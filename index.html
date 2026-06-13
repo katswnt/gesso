@@ -712,17 +712,18 @@ function regionBars(){
   const key=order.filter(r=>dist[r]).map(r=>`<span><i style="background:${colors[r]}"></i>${r} ${Math.round(dist[r]/total*100)}%</span>`).join('');
   return {segs,key,europe:Math.round((dist.Europe||0)/total*100)};
 }
-function renderStart(){
+function renderStart(dateStr){
   clearTimers();
+  const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
-      <div class="herokick"><span class="r"></span>The daily art-guessing game<span class="r"></span></div>
-      <div class="herobig">Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.</div>
-      <div class="heroglos"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke</div>
-      <div class="herometa">${accession()} &middot; five works</div>
+      <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
+      <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.'}</div>
+      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke'}</div>
+      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; five works</div>
     </div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
@@ -735,7 +736,7 @@ function renderStart(){
     </div>
     ${ATTRIB}
   </div>`;
-  document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k));
+  document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
 }
 function startGame(key,dateStr){
   clearTimers();
@@ -818,7 +819,8 @@ function renderRound(){
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
     const leave=GEO_LEAVE[tier];
-    if(leave!=null&&it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
+    const rightRegion=continentOf(e.latlng.lat,e.latlng.lng)===it.region || km(e.latlng.lat,e.latlng.lng,it.lat,it.lng)<2000;
+    if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
   setTimeout(()=>map.invalidateSize(),settings.reduceMotion?0:250);
@@ -1100,7 +1102,7 @@ function renderArchive(monthDate){
   </div>${ATTRIB}</div></div>`;
   document.getElementById('prevmo').onclick=()=>{archiveMonth=new Date(y,m-1,1);renderArchive(archiveMonth);};
   document.getElementById('nextmo').onclick=()=>{if(canNext){archiveMonth=new Date(y,m+1,1);renderArchive(archiveMonth);}};
-  document.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>startGame(tier,b.dataset.date));
+  document.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>renderStart(b.dataset.date));
 }
 function masteryEntries(){
   const m=loadMastery(), all=[...Object.entries(m.byStyle||{}),...Object.entries(m.byRegion||{})].filter(([,v])=>v&&v.total>=2);
@@ -1150,7 +1152,7 @@ function renderFinal(){
   document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
   document.getElementById('streak').onclick=renderStreak;
-  document.getElementById('again').onclick=renderStart;
+  document.getElementById('again').onclick=()=>renderStart();
 }
 
 // ---------- zoom lightbox ----------
