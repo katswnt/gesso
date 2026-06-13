@@ -251,15 +251,18 @@ function continentOf(lat,lng){
   if(lng>40)return "Asia";
   return "Europe";
 }
-// strike wrong style pills down to 2 remaining (answer + 1). Idempotent — safe to call twice.
-function apply5050(it){
+// strike wrong style pills down to `leave` remaining (answer + leave-1). Idempotent.
+function geoElim(it,leave){
   const pills=[...document.querySelectorAll('[data-pills="style"] .pill')];
   const active=pills.filter(b=>!b.classList.contains('ruledout'));
   const wrong=active.filter(b=>b.dataset.v!==it.style);
-  const toStrike=Math.max(0,active.length-2);
+  const toStrike=Math.max(0,active.length-leave);
   shuffle(wrong).slice(0,toStrike).forEach(b=>b.classList.add('ruledout'));
   return toStrike;
 }
+const apply5050=it=>geoElim(it,2); // paid hint = full 50/50 (leave answer + 1)
+// how many style options a correct-region pin leaves you, by tier (null = no geo help)
+const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
 function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
@@ -304,7 +307,13 @@ const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
 function buildIndexes(){
   for(const p of POOL){ if(p.styleKind==='movement'&&CANON_STYLE[p.style]) p.style=CANON_STYLE[p.style]; }
-  POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
+  // region-stratified recognizability: rank each work WITHIN its region, then order globally by
+  // that percentile so every difficulty tier is a mix of regions (not Western=easy, rest=impossible)
+  const byRegion={};
+  for(const p of POOL){ (byRegion[p.region]=byRegion[p.region]||[]).push(p); }
+  for(const r in byRegion){ const g=byRegion[r].sort((a,b)=>(a.fame||0)-(b.fame||0)); const n=g.length;
+    g.forEach((p,i)=>p._rank = n>1 ? i/(n-1) : 0.5); }
+  POOL.sort((a,b)=>(b._rank-a._rank)||((b.fame||0)-(a.fame||0)));
   MINY=Math.min(...POOL.map(p=>p.y));
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
@@ -455,8 +464,10 @@ function renderRound(){
     curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
-    if(tier!=='impossible'&&it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
-      free5050=true; apply5050(it); const gb=document.getElementById('geobonus'); if(gb)gb.style.display='block';}});
+    const leave=GEO_LEAVE[tier];
+    if(leave!=null&&it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
+      const k=geoElim(it,leave); free5050=true;
+      const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
   setTimeout(()=>map.invalidateSize(),250);
   document.getElementById('submit').onclick=score;
 }

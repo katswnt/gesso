@@ -183,11 +183,13 @@ async function metObject(id, deptId){
   if(!geo) return null;
   const y=Math.round(((o.objectBeginDate||0)+(o.objectEndDate||o.objectBeginDate||0))/2);
   if(!y || y<-3000 || y>2025) return null;
+  // real recognizability signal for Met works: the museum's own highlight/timeline flags
+  const fame = o.isHighlight?55:(o.isTimelineWork?30:10);
   return item({
     id:"met"+o.objectID, title:o.title||o.classification||"Untitled",
     artist:(o.artistDisplayName||"").trim(), y, lat:geo.lat, lng:geo.lng, place:geo.place,
     movement:"", medium:mediumClass(o.medium), culture:(o.culture||geo.place||"").trim(),
-    fame:8, img:o.primaryImageSmall, src:"met"
+    fame, img:o.primaryImageSmall, src:"met"
   });
 }
 async function pmap(arr, fn, conc=6){
