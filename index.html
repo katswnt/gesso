@@ -607,7 +607,14 @@ function buildIndexes(){
   for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
     if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region; }
 }
-function tierItems(i){const n=POOL.length;return POOL.slice(Math.floor(i*n/4),Math.floor((i+1)*n/4));}
+// Easy = a small elite slice of the most-recognized works (everyone should at least KNOW them);
+// the rest split across medium/hard/impossible. POOL is fame-sorted in buildIndexes().
+function tierItems(i){
+  const n=POOL.length, EASY=Math.min(42, Math.max(20, Math.floor(n*0.15)));
+  if(i===0) return POOL.slice(0, EASY);
+  const rest=POOL.slice(EASY), per=Math.ceil(rest.length/3);
+  return rest.slice((i-1)*per, Math.min(rest.length, i*per));
+}
 const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
   {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
 

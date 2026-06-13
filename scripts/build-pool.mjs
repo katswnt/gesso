@@ -65,6 +65,7 @@ const CENTROIDS = [
   [/iran|persia|safavid|qajar|sasanian|achaemenid|isfahan|shiraz/i, 35.7, 51.4, "Iran"],
   [/edo peoples|nigeria|benin|yoruba|ife|igbo/i, 6.5, 3.38, "Nigeria"],
   [/turk|ottoman|anatolia|byzan|iznik/i, 41.0, 28.98, "Turkey"],
+  [/palestin|jerusalem|west bank|gaza|holy land/i, 31.95, 35.23, "Palestine"],
   [/syria|levant|damascus|palmyra/i, 33.5, 36.3, "Syria"],
   [/iraq|mesopotam|babylon|assyria|sumer|nimrud|akkad/i, 33.3, 44.4, "Iraq"],
   [/egypt|coptic|nubia|thebes|amarna/i, 30.0, 31.2, "Egypt"],
@@ -185,8 +186,9 @@ async function metObject(id, deptId){
   if(!geo) return null;
   const y=Math.round(((o.objectBeginDate||0)+(o.objectEndDate||o.objectBeginDate||0))/2);
   if(!y || y<-3000 || y>2025) return null;
-  // real recognizability signal for Met works: the museum's own highlight/timeline flags
-  const fame = o.isHighlight?55:(o.isTimelineWork?30:10);
+  // Met works carry museum-importance flags, NOT lay-recognizability — keep them below the
+  // famous-painting (Wikidata sitelink) band so "Easy" stays genuinely recognizable.
+  const fame = o.isHighlight?18:(o.isTimelineWork?12:6);
   return item({
     id:"met"+o.objectID, title:o.title||o.classification||"Untitled",
     artist:(o.artistDisplayName||"").trim(), y, lat:geo.lat, lng:geo.lng, place:geo.place,
