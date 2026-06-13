@@ -78,6 +78,20 @@
   .hinttext{animation:afFade .3s ease;margin-top:11px;font:13px/1.5 'IBM Plex Mono',monospace;
     color:#6f6a5b;border-left:2px solid var(--accent);padding-left:13px}
   .hinttext div{padding:2px 0}
+  .hintbox{margin-top:16px;border:1px solid var(--line-card);border-radius:8px;padding:13px 14px;background:#fdfcf9}
+  .hinthd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;flex-wrap:wrap}
+  .hinthl{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .hintmeta{font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:var(--faint);white-space:nowrap}
+  .hintchips{display:flex;flex-wrap:wrap;gap:7px}
+  .hintchip{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;padding:7px 11px;border-radius:4px;cursor:pointer}
+  .hintchip .cost{font:500 10px 'IBM Plex Mono',monospace;letter-spacing:0;opacity:.6}
+  .hintchip:hover{background:var(--accent);color:#fff}
+  .hintchip.used{border-color:var(--line-card);color:var(--faint);background:#f1eee7;cursor:default}
+  .hintchip.used .cost{display:none}
+  .hintchip.used::before{content:"\2713";font-weight:700;margin-right:1px}
+  .hintchip:disabled:not(.used){opacity:.34;cursor:default}
+  .hintchip:disabled:not(.used):hover{background:transparent;color:var(--accent)}
+  .hintlabel{display:inline-block;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-right:7px}
   /* reveal */
   .banner{padding:22px 24px;background:linear-gradient(180deg,#eceffb,#f6f4ee);border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -429,8 +443,11 @@ function renderRound(){
       <div style="display:flex;flex-direction:column">
         <div class="plate"><img class="art" src="${esc(it.img)}" alt="The painting to identify"/></div>
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.medium||'UNKNOWN MEDIUM').toUpperCase())}</span></div>
-        <div style="margin-top:16px"><button class="btn2" id="hintbtn">Request hint &middot; <span id="hintsleft"></span></button>
-          <div class="hinttext" id="hintout" style="display:none"></div></div>
+        <div class="hintbox">
+          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
+          <div class="hintchips" id="hintchips"></div>
+          <div class="hinttext" id="hintout" style="display:none"></div>
+        </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}</div>
     </div>
@@ -491,18 +508,23 @@ function setupAutocomplete(){
 }
 
 function wireHints(it){
-  const btn=document.getElementById('hintbtn'),out=document.getElementById('hintout'),left=document.getElementById('hintsleft');
+  const chips=document.getElementById('hintchips'),out=document.getElementById('hintout'),left=document.getElementById('hintsleft');
   const opts=[];
-  opts.push({label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
-  opts.push({label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
-  if(it.cats.includes('style')) opts.push({label:"50/50",txt:()=>{const k=apply5050(it); return k>0?`Two unlikely options ruled out.`:`Already narrowed to two.`;}});
-  if(it.cats.includes('artist')&&it.artist) opts.push({label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
-  let oi=0;
-  const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem>0?`reveal ${opts[oi]?opts[oi].label:'hint'} · −${HINT_COST} (${rem} left)`:`no hints left`; btn.disabled=rem<=0||oi>=opts.length; if(oi>=opts.length)left.textContent="no more hints";};
-  btn.onclick=()=>{ if(hintsUsed>=HINT_LIMIT||oi>=opts.length)return;
-    const o=opts[oi]; guess.hints.add(o.label); hintsUsed++; oi++;
-    out.style.display='block'; out.insertAdjacentHTML('beforeend',`<div>${o.txt()} <span style="color:var(--accent)">−${HINT_COST}</span></div>`);
-    refresh();};
+  opts.push({key:"century",label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
+  opts.push({key:"continent",label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
+  if(it.cats.includes('style')) opts.push({key:"50/50",label:"50/50",txt:()=>{const k=apply5050(it); return k>0?`Two unlikely options ruled out.`:`Already narrowed to two.`;}});
+  if(it.cats.includes('artist')&&it.artist) opts.push({key:"initials",label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
+  chips.innerHTML=opts.map(o=>`<button type="button" class="hintchip" data-k="${o.key}">${o.label}<span class="cost">&minus;${HINT_COST}</span></button>`).join('');
+  const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem;
+    chips.querySelectorAll('.hintchip').forEach(b=>{if(!b.classList.contains('used'))b.disabled=rem<=0;});};
+  chips.querySelectorAll('.hintchip').forEach(b=>{
+    b.onclick=()=>{if(hintsUsed>=HINT_LIMIT||b.classList.contains('used'))return;
+      const o=opts.find(x=>x.key===b.dataset.k); if(!o)return;
+      guess.hints.add(o.label); hintsUsed++;
+      b.classList.add('used'); b.disabled=true;
+      out.style.display='block'; out.insertAdjacentHTML('beforeend',`<div>${o.txt()} <span style="color:var(--accent)">−${HINT_COST}</span></div>`);
+      refresh();};
+  });
   refresh();
 }
 function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>10&&c%100<14)?"th":["th","st","nd","rd"][c%10]||"th";return `${c}${s} century${y<0?" BCE":""}`;}
