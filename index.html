@@ -24,12 +24,12 @@
   .wrap{width:100%}
   .card{background:var(--surface)}
   .sheet{max-width:1080px;margin:0 auto;background:var(--surface);
-    border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:62vh;padding-bottom:40px}
+    border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:calc(100vh - 55px);padding-bottom:40px}
   /* header */
   .hd{position:sticky;top:0;z-index:600;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .hdinner{max-width:1080px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between}
   .hd .brand{display:flex;align-items:baseline;gap:13px}
-  .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em}
+  .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em;color:var(--accent);text-transform:lowercase}
   .accn{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .hd .right{display:flex;align-items:center;gap:18px}
   .pips{display:flex;gap:5px}
@@ -113,9 +113,13 @@
     display:flex;align-items:center;gap:13px;flex-wrap:wrap;font:12px 'IBM Plex Mono',monospace;color:var(--ink)}
   .weak{color:var(--miss)}
   /* start */
-  .hero{padding:22px 24px 4px;text-align:center}
-  .hero .big2{font:800 40px 'Archivo',sans-serif;letter-spacing:-.02em}
-  .hero .tag{font:500 12px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+  .hero{padding:38px 24px 14px;text-align:center}
+  .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+  .herokick .r{width:26px;height:1px;background:var(--accent);opacity:.4}
+  .herobig{font:800 56px 'Archivo',sans-serif;letter-spacing:-.025em;line-height:1.06;color:var(--ink)}
+  .herobig em{font-style:normal;color:var(--accent)}
+  .heroglos{font:500 12px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:15px;letter-spacing:.01em;max-width:520px;margin-left:auto;margin-right:auto}
+  .herometa{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:8px;letter-spacing:.16em;text-transform:uppercase}
   .difs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 24px}
   .dif{text-align:left;background:var(--surface);border:1px solid var(--line-card);border-radius:8px;padding:18px;cursor:pointer;transition:.12s;font-family:inherit}
   .dif:hover{border-color:var(--accent);transform:translateY(-2px)}
@@ -150,7 +154,8 @@
     .revealgrid{grid-template-columns:1fr;gap:20px;padding:17px}
     .playgrid{grid-template-columns:1fr!important}
     .difs{grid-template-columns:1fr}
-    .big{font-size:34px}.hero .big2{font-size:30px}.year{font-size:23px}
+    .hdinner{padding:13px 16px}.hd .accn{display:none}
+    .big{font-size:34px}.herobig{font-size:38px}.year{font-size:23px}
   }
 </style>
 </head>
@@ -353,8 +358,12 @@ function renderStart(){
   const b=regionBars();
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
-    <div class="hero"><div class="big2">Gesso</div>
-      <div class="tag">Take a gesso &middot; the daily art-guessing game &middot; ${accession()} &middot; five works</div></div>
+    <div class="hero">
+      <div class="herokick"><span class="r"></span>The daily art-guessing game<span class="r"></span></div>
+      <div class="herobig">Take a <em>gesso</em>.</div>
+      <div class="heroglos"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke</div>
+      <div class="herometa">${accession()} &middot; five works</div>
+    </div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
@@ -446,7 +455,7 @@ function renderRound(){
     curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
-    if(it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
+    if(tier!=='impossible'&&it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
       free5050=true; apply5050(it); const gb=document.getElementById('geobonus'); if(gb)gb.style.display='block';}});
   setTimeout(()=>map.invalidateSize(),250);
   document.getElementById('submit').onclick=score;
