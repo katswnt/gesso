@@ -157,6 +157,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
+<script src="data/teach-works.js"></script>
 <script src="data/pool.js"></script>
 <script>
 "use strict";
@@ -164,10 +165,10 @@ const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
 const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
 // difficulty tunes scoring leniency + how confusable the distractors are
 const DIFF={
-  easy:      {distK:4500, relMov:0.70, timeMult:1.5, look:'far'},
-  medium:    {distK:2500, relMov:0.50, timeMult:1.0, look:'mix'},
-  hard:      {distK:1500, relMov:0.35, timeMult:0.75, look:'near'},
-  impossible:{distK:1000, relMov:0.25, timeMult:0.6,  look:'near'},
+  easy:      {distK:4500, relMov:0.70, timeMult:1.6, look:'far'},
+  medium:    {distK:2500, relMov:0.50, timeMult:1.1, look:'mix'},
+  hard:      {distK:1500, relMov:0.35, timeMult:0.9, look:'near'},
+  impossible:{distK:1000, relMov:0.25, timeMult:0.75, look:'near'},
 };
 const dcfg=()=>DIFF[tier]||DIFF.medium;
 
@@ -486,9 +487,9 @@ function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>
 
 // ---------- scoring ----------
 function timeScore(diff){
-  if(diff<=10)return{pts:MAX_CAT,bull:true};
-  if(diff<=30)return{pts:2300}; if(diff<=75)return{pts:1900}; if(diff<=150)return{pts:1350};
-  if(diff<=300)return{pts:800}; if(diff<=600)return{pts:350}; return{pts:0};
+  if(diff<=15)return{pts:MAX_CAT,bull:true};
+  if(diff<=40)return{pts:2250}; if(diff<=90)return{pts:2000}; if(diff<=180)return{pts:1500};
+  if(diff<=400)return{pts:850}; if(diff<=800)return{pts:350}; return{pts:0};
 }
 function score(){
   const it=game[idx], cells={}, D=dcfg();
@@ -533,6 +534,7 @@ function score(){
 
 // ---------- REVEAL ----------
 function studyFor(it){
+  const w=CUES.work&&CUES.work[it.id]; if(w&&w.why) return w; // per-work note (Codex-generated)
   return (it.styleKind==='movement'&&CUES.style[it.style]) || (it.styleKind==='culture'&&CUES.culture[it.style])
     || CUES.region[it.region] || {why:`Made in ${it.place||it.region}, c. ${fmtYear(it.y)}.`,cues:[]};
 }

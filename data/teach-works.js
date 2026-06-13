@@ -1,0 +1,2 @@
+window.ARTEFACTUM_CUES=window.ARTEFACTUM_CUES||{};
+window.ARTEFACTUM_CUES.work={};
