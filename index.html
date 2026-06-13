@@ -162,9 +162,37 @@
 "use strict";
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
 const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
+// difficulty tunes scoring leniency + how confusable the distractors are
+const DIFF={
+  easy:      {distK:4500, relMov:0.70, timeMult:1.5, look:'far'},
+  medium:    {distK:2500, relMov:0.50, timeMult:1.0, look:'mix'},
+  hard:      {distK:1500, relMov:0.35, timeMult:0.75, look:'near'},
+  impossible:{distK:1000, relMov:0.25, timeMult:0.6,  look:'near'},
+};
+const dcfg=()=>DIFF[tier]||DIFF.medium;
 
 // ---------- helpers ----------
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pickN(a,n){return shuffle(a).slice(0,n);}
+function fill3(ans,picks,fromAll){let p=[...new Set(picks)].filter(x=>x&&x!==ans);
+  const rest=shuffle(fromAll.filter(x=>x!==ans&&!p.includes(x)));
+  while(p.length<3&&rest.length)p.push(rest.shift());
+  return shuffle([ans,...p.slice(0,3)]);}
+// medium choices: easy = different families (obvious); hard = same family (lookalikes)
+function mediumChoices(ans){const look=dcfg().look;
+  const same=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
+  const diff=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
+  let picks; if(look==='far')picks=pickN(diff,3); else if(look==='near')picks=[...pickN(same,3),...pickN(diff,3)].slice(0,3); else picks=[...pickN(same,1),...pickN(diff,2)];
+  return fill3(ans,picks,ALL_MED);}
+// style choices: themed to the answer's own region/kind (so European works show European movements,
+// Asian works show Asian schools); hard pulls confusable related/same-region neighbours
+function styleChoices(it){const look=dcfg().look, ans=it.style, pool=it.styleKind==='culture'?CULTS:MOVS;
+  const sameReg=pool.filter(s=>s!==ans&&styleRegion[s]===it.region);
+  const related=(RELATED_MOV[ans]||[]).filter(s=>pool.includes(s));
+  let picks; if(look==='far')picks=pickN(pool.filter(s=>s!==ans),3);
+  else if(look==='near')picks=[...pickN(related,2),...pickN(sameReg,3)].slice(0,3);
+  else picks=[...pickN(related,1),...pickN(sameReg.length?sameReg:pool,2)];
+  return fill3(ans,picks,pool);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
 // Region-aware period schemes — the slider tag reflects the work's own culture's periodization
@@ -239,7 +267,7 @@ function catShort(c,it){
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
-let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={};
+let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
 function buildIndexes(){
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
@@ -247,8 +275,9 @@ function buildIndexes(){
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra])].sort();
-  artistStyle={};
-  for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); } }
+  artistStyle={}; styleRegion={};
+  for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
+    if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region; }
 }
 function tierItems(i){const n=POOL.length;return POOL.slice(Math.floor(i*n/4),Math.floor((i+1)*n/4));}
 const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
@@ -329,13 +358,12 @@ function renderRound(){
     <div class="minmax"><span>3000 BC</span><span>2025</span></div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
-    const ch=shuffle([it.medium,...shuffle(ALL_MED.filter(m=>m!==it.medium)).slice(0,3)]);
+    const ch=mediumChoices(it.medium);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">Medium</span></div>
       <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
   }
   if(it.cats.includes('style')){
-    const poolS=it.styleKind==='culture'?CULTS:MOVS;
-    const ch=shuffle([it.style,...shuffle(poolS.filter(m=>m!==it.style)).slice(0,3)]);
+    const ch=styleChoices(it);
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
   }
@@ -431,13 +459,13 @@ function timeScore(diff){
   if(diff<=300)return{pts:800}; if(diff<=600)return{pts:350}; return{pts:0};
 }
 function score(){
-  const it=game[idx], cells={};
-  // when
-  const dy=Math.abs(guess.year-it.y), ts=timeScore(dy);
-  cells.when={pts:ts.pts, bull:!!ts.bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
-    note:ts.bull?"right to the decade":periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
-  // where
-  let dist=null,sp=0; if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng); sp=Math.round(MAX_CAT*Math.exp(-dist/2500));}
+  const it=game[idx], cells={}, D=dcfg();
+  // when (leniency scales with difficulty; 🎯 bullseye always = within a real decade)
+  const dy=Math.abs(guess.year-it.y), ts=timeScore(Math.round(dy/D.timeMult)), bull=dy<=10;
+  cells.when={pts:bull?MAX_CAT:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
+    note:bull?"right to the decade":periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+  // where (distance falloff is gentler on easy, steeper on hard)
+  let dist=null,sp=0; if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng); sp=Math.round(MAX_CAT*Math.exp(-dist/D.distK));}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place, note:dist==null?"no pin dropped":`${Math.round(dist)} km off`};
   // medium
   if(it.cats.includes('medium')){let s=0,note="no answer";
@@ -448,7 +476,7 @@ function score(){
   // style
   if(it.cats.includes('style')){let s=0,note="no answer";
     if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
-      else if((RELATED_MOV[it.style]||[]).includes(guess.style)){s=Math.round(MAX_CAT*0.5);note="related";}
+      else if((RELATED_MOV[it.style]||[]).includes(guess.style)){s=Math.round(MAX_CAT*D.relMov);note="related";}
       else note="wrong";}
     cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
   // artist (bonus)
