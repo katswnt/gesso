@@ -125,6 +125,38 @@ const ARTIST_POOL = [...new Set([...ART.map(a=>a.a),
   "El Greco","Sandro Botticelli","Donatello","Hokusai","Utagawa Hiroshige",
 ])].sort();
 
+// Related movements earn HALF credit for a near-miss
+const RELATED_MOV = {
+  "Renaissance":["Baroque","Mannerism"],
+  "Baroque":["Dutch Golden Age","Renaissance","Realism"],
+  "Dutch Golden Age":["Baroque","Realism"],
+  "Realism":["Baroque","Dutch Golden Age","Regionalism","Impressionism"],
+  "Regionalism":["Realism","Social Realism"],
+  "Post-Impressionism":["Pointillism","Impressionism","Symbolism","Expressionism"],
+  "Pointillism":["Post-Impressionism","Impressionism"],
+  "Symbolism":["Expressionism","Post-Impressionism","Art Nouveau"],
+  "Expressionism":["Symbolism","Post-Impressionism","Fauvism"],
+  "De Stijl":["Cubism","Constructivism","Bauhaus"],
+  "Ukiyo-e":["Nihonga"],
+};
+// Similar artists (contemporaries / same school) earn partial credit — keyed by the true artist
+const SIMILAR_ARTISTS = {
+  "Leonardo da Vinci":["Raphael","Michelangelo","Sandro Botticelli","Titian"],
+  "Sandro Botticelli":["Leonardo da Vinci","Raphael","Donatello","Titian"],
+  "Michelangelo":["Leonardo da Vinci","Raphael","Donatello","Titian"],
+  "Vincent van Gogh":["Paul Gauguin","Paul Cézanne","Georges Seurat","Henri de Toulouse-Lautrec","Édouard Manet"],
+  "Georges Seurat":["Paul Cézanne","Vincent van Gogh","Camille Pissarro","Claude Monet","Paul Gauguin"],
+  "Katsushika Hokusai":["Utagawa Hiroshige","Hokusai"],
+  "Johannes Vermeer":["Rembrandt","Pieter Bruegel the Elder","Jan van Eyck"],
+  "Rembrandt":["Johannes Vermeer","Peter Paul Rubens","Caravaggio"],
+  "Diego Velázquez":["Caravaggio","Peter Paul Rubens","El Greco","Francisco Goya"],
+  "Edvard Munch":["Egon Schiele","Gustav Klimt","Amedeo Modigliani"],
+  "Gustav Klimt":["Egon Schiele","Edvard Munch","Amedeo Modigliani"],
+  "Grant Wood":["Edward Hopper","Georgia O'Keeffe"],
+  "James McNeill Whistler":["Édouard Manet","Edgar Degas","John Constable"],
+  "Piet Mondrian":["Wassily Kandinsky","Paul Klee","Joan Miró"],
+};
+
 // ---- Helpers ----
 const ROUNDS = 5, MAX_CAT = 2500;
 function shuffle(arr){arr=arr.slice();for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
@@ -232,15 +264,20 @@ function score(){
   let sPlace=0,dist=null;
   if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
     sPlace=Math.round(MAX_CAT*Math.exp(-dist/2500));}
-  // movement
-  const sMov=guess.mov===it.m?MAX_CAT:0;
-  // artist (exact or last-name match)
+  // movement — full credit exact, half credit for a related movement
+  let sMov=0, movNote="";
+  if(guess.mov===it.m){sMov=MAX_CAT;}
+  else if(guess.mov && (RELATED_MOV[it.m]||[]).includes(guess.mov)){sMov=Math.round(MAX_CAT*0.5); movNote=" — related, half credit";}
+  // artist — exact/last-name full, similar artist partial
   const norm=s=>s.toLowerCase().replace(/[^a-z ]/g,'').trim();
   const last=s=>norm(s).split(' ').pop();
   const ga=norm(guess.artist);
-  const sArt=ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))?MAX_CAT:0;
+  let sArt=0, artNote="";
+  if(ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))){sArt=MAX_CAT;}
+  else if(ga && (SIMILAR_ARTISTS[it.a]||[]).some(s=>norm(s)===ga || last(s)===last(guess.artist))){
+    sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
   const total=sTime+sPlace+sMov+sArt;
-  results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,guess:{...guess}});
+  results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,guess:{...guess}});
   renderReveal(results[results.length-1]);
 }
 
@@ -255,8 +292,8 @@ function renderReveal(r){
         <div class="meta">${it.a} · ${fmtYear(it.y)} · ${it.place} · ${it.m}</div>
         ${row("When",emFor(r.sTime/MAX_CAT),r.sTime,`you said ${eraName(r.guess.year)} · it's ${eraName(it.y)} (off by ${r.dy} yrs)`)}
         ${row("Where",emFor(r.sPlace/MAX_CAT),r.sPlace,r.dist==null?"no pin":`${Math.round(r.dist)} km away`)}
-        ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}`:"no answer")}
-        ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}`:"no answer")}
+        ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}${r.movNote}`:"no answer")}
+        ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}${r.artNote}`:"no answer")}
         <div class="total">+${r.total} points</div>
         <button class="btn" id="next">${idx<game.length-1?"Next masterwork →":"See final score →"}</button>
       </div>
