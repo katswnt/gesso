@@ -46,6 +46,13 @@
   .cicon svg{width:16px;height:16px}
   .gicon{display:inline-flex;width:16px;height:16px;vertical-align:-3px}
   .gicon svg{width:16px;height:16px}
+  .lookmarks{position:absolute;inset:10px;pointer-events:none}
+  .lookmark{position:absolute;transform:translate(-50%,-50%);width:25px;height:24px;
+    border-radius:60% 40% 55% 45% / 55% 45% 60% 40%;background:var(--accent);color:#fff;border:2px solid #fff;
+    font:700 12px 'Archivo',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    pointer-events:auto;box-shadow:0 2px 7px rgba(27,25,22,.35)}
+  .lookmark:hover{transform:translate(-50%,-50%) scale(1.15)}
+  .cue.flash{background:rgba(34,48,184,.12);border-radius:5px}
   .fieldlabel{display:flex;align-items:center;gap:8px;margin-bottom:11px}
   .fieldlabel .ix{font:600 10px 'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:.1em}
   .fieldlabel .nm{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
@@ -970,7 +977,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span></div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span>${(study.cues||[]).slice(0,4).map((c,i)=>{const pos=[[20,27],[43,71],[67,34],[31,80]][i]||[50,50];return `<div class="lookmarks"><button class="lookmark" style="top:${pos[0]}%;left:${pos[1]}%" data-cue="${i}" title="${esc(c)}">${i+1}</button></div>`;}).join('')}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -1006,6 +1013,11 @@ function renderReveal(r){
   </div>`;
   countUps();
   setupReportFlow(it,study);
+  // look-closer markers → highlight the matching cue
+  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
+    const cs=document.querySelectorAll('.study .cue'), cue=cs[+b.dataset.cue];
+    if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
+      cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
