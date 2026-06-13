@@ -239,6 +239,7 @@ async function loadPool(){
 // ---- Game state ----
 let game=[], idx=0, results=[], guess={}, POOL=[];
 let map, marker, artistMov={};
+let hintsUsed=0; const HINT_LIMIT=3;
 
 function renderProgress(){
   document.getElementById('progress').innerHTML = game.map((_,i)=>
@@ -276,7 +277,7 @@ function renderRound(){
             <div class="hint">Click the map to drop your pin.</div>
           </div>
         </div>
-        <div class="q" style="margin-top:18px">Need a hint? <span class="hint" style="text-transform:none">(−${HINT_COST} each)</span></div>
+        <div class="q" style="margin-top:18px">Need a hint? <span class="hint" id="hintsleft" style="text-transform:none"></span></div>
         <div class="hints" id="hints">
           <button class="hintbtn" data-h="when">🕰️ Century</button>
           <button class="hintbtn" data-h="where">🗺️ Continent</button>
@@ -316,11 +317,19 @@ function renderRound(){
     },
     artist:()=>`🖌️ The artist's initials are ${initialsOf(it.a)}.`,
   };
-  document.querySelectorAll('.hintbtn').forEach(b=>b.onclick=()=>{
-    const k=b.dataset.h; if(guess.hints.has(k))return;
-    guess.hints.add(k); b.disabled=true;
+  const hintBtns=[...document.querySelectorAll('.hintbtn')], hl=document.getElementById('hintsleft');
+  const refreshHints=()=>{
+    const left=HINT_LIMIT-hintsUsed;
+    hl.textContent = left>0 ? `${left} of ${HINT_LIMIT} left this game · −${HINT_COST} each` : "no hints left this game";
+    hintBtns.forEach(b=>{ if(!guess.hints.has(b.dataset.h)) b.disabled = left<=0; });
+  };
+  hintBtns.forEach(b=>b.onclick=()=>{
+    const k=b.dataset.h; if(guess.hints.has(k)||hintsUsed>=HINT_LIMIT)return;
+    guess.hints.add(k); hintsUsed++; b.disabled=true;
     ho.insertAdjacentHTML('beforeend',`<div>${hintText[k]()} <span class="hint">−${HINT_COST}</span></div>`);
+    refreshHints();
   });
+  refreshHints();
   document.getElementById('submit').onclick=score;
 }
 
@@ -431,8 +440,10 @@ function renderFinal(){
   const grand=results.reduce((s,r)=>s+r.total,0);
   const maxg=ROUNDS*MAX_CAT*4;
   const gridRows=results.map(r=>
-    [r.sTime,r.sPlace,r.sMov,r.sArt].map(s=>emFor(s/MAX_CAT)).join('')).join('\n');
-  const share=`Artefactum · ${grand.toLocaleString()}/${maxg.toLocaleString()}\n${gridRows}\n🕰️🗺️🎨🖌️`;
+    [r.sTime,r.sPlace,r.sMov,r.sArt].map(s=>emFor(s/MAX_CAT)).join('')+(r.guess.hints.size?' 💡':'')).join('\n');
+  const totalHints=results.reduce((s,r)=>s+r.guess.hints.size,0);
+  const hintTag=totalHints?`  💡×${totalHints}`:`  💡 none`;
+  const share=`Artefactum · ${grand.toLocaleString()}/${maxg.toLocaleString()}${hintTag}\n${gridRows}\n🕰️🗺️🎨🖌️`;
   document.getElementById('stage').innerHTML=`
     <div class="card"><div class="reveal final">
       <div class="q">Final score</div>
@@ -480,7 +491,7 @@ function startGame(key){
   let arr=tierItems(i);
   if(arr.length<ROUNDS) arr=[...arr,...shuffle(POOL.filter(p=>!arr.includes(p)))]; // widen if thin
   game=shuffle(arr).slice(0,ROUNDS);
-  idx=0; results=[];
+  idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
 
