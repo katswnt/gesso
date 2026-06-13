@@ -46,6 +46,17 @@
   .ac-item{padding:9px 12px;cursor:pointer;font-size:14px}
   .ac-item:hover,.ac-item.active{background:var(--gold);color:#1a160c}
   .erares{color:var(--gold);font-style:italic;font-size:13px;margin-top:2px}
+  .difs{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
+  @media(max-width:680px){.difs{grid-template-columns:1fr}}
+  .dif{text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;cursor:pointer;color:var(--ink);font-family:inherit;transition:.12s}
+  .dif:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .dif .dn{font-size:20px;color:var(--gold);margin-bottom:3px}
+  .dif .dd{color:var(--muted);font-size:13px}
+  .dif .dc{color:var(--muted);font-size:12px;margin-top:8px;font-style:italic}
+  #revmap{height:200px;border-radius:10px;border:1px solid var(--line);margin:6px 0 4px}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:8px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .btn{display:block;width:100%;margin-top:18px;padding:13px;border:none;border-radius:10px;
     background:var(--gold);color:#1a160c;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;letter-spacing:.03em}
   .btn:hover{filter:brightness(1.06)}
@@ -169,13 +180,22 @@ function cleanMov(m){return m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'')
 function normMov(m){return cleanMov(m).toLowerCase().replace(/[^a-z ]/g,'').trim();}
 
 // ---- Live data: pull a pool of famous paintings from Wikidata (CORS-enabled) ----
-const WD_QUERY = `SELECT ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?countryLabel ?coord ?image WHERE {
+const WD_QUERY = `SELECT ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?countryLabel ?coord ?image ?s WHERE {
   ?item wdt:P31 wd:Q3305213; wdt:P18 ?image; wdt:P170 ?creator; wdt:P571 ?inception;
         wdt:P135 ?movement; wdt:P495 ?country; wikibase:sitelinks ?s.
   OPTIONAL { ?country wdt:P625 ?coord. }
-  FILTER(?s > 28)
+  FILTER(?s > 11)
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-} ORDER BY DESC(?s) LIMIT 400`;
+} ORDER BY DESC(?s) LIMIT 700`;
+
+// Difficulty tiers = fame quartiles of the pool (sorted by sitelink count)
+const TIERS = [
+  {key:"easy",       label:"Easy",       blurb:"World-famous masterpieces"},
+  {key:"medium",     label:"Medium",     blurb:"Well-known works"},
+  {key:"hard",       label:"Hard",       blurb:"For art-history buffs"},
+  {key:"impossible", label:"Impossible", blurb:"Deep cuts & obscurities"},
+];
+function tierItems(i){const n=POOL.length;return POOL.slice(Math.floor(i*n/4),Math.floor((i+1)*n/4));}
 
 async function loadPool(){
   const url="https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(WD_QUERY);
@@ -191,14 +211,14 @@ async function loadPool(){
     if(/^Q\d+$/.test(a)||/^Q\d+$/.test(t)) continue;            // skip unlabeled entities
     const mp=coord.match(/Point\(([-\d.]+) ([-\d.]+)\)/); if(!mp) continue;
     if(seen.has(t)) continue; seen.add(t);
-    pool.push({t, a, y, m:cleanMov(mraw), place, lng:+mp[1], lat:+mp[2],
+    pool.push({t, a, y, m:cleanMov(mraw), place, lng:+mp[1], lat:+mp[2], sl:parseInt(g('s'),10)||0,
       img:img.replace(/^http:/,'https:')+"?width=1000"});
   }
   return pool;
 }
 
 // ---- Game state ----
-let game=[], idx=0, results=[], guess={};
+let game=[], idx=0, results=[], guess={}, POOL=[];
 let map, marker, artistMov={};
 
 function renderProgress(){
@@ -255,7 +275,7 @@ function renderRound(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     {attribution:'© OpenStreetMap, © CARTO',maxZoom:8}).addTo(map);
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
-    else marker=L.marker(e.latlng).addTo(map);});
+    else marker=L.circleMarker(e.latlng,{radius:8,color:'#d9b15e',fillColor:'#d9b15e',fillOpacity:.9,weight:2}).addTo(map);});
   setTimeout(()=>map.invalidateSize(),200);
   document.getElementById('submit').onclick=score;
 }
@@ -336,9 +356,24 @@ function renderReveal(r){
         ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}${r.movNote}`:"no answer")}
         ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}${r.artNote}`:"no answer")}
         <div class="total">+${r.total} points</div>
+        <div class="legend"><span><span class="dot" style="background:#5fb87a"></span>Made in ${it.place}</span>${r.guess.ll?'<span><span class="dot" style="background:#d9b15e"></span>Your guess</span>':''}</div>
+        <div id="revmap"></div>
         <button class="btn" id="next">${idx<game.length-1?"Next masterwork →":"See final score →"}</button>
       </div>
     </div>`;
+  // pin-vs-truth map
+  const rm=L.map('revmap',{zoomControl:false,attributionControl:false,worldCopyJump:true}).setView([20,0],1);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
+  const dot=(lat,lng,c,tip)=>L.circleMarker([lat,lng],{radius:8,color:c,fillColor:c,fillOpacity:.9,weight:2}).addTo(rm).bindTooltip(tip);
+  dot(it.lat,it.lng,'#5fb87a',it.place);
+  const pts=[[it.lat,it.lng]];
+  if(r.guess.ll){
+    dot(r.guess.ll.lat,r.guess.ll.lng,'#d9b15e','Your guess');
+    L.polyline([[r.guess.ll.lat,r.guess.ll.lng],[it.lat,it.lng]],{color:'#d9b15e',dashArray:'6',weight:2}).addTo(rm);
+    pts.push([r.guess.ll.lat,r.guess.ll.lng]);
+  }
+  rm.fitBounds(pts,{padding:[35,35],maxZoom:5});
+  setTimeout(()=>rm.invalidateSize(),150);
   document.getElementById('next').onclick=()=>{idx++; idx<game.length?renderRound():renderFinal();};
 }
 
@@ -361,10 +396,11 @@ function renderFinal(){
   document.getElementById('copy').onclick=()=>{
     navigator.clipboard.writeText(share).then(()=>{
       document.getElementById('copy').textContent="Copied! ✓";});};
-  document.getElementById('again').onclick=()=>location.reload();
+  document.getElementById('again').onclick=()=>renderStart();
 }
 
 function buildIndexes(pool){
+  pool.sort((a,b)=>(b.sl||0)-(a.sl||0)); // fame-sorted for difficulty quartiles
   ALL_MOV=[...new Set(pool.map(p=>p.m))];
   ARTIST_POOL=[...new Set([...ARTIST_POOL, ...pool.map(p=>p.a)])].sort();
   artistMov={};
@@ -377,19 +413,38 @@ function loading(msg){
     `<div class="card"><div class="reveal final"><div class="bigscore">⏳</div><div class="hint">${msg}</div></div></div>`;
 }
 
+function renderStart(){
+  document.getElementById('progress').innerHTML='';
+  document.getElementById('stage').innerHTML=`
+    <div class="card"><div class="difs">
+    ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
+        <div class="dn">${t.label}</div>
+        <div class="dd">${t.blurb}</div>
+        <div class="dc">${tierItems(i).length} works available</div>
+      </button>`).join('')}
+    </div></div>`;
+  document.querySelectorAll('.dif').forEach(b=>b.onclick=()=>startGame(b.dataset.k));
+}
+
+function startGame(key){
+  const i=TIERS.findIndex(x=>x.key===key);
+  let arr=tierItems(i);
+  if(arr.length<ROUNDS) arr=[...arr,...shuffle(POOL.filter(p=>!arr.includes(p)))]; // widen if thin
+  game=shuffle(arr).slice(0,ROUNDS);
+  idx=0; results=[];
+  renderRound();
+}
+
 async function init(){
   loading("Summoning masterworks from Wikidata…");
   try{
-    const pool=await loadPool();
-    if(pool.length<ROUNDS) throw new Error("thin pool");
-    buildIndexes(pool);
-    game=shuffle(pool).slice(0,ROUNDS);
+    POOL=await loadPool();
+    if(POOL.length<ROUNDS) throw new Error("thin pool");
+    buildIndexes(POOL);
   }catch(e){
-    // offline / API down → fall back to the curated set
-    game=shuffle(ART).slice(0,ROUNDS);
+    POOL=ART.map(p=>({...p,sl:100})); buildIndexes(POOL); // offline → curated set as 'easy'
   }
-  idx=0; results=[];
-  renderRound();
+  renderStart();
 }
 
 init();
