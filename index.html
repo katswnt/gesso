@@ -336,11 +336,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
 <script src="data/teach-works.js"></script>
+<script src="data/hotspots.js"></script>
 <script src="data/pool.js"></script>
 <script>
 "use strict";
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
 const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
+const HOTSPOTS = window.ARTEFACTUM_HOTSPOTS || {};
 // difficulty tunes scoring leniency + how confusable the distractors are
 const DIFF={
   easy:      {distK:4500, relMov:0.70, timeMult:1.6, look:'far'},
@@ -1015,7 +1017,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span></div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -1051,6 +1053,11 @@ function renderReveal(r){
   </div>`;
   countUps();
   setupReportFlow(it,study);
+  // look-closer markers (feature-anchored) → highlight the matching cue
+  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
+    const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
+    if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
+      cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:8,attribution:'© OpenStreetMap'}).addTo(rm);

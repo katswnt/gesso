@@ -1,0 +1,1 @@
+window.ARTEFACTUM_HOTSPOTS = {};
