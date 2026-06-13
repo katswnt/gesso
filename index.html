@@ -165,6 +165,35 @@
   .navbits{display:flex;align-items:center;gap:8px;font:600 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .navbtn{appearance:none;border:0;background:transparent;color:var(--accent);font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:5px 3px;cursor:pointer}
   .navbtn:hover{text-decoration:underline;text-decoration-color:var(--accent-underline);text-underline-offset:3px}
+  .emblem{display:grid;gap:2px;grid-template-columns:repeat(2,var(--em));grid-template-rows:repeat(2,var(--em));flex:0 0 auto}
+  .emblem i{display:block;border-radius:2px}
+  .glossnav{appearance:none;border:0;background:transparent;padding:4px;cursor:pointer;display:inline-flex;align-items:center}
+  .glossnav:hover{transform:translateY(-1px)}
+  .glosswrap{padding:24px}
+  .glosshead{background:var(--surface-strong);border-bottom:1.5px solid var(--ink);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+  .glosstitle{display:flex;align-items:center;gap:10px;font:700 16px 'Archivo',sans-serif}
+  .glossmeta{font:600 11px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
+  .glossbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  .glossbar span{display:block;height:100%;background:var(--accent)}
+  .glossgrid{padding:16px 22px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .glosscard{text-align:left;background:#fff;border:1px solid var(--line);border-radius:8px;padding:15px;font-family:inherit;min-height:112px}
+  button.glosscard{cursor:pointer}
+  button.glosscard:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .glosscard.locked{background:#efece4;border:1px dashed #c7c0ae;opacity:.88}
+  .glosscard .nm{font:700 14px/1.15 'Archivo',sans-serif;margin-top:11px;color:var(--ink)}
+  .glosscard.locked .nm{color:#b3ac9a}
+  .glosscard .sub{font:500 10px/1.35 'IBM Plex Mono',monospace;color:var(--muted);margin-top:4px}
+  .glosscard.locked .sub{color:#bcb4a2}
+  .moveback{appearance:none;border:0;background:transparent;color:var(--accent);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:0}
+  .movehero{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--line)}
+  .movename{font:800 26px/1.05 'Archivo',sans-serif;letter-spacing:-.01em}
+  .movesub{margin-top:6px;font:500 12px/1.35 'IBM Plex Mono',monospace;color:var(--muted)}
+  .canonical{margin-top:14px;background:#fff;border:1px solid var(--line-card);border-radius:8px;overflow:hidden}
+  .canonical img{display:block;width:100%;max-height:280px;object-fit:contain;background:#efece4}
+  .canonical .cap{padding:11px 13px;margin:0;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
+  .glossadded{margin-top:16px;padding-top:13px;border-top:1px solid var(--study-border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .glossadded .ok{display:flex;align-items:center;gap:8px;font:600 11px 'IBM Plex Mono',monospace;color:var(--full)}
+  .glossadded button{appearance:none;border:0;background:transparent;color:var(--accent);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em;cursor:pointer;border-bottom:1px solid var(--accent-underline);padding:0 0 2px}
   .retwrap{padding:24px}
   .retcard{background:var(--surface);border:1px solid var(--line-card);border-radius:10px;overflow:hidden;box-shadow:0 14px 36px rgba(35,32,26,.08)}
   .retcap{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
@@ -235,6 +264,7 @@
     .hdinner{padding:13px 16px}.hd .accn{display:none}
     .big{font-size:34px}.herobig{font-size:38px}.dabo-lg{width:21px;height:20px}.dabo-lg::after{top:4px;left:6px;width:5px;height:5px}.year{font-size:23px}
     .hd .right{gap:9px}.navbits{gap:4px}.navbtn{font-size:10px;padding:4px 2px}.pips{display:none}
+    .glosswrap{padding:16px}.glosshead{padding:13px 16px}.glossgrid{grid-template-columns:1fr 1fr;padding:12px 14px 16px;gap:9px}.glosscard{padding:12px;min-height:104px}.glosscard .nm{font-size:12px}.movehero{padding:18px 16px;gap:14px}.movename{font-size:20px}.canonical img{max-height:220px}
     .retwrap{padding:16px}.retcap{padding:13px 16px}.streakbody{padding:22px 18px}.streakdab{width:96px;height:96px}.streakdab span{font-size:42px}.retactions{flex-direction:column}
     .statsgrid{grid-template-columns:1fr 1fr;padding:14px}.mastergrid{grid-template-columns:1fr;padding:2px 14px 14px}.archivegrid{gap:5px;padding:0 14px 14px}.dowgrid{gap:5px;padding:14px 14px 6px}.daycell{height:38px}.daycell .scorechip{font-size:0;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:2px}.legend{padding:12px 14px 16px}
   }
@@ -374,6 +404,91 @@ const RELATED_MOV={
   "Romanticism":["Neoclassicism","Realism"],
   "Neoclassicism":["Romanticism","Renaissance"],
 };
+const MOVEMENTS={
+  "Academic art":{dates:"c. 1840–1900",region:"Europe / North America",palette:["#6f4f38","#d8c3a5","#2b3550","#f2ead6"]},
+  "American Realism":{dates:"c. 1900–1950",region:"United States",palette:["#1f2a35","#8b3f2f","#d8b46a","#e7e2d6"]},
+  "Assyrian":{dates:"c. 900–600 BCE",region:"Assyria / Mesopotamia",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
+  "Baroque":{dates:"c. 1600–1750",region:"Europe",palette:["#1a120b","#7a1f1f","#c9a24b","#e0d2af"]},
+  "Calima (Ilama)":{dates:"c. 1000–1 BCE",region:"Colombia",palette:["#8f4a24","#c98a3a","#e0c58a","#2b2118"]},
+  "Cambodia":{dates:"c. 600–1400",region:"Cambodia",palette:["#6d5a36","#a98244","#d7c6a1","#2b2118"]},
+  "Central Tibet":{dates:"c. 1200–1700",region:"Tibet",palette:["#7a1f1f","#d79b32","#1f3a5f","#e8ddc3"]},
+  "China":{dates:"c. 500 BCE–1900",region:"China",palette:["#1f3a5f","#8f2f24","#d8b46a","#e8ddc3"]},
+  "Cypriot":{dates:"c. 750–300 BCE",region:"Cyprus",palette:["#c07a3a","#e0c58a","#6f6a5b","#f2ead6"]},
+  "Dutch Golden Age":{dates:"c. 1600–1680",region:"Netherlands",palette:["#2b2118","#6b4e2e","#c9a24b","#e8ddc3"]},
+  "Early Netherlandish":{dates:"c. 1420–1520",region:"Netherlands / Flanders",palette:["#20304a","#7a1f1f","#c9a24b","#e8ddc3"]},
+  "Early Renaissance":{dates:"c. 1400–1490",region:"Italy",palette:["#8f4a24","#2f5f73","#d7b56d","#e8ddc3"]},
+  "East Greek, Clazomenian":{dates:"c. 650–500 BCE",region:"Ionia / western Anatolia",palette:["#a84f2a","#1b1916","#d8b46a","#f2ead6"]},
+  "Eastern Tibet":{dates:"c. 1400–1900",region:"Eastern Tibet",palette:["#8f2f24","#d79b32","#2f5f73","#e8ddc3"]},
+  "Edo peoples":{dates:"c. 1400–1900",region:"Benin / Nigeria",palette:["#7a3e24","#d2a44f","#1b1916","#e8ddc3"]},
+  "Egypt":{dates:"c. 3000 BCE–1400",region:"Egypt",palette:["#1f5f8b","#d8b46a","#8f3a24","#e8ddc3"]},
+  "Etruscan":{dates:"c. 700–100 BCE",region:"Etruria / Italy",palette:["#8f2f24","#1b1916","#d8b46a","#e8ddc3"]},
+  "French Realism":{dates:"c. 1848–1880",region:"France",palette:["#4a4036","#8f6a3a","#c7b48a","#e7e2d6"]},
+  "German Renaissance":{dates:"c. 1450–1550",region:"Germany",palette:["#2b2118","#8f2f24","#c9a24b","#d8c3a5"]},
+  "German Romanticism":{dates:"c. 1790–1840",region:"Germany",palette:["#1f2d3a","#6f7d86","#c7b48a","#efece4"]},
+  "Gothic":{dates:"c. 1150–1400",region:"Europe",palette:["#1f3a5f","#8f2f24","#c9a24b","#e8ddc3"]},
+  "Greece / Rome":{dates:"c. 800 BCE–500",region:"Mediterranean",palette:["#1b1916","#b56a3a","#d8c3a5","#f2ead6"]},
+  "Greek, Attic":{dates:"c. 600–300 BCE",region:"Athens / Attica",palette:["#1b1916","#b34f2a","#d8b46a","#f2ead6"]},
+  "Greek, Boeotian":{dates:"c. 700–300 BCE",region:"Boeotia",palette:["#1b1916","#a84f2a","#c98a3a","#efece4"]},
+  "Greek, Laconian":{dates:"c. 650–500 BCE",region:"Laconia / Sparta",palette:["#1b1916","#8f2f24","#d8b46a","#efece4"]},
+  "Greek, Ptolemaic, Cretan":{dates:"c. 330–30 BCE",region:"Crete / Ptolemaic world",palette:["#1f3a5f","#b56a3a","#d8c3a5","#efece4"]},
+  "Greek, South Italian, Apulian":{dates:"c. 430–300 BCE",region:"Apulia / South Italy",palette:["#1b1916","#b34f2a","#d8b46a","#efece4"]},
+  "Greek, South Italian, Campanian, Teano":{dates:"c. 400–300 BCE",region:"Campania / South Italy",palette:["#1b1916","#a84f2a","#c7b48a","#efece4"]},
+  "Greek, Tarentine":{dates:"c. 500–250 BCE",region:"Taranto / South Italy",palette:["#d8c3a5","#8f4a24","#1f3a5f","#efece4"]},
+  "Helladic":{dates:"c. 3200–1050 BCE",region:"Mainland Greece",palette:["#8f4a24","#c98a3a","#d8c3a5","#1b1916"]},
+  "Hellenistic sculpture":{dates:"c. 323–31 BCE",region:"Greek Mediterranean",palette:["#f2ead6","#c7c0ae","#8a8472","#1b1916"]},
+  "High Renaissance":{dates:"c. 1490–1527",region:"Italy",palette:["#8f2f24","#1f3a5f","#c9a24b","#e8ddc3"]},
+  "Hittite":{dates:"c. 1650–1200 BCE",region:"Anatolia",palette:["#6f4e2f","#b28a4a","#d8c3a5","#2b2118"]},
+  "Impressionism":{dates:"c. 1860–1890",region:"France",palette:["#8fb3d9","#e7b6c2","#b6cf9e","#f2ead6"]},
+  "India":{dates:"c. 300 BCE–1900",region:"India",palette:["#8f2f24","#d79b32","#1f6f5b","#e8ddc3"]},
+  "Indonesia (Java)":{dates:"c. 700–1500",region:"Java / Indonesia",palette:["#5f4a2e","#9c7a3a","#d8c3a5","#1b1916"]},
+  "Iran":{dates:"c. 600 BCE–1900",region:"Iran / Persia",palette:["#1f6f8b","#c0392b","#d8b46a","#e8ddc3"]},
+  "Italian Baroque":{dates:"c. 1590–1720",region:"Italy",palette:["#1a120b","#7a1f1f","#c9a24b","#e0d2af"]},
+  "Italian Renaissance":{dates:"c. 1400–1600",region:"Italy",palette:["#7a1f1f","#1f3a5f","#c9a24b","#e8ddc3"]},
+  "Japan":{dates:"c. 700–1900",region:"Japan",palette:["#1f3a5f","#c0392b","#e8ddc3","#2b2118"]},
+  "Korea":{dates:"c. 900–1900",region:"Korea",palette:["#1f3a5f","#6f8a61","#d8c3a5","#f2ead6"]},
+  "Lambayeque (Sicán)":{dates:"c. 750–1375",region:"Peru",palette:["#c9a24b","#8f4a24","#2b2118","#e8ddc3"]},
+  "Land art":{dates:"c. 1960–1980",region:"United States",palette:["#8a8472","#c7b48a","#5f6f73","#efece4"]},
+  "Mannerism":{dates:"c. 1520–1600",region:"Italy / Europe",palette:["#6f2f6f","#8f2f24","#d8b46a","#e8ddc3"]},
+  "Minoan":{dates:"c. 3000–1100 BCE",region:"Crete",palette:["#c0392b","#1f6f8b","#d8b46a","#e8ddc3"]},
+  "Naturalism":{dates:"c. 1830–1890",region:"Europe",palette:["#4f5f3a","#8f6a3a","#c7b48a","#efece4"]},
+  "Neoclassicism":{dates:"c. 1760–1830",region:"Europe",palette:["#f2ead6","#c7c0ae","#1f3a5f","#8f2f24"]},
+  "Nepal, Kathmandu Valley":{dates:"c. 1100–1800",region:"Nepal",palette:["#8f2f24","#d79b32","#1f6f8b","#e8ddc3"]},
+  "Nigeria":{dates:"c. 1200–1900",region:"Nigeria",palette:["#7a3e24","#d2a44f","#1f3a5f","#e8ddc3"]},
+  "Old Assyrian Trading Colony":{dates:"c. 1950–1750 BCE",region:"Anatolia / Assyria",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
+  "Olmec":{dates:"c. 1500–400 BCE",region:"Mexico",palette:["#2f5f4a","#8f4a24","#1b1916","#d8c3a5"]},
+  "Orientalism":{dates:"c. 1800–1900",region:"Europe",palette:["#1f6f8b","#c98a3a","#8f2f24","#e8ddc3"]},
+  "Pakistan, Khyber-Pakhtunkhwa province, possibly Takht-i-bahi monastery, ancient region of Gandhara":{dates:"c. 100–500",region:"Gandhara / Pakistan",palette:["#6f6a5b","#b0a58f","#1f3a5f","#efece4"]},
+  "Parthian":{dates:"c. 247 BCE–224",region:"Iran / Mesopotamia",palette:["#7a3e24","#d8b46a","#1f3a5f","#e8ddc3"]},
+  "Pop art":{dates:"c. 1955–1970",region:"United States / Britain",palette:["#d4352a","#2230b8","#e8c33a","#f2ead6"]},
+  "Post-Impressionism":{dates:"c. 1885–1910",region:"France",palette:["#1f6f8b","#e8b13a","#2f8f5b","#c0392b"]},
+  "Pre-Raphaelite":{dates:"c. 1848–1900",region:"Britain",palette:["#1f6f5b","#8f2f24","#c9a24b","#e8ddc3"]},
+  "Pre-romanticism":{dates:"c. 1760–1790",region:"Europe / North America",palette:["#1f2d3a","#7a1f1f","#c7b48a","#efece4"]},
+  "Regionalism":{dates:"c. 1920–1945",region:"United States",palette:["#6f4e2f","#c98a3a","#5f7d55","#efece4"]},
+  "Renaissance":{dates:"c. 1400–1600",region:"Europe",palette:["#7a1f1f","#1f3a5f","#c9a24b","#e8ddc3"]},
+  "Rococo":{dates:"c. 1715–1780",region:"France / Europe",palette:["#e7b6c2","#8fb3d9","#d8b46a","#f2ead6"]},
+  "Roman":{dates:"c. 500 BCE–500",region:"Roman Empire",palette:["#8f2f24","#c98a3a","#1b1916","#e8ddc3"]},
+  "Roman, Pompeian":{dates:"c. 100 BCE–79",region:"Pompeii / Roman Italy",palette:["#7a1f1f","#1b1916","#d8b46a","#e8ddc3"]},
+  "Roman, Rhenish":{dates:"c. 100–300",region:"Roman Rhineland",palette:["#8f4a24","#1b1916","#d8c3a5","#efece4"]},
+  "Romanticism":{dates:"c. 1780–1850",region:"Europe",palette:["#1f2d3a","#7a1f1f","#d8b46a","#e8ddc3"]},
+  "Romkun, Breri, or Igana people":{dates:"c. 1700–1900",region:"New Guinea",palette:["#7a3e24","#d8b46a","#1b1916","#e8ddc3"]},
+  "Suprematism":{dates:"c. 1915–1930",region:"Russia",palette:["#1b1916","#d4352a","#f2ead6","#8a8472"]},
+  "Surrealism":{dates:"c. 1924–1966",region:"Europe",palette:["#1f3a5f","#d8b46a","#c0392b","#e8ddc3"]},
+  "Syria":{dates:"c. 600–1400",region:"Syria",palette:["#1f6f8b","#8f2f24","#d8b46a","#e8ddc3"]},
+  "Teotihuacan":{dates:"c. 100 BCE–750",region:"Central Mexico",palette:["#2f5f4a","#8f4a24","#d8c3a5","#1b1916"]},
+  "Thailand":{dates:"c. 1200–1900",region:"Thailand",palette:["#c0392b","#d79b32","#1f6f8b","#e8ddc3"]},
+  "Tibet":{dates:"c. 1000–1900",region:"Tibet",palette:["#8f2f24","#d79b32","#1f3a5f","#e8ddc3"]},
+  "Tolita-Tumaco":{dates:"c. 600 BCE–400",region:"Ecuador / Colombia",palette:["#8f4a24","#c98a3a","#2b2118","#e8ddc3"]},
+  "Tonalism":{dates:"c. 1880–1915",region:"United States / Europe",palette:["#5f6661","#8a8472","#b0a58f","#efece4"]},
+  "Torres Strait Islander":{dates:"c. 1800–1900",region:"Torres Strait",palette:["#1b1916","#d8b46a","#c7c0ae","#e8ddc3"]},
+  "Venetian school":{dates:"c. 1500–1600",region:"Venice",palette:["#7a1f1f","#1f3a5f","#c9a24b","#e8ddc3"]},
+  "Vietnam":{dates:"c. 1000–1800",region:"Vietnam",palette:["#1f6f8b","#6f8a61","#d8b46a","#e8ddc3"]},
+  "Western India, Rajasthan, Mewar":{dates:"c. 1600–1900",region:"Mewar / Rajasthan",palette:["#c0392b","#d79b32","#1f6f8b","#e8ddc3"]}
+};
+const LOCKED_PALETTE=["#d6cfbe","#ddd6c6","#ddd6c6","#d6cfbe"];
+const GLOSSARY_EMBLEM=["#2230b8","#cf9f3a","#2f8f5b","#1b1916"];
+const CUE_ALIASES={
+  "Assyrian":"Iran","Calima (Ilama)":"Peru","Central Tibet":"Nepal / Tibet","Cypriot":"Greece","East Greek, Clazomenian":"Greece","Eastern Tibet":"Nepal / Tibet","Edo peoples":"Nigeria","Etruscan":"Italy (Rome)","Greece / Rome":"Greece","Greek, Attic":"Greece","Greek, Boeotian":"Greece","Greek, Laconian":"Greece","Greek, Ptolemaic, Cretan":"Greece","Greek, South Italian, Apulian":"Greece","Greek, South Italian, Campanian, Teano":"Greece","Greek, Tarentine":"Greece","Helladic":"Greece","Hittite":"Iran","Indonesia (Java)":"India","Lambayeque (Sicán)":"Peru","Minoan":"Greece","Nepal, Kathmandu Valley":"Nepal / Tibet","Old Assyrian Trading Colony":"Iran","Olmec":"Mexico","Pakistan, Khyber-Pakhtunkhwa province, possibly Takht-i-bahi monastery, ancient region of Gandhara":"India","Parthian":"Iran","Roman":"Italy (Rome)","Roman, Pompeian":"Italy (Rome)","Roman, Rhenish":"Italy (Rome)","Romkun, Breri, or Igana people":"Nigeria","Syria":"Iran","Teotihuacan":"Mexico","Thailand":"India","Tibet":"Nepal / Tibet","Tolita-Tumaco":"Peru","Torres Strait Islander":"Nigeria","Vietnam":"China","Western India, Rajasthan, Mewar":"India"
+};
 function catLabel(c,it){
   if(c==='when')return "When made"; if(c==='where')return "Where made"; if(c==='medium')return "Medium";
   if(c==='artist')return "Artist"; if(c==='style')return it&&it.styleKind==='culture'?"Culture":"Movement"; return c;
@@ -393,7 +508,7 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
-let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
+let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
@@ -406,6 +521,7 @@ function buildIndexes(){
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
+  MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra])].sort();
   artistStyle={}; styleRegion={};
@@ -431,6 +547,60 @@ function masteryLine(){
   return s;
 }
 
+// ---------- movement glossary ----------
+function loadGlossary(){try{const g=JSON.parse(localStorage.getItem("gesso.glossary"))||{};return {met:g.met&&typeof g.met==='object'?g.met:{}}}catch{return{met:{}}}}
+function saveGlossary(g){try{localStorage.setItem("gesso.glossary",JSON.stringify(g))}catch{}}
+function movementMeta(name){return MOVEMENTS[name]||{dates:"c. unknown",region:styleRegion[name]||"Unknown",palette:GLOSSARY_EMBLEM};}
+function emblemHTML(palette,size,locked){
+  const colors=locked?LOCKED_PALETTE:(palette||GLOSSARY_EMBLEM);
+  return `<span class="emblem" style="--em:${size}px${size>=30?';gap:3px':''}">${colors.map(c=>`<i style="background:${c}"></i>`).join('')}</span>`;
+}
+function maskName(name){return String(name||"").replace(/[^\s]/g,"?");}
+function movementCues(name){
+  const style=CUES.style&&CUES.style[name], culture=CUES.culture&&CUES.culture[name], alias=CUE_ALIASES[name]&&CUES.culture&&CUES.culture[CUE_ALIASES[name]];
+  return (style&&style.cues)||(culture&&culture.cues)||(alias&&alias.cues)||[];
+}
+function canonicalWork(name){return POOL.filter(p=>p.style===name).sort((a,b)=>(b.fame||0)-(a.fame||0))[0]||null;}
+function bumpGlossary(name){
+  if(!name)return loadGlossary();
+  const g=loadGlossary(), today=runDate||todayStr();
+  g.met[name]=g.met[name]||{firstSeen:today,count:0};
+  if(!g.met[name].firstSeen)g.met[name].firstSeen=today;
+  g.met[name].count=(+g.met[name].count||0)+1;
+  saveGlossary(g); return g;
+}
+function glossaryTotal(){return MOVEMENT_NAMES.length;}
+function renderGlossary(){
+  clearTimers();
+  const g=loadGlossary(), total=glossaryTotal(), metCount=MOVEMENT_NAMES.filter(n=>g.met[n]).length, pct=total?metCount/total*100:0;
+  const cards=MOVEMENT_NAMES.map(name=>{
+    const meta=movementMeta(name), met=g.met[name], unlocked=!!met, em=emblemHTML(meta.palette,15,!unlocked);
+    const body=`${em}<div class="nm">${unlocked?esc(name):esc(maskName(name))}</div><div class="sub">${unlocked?`${esc(meta.dates)} &middot; ${esc(meta.region)}`:'Not yet met'}</div>`;
+    return unlocked?`<button type="button" class="glosscard" data-movement="${esc(name)}">${body}</button>`:`<div class="glosscard locked" aria-label="Locked glossary card">${body}</div>`;
+  }).join('');
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
+    <div class="glosshead"><div class="glosstitle">${emblemHTML(GLOSSARY_EMBLEM,9,false)}<span>Glossary</span></div><div class="glossmeta">${metCount} / ${total} met</div></div>
+    <div style="padding:16px 22px 0"><div class="glossbar"><span style="width:${pct.toFixed(1)}%"></span></div></div>
+    <div class="glossgrid">${cards}</div>
+  </div>${ATTRIB}</div></div>`;
+}
+function renderMovement(name){
+  clearTimers();
+  const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
+  const count=met?+met.count||0:0, metLine=met&&met.firstSeen?` &middot; <span style="color:var(--full)">met ${esc(met.firstSeen)}</span>`:'';
+  const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div class="mono" style="font-size:12px;color:var(--muted)">No eye cues available yet.</div>`;
+  const cap=work?`${work.artist||'Unknown'} &middot; ${work.title} &middot; ${fmtYear(work.y)}`:'No canonical work available';
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
+    <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">Movement</span></div>
+    <div class="movehero">${emblemHTML(meta.palette,30,false)}<div><div class="movename">${esc(name)}</div><div class="movesub">${esc(meta.dates)} &middot; ${esc(meta.region)}${metLine}</div></div></div>
+    <div style="padding:20px 24px 8px"><div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}</div>
+    <div style="padding:18px 24px 24px"><div class="kick" style="color:var(--muted);margin-bottom:11px">Canonical example</div>
+      <div class="canonical">${work?`<img class="art" src="${esc(work.img)}" alt="${esc(work.title)}" onerror="this.style.display='none'">`:''}<div class="cap">${esc(cap)}</div></div>
+      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="mono" style="font-size:11px;color:var(--muted)">You've met <strong style="color:var(--ink)">${count}</strong> works in this school</span><span class="mono" style="font-size:11px;color:var(--accent);font-weight:600">See them &rarr;</span></div>
+    </div>
+  </div>${ATTRIB}</div></div>`;
+}
+
 // ---------- game state ----------
 let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marker;
 let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archiveMonth=null;
@@ -438,7 +608,7 @@ let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archive
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn" data-route="streak">streak ·</button><button class="navbtn" data-route="archive">archive ▦</button><button class="navbtn" data-route="stats">stats ◔</button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="glossnav" data-route="glossary" title="Glossary" aria-label="Glossary">${emblemHTML(GLOSSARY_EMBLEM,9,false)}</button><button class="navbtn" data-route="streak">streak ·</button><button class="navbtn" data-route="archive">archive ▦</button><button class="navbtn" data-route="stats">stats ◔</button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
@@ -458,8 +628,9 @@ function saveStreak(s){try{localStorage.setItem("artefactum.streak",JSON.stringi
 function recordDailyScore(dateStr,score){const today=todayStr();if(dateStr!==today)return loadStreak();const s=loadStreak(),hadToday=s.playedDates.includes(today)||s.lastPlayed===today,prev=s.lastPlayed;if(!hadToday){s.current=prev===addDays(today,-1)?s.current+1:1;s.longest=Math.max(s.longest,s.current);s.lastPlayed=today;s.playedDates=[...new Set([...s.playedDates,today])].sort();}s.scores[today]=Math.max(+s.scores[today]||0,score);saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name){if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else renderStart();}
+function route(name){if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else renderStart();}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();renderMovement(b.dataset.movement);}});
 function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}}
 
 // ---------- START ----------
@@ -681,6 +852,9 @@ function studyFor(it){
 function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
 function renderReveal(r){
   const it=r.it;
+  const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
+  if(glossName)bumpGlossary(glossName);
+  const glossMeta=glossName?movementMeta(glossName):null;
   const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
     return `<div class="swatch"><div class="sq" style="background:${swatchColor(f)}"></div><div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
     + (r.cells.artist?`<div class="swatch"><div class="sq" style="background:${swatchColor(r.cells.artist.pts/MAX_CAT)}"></div><div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
@@ -736,6 +910,7 @@ function renderReveal(r){
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       <div class="disclose">Study notes are AI-generated and fact-checked.</div>
       <a class="telllink reportlink" href="${reportURL}" target="_blank" rel="noopener">Report an error &#8599;</a>
+      ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>+ Added to glossary</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
     <div style="padding:0 24px 24px"><button class="btn" id="next">${idx<ROUNDS-1?'Next masterwork →':'See final score →'}</button>${ATTRIB}</div>
   </div>`;
