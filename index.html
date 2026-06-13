@@ -167,8 +167,29 @@ const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
-const EPOCHS=[["Antiquity",-3000,500],["Medieval",500,1400],["Early Modern",1400,1800],["Modern",1800,1945],["Contemporary",1945,2026]];
-function epochName(y){for(const[n,a,b]of EPOCHS)if(y<b)return n;return "Contemporary";}
+// Region-aware period schemes — the slider tag reflects the work's own culture's periodization
+const SCHEMES={
+  western:[["Antiquity",500],["Medieval",1400],["Renaissance",1600],["Baroque",1750],["Enlightenment",1800],["19th c.",1900],["Modern",1945],["Contemporary",3000]],
+  china:[["Ancient",-221],["Han",220],["Six Dynasties",589],["Sui–Tang",907],["Song",1279],["Yuan",1368],["Ming",1644],["Qing",1912],["Modern",3000]],
+  japan:[["Ancient",710],["Nara",794],["Heian",1185],["Kamakura",1333],["Muromachi",1573],["Momoyama",1615],["Edo",1868],["Meiji+",3000]],
+  india:[["Ancient",320],["Gupta",606],["Medieval",1206],["Sultanate",1526],["Mughal",1757],["Colonial",1947],["Modern",3000]],
+  persia:[["Ancient",651],["Early Islamic",1256],["Ilkhanid–Timurid",1501],["Safavid",1736],["Qajar",1925],["Modern",3000]],
+  egypt:[["Early Dynastic",-2686],["Old Kingdom",-2055],["Middle Kingdom",-1550],["New Kingdom",-1069],["Late Period",-332],["Greco-Roman",641],["Islamic",3000]],
+  classical:[["Archaic",-480],["Classical Greek",-323],["Hellenistic",-31],["Roman Imperial",476],["Late Antique",3000]],
+  neutral:[["Ancient",500],["Medieval",1400],["Early Modern",1800],["Modern",1945],["Contemporary",3000]],
+};
+function schemeFor(it){
+  const t=((it.place||"")+" "+(it.style||"")+" "+(it.region||"")).toLowerCase();
+  if(/japan|edo|ukiyo/.test(t))return 'japan';
+  if(/china|chinese/.test(t))return 'china';
+  if(/india|mughal|rajput|deccan|nepal|tibet/.test(t))return 'india';
+  if(/iran|persia|islam|ottoman|turkey|safavid|qajar|syria/.test(t))return 'persia';
+  if(/egypt/.test(t))return 'egypt';
+  if(/greece|rome|roman|greek/.test(t))return 'classical';
+  if(it.region==='Europe'||it.region==='North America')return 'western';
+  return 'neutral';
+}
+function periodName(it,y){const sc=SCHEMES[schemeFor(it)];for(const[n,end]of sc)if(y<end)return n;return sc[sc.length-1][0];}
 function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
@@ -287,7 +308,7 @@ function startGame(key){
 // ---------- PLAY ----------
 function renderRound(){
   const it=game[idx];
-  guess={year:1700, ll:null, medium:null, style:null, artist:"", artistPicked:false, hints:new Set()};
+  guess={year:1700, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
   let n=1; const fields=[];
   fields.push({k:'when', html:`
@@ -332,7 +353,8 @@ function renderRound(){
   </div>`;
   // wire slider
   const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
-  yr.oninput=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${epochName(+yr.value).toUpperCase()} ]`;};
+  yr.oninput=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${periodName(it,+yr.value).toUpperCase()} ]`;};
+  yr.oninput();
   // pills
   document.querySelectorAll('[data-pills]').forEach(g=>{const kind=g.dataset.pills;
     g.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{
@@ -360,8 +382,8 @@ function setupAutocomplete(){
     list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${esc(a)}</div>`).join('');
     list.style.display='block';
     list.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();pick(+el.dataset.i);});};
-  const pick=i=>{inp.value=items[i];guess.artist=items[i];guess.artistPicked=true;close();inp.focus();};
-  inp.oninput=()=>{guess.artist=inp.value;guess.artistPicked=false;active=-1;render(inp.value);};
+  const pick=i=>{inp.value=items[i];guess.artist=items[i];close();inp.focus();};
+  inp.oninput=()=>{guess.artist=inp.value;active=-1;render(inp.value);};
   inp.onkeydown=e=>{if(list.style.display==='none')return;
     if(e.key==='ArrowDown'){active=Math.min(active+1,items.length-1);render(inp.value);e.preventDefault();}
     else if(e.key==='ArrowUp'){active=Math.max(active-1,0);render(inp.value);e.preventDefault();}
@@ -398,7 +420,7 @@ function score(){
   // when
   const dy=Math.abs(guess.year-it.y), ts=timeScore(dy);
   cells.when={pts:ts.pts, bull:!!ts.bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
-    note:ts.bull?"right to the decade":epochName(guess.year)===epochName(it.y)?"same epoch":`${dy} yrs off`};
+    note:ts.bull?"right to the decade":periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   // where
   let dist=null,sp=0; if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng); sp=Math.round(MAX_CAT*Math.exp(-dist/2500));}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place, note:dist==null?"no pin dropped":`${Math.round(dist)} km off`};
