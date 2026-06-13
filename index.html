@@ -321,13 +321,9 @@ const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
 function buildIndexes(){
   for(const p of POOL){ if(p.styleKind==='movement'&&CANON_STYLE[p.style]) p.style=CANON_STYLE[p.style]; }
-  // region-stratified recognizability: rank each work WITHIN its region, then order globally by
-  // that percentile so every difficulty tier is a mix of regions (not Western=easy, rest=impossible)
-  const byRegion={};
-  for(const p of POOL){ (byRegion[p.region]=byRegion[p.region]||[]).push(p); }
-  for(const r in byRegion){ const g=byRegion[r].sort((a,b)=>(a.fame||0)-(b.fame||0)); const n=g.length;
-    g.forEach((p,i)=>p._rank = n>1 ? i/(n-1) : 0.5); }
-  POOL.sort((a,b)=>(b._rank-a._rank)||((b.fame||0)-(a.fame||0)));
+  // difficulty = real recognizability: global fame quartiles. Easy = what people actually recognize,
+  // which is canon-skewed toward the West — surfaced as the teaching note on the start screen.
+  POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
   MINY=Math.min(...POOL.map(p=>p.y));
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
@@ -379,6 +375,7 @@ function regionBars(){
 }
 function renderStart(){
   const b=regionBars();
+  const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
@@ -392,8 +389,8 @@ function renderStart(){
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
     </div>
-    <div class="collnote"><div class="h">About the collection</div>
-      <p>These works are drawn from <strong>Wikidata</strong> and <strong>The Met's open collection</strong>. Even reaching widely, the pool skews <strong>${b.europe}% European</strong> — a direct fingerprint of how museums, archivists and canon-makers have historically prioritized Western art. What's easy to find here is itself a lesson.</p>
+    <div class="collnote"><div class="h">Notice what "Easy" is</div>
+      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool (Wikidata + The Met's open collection) is ${b.europe}% European:</p>
       <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
     </div>
     ${ATTRIB}
