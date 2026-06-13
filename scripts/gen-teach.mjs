@@ -19,12 +19,13 @@ function save(){ writeFileSync(OUT, "window.ARTEFACTUM_CUES=window.ARTEFACTUM_CU
 for(let i=0;i<todo.length;i+=BATCH){
   const batch=todo.slice(i,i+BATCH);
   const list=batch.map(p=>`id=${JSON.stringify(p.id)} | "${p.title}" | ${p.artist||"anonymous"} | ${fy(p.y)} | ${p.place||p.region} | school: ${p.style||"—"} | medium: ${p.medium||"—"}`).join("\n");
-  const prompt=`You are an art historian writing concise "teach me" notes for an art-guessing game that teaches people to place works by eye.
+  const prompt=`You are an art historian writing "teach me" notes for an art-guessing game. The whole point is to teach a player HOW THEY WOULD KNOW a work's date, place, school, medium, and artist by LOOKING — diagnostic reasoning, not description.
 For EACH work below return an item:
 - id: copy the id string exactly.
-- why: ONE sentence telling the player how to PLACE this work — name a concrete period/era, the region, and the school or medium, and the single biggest giveaway.
-- cues: EXACTLY 3 short, concrete visual tells a viewer could actually spot (palette, technique, motif, composition, support).
-Rules: Be art-history accurate. The metadata given is ground truth. If you are unsure of a work-specific fact, stay at the level of style/region/medium generalization — do NOT invent signatures, anecdotes, or attributions. No markdown, no prose outside the JSON.
+- why: ONE sentence that PLACES the work — concrete era + region + school/medium + the single biggest visual giveaway.
+- cues: EXACTLY 4 cues. Each cue must connect SOMETHING YOU CAN SEE to WHAT IT TELLS YOU, in the form "<visible feature> → <what that signals>". Across the 4 cues, cover DIFFERENT axes so the player learns to reason about each: (1) WHEN — a feature that dates it (clothing/fashion, technology, style phase); (2) WHERE — a feature that locates the region/culture; (3) SCHOOL/MOVEMENT — a feature diagnostic of the movement or tradition; (4) MEDIUM or ARTIST'S HAND — what the surface/technique reveals about the medium, and if the artist is known and distinctive, the tell-tale of their hand.
+Example cue style: "fluid, wet-in-wet brushwork and tonal restraint → a Paris-trained hand, characteristic of Sargent" — NOT "fluid brushwork".
+Rules: Be art-history accurate; the metadata is ground truth. If a specific is uncertain, reason at the style/region/medium level rather than inventing facts. Keep each cue to one tight clause before and after the arrow. No markdown, no prose outside the JSON.
 Works:
 ${list}`;
   const r=spawnSync("codex",["exec","-s","read-only","--ephemeral","--skip-git-repo-check","--color","never","--output-schema",SCHEMA,"-"],
@@ -34,7 +35,7 @@ ${list}`;
   if(a>=0&&b>a){ try{ js=JSON.parse(so.slice(a,b+1)); }catch(e){} }
   if(!js||!Array.isArray(js.items)){ console.error(`batch @${i} parse FAIL (will retry on rerun)`); continue; }
   let added=0;
-  for(const it of js.items){ if(it&&it.id&&it.why&&Array.isArray(it.cues)){ out[it.id]={why:it.why,cues:it.cues.slice(0,3)}; added++; } }
+  for(const it of js.items){ if(it&&it.id&&it.why&&Array.isArray(it.cues)){ out[it.id]={why:it.why,cues:it.cues.slice(0,4)}; added++; } }
   save();
   console.error(`batch ${Math.floor(i/BATCH)+1}/${Math.ceil(todo.length/BATCH)}: +${added}, total ${Object.keys(out).length}`);
 }
