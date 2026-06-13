@@ -4,537 +4,571 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Artefactum — the daily art-guessing game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root{
-    --bg:#0e0d0b; --panel:#17150f; --panel2:#1f1c14; --ink:#f4ede0; --muted:#a99f8a;
-    --line:#2e2a1f; --gold:#d9b15e; --green:#5fb87a; --yellow:#e3c45c; --red:#c8654d;
-    --accent:#d9b15e;
+    --bg:#e9e7e0; --surface:#f6f4ee; --surface-strong:#edeae0; --ink:#1b1916; --muted:#8a8472;
+    --faint:#a39d8c; --ink-soft:#3a362d; --line:#e3ded1; --line-card:#ddd8ca; --accent:#2230b8;
+    --accent-underline:#b0b5e0; --study-bg:#eceffb; --study-border:#d3d8ef;
+    --full:#2f8f5b; --partial:#cf9f3a; --miss:#c14b3a; --track:#dcd6c6;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1b1810,#0e0d0b);
-    color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;}
-  .wrap{max-width:920px;margin:0 auto;padding:24px 18px 80px}
-  header{text-align:center;margin-bottom:14px}
-  h1{font-size:34px;letter-spacing:.06em;margin:.2em 0;color:var(--gold)}
-  h1 span{font-style:italic;color:var(--ink)}
-  .sub{color:var(--muted);font-size:15px;margin-top:-4px}
-  .progress{display:flex;gap:6px;justify-content:center;margin:14px 0}
-  .pip{width:26px;height:6px;border-radius:3px;background:var(--line)}
-  .pip.done{background:var(--gold)}
-  .pip.cur{background:var(--ink)}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
-    box-shadow:0 18px 50px rgba(0,0,0,.45)}
-  .art{width:100%;max-height:46vh;object-fit:contain;background:#000;display:block;cursor:zoom-in}
-  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:5000;display:flex;
-    align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Archivo',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .leaflet-container{background:#dfe2e8;font-family:inherit}
+  .leaflet-control-attribution{display:none}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 70px}
+  .card{border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--line-card);
+    box-shadow:0 30px 70px rgba(35,32,26,.16)}
+  /* header */
+  .hd{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;
+    border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
+  .hd .brand{display:flex;align-items:baseline;gap:13px}
+  .wordmark{font:700 19px 'Archivo';letter-spacing:-.01em}
+  .accn{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
+  .hd .right{display:flex;align-items:center;gap:18px}
+  .pips{display:flex;gap:5px}
+  .pip{width:22px;height:5px;border-radius:2px;background:var(--line-card)}
+  .pip.done{background:var(--accent)} .pip.cur{background:var(--ink)}
+  .stamp{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--accent);
+    border:1.5px solid var(--accent);padding:4px 10px;border-radius:3px;transform:rotate(-2deg);display:inline-block;text-transform:uppercase}
+  /* generic */
+  .kick{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .fieldlabel{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .fieldlabel .ix{font:600 10px 'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:.1em}
+  .fieldlabel .nm{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .fieldlabel .rule{flex:1;height:1px;background:var(--line)}
+  .fieldlabel .hintrule{font:10px 'IBM Plex Mono',monospace;color:var(--faint)}
+  .plate{background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px;box-shadow:0 10px 26px rgba(35,32,26,.1)}
+  .plate img{display:block;width:100%;border-radius:1px;cursor:zoom-in}
+  .cap{display:flex;justify-content:space-between;margin-top:10px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
+  .btn{width:100%;padding:15px;border:none;border-radius:5px;background:var(--accent);color:#fff;
+    font:700 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+  .btn:hover{filter:brightness(1.08)}
+  .btn2{background:transparent;border:1.5px solid var(--accent);color:var(--accent);
+    font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border-radius:4px;cursor:pointer}
+  .btn2:disabled{opacity:.4;cursor:default}
+  .attrib{text-align:center;margin-top:15px;font:11px 'IBM Plex Mono',monospace;color:var(--faint)}
+  .attrib a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-underline)}
+  .year{font:700 27px 'Archivo';letter-spacing:-.01em}
+  .eratag{font:500 12px 'IBM Plex Mono',monospace;color:var(--muted)}
+  input[type=range]{width:100%;accent-color:var(--accent);background:var(--track);cursor:pointer;
+    -webkit-appearance:none;appearance:none;height:4px;border-radius:3px;outline:none}
+  .minmax{display:flex;justify-content:space-between;margin-top:6px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)}
+  .pills{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{background:#fff;color:var(--ink);border:1px solid var(--line-card);padding:8px 13px;border-radius:4px;
+    cursor:pointer;font:500 12px 'IBM Plex Mono',monospace}
+  .pill.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .pill.ruledout{opacity:.3;text-decoration:line-through;pointer-events:none}
+  input[type=text]{width:100%;padding:11px 13px;background:#fff;border:1px solid var(--line-card);
+    border-radius:4px;color:var(--ink);font:13px 'IBM Plex Mono',monospace;outline:none}
+  input[type=text]:focus{border-color:var(--accent)}
+  .ac{position:relative}
+  .ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:1000;background:#fff;
+    border:1px solid var(--line-card);border-radius:4px;overflow:hidden}
+  .ac-item{padding:9px 13px;color:var(--ink);font:12px 'IBM Plex Mono',monospace;cursor:pointer;border-top:1px solid #eee9dc}
+  .ac-item:first-child{border-top:none}
+  .ac-item.active,.ac-item:hover{background:var(--accent);color:#fff}
+  .hinttext{animation:afFade .3s ease;margin-top:11px;font:13px/1.5 'IBM Plex Mono',monospace;
+    color:#6f6a5b;border-left:2px solid var(--accent);padding-left:13px}
+  .hinttext div{padding:2px 0}
+  /* reveal */
+  .banner{padding:22px 24px;background:linear-gradient(180deg,#eceffb,#f6f4ee);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .big{font:800 42px 'Archivo';letter-spacing:-.02em}
+  .swatchrow{display:flex;gap:11px}
+  .swatch{text-align:center}
+  .swatch .sq{width:36px;height:36px;border-radius:8px}
+  .swatch .lb{font:600 8px 'IBM Plex Mono',monospace;letter-spacing:.05em;color:var(--faint);margin-top:5px}
+  .revealgrid{padding:24px;display:grid;grid-template-columns:.92fr 1.08fr;gap:26px;border-bottom:1px solid var(--line)}
+  .filed{position:absolute;top:18px;right:18px;font:700 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;
+    color:#fff;background:var(--accent);padding:5px 9px;border-radius:3px;transform:rotate(4deg)}
+  .worktitle{font:700 19px/1.15 'Archivo';letter-spacing:-.01em;margin-top:14px}
+  .metarow{display:flex;gap:10px}
+  .metarow .k{flex:0 0 62px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--accent)}
+  .metarow .v{font:13px 'IBM Plex Mono',monospace;color:var(--ink)}
+  .telllink{display:inline-block;margin-top:16px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-underline);padding-bottom:2px}
+  .scrow{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .scrow:last-child{border-bottom:none}
+  .scrow .sq{width:24px;height:24px;border-radius:5px;flex:0 0 auto}
+  .scrow .mid{flex:1;min-width:0}
+  .scrow .t1{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+  .scrow .t2{font:11px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:2px}
+  .scrow .pts{text-align:right;flex:0 0 auto}
+  .scrow .pts .n{font:700 17px 'Archivo';color:var(--ink)}
+  .scrow .pts .d{font:9px 'IBM Plex Mono',monospace;color:var(--faint)}
+  .study{margin:24px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:22px}
+  .study .why{font:500 18px/1.42 'Archivo';color:var(--ink);max-width:600px;margin:13px 0 20px}
+  .cue{display:flex;gap:12px;align-items:flex-start;padding:5px 0}
+  .cue .num{flex:0 0 16px;font:700 13px 'Archivo';color:var(--accent)}
+  .cue .tx{font:13px/1.45 'IBM Plex Mono',monospace;color:var(--ink-soft)}
+  .mastery{margin-top:20px;padding-top:16px;border-top:1px solid var(--study-border);
+    display:flex;align-items:center;gap:13px;flex-wrap:wrap;font:12px 'IBM Plex Mono',monospace;color:var(--ink)}
+  .weak{color:var(--miss)}
+  /* start */
+  .hero{padding:30px 24px 6px;text-align:center}
+  .hero .big2{font:800 40px 'Archivo';letter-spacing:-.02em}
+  .hero .tag{font:500 12px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+  .difs{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:22px 24px}
+  .dif{text-align:left;background:var(--surface);border:1px solid var(--line-card);border-radius:8px;padding:18px;cursor:pointer;transition:.12s;font-family:inherit}
+  .dif:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .dif .tier{font:600 10px 'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:.1em}
+  .dif .nm{font:700 20px 'Archivo';margin:5px 0 4px}
+  .dif .bl{font:12px 'IBM Plex Mono',monospace;color:var(--muted)}
+  .dif .ct{font:11px 'IBM Plex Mono',monospace;color:var(--accent);margin-top:9px}
+  .collnote{margin:4px 24px 24px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+  .collnote .h{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  .collnote p{margin:0;font:12px/1.6 'IBM Plex Mono',monospace;color:var(--ink-soft)}
+  .bars{display:flex;height:8px;border-radius:3px;overflow:hidden;margin:10px 0 8px}
+  .bars span{display:block}
+  .barkey{display:flex;flex-wrap:wrap;gap:10px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)}
+  .barkey i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+  /* results */
+  .matrix{padding:6px 24px 4px;overflow-x:auto}
+  .matrix table{border-collapse:collapse;width:100%}
+  .matrix th{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--faint);padding:6px 4px;text-transform:uppercase}
+  .matrix td{padding:4px}
+  .matrix .rl{font:11px 'IBM Plex Mono',monospace;color:var(--muted);text-align:left;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msq{width:26px;height:26px;border-radius:5px;margin:0 auto}
+  .sharebox{font-family:'IBM Plex Mono',monospace;background:#fff;border:1px solid var(--line-card);
+    border-radius:6px;padding:14px;white-space:pre;line-height:1.5;font-size:14px;overflow-x:auto}
+  /* zoom */
+  .lightbox{position:fixed;inset:0;background:rgba(20,18,14,.94);z-index:5000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
   .lightbox img{max-width:94vw;max-height:94vh;cursor:zoom-in;will-change:transform;user-select:none}
   .lb-close{position:fixed;top:14px;right:20px;background:none;border:none;color:#fff;font-size:30px;cursor:pointer;line-height:1}
-  .lb-hint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#cfc6b4;font-size:13px;pointer-events:none}
-  .body{padding:18px}
-  .q{font-weight:600;letter-spacing:.02em;margin:2px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
-  #map{height:230px;border-radius:10px;border:1px solid var(--line)}
-  .yearbox{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-  .yearval{font-size:24px;color:var(--ink)}
-  input[type=range]{width:100%;accent-color:var(--gold)}
-  .movs{display:flex;flex-wrap:wrap;gap:8px}
-  .mov{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:8px 12px;
-    border-radius:20px;cursor:pointer;font-family:inherit;font-size:14px}
-  .mov.sel{background:var(--gold);color:#1a160c;border-color:var(--gold)}
-  input[type=text]{width:100%;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:8px;color:var(--ink);font-family:inherit;font-size:15px}
-  .ac{position:relative}
-  .ac-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:1000;background:var(--panel2);
-    border:1px solid var(--line);border-radius:8px;max-height:190px;overflow:auto;box-shadow:0 12px 30px rgba(0,0,0,.5)}
-  .ac-item{padding:9px 12px;cursor:pointer;font-size:14px}
-  .ac-item:hover,.ac-item.active{background:var(--gold);color:#1a160c}
-  .erares{color:var(--gold);font-style:italic;font-size:13px;margin-top:2px}
-  .difs{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
-  @media(max-width:680px){.difs{grid-template-columns:1fr}}
-  .dif{text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
-    padding:16px 18px;cursor:pointer;color:var(--ink);font-family:inherit;transition:.12s}
-  .dif:hover{border-color:var(--gold);transform:translateY(-2px)}
-  .dif .dn{font-size:20px;color:var(--gold);margin-bottom:3px}
-  .dif .dd{color:var(--muted);font-size:13px}
-  .dif .dc{color:var(--muted);font-size:12px;margin-top:8px;font-style:italic}
-  #revmap{height:200px;border-radius:10px;border:1px solid var(--line);margin:6px 0 4px}
-  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:8px}
-  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
-  .hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-  .hintbtn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:7px 12px;
-    border-radius:20px;cursor:pointer;font-family:inherit;font-size:13px}
-  .hintbtn:hover:not(:disabled){background:var(--gold);color:#1a160c}
-  .hintbtn:disabled{opacity:.4;cursor:default}
-  .hintout{color:var(--ink);font-size:13px;margin-top:8px;line-height:1.7}
-  .hintout div{padding:4px 0;border-bottom:1px dashed var(--line)}
-  .btn{display:block;width:100%;margin-top:18px;padding:13px;border:none;border-radius:10px;
-    background:var(--gold);color:#1a160c;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;letter-spacing:.03em}
-  .btn:hover{filter:brightness(1.06)}
-  .btn.ghost{background:transparent;border:1px solid var(--gold);color:var(--gold)}
-  .reveal{padding:18px}
-  .reveal h2{margin:.1em 0;font-size:22px}
-  .reveal .meta{color:var(--muted);font-style:italic;margin-bottom:12px}
-  .scoreline{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line)}
-  .scoreline .em{font-size:18px}
-  .scoreline .pts{color:var(--gold)}
-  .total{text-align:center;font-size:20px;margin:12px 0;color:var(--gold)}
-  .final{text-align:center}
-  .bigscore{font-size:54px;color:var(--gold);margin:6px 0}
-  .sharebox{font-family:ui-monospace,Menlo,monospace;background:var(--panel2);border:1px solid var(--line);
-    border-radius:10px;padding:14px;white-space:pre;display:inline-block;text-align:left;line-height:1.5;margin:10px 0}
-  .hint{color:var(--muted);font-size:13px;margin-top:6px}
-  .leaflet-container{background:#11100b}
+  .lb-hint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#cfc6b4;font:13px 'IBM Plex Mono',monospace;pointer-events:none}
+  @keyframes afFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media(max-width:680px){
+    .wrap{padding:14px 0 60px}
+    .revealgrid{grid-template-columns:1fr;gap:20px;padding:17px}
+    .playgrid{grid-template-columns:1fr!important}
+    .difs{grid-template-columns:1fr}
+    .big{font-size:34px}.hero .big2{font-size:30px}.year{font-size:23px}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Artefactum<span> · ars</span></h1>
-    <div class="sub">Ten masterworks. Five centuries. Guess the <em>when</em>, <em>where</em>, <em>movement</em> &amp; <em>artist</em>.</div>
-  </header>
-  <div class="progress" id="progress"></div>
-  <div id="stage"></div>
-</div>
+<div class="wrap"><div id="stage"></div></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data/cues.js"></script>
+<script src="data/pool.js"></script>
 <script>
-// ---- Dataset (images served live from Wikimedia Commons) ----
-const F = f => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=1000`;
-const ART = [
- {t:"Mona Lisa", a:"Leonardo da Vinci", y:1503, lat:43.77,lng:11.25, place:"Florence, Italy", m:"Renaissance", f:"Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg"},
- {t:"The Starry Night", a:"Vincent van Gogh", y:1889, lat:43.79,lng:4.83, place:"Saint-Rémy, France", m:"Post-Impressionism", f:"Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"},
- {t:"The Great Wave off Kanagawa", a:"Katsushika Hokusai", y:1831, lat:35.68,lng:139.69, place:"Edo (Tokyo), Japan", m:"Ukiyo-e", f:"Tsunami_by_hokusai_19th_century.jpg"},
- {t:"Girl with a Pearl Earring", a:"Johannes Vermeer", y:1665, lat:52.01,lng:4.36, place:"Delft, Netherlands", m:"Dutch Golden Age", f:"1665_Girl_with_a_Pearl_Earring.jpg"},
- {t:"The Birth of Venus", a:"Sandro Botticelli", y:1485, lat:43.77,lng:11.25, place:"Florence, Italy", m:"Renaissance", f:"Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg"},
- {t:"The Scream", a:"Edvard Munch", y:1893, lat:59.91,lng:10.75, place:"Oslo, Norway", m:"Expressionism", f:"Edvard_Munch,_1893,_The_Scream,_oil,_tempera_and_pastel_on_cardboard,_91_x_73_cm,_National_Gallery_of_Norway.jpg"},
- {t:"American Gothic", a:"Grant Wood", y:1930, lat:40.92,lng:-92.22, place:"Eldon, Iowa, USA", m:"Regionalism", f:"Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg"},
- {t:"The Night Watch", a:"Rembrandt", y:1642, lat:52.37,lng:4.90, place:"Amsterdam, Netherlands", m:"Baroque", f:"The_Nightwatch_by_Rembrandt_-_Rijksmuseum.jpg"},
- {t:"Las Meninas", a:"Diego Velázquez", y:1656, lat:40.41,lng:-3.70, place:"Madrid, Spain", m:"Baroque", f:"Las_Meninas_01.jpg"},
- {t:"The Kiss", a:"Gustav Klimt", y:1908, lat:48.21,lng:16.37, place:"Vienna, Austria", m:"Symbolism", f:"Klimt_-_Der_Kuss.jpeg"},
- {t:"Whistler's Mother", a:"James McNeill Whistler", y:1871, lat:51.51,lng:-0.13, place:"London, England", m:"Realism", f:"Whistlers_Mother_high_res.jpg"},
- {t:"Composition II in Red, Blue and Yellow", a:"Piet Mondrian", y:1930, lat:48.86,lng:2.35, place:"Paris, France", m:"De Stijl", f:"Piet_Mondriaan,_1930_-_Mondrian_Composition_II_in_Red,_Blue,_and_Yellow.jpg"},
- {t:"The Milkmaid", a:"Johannes Vermeer", y:1658, lat:52.01,lng:4.36, place:"Delft, Netherlands", m:"Dutch Golden Age", f:"Johannes_Vermeer_-_Het_melkmeisje_-_Google_Art_Project.jpg"},
- {t:"A Sunday on La Grande Jatte", a:"Georges Seurat", y:1884, lat:48.86,lng:2.35, place:"Paris, France", m:"Pointillism", f:"Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg"},
- {t:"The Creation of Adam", a:"Michelangelo", y:1512, lat:41.90,lng:12.45, place:"Vatican City, Rome", m:"Renaissance", f:"Michelangelo_-_Creation_of_Adam_(cropped).jpg"},
-];
-let ALL_MOV = [...new Set(ART.map(a=>a.m))];
-const getImg = it => it.img || F(it.f);
+"use strict";
+const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
+const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
 
-// Era bands — scoring is by timeframe, not exact year
-const ERAS = [
-  {name:"Ancient", start:-3000, end:476},
-  {name:"Medieval", start:476, end:1400},
-  {name:"Renaissance", start:1400, end:1600},
-  {name:"Baroque", start:1600, end:1750},
-  {name:"Enlightenment", start:1750, end:1800},
-  {name:"19th century", start:1800, end:1900},
-  {name:"Early Modern", start:1900, end:1945},
-  {name:"Contemporary", start:1945, end:2025},
-];
-function eraIndex(y){for(let i=0;i<ERAS.length;i++){if(y<ERAS[i].end||i===ERAS.length-1)return i;}return ERAS.length-1;}
-function eraName(y){return ERAS[eraIndex(y)].name;}
-
-// Broader autocomplete pool so suggestions don't give the answer away
-let ARTIST_POOL = [...new Set([...ART.map(a=>a.a),
-  "Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin",
-  "Henri Matisse","Pablo Picasso","Salvador Dalí","Marc Chagall","Wassily Kandinsky",
-  "Jackson Pollock","Andy Warhol","Frida Kahlo","Georgia O'Keeffe","Edward Hopper",
-  "Caravaggio","Raphael","Titian","Albrecht Dürer","Jan van Eyck","Hieronymus Bosch",
-  "Pieter Bruegel the Elder","Francisco Goya","Eugène Delacroix","J.M.W. Turner",
-  "John Constable","Gustave Courbet","Édouard Manet","Camille Pissarro","Henri de Toulouse-Lautrec",
-  "Egon Schiele","Amedeo Modigliani","Joan Miró","René Magritte","Paul Klee",
-  "Caspar David Friedrich","William Blake","Artemisia Gentileschi","Peter Paul Rubens",
-  "El Greco","Sandro Botticelli","Donatello","Hokusai","Utagawa Hiroshige",
-])].sort();
-
-// Related movements earn HALF credit for a near-miss
-const RELATED_MOV = {
-  "Renaissance":["Baroque","Mannerism"],
-  "Baroque":["Dutch Golden Age","Renaissance","Realism"],
+// ---------- helpers ----------
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
+const EPOCHS=[["Antiquity",-3000,500],["Medieval",500,1400],["Early Modern",1400,1800],["Modern",1800,1945],["Contemporary",1945,2026]];
+function epochName(y){for(const[n,a,b]of EPOCHS)if(y<b)return n;return "Contemporary";}
+function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
+function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
+function lastName(s){return norm(s).split(' ').pop();}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function accession(){const d=new Date();const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `NO. ${d.getFullYear()}·${mm}${dd}`;}
+function sourceURL(it){
+  if(it.src==='met') return `https://www.metmuseum.org/art/collection/search/${it.id.slice(3)}`;
+  if(it.id&&it.id.indexOf('wikidata.org')>=0) return it.id.replace('http://','https://');
+  return `https://commons.wikimedia.org/`;
+}
+const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint",
+  "Bronze":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
+  "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft" };
+const RELATED_MOV={
+  "Renaissance":["Italian Renaissance","Mannerism","Baroque","Northern Renaissance"],
+  "Italian Renaissance":["Renaissance","Mannerism","Baroque"],
+  "Baroque":["Dutch Golden Age","Renaissance","Realism","Rococo"],
   "Dutch Golden Age":["Baroque","Realism"],
-  "Realism":["Baroque","Dutch Golden Age","Regionalism","Impressionism"],
-  "Regionalism":["Realism","Social Realism"],
-  "Post-Impressionism":["Pointillism","Impressionism","Symbolism","Expressionism"],
+  "Post-Impressionism":["Pointillism","Impressionism","Symbolism","Expressionism","Fauvism"],
+  "Impressionism":["Post-Impressionism","Pointillism","Realism"],
   "Pointillism":["Post-Impressionism","Impressionism"],
   "Symbolism":["Expressionism","Post-Impressionism","Art Nouveau"],
-  "Expressionism":["Symbolism","Post-Impressionism","Fauvism"],
-  "De Stijl":["Cubism","Constructivism","Bauhaus"],
-  "Ukiyo-e":["Nihonga"],
+  "Expressionism":["Symbolism","Fauvism","Post-Impressionism"],
+  "Realism":["Baroque","Dutch Golden Age","Impressionism"],
+  "Romanticism":["Neoclassicism","Realism"],
+  "Neoclassicism":["Romanticism","Renaissance"],
 };
-// Similar artists (contemporaries / same school) earn partial credit — keyed by the true artist
-const SIMILAR_ARTISTS = {
-  "Leonardo da Vinci":["Raphael","Michelangelo","Sandro Botticelli","Titian"],
-  "Sandro Botticelli":["Leonardo da Vinci","Raphael","Donatello","Titian"],
-  "Michelangelo":["Leonardo da Vinci","Raphael","Donatello","Titian"],
-  "Vincent van Gogh":["Paul Gauguin","Paul Cézanne","Georges Seurat","Henri de Toulouse-Lautrec","Édouard Manet"],
-  "Georges Seurat":["Paul Cézanne","Vincent van Gogh","Camille Pissarro","Claude Monet","Paul Gauguin"],
-  "Katsushika Hokusai":["Utagawa Hiroshige","Hokusai"],
-  "Johannes Vermeer":["Rembrandt","Pieter Bruegel the Elder","Jan van Eyck"],
-  "Rembrandt":["Johannes Vermeer","Peter Paul Rubens","Caravaggio"],
-  "Diego Velázquez":["Caravaggio","Peter Paul Rubens","El Greco","Francisco Goya"],
-  "Edvard Munch":["Egon Schiele","Gustav Klimt","Amedeo Modigliani"],
-  "Gustav Klimt":["Egon Schiele","Edvard Munch","Amedeo Modigliani"],
-  "Grant Wood":["Edward Hopper","Georgia O'Keeffe"],
-  "James McNeill Whistler":["Édouard Manet","Edgar Degas","John Constable"],
-  "Piet Mondrian":["Wassily Kandinsky","Paul Klee","Joan Miró"],
-};
-
-// ---- Helpers ----
-const ROUNDS = 5, MAX_CAT = 2500;
-function shuffle(arr){arr=arr.slice();for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
-function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,
-  h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
-function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
-function centuryOf(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=["th","st","nd","rd"][(c%100>10&&c%100<14)?0:(c%10<4?c%10:0)];return `${c}${s} century${y<0?" BC":""}`;}
-function continentOf(lat,lng){
-  if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56) return "South America";
-  if(lng>=-170&&lng<=-52&&lat>=13) return "North America";
-  if(lng>=110&&lat<=-10) return "Oceania";
-  if(lat>=36&&lng>=-25&&lng<=60) return "Europe";
-  if(lat>=-35&&lat<36&&lng>=-20&&lng<=52) return "Africa";
-  if(lng>40) return "Asia";
-  return "Europe";
+function catLabel(c,it){
+  if(c==='when')return "When made"; if(c==='where')return "Where made"; if(c==='medium')return "Medium";
+  if(c==='artist')return "Artist"; if(c==='style')return it&&it.styleKind==='culture'?"Culture":"Movement"; return c;
 }
-function initialsOf(name){return name.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+".").join(" ");}
-const HINT_COST=500, PICK_COST=500;
-function emFor(frac){return frac>=.75?"🟩":frac>=.35?"🟨":"🟥";}
-function cleanMov(m){return m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim();}
-function normMov(m){return cleanMov(m).toLowerCase().replace(/[^a-z ]/g,'').trim();}
+function catShort(c,it){
+  if(c==='when')return "WHEN"; if(c==='where')return "WHERE"; if(c==='medium')return "MED.";
+  if(c==='artist')return "ARTIST"; if(c==='style')return it&&it.styleKind==='culture'?"CULT.":"MOV."; return c;
+}
 
-// ---- Live data: pull a pool of famous paintings from Wikidata (CORS-enabled) ----
-const WD_QUERY = `SELECT ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?countryLabel ?coord ?image ?s WHERE {
-  ?item wdt:P31 wd:Q3305213; wdt:P18 ?image; wdt:P170 ?creator; wdt:P571 ?inception;
-        wdt:P135 ?movement; wdt:P495 ?country; wikibase:sitelinks ?s.
-  OPTIONAL { ?country wdt:P625 ?coord. }
-  FILTER(?s > 11)
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-} ORDER BY DESC(?s) LIMIT 700`;
-
-// Difficulty tiers = fame quartiles of the pool (sorted by sitelink count)
-const TIERS = [
-  {key:"easy",       label:"Easy",       blurb:"World-famous masterpieces"},
-  {key:"medium",     label:"Medium",     blurb:"Well-known works"},
-  {key:"hard",       label:"Hard",       blurb:"For art-history buffs"},
-  {key:"impossible", label:"Impossible", blurb:"Deep cuts & obscurities"},
-];
+// ---------- data / indexes ----------
+let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
+let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={};
+function buildIndexes(){
+  POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
+  ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
+  MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
+  CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
+  const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
+  ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra])].sort();
+  artistStyle={};
+  for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); } }
+}
 function tierItems(i){const n=POOL.length;return POOL.slice(Math.floor(i*n/4),Math.floor((i+1)*n/4));}
+const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
+  {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
 
-async function loadPool(){
-  const url="https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(WD_QUERY);
-  const res=await fetch(url,{headers:{Accept:"application/sparql-results+json"}});
-  if(!res.ok) throw new Error("wikidata "+res.status);
-  const data=await res.json();
-  const seen=new Set(), pool=[];
-  for(const b of data.results.bindings){
-    const g=k=>b[k]&&b[k].value;
-    const t=g('itemLabel'), a=g('creatorLabel'), y=parseInt(g('yr'),10), mraw=g('movementLabel'),
-          place=g('countryLabel'), coord=g('coord'), img=g('image');
-    if(!t||!a||!y||!mraw||!coord||!img) continue;
-    if(/^Q\d+$/.test(a)||/^Q\d+$/.test(t)) continue;            // skip unlabeled entities
-    const mp=coord.match(/Point\(([-\d.]+) ([-\d.]+)\)/); if(!mp) continue;
-    if(seen.has(t)) continue; seen.add(t);
-    pool.push({t, a, y, m:cleanMov(mraw), place, lng:+mp[1], lat:+mp[2], sl:parseInt(g('s'),10)||0,
-      img:img.replace(/^http:/,'https:')+"?width=1000"});
-  }
-  return pool;
+// ---------- mastery ----------
+function loadMastery(){try{return JSON.parse(localStorage.getItem("artefactum.mastery"))||{byStyle:{},byRegion:{}}}catch{return{byStyle:{},byRegion:{}}}}
+function saveMastery(m){try{localStorage.setItem("artefactum.mastery",JSON.stringify(m))}catch{}}
+function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]; b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m);}
+function masteryLine(){
+  const m=loadMastery(), all={...{},...m.byStyle,...m.byRegion};
+  const entries=Object.entries(m.byStyle).filter(([,v])=>v.total>=2);
+  if(!entries.length) return "";
+  entries.sort((a,b)=>(b[1].correct/b[1].total)-(a[1].correct/a[1].total));
+  const best=entries[0], worst=entries[entries.length-1];
+  let s=`Sharp on <strong>${esc(best[0])}</strong> (${best[1].correct}/${best[1].total})`;
+  if(worst!==best) s+=` &middot; <span class="weak">${esc(worst[0])} still slips (${worst[1].correct}/${worst[1].total})</span>`;
+  return s;
 }
 
-// ---- Game state ----
-let game=[], idx=0, results=[], guess={}, POOL=[];
-let map, marker, artistMov={};
-let hintsUsed=0; const HINT_LIMIT=3;
+// ---------- game state ----------
+let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marker;
 
-function renderProgress(){
-  document.getElementById('progress').innerHTML = game.map((_,i)=>
-    `<div class="pip ${i<idx?'done':i===idx?'cur':''}"></div>`).join('');
+function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
+function header(filled,cur,withStamp){
+  return `<div class="hd"><div class="brand"><span class="wordmark">Artefactum</span><span class="accn">${accession()}</span></div>
+    <div class="right"><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div>`;
+}
+const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
+
+// ---------- START ----------
+function regionBars(){
+  const dist={};for(const p of POOL)dist[p.region]=(dist[p.region]||0)+1;
+  const order=["Europe","Asia","Africa","North America","South America","Oceania"];
+  const colors={Europe:"#2230b8",Asia:"#cf9f3a",Africa:"#2f8f5b",["North America"]:"#7a86d8",["South America"]:"#c14b3a",Oceania:"#8a8472"};
+  const total=POOL.length||1;
+  const segs=order.filter(r=>dist[r]).map(r=>`<span style="width:${(dist[r]/total*100).toFixed(1)}%;background:${colors[r]}"></span>`).join('');
+  const key=order.filter(r=>dist[r]).map(r=>`<span><i style="background:${colors[r]}"></i>${r} ${Math.round(dist[r]/total*100)}%</span>`).join('');
+  return {segs,key,europe:Math.round((dist.Europe||0)/total*100)};
+}
+function renderStart(){
+  const b=regionBars();
+  document.getElementById('stage').innerHTML=`<div class="card">
+    ${header(0,-1,false)}
+    <div class="hero"><div class="big2">Artefactum</div>
+      <div class="tag">The daily art-guessing game &middot; ${accession()} &middot; five works</div></div>
+    <div class="difs">
+      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
+        <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
+        <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
+    </div>
+    <div class="collnote"><div class="h">About the collection</div>
+      <p>These works are drawn from <strong>Wikidata</strong> and <strong>The Met's open collection</strong>. Even reaching widely, the pool skews <strong>${b.europe}% European</strong> — a direct fingerprint of how museums, archivists and canon-makers have historically prioritized Western art. What's easy to find here is itself a lesson.</p>
+      <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
+    </div>
+    ${ATTRIB}
+  </div>`;
+  document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k));
+}
+function startGame(key){
+  tier=key; const i=TIERS.findIndex(t=>t.key===key);
+  let arr=tierItems(i);
+  if(arr.length<ROUNDS) arr=[...arr,...shuffle(POOL.filter(p=>!arr.includes(p)))];
+  game=shuffle(arr).slice(0,ROUNDS); idx=0; results=[]; hintsUsed=0;
+  renderRound();
 }
 
+// ---------- PLAY ----------
 function renderRound(){
-  renderProgress();
-  const it = game[idx];
-  guess = {year:1700, ll:null, mov:null, artist:"", artistPicked:false, hints:new Set()};
-  // movement choices: correct + 3 distractors
-  const movChoices = shuffle([it.m, ...shuffle(ALL_MOV.filter(m=>m!==it.m)).slice(0,3)]);
-  const stage = document.getElementById('stage');
-  stage.innerHTML = `
-    <div class="card">
-      <img class="art" src="${getImg(it)}" alt="artwork to identify" />
-      <div class="body">
-        <div class="grid2">
-          <div>
-            <div class="q">When was it made?</div>
-            <div class="yearbox"><span class="hint">3000 BC</span><span class="yearval" id="yv">AD 1700</span><span class="hint">2025</span></div>
-            <input type="range" id="yr" min="-3000" max="2025" value="1700" step="1" />
-            <div class="erares" id="era">Era: Baroque</div>
-            <div class="q" style="margin-top:18px">Which movement?</div>
-            <div class="movs" id="movs">${movChoices.map(m=>`<button class="mov" data-m="${m}">${m}</button>`).join('')}</div>
-            <div class="q" style="margin-top:18px">Who painted it?</div>
-            <div class="ac">
-              <input type="text" id="artist" placeholder="Start typing an artist…" autocomplete="off"/>
-              <div class="ac-list" id="aclist" style="display:none"></div>
-            </div>
-          </div>
-          <div>
-            <div class="q">Where was it made?</div>
-            <div id="map"></div>
-            <div class="hint">Click the map to drop your pin.</div>
-          </div>
-        </div>
-        <div class="q" style="margin-top:18px">Need a hint? <span class="hint" id="hintsleft" style="text-transform:none"></span></div>
-        <div class="hints" id="hints">
-          <button class="hintbtn" data-h="when">🕰️ Century</button>
-          <button class="hintbtn" data-h="where">🗺️ Continent</button>
-          <button class="hintbtn" data-h="mov">🎨 50/50</button>
-          <button class="hintbtn" data-h="artist">🖌️ Artist initials</button>
-        </div>
-        <div class="hintout" id="hintout"></div>
-        <button class="btn" id="submit">Lock in guesses →</button>
+  const it=game[idx];
+  guess={year:1700, ll:null, medium:null, style:null, artist:"", artistPicked:false, hints:new Set()};
+  // build right-column adaptive fields
+  let n=1; const fields=[];
+  fields.push({k:'when', html:`
+    <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">When made</span></div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">AD 1700</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
+    <input type="range" id="yr" min="-3000" max="2025" value="1700" step="1" />
+    <div class="minmax"><span>3000 BC</span><span>2025</span></div>`}); n++;
+  if(it.cats.includes('medium')){
+    const ch=shuffle([it.medium,...shuffle(ALL_MED.filter(m=>m!==it.medium)).slice(0,3)]);
+    fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">Medium</span></div>
+      <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
+  }
+  if(it.cats.includes('style')){
+    const poolS=it.styleKind==='culture'?CULTS:MOVS;
+    const ch=shuffle([it.style,...shuffle(poolS.filter(m=>m!==it.style)).slice(0,3)]);
+    fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${catLabel('style',it)}</span></div>
+      <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
+  }
+  if(it.cats.includes('artist')){
+    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">Attributed to · bonus</span></div>
+      <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
+      <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
+  }
+  const whereN=n;
+  document.getElementById('stage').innerHTML=`<div class="card">
+    ${header(idx,idx,true)}
+    <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
+      <div style="display:flex;flex-direction:column">
+        <div class="plate"><img class="art" src="${esc(it.img)}" alt="The painting to identify"/></div>
+        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.medium||'UNKNOWN MEDIUM').toUpperCase())}</span></div>
+        <div style="margin-top:16px"><button class="btn2" id="hintbtn">Request hint &middot; <span id="hintsleft"></span></button>
+          <div class="hinttext" id="hintout" style="display:none"></div></div>
       </div>
-    </div>`;
-  // wire year + era
-  const yr=document.getElementById('yr'), yv=document.getElementById('yv'), eraEl=document.getElementById('era');
-  yr.oninput=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); eraEl.textContent="Era: "+eraName(+yr.value);};
-  // wire movement
-  document.querySelectorAll('.mov').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('.mov').forEach(x=>x.classList.remove('sel'));
-    b.classList.add('sel'); guess.mov=b.dataset.m;});
-  // wire artist autocomplete
-  setupAutocomplete();
-  // map — reset stale marker from previous round so the pin always drops
+      <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}</div>
+    </div>
+    <div style="padding:0 24px 24px">
+      <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">Place of origin</span><span class="rule"></span><span class="hintrule">CLICK TO MARK</span></div>
+      <div id="map" style="height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+    </div>
+    <div style="padding:0 24px 24px">
+      <button class="btn" id="submit">Lock in &amp; file record &rarr;</button>${ATTRIB}</div>
+  </div>`;
+  // wire slider
+  const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
+  yr.oninput=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${epochName(+yr.value).toUpperCase()} ]`;};
+  // pills
+  document.querySelectorAll('[data-pills]').forEach(g=>{const kind=g.dataset.pills;
+    g.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{
+      if(b.classList.contains('ruledout'))return;
+      g.querySelectorAll('.pill').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); guess[kind]=b.dataset.v;});});
+  // artist
+  if(it.cats.includes('artist')) setupAutocomplete();
+  // hints
+  wireHints(it);
+  // map
   marker=null;
-  map = L.map('map',{worldCopyJump:true}).setView([30,10],1);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    {attribution:'© OpenStreetMap, © CARTO',maxZoom:8}).addTo(map);
+  map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false}).setView([34,12],1);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(map);
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
-    else marker=L.circleMarker(e.latlng,{radius:8,color:'#d9b15e',fillColor:'#d9b15e',fillOpacity:.9,weight:2}).addTo(map);});
-  setTimeout(()=>map.invalidateSize(),200);
-  // wire hints (choose any; each costs HINT_COST)
-  const ho=document.getElementById('hintout');
-  const hintText={
-    when:()=>`🕰️ Made in the ${centuryOf(it.y)}.`,
-    where:()=>`🗺️ Made somewhere in ${continentOf(it.lat,it.lng)}.`,
-    mov:()=>{ // 50/50: dim two wrong movement options
-      const wrong=shuffle([...document.querySelectorAll('.mov')].filter(b=>normMov(b.dataset.m)!==normMov(it.m)));
-      wrong.slice(0,2).forEach(b=>{b.style.opacity=.25; b.style.textDecoration='line-through'; b.disabled=true;});
-      return `🎨 Two unlikely movements have been ruled out.`;
-    },
-    artist:()=>`🖌️ The artist's initials are ${initialsOf(it.a)}.`,
-  };
-  const hintBtns=[...document.querySelectorAll('.hintbtn')], hl=document.getElementById('hintsleft');
-  const refreshHints=()=>{
-    const left=HINT_LIMIT-hintsUsed;
-    hl.textContent = left>0 ? `${left} of ${HINT_LIMIT} left this game · −${HINT_COST} each` : "no hints left this game";
-    hintBtns.forEach(b=>{ if(!guess.hints.has(b.dataset.h)) b.disabled = left<=0; });
-  };
-  hintBtns.forEach(b=>b.onclick=()=>{
-    const k=b.dataset.h; if(guess.hints.has(k)||hintsUsed>=HINT_LIMIT)return;
-    guess.hints.add(k); hintsUsed++; b.disabled=true;
-    ho.insertAdjacentHTML('beforeend',`<div>${hintText[k]()} <span class="hint">−${HINT_COST}</span></div>`);
-    refreshHints();
-  });
-  refreshHints();
+    else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);});
+  setTimeout(()=>map.invalidateSize(),250);
   document.getElementById('submit').onclick=score;
 }
 
 function setupAutocomplete(){
-  const inp=document.getElementById('artist'), list=document.getElementById('aclist');
-  let active=-1, items=[];
-  const close=()=>{list.style.display='none'; active=-1;};
-  const render=q=>{
-    const ql=q.toLowerCase().trim();
-    items = ql ? ARTIST_POOL.filter(a=>a.toLowerCase().includes(ql)).slice(0,8) : [];
+  const inp=document.getElementById('artist'),list=document.getElementById('aclist');let active=-1,items=[];
+  const close=()=>{list.style.display='none';active=-1;};
+  const render=q=>{const ql=q.toLowerCase().trim();items=ql?ARTIST_POOL.filter(a=>a.toLowerCase().includes(ql)).slice(0,8):[];
     if(!items.length){close();return;}
-    list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${a}</div>`).join('');
+    list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${esc(a)}</div>`).join('');
     list.style.display='block';
-    list.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=ev=>{
-      ev.preventDefault(); pick(+el.dataset.i);});
-  };
-  const pick=i=>{inp.value=items[i]; guess.artist=items[i]; guess.artistPicked=true; close(); inp.focus();};
-  inp.oninput=()=>{guess.artist=inp.value; guess.artistPicked=false; active=-1; render(inp.value);};
-  inp.onkeydown=e=>{
-    if(list.style.display==='none')return;
+    list.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();pick(+el.dataset.i);});};
+  const pick=i=>{inp.value=items[i];guess.artist=items[i];guess.artistPicked=true;close();inp.focus();};
+  inp.oninput=()=>{guess.artist=inp.value;guess.artistPicked=false;active=-1;render(inp.value);};
+  inp.onkeydown=e=>{if(list.style.display==='none')return;
     if(e.key==='ArrowDown'){active=Math.min(active+1,items.length-1);render(inp.value);e.preventDefault();}
     else if(e.key==='ArrowUp'){active=Math.max(active-1,0);render(inp.value);e.preventDefault();}
     else if(e.key==='Enter'&&active>=0){pick(active);e.preventDefault();}
-    else if(e.key==='Escape')close();
-  };
+    else if(e.key==='Escape')close();};
   inp.onblur=()=>setTimeout(close,120);
 }
 
+function wireHints(it){
+  const btn=document.getElementById('hintbtn'),out=document.getElementById('hintout'),left=document.getElementById('hintsleft');
+  const opts=[];
+  opts.push({label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
+  opts.push({label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
+  if(it.cats.includes('style')) opts.push({label:"50/50",txt:()=>{const ws=shuffle([...document.querySelectorAll('[data-pills="style"] .pill')].filter(b=>b.dataset.v!==it.style)); ws.slice(0,2).forEach(b=>b.classList.add('ruledout')); return `Two unlikely options ruled out.`;}});
+  if(it.cats.includes('artist')&&it.artist) opts.push({label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
+  let oi=0;
+  const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem>0?`reveal ${opts[oi]?opts[oi].label:'hint'} · −${HINT_COST} (${rem} left)`:`no hints left`; btn.disabled=rem<=0||oi>=opts.length; if(oi>=opts.length)left.textContent="no more hints";};
+  btn.onclick=()=>{ if(hintsUsed>=HINT_LIMIT||oi>=opts.length)return;
+    const o=opts[oi]; guess.hints.add(o.label); hintsUsed++; oi++;
+    out.style.display='block'; out.insertAdjacentHTML('beforeend',`<div>${o.txt()} <span style="color:var(--accent)">−${HINT_COST}</span></div>`);
+    refresh();};
+  refresh();
+}
+function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>10&&c%100<14)?"th":["th","st","nd","rd"][c%10]||"th";return `${c}${s} century${y<0?" BC":""}`;}
+
+// ---------- scoring ----------
+function timeScore(diff){
+  if(diff<=10)return{pts:MAX_CAT,bull:true};
+  if(diff<=30)return{pts:2300}; if(diff<=75)return{pts:1900}; if(diff<=150)return{pts:1350};
+  if(diff<=300)return{pts:800}; if(diff<=600)return{pts:350}; return{pts:0};
+}
 function score(){
-  const it=game[idx];
-  // time — scored by era band (timeframe), not exact year
-  const dy=Math.abs(guess.year-it.y);
-  const bandDiff=Math.abs(eraIndex(guess.year)-eraIndex(it.y));
-  const sTime=Math.round(MAX_CAT*Math.max(0,1-bandDiff/3));
-  // place
-  let sPlace=0,dist=null;
-  if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
-    sPlace=Math.round(MAX_CAT*Math.exp(-dist/2500));}
-  // movement — full credit exact; half credit if related or sharing a key word
-  let sMov=0, movNote="";
-  const STOP=new Set(["art","painting","style","the","of","early","late","high"]);
-  const movWords=s=>new Set(normMov(s).split(' ').filter(w=>w.length>3&&!STOP.has(w)));
-  if(guess.mov && normMov(guess.mov)===normMov(it.m)){sMov=MAX_CAT;}
-  else if(guess.mov){
-    const related=(RELATED_MOV[it.m]||[]).some(r=>normMov(r)===normMov(guess.mov));
-    const gW=movWords(guess.mov), aW=movWords(it.m);
-    const overlap=[...gW].some(w=>aW.has(w));
-    if(related||overlap){sMov=Math.round(MAX_CAT*0.5); movNote=" — related, half credit";}
-  }
-  // artist — exact/last-name full; partial if same school (curated map or shared movement in pool)
-  const norm=s=>s.toLowerCase().replace(/[^a-z ]/g,'').trim();
-  const last=s=>norm(s).split(' ').pop();
-  const ga=norm(guess.artist);
-  let sArt=0, artNote="";
-  if(ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))){
-    sArt=MAX_CAT;
-    if(guess.artistPicked){sArt-=PICK_COST; artNote=` — picked from list, −${PICK_COST}`;}
-  }
-  else if(ga){
-    const curated=(SIMILAR_ARTISTS[it.a]||[]).some(s=>norm(s)===ga || last(s)===last(guess.artist));
-    const sharesMov=artistMov[ga] && artistMov[ga].has(normMov(it.m));
-    if(curated||sharesMov){sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
-  }
+  const it=game[idx], cells={};
+  // when
+  const dy=Math.abs(guess.year-it.y), ts=timeScore(dy);
+  cells.when={pts:ts.pts, bull:!!ts.bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
+    note:ts.bull?"right to the decade":epochName(guess.year)===epochName(it.y)?"same epoch":`${dy} yrs off`};
+  // where
+  let dist=null,sp=0; if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng); sp=Math.round(MAX_CAT*Math.exp(-dist/2500));}
+  cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place, note:dist==null?"no pin dropped":`${Math.round(dist)} km off`};
+  // medium
+  if(it.cats.includes('medium')){let s=0,note="no answer";
+    if(guess.medium){ if(guess.medium===it.medium){s=MAX_CAT;note="exact";}
+      else if(MED_FAMILY[guess.medium]&&MED_FAMILY[guess.medium]===MED_FAMILY[it.medium]){s=Math.round(MAX_CAT*0.5);note="same family";}
+      else note="wrong";}
+    cells.medium={pts:s,you:guess.medium||"—",actual:it.medium,note};}
+  // style
+  if(it.cats.includes('style')){let s=0,note="no answer";
+    if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
+      else if((RELATED_MOV[it.style]||[]).includes(guess.style)){s=Math.round(MAX_CAT*0.5);note="related";}
+      else note="wrong";}
+    cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
+  // artist (bonus)
+  if(it.cats.includes('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
+    if(ga){ if(ga===norm(it.artist)||(lastName(guess.artist)&&lastName(guess.artist)===lastName(it.artist))){s=MAX_CAT;note="exact match";}
+      else if(artistStyle[ga]&&it.style&&artistStyle[ga].has(norm(it.style))){s=Math.round(MAX_CAT*0.4);note="same school";}
+      else note="not matched";}
+    cells.artist={pts:s,bonus:true,you:guess.artist||"—",actual:it.artist,note};}
+  // totals
+  const coreCats=it.cats.filter(c=>c!=='artist');
+  const baseMax=coreCats.length*MAX_CAT;
+  const core=coreCats.reduce((a,c)=>a+cells[c].pts,0);
+  const bonus=cells.artist?cells.artist.pts:0;
   const hintPen=guess.hints.size*HINT_COST;
-  const total=Math.max(0, sTime+sPlace+sMov+sArt-hintPen);
-  results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,hintPen,guess:{...guess}});
+  const coreNet=Math.max(0,core-hintPen);
+  // mastery
+  if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
+  bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
+  results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
   renderReveal(results[results.length-1]);
 }
 
+// ---------- REVEAL ----------
+function studyFor(it){
+  return (it.styleKind==='movement'&&CUES.style[it.style]) || (it.styleKind==='culture'&&CUES.culture[it.style])
+    || CUES.region[it.region] || {why:`A ${it.region} work${it.style?' in the '+it.style+' tradition':''}, c. ${fmtYear(it.y)}.`,cues:[]};
+}
+function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
 function renderReveal(r){
   const it=r.it;
-  const row=(label,em,pts,detail)=>`<div class="scoreline"><span><span class="em">${em}</span> ${label} <span class="hint">${detail}</span></span><span class="pts">${pts}</span></div>`;
-  document.getElementById('stage').innerHTML=`
-    <div class="card">
-      <img class="art" src="${getImg(it)}" alt="${it.t}" />
-      <div class="reveal">
-        <h2>${it.t}</h2>
-        <div class="meta">${it.a} · ${fmtYear(it.y)} · ${it.place} · ${it.m}</div>
-        ${row("When",emFor(r.sTime/MAX_CAT),r.sTime,`you said ${eraName(r.guess.year)} · it's ${eraName(it.y)} (off by ${r.dy} yrs)`)}
-        ${row("Where",emFor(r.sPlace/MAX_CAT),r.sPlace,r.dist==null?"no pin":`${Math.round(r.dist)} km away`)}
-        ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}${r.movNote}`:"no answer")}
-        ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}${r.artNote}`:"no answer")}
-        ${r.hintPen?`<div class="scoreline"><span><span class="em">💡</span> Hints <span class="hint">${r.guess.hints.size} used</span></span><span class="pts">−${r.hintPen}</span></div>`:''}
-        <div class="total">+${r.total} points</div>
-        <div class="legend"><span><span class="dot" style="background:#5fb87a"></span>Made in ${it.place}</span>${r.guess.ll?'<span><span class="dot" style="background:#d9b15e"></span>Your guess</span>':''}</div>
-        <div id="revmap"></div>
-        <button class="btn" id="next">${idx<game.length-1?"Next masterwork →":"See final score →"}</button>
+  const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
+    return `<div class="swatch"><div class="sq" style="background:${swatchColor(f)}"></div><div class="lb">${catShort(c,it)}</div></div>`;}).join('')
+    + (r.cells.artist?`<div class="swatch"><div class="sq" style="background:${swatchColor(r.cells.artist.pts/MAX_CAT)}"></div><div class="lb">ARTIST</div></div>`:'');
+  const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
+    return `<div class="scrow"><span class="sq" style="background:${swatchColor(f)}"></span>
+      <div class="mid"><div class="t1">${catLabel(c,it)}${cell.bonus?' · bonus':''}</div>
+      <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
+      <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
+  const study=studyFor(it);
+  const why=study.why.replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
+  const ml=masteryLine();
+  document.getElementById('stage').innerHTML=`<div class="card">
+    ${header(idx+1,idx,true)}
+    <div class="banner"><div>
+      <div class="kick">Record filed &middot; Piece ${idx+1} of ${ROUNDS}</div>
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
+        <span class="big" data-cu="${r.coreNet}" data-prefix="+">+${r.coreNet.toLocaleString()}</span>
+        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${r.baseMax.toLocaleString()} pts${r.bonus?` &middot; +${r.bonus.toLocaleString()} bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
+    </div><div class="swatchrow">${banner}</div></div>
+    <div class="revealgrid">
+      <div>
+        <div style="position:relative" class="plate"><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}"/><span class="filed">FILED &check;</span></div>
+        <div class="worktitle">${esc(it.title)}</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+          ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
+          <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
+          <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
+          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:''}
+          ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:''}
+        </div>
+        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">Tell me about this work &#8599;</a>
       </div>
-    </div>`;
-  // pin-vs-truth map
-  const rm=L.map('revmap',{zoomControl:false,attributionControl:false,worldCopyJump:true}).setView([20,0],1);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
-  const dot=(lat,lng,c,tip)=>L.circleMarker([lat,lng],{radius:8,color:c,fillColor:c,fillOpacity:.9,weight:2}).addTo(rm).bindTooltip(tip);
-  dot(it.lat,it.lng,'#5fb87a',it.place);
-  const pts=[[it.lat,it.lng]];
-  if(r.guess.ll){
-    dot(r.guess.ll.lat,r.guess.ll.lng,'#d9b15e','Your guess');
-    L.polyline([[r.guess.ll.lat,r.guess.ll.lng],[it.lat,it.lng]],{color:'#d9b15e',dashArray:'6',weight:2}).addTo(rm);
-    pts.push([r.guess.ll.lat,r.guess.ll.lng]);
-  }
-  rm.fitBounds(pts,{padding:[35,35],maxZoom:5});
-  setTimeout(()=>rm.invalidateSize(),150);
-  document.getElementById('next').onclick=()=>{idx++; idx<game.length?renderRound():renderFinal();};
+      <div>
+        <div class="kick" style="margin-bottom:4px">Scorecard</div>
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}
+        <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
+          <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
+            ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
+      <div class="why">${why}</div>
+      ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
+        <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
+      ${it.medium&&CUES.medium[it.medium]?`<div class="cue" style="margin-top:8px"><span class="num">◆</span><span class="tx">${CUES.medium[it.medium]}</span></div>`:''}
+      ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
+    </div>
+    <div style="padding:0 24px 24px"><button class="btn" id="next">${idx<ROUNDS-1?'Next masterwork →':'See final score →'}</button>${ATTRIB}</div>
+  </div>`;
+  countUps();
+  // reveal map
+  const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
+  const t=[it.lat,it.lng], pts=[t];
+  L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
+  if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
+    L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:'5,6'}).addTo(rm);
+    L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
+  try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5});}catch{}
+  setTimeout(()=>rm.invalidateSize(),250);
+  document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
 }
+function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const target=+el.getAttribute('data-cu'),prefix=el.getAttribute('data-prefix')||'';
+  const t0=performance.now(),dur=950,ease=t=>1-Math.pow(1-t,3);
+  const step=now=>{const p=Math.min(1,(now-t0)/dur);el.textContent=prefix+Math.round(target*ease(p)).toLocaleString();if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 
+// ---------- RESULTS ----------
+function shareSquare(c,r){const it=r.it,cell=r.cells[c];const f=cell.pts/MAX_CAT;
+  if(c==='when'&&cell.bull)return "🎯"; if(c==='artist'&&cell.pts===MAX_CAT)return "⭐"; return emFor(f);}
 function renderFinal(){
-  renderProgress();
-  const grand=results.reduce((s,r)=>s+r.total,0);
-  const maxg=ROUNDS*MAX_CAT*4;
-  const gridRows=results.map(r=>
-    [r.sTime,r.sPlace,r.sMov,r.sArt].map(s=>emFor(s/MAX_CAT)).join('')+(r.guess.hints.size?' 💡':'')).join('\n');
-  const totalHints=results.reduce((s,r)=>s+r.guess.hints.size,0);
-  const hintTag=totalHints?`  💡×${totalHints}`:`  💡 none`;
-  const share=`Artefactum · ${grand.toLocaleString()}/${maxg.toLocaleString()}${hintTag}\n${gridRows}\n🕰️🗺️🎨🖌️`;
-  document.getElementById('stage').innerHTML=`
-    <div class="card"><div class="reveal final">
-      <div class="q">Final score</div>
-      <div class="bigscore">${grand.toLocaleString()}</div>
-      <div class="hint">out of ${maxg.toLocaleString()} possible</div>
-      <div class="sharebox" id="share">${share}</div>
-      <button class="btn" id="copy">Copy result to share</button>
-      <button class="btn ghost" id="again">Play again</button>
-    </div></div>`;
-  document.getElementById('copy').onclick=()=>{
-    navigator.clipboard.writeText(share).then(()=>{
-      document.getElementById('copy').textContent="Copied! ✓";});};
-  document.getElementById('again').onclick=()=>renderStart();
+  const grand=results.reduce((a,r)=>a+r.coreNet,0);
+  const gmax=results.reduce((a,r)=>a+r.baseMax,0);
+  const bonus=results.reduce((a,r)=>a+r.bonus,0);
+  const totalHints=results.reduce((a,r)=>a+r.hints,0);
+  // share text (per piece: its category squares in cat order)
+  const lines=results.map(r=>r.it.cats.map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
+  const share=`Artefactum ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${bonus?` +${bonus} bonus`:''}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
+  // matrix
+  const cols=["when","where","medium","style","artist"];
+  const head=cols.map(c=>`<th>${catShort(c)}</th>`).join('');
+  const rows=results.map(r=>`<tr><td class="rl">${esc(r.it.title)}</td>${cols.map(c=>{
+    if(!r.it.cats.includes(c))return `<td></td>`;
+    const f=r.cells[c].pts/MAX_CAT;return `<td><div class="msq" style="background:${swatchColor(f)}"></div></td>`;}).join('')}</tr>`).join('');
+  const ml=masteryLine();
+  document.getElementById('stage').innerHTML=`<div class="card">
+    ${header(ROUNDS,-1,true)}
+    <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
+        <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
+        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
+    <div class="matrix"><table><thead><tr><th style="text-align:left">Work</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="padding:18px 24px 8px"><div class="kick" style="margin-bottom:8px">Share</div>
+      <div class="sharebox" id="share">${esc(share)}</div></div>
+    ${ml?`<div class="study"><div class="kick">Session mastery</div><div class="why" style="font-size:15px">${ml}</div></div>`:''}
+    <div style="padding:8px 24px 24px"><button class="btn" id="copy">Copy result to share</button>
+      <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
+  </div>`;
+  countUps();
+  document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(share).then(()=>document.getElementById('copy').textContent='Copied ✓');
+  document.getElementById('again').onclick=renderStart;
 }
 
-function buildIndexes(pool){
-  pool.sort((a,b)=>(b.sl||0)-(a.sl||0)); // fame-sorted for difficulty quartiles
-  ALL_MOV=[...new Set(pool.map(p=>p.m))];
-  ARTIST_POOL=[...new Set([...ARTIST_POOL, ...pool.map(p=>p.a)])].sort();
-  artistMov={};
-  const n=s=>s.toLowerCase().replace(/[^a-z ]/g,'').trim();
-  for(const p of pool){const k=n(p.a); (artistMov[k]=artistMov[k]||new Set()).add(normMov(p.m));}
-}
-
-function loading(msg){
-  document.getElementById('stage').innerHTML=
-    `<div class="card"><div class="reveal final"><div class="bigscore">⏳</div><div class="hint">${msg}</div></div></div>`;
-}
-
-function renderStart(){
-  document.getElementById('progress').innerHTML='';
-  document.getElementById('stage').innerHTML=`
-    <div class="card"><div class="difs">
-    ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
-        <div class="dn">${t.label}</div>
-        <div class="dd">${t.blurb}</div>
-        <div class="dc">${tierItems(i).length} works available</div>
-      </button>`).join('')}
-    </div></div>`;
-  document.querySelectorAll('.dif').forEach(b=>b.onclick=()=>startGame(b.dataset.k));
-}
-
-function startGame(key){
-  const i=TIERS.findIndex(x=>x.key===key);
-  let arr=tierItems(i);
-  if(arr.length<ROUNDS) arr=[...arr,...shuffle(POOL.filter(p=>!arr.includes(p)))]; // widen if thin
-  game=shuffle(arr).slice(0,ROUNDS);
-  idx=0; results=[]; hintsUsed=0;
-  renderRound();
-}
-
-async function init(){
-  loading("Summoning masterworks from Wikidata…");
-  try{
-    POOL=await loadPool();
-    if(POOL.length<ROUNDS) throw new Error("thin pool");
-    buildIndexes(POOL);
-  }catch(e){
-    POOL=ART.map(p=>({...p,sl:100})); buildIndexes(POOL); // offline → curated set as 'easy'
-  }
-  renderStart();
-}
-
-// ---- Zoom lightbox (delegated; works on any .art image) ----
-function hiRes(src){return src.replace(/width=\d+/, "width=1800");}
+// ---------- zoom lightbox ----------
+function hiRes(src){return src.replace(/width=\d+/,"width=1800");}
 function openZoom(src){
-  const lb=document.createElement('div'); lb.className='lightbox';
-  const img=document.createElement('img'); img.src=hiRes(src); img.draggable=false;
-  let scale=1,tx=0,ty=0,drag=false,sx=0,sy=0;
-  const apply=()=>img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
-  img.onclick=e=>{e.stopPropagation(); if(scale===1)scale=2.5; else{scale=1;tx=0;ty=0;} img.style.cursor=scale>1?'grab':'zoom-in'; apply();};
-  img.onmousedown=e=>{if(scale===1)return; drag=true; sx=e.clientX-tx; sy=e.clientY-ty; img.style.cursor='grabbing'; e.preventDefault();};
-  const mv=e=>{if(!drag)return; tx=e.clientX-sx; ty=e.clientY-sy; apply();};
-  const up=()=>{drag=false; if(scale>1)img.style.cursor='grab';};
-  window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
-  const close=()=>{lb.remove(); window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); document.removeEventListener('keydown',esc);};
-  const esc=e=>{if(e.key==='Escape')close();};
-  document.addEventListener('keydown',esc);
-  lb.onclick=close;
-  const x=document.createElement('button'); x.className='lb-close'; x.textContent='✕'; x.onclick=e=>{e.stopPropagation();close();};
-  const hint=document.createElement('div'); hint.className='lb-hint'; hint.textContent='Click image to zoom · drag to pan · Esc to close';
-  lb.append(img,x,hint); document.body.appendChild(lb);
+  const lb=document.createElement('div');lb.className='lightbox';
+  const img=document.createElement('img');img.src=hiRes(src);img.draggable=false;
+  let scale=1,tx=0,ty=0,drag=false,sx=0,sy=0;const apply=()=>img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  img.onclick=e=>{e.stopPropagation();if(scale===1)scale=2.5;else{scale=1;tx=0;ty=0;}img.style.cursor=scale>1?'grab':'zoom-in';apply();};
+  img.onmousedown=e=>{if(scale===1)return;drag=true;sx=e.clientX-tx;sy=e.clientY-ty;img.style.cursor='grabbing';e.preventDefault();};
+  const mv=e=>{if(!drag)return;tx=e.clientX-sx;ty=e.clientY-sy;apply();};const up=()=>{drag=false;if(scale>1)img.style.cursor='grab';};
+  window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+  const close=()=>{lb.remove();window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);document.removeEventListener('keydown',esc2);};
+  const esc2=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',esc2);
+  lb.onclick=close;const x=document.createElement('button');x.className='lb-close';x.textContent='✕';x.onclick=e=>{e.stopPropagation();close();};
+  const hint=document.createElement('div');hint.className='lb-hint';hint.textContent='Click image to zoom · drag to pan · Esc to close';
+  lb.append(img,x,hint);document.body.appendChild(lb);
 }
 document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('art'))openZoom(e.target.src);});
 
-init();
+// ---------- boot ----------
+if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
+else{ buildIndexes(); renderStart(); }
 </script>
 </body>
 </html>
