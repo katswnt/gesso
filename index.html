@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%232230b8' d='M8 34C8 17 21 6 37 10c14 4 23 18 17 32-5 13-22 18-35 11C11 49 7 42 8 34Z'/%3E%3Ccircle cx='25' cy='25' r='7' fill='%23f6f4ee' fill-opacity='.82'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23f6f4ee'/%3E%3Cpath fill='%232230b8' d='M22 95C22 48 59 18 105 30c39 10 65 51 47 89-15 36-62 51-99 31-22-12-34-33-31-55Z'/%3E%3Ccircle cx='72' cy='70' r='18' fill='%23f6f4ee' fill-opacity='.82'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#e9e7e0; --surface:#f6f4ee; --surface-strong:#edeae0; --ink:#1b1916; --muted:#8a8472;
@@ -29,7 +31,7 @@
   .hd{position:sticky;top:0;z-index:600;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .hdinner{max-width:1080px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between}
   .hd .brand{display:flex;align-items:baseline;gap:13px}
-  .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em;color:var(--accent);text-transform:lowercase}
+  .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em;color:var(--accent);text-transform:lowercase;cursor:pointer}
   .accn{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .hd .right{display:flex;align-items:center;gap:18px}
   .pips{display:flex;gap:5px}
@@ -122,8 +124,18 @@
   .scrow .pts .d{font:9px 'IBM Plex Mono',monospace;color:var(--faint)}
   .study{margin:24px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:22px}
   .study .why{font:500 18px/1.42 'Archivo',sans-serif;color:var(--ink);max-width:600px;margin:13px 0 20px}
-  .disclose{font:10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:14px}
-  .reportlink{font-size:10px;margin-top:6px}
+  .studyfoot{border-top:1px solid var(--study-border);padding-top:11px;margin-top:14px;font:500 10.5px/1.5 'IBM Plex Mono',monospace;color:var(--muted)}
+  .studyfoot .reportopen{appearance:none;border:0;background:transparent;color:var(--accent);font:600 10.5px 'IBM Plex Mono',monospace;text-decoration:underline;text-decoration-color:var(--accent-underline);text-underline-offset:3px;padding:0;cursor:pointer}
+  .reportform .kick{margin-bottom:11px}
+  .reportchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
+  .reportchip{background:#fff;color:var(--ink);border:1px solid #cdd2e8;border-radius:4px;padding:6px 10px;font:600 11px 'IBM Plex Mono',monospace;cursor:pointer}
+  .reportchip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  .reportform input{font-size:12px;margin-bottom:11px}
+  .reportactions{display:flex;gap:8px}
+  .reportactions .btn{flex:1;padding:10px;font-size:11px;letter-spacing:.08em}
+  .reportactions .btn2{border-color:#cdd2e8;color:var(--muted);padding:10px 14px}
+  .reportthanks{display:flex;align-items:center;gap:8px;color:var(--full);font:600 11px 'IBM Plex Mono',monospace}
+  .reportthanks i{width:16px;height:16px;border-radius:50%;background:var(--full);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:10px}
   .cue{display:flex;gap:12px;align-items:flex-start;padding:7px 0}
   .cue .num{flex:0 0 16px;font:700 13px 'Archivo',sans-serif;color:var(--accent)}
   .cue .tx{font:13px/1.55 'IBM Plex Mono',monospace;color:var(--ink-soft)}
@@ -158,6 +170,10 @@
   .matrix th{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--faint);padding:6px 4px;text-transform:uppercase}
   .matrix td{padding:4px}
   .matrix .rl{font:11px 'IBM Plex Mono',monospace;color:var(--muted);text-align:left;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sq,.msq{position:relative;display:inline-flex;align-items:center;justify-content:center}
+  .swglyph{display:none;color:#fff;font:800 15px/1 'Archivo',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
+  .swatch .swglyph{font-size:20px}.scrow .swglyph,.msq .swglyph{font-size:13px}
+  body.colorblind .swglyph{display:block}
   .msq{width:26px;height:26px;border-radius:5px;margin:0 auto}
   .sharebox{font-family:'IBM Plex Mono',monospace;background:#fff;border:1px solid var(--line-card);
     border-radius:6px;padding:14px;white-space:pre;line-height:1.5;font-size:14px;overflow-x:auto}
@@ -169,6 +185,24 @@
   .emblem i{display:block;border-radius:2px}
   .glossnav{appearance:none;border:0;background:transparent;padding:4px;cursor:pointer;display:inline-flex;align-items:center}
   .glossnav:hover{transform:translateY(-1px)}
+  .gearbtn{appearance:none;border:0;background:transparent;color:var(--accent);font:700 16px/1 'Archivo',sans-serif;padding:4px 3px;cursor:pointer}
+  .gearbtn:hover{transform:translateY(-1px)}
+  .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.32);display:flex;align-items:center;justify-content:center;padding:18px}
+  .settingspanel{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line-card);border-radius:12px;overflow:hidden;box-shadow:0 14px 36px rgba(35,32,26,.16)}
+  .settingshead{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
+  .settingshead .ttl{font:700 16px 'Archivo',sans-serif}
+  .settingsclose{appearance:none;border:0;background:transparent;color:var(--muted);font:700 22px/1 'Archivo',sans-serif;cursor:pointer}
+  .settingsbody{padding:8px 22px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .setrow:last-child{border-bottom:0}
+  .setrow .name{font:600 14px 'Archivo',sans-serif}.setrow .hint{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:2px}
+  .setrow.disabled .name,.setrow.disabled .hint{color:var(--faint)}
+  .toggle{appearance:none;border:0;width:42px;height:24px;border-radius:13px;background:#cfc8b8;position:relative;cursor:pointer;flex:0 0 auto;padding:0}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+  .toggle[aria-pressed="true"]{background:var(--accent)}
+  .toggle[aria-pressed="true"]::after{left:21px}
+  .soonchip{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--faint);border:1px solid var(--line-card);border-radius:4px;padding:4px 8px}
+  .settingsfoot{padding:0 22px 20px;font:500 10.5px/1.5 'IBM Plex Mono',monospace;color:var(--faint)}
   .glosswrap{padding:24px}
   .glosshead{background:var(--surface-strong);border-bottom:1.5px solid var(--ink);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
   .glosstitle{display:flex;align-items:center;gap:10px;font:700 16px 'Archivo',sans-serif}
@@ -267,10 +301,23 @@
     .glosswrap{padding:16px}.glosshead{padding:13px 16px}.glossgrid{grid-template-columns:1fr 1fr;padding:12px 14px 16px;gap:9px}.glosscard{padding:12px;min-height:104px}.glosscard .nm{font-size:12px}.movehero{padding:18px 16px;gap:14px}.movename{font-size:20px}.canonical img{max-height:220px}
     .retwrap{padding:16px}.retcap{padding:13px 16px}.streakbody{padding:22px 18px}.streakdab{width:96px;height:96px}.streakdab span{font-size:42px}.retactions{flex-direction:column}
     .statsgrid{grid-template-columns:1fr 1fr;padding:14px}.mastergrid{grid-template-columns:1fr;padding:2px 14px 14px}.archivegrid{gap:5px;padding:0 14px 14px}.dowgrid{gap:5px;padding:14px 14px 6px}.daycell{height:38px}.daycell .scorechip{font-size:0;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:2px}.legend{padding:12px 14px 16px}
+    .settingsveil{align-items:flex-end;padding:0;background:rgba(27,25,22,.38)}
+    .settingspanel{width:100%;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0}
+    .settingspanel::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--line-card);margin:12px auto 0}
+    .settingshead{padding-top:12px}
   }
   @media (prefers-reduced-motion: reduce){
     .dabo,.dabo-float,.imgloader i,.streakdab{animation:none}
+    body.motion-ok .dabo{animation:dabWobble 5.5s ease-in-out infinite}
+    body.motion-ok .dabo-float{animation:dabFloat 3.4s ease-in-out infinite}
+    body.motion-ok .imgloader i{animation:dabBreathe 1.3s ease-in-out infinite}
+    body.motion-ok .imgloader i:nth-child(2){animation-delay:.18s}
+    body.motion-ok .imgloader i:nth-child(3){animation-delay:.36s}
+    body.motion-ok .streakdab{animation:dabWobble 6s ease-in-out infinite,dabFloat 3.6s ease-in-out infinite}
+    body.motion-ok .streakdab.reset{animation:none}
   }
+  body.reduce-motion .dabo,body.reduce-motion .dabo-float,body.reduce-motion .imgloader i,body.reduce-motion .streakdab{animation:none!important}
+  body.reduce-motion .hinttext,body.reduce-motion .dif,body.reduce-motion .glossnav,body.reduce-motion button.glosscard{transition:none!important;animation:none!important}
 </style>
 </head>
 <body>
@@ -317,6 +364,26 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, pool=it.styleKin
   return fill3(ans,picks,pool);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
+const motionQuery=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
+let settings=loadSettings();
+function loadSettings(){try{const s=JSON.parse(localStorage.getItem("gesso.settings"))||{};return {reduceMotion:typeof s.reduceMotion==='boolean'?s.reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:!!s.colorblind};}catch{return{reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:false};}}
+function saveSettings(){try{localStorage.setItem("gesso.settings",JSON.stringify({reduceMotion:!!settings.reduceMotion,colorblind:!!settings.colorblind}));}catch{}}
+function applySettings(){document.body.classList.toggle('reduce-motion',!!settings.reduceMotion);document.body.classList.toggle('motion-ok',!settings.reduceMotion);document.body.classList.toggle('colorblind',!!settings.colorblind);const sh=document.getElementById('share');if(sh&&results.length){const fresh=resultSummary().share;sh.textContent=fresh;if(lastFinal)lastFinal.share=fresh;}}
+function prefersReducedChanged(e){try{const stored=JSON.parse(localStorage.getItem("gesso.settings"))||{};if(typeof stored.reduceMotion!=='boolean'){settings.reduceMotion=!!e.matches;applySettings();}}catch{}}
+if(motionQuery&&motionQuery.addEventListener)motionQuery.addEventListener('change',prefersReducedChanged);
+function openSettings(){
+  const veil=document.createElement('div');veil.className='settingsveil';veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="settingshead"><span class="ttl">Settings</span><button type="button" class="settingsclose" aria-label="Close settings">&times;</button></div>
+    <div class="settingsbody">
+      <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
+      <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
+      <div class="setrow disabled"><div><div class="name">Hard mode</div><div class="hint">Tighter scoring, no 50/50 hint &middot; soon</div></div><span class="soonchip">SOON</span></div>
+    </div><div class="settingsfoot">Preferences save to this browser.</div></div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
+  const escClose=e=>{if(e.key==='Escape')close();};
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}});
+  document.addEventListener('keydown',escClose);document.body.appendChild(veil);
+}
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
 function posToYear(p){p=+p; return p<=BREAKP?Math.round(MINY+(p/BREAKP)*(BREAKY-MINY)):Math.round(BREAKY+((p-BREAKP)/(MAXP-BREAKP))*(MAXY-BREAKY));}
@@ -377,7 +444,7 @@ function geoElim(it,leave){
 const apply5050=it=>geoElim(it,2); // paid hint = full 50/50 (leave answer + 1)
 // how many style options a correct-region pin leaves you, by tier (null = no geo help)
 const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
-function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
+function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -608,7 +675,7 @@ let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archive
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="glossnav" data-route="glossary" title="Glossary" aria-label="Glossary">${emblemHTML(GLOSSARY_EMBLEM,9,false)}</button><button class="navbtn" data-route="streak">streak ·</button><button class="navbtn" data-route="archive">archive ▦</button><button class="navbtn" data-route="stats">stats ◔</button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="glossnav" data-route="glossary" title="Glossary" aria-label="Glossary">${emblemHTML(GLOSSARY_EMBLEM,9,false)}</button><button class="navbtn" data-route="streak">streak ·</button><button class="navbtn" data-route="archive">archive ▦</button><button class="navbtn" data-route="stats">stats ◔</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings">⚙</button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
@@ -631,6 +698,8 @@ function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n|
 function route(name){if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else renderStart();}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();renderMovement(b.dataset.movement);}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.wordmark');if(b){e.preventDefault();renderStart();}});
 function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}}
 
 // ---------- START ----------
@@ -741,7 +810,7 @@ function renderRound(){
   wireHints(it);
   // map
   marker=null;
-  map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false}).setView([34,12],1);
+  map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(map);
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
     else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
@@ -752,7 +821,7 @@ function renderRound(){
     if(leave!=null&&it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
-  setTimeout(()=>map.invalidateSize(),250);
+  setTimeout(()=>map.invalidateSize(),settings.reduceMotion?0:250);
   document.getElementById('submit').onclick=score;
 }
 
@@ -850,25 +919,36 @@ function studyFor(it){
     || CUES.region[it.region] || {why:`Made in ${it.place||it.region}, c. ${fmtYear(it.y)}.`,cues:[]};
 }
 function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
+function swatchGlyph(f){return f>=.75?'✓':f>=.35?'◐':'✕';}
+function swatchBox(f,cls='sq'){return `<span class="${cls}" style="background:${swatchColor(f)}"><span class="swglyph">${swatchGlyph(f)}</span></span>`;}
+function studyDisclosureHTML(){return `<div class="studyfoot" id="studyReport"><span>Study notes are AI-generated &amp; fact-checked. Spot something off? </span><button type="button" class="reportopen">Report an error</button></div>`;}
+function setupReportFlow(it,study){
+  const root=document.getElementById('studyReport');if(!root)return;
+  const reasons=['Wrong date','Attribution','Note is wrong','Other'];let reason=reasons[0];
+  const renderDefault=()=>{root.className='studyfoot';root.innerHTML=`<span>Study notes are AI-generated &amp; fact-checked. Spot something off? </span><button type="button" class="reportopen">Report an error</button>`;root.querySelector('.reportopen').onclick=renderForm;};
+  const renderForm=()=>{root.className='studyfoot reportform';root.innerHTML=`<div class="kick">Report an error</div><div class="reportchips">${reasons.map(r=>`<button type="button" class="reportchip ${r===reason?'sel':''}" data-reason="${esc(r)}">${esc(r)}</button>`).join('')}</div><input type="text" id="reportDetail" maxlength="180" placeholder="Add a detail (optional)..." autocomplete="off"><div class="reportactions"><button type="button" class="btn" id="sendReport">Send report</button><button type="button" class="btn2" id="cancelReport">Cancel</button></div>`;
+    root.querySelectorAll('.reportchip').forEach(ch=>ch.onclick=()=>{reason=ch.dataset.reason;root.querySelectorAll('.reportchip').forEach(x=>x.classList.toggle('sel',x===ch));});
+    root.querySelector('#cancelReport').onclick=renderDefault;
+    root.querySelector('#sendReport').onclick=()=>{const detail=(root.querySelector('#reportDetail').value||'').trim(),payload={workId:it.id,movement:it.style||'',reason,detail,note:study.why||'',date:new Date().toISOString()};let arr=[];try{arr=JSON.parse(localStorage.getItem('gesso.reports'))||[];}catch{}arr.push(payload);try{localStorage.setItem('gesso.reports',JSON.stringify(arr));}catch{}root.className='studyfoot';root.innerHTML=`<div class="reportthanks"><i>✓</i><span>Thanks — flagged for a curator to review.</span></div>`;};
+  };
+  renderDefault();
+}
 function renderReveal(r){
   const it=r.it;
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
   if(glossName)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
   const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
-    return `<div class="swatch"><div class="sq" style="background:${swatchColor(f)}"></div><div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
-    + (r.cells.artist?`<div class="swatch"><div class="sq" style="background:${swatchColor(r.cells.artist.pts/MAX_CAT)}"></div><div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
+    return `<div class="swatch">${swatchBox(f)}<div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
+    + (r.cells.artist?`<div class="swatch">${swatchBox(r.cells.artist.pts/MAX_CAT)}<div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
   const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
-    return `<div class="scrow"><span class="sq" style="background:${swatchColor(f)}"></span>
+    return `<div class="scrow">${swatchBox(f)}
       <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · bonus':''}</div>
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
   const why=study.why.replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
   const ml=masteryLine();
-  const reportTitle=`Error report: ${it.title}`;
-  const reportBody=`Work: ${it.title}\nID: ${it.id}\nArtist: ${it.artist||'—'}\nDate: ${fmtYear(it.y)}\nOrigin: ${it.place||''}\n\nWhat's wrong:\n`;
-  const reportURL=`https://github.com/katswnt/artefactum/issues/new?title=${encodeURIComponent(reportTitle)}&body=${encodeURIComponent(reportBody)}`;
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
 
     <div class="banner"><div>
@@ -908,13 +988,13 @@ function renderReveal(r){
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
       ${it.medium&&CUES.medium[it.medium]?`<div class="cue" style="margin-top:8px"><span class="num">◆</span><span class="tx">${CUES.medium[it.medium]}</span></div>`:''}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
-      <div class="disclose">Study notes are AI-generated and fact-checked.</div>
-      <a class="telllink reportlink" href="${reportURL}" target="_blank" rel="noopener">Report an error &#8599;</a>
+      ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>+ Added to glossary</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
     <div style="padding:0 24px 24px"><button class="btn" id="next">${idx<ROUNDS-1?'Next masterwork →':'See final score →'}</button>${ATTRIB}</div>
   </div>`;
   countUps();
+  setupReportFlow(it,study);
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
@@ -923,11 +1003,12 @@ function renderReveal(r){
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
     L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:'5,6'}).addTo(rm);
     L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
-  try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5});}catch{}
-  setTimeout(()=>rm.invalidateSize(),250);
+  try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5,animate:!settings.reduceMotion});}catch{}
+  setTimeout(()=>rm.invalidateSize(),settings.reduceMotion?0:250);
   document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
 }
 function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const target=+el.getAttribute('data-cu'),prefix=el.getAttribute('data-prefix')||'';
+  if(settings.reduceMotion){el.textContent=prefix+target.toLocaleString();return;}
   const t0=performance.now(),dur=950,ease=t=>1-Math.pow(1-t,3);
   const step=now=>{const p=Math.min(1,(now-t0)/dur);el.textContent=prefix+Math.round(target*ease(p)).toLocaleString();if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 
@@ -942,6 +1023,7 @@ function resultSummary(){
 }
 function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
 function cellColor(pts){const f=pts/MAX_CAT;return f>=.75?cssVar('--full'):f>=.35?cssVar('--partial'):cssVar('--miss');}
+function cellGlyph(pts){return swatchGlyph(pts/MAX_CAT);}
 function iconImage(c){
   return new Promise(resolve=>{const img=new Image(),svg=(ICONS[c]||'').replace(/currentColor/g,'#1b1916').replace(/width="24" height="24"/,'width="48" height="48"');img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));});
 }
@@ -963,7 +1045,8 @@ async function renderShareCard(data){
       const cellData=r.cells[c], x=x0+labelW+gap+ci*(cell+gap);
       ctx.fillStyle=cellColor(cellData.pts);roundRect(ctx,x,y,cell,rowH-26,16);ctx.fill();
       const mark=c==='artist'&&cellData.pts===MAX_CAT?'⭐':cellData.pts===MAX_CAT?'🎯':'';
-      if(mark){ctx.font='46px Arial, sans-serif';ctx.fillStyle='#fff';ctx.fillText(mark,x+cell/2,y+62);}
+      if(settings.colorblind){ctx.font='800 48px Archivo, sans-serif';ctx.fillStyle='#fff';ctx.fillText(cellGlyph(cellData.pts),x+cell/2,y+62);}
+      else if(mark){ctx.font='46px Arial, sans-serif';ctx.fillStyle='#fff';ctx.fillText(mark,x+cell/2,y+62);}
     });
   });
   ctx.strokeStyle=cssVar('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(84,1130);ctx.lineTo(996,1130);ctx.stroke();
@@ -1044,7 +1127,7 @@ function renderFinal(){
   const head=cols.map(c=>`<th>${iconHTML(c)}${catShort(c)}</th>`).join('');
   const rows=results.map(r=>`<tr><td class="rl">${esc(r.it.title)}</td>${cols.map(c=>{
     if(!r.it.cats.includes(c))return `<td></td>`;
-    const f=r.cells[c].pts/MAX_CAT;return `<td><div class="msq" style="background:${swatchColor(f)}"></div></td>`;}).join('')}</tr>`).join('');
+    const f=r.cells[c].pts/MAX_CAT;return `<td>${swatchBox(f,'msq')}</td>`;}).join('')}</tr>`).join('');
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
 
@@ -1062,7 +1145,7 @@ function renderFinal(){
       <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
   </div>`;
   countUps();
-  document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(share).then(()=>document.getElementById('copy').textContent='Copied ✓');
+  document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
   document.getElementById('streak').onclick=renderStreak;
   document.getElementById('again').onclick=renderStart;
@@ -1087,6 +1170,7 @@ function openZoom(src){
 document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('art'))openZoom(e.target.src);});
 
 // ---------- boot ----------
+applySettings();
 if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
 else{ buildIndexes(); renderStart(); }
 </script>
