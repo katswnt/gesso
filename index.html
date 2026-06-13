@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Artefactum — the daily art-guessing game</title>
+<title>Gesso — the daily art-guessing game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -189,7 +189,18 @@ function schemeFor(it){
   if(it.region==='Europe'||it.region==='North America')return 'western';
   return 'neutral';
 }
-function periodName(it,y){const sc=SCHEMES[schemeFor(it)];for(const[n,end]of sc)if(y<end)return n;return sc[sc.length-1][0];}
+function periodOf(scheme,y){const sc=SCHEMES[scheme]||SCHEMES.neutral;for(const[n,end]of sc)if(y<end)return n;return sc[sc.length-1][0];}
+function periodName(it,y){return periodOf(schemeFor(it),y);}
+// derive a period scheme from a GUESSED pin (so the slider reflects the player's hypothesis, not the answer)
+function schemeFromLatLng(lat,lng){
+  if(lng>=24&&lng<=37&&lat>=18&&lat<=32)return 'egypt';
+  if(lng>=128&&lng<=146&&lat>=30&&lat<=46)return 'japan';
+  if(lng>=98&&lng<=136&&lat>=18&&lat<=50)return 'china';
+  if(lng>=68&&lng<=92&&lat>=6&&lat<=36)return 'india';
+  if(lng>=25&&lng<=75&&lat>=12&&lat<=43)return 'persia';
+  if(lng>=-25&&lng<=60&&lat>=35&&lat<=72)return 'western';
+  return 'neutral';
+}
 function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
@@ -263,7 +274,7 @@ let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marke
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="brand"><span class="wordmark">Artefactum</span><span class="accn">${accession()}</span></div>
+  return `<div class="hd"><div class="brand"><span class="wordmark">Gesso</span><span class="accn">${accession()}</span></div>
     <div class="right"><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
@@ -282,8 +293,8 @@ function renderStart(){
   const b=regionBars();
   document.getElementById('stage').innerHTML=`<div class="card">
     ${header(0,-1,false)}
-    <div class="hero"><div class="big2">Artefactum</div>
-      <div class="tag">The daily art-guessing game &middot; ${accession()} &middot; five works</div></div>
+    <div class="hero"><div class="big2">Gesso</div>
+      <div class="tag">Take a gesso &middot; the daily art-guessing game &middot; ${accession()} &middot; five works</div></div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
@@ -315,7 +326,8 @@ function renderRound(){
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">When made</span></div>
     <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">AD 1700</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
     <input type="range" id="yr" min="-3000" max="2025" value="1700" step="1" />
-    <div class="minmax"><span>3000 BC</span><span>2025</span></div>`}); n++;
+    <div class="minmax"><span>3000 BC</span><span>2025</span></div>
+    <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
     const ch=shuffle([it.medium,...shuffle(ALL_MED.filter(m=>m!==it.medium)).slice(0,3)]);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">Medium</span></div>
@@ -353,8 +365,9 @@ function renderRound(){
   </div>`;
   // wire slider
   const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
-  yr.oninput=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${periodName(it,+yr.value).toUpperCase()} ]`;};
-  yr.oninput();
+  let curScheme='neutral';
+  const updEra=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${periodOf(curScheme,+yr.value).toUpperCase()} ]`;};
+  yr.oninput=updEra; updEra();
   // pills
   document.querySelectorAll('[data-pills]').forEach(g=>{const kind=g.dataset.pills;
     g.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{
@@ -369,7 +382,9 @@ function renderRound(){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(map);
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
-    else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);});
+    else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
+    curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
+    const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;});
   setTimeout(()=>map.invalidateSize(),250);
   document.getElementById('submit').onclick=score;
 }
@@ -544,7 +559,7 @@ function renderFinal(){
   const totalHints=results.reduce((a,r)=>a+r.hints,0);
   // share text (per piece: its category squares in cat order)
   const lines=results.map(r=>r.it.cats.map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
-  const share=`Artefactum ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${bonus?` +${bonus} bonus`:''}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
+  const share=`Gesso ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${bonus?` +${bonus} bonus`:''}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
   // matrix
   const cols=["when","where","medium","style","artist"];
   const head=cols.map(c=>`<th>${catShort(c)}</th>`).join('');
