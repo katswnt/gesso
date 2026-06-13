@@ -96,7 +96,8 @@ const ART = [
  {t:"A Sunday on La Grande Jatte", a:"Georges Seurat", y:1884, lat:48.86,lng:2.35, place:"Paris, France", m:"Pointillism", f:"Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg"},
  {t:"The Creation of Adam", a:"Michelangelo", y:1512, lat:41.90,lng:12.45, place:"Vatican City, Rome", m:"Renaissance", f:"Michelangelo_-_Creation_of_Adam_(cropped).jpg"},
 ];
-const ALL_MOV = [...new Set(ART.map(a=>a.m))];
+let ALL_MOV = [...new Set(ART.map(a=>a.m))];
+const getImg = it => it.img || F(it.f);
 
 // Era bands — scoring is by timeframe, not exact year
 const ERAS = [
@@ -113,7 +114,7 @@ function eraIndex(y){for(let i=0;i<ERAS.length;i++){if(y<ERAS[i].end||i===ERAS.l
 function eraName(y){return ERAS[eraIndex(y)].name;}
 
 // Broader autocomplete pool so suggestions don't give the answer away
-const ARTIST_POOL = [...new Set([...ART.map(a=>a.a),
+let ARTIST_POOL = [...new Set([...ART.map(a=>a.a),
   "Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin",
   "Henri Matisse","Pablo Picasso","Salvador Dalí","Marc Chagall","Wassily Kandinsky",
   "Jackson Pollock","Andy Warhol","Frida Kahlo","Georgia O'Keeffe","Edward Hopper",
@@ -164,11 +165,41 @@ function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,
   h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
 function emFor(frac){return frac>=.75?"🟩":frac>=.35?"🟨":"🟥";}
+function cleanMov(m){return m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim();}
+function normMov(m){return cleanMov(m).toLowerCase().replace(/[^a-z ]/g,'').trim();}
+
+// ---- Live data: pull a pool of famous paintings from Wikidata (CORS-enabled) ----
+const WD_QUERY = `SELECT ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?countryLabel ?coord ?image WHERE {
+  ?item wdt:P31 wd:Q3305213; wdt:P18 ?image; wdt:P170 ?creator; wdt:P571 ?inception;
+        wdt:P135 ?movement; wdt:P495 ?country; wikibase:sitelinks ?s.
+  OPTIONAL { ?country wdt:P625 ?coord. }
+  FILTER(?s > 28)
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+} ORDER BY DESC(?s) LIMIT 400`;
+
+async function loadPool(){
+  const url="https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(WD_QUERY);
+  const res=await fetch(url,{headers:{Accept:"application/sparql-results+json"}});
+  if(!res.ok) throw new Error("wikidata "+res.status);
+  const data=await res.json();
+  const seen=new Set(), pool=[];
+  for(const b of data.results.bindings){
+    const g=k=>b[k]&&b[k].value;
+    const t=g('itemLabel'), a=g('creatorLabel'), y=parseInt(g('yr'),10), mraw=g('movementLabel'),
+          place=g('countryLabel'), coord=g('coord'), img=g('image');
+    if(!t||!a||!y||!mraw||!coord||!img) continue;
+    if(/^Q\d+$/.test(a)||/^Q\d+$/.test(t)) continue;            // skip unlabeled entities
+    const mp=coord.match(/Point\(([-\d.]+) ([-\d.]+)\)/); if(!mp) continue;
+    if(seen.has(t)) continue; seen.add(t);
+    pool.push({t, a, y, m:cleanMov(mraw), place, lng:+mp[1], lat:+mp[2],
+      img:img.replace(/^http:/,'https:')+"?width=1000"});
+  }
+  return pool;
+}
 
 // ---- Game state ----
-const game = shuffle(ART).slice(0,ROUNDS);
-let idx=0, results=[], guess={};
-let map, marker;
+let game=[], idx=0, results=[], guess={};
+let map, marker, artistMov={};
 
 function renderProgress(){
   document.getElementById('progress').innerHTML = game.map((_,i)=>
@@ -184,7 +215,7 @@ function renderRound(){
   const stage = document.getElementById('stage');
   stage.innerHTML = `
     <div class="card">
-      <img class="art" src="${F(it.f)}" alt="artwork to identify" />
+      <img class="art" src="${getImg(it)}" alt="artwork to identify" />
       <div class="body">
         <div class="grid2">
           <div>
@@ -264,18 +295,28 @@ function score(){
   let sPlace=0,dist=null;
   if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
     sPlace=Math.round(MAX_CAT*Math.exp(-dist/2500));}
-  // movement — full credit exact, half credit for a related movement
+  // movement — full credit exact; half credit if related or sharing a key word
   let sMov=0, movNote="";
-  if(guess.mov===it.m){sMov=MAX_CAT;}
-  else if(guess.mov && (RELATED_MOV[it.m]||[]).includes(guess.mov)){sMov=Math.round(MAX_CAT*0.5); movNote=" — related, half credit";}
-  // artist — exact/last-name full, similar artist partial
+  const STOP=new Set(["art","painting","style","the","of","early","late","high"]);
+  const movWords=s=>new Set(normMov(s).split(' ').filter(w=>w.length>3&&!STOP.has(w)));
+  if(guess.mov && normMov(guess.mov)===normMov(it.m)){sMov=MAX_CAT;}
+  else if(guess.mov){
+    const related=(RELATED_MOV[it.m]||[]).some(r=>normMov(r)===normMov(guess.mov));
+    const gW=movWords(guess.mov), aW=movWords(it.m);
+    const overlap=[...gW].some(w=>aW.has(w));
+    if(related||overlap){sMov=Math.round(MAX_CAT*0.5); movNote=" — related, half credit";}
+  }
+  // artist — exact/last-name full; partial if same school (curated map or shared movement in pool)
   const norm=s=>s.toLowerCase().replace(/[^a-z ]/g,'').trim();
   const last=s=>norm(s).split(' ').pop();
   const ga=norm(guess.artist);
   let sArt=0, artNote="";
   if(ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))){sArt=MAX_CAT;}
-  else if(ga && (SIMILAR_ARTISTS[it.a]||[]).some(s=>norm(s)===ga || last(s)===last(guess.artist))){
-    sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
+  else if(ga){
+    const curated=(SIMILAR_ARTISTS[it.a]||[]).some(s=>norm(s)===ga || last(s)===last(guess.artist));
+    const sharesMov=artistMov[ga] && artistMov[ga].has(normMov(it.m));
+    if(curated||sharesMov){sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
+  }
   const total=sTime+sPlace+sMov+sArt;
   results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,guess:{...guess}});
   renderReveal(results[results.length-1]);
@@ -286,7 +327,7 @@ function renderReveal(r){
   const row=(label,em,pts,detail)=>`<div class="scoreline"><span><span class="em">${em}</span> ${label} <span class="hint">${detail}</span></span><span class="pts">${pts}</span></div>`;
   document.getElementById('stage').innerHTML=`
     <div class="card">
-      <img class="art" src="${F(it.f)}" alt="${it.t}" />
+      <img class="art" src="${getImg(it)}" alt="${it.t}" />
       <div class="reveal">
         <h2>${it.t}</h2>
         <div class="meta">${it.a} · ${fmtYear(it.y)} · ${it.place} · ${it.m}</div>
@@ -323,7 +364,35 @@ function renderFinal(){
   document.getElementById('again').onclick=()=>location.reload();
 }
 
-renderRound();
+function buildIndexes(pool){
+  ALL_MOV=[...new Set(pool.map(p=>p.m))];
+  ARTIST_POOL=[...new Set([...ARTIST_POOL, ...pool.map(p=>p.a)])].sort();
+  artistMov={};
+  const n=s=>s.toLowerCase().replace(/[^a-z ]/g,'').trim();
+  for(const p of pool){const k=n(p.a); (artistMov[k]=artistMov[k]||new Set()).add(normMov(p.m));}
+}
+
+function loading(msg){
+  document.getElementById('stage').innerHTML=
+    `<div class="card"><div class="reveal final"><div class="bigscore">⏳</div><div class="hint">${msg}</div></div></div>`;
+}
+
+async function init(){
+  loading("Summoning masterworks from Wikidata…");
+  try{
+    const pool=await loadPool();
+    if(pool.length<ROUNDS) throw new Error("thin pool");
+    buildIndexes(pool);
+    game=shuffle(pool).slice(0,ROUNDS);
+  }catch(e){
+    // offline / API down → fall back to the curated set
+    game=shuffle(ART).slice(0,ROUNDS);
+  }
+  idx=0; results=[];
+  renderRound();
+}
+
+init();
 </script>
 </body>
 </html>
