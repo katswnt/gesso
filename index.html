@@ -44,6 +44,8 @@
   .banner .mono{white-space:nowrap}
   .cicon{display:inline-flex;width:16px;height:16px;vertical-align:-3px;margin-right:6px}
   .cicon svg{width:16px;height:16px}
+  .gicon{display:inline-flex;width:16px;height:16px;vertical-align:-3px}
+  .gicon svg{width:16px;height:16px}
   .fieldlabel{display:flex;align-items:center;gap:8px;margin-bottom:11px}
   .fieldlabel .ix{font:600 10px 'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:.1em}
   .fieldlabel .nm{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
@@ -673,9 +675,10 @@ let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marke
 let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archiveMonth=null;
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
+const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="glossnav" data-route="glossary" title="Glossary" aria-label="Glossary">${emblemHTML(GLOSSARY_EMBLEM,9,false)}</button><button class="navbtn" data-route="streak">streak ·</button><button class="navbtn" data-route="archive">archive ▦</button><button class="navbtn" data-route="stats">stats ◔</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings">⚙</button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
