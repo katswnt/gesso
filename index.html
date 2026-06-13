@@ -57,6 +57,13 @@
   #revmap{height:200px;border-radius:10px;border:1px solid var(--line);margin:6px 0 4px}
   .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:8px}
   .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .hintbtn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:7px 12px;
+    border-radius:20px;cursor:pointer;font-family:inherit;font-size:13px}
+  .hintbtn:hover:not(:disabled){background:var(--gold);color:#1a160c}
+  .hintbtn:disabled{opacity:.4;cursor:default}
+  .hintout{color:var(--ink);font-size:13px;margin-top:8px;line-height:1.7}
+  .hintout div{padding:4px 0;border-bottom:1px dashed var(--line)}
   .btn{display:block;width:100%;margin-top:18px;padding:13px;border:none;border-radius:10px;
     background:var(--gold);color:#1a160c;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;letter-spacing:.03em}
   .btn:hover{filter:brightness(1.06)}
@@ -176,6 +183,16 @@ function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,
   h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
 function centuryOf(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=["th","st","nd","rd"][(c%100>10&&c%100<14)?0:(c%10<4?c%10:0)];return `${c}${s} century${y<0?" BC":""}`;}
+function continentOf(lat,lng){
+  if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56) return "South America";
+  if(lng>=-170&&lng<=-52&&lat>=13) return "North America";
+  if(lng>=110&&lat<=-10) return "Oceania";
+  if(lat>=36&&lng>=-25&&lng<=60) return "Europe";
+  if(lat>=-35&&lat<36&&lng>=-20&&lng<=52) return "Africa";
+  if(lng>40) return "Asia";
+  return "Europe";
+}
+function initialsOf(name){return name.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+".").join(" ");}
 const HINT_COST=500, PICK_COST=500;
 function emFor(frac){return frac>=.75?"🟩":frac>=.35?"🟨":"🟥";}
 function cleanMov(m){return m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim();}
@@ -231,7 +248,7 @@ function renderProgress(){
 function renderRound(){
   renderProgress();
   const it = game[idx];
-  guess = {year:1700, ll:null, mov:null, artist:"", artistPicked:false, hint:false};
+  guess = {year:1700, ll:null, mov:null, artist:"", artistPicked:false, hints:new Set()};
   // movement choices: correct + 3 distractors
   const movChoices = shuffle([it.m, ...shuffle(ALL_MOV.filter(m=>m!==it.m)).slice(0,3)]);
   const stage = document.getElementById('stage');
@@ -259,8 +276,14 @@ function renderRound(){
             <div class="hint">Click the map to drop your pin.</div>
           </div>
         </div>
-        <button class="btn ghost" id="hint">💡 Hint (−${HINT_COST}): reveal the century</button>
-        <div class="erares" id="hintout" style="display:none;text-align:center"></div>
+        <div class="q" style="margin-top:18px">Need a hint? <span class="hint" style="text-transform:none">(−${HINT_COST} each)</span></div>
+        <div class="hints" id="hints">
+          <button class="hintbtn" data-h="when">🕰️ Century</button>
+          <button class="hintbtn" data-h="where">🗺️ Continent</button>
+          <button class="hintbtn" data-h="mov">🎨 50/50</button>
+          <button class="hintbtn" data-h="artist">🖌️ Artist initials</button>
+        </div>
+        <div class="hintout" id="hintout"></div>
         <button class="btn" id="submit">Lock in guesses →</button>
       </div>
     </div>`;
@@ -281,11 +304,23 @@ function renderRound(){
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
     else marker=L.circleMarker(e.latlng,{radius:8,color:'#d9b15e',fillColor:'#d9b15e',fillOpacity:.9,weight:2}).addTo(map);});
   setTimeout(()=>map.invalidateSize(),200);
-  // wire hint
-  const hb=document.getElementById('hint'), ho=document.getElementById('hintout');
-  hb.onclick=()=>{guess.hint=true; ho.style.display='block';
-    ho.textContent=`This work was made in the ${centuryOf(it.y)}.`;
-    hb.disabled=true; hb.style.opacity=.5; hb.textContent=`💡 Hint used (−${HINT_COST})`;};
+  // wire hints (choose any; each costs HINT_COST)
+  const ho=document.getElementById('hintout');
+  const hintText={
+    when:()=>`🕰️ Made in the ${centuryOf(it.y)}.`,
+    where:()=>`🗺️ Made somewhere in ${continentOf(it.lat,it.lng)}.`,
+    mov:()=>{ // 50/50: dim two wrong movement options
+      const wrong=shuffle([...document.querySelectorAll('.mov')].filter(b=>normMov(b.dataset.m)!==normMov(it.m)));
+      wrong.slice(0,2).forEach(b=>{b.style.opacity=.25; b.style.textDecoration='line-through'; b.disabled=true;});
+      return `🎨 Two unlikely movements have been ruled out.`;
+    },
+    artist:()=>`🖌️ The artist's initials are ${initialsOf(it.a)}.`,
+  };
+  document.querySelectorAll('.hintbtn').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.h; if(guess.hints.has(k))return;
+    guess.hints.add(k); b.disabled=true;
+    ho.insertAdjacentHTML('beforeend',`<div>${hintText[k]()} <span class="hint">−${HINT_COST}</span></div>`);
+  });
   document.getElementById('submit').onclick=score;
 }
 
@@ -349,7 +384,7 @@ function score(){
     const sharesMov=artistMov[ga] && artistMov[ga].has(normMov(it.m));
     if(curated||sharesMov){sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
   }
-  const hintPen=guess.hint?HINT_COST:0;
+  const hintPen=guess.hints.size*HINT_COST;
   const total=Math.max(0, sTime+sPlace+sMov+sArt-hintPen);
   results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,hintPen,guess:{...guess}});
   renderReveal(results[results.length-1]);
@@ -368,7 +403,7 @@ function renderReveal(r){
         ${row("Where",emFor(r.sPlace/MAX_CAT),r.sPlace,r.dist==null?"no pin":`${Math.round(r.dist)} km away`)}
         ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}${r.movNote}`:"no answer")}
         ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}${r.artNote}`:"no answer")}
-        ${r.hintPen?`<div class="scoreline"><span><span class="em">💡</span> Hint <span class="hint">century revealed</span></span><span class="pts">−${r.hintPen}</span></div>`:''}
+        ${r.hintPen?`<div class="scoreline"><span><span class="em">💡</span> Hints <span class="hint">${r.guess.hints.size} used</span></span><span class="pts">−${r.hintPen}</span></div>`:''}
         <div class="total">+${r.total} points</div>
         <div class="legend"><span><span class="dot" style="background:#5fb87a"></span>Made in ${it.place}</span>${r.guess.ll?'<span><span class="dot" style="background:#d9b15e"></span>Your guess</span>':''}</div>
         <div id="revmap"></div>
