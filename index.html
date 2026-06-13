@@ -446,6 +446,9 @@ function geoElim(it,leave){
 const apply5050=it=>geoElim(it,2); // paid hint = full 50/50 (leave answer + 1)
 // how many style options a correct-region pin leaves you, by tier (null = no geo help)
 const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
+// "right country" = full credit within this radius (km); big countries get a generous radius, then falloff beyond
+const PLACE_RADIUS=[[/united states|america|u\.s\./i,2200],[/russia|soviet/i,3000],[/canada/i,2500],[/china/i,2000],[/australia/i,1900],[/brazil/i,1800],[/india/i,1500],[/kazakh/i,1300],[/argentin/i,1500],[/indonesia/i,1700],[/mexico/i,1100],[/iran|persia/i,950],[/egypt/i,750],[/turkey|ottoman|türkiye/i,800],[/japan/i,700]];
+function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))return r;return 450;}
 function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
@@ -789,11 +792,12 @@ function renderRound(){
           <div class="hinttext" id="hintout" style="display:none"></div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}</div>
-    </div>
-    <div style="padding:0 24px 24px">
-      <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">CLICK TO MARK</span></div>
-      <div id="map" style="height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+      <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
+        <div>
+          <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">CLICK TO MARK</span></div>
+          <div id="map" style="height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+        </div>
+      </div>
     </div>
     <div style="padding:0 24px 24px">
       <button class="btn" id="submit">Lock in &amp; file record &rarr;</button>${ATTRIB}</div>
@@ -883,8 +887,10 @@ function score(){
   cells.when={pts:bull?MAX_CAT:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
     note:bull?"right to the decade":periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   // where (distance falloff is gentler on easy, steeper on hard)
-  let dist=null,sp=0; if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng); sp=Math.round(MAX_CAT*Math.exp(-dist/D.distK));}
-  cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place, note:dist==null?"no pin dropped":`${Math.round(dist)} km off`};
+  let dist=null,sp=0,rad=radiusFor(it.place); if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
+    sp = dist<=rad ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(dist-rad)/D.distK));}
+  cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
+    note:dist==null?"no pin dropped":dist<=rad?"right country":`${Math.round(dist)} km off`};
   // medium
   if(it.cats.includes('medium')){let s=0,note="no answer";
     if(guess.medium){ if(guess.medium===it.medium){s=MAX_CAT;note="exact";}
