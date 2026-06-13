@@ -25,7 +25,12 @@
   .pip.cur{background:var(--ink)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     box-shadow:0 18px 50px rgba(0,0,0,.45)}
-  .art{width:100%;max-height:46vh;object-fit:contain;background:#000;display:block}
+  .art{width:100%;max-height:46vh;object-fit:contain;background:#000;display:block;cursor:zoom-in}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:5000;display:flex;
+    align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
+  .lightbox img{max-width:94vw;max-height:94vh;cursor:zoom-in;will-change:transform;user-select:none}
+  .lb-close{position:fixed;top:14px;right:20px;background:none;border:none;color:#fff;font-size:30px;cursor:pointer;line-height:1}
+  .lb-hint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#cfc6b4;font-size:13px;pointer-events:none}
   .body{padding:18px}
   .q{font-weight:600;letter-spacing:.02em;margin:2px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -506,6 +511,28 @@ async function init(){
   }
   renderStart();
 }
+
+// ---- Zoom lightbox (delegated; works on any .art image) ----
+function hiRes(src){return src.replace(/width=\d+/, "width=1800");}
+function openZoom(src){
+  const lb=document.createElement('div'); lb.className='lightbox';
+  const img=document.createElement('img'); img.src=hiRes(src); img.draggable=false;
+  let scale=1,tx=0,ty=0,drag=false,sx=0,sy=0;
+  const apply=()=>img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  img.onclick=e=>{e.stopPropagation(); if(scale===1)scale=2.5; else{scale=1;tx=0;ty=0;} img.style.cursor=scale>1?'grab':'zoom-in'; apply();};
+  img.onmousedown=e=>{if(scale===1)return; drag=true; sx=e.clientX-tx; sy=e.clientY-ty; img.style.cursor='grabbing'; e.preventDefault();};
+  const mv=e=>{if(!drag)return; tx=e.clientX-sx; ty=e.clientY-sy; apply();};
+  const up=()=>{drag=false; if(scale>1)img.style.cursor='grab';};
+  window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
+  const close=()=>{lb.remove(); window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',esc);
+  lb.onclick=close;
+  const x=document.createElement('button'); x.className='lb-close'; x.textContent='✕'; x.onclick=e=>{e.stopPropagation();close();};
+  const hint=document.createElement('div'); hint.className='lb-hint'; hint.textContent='Click image to zoom · drag to pan · Esc to close';
+  lb.append(img,x,hint); document.body.appendChild(lb);
+}
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('art'))openZoom(e.target.src);});
 
 init();
 </script>
