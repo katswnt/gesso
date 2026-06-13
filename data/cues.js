@@ -79,10 +79,18 @@ window.ARTEFACTUM_CUES = {
       cues:["Expressive stylization over naturalism.","Cast bronze/brass and carved wood.","Royal, ancestral and ritual function."]},
   },
   region: {
+    "Europe": {why:"European easel painting — oil on canvas or panel, with modelled light and perspective — runs from the Renaissance onward.",
+      cues:["Oil paint built in layers for depth and shadow.","Naturalistic volume, light and linear perspective.","Religious, portrait, landscape and history subjects."]},
+    "North America": {why:"Art of North America spans Indigenous traditions and later European-influenced schools of the 18th–20th centuries.",
+      cues:["Portrait, landscape and genre scenes in the colonial/American schools.","Indigenous work: hide, beadwork, carving and pottery.","Often realist or regional in subject."]},
+    "South America": {why:"Andean and later colonial traditions mark much South American art.",
+      cues:["Pre-Columbian: geometric textile and ceramic mastery.","Colonial: European religious imagery reworked locally.","Stylized pattern and rich surface."]},
     "Africa": {why:"Sculptural abstraction and ritual function are hallmarks of much African art.",
       cues:["Form stylized for power, not likeness.","Wood, bronze and terracotta.","Ceremonial and ancestral use."]},
     "Asia": {why:"Brush, ink and line, with flat decorative color, run through much Asian art.",
       cues:["Calligraphic line and ink.","Flat color and ornamental pattern.","Devotional and literary subjects."]},
+    "Oceania": {why:"Bold, symbolic carving and pattern mark the arts of the Pacific.",
+      cues:["Carved wood, bark cloth and shell.","Ancestral and cosmological motifs.","Strong rhythmic pattern."]},
   },
   // medium notes appended to the cue list when known
   medium: {

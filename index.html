@@ -194,7 +194,11 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, pool=it.styleKin
   else picks=[...pickN(related,1),...pickN(sameReg.length?sameReg:pool,2)];
   return fill3(ans,picks,pool);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
-function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
+function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
+// non-linear timeline: most works are post-1400, so give recent centuries more of the track
+let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
+function posToYear(p){p=+p; return p<=BREAKP?Math.round(MINY+(p/BREAKP)*(BREAKY-MINY)):Math.round(BREAKY+((p-BREAKP)/(MAXP-BREAKP))*(MAXY-BREAKY));}
+function yearToPos(y){return y<=BREAKY?Math.round((y-MINY)/(BREAKY-MINY)*BREAKP):Math.round(BREAKP+(y-BREAKY)/(MAXY-BREAKY)*(MAXP-BREAKP));}
 // Region-aware period schemes — the slider tag reflects the work's own culture's periodization
 const SCHEMES={
   western:[["Antiquity",500],["Medieval",1400],["Renaissance",1600],["Baroque",1750],["Enlightenment",1800],["19th c.",1900],["Modern",1945],["Contemporary",3000]],
@@ -289,6 +293,7 @@ let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
 let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
 function buildIndexes(){
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
+  MINY=Math.min(...POOL.map(p=>p.y));
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
@@ -372,9 +377,9 @@ function renderRound(){
   let n=1; const fields=[];
   fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">When made</span></div>
-    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">AD 1700</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
-    <input type="range" id="yr" min="-3000" max="2025" value="1700" step="1" />
-    <div class="minmax"><span>3000 BC</span><span>2025</span></div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
+    <input type="range" id="yr" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
+    <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
     const ch=mediumChoices(it.medium);
@@ -414,7 +419,7 @@ function renderRound(){
   // wire slider
   const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
   let curScheme='neutral', free5050=false;
-  const updEra=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${periodOf(curScheme,+yr.value).toUpperCase()} ]`;};
+  const updEra=()=>{guess.year=posToYear(+yr.value); yv.textContent=fmtYear(guess.year); era.textContent=`[ ${periodOf(curScheme,guess.year).toUpperCase()} ]`;};
   yr.oninput=updEra; updEra();
   // pills
   document.querySelectorAll('[data-pills]').forEach(g=>{const kind=g.dataset.pills;
@@ -473,7 +478,7 @@ function wireHints(it){
     refresh();};
   refresh();
 }
-function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>10&&c%100<14)?"th":["th","st","nd","rd"][c%10]||"th";return `${c}${s} century${y<0?" BC":""}`;}
+function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>10&&c%100<14)?"th":["th","st","nd","rd"][c%10]||"th";return `${c}${s} century${y<0?" BCE":""}`;}
 
 // ---------- scoring ----------
 function timeScore(diff){
@@ -525,7 +530,7 @@ function score(){
 // ---------- REVEAL ----------
 function studyFor(it){
   return (it.styleKind==='movement'&&CUES.style[it.style]) || (it.styleKind==='culture'&&CUES.culture[it.style])
-    || CUES.region[it.region] || {why:`A ${it.region} work${it.style?' in the '+it.style+' tradition':''}, c. ${fmtYear(it.y)}.`,cues:[]};
+    || CUES.region[it.region] || {why:`Made in ${it.place||it.region}, c. ${fmtYear(it.y)}.`,cues:[]};
 }
 function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
 function renderReveal(r){

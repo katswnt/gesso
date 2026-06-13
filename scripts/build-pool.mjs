@@ -114,7 +114,7 @@ function item(o){
 
 // ---- Wikidata ----
 async function fromWikidata(){
-  const q = `SELECT ?item ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?materialLabel ?coord ?image ?s WHERE {
+  const q = `SELECT ?item ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?materialLabel ?countryLabel ?coord ?image ?s WHERE {
     VALUES ?type { wd:Q3305213 wd:Q11060274 wd:Q93184 wd:Q860861 }
     ?item wdt:P31 ?type; wdt:P18 ?image; wdt:P170 ?creator; wdt:P571 ?inception;
           wdt:P495 ?country; wikibase:sitelinks ?s.
@@ -124,6 +124,10 @@ async function fromWikidata(){
     FILTER(?s>12)
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
   } ORDER BY DESC(?s) LIMIT 600`;
+  // transcontinental / edge countries whose Wikidata centroid misleads (Russia -> Siberia, etc.)
+  const COUNTRY_FIX=[[/russia|soviet|russian empire/i,55.75,37.62],[/ottoman|turkey|türkiye/i,41.01,28.98],
+    [/byzantine/i,41.01,28.98],[/united states|america/i,38.9,-77.04],[/kazakhstan/i,43.24,76.95]];
+  const fixCoord=(label,la,ln)=>{for(const[re,a,b]of COUNTRY_FIX)if(re.test(label))return[a,b];return[la,ln];};
   const url = "https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(q);
   const data = await fetchJSON(url);
   const byId = new Map();
@@ -134,11 +138,12 @@ async function fromWikidata(){
     if(!id||!title||!y||!coord||!img) continue;
     if(/^Q\d+$/.test(title)||/^Q\d+$/.test(artist||"")) continue;
     const mp=coord.match(/Point\(([-\d.]+) ([-\d.]+)\)/); if(!mp) continue;
+    const cl=g('countryLabel')||""; const [la,ln]=fixCoord(cl,+mp[2],+mp[1]);
     let it=byId.get(id);
     if(!it){
-      it=item({id,title,artist:artist||"",y,lat:+mp[2],lng:+mp[1],
+      it=item({id,title,artist:artist||"",y,lat:la,lng:ln,
         movement:cleanMov(g('movementLabel')||""), medium:mediumClass(g('materialLabel')||""),
-        culture:"", place:"", fame:parseInt(g('s'),10)||0, img:img.replace(/^http:/,'https:')+"?width=900", src:"wd"});
+        culture:"", place:cl, fame:parseInt(g('s'),10)||0, img:img.replace(/^http:/,'https:')+"?width=900", src:"wd"});
       byId.set(id,it);
     } else {
       if(!it.movement) it.movement=cleanMov(g('movementLabel')||"");
