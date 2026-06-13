@@ -689,7 +689,7 @@ function renderMovement(name){
 }
 
 // ---------- game state ----------
-let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marker;
+let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marker, infinite=false;
 let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archiveMonth=null;
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
@@ -751,6 +751,10 @@ function renderStart(dateStr){
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
     </div>
+    ${replay?'':`<div style="text-align:center;padding:0 24px 16px">
+      <span class="kick" style="margin-right:8px">Or play endlessly</span>
+      ${TIERS.map(t=>`<button class="navbtn inf" data-inf="${t.key}" style="margin:3px 3px">∞ ${t.label}</button>`).join('')}
+    </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
       <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool (Wikidata + The Met's open collection) is ${b.europe}% European:</p>
       <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
@@ -758,12 +762,38 @@ function renderStart(dateStr){
     ${ATTRIB}
   </div>`;
   document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
+  document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
 }
 function startGame(key,dateStr){
   clearTimers();
-  tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
+  infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
   game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
   renderRound();
+}
+function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
+function startInfinite(key){
+  clearTimers(); infinite=true; tier=key; runDate=todayStr(); runArchive=false;
+  game=shuffle(tierItems(tierIndex(key))); idx=0; results=[]; hintsUsed=0;
+  renderRound();
+}
+function renderInfiniteSummary(){
+  clearTimers();
+  const rounds=results.length, total=results.reduce((a,x)=>a+x.coreNet+x.bonus,0);
+  const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
+  document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
+    <div class="banner"><div><div class="kick">Infinite session &middot; ${tier}</div>
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px"><span class="big">${avg.toLocaleString()}</span>
+      <span class="mono" style="font-size:13px;color:var(--muted)">avg pts / round &middot; ${rounds} round${rounds===1?'':'s'}</span></div></div></div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:9px">
+      <div class="metarow"><span class="k">ROUNDS</span><span class="v">${rounds}</span></div>
+      <div class="metarow"><span class="k">TOTAL</span><span class="v">${total.toLocaleString()} pts</span></div>
+      <div class="metarow"><span class="k">BEST</span><span class="v">${best.toLocaleString()} pts in one round</span></div>
+    </div>
+    <div style="padding:8px 24px 24px"><button class="btn" id="againinf">Play again →</button>
+      <button class="btn" id="homeinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Home</button>${ATTRIB}</div>
+  </div>`;
+  document.getElementById('againinf').onclick=()=>startInfinite(tier);
+  document.getElementById('homeinf').onclick=()=>{infinite=false;renderStart();};
 }
 
 // ---------- PLAY ----------
@@ -978,14 +1008,14 @@ function renderReveal(r){
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
 
     <div class="banner"><div>
-      <div class="kick">Record filed &middot; Piece ${idx+1} of ${ROUNDS}</div>
+      <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
-        <span class="big" data-cu="${r.coreNet}" data-prefix="+">+${r.coreNet.toLocaleString()}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${r.baseMax.toLocaleString()} pts${r.bonus?` &middot; +${r.bonus.toLocaleString()} bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
+        <span class="big" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>
+        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span>${(study.cues||[]).slice(0,4).map((c,i)=>{const pos=[[20,27],[43,71],[67,34],[31,80]][i]||[50,50];return `<div class="lookmarks"><button class="lookmark" style="top:${pos[0]}%;left:${pos[1]}%" data-cue="${i}" title="${esc(c)}">${i+1}</button></div>`;}).join('')}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span></div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -998,7 +1028,7 @@ function renderReveal(r){
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
@@ -1017,15 +1047,10 @@ function renderReveal(r){
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>+ Added to glossary</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
-    <div style="padding:0 24px 24px"><button class="btn" id="next">${idx<ROUNDS-1?'Next masterwork →':'See final score →'}</button>${ATTRIB}</div>
+    <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(idx<ROUNDS-1?'Next masterwork →':'See final score →')}</button>${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
   </div>`;
   countUps();
   setupReportFlow(it,study);
-  // look-closer markers → highlight the matching cue
-  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
-    const cs=document.querySelectorAll('.study .cue'), cue=cs[+b.dataset.cue];
-    if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
-      cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:8,attribution:'© OpenStreetMap'}).addTo(rm);
@@ -1036,7 +1061,12 @@ function renderReveal(r){
     L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
   try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5,animate:!settings.reduceMotion});}catch{}
   setTimeout(()=>rm.invalidateSize(),settings.reduceMotion?0:250);
-  document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
+  if(infinite){
+    document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(shuffle(tierItems(tierIndex(tier)))); renderRound(); };
+    const eb=document.getElementById('endinf'); if(eb) eb.onclick=renderInfiniteSummary;
+  } else {
+    document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
+  }
 }
 function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const target=+el.getAttribute('data-cu'),prefix=el.getAttribute('data-prefix')||'';
   if(settings.reduceMotion){el.textContent=prefix+target.toLocaleString();return;}
@@ -1047,9 +1077,11 @@ function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const ta
 function shareSquare(c,r){const it=r.it,cell=r.cells[c];const f=cell.pts/MAX_CAT;
   if(c==='when'&&cell.bull)return "🎯"; if(c==='artist'&&cell.pts===MAX_CAT)return "⭐"; return emFor(f);}
 function resultSummary(){
-  const grand=results.reduce((a,r)=>a+r.coreNet,0), gmax=results.reduce((a,r)=>a+r.baseMax,0), bonus=results.reduce((a,r)=>a+r.bonus,0), totalHints=results.reduce((a,r)=>a+r.hints,0);
+  const base=results.reduce((a,r)=>a+r.coreNet,0), bonus=results.reduce((a,r)=>a+r.bonus,0);
+  const bonusMax=results.reduce((a,r)=>a+(r.cells.artist?MAX_CAT:0),0);
+  const grand=base+bonus, gmax=results.reduce((a,r)=>a+r.baseMax,0)+bonusMax, totalHints=results.reduce((a,r)=>a+r.hints,0);
   const lines=results.map(r=>r.it.cats.map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
-  const share=`Gesso ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${bonus?` +${bonus} bonus`:''}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
+  const share=`Gesso ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
   return {grand,gmax,bonus,totalHints,lines,share};
 }
 function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
@@ -1179,7 +1211,7 @@ function renderFinal(){
     <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
         <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
+        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; incl. +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
     <div class="matrix"><table><thead><tr><th style="text-align:left">Work</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
     <div style="padding:18px 24px 8px"><div class="kick" style="margin-bottom:8px">Share</div>
       <div class="sharebox" id="share">${esc(share)}</div></div>
@@ -1197,7 +1229,10 @@ function renderFinal(){
 }
 
 // ---------- zoom lightbox ----------
-function hiRes(src){return src.replace(/width=\d+/,"width=1800");}
+function hiRes(src){
+  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met full-res
+  return src.replace(/width=\d+/,"width=2000"); // Wikimedia Commons larger render
+}
 function openZoom(src){
   const lb=document.createElement('div');lb.className='lightbox';
   const img=document.createElement('img');img.src=hiRes(src);img.draggable=false;
