@@ -16,17 +16,18 @@
     --full:#2f8f5b; --partial:#cf9f3a; --miss:#c14b3a; --track:#dcd6c6;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Archivo',sans-serif,sans-serif;
+  body{margin:0;background:var(--surface);color:var(--ink);font-family:'Archivo',sans-serif;
     -webkit-font-smoothing:antialiased;min-height:100vh}
   .leaflet-container{background:#dfe2e8;font-family:inherit}
   .leaflet-control-attribution{display:none}
   .mono{font-family:'IBM Plex Mono',monospace}
-  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 70px}
-  .card{border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--line-card);
-    box-shadow:0 1px 2px rgba(35,32,26,.05),0 14px 36px rgba(35,32,26,.10)}
+  .wrap{width:100%}
+  .card{background:var(--surface)}
+  .sheet{max-width:1080px;margin:0 auto;background:var(--surface);
+    border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:62vh;padding-bottom:40px}
   /* header */
-  .hd{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;
-    border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
+  .hd{position:sticky;top:0;z-index:600;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
+  .hdinner{max-width:1080px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between}
   .hd .brand{display:flex;align-items:baseline;gap:13px}
   .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em}
   .accn{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
@@ -333,8 +334,8 @@ let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marke
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="brand"><span class="wordmark">Gesso</span><span class="accn">${accession()}</span></div>
-    <div class="right"><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div>`;
+  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">Gesso</span><span class="accn">${accession()}</span></div>
+    <div class="right"><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
@@ -350,8 +351,8 @@ function regionBars(){
 }
 function renderStart(){
   const b=regionBars();
-  document.getElementById('stage').innerHTML=`<div class="card">
-    ${header(0,-1,false)}
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
+
     <div class="hero"><div class="big2">Gesso</div>
       <div class="tag">Take a gesso &middot; the daily art-guessing game &middot; ${accession()} &middot; five works</div></div>
     <div class="difs">
@@ -404,8 +405,8 @@ function renderRound(){
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   }
   const whereN=n;
-  document.getElementById('stage').innerHTML=`<div class="card">
-    ${header(idx,idx,true)}
+  document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
+
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
         <div class="plate"><img class="art" src="${esc(it.img)}" alt="The painting to identify"/></div>
@@ -553,8 +554,8 @@ function renderReveal(r){
   const study=studyFor(it);
   const why=study.why.replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`<div class="card">
-    ${header(idx+1,idx,true)}
+  document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
+
     <div class="banner"><div>
       <div class="kick">Record filed &middot; Piece ${idx+1} of ${ROUNDS}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
@@ -630,8 +631,8 @@ function renderFinal(){
     if(!r.it.cats.includes(c))return `<td></td>`;
     const f=r.cells[c].pts/MAX_CAT;return `<td><div class="msq" style="background:${swatchColor(f)}"></div></td>`;}).join('')}</tr>`).join('');
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`<div class="card">
-    ${header(ROUNDS,-1,true)}
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
+
     <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
         <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
