@@ -1,1 +1,1 @@
-window.ARTEFACTUM_HOTSPOTS = {};
+window.ARTEFACTUM_HOTSPOTS = {"http://www.wikidata.org/entity/Q12418":[{"n":1,"x":46,"y":56},{"n":2,"x":83,"y":40},{"n":3,"x":44,"y":80},{"n":4,"x":47,"y":33}],"http://www.wikidata.org/entity/Q45585":[{"n":1,"x":42,"y":18},{"n":2,"x":16,"y":52},{"n":3,"x":52,"y":40},{"n":4,"x":86,"y":16}],"http://www.wikidata.org/entity/Q29530":[{"n":1,"x":25,"y":33},{"n":2,"x":52,"y":8},{"n":3,"x":58,"y":33},{"n":4,"x":82,"y":36}]};

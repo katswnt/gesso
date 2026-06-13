@@ -10,9 +10,11 @@ const todo = pool.filter(p=>!hs[p.id]).slice(0,N);
 mkdirSync("/tmp/hot",{recursive:true});
 const batch=[];
 for(const p of todo){
-  const path=`/tmp/hot/${p.id}.jpg`;
-  try{ const r=await fetch(p.img); writeFileSync(path, Buffer.from(await r.arrayBuffer())); }
-  catch{ console.error("download failed",p.id); continue; }
+  const path=`/tmp/hot/${p.id.replace(/[^a-z0-9]/gi,"_")}.jpg`;
+  try{ const r=await fetch(p.img,{headers:{"User-Agent":"GessoHotspots/1.0 (kathryn.swint@gmail.com)"}});
+    if(!r.ok) throw new Error("http "+r.status);
+    writeFileSync(path, Buffer.from(await r.arrayBuffer())); }
+  catch(e){ console.error("download failed",p.id,String(e)); continue; }
   batch.push({id:p.id, title:p.title, path, cues:(notes[p.id]&&notes[p.id].cues)||[]});
 }
 console.log(JSON.stringify({remaining:pool.filter(p=>!hs[p.id]).length, batch}, null, 1));
