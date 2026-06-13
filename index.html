@@ -45,7 +45,7 @@
   .fieldlabel .nm{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
   .fieldlabel .rule{flex:1;height:1px;background:var(--line)}
   .fieldlabel .hintrule{font:10px 'IBM Plex Mono',monospace;color:var(--faint)}
-  .plate{background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px;box-shadow:0 10px 26px rgba(35,32,26,.1)}
+  .plate{position:relative;background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px;box-shadow:0 10px 26px rgba(35,32,26,.1)}
   .plate img{display:block;width:100%;border-radius:1px;cursor:zoom-in}
   .cap{display:flex;justify-content:space-between;margin-top:10px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .btn{width:100%;padding:15px;border:none;border-radius:5px;background:var(--accent);color:#fff;
@@ -163,13 +163,28 @@
   .lb-close{position:fixed;top:14px;right:20px;background:none;border:none;color:#fff;font-size:30px;cursor:pointer;line-height:1}
   .lb-hint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#cfc6b4;font:13px 'IBM Plex Mono',monospace;pointer-events:none}
   @keyframes afFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @keyframes dabWobble{0%,100%{border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;transform:rotate(0deg)}33%{border-radius:42% 58% 47% 53% / 62% 44% 56% 38%;transform:rotate(5deg)}66%{border-radius:55% 45% 35% 65% / 45% 60% 40% 55%;transform:rotate(-4deg)}}
+  @keyframes dabBreathe{0%,100%{transform:scale(.74);opacity:.5}50%{transform:scale(1.05);opacity:1}}
+  @keyframes dabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .dabo{display:inline-block;width:11px;height:10px;background:var(--accent);vertical-align:baseline;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
+  .dabo::after{content:"";position:absolute;top:2px;left:3px;width:3px;height:3px;border-radius:50%;background:rgba(246,244,238,.8)}
+  .dabo-float{display:inline-block;vertical-align:baseline;animation:dabFloat 3.4s ease-in-out infinite}
+  .dabo-lg{width:30px;height:29px}
+  .dabo-lg::after{top:6px;left:8px;width:7px;height:7px}
+  .imgloader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--surface);z-index:2;border-radius:2px}
+  .imgloader i{width:16px;height:16px;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabBreathe 1.3s ease-in-out infinite}
+  .imgloader i:nth-child(2){animation-delay:.18s}
+  .imgloader i:nth-child(3){animation-delay:.36s}
   @media(max-width:680px){
     .wrap{padding:14px 0 60px}
     .revealgrid{grid-template-columns:1fr;gap:20px;padding:17px}
     .playgrid{grid-template-columns:1fr!important}
     .difs{grid-template-columns:1fr}
     .hdinner{padding:13px 16px}.hd .accn{display:none}
-    .big{font-size:34px}.herobig{font-size:38px}.year{font-size:23px}
+    .big{font-size:34px}.herobig{font-size:38px}.dabo-lg{width:21px;height:20px}.dabo-lg::after{top:4px;left:6px;width:5px;height:5px}.year{font-size:23px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .dabo,.dabo-float,.imgloader i{animation:none}
   }
 </style>
 </head>
@@ -358,7 +373,7 @@ let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marke
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">Gesso</span><span class="accn">${accession()}</span></div>
+  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
     <div class="right"><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
@@ -380,7 +395,7 @@ function renderStart(){
 
     <div class="hero">
       <div class="herokick"><span class="r"></span>The daily art-guessing game<span class="r"></span></div>
-      <div class="herobig">Take a <em>gesso</em>.</div>
+      <div class="herobig">Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.</div>
       <div class="heroglos"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke</div>
       <div class="herometa">${accession()} &middot; five works</div>
     </div>
@@ -438,7 +453,7 @@ function renderRound(){
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
-        <div class="plate"><img class="art" src="${esc(it.img)}" alt="The painting to identify"/></div>
+        <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/></div>
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.medium||'UNKNOWN MEDIUM').toUpperCase())}</span></div>
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
@@ -603,7 +618,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}"/><span class="filed">FILED &check;</span></div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span></div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
