@@ -175,6 +175,8 @@ function shuffle(arr){arr=arr.slice();for(let i=arr.length-1;i>0;i--){const j=Ma
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,
   h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BC`:`AD ${y}`;}
+function centuryOf(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=["th","st","nd","rd"][(c%100>10&&c%100<14)?0:(c%10<4?c%10:0)];return `${c}${s} century${y<0?" BC":""}`;}
+const HINT_COST=500, PICK_COST=500;
 function emFor(frac){return frac>=.75?"🟩":frac>=.35?"🟨":"🟥";}
 function cleanMov(m){return m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim();}
 function normMov(m){return cleanMov(m).toLowerCase().replace(/[^a-z ]/g,'').trim();}
@@ -229,7 +231,7 @@ function renderProgress(){
 function renderRound(){
   renderProgress();
   const it = game[idx];
-  guess = {year:1700, ll:null, mov:null, artist:""};
+  guess = {year:1700, ll:null, mov:null, artist:"", artistPicked:false, hint:false};
   // movement choices: correct + 3 distractors
   const movChoices = shuffle([it.m, ...shuffle(ALL_MOV.filter(m=>m!==it.m)).slice(0,3)]);
   const stage = document.getElementById('stage');
@@ -257,6 +259,8 @@ function renderRound(){
             <div class="hint">Click the map to drop your pin.</div>
           </div>
         </div>
+        <button class="btn ghost" id="hint">💡 Hint (−${HINT_COST}): reveal the century</button>
+        <div class="erares" id="hintout" style="display:none;text-align:center"></div>
         <button class="btn" id="submit">Lock in guesses →</button>
       </div>
     </div>`;
@@ -277,6 +281,11 @@ function renderRound(){
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
     else marker=L.circleMarker(e.latlng,{radius:8,color:'#d9b15e',fillColor:'#d9b15e',fillOpacity:.9,weight:2}).addTo(map);});
   setTimeout(()=>map.invalidateSize(),200);
+  // wire hint
+  const hb=document.getElementById('hint'), ho=document.getElementById('hintout');
+  hb.onclick=()=>{guess.hint=true; ho.style.display='block';
+    ho.textContent=`This work was made in the ${centuryOf(it.y)}.`;
+    hb.disabled=true; hb.style.opacity=.5; hb.textContent=`💡 Hint used (−${HINT_COST})`;};
   document.getElementById('submit').onclick=score;
 }
 
@@ -293,8 +302,8 @@ function setupAutocomplete(){
     list.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=ev=>{
       ev.preventDefault(); pick(+el.dataset.i);});
   };
-  const pick=i=>{inp.value=items[i]; guess.artist=items[i]; close(); inp.focus();};
-  inp.oninput=()=>{guess.artist=inp.value; active=-1; render(inp.value);};
+  const pick=i=>{inp.value=items[i]; guess.artist=items[i]; guess.artistPicked=true; close(); inp.focus();};
+  inp.oninput=()=>{guess.artist=inp.value; guess.artistPicked=false; active=-1; render(inp.value);};
   inp.onkeydown=e=>{
     if(list.style.display==='none')return;
     if(e.key==='ArrowDown'){active=Math.min(active+1,items.length-1);render(inp.value);e.preventDefault();}
@@ -331,14 +340,18 @@ function score(){
   const last=s=>norm(s).split(' ').pop();
   const ga=norm(guess.artist);
   let sArt=0, artNote="";
-  if(ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))){sArt=MAX_CAT;}
+  if(ga && (ga===norm(it.a) || (last(guess.artist) && last(guess.artist)===last(it.a)))){
+    sArt=MAX_CAT;
+    if(guess.artistPicked){sArt-=PICK_COST; artNote=` — picked from list, −${PICK_COST}`;}
+  }
   else if(ga){
     const curated=(SIMILAR_ARTISTS[it.a]||[]).some(s=>norm(s)===ga || last(s)===last(guess.artist));
     const sharesMov=artistMov[ga] && artistMov[ga].has(normMov(it.m));
     if(curated||sharesMov){sArt=Math.round(MAX_CAT*0.4); artNote=" — same school, partial credit";}
   }
-  const total=sTime+sPlace+sMov+sArt;
-  results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,guess:{...guess}});
+  const hintPen=guess.hint?HINT_COST:0;
+  const total=Math.max(0, sTime+sPlace+sMov+sArt-hintPen);
+  results.push({it,sTime,sPlace,sMov,sArt,total,dy,dist,movNote,artNote,hintPen,guess:{...guess}});
   renderReveal(results[results.length-1]);
 }
 
@@ -355,6 +368,7 @@ function renderReveal(r){
         ${row("Where",emFor(r.sPlace/MAX_CAT),r.sPlace,r.dist==null?"no pin":`${Math.round(r.dist)} km away`)}
         ${row("Movement",emFor(r.sMov/MAX_CAT),r.sMov,r.guess.mov?`you said ${r.guess.mov}${r.movNote}`:"no answer")}
         ${row("Artist",emFor(r.sArt/MAX_CAT),r.sArt,r.guess.artist?`you said ${r.guess.artist}${r.artNote}`:"no answer")}
+        ${r.hintPen?`<div class="scoreline"><span><span class="em">💡</span> Hint <span class="hint">century revealed</span></span><span class="pts">−${r.hintPen}</span></div>`:''}
         <div class="total">+${r.total} points</div>
         <div class="legend"><span><span class="dot" style="background:#5fb87a"></span>Made in ${it.place}</span>${r.guess.ll?'<span><span class="dot" style="background:#d9b15e"></span>Your guess</span>':''}</div>
         <div id="revmap"></div>
