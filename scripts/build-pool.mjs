@@ -179,7 +179,9 @@ async function metSearchIds(deptId){
 async function metObject(id, deptId){
   const o = await fetchJSON(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
   if(!o || !o.isPublicDomain || !o.primaryImageSmall || !o.objectBeginDate) return null;
-  const geo = geocodeCulture(o.culture, o.country, o.region, o.title) || DEPT_GEO[deptId];
+  // NOTE: geocode from culture/country/region only — NOT the title (titles like "Egyptianizing
+  // scene" or "head of a Persian" caused false location matches). Fall back to department centroid.
+  const geo = geocodeCulture(o.culture, o.country, o.region) || DEPT_GEO[deptId];
   if(!geo) return null;
   const y=Math.round(((o.objectBeginDate||0)+(o.objectEndDate||o.objectBeginDate||0))/2);
   if(!y || y<-3000 || y>2025) return null;
