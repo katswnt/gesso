@@ -291,7 +291,11 @@ function catShort(c,it){
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
 let ALL_MED=[], MOVS=[], CULTS=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
+const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
+  "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
+  "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
 function buildIndexes(){
+  for(const p of POOL){ if(p.styleKind==='movement'&&CANON_STYLE[p.style]) p.style=CANON_STYLE[p.style]; }
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
   MINY=Math.min(...POOL.map(p=>p.y));
   ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
