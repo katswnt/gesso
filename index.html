@@ -229,6 +229,25 @@ function schemeFromLatLng(lat,lng){
   if(lng>=-25&&lng<=60&&lat>=35&&lat<=72)return 'western';
   return 'neutral';
 }
+// continent of a guessed pin (matches the data pipeline's classification)
+function continentOf(lat,lng){
+  if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56)return "South America";
+  if(lng>=-170&&lng<=-52&&lat>=13)return "North America";
+  if(lng>=110&&lat<=-10)return "Oceania";
+  if(lat>=36&&lng>=-25&&lng<=60)return "Europe";
+  if(lat>=-35&&lat<36&&lng>=-20&&lng<=52)return "Africa";
+  if(lng>40)return "Asia";
+  return "Europe";
+}
+// strike wrong style pills down to 2 remaining (answer + 1). Idempotent — safe to call twice.
+function apply5050(it){
+  const pills=[...document.querySelectorAll('[data-pills="style"] .pill')];
+  const active=pills.filter(b=>!b.classList.contains('ruledout'));
+  const wrong=active.filter(b=>b.dataset.v!==it.style);
+  const toStrike=Math.max(0,active.length-2);
+  shuffle(wrong).slice(0,toStrike).forEach(b=>b.classList.add('ruledout'));
+  return toStrike;
+}
 function emFor(f){return f>=.75?"🟩":f>=.35?"🟨":"🟥";}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
@@ -365,7 +384,8 @@ function renderRound(){
   if(it.cats.includes('style')){
     const ch=styleChoices(it);
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${catLabel('style',it)}</span></div>
-      <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
+      <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   }
   if(it.cats.includes('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">Attributed to · bonus</span></div>
@@ -393,7 +413,7 @@ function renderRound(){
   </div>`;
   // wire slider
   const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
-  let curScheme='neutral';
+  let curScheme='neutral', free5050=false;
   const updEra=()=>{guess.year=+yr.value; yv.textContent=fmtYear(+yr.value); era.textContent=`[ ${periodOf(curScheme,+yr.value).toUpperCase()} ]`;};
   yr.oninput=updEra; updEra();
   // pills
@@ -412,7 +432,10 @@ function renderRound(){
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
     else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
     curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
-    const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;});
+    const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
+    // correct-geo reward: pin the right continent → free 50/50 on the school
+    if(it.cats.includes('style')&&!free5050&&continentOf(e.latlng.lat,e.latlng.lng)===it.region){
+      free5050=true; apply5050(it); const gb=document.getElementById('geobonus'); if(gb)gb.style.display='block';}});
   setTimeout(()=>map.invalidateSize(),250);
   document.getElementById('submit').onclick=score;
 }
@@ -440,7 +463,7 @@ function wireHints(it){
   const opts=[];
   opts.push({label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
   opts.push({label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
-  if(it.cats.includes('style')) opts.push({label:"50/50",txt:()=>{const ws=shuffle([...document.querySelectorAll('[data-pills="style"] .pill')].filter(b=>b.dataset.v!==it.style)); ws.slice(0,2).forEach(b=>b.classList.add('ruledout')); return `Two unlikely options ruled out.`;}});
+  if(it.cats.includes('style')) opts.push({label:"50/50",txt:()=>{const k=apply5050(it); return k>0?`Two unlikely options ruled out.`:`Already narrowed to two.`;}});
   if(it.cats.includes('artist')&&it.artist) opts.push({label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
   let oi=0;
   const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem>0?`reveal ${opts[oi]?opts[oi].label:'hint'} · −${HINT_COST} (${rem} left)`:`no hints left`; btn.disabled=rem<=0||oi>=opts.length; if(oi>=opts.length)left.textContent="no more hints";};
