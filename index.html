@@ -21,6 +21,7 @@
   body{margin:0;background:var(--surface);color:var(--ink);font-family:'Archivo',sans-serif;
     -webkit-font-smoothing:antialiased;min-height:100vh}
   .leaflet-container{background:#dfe2e8;font-family:inherit}
+  .leaflet-tile{filter:grayscale(.6) sepia(.16) brightness(1.07) contrast(.94)}
   .leaflet-control-attribution{display:none}
   .mono{font-family:'IBM Plex Mono',monospace}
   .wrap{width:100%}
@@ -833,7 +834,7 @@ function renderRound(){
   // map
   marker=null;
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:8,attribution:'© OpenStreetMap'}).addTo(map);
   map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
     else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
     curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
@@ -1027,7 +1028,7 @@ function renderReveal(r){
       cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(rm);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:8,attribution:'© OpenStreetMap'}).addTo(rm);
   const t=[it.lat,it.lng], pts=[t];
   L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
@@ -1091,9 +1092,21 @@ async function renderShareCard(data){
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 async function downloadShareImage(btn,data){
   const original=btn.textContent;btn.textContent='Rendering image…';
-  try{const url=await renderShareCard(data),a=document.createElement('a'),d=(data&&data.date)||runDate||todayStr(),t=(data&&data.tier)||tier;a.href=url;a.download=`gesso-${d}-${t}.png`;a.click();btn.textContent='Image downloaded';}
-  catch{const text=(data&&data.share)||(lastFinal&&lastFinal.share)||'';if(text&&navigator.clipboard)await navigator.clipboard.writeText(text);btn.textContent='Copied text result';}
-  setTimeout(()=>btn.textContent=original,1600);
+  const d=(data&&data.date)||runDate||todayStr(),t=(data&&data.tier)||tier;
+  const text=(data&&data.share)||(lastFinal&&lastFinal.share)||'';
+  try{
+    const url=await renderShareCard(data);
+    const blob=await (await fetch(url)).blob();
+    const file=new File([blob],`gesso-${d}-${t}.png`,{type:'image/png'});
+    // mobile: native share sheet (save to photos / share to apps); desktop: download
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:'Gesso',text}); btn.textContent='Shared ✓'; }
+      catch(e){ if(e&&e.name==='AbortError'){btn.textContent=original;return;} throw e; }
+    } else {
+      const a=document.createElement('a');a.href=url;a.download=file.name;a.click();btn.textContent='Image downloaded';
+    }
+  }catch{ if(text&&navigator.clipboard)await navigator.clipboard.writeText(text);btn.textContent='Copied text result'; }
+  setTimeout(()=>btn.textContent=original,1800);
 }
 function renderStreak(){
   clearTimers();
