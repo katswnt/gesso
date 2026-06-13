@@ -122,6 +122,8 @@
   .scrow .pts .d{font:9px 'IBM Plex Mono',monospace;color:var(--faint)}
   .study{margin:24px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:22px}
   .study .why{font:500 18px/1.42 'Archivo',sans-serif;color:var(--ink);max-width:600px;margin:13px 0 20px}
+  .disclose{font:10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:14px}
+  .reportlink{font-size:10px;margin-top:6px}
   .cue{display:flex;gap:12px;align-items:flex-start;padding:7px 0}
   .cue .num{flex:0 0 16px;font:700 13px 'Archivo',sans-serif;color:var(--accent)}
   .cue .tx{font:13px/1.55 'IBM Plex Mono',monospace;color:var(--ink-soft)}
@@ -618,6 +620,9 @@ function renderReveal(r){
   const study=studyFor(it);
   const why=study.why.replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
   const ml=masteryLine();
+  const reportTitle=`Error report: ${it.title}`;
+  const reportBody=`Work: ${it.title}\nID: ${it.id}\nArtist: ${it.artist||'—'}\nDate: ${fmtYear(it.y)}\nOrigin: ${it.place||''}\n\nWhat's wrong:\n`;
+  const reportURL=`https://github.com/katswnt/artefactum/issues/new?title=${encodeURIComponent(reportTitle)}&body=${encodeURIComponent(reportBody)}`;
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
 
     <div class="banner"><div>
@@ -657,6 +662,8 @@ function renderReveal(r){
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
       ${it.medium&&CUES.medium[it.medium]?`<div class="cue" style="margin-top:8px"><span class="num">◆</span><span class="tx">${CUES.medium[it.medium]}</span></div>`:''}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
+      <div class="disclose">Study notes are AI-generated and fact-checked.</div>
+      <a class="telllink reportlink" href="${reportURL}" target="_blank" rel="noopener">Report an error &#8599;</a>
     </div>
     <div style="padding:0 24px 24px"><button class="btn" id="next">${idx<ROUNDS-1?'Next masterwork →':'See final score →'}</button>${ATTRIB}</div>
   </div>`;
