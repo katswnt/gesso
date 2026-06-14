@@ -41,3 +41,15 @@
 
 ## Review
 (to be filled in as phases land)
+
+## Bug-hunt backlog (lower priority — added 2026-06-13)
+- [ ] #5 Geo-reward radius: free style 50/50 fires at 2000 km but WHERE scoring radius is ~450 km. Key the reward off `radiusFor(it.place)` so the reward matches the scored "right country" zone.
+- [ ] #13 Unseeded distractor shuffle: medium/style pills use `Math.random`, so same-day players get different distractor difficulty. Seed off `runDate|idx` for fairness/determinism.
+- [ ] #15 Glossary labels cultures as "Movement" → many cards read "c. unknown · <region>". Label cultures correctly and/or fill culture metadata.
+
+## Pool expansion (in progress — 2026-06-13)
+- [x] Make build-pool.mjs OUT-configurable; raise caps (WD LIMIT 900, PER_DEPT 64).
+- [x] Build to temp, diff vs current: 74 new-only works (mostly non-Western), append-merge to preserve existing teach/hotspots.
+- [ ] Generate teach-notes (Codex) for the 74 new works.
+- [ ] Generate hotspots for new works (hotspot loop).
+- [ ] Re-pull Met Islamic Art (returned 0 ids — transient API failure this run).

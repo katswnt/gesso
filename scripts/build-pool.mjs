@@ -125,7 +125,7 @@ async function fromWikidata(){
     OPTIONAL { ?item wdt:P186 ?material. }
     FILTER(?s>12)
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-  } ORDER BY DESC(?s) LIMIT 600`;
+  } ORDER BY DESC(?s) LIMIT 900`;
   // transcontinental / edge countries whose Wikidata centroid misleads (Russia -> Siberia, etc.)
   const COUNTRY_FIX=[[/russia|soviet|russian empire/i,55.75,37.62],[/ottoman|turkey|türkiye/i,41.01,28.98],
     [/byzantine/i,41.01,28.98],[/united states|america/i,38.9,-77.04],[/kazakhstan/i,43.24,76.95]];
@@ -166,7 +166,7 @@ const MET_DEPTS = [
   {id:13, name:"Greek and Roman Art"},
 ];
 const MET_QS = ["painting","figure","vessel","mask"];
-const PER_DEPT = 42;
+const PER_DEPT = 64;
 
 async function metSearchIds(deptId){
   const ids=new Set();
@@ -234,5 +234,6 @@ for(const it of pool) dist[it.region]=(dist[it.region]||0)+1;
 console.error("Region distribution:", dist, "TOTAL", pool.length);
 
 mkdirSync("data",{recursive:true});
-writeFileSync("data/pool.js", "window.ARTEFACTUM_POOL = "+JSON.stringify(pool)+";\n");
-console.error("Wrote data/pool.js");
+const OUT=process.env.OUT||"data/pool.js";
+writeFileSync(OUT, "window.ARTEFACTUM_POOL = "+JSON.stringify(pool)+";\n");
+console.error("Wrote "+OUT);
