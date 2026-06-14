@@ -316,6 +316,9 @@
   body.motion-ok .brand:hover .dabo{animation:squish .55s ease}
   @keyframes inkStamp{0%{opacity:0;transform:rotate(4deg) scale(1.9)}55%{opacity:1;transform:rotate(4deg) scale(.9)}78%{transform:rotate(4deg) scale(1.06)}100%{transform:rotate(4deg) scale(1)}}
   body.motion-ok .filed{animation:inkStamp .5s cubic-bezier(.2,1.4,.5,1) both}
+  .big.gold{color:#9a7b2e}
+  .perfectstamp{position:absolute;top:62%;left:58%;transform:translate(-50%,-50%) rotate(6deg);font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#9a7b2e;border:2.5px solid #b3892f;border-radius:5px;padding:4px 9px;background:var(--surface,#f6f4ee);box-shadow:0 2px 5px rgba(122,92,28,.28);white-space:nowrap;pointer-events:none}
+  body.motion-ok .perfectstamp{animation:inkStamp .5s cubic-bezier(.2,1.4,.5,1) both}
   .dabo::after{content:"";position:absolute;top:2px;left:3px;width:3px;height:3px;border-radius:50%;background:rgba(246,244,238,.8)}
   .dabo-float{display:inline-block;vertical-align:baseline;animation:dabFloat 3.4s ease-in-out infinite}
   .dabo-lg{width:30px;height:29px}
@@ -1086,8 +1089,19 @@ function setupReportFlow(it,study){
   };
   renderDefault();
 }
+function paintBurst(host){
+  if(!host||(typeof settings!=='undefined'&&settings.reduceMotion))return;
+  const cols=['#2230b8','#2f8f5b','#cf9f3a','#b3892f'];
+  const cx=host.clientWidth/2, cy=host.clientHeight/2;
+  for(let i=0;i<16;i++){ const d=document.createElement('span'), ang=i/16*6.2832, dist=34+(i%5)*13, sz=6+(i%4)*3;
+    d.style.cssText=`position:absolute;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:${cols[i%4]};border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;transform:translate(-50%,-50%);transition:transform .7s cubic-bezier(.2,.7,.3,1),opacity .7s;pointer-events:none;z-index:5`;
+    host.appendChild(d);
+    requestAnimationFrame(()=>{ d.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; d.style.opacity='0'; });
+    setTimeout(()=>d.remove(),760); }
+}
 function renderReveal(r){
   const it=r.it;
+  const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
   if(glossName&&!infinite&&!runArchive)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
@@ -1104,10 +1118,10 @@ function renderReveal(r){
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
 
-    <div class="banner"><div>
+    <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
-        <span class="big" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>
+        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${perfect?'<span class="perfectstamp">&starf; PERFECT</span>':''}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
@@ -1147,6 +1161,7 @@ function renderReveal(r){
   </div>`;
   countUps();
   setupReportFlow(it,study);
+  if(perfect)setTimeout(()=>paintBurst(document.getElementById('revbanner')),80);
   // look-closer markers (feature-anchored) → highlight the matching cue
   document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
     const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
@@ -1158,11 +1173,16 @@ function renderReveal(r){
   addPalestine(rm);
   const t=[it.lat,it.lng], pts=[t];
   L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
+  let poly=null;
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
-    L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:'5,6'}).addTo(rm);
+    poly=L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:settings.reduceMotion?'5,6':null}).addTo(rm);
     L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
   try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5,animate:!settings.reduceMotion});}catch{}
-  setTimeout(()=>rm.invalidateSize(),settings.reduceMotion?0:250);
+  setTimeout(()=>{rm.invalidateSize();
+    if(poly&&!settings.reduceMotion){ try{ const path=poly.getElement(); const len=path.getTotalLength();
+      path.style.transition='none'; path.style.strokeDasharray=len; path.style.strokeDashoffset=len;
+      requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; }); }catch{} }
+  },settings.reduceMotion?0:260);
   if(infinite){
     document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(shuffle(tierItems(tierIndex(tier)))); renderRound(); };
     const eb=document.getElementById('endinf'); if(eb) eb.onclick=renderInfiniteSummary;
