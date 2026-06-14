@@ -2,6 +2,9 @@
 
 _Most of the original build plan, all museum pulls, the fame system, design touches, archive, Collections page, and the early-modern pull are DONE. This is what's actually open._
 
+## ⭐ TOP — "How to play" onboarding (design brief: `tasks/howto-design-brief.md`)
+Real first-time players (Kat's mom & aunt) didn't know what to tap first, whether to answer every category, that the timeline is a slider, or that the map zooms. Need: first-visit "How to play" overlay (reopenable) + inline affordance cues (draggable slider, map pinch/+− zoom, "skip what you don't know"). **Awaiting Claude Design `.dc.html`; Claude Code ports it.**
+
 ## A. Enrichment pipeline — in flight (Codex on reset), HOLD re-freeze until done
 - [ ] Teach-notes for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard` over the staged candidate files.
 - [ ] Hotspots for the same — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
