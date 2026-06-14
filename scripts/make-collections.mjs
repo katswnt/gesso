@@ -20,20 +20,19 @@ const META={
 const counts={};for(const p of pool){const b=BUCKET[p.src]||"wiki";counts[b]=(counts[b]||0)+1;}
 const sources=Object.keys(META).map(k=>({...META[k],count:counts[k]||0})).sort((a,b)=>b.count-a.count);
 
-// the famous collections we actually source (most-recognized works, via Wikidata/Commons)
+// "Where the canon hangs" — famous museums where iconic art PHYSICALLY lives (educational context,
+// NOT our data sources; e.g. we don't pull from MoMA/Orsay/Vatican, but that's where the canon is).
 const canon=[
   {name:"Musée du Louvre",city:"Paris",url:"https://www.louvre.fr",work:"Mona Lisa"},
   {name:"Museo del Prado",city:"Madrid",url:"https://www.museodelprado.es",work:"Las Meninas"},
-  {name:"National Gallery",city:"London",url:"https://www.nationalgallery.org.uk",work:"Sunflowers"},
-  {name:"Galleria degli Uffizi",city:"Florence",url:"https://www.uffizi.it",work:"The Birth of Venus"},
   {name:"Rijksmuseum",city:"Amsterdam",url:"https://www.rijksmuseum.nl",work:"The Night Watch"},
-  {name:"National Gallery of Art",city:"Washington, DC",url:"https://www.nga.gov",work:"Ginevra de' Benci"},
-  {name:"Fine Arts Museums of SF",city:"San Francisco",url:"https://www.famsf.org",work:"de Young collection"},
+  {name:"Museum of Modern Art",city:"New York",url:"https://www.moma.org",work:"The Starry Night"},
+  {name:"Musée d'Orsay",city:"Paris",url:"https://www.musee-orsay.fr",work:"Luncheon on the Grass"},
+  {name:"Galleria degli Uffizi",city:"Florence",url:"https://www.uffizi.it",work:"The Birth of Venus"},
+  {name:"Vatican Museums",city:"Vatican City",url:"https://www.museivaticani.va",work:"Laocoön and His Sons"},
   {name:"National Palace Museum",city:"Taipei",url:"https://www.npm.gov.tw",work:"Dwelling in the Fuchun Mountains"},
-  {name:"Tokyo National Museum",city:"Tokyo",url:"https://www.tnm.jp",work:"Higashiyama screens"},
-  {name:"National Museum of Korea",city:"Seoul",url:"https://www.museum.go.kr",work:"Pensive Bodhisattva"},
-  {name:"Topkapı Palace Museum",city:"Istanbul",url:"https://www.millisaraylar.gov.tr",work:"Ottoman court arts"},
   {name:"Egyptian Museum",city:"Cairo",url:"https://egymonuments.gov.eg",work:"Narmer Palette"},
+  {name:"Tokyo National Museum",city:"Tokyo",url:"https://www.tnm.jp",work:"The Great Wave"},
 ];
 const out={ total:pool.length, region:by(p=>p.region), origins:by(p=>p.place).slice(0,20),
   eras:["Before 1 CE","1–500","500–1400","1400–1600","1600–1750","1750–1860","1860–1900","1900+"].map(k=>[k,pool.filter(p=>era(p)===k).length]),
