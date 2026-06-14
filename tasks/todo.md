@@ -83,3 +83,8 @@ Goal: grow to thousands of works that match our criteria (good image, datable, g
 - [ ] Commons category size / "featured"/"quality image" flags.
 - [ ] Museum "highlight"/"on view"/"masterpiece" flags (Met isHighlight, AIC is_on_view, etc.) as a secondary signal.
 - [ ] Composite fame score = weighted blend (sitelinks heavy, pageviews medium, list/highlight bonuses) → quartile into easy/medium/hard/impossible.
+
+## Polish options from index-5.html (2026-06-13) — easy wins, not yet applied
+- [ ] Dual-definition wordmark on start hero: keep the noun ("the white primer…") and add a second line — `ges·so²` *verb, informal* · "to take an educated guess at a work of art — its date, place, school & hand". (Explains the pun.)
+- [ ] Hero meta shows live pool size: change "five works" → "today's five of <N> works" using POOL.length with the count in accent color (nice scale signal, lands well after the 2,440-work merge).
+Note: index-5.html predates the favicon/fame-overlay/FAQ changes already shipped — only these two tweaks are new; do NOT take its older favicon/header back.
