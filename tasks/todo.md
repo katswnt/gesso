@@ -88,3 +88,11 @@ Goal: grow to thousands of works that match our criteria (good image, datable, g
 - [ ] Dual-definition wordmark on start hero: keep the noun ("the white primer…") and add a second line — `ges·so²` *verb, informal* · "to take an educated guess at a work of art — its date, place, school & hand". (Explains the pun.)
 - [ ] Hero meta shows live pool size: change "five works" → "today's five of <N> works" using POOL.length with the count in accent color (nice scale signal, lands well after the 2,440-work merge).
 Note: index-5.html predates the favicon/fame-overlay/FAQ changes already shipped — only these two tweaks are new; do NOT take its older favicon/header back.
+
+## Design touches handoff 04 (2026-06-13)
+- [x] Always-on CSS touches applied: dab slider thumb, dab pips, logo-hover squish, accession perforation, plate crop-marks, canvas grain, FILED ink-stamp anim, tabular figures, ultramarine selection/scrollbar.
+- [x] Dual-definition wordmark + "today's five of N works" live count.
+- [ ] JS touch #1 — Gold "★ PERFECT" stamp (option C: offset+opaque) in renderReveal when `r.coreCats.every(c=>r.cells[c].pts===MAX_CAT)`; gold tokens border #b3892f / text #9a7b2e / light #caa64e; reuse inkStamp keyframe; also drop 🎯 on any single full-score category swatch. (spec in Downloads/design_handoff 4/04_touches/README.md)
+- [ ] JS touch #2 — paintBurst() dab-particle burst from banner center on a perfect piece (motion-gated). Banner needs position:relative;overflow:hidden.
+- [ ] JS touch #3 — pin-vs-truth polyline draws on via stroke-dashoffset animation on the reveal map after fitBounds settles (motion-gated; static dashed fallback).
+- Reference demos: Downloads/design_handoff 4/04_touches/Gesso Touches.dc.html + Gesso Gold.dc.html (chose C). support.js has helper snippets.

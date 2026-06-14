@@ -294,6 +294,26 @@
   @keyframes dabBreathe{0%,100%{transform:scale(.74);opacity:.5}50%{transform:scale(1.05);opacity:1}}
   @keyframes dabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   .dabo{display:inline-block;width:11px;height:10px;background:var(--accent);vertical-align:baseline;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
+  /* ---- design touches (handoff 04) ---- */
+  ::selection{background:var(--accent);color:#fff}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:6px}
+  ::-webkit-scrollbar-track{background:var(--line-card)}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.035;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .big,.year,.bigscore,.scrow .pts .n,[data-cu]{font-variant-numeric:tabular-nums}
+  .pip{width:11px;height:10px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:23px;height:21px;margin-top:-9px;border:none;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:grab}
+  input[type=range]::-moz-range-thumb{width:23px;height:21px;border:none;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:grab}
+  body.motion-ok input[type=range]::-webkit-slider-thumb{animation:dabWobble 5s ease-in-out infinite}
+  .accn{position:relative;padding-left:14px}
+  .accn::before{content:"";position:absolute;left:3px;top:-1px;bottom:-1px;width:2px;background-image:radial-gradient(circle,var(--line-card) 1px,transparent 1.3px);background-size:2px 4px}
+  .plate::before,.plate::after{content:"";position:absolute;width:11px;height:11px;pointer-events:none;z-index:3}
+  .plate::before{top:-5px;left:-5px;border-top:1.5px solid var(--ink);border-left:1.5px solid var(--ink)}
+  .plate::after{bottom:-5px;right:-5px;border-bottom:1.5px solid var(--ink);border-right:1.5px solid var(--ink)}
+  @keyframes squish{0%{transform:scale(1)}38%{transform:scale(1.4,.68)}68%{transform:scale(.85,1.16)}100%{transform:scale(1)}}
+  body.motion-ok .brand:hover .dabo{animation:squish .55s ease}
+  @keyframes inkStamp{0%{opacity:0;transform:rotate(4deg) scale(1.9)}55%{opacity:1;transform:rotate(4deg) scale(.9)}78%{transform:rotate(4deg) scale(1.06)}100%{transform:rotate(4deg) scale(1)}}
+  body.motion-ok .filed{animation:inkStamp .5s cubic-bezier(.2,1.4,.5,1) both}
   .dabo::after{content:"";position:absolute;top:2px;left:3px;width:3px;height:3px;border-radius:50%;background:rgba(246,244,238,.8)}
   .dabo-float{display:inline-block;vertical-align:baseline;animation:dabFloat 3.4s ease-in-out infinite}
   .dabo-lg{width:30px;height:29px}
@@ -767,8 +787,8 @@ function renderStart(dateStr){
     <div class="hero">
       <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
       <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.'}</div>
-      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke'}</div>
-      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; five works</div>
+      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art &mdash; its date, place, school &amp; hand</span>'}</div>
+      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
     </div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
