@@ -66,6 +66,7 @@
   .fieldlabel .hintrule{font:10px 'IBM Plex Mono',monospace;color:var(--faint)}
   .plate{position:relative;background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px;box-shadow:0 10px 26px rgba(35,32,26,.1)}
   .plate img{display:block;width:100%;border-radius:1px;cursor:zoom-in}
+  .imgfail{display:flex;align-items:center;justify-content:center;min-height:280px;color:var(--muted);font:500 13px 'IBM Plex Mono',monospace;text-align:center;padding:20px;background:repeating-linear-gradient(45deg,#f3f0e8,#f3f0e8 11px,#ece9e0 11px,#ece9e0 22px)}
   .cap{display:flex;justify-content:space-between;margin-top:10px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .btn{width:100%;padding:15px;border:none;border-radius:5px;background:var(--accent);color:#fff;
     font:700 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
@@ -496,6 +497,7 @@ function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function imgFail(img){const pl=img.parentNode&&img.parentNode.querySelector('.imgloader');if(pl)pl.remove();img.style.display='none';if(img.parentNode&&!img.parentNode.querySelector('.imgfail')){const d=document.createElement('div');d.className='imgfail';d.textContent='Image unavailable';img.parentNode.appendChild(d);}}
 function accession(){const d=new Date();const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `NO. ${d.getFullYear()}·${mm}${dd}`;}
 function sourceURL(it){
   if(it.src==='met') return `https://www.metmuseum.org/art/collection/search/${it.id.slice(3)}`;
@@ -932,7 +934,7 @@ function renderRound(){
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
-        <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/></div>
+        <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/></div>
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
@@ -1134,7 +1136,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
