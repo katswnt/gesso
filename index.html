@@ -67,6 +67,12 @@
   .plate{position:relative;background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px;box-shadow:0 10px 26px rgba(35,32,26,.1)}
   .plate img{display:block;width:100%;border-radius:1px;cursor:zoom-in}
   .imgfail{display:flex;align-items:center;justify-content:center;min-height:280px;color:var(--muted);font:500 13px 'IBM Plex Mono',monospace;text-align:center;padding:20px;background:repeating-linear-gradient(45deg,#f3f0e8,#f3f0e8 11px,#ece9e0 11px,#ece9e0 22px)}
+  .tierdots{display:flex;gap:3px;justify-content:center;margin-top:3px}
+  .td{width:7px;height:7px;border-radius:50%;border:1.5px solid;box-sizing:border-box}
+  .daypager{display:flex;align-items:center;gap:9px}
+  .daygrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:14px}
+  .dayrow{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--line-card);border-radius:8px;background:var(--surface)}
+  @media(max-width:680px){.td{width:6px;height:6px}.daygrid{grid-template-columns:1fr}}
   .cap{display:flex;justify-content:space-between;margin-top:10px;font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .btn{width:100%;padding:15px;border:none;border-radius:5px;background:var(--accent);color:#fff;
     font:700 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
@@ -788,9 +794,12 @@ function dailyItems(key,dateStr){
 }
 function addPalestine(m){ return; /* label overlay removed — clashed with localized basemap labels */ try{ L.marker([31.95,35.23],{interactive:false,keyboard:false,
   icon:L.divIcon({className:'palabel',html:'Palestine',iconSize:[60,14],iconAnchor:[30,7]})}).addTo(m); }catch{} }
-function loadStreak(){try{const s=JSON.parse(localStorage.getItem("artefactum.streak"))||{};return {current:+s.current||0,longest:+s.longest||0,lastPlayed:s.lastPlayed||"",playedDates:Array.isArray(s.playedDates)?s.playedDates:[],scores:s.scores||{}};}catch{return{current:0,longest:0,lastPlayed:"",playedDates:[],scores:{}}}}
+function loadStreak(){try{const s=JSON.parse(localStorage.getItem("artefactum.streak"))||{};return {current:+s.current||0,longest:+s.longest||0,lastPlayed:s.lastPlayed||"",playedDates:Array.isArray(s.playedDates)?s.playedDates:[],scores:s.scores||{},byDay:(s.byDay&&typeof s.byDay==='object')?s.byDay:{}};}catch{return{current:0,longest:0,lastPlayed:"",playedDates:[],scores:{},byDay:{}}}}
 function saveStreak(s){try{localStorage.setItem("artefactum.streak",JSON.stringify(s))}catch{}}
-function recordDailyScore(dateStr,score){const today=todayStr();if(dateStr!==today)return loadStreak();const s=loadStreak(),hadToday=s.playedDates.includes(today)||s.lastPlayed===today,prev=s.lastPlayed;if(!hadToday){s.current=prev===addDays(today,-1)?s.current+1:1;s.longest=Math.max(s.longest,s.current);s.lastPlayed=today;s.playedDates=[...new Set([...s.playedDates,today])].sort();}s.scores[today]=Math.max(+s.scores[today]||0,score);saveStreak(s);return s;}
+function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=loadStreak();
+  if(tierKey){s.byDay[dateStr]=s.byDay[dateStr]||{};s.byDay[dateStr][tierKey]=Math.max(+s.byDay[dateStr][tierKey]||0,score);}
+  if(dateStr===today){const hadToday=s.playedDates.includes(today)||s.lastPlayed===today,prev=s.lastPlayed;if(!hadToday){s.current=prev===addDays(today,-1)?s.current+1:1;s.longest=Math.max(s.longest,s.current);s.lastPlayed=today;s.playedDates=[...new Set([...s.playedDates,today])].sort();}s.scores[today]=Math.max(+s.scores[today]||0,score);}
+  saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
 function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else renderStart(undefined,false);}
@@ -809,7 +818,7 @@ function renderFromPath(){
       if(!infinite && game.length && results.length<ROUNDS && tier===key && runDate===eff) return renderRound();
       return startGame(key, rd, false);
     }
-    return renderStart(date,false); }
+    return renderDayView(date,false); }
   return renderStart(undefined,false);
 }
 window.addEventListener('popstate',renderFromPath);
@@ -1306,20 +1315,42 @@ function renderStreak(){
   const sh=document.getElementById('shareimg');if(sh)sh.onclick=()=>lastFinal?downloadShareImage(sh,lastFinal):navigator.clipboard.writeText(`Gesso · ${score.toLocaleString()} pts · ${s.current} day streak`).then(()=>sh.textContent='Copied ✓');
   const cd=document.getElementById('countdown');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
 }
+const TIERDOT={easy:'#aeb6e3',medium:'#7480d4',hard:'#3f4cbe',impossible:'#232c84'};
+function renderDayView(ds,push=true){
+  clearTimers(); if(push)pushNav({v:'pick',date:ds});
+  const s=loadStreak(), today=todayStr(), bd=s.byDay[ds]||{}, done=TIERS.filter(t=>bd[t.key]!=null).length, canNext=ds<today;
+  const rows=TIERS.map(t=>{const sc=bd[t.key], isDone=sc!=null;
+    return `<div class="dayrow"><i class="td" style="width:13px;height:13px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>
+      <div style="flex:1;min-width:0"><div style="font:700 14px Archivo,sans-serif">${t.label}</div><div class="mono" style="font-size:11px;color:var(--muted)">${esc(t.blurb)}</div></div>
+      ${isDone?`<span class="mono" style="color:var(--full);font-size:12px;white-space:nowrap">&check; ${sc.toLocaleString()}</span><button class="btn2 dayplay" data-k="${t.key}" style="padding:6px 12px">Replay</button>`:`<button class="btn dayplay" data-k="${t.key}" style="width:auto;padding:8px 18px">Play</button>`}</div>`;}).join('');
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
+    <div class="retcap"><button class="moveback" id="bkarch">&lsaquo; Archive</button>
+      <div class="daypager"><button class="btn2" id="pday" data-ds="${ds}" aria-label="Previous day" style="padding:5px 11px">&lsaquo;</button><span class="mono" style="font-weight:600;letter-spacing:.04em">${niceDate(ds)}</span><button class="btn2" id="nday" aria-label="Next day" ${canNext?'':'disabled'} style="padding:5px 11px">&rsaquo;</button></div></div>
+    <div style="padding:16px 16px 2px"><div style="font:800 22px Archivo,sans-serif">${niceDate(ds)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:3px">${accessionFor(ds)} &middot; ${done} / 4 tiers filed</div></div>
+    <div class="daygrid">${rows}</div>
+  </div>${ATTRIB}</div></div>`;
+  document.getElementById('bkarch').onclick=()=>renderArchive();
+  document.getElementById('pday').onclick=()=>renderDayView(addDays(ds,-1));
+  const nd=document.getElementById('nday'); if(nd&&canNext)nd.onclick=()=>renderDayView(addDays(ds,1));
+  document.querySelectorAll('.dayplay').forEach(b=>b.onclick=()=>startGame(b.dataset.k, ds===today?undefined:ds));
+  if(!window.__dayKey){window.__dayKey=true;document.addEventListener('keydown',e=>{const pd=document.getElementById('pday');if(!pd)return;const d=pd.dataset.ds;if(e.key==='ArrowLeft')renderDayView(addDays(d,-1));else if(e.key==='ArrowRight'){const n=document.getElementById('nday');if(n&&!n.disabled)renderDayView(addDays(d,1));}});}
+}
 function renderArchive(monthDate){
   clearTimers();
   const s=loadStreak(), today=todayStr(), td=parseLocalDate(today);archiveMonth=monthDate||archiveMonth||new Date(td.getFullYear(),td.getMonth(),1);
   const y=archiveMonth.getFullYear(),m=archiveMonth.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),canNext=y<td.getFullYear()||m<td.getMonth();
   let cells='';for(let i=0;i<first.getDay();i++)cells+='<div class="daycell blank"></div>';
-  for(let d=1;d<=last.getDate();d++){const ds=localDateStr(new Date(y,m,d)),dt=parseLocalDate(ds),played=s.playedDates.includes(ds),isToday=ds===today,future=dt>td,missed=dt<td&&!played;let cls=future?'future':isToday?'today':played?'played':missed?'missed':'';let sub=played?`<span class="scorechip">${shortScore(s.scores[ds])}</span>`:isToday?'<span class="smallcap">Today</span>':missed?'<span class="scorechip" style="color:#d6cfbe">missed</span>':'';let click=(played||missed)&&dt<td?` data-date="${ds}"`:'';cells+=`<button class="daycell ${cls}"${click}><span class="dn">${d}</span>${sub}</button>`;}
+  for(let d=1;d<=last.getDate();d++){const ds=localDateStr(new Date(y,m,d)),dt=parseLocalDate(ds),bd=s.byDay[ds]||{},played=Object.keys(bd).length>0||s.playedDates.includes(ds),isToday=ds===today,future=dt>td;let cls=future?'future':isToday?'today':played?'played':'missed';
+    let dots=future?'':`<span class="tierdots">${TIERS.map(t=>{const done=bd[t.key]!=null;return `<i class="td" style="${done?`background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}`:'background:transparent;border-color:#d3ccbb'}"></i>`;}).join('')}</span>`;
+    let click=future?'':` data-date="${ds}"`;cells+=`<button class="daycell ${cls}"${click}><span class="dn">${d}</span>${dots}</button>`;}
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
     <div class="retcap"><span class="ttl">Archive</span><div style="display:flex;align-items:center;gap:14px"><button class="btn2" id="prevmo" style="padding:5px 10px">‹</button><span class="mono" style="font-weight:600;letter-spacing:.08em">${archiveMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'}).toUpperCase()}</span><button class="btn2" id="nextmo" ${canNext?'':'disabled'} style="padding:5px 10px">›</button></div></div>
     <div class="dowgrid"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="archivegrid">${cells}</div>
-    <div class="legend"><span><i style="background:rgba(34,48,184,.18)"></i>Played</span><span><i style="border:2px solid var(--accent);background:#fff"></i>Today</span><span><i style="border:1px solid var(--line-card)"></i>Missed</span><span style="margin-left:auto">Tap any past day to replay</span></div>
+    <div class="legend"><span style="display:flex;align-items:center;gap:5px">${TIERS.map(t=>`<i class="td" style="width:8px;height:8px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>`).join('')}&nbsp;easy → impossible · filled = filed</span><span style="margin-left:auto">Tap any day to play / replay</span></div>
   </div>${ATTRIB}</div></div>`;
   document.getElementById('prevmo').onclick=()=>{archiveMonth=new Date(y,m-1,1);renderArchive(archiveMonth);};
   document.getElementById('nextmo').onclick=()=>{if(canNext){archiveMonth=new Date(y,m+1,1);renderArchive(archiveMonth);}};
-  document.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>renderStart(b.dataset.date));
+  document.querySelectorAll("[data-date]").forEach(b=>b.onclick=()=>renderDayView(b.dataset.date));
 }
 function masteryEntries(){
   const m=loadMastery(), all=[...Object.entries(m.byStyle||{}),...Object.entries(m.byRegion||{})].filter(([,v])=>v&&v.total>=2);
@@ -1342,7 +1373,7 @@ function renderFinal(){
   clearTimers();
   const summary=resultSummary(), {grand,gmax,bonus,share}=summary;
   lastFinal={...summary,results:results.slice(),tier,date:runDate||todayStr()};
-  if(!runArchive)recordDailyScore(runDate||todayStr(),grand);
+  recordDailyScore(runDate||todayStr(),grand,tier); // records per-tier completion (any date); streak credit only for today
   // matrix
   const cols=["when","where","medium","style","artist"];
   const head=cols.map(c=>`<th>${iconHTML(c)}${catShort(c)}</th>`).join('');
