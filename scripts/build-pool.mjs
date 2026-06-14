@@ -24,6 +24,7 @@ function continentOf(lat, lng){
   if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56) return "South America";
   if(lng>=-170&&lng<=-52&&lat>=13) return "North America";
   if(lng>=110&&lat<=-10) return "Oceania";
+  if(lng>34.5&&lat<42&&lat>=12) return "Asia";  // West/South/East Asia incl. Middle East (Iran, Levant, Mesopotamia)
   if(lat>=36&&lng>=-25&&lng<=60) return "Europe";
   if(lat>=-35&&lat<36&&lng>=-20&&lng<=52) return "Africa";
   if(lng>40) return "Asia";

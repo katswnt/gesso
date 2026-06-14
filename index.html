@@ -355,8 +355,11 @@ const dcfg=()=>DIFF[tier]||DIFF.medium;
 // ---------- helpers ----------
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pickN(a,n){return shuffle(a).slice(0,n);}
-function fill3(ans,picks,fromAll){let p=[...new Set(picks)].filter(x=>x&&x!==ans);
-  const rest=shuffle(fromAll.filter(x=>x!==ans&&!p.includes(x)));
+// last meaningful token, e.g. "Eastern Tibet"->"Tibet", "Central Tibet"->"Tibet" (but "Greek, Attic"->"Attic")
+function lastTok(s){return String(s).trim().split(/\s+/).pop().replace(/[^A-Za-z]/g,'');}
+function fill3(ans,picks,fromAll){const at=lastTok(ans), sib=x=>lastTok(x)===at;
+  let p=[...new Set(picks)].filter(x=>x&&x!==ans&&!sib(x));
+  const rest=shuffle(fromAll.filter(x=>x!==ans&&!p.includes(x)&&!sib(x)));
   while(p.length<3&&rest.length)p.push(rest.shift());
   return shuffle([ans,...p.slice(0,3)]);}
 // medium choices: easy = different families (obvious); hard = same family (lookalikes)
@@ -439,6 +442,7 @@ function continentOf(lat,lng){
   if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56)return "South America";
   if(lng>=-170&&lng<=-52&&lat>=13)return "North America";
   if(lng>=110&&lat<=-10)return "Oceania";
+  if(lng>34.5&&lat<42&&lat>=12)return "Asia";  // West/South/East Asia incl. Middle East
   if(lat>=36&&lng>=-25&&lng<=60)return "Europe";
   if(lat>=-35&&lat<36&&lng>=-20&&lng<=52)return "Africa";
   if(lng>40)return "Asia";
@@ -1059,7 +1063,6 @@ function renderReveal(r){
       <div class="why">${why}</div>
       ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
-      ${it.medium&&CUES.medium[it.medium]?`<div class="cue" style="margin-top:8px"><span class="num">◆</span><span class="tx">${CUES.medium[it.medium]}</span></div>`:''}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>+ Added to glossary</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
