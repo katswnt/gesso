@@ -42,7 +42,7 @@ const DIFF={
 const dcfg=()=>DIFF[tier]||DIFF.medium;
 
 // ---------- helpers ----------
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function shuffle(a){const rnd=window.__RNG||Math.random;a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pickN(a,n){return shuffle(a).slice(0,n);}
 // last meaningful token, e.g. "Eastern Tibet"->"Tibet", "Central Tibet"->"Tibet" (but "Greek, Attic"->"Attic")
 function lastTok(s){return String(s).trim().split(/\s+/).pop().replace(/[^A-Za-z]/g,'');}
@@ -446,7 +446,7 @@ function renderMovement(name){
   const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div class="mono" style="font-size:12px;color:var(--muted)">No eye cues available yet.</div>`;
   const cap=work?`${work.artist||'Unknown'} &middot; ${work.title} &middot; ${fmtYear(work.y)}`:'No canonical work available';
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
-    <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">Movement</span></div>
+    <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">${(typeof CULTS!=='undefined'&&CULTS.includes(name))?'Culture':'Movement'}</span></div>
     <div class="movehero">${emblemHTML(meta.palette,30,false)}<div><div class="movename">${esc(name)}</div><div class="movesub">${esc(meta.dates)} &middot; ${esc(meta.region)}${metLine}</div></div></div>
     <div style="padding:20px 24px 8px"><div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}</div>
     <div style="padding:18px 24px 24px"><div class="kick" style="color:var(--muted);margin-bottom:11px">Canonical example</div>
@@ -634,6 +634,8 @@ function renderInfiniteSummary(){
 // ---------- PLAY ----------
 function renderRound(){
   window.scrollTo(0,0);
+  // seed distractor shuffles per date+tier+work so the option set is the same for everyone (fair/deterministic)
+  window.__RNG=mulberry32(seedHash((runDate||todayStr())+'|'+tier+'|'+idx)); Promise.resolve().then(()=>{window.__RNG=null;});
   const it=game[idx];
   guess={year:1700, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
@@ -708,7 +710,7 @@ function renderRound(){
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
     const leave=GEO_LEAVE[tier];
-    const rightRegion=continentOf(lat,lng)===it.region || km(lat,lng,it.lat,it.lng)<2000;
+    const rightRegion=continentOf(lat,lng)===it.region || km(lat,lng,it.lat,it.lng)<=radiusFor(it.place);
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
