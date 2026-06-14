@@ -31,6 +31,14 @@ function png(size){
   return Buffer.concat([sig,chunk("IHDR",ihdr),chunk("IDAT",deflateSync(raw)),chunk("IEND",Buffer.alloc(0))]);
 }
 
-writeFileSync("favicon.png", png(64));
+const p64 = png(64);
+writeFileSync("favicon.png", p64);
 writeFileSync("apple-touch-icon.png", png(180));
-console.log("wrote favicon.png (64) + apple-touch-icon.png (180)");
+// favicon.ico — ICO container wrapping the 64px PNG (modern browsers accept PNG-in-ICO)
+const dir = Buffer.alloc(22);
+dir.writeUInt16LE(0,0); dir.writeUInt16LE(1,2); dir.writeUInt16LE(1,4); // reserved, type=icon, count=1
+dir.writeUInt8(64,6); dir.writeUInt8(64,7); dir.writeUInt8(0,8); dir.writeUInt8(0,9); // w,h,colors,reserved
+dir.writeUInt16LE(1,10); dir.writeUInt16LE(32,12); // planes, bpp
+dir.writeUInt32LE(p64.length,14); dir.writeUInt32LE(22,18); // size, offset
+writeFileSync("favicon.ico", Buffer.concat([dir, p64]));
+console.log("wrote favicon.png (64) + apple-touch-icon.png (180) + favicon.ico");
