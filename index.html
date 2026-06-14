@@ -62,14 +62,24 @@ function mediumChoices(ans){const look=dcfg().look;
 const DEMONYM={japanese:'japan',chinese:'china',korean:'korea',persian:'persia',iranian:'persia',indian:'india',egyptian:'egypt',greek:'greece',roman:'rome',italian:'italy',french:'france',german:'germany',spanish:'spain',dutch:'netherlands',flemish:'netherlands',english:'england',british:'britain',american:'usa',mexican:'mexico',peruvian:'peru',tibetan:'tibet',nepalese:'nepal',thai:'thailand',vietnamese:'vietnam'};
 function cultureKey(s){let k=String(s||'').toLowerCase().replace(/[^a-z ]/g,'').trim().split(' ')[0];return DEMONYM[k]||k;}
 function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(ans);
-  // drop near-duplicate synonyms of the answer (e.g. "Japan" vs "Japanese") from the option pool
-  const pool=(it.styleKind==='culture'?CULTS:MOVS).filter(s=>s===ans||cultureKey(s)!==aKey);
+  const isCult=it.styleKind==='culture';
+  // a culture's geographic "root" (dominant country) — keeps options from overlapping, e.g. "Meiji" + "Japan"
+  const root=s=>styleCountry[s]||cultureKey(s);
+  const aRoot=root(ans);
+  // drop near-duplicate synonyms of the answer ("Japan" vs "Japanese"); for cultures also drop same-country labels
+  const pool=(isCult?CULTS:MOVS).filter(s=>s===ans||(cultureKey(s)!==aKey&&(!isCult||root(s)!==aRoot)));
   const sameReg=pool.filter(s=>s!==ans&&styleRegion[s]===it.region);
   const related=(RELATED_MOV[ans]||[]).filter(s=>pool.includes(s));
   let picks; if(look==='far')picks=pickN(pool.filter(s=>s!==ans),3);
   else if(look==='near')picks=[...pickN(related,2),...pickN(sameReg,3)].slice(0,3);
   else picks=[...pickN(related,1),...pickN(sameReg.length?sameReg:pool,2)];
-  return fill3(ans,picks,pool);}
+  if(!isCult) return fill3(ans,picks,pool);
+  // cultures: guarantee the 4 options come from distinct countries (no Meiji + Edo + Japan together)
+  const out=[ans], used=new Set([aRoot]);
+  for(const s of [...picks,...shuffle(sameReg),...shuffle(pool)]){
+    if(out.length>=4)break; if(s===ans||out.includes(s))continue;
+    const r=root(s); if(used.has(r))continue; out.push(s); used.add(r);}
+  return shuffle(out);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
 const motionQuery=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -342,7 +352,7 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
-let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={};
+let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
@@ -360,9 +370,13 @@ function buildIndexes(){
   MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra])].sort();
-  artistStyle={}; styleRegion={};
+  artistStyle={}; styleRegion={}; styleCountry={};
+  const placeCounts={};
   for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
-    if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region; }
+    if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region;
+    if(p.style&&p.place){ const pc=placeCounts[p.style]=placeCounts[p.style]||{}; pc[p.place]=(pc[p.place]||0)+1; } }
+  // dominant country per style → used to keep culture options from overlapping (e.g. "Meiji" + "Japan")
+  for(const s in placeCounts){ styleCountry[s]=Object.entries(placeCounts[s]).sort((a,b)=>b[1]-a[1])[0][0]; }
 }
 // Easy = a small elite slice of the most-recognized works (everyone should at least KNOW them);
 // the rest split across medium/hard/impossible. POOL is fame-sorted in buildIndexes().
@@ -991,11 +1005,10 @@ function renderReveal(r){
     const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
     if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
       cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
-  // "Ask the guide" accordion: one open at a time
+  // "Ask the guide" accordion: each row toggles independently (multiple can be open)
   document.querySelectorAll('.askguide .agq').forEach(b=>b.onclick=()=>{
     const open=b.getAttribute('aria-expanded')==='true';
-    b.closest('.aglist').querySelectorAll('.agq').forEach(x=>{x.setAttribute('aria-expanded','false');x.nextElementSibling.hidden=true;});
-    if(!open){b.setAttribute('aria-expanded','true');b.nextElementSibling.hidden=false;}});
+    b.setAttribute('aria-expanded',open?'false':'true'); b.nextElementSibling.hidden=open;});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
