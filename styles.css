@@ -345,7 +345,7 @@
     .playgrid{grid-template-columns:1fr!important}
     .difs{grid-template-columns:1fr}
     .hdinner{padding:13px 16px}.hd .accn{display:none}
-    .big{font-size:34px}.herobig{font-size:38px}.dabo-lg{width:21px;height:20px}.dabo-lg::after{top:4px;left:6px;width:5px;height:5px}.year{font-size:23px}.practice{margin:6px 16px 16px}
+    .big{font-size:34px}.herobig{font-size:38px}.dabo-lg{width:21px;height:20px}.dabo-lg::after{top:4px;left:6px;width:5px;height:5px}.year{font-size:23px}.practice{margin:6px 24px 16px}
     .hd .right{gap:9px}.navbits{gap:4px}.pips{display:none}
     /* mobile: collapse the retention nav into a hamburger menu so the header never overflows */
     .hd .navbits .navbtn,.hd .navbits .gearbtn,.hd .navbits .helpdab{display:none}
