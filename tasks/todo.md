@@ -8,8 +8,8 @@ Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings ve
 ## A. Enrichment pipeline — in flight (Codex on reset), HOLD re-freeze until done
 **Richer teaching schema now governs all of this — see `tasks/teaching-notes-guidelines.md`.** Each work ships `why` + `cues[4]` + `hotspots` + NEW `guide[]` ("Ask the guide" accordion: 5 required Q&A slots incl. story/context, plus as many extra accurate ones as the work supports).
 - [ ] **Update `gen-teach-shard` prompt** to the richer schema (adds `guide[]`; keeps `why`+`cues`). Bake in the §accuracy guardrails (never invent a named figure; obscure works lean on visible-description + medium/technique).
-- [ ] Teach-notes (full schema) for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard`.
-- [ ] **Back-fill `guide[]` for all 2,738 existing works** (Kat: backfill for sure). Order: famous tiers first, then long tail.
+- [~] **Guide backfill — 2,240 / 3,260 done.** Claude workflow generated drafts for the top ~2,220 fame-ranked works (`a310539`) before hitting the monthly spend limit. **~1,020 works still need `guide`** (run `node scripts/gen-teach.mjs` when Codex resets OR re-run the workflow when budget allows — both resume from what's done).
+- [ ] **Verify pass for the 2,220 unverified drafts** — the workflow's verify stage never ran (spend limit). Drafts are schema-valid + followed the accuracy guardrails, but a fact-check sweep (esp. no-invented-figure-names) should run via Codex or a budgeted Claude pass before we consider notes final.
 - [ ] Hotspots for the new works — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
 - [ ] **Dimensions enrichment**: add a size field to every work (Wikidata P2048/P2049; Met/AIC/Cleveland/Harvard/V&A `dimensions` by `src`) → `data/dimensions.js` overlay; reveal-only line "Oil on canvas · 73 × 92 cm".
 - [ ] THEN: final fame re-score over the full 3,260 pool → regenerate `fame.js` → **re-freeze daily** (`freeze-daily.mjs`).
