@@ -112,3 +112,11 @@ Note: index-5.html predates the favicon/fame-overlay/FAQ changes already shipped
 - [ ] MODERN/CONTEMPORARY art: user wants 20th/21st-c. work. CAVEAT: most is under copyright → no open images (MoMA/Whitney/Tate metadata is open but images are NOT CC0). Gettable: pre-1929 (now US public domain, rising yearly) via AIC/Met/NGA/Wikidata; some museum-photographed PD works. Plan: targeted pull of PD modern (1900–1929) + CC0 design/photography; set expectation that living-artist contemporary can't be shown openly.
 - [x] Share image now includes date + difficulty; fixed wrong URL (playgesso.com → gesso.katswint.com).
 - [x] Canon note now credits all source museums, not just Wikidata+Met.
+
+## Capped famous-first pulls — queued for Codex reset (2026-06-14)
+All CAPPED (~300-400 most-famous each, not full ingest):
+- [ ] NGA (Washington) open-access — from GitHub opendata CSVs (published_images = cleared/PD). Prompt ready: scripts/codex-prompts/nga.txt (pull-nga.mjs failed mid-run on token limit; re-run on reset).
+- [ ] de Young / FAMSF (SF) — open-access CC0 images; confirm endpoint, pull famous-first.
+- [ ] National Palace Museum, Taipei — open data; deep Chinese collection (rare non-Western source).
+- [ ] Canon backfill — pull ~150 most-famous PD paintings by Wikidata Q-id directly (image required, country OPTIONAL — the original wikidata pull required country+coords, which dropped Scream/Great Wave/Girl-with-Pearl-Earring/Arnolfini/Olympia/School of Athens/Creation of Adam/etc.). Include Prado GLAM works (collection=Q160112) — Spanish Golden Age masters now on Wikidata/Commons.
+- [ ] Resume hotspot driver (stopped at 1236/2735) + then re-freeze daily so modern + canon works enter dailies.
