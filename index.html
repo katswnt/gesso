@@ -472,9 +472,10 @@ function renderCollections(){
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
-    <div style="background:var(--study-bg);border:1px solid var(--study-border);border-radius:10px;padding:18px;margin-top:16px">
-      <div style="font:700 14px Archivo;margin-bottom:6px">04 &middot; The African-museum gap</div>
-      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.</div></div>
+    <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
+      <div class="mono" style="color:var(--accent);font-weight:700">04</div>
+      <div style="font:700 15px Archivo;margin:4px 0 7px">The African-museum gap</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.55">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.</div></div>
     <div class="kick" style="margin:36px 0 14px">Where the canon hangs</div>
     <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
     ${ATTRIB}
@@ -969,10 +970,10 @@ function renderReveal(r){
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
-          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:''}
+          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:''}
         </div>
-        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">Tell me about this work &#8599;</a>
+        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record &#8599;</a>
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
