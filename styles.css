@@ -195,7 +195,7 @@
   .menubtn{display:none;flex-direction:column;gap:4px;align-items:center;justify-content:center;appearance:none;border:0;background:transparent;cursor:pointer;width:38px;min-height:38px;padding:7px}
   .menubtn span{display:block;height:2px;width:20px;background:var(--accent);border-radius:2px}
   .menulist{display:flex;flex-direction:column;padding:6px 0 4px}
-  .menulist button{appearance:none;border:0;border-bottom:1px solid var(--study-border);background:transparent;text-align:left;font:600 15px 'Archivo',sans-serif;color:var(--ink);padding:15px 22px;cursor:pointer}
+  .menulist button{appearance:none;border:0;border-bottom:1px solid var(--study-border);background:transparent;text-align:left;font:700 13px 'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);padding:16px 22px;cursor:pointer}
   .menulist button:last-child{border-bottom:0}
   .menulist button:active{background:var(--study-bg)}
   .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.32);display:flex;align-items:center;justify-content:center;padding:18px}
