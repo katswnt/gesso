@@ -622,7 +622,7 @@ function renderStart(dateStr,push=true){
 
     <div class="hero">
       <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
-      <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.'}</div>
+      <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em><span style="margin-left:-5px">.</span>'}</div>
       <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art &mdash; its date, place, school &amp; hand</span>'}</div>
       <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
       <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
@@ -632,9 +632,10 @@ function renderStart(dateStr,push=true){
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
     </div>
-    ${replay?'':`<div style="text-align:center;padding:0 24px 16px">
-      <span class="kick" style="margin-right:8px">Or play endlessly</span>
-      ${TIERS.map(t=>`<button class="navbtn inf" data-inf="${t.key}" style="margin:3px 3px">∞ ${t.label}</button>`).join('')}
+    ${replay?'':`<div class="practice">
+      <div class="pinf">&infin;</div>
+      <div class="ptxt"><div class="h">Practice mode</div><p>Done with today&rsquo;s five? Keep going &mdash; endless works, no limit. Won&rsquo;t affect your streak or stats.</p></div>
+      <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
       <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia — is ${b.europe}% European:</p>
