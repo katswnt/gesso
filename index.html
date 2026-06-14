@@ -979,6 +979,7 @@ function renderReveal(r){
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
           ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:''}
+          ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(it.dim)}</span></div>`:''}
         </div>
         <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record &#8599;</a>
       </div>
