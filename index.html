@@ -846,7 +846,7 @@ function renderRound(){
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
         <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove()"/></div>
-        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.medium||'UNKNOWN MEDIUM').toUpperCase())}</span></div>
+        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
           <div class="hintchips" id="hintchips"></div>
