@@ -1,0 +1,2578 @@
+{
+  "http://www.wikidata.org/entity/Q12418": {
+    "wikidata": "Q12418",
+    "sitelinks": 146,
+    "pageviews": 185478,
+    "fame": 681.004,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q45585": {
+    "wikidata": "Q45585",
+    "sitelinks": 76,
+    "pageviews": 92701,
+    "fame": 605.938,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q29530": {
+    "wikidata": "Q29530",
+    "sitelinks": 67,
+    "pageviews": 23876,
+    "fame": 573.161,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q219831": {
+    "wikidata": "Q219831",
+    "sitelinks": 58,
+    "pageviews": 24829,
+    "fame": 559.551,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q208758": {
+    "wikidata": "Q208758",
+    "sitelinks": 57,
+    "pageviews": 35352,
+    "fame": 563.141,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q154469": {
+    "wikidata": "Q154469",
+    "sitelinks": 53,
+    "pageviews": 6882,
+    "fame": 531.451,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q321303": {
+    "wikidata": "Q321303",
+    "sitelinks": 49,
+    "pageviews": 53613,
+    "fame": 554.546,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q311243": {
+    "wikidata": "Q311243",
+    "sitelinks": 48,
+    "pageviews": 33037,
+    "fame": 545.263,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q465762": {
+    "wikidata": "Q465762",
+    "sitelinks": 47,
+    "pageviews": 14778,
+    "fame": 531.135,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q152867": {
+    "wikidata": "Q152867",
+    "sitelinks": 45,
+    "pageviews": 10605,
+    "fame": 521.902,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q464782": {
+    "wikidata": "Q464782",
+    "sitelinks": 45,
+    "pageviews": 42348,
+    "fame": 542.67,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1091086": {
+    "wikidata": "Q1091086",
+    "sitelinks": 44,
+    "pageviews": 20701,
+    "fame": 529.736,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q152509": {
+    "wikidata": "Q152509",
+    "sitelinks": 44,
+    "pageviews": 10857,
+    "fame": 520.056,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q167605": {
+    "wikidata": "Q167605",
+    "sitelinks": 44,
+    "pageviews": 9098,
+    "fame": 517.405,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q683274": {
+    "wikidata": "Q683274",
+    "sitelinks": 42,
+    "pageviews": 6545,
+    "fame": 507.919,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q727875": {
+    "wikidata": "Q727875",
+    "sitelinks": 40,
+    "pageviews": 10110,
+    "fame": 509.678,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q83872": {
+    "wikidata": "Q83872",
+    "sitelinks": 38,
+    "pageviews": 41274,
+    "fame": 525.776,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1133420": {
+    "wikidata": "Q1133420",
+    "sitelinks": 37,
+    "pageviews": 3036,
+    "fame": 484.038,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1150997": {
+    "wikidata": "Q1150997",
+    "sitelinks": 37,
+    "pageviews": 67170,
+    "fame": 530.484,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1231009": {
+    "wikidata": "Q1231009",
+    "sitelinks": 37,
+    "pageviews": 8929,
+    "fame": 500.216,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1170315": {
+    "wikidata": "Q1170315",
+    "sitelinks": 37,
+    "pageviews": 6771,
+    "fame": 496.067,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1044742": {
+    "wikidata": "Q1044742",
+    "sitelinks": 36,
+    "pageviews": 50522,
+    "fame": 523.545,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1978815": {
+    "wikidata": "Q1978815",
+    "sitelinks": 33,
+    "pageviews": 6125,
+    "fame": 483.441,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1283024": {
+    "wikidata": "Q1283024",
+    "sitelinks": 33,
+    "pageviews": 2861,
+    "fame": 472.025,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q500951": {
+    "wikidata": "Q500951",
+    "sitelinks": 32,
+    "pageviews": 949,
+    "fame": 452.498,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q185255": {
+    "wikidata": "Q185255",
+    "sitelinks": 31,
+    "pageviews": 7782,
+    "fame": 480.969,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q687182": {
+    "wikidata": "Q687182",
+    "sitelinks": 31,
+    "pageviews": 15311,
+    "fame": 491.119,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q984058": {
+    "wikidata": "Q984058",
+    "sitelinks": 30,
+    "pageviews": 1912,
+    "fame": 456.745,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q920030": {
+    "wikidata": "Q920030",
+    "sitelinks": 30,
+    "pageviews": 2612,
+    "fame": 461.423,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q512755": {
+    "wikidata": "Q512755",
+    "sitelinks": 30,
+    "pageviews": 7918,
+    "fame": 478.054,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q500554": {
+    "wikidata": "Q500554",
+    "sitelinks": 29,
+    "pageviews": 12869,
+    "fame": 482.06,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2735507": {
+    "wikidata": "Q2735507",
+    "sitelinks": 28,
+    "pageviews": 2702,
+    "fame": 455.261,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1899740": {
+    "wikidata": "Q1899740",
+    "sitelinks": 27,
+    "pageviews": 3476,
+    "fame": 455.529,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2629423": {
+    "wikidata": "Q2629423",
+    "sitelinks": 27,
+    "pageviews": 2111,
+    "fame": 448.051,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2697937": {
+    "wikidata": "Q2697937",
+    "sitelinks": 26,
+    "pageviews": 19104,
+    "fame": 477.449,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2610675": {
+    "wikidata": "Q2610675",
+    "sitelinks": 26,
+    "pageviews": 1859,
+    "fame": 442.509,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1368055": {
+    "wikidata": "Q1368055",
+    "sitelinks": 26,
+    "pageviews": 6838,
+    "fame": 462.04,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2664039": {
+    "wikidata": "Q2664039",
+    "sitelinks": 26,
+    "pageviews": 75834,
+    "fame": 498.128,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q860129": {
+    "wikidata": "Q860129",
+    "sitelinks": 26,
+    "pageviews": 16933,
+    "fame": 475.64,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2983399": {
+    "wikidata": "Q2983399",
+    "sitelinks": 25,
+    "pageviews": 4259,
+    "fame": 451.165,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q5930190": {
+    "wikidata": "Q5930190",
+    "sitelinks": 25,
+    "pageviews": 917,
+    "fame": 428.143,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q26220165": {
+    "wikidata": "Q26220165",
+    "sitelinks": 24,
+    "pageviews": 786,
+    "fame": 421.911,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q7536969": {
+    "wikidata": "Q7536969",
+    "sitelinks": 24,
+    "pageviews": 5814,
+    "fame": 451.911,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2035209": {
+    "wikidata": "Q2035209",
+    "sitelinks": 24,
+    "pageviews": 454,
+    "fame": 413.692,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q509806": {
+    "wikidata": "Q509806",
+    "sitelinks": 24,
+    "pageviews": 9510,
+    "fame": 459.291,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2665048": {
+    "wikidata": "Q2665048",
+    "sitelinks": 24,
+    "pageviews": 5191,
+    "fame": 450.211,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1088425": {
+    "wikidata": "Q1088425",
+    "sitelinks": 24,
+    "pageviews": 2865,
+    "fame": 441.298,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2404992": {
+    "wikidata": "Q2404992",
+    "sitelinks": 23,
+    "pageviews": 1116,
+    "fame": 423.081,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2501284": {
+    "wikidata": "Q2501284",
+    "sitelinks": 23,
+    "pageviews": 911,
+    "fame": 420.04,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1123378": {
+    "wikidata": "Q1123378",
+    "sitelinks": 23,
+    "pageviews": 1529,
+    "fame": 427.801,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q3555076": {
+    "wikidata": "Q3555076",
+    "sitelinks": 23,
+    "pageviews": 1655,
+    "fame": 428.988,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2610729": {
+    "wikidata": "Q2610729",
+    "sitelinks": 22,
+    "pageviews": 732,
+    "fame": 412.507,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1212920": {
+    "wikidata": "Q1212920",
+    "sitelinks": 22,
+    "pageviews": 1937,
+    "fame": 427.091,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q39013": {
+    "wikidata": "Q39013",
+    "sitelinks": 22,
+    "pageviews": 388,
+    "fame": 403.003,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1787143": {
+    "wikidata": "Q1787143",
+    "sitelinks": 22,
+    "pageviews": 1235,
+    "fame": 420.344,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1212861": {
+    "wikidata": "Q1212861",
+    "sitelinks": 22,
+    "pageviews": 3514,
+    "fame": 436.021,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q123935": {
+    "wikidata": "Q123935",
+    "sitelinks": 21,
+    "pageviews": 1334,
+    "fame": 417.055,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q247282": {
+    "wikidata": "Q247282",
+    "sitelinks": 21,
+    "pageviews": 994,
+    "fame": 412.645,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q693746": {
+    "wikidata": "Q693746",
+    "sitelinks": 21,
+    "pageviews": 3896,
+    "fame": 433.124,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2571560": {
+    "wikidata": "Q2571560",
+    "sitelinks": 21,
+    "pageviews": 5651,
+    "fame": 438.701,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1560719": {
+    "wikidata": "Q1560719",
+    "sitelinks": 21,
+    "pageviews": 4791,
+    "fame": 436.225,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2354080": {
+    "wikidata": "Q2354080",
+    "sitelinks": 21,
+    "pageviews": 11331,
+    "fame": 449.135,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q16950902": {
+    "wikidata": "Q16950902",
+    "sitelinks": 21,
+    "pageviews": 2929,
+    "fame": 428.846,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1755464": {
+    "wikidata": "Q1755464",
+    "sitelinks": 20,
+    "pageviews": 4621,
+    "fame": 431.031,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1206860": {
+    "wikidata": "Q1206860",
+    "sitelinks": 20,
+    "pageviews": 3753,
+    "fame": 427.911,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q5332757": {
+    "wikidata": "Q5332757",
+    "sitelinks": 20,
+    "pageviews": 1776,
+    "fame": 416.692,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2052008": {
+    "wikidata": "Q2052008",
+    "sitelinks": 20,
+    "pageviews": 235,
+    "fame": 386.41,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q5962062": {
+    "wikidata": "Q5962062",
+    "sitelinks": 20,
+    "pageviews": 321,
+    "fame": 391.071,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q6402081": {
+    "wikidata": "Q6402081",
+    "sitelinks": 19,
+    "pageviews": 1172,
+    "fame": 405.583,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q500936": {
+    "wikidata": "Q500936",
+    "sitelinks": 19,
+    "pageviews": 7761,
+    "fame": 433.928,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1198912": {
+    "wikidata": "Q1198912",
+    "sitelinks": 19,
+    "pageviews": 1210,
+    "fame": 406.061,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2388965": {
+    "wikidata": "Q2388965",
+    "sitelinks": 19,
+    "pageviews": 815,
+    "fame": 400.139,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q650635": {
+    "wikidata": "Q650635",
+    "sitelinks": 19,
+    "pageviews": 305,
+    "fame": 385.427,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3716086": {
+    "wikidata": "Q3716086",
+    "sitelinks": 19,
+    "pageviews": 87,
+    "fame": 366.733,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2528741": {
+    "wikidata": "Q2528741",
+    "sitelinks": 18,
+    "pageviews": 2265,
+    "fame": 410.33,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2528477": {
+    "wikidata": "Q2528477",
+    "sitelinks": 18,
+    "pageviews": 5305,
+    "fame": 423.093,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q167536": {
+    "wikidata": "Q167536",
+    "sitelinks": 18,
+    "pageviews": 12316,
+    "fame": 435.725,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1796098": {
+    "wikidata": "Q1796098",
+    "sitelinks": 18,
+    "pageviews": 830,
+    "fame": 395.283,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2632688": {
+    "wikidata": "Q2632688",
+    "sitelinks": 18,
+    "pageviews": 1252,
+    "fame": 401.443,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1659469": {
+    "wikidata": "Q1659469",
+    "sitelinks": 18,
+    "pageviews": 528,
+    "fame": 388.509,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2783729": {
+    "wikidata": "Q2783729",
+    "sitelinks": 18,
+    "pageviews": 590,
+    "fame": 390.171,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q970968": {
+    "wikidata": "Q970968",
+    "sitelinks": 18,
+    "pageviews": 2232,
+    "fame": 410.11,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q17275221": {
+    "wikidata": "Q17275221",
+    "sitelinks": 18,
+    "pageviews": 3722,
+    "fame": 417.778,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q369810": {
+    "wikidata": "Q369810",
+    "sitelinks": 18,
+    "pageviews": 699,
+    "fame": 392.71,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q512971": {
+    "wikidata": "Q512971",
+    "sitelinks": 18,
+    "pageviews": 647,
+    "fame": 391.552,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1227359": {
+    "wikidata": "Q1227359",
+    "sitelinks": 17,
+    "pageviews": 1565,
+    "fame": 399.381,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2016193": {
+    "wikidata": "Q2016193",
+    "sitelinks": 17,
+    "pageviews": 1842,
+    "fame": 401.824,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q731639": {
+    "wikidata": "Q731639",
+    "sitelinks": 17,
+    "pageviews": 352,
+    "fame": 377.034,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3784247": {
+    "wikidata": "Q3784247",
+    "sitelinks": 17,
+    "pageviews": 624,
+    "fame": 385.603,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q232087": {
+    "wikidata": "Q232087",
+    "sitelinks": 17,
+    "pageviews": 3515,
+    "fame": 411.513,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2712679": {
+    "wikidata": "Q2712679",
+    "sitelinks": 17,
+    "pageviews": 1744,
+    "fame": 401.005,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q646337": {
+    "wikidata": "Q646337",
+    "sitelinks": 17,
+    "pageviews": 4241,
+    "fame": 414.329,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q4808020": {
+    "wikidata": "Q4808020",
+    "sitelinks": 17,
+    "pageviews": 3699,
+    "fame": 412.278,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q766212": {
+    "wikidata": "Q766212",
+    "sitelinks": 17,
+    "pageviews": 1572,
+    "fame": 399.448,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q713211": {
+    "wikidata": "Q713211",
+    "sitelinks": 17,
+    "pageviews": 8533,
+    "fame": 424.814,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q3173195": {
+    "wikidata": "Q3173195",
+    "sitelinks": 17,
+    "pageviews": 8857,
+    "fame": 425.373,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q2273943": {
+    "wikidata": "Q2273943",
+    "sitelinks": 16,
+    "pageviews": 288,
+    "fame": 368.318,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2413468": {
+    "wikidata": "Q2413468",
+    "sitelinks": 16,
+    "pageviews": 2354,
+    "fame": 399.786,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q4233325": {
+    "wikidata": "Q4233325",
+    "sitelinks": 16,
+    "pageviews": 1772,
+    "fame": 395.528,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2420918": {
+    "wikidata": "Q2420918",
+    "sitelinks": 16,
+    "pageviews": 527,
+    "fame": 377.358,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2535563": {
+    "wikidata": "Q2535563",
+    "sitelinks": 16,
+    "pageviews": 364,
+    "fame": 371.82,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2664637": {
+    "wikidata": "Q2664637",
+    "sitelinks": 16,
+    "pageviews": 297,
+    "fame": 368.778,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q4451145": {
+    "wikidata": "Q4451145",
+    "sitelinks": 16,
+    "pageviews": 2100,
+    "fame": 398.074,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2270955": {
+    "wikidata": "Q2270955",
+    "sitelinks": 16,
+    "pageviews": 1336,
+    "fame": 391.294,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3632485": {
+    "wikidata": "Q3632485",
+    "sitelinks": 16,
+    "pageviews": 958,
+    "fame": 386.31,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q507120": {
+    "wikidata": "Q507120",
+    "sitelinks": 16,
+    "pageviews": 286,
+    "fame": 368.214,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q644106": {
+    "wikidata": "Q644106",
+    "sitelinks": 16,
+    "pageviews": 3819,
+    "fame": 407.041,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q1787460": {
+    "wikidata": "Q1787460",
+    "sitelinks": 16,
+    "pageviews": 3468,
+    "fame": 405.596,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q17512050": {
+    "wikidata": "Q17512050",
+    "sitelinks": 16,
+    "pageviews": 869,
+    "fame": 384.849,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q334604": {
+    "wikidata": "Q334604",
+    "sitelinks": 16,
+    "pageviews": 3113,
+    "fame": 403.976,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q28092249": {
+    "wikidata": "Q28092249",
+    "sitelinks": 16,
+    "pageviews": 182,
+    "fame": 361.464,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3035829": {
+    "wikidata": "Q3035829",
+    "sitelinks": 15,
+    "pageviews": 556,
+    "fame": 372.097,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2088930": {
+    "wikidata": "Q2088930",
+    "sitelinks": 15,
+    "pageviews": 497,
+    "fame": 370.418,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2427320": {
+    "wikidata": "Q2427320",
+    "sitelinks": 15,
+    "pageviews": 282,
+    "fame": 361.941,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2631335": {
+    "wikidata": "Q2631335",
+    "sitelinks": 15,
+    "pageviews": 333,
+    "fame": 364.426,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2909909": {
+    "wikidata": "Q2909909",
+    "sitelinks": 15,
+    "pageviews": 1606,
+    "fame": 387.991,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q714794": {
+    "wikidata": "Q714794",
+    "sitelinks": 15,
+    "pageviews": 2238,
+    "fame": 392.966,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q668343": {
+    "wikidata": "Q668343",
+    "sitelinks": 15,
+    "pageviews": 4548,
+    "fame": 403.599,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q3299143": {
+    "wikidata": "Q3299143",
+    "sitelinks": 15,
+    "pageviews": 1218,
+    "fame": 383.846,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2126369": {
+    "wikidata": "Q2126369",
+    "sitelinks": 15,
+    "pageviews": 12936,
+    "fame": 419.277,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q10322900": {
+    "wikidata": "Q10322900",
+    "sitelinks": 14,
+    "pageviews": 1487,
+    "fame": 380.383,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3543882": {
+    "wikidata": "Q3543882",
+    "sitelinks": 14,
+    "pageviews": 2352,
+    "fame": 387.257,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2378567": {
+    "wikidata": "Q2378567",
+    "sitelinks": 14,
+    "pageviews": 1074,
+    "fame": 375.506,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q959537": {
+    "wikidata": "Q959537",
+    "sitelinks": 14,
+    "pageviews": 227,
+    "fame": 352.245,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1988152": {
+    "wikidata": "Q1988152",
+    "sitelinks": 14,
+    "pageviews": 211,
+    "fame": 351.154,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q6251405": {
+    "wikidata": "Q6251405",
+    "sitelinks": 14,
+    "pageviews": 1586,
+    "fame": 381.349,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q6046671": {
+    "wikidata": "Q6046671",
+    "sitelinks": 14,
+    "pageviews": 1482,
+    "fame": 380.332,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q4013804": {
+    "wikidata": "Q4013804",
+    "sitelinks": 14,
+    "pageviews": 182,
+    "fame": 348.947,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q19798137": {
+    "wikidata": "Q19798137",
+    "sitelinks": 14,
+    "pageviews": 301,
+    "fame": 356.461,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q5526647": {
+    "wikidata": "Q5526647",
+    "sitelinks": 14,
+    "pageviews": 6146,
+    "fame": 401.661,
+    "tier": "easy"
+  },
+  "http://www.wikidata.org/entity/Q4693305": {
+    "wikidata": "Q4693305",
+    "sitelinks": 14,
+    "pageviews": 4523,
+    "fame": 397.062,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q5906548": {
+    "wikidata": "Q5906548",
+    "sitelinks": 14,
+    "pageviews": 195,
+    "fame": 349.977,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1213936": {
+    "wikidata": "Q1213936",
+    "sitelinks": 14,
+    "pageviews": 3626,
+    "fame": 393.747,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q714804": {
+    "wikidata": "Q714804",
+    "sitelinks": 14,
+    "pageviews": 2231,
+    "fame": 386.465,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1224572": {
+    "wikidata": "Q1224572",
+    "sitelinks": 14,
+    "pageviews": 1647,
+    "fame": 381.915,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q431571": {
+    "wikidata": "Q431571",
+    "sitelinks": 14,
+    "pageviews": 433,
+    "fame": 361.901,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1130759": {
+    "wikidata": "Q1130759",
+    "sitelinks": 14,
+    "pageviews": 688,
+    "fame": 368.834,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2701637": {
+    "wikidata": "Q2701637",
+    "sitelinks": 14,
+    "pageviews": 2294,
+    "fame": 386.882,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2065740": {
+    "wikidata": "Q2065740",
+    "sitelinks": 14,
+    "pageviews": 594,
+    "fame": 366.633,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1114913": {
+    "wikidata": "Q1114913",
+    "sitelinks": 13,
+    "pageviews": 229,
+    "fame": 345.477,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3825327": {
+    "wikidata": "Q3825327",
+    "sitelinks": 13,
+    "pageviews": 186,
+    "fame": 342.372,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q6025697": {
+    "wikidata": "Q6025697",
+    "sitelinks": 13,
+    "pageviews": 114,
+    "fame": 335.08,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1747282": {
+    "wikidata": "Q1747282",
+    "sitelinks": 13,
+    "pageviews": 2301,
+    "fame": 380.029,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q10749451": {
+    "wikidata": "Q10749451",
+    "sitelinks": 13,
+    "pageviews": 645,
+    "fame": 360.968,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1115514": {
+    "wikidata": "Q1115514",
+    "sitelinks": 13,
+    "pageviews": 673,
+    "fame": 361.604,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q136433749": {
+    "wikidata": "Q136433749",
+    "sitelinks": 13,
+    "pageviews": 3694,
+    "fame": 387.127,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q686105": {
+    "wikidata": "Q686105",
+    "sitelinks": 13,
+    "pageviews": 639,
+    "fame": 360.828,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3743879": {
+    "wikidata": "Q3743879",
+    "sitelinks": 13,
+    "pageviews": 466,
+    "fame": 356.101,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q603703": {
+    "wikidata": "Q603703",
+    "sitelinks": 13,
+    "pageviews": null,
+    "fame": 263.906,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2456003": {
+    "wikidata": "Q2456003",
+    "sitelinks": 13,
+    "pageviews": 710,
+    "fame": 362.406,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q3918296": {
+    "wikidata": "Q3918296",
+    "sitelinks": 13,
+    "pageviews": 126,
+    "fame": 336.569,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q5564463": {
+    "wikidata": "Q5564463",
+    "sitelinks": 13,
+    "pageviews": 640,
+    "fame": 360.851,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1196533": {
+    "wikidata": "Q1196533",
+    "sitelinks": 13,
+    "pageviews": 219,
+    "fame": 344.81,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q23008305": {
+    "wikidata": "Q23008305",
+    "sitelinks": 13,
+    "pageviews": 1235,
+    "fame": 370.7,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2980775": {
+    "wikidata": "Q2980775",
+    "sitelinks": 13,
+    "pageviews": 1523,
+    "fame": 373.842,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q6644913": {
+    "wikidata": "Q6644913",
+    "sitelinks": 13,
+    "pageviews": 679,
+    "fame": 361.737,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q21260816": {
+    "wikidata": "Q21260816",
+    "sitelinks": 13,
+    "pageviews": 121,
+    "fame": 335.966,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q1220030": {
+    "wikidata": "Q1220030",
+    "sitelinks": 13,
+    "pageviews": 471,
+    "fame": 356.26,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2344593": {
+    "wikidata": "Q2344593",
+    "sitelinks": 13,
+    "pageviews": 1378,
+    "fame": 372.342,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q2568551": {
+    "wikidata": "Q2568551",
+    "sitelinks": 13,
+    "pageviews": 400,
+    "fame": 353.815,
+    "tier": "medium"
+  },
+  "http://www.wikidata.org/entity/Q4179284": {
+    "wikidata": "Q4179284",
+    "sitelinks": 13,
+    "pageviews": 466,
+    "fame": 356.101,
+    "tier": "medium"
+  },
+  "met51776": {
+    "wikidata": "Q7125071",
+    "sitelinks": 2,
+    "pageviews": 272,
+    "fame": 194.003,
+    "tier": "hard"
+  },
+  "met53750": {
+    "wikidata": "Q7125071",
+    "sitelinks": 2,
+    "pageviews": 272,
+    "fame": 194.003,
+    "tier": "hard"
+  },
+  "met39614": {
+    "wikidata": "Q20862737",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met50486": {
+    "wikidata": "Q60502265",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met44510": {
+    "wikidata": "Q78852605",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met40055": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met52988": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met902226": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met77205": {
+    "wikidata": "Q6088729",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met892108": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met897121": {
+    "wikidata": "Q20197747",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met667297": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met929155": {
+    "wikidata": "Q50385576",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met902222": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met40351": {
+    "wikidata": "Q78859349",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met60765": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met51797": {
+    "wikidata": "Q78795906",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met44723": {
+    "wikidata": "Q60759864",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met48942": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met76969": {
+    "wikidata": "Q78666456",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37971": {
+    "wikidata": "Q78878792",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38063": {
+    "wikidata": "Q78873554",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met49129": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met78197": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met37557": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met61429": {
+    "wikidata": "Q29383366",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37800": {
+    "wikidata": "Q78917856",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37819": {
+    "wikidata": "Q78916790",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37813": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met78189": {
+    "wikidata": "Q138756220",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met53573": {
+    "wikidata": "Q78756809",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37802": {
+    "wikidata": "Q78917790",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met39632": {
+    "wikidata": "Q96760095",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met44168": {
+    "wikidata": "Q107429065",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met49381": {
+    "wikidata": "Q116314015",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met646117": {
+    "wikidata": "Q117320036",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met39021": {
+    "wikidata": "Q116374453",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38159": {
+    "wikidata": "Q43712728",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met453351": {
+    "wikidata": "Q29385238",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met451023": {
+    "wikidata": "Q123370697",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met448461": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451260": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "medium"
+  },
+  "met449863": {
+    "wikidata": "Q64571736",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met452514": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met452104": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met456922": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met447817": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451267": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met451269": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451258": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451277": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451282": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451264": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451257": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451804": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met446860": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met453576": {
+    "wikidata": "Q29385244",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met449463": {
+    "wikidata": "Q116273484",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met449475": {
+    "wikidata": "Q100323044",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met449459": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met449862": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met452106": {
+    "wikidata": "Q12877549",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met447122": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met449617": {
+    "wikidata": "Q116273144",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met453494": {
+    "wikidata": "Q116373829",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met449597": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met449592": {
+    "wikidata": "Q116373848",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met446699": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met451717": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met453634": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met310350": {
+    "wikidata": "Q929647",
+    "sitelinks": 28,
+    "pageviews": 48464,
+    "fame": 498.559,
+    "tier": "easy"
+  },
+  "met310647": {
+    "wikidata": "Q914175",
+    "sitelinks": 13,
+    "pageviews": 4110,
+    "fame": 388.727,
+    "tier": "medium"
+  },
+  "met313565": {
+    "wikidata": "Q108338888",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "hard"
+  },
+  "met309855": {
+    "wikidata": "Q80028666",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met310486": {
+    "wikidata": "Q80043468",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met309959": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met311950": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met310279": {
+    "wikidata": "Q1040069",
+    "sitelinks": 9,
+    "pageviews": 231,
+    "fame": 311.96,
+    "tier": "medium"
+  },
+  "met318622": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met573600": {
+    "wikidata": "Q64633696",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met547550": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met544751": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met548220": {
+    "wikidata": "Q79905008",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met548210": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met545169": {
+    "wikidata": "Q64578831",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met545170": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met553259": {
+    "wikidata": "Q139342488",
+    "sitelinks": 1,
+    "pageviews": null,
+    "fame": 69.315,
+    "tier": "impossible"
+  },
+  "met568634": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met550971": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met576653": {
+    "wikidata": "Q139309257",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met547673": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met549375": {
+    "wikidata": "Q116273776",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met550781": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met544698": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met548499": {
+    "wikidata": "Q122814642",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met550972": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met553499": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met545168": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met590953": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met548395": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met569685": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met545903": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met550061": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met322869": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met324575": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met324492": {
+    "wikidata": "Q29384465",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met327403": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met323721": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met324753": {
+    "wikidata": "Q135074410",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met323535": {
+    "wikidata": "Q116236550",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met245840": {
+    "wikidata": "Q116241699",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met247010": {
+    "wikidata": "Q116296700",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250931": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met250944": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met247017": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met254649": {
+    "wikidata": "Q29383910",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met253315": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met246553": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met251763": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met630999": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met249058": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met255429": {
+    "wikidata": "Q116282799",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met248185": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met254830": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met250069": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met247429": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met242336": {
+    "wikidata": "Q116291698",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met827078": {
+    "wikidata": "Q135043732",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met244545": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met247964": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met256169": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met245580": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met252410": {
+    "wikidata": "Q116282864",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met57329": {
+    "wikidata": "Q7125071",
+    "sitelinks": 2,
+    "pageviews": 272,
+    "fame": 194.003,
+    "tier": "hard"
+  },
+  "met910555": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met74813": {
+    "wikidata": "Q78706762",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met49083": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met40354": {
+    "wikidata": "Q78859006",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met49004": {
+    "wikidata": "Q78831360",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met853210": {
+    "wikidata": "Q126119094",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met675695": {
+    "wikidata": "Q78615223",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met853218": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met45368": {
+    "wikidata": "Q78848426",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met895426": {
+    "wikidata": "Q126118656",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met929172": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met829403": {
+    "wikidata": "Q126119485",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met40462": {
+    "wikidata": "Q78855867",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met54961": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met38024": {
+    "wikidata": "Q78875542",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met854908": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met44612": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met44908": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met42716": {
+    "wikidata": "Q18683181",
+    "sitelinks": 11,
+    "pageviews": 147,
+    "fame": 323.449,
+    "tier": "medium"
+  },
+  "met51532": {
+    "wikidata": "Q78811364",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met57239": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met54836": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met841644": {
+    "wikidata": "Q126119334",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met45396": {
+    "wikidata": "Q78847890",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met78812": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met37803": {
+    "wikidata": "Q28802868",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met37966": {
+    "wikidata": "Q78879096",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met74906": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met53574": {
+    "wikidata": "Q78756809",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met49216": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met44292": {
+    "wikidata": "Q116314446",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met43253": {
+    "wikidata": "Q107429065",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38158": {
+    "wikidata": "Q2899169",
+    "sitelinks": 6,
+    "pageviews": 320,
+    "fame": 281.163,
+    "tier": "medium"
+  },
+  "met63532": {
+    "wikidata": "Q7441985",
+    "sitelinks": 10,
+    "pageviews": 1031,
+    "fame": 343.878,
+    "tier": "medium"
+  },
+  "met38583": {
+    "wikidata": "Q83562121",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38515": {
+    "wikidata": "Q83562111",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38314": {
+    "wikidata": "Q83562091",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38124": {
+    "wikidata": "Q83562065",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met39328": {
+    "wikidata": "Q83562179",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met51170": {
+    "wikidata": "Q116313140",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met39199": {
+    "wikidata": "Q83562137",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met39331": {
+    "wikidata": "Q83562181",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met38945": {
+    "wikidata": "Q83562134",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met313386": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 294.444,
+    "tier": "medium"
+  },
+  "met314362": {
+    "wikidata": "Q104032316",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met318992": {
+    "wikidata": "Q103308110",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met318012": {
+    "wikidata": "Q20200613",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met310351": {
+    "wikidata": "Q20200613",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met317747": {
+    "wikidata": "Q50820902",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met548400": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met543968": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met248130": {
+    "wikidata": "Q116288075",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250939": {
+    "wikidata": "Q29383809",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250942": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met250946": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met245838": {
+    "wikidata": "Q116288962",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met245848": {
+    "wikidata": "Q116288894",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met247015": {
+    "wikidata": "Q116296696",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250935": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met250936": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met250937": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met247012": {
+    "wikidata": "Q116296695",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met247007": {
+    "wikidata": "Q116296821",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250945": {
+    "wikidata": "Q29383811",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met247108": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 256.495,
+    "tier": "hard"
+  },
+  "met248501": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met250943": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met244919": {
+    "wikidata": "Q116297458",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met249333": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met253497": {
+    "wikidata": "Q116241647",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met250951": {
+    "wikidata": "Q29383813",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  },
+  "met857715": {
+    "wikidata": null,
+    "sitelinks": null,
+    "pageviews": null,
+    "fame": 194.591,
+    "tier": "hard"
+  },
+  "met242112": {
+    "wikidata": "Q116296952",
+    "sitelinks": 0,
+    "pageviews": null,
+    "fame": 0,
+    "tier": "impossible"
+  }
+}
