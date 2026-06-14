@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const MERGE = process.argv.includes("--merge");
-const SRCS = ["wd-africa","wd-museums","modern","wikidata-extra","met-extra","cleveland","harvard","va","smithsonian","aic"]; // priority order for dedup keep
+const SRCS = ["wd-culture","wd-africa","wd-museums","modern","wikidata-extra","met-extra","cleveland","harvard","va","smithsonian","aic"]; // priority order for dedup keep
 
 // ---- helpers copied from build-pool.mjs (kept in sync) ----
 function continentOf(lat,lng){
