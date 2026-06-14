@@ -497,7 +497,9 @@ function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function imgFail(img){const pl=img.parentNode&&img.parentNode.querySelector('.imgloader');if(pl)pl.remove();img.style.display='none';if(img.parentNode&&!img.parentNode.querySelector('.imgfail')){const d=document.createElement('div');d.className='imgfail';d.textContent='Image unavailable';img.parentNode.appendChild(d);}}
+function imgFail(img){
+  if(!img.dataset.retry){ img.dataset.retry='1'; const base=img.src; setTimeout(()=>{ img.src=base+(base.includes('?')?'&':'?')+'_r=1'; },1500); return; }
+  const pl=img.parentNode&&img.parentNode.querySelector('.imgloader');if(pl)pl.remove();img.style.display='none';if(img.parentNode&&!img.parentNode.querySelector('.imgfail')){const d=document.createElement('div');d.className='imgfail';d.textContent='Image unavailable';img.parentNode.appendChild(d);}}
 function accession(){const d=new Date();const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `NO. ${d.getFullYear()}·${mm}${dd}`;}
 function sourceURL(it){
   if(it.src==='met') return `https://www.metmuseum.org/art/collection/search/${it.id.slice(3)}`;
