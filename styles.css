@@ -423,9 +423,6 @@
   @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}
   body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 1.6s ease-in-out 2}
   body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 1.6s ease-in-out 2}
-  @keyframes tapPulse{0%{transform:translate(-50%,-50%) scale(.6);opacity:.85}70%{transform:translate(-50%,-50%) scale(1.6);opacity:0}100%{opacity:0}}
-  .maptap{position:absolute;left:50%;top:50%;width:34px;height:34px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;z-index:500;transform:translate(-50%,-50%)}
-  body.motion-ok .maptap{animation:tapPulse 1.8s ease-out 3}
   .lockinfo{display:flex;align-items:center;gap:8px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:9px 12px;margin-bottom:11px;font:500 12px/1.4 'Archivo',sans-serif;color:var(--ink)}
   .lockinfo svg{flex:0 0 auto}
   .newhere{display:inline-block;margin-top:6px;background:none;border:0;font:600 12px 'IBM Plex Mono',monospace;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
