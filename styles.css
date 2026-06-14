@@ -63,7 +63,7 @@
   .btn2{background:transparent;border:1.5px solid var(--accent);color:var(--accent);
     font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border-radius:4px;cursor:pointer}
   .btn2:disabled{opacity:.4;cursor:default}
-  .attrib{text-align:center;margin-top:15px;font:11px 'IBM Plex Mono',monospace;color:var(--faint)}
+  .attrib{text-align:center;margin-top:15px;padding:0 20px;font:11px 'IBM Plex Mono',monospace;color:var(--faint)}
   .attrib a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-underline)}
   .year{font:700 27px 'Archivo',sans-serif;letter-spacing:-.01em}
   .eratag{font:500 12px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
