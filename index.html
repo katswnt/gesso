@@ -633,6 +633,7 @@ function renderInfiniteSummary(){
 
 // ---------- PLAY ----------
 function renderRound(){
+  window.scrollTo(0,0);
   const it=game[idx];
   guess={year:1700, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
@@ -840,6 +841,7 @@ function paintBurst(host){
     setTimeout(()=>d.remove(),760); }
 }
 function renderReveal(r){
+  window.scrollTo(0,0);
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
