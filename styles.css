@@ -363,6 +363,22 @@
   .colbar{height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;color:#fff;font:700 11px 'IBM Plex Mono',monospace;min-width:42px}
   .colcard{flex:1 1 200px;max-width:300px;background:var(--surface);border:1px solid var(--line-card);border-radius:9px;padding:13px}
 
+  /* "Ask the guide" accordion (reveal) */
+  .askguide{margin-top:18px;border-top:1px solid var(--study-border);padding-top:16px}
+  .agkick{display:flex;align-items:center;gap:8px;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  .agkick .agdab{width:18px;height:17px;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .agcount{color:var(--faint);font-weight:600;letter-spacing:.06em}
+  .aglist{display:flex;flex-direction:column;gap:8px}
+  .agrow{background:var(--study-bg);border:1px solid var(--study-border);border-radius:9px;overflow:hidden}
+  .agq{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:11px 13px;background:transparent;border:0;cursor:pointer;text-align:left;font:600 13px 'Archivo',sans-serif;color:var(--ink)}
+  .agnum{flex:0 0 auto;width:18px;height:17px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;background:#efece4;color:var(--muted);font:700 9px 'Archivo',sans-serif;display:flex;align-items:center;justify-content:center}
+  .agqt{flex:1}
+  .agplus{flex:0 0 auto;font:700 16px/1 'Archivo',sans-serif;color:var(--muted);transition:transform .2s,color .2s}
+  .agq[aria-expanded="true"] .agnum{background:var(--accent);color:#fff}
+  .agq[aria-expanded="true"] .agplus{transform:rotate(45deg);color:var(--accent)}
+  .aga{padding:0 13px 14px 41px;font:400 13px/1.55 'Archivo',sans-serif;color:var(--ink)}
+  body.reduce-motion .agplus{transition:none}
+
   /* ---------- "How to play" onboarding ---------- */
   .blob{border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
   .obbody{padding:26px 24px 6px;text-align:center;min-height:206px}

@@ -911,6 +911,15 @@ function paintBurst(host){
     requestAnimationFrame(()=>{ d.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; d.style.opacity='0'; });
     setTimeout(()=>d.remove(),760); }
 }
+// "Ask the guide" accordion — renders the per-work guide[] Q&A (collapse-by-default, one open at a time)
+function guideHTML(guide){
+  if(!Array.isArray(guide)||!guide.length) return '';
+  const bubble=`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.5 7.5L4 20l1.2-4.2A8.5 8.5 0 1121 11.5z"/></svg>`;
+  return `<div class="askguide"><div class="agkick"><span class="agdab">${bubble}</span>Ask the guide <span class="agcount">${guide.length} question${guide.length>1?'s':''}</span></div>
+    <div class="aglist">${guide.map((g,i)=>`<div class="agrow">
+      <button type="button" class="agq" data-ag="${i}" aria-expanded="false"><span class="agnum">${i+1}</span><span class="agqt">${esc(g.q)}</span><span class="agplus">+</span></button>
+      <div class="aga" hidden>${esc(g.a)}</div></div>`).join('')}</div></div>`;
+}
 function renderReveal(r){
   window.scrollTo(0,0);
   const it=r.it;
@@ -966,6 +975,7 @@ function renderReveal(r){
       <div class="why">${why}</div>
       ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
+      ${guideHTML(study.guide)}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
@@ -980,6 +990,11 @@ function renderReveal(r){
     const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
     if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
       cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
+  // "Ask the guide" accordion: one open at a time
+  document.querySelectorAll('.askguide .agq').forEach(b=>b.onclick=()=>{
+    const open=b.getAttribute('aria-expanded')==='true';
+    b.closest('.aglist').querySelectorAll('.agq').forEach(x=>{x.setAttribute('aria-expanded','false');x.nextElementSibling.hidden=true;});
+    if(!open){b.setAttribute('aria-expanded','true');b.nextElementSibling.hidden=false;}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
