@@ -22,6 +22,9 @@ Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings ve
 - [x] #5 Geo-reward radius keyed off `radiusFor` · #13 deterministic per-day distractor shuffle · #15 culture vs movement label — all shipped (`c483110`).
 - [ ] Hint-not-counted: needs a concrete repro (a hint clearly used but points not subtracted) — may just be the intended no-op-50/50-is-free behavior.
 
+## ✅ Checked — Collections page uses live data
+`renderCollections()` is fully data-driven from `window.ARTEFACTUM_COLLECTIONS` (no hardcoded stats in the render; prose is qualitative). `data/collections.js` is a generated snapshot (`scripts/make-collections.mjs`) and is currently IN SYNC with the pool (regenerate → zero diff). Only staleness risk: must re-run `make-collections.mjs` after any pool change. Optional future: compute from `window.ARTEFACTUM_POOL` at runtime to remove the build step entirely.
+
 ## C. Data quality
 - [ ] Legacy place-vs-origin geocode mismatches (works tagged to holding museum, not origin) — consolidate now prefers origin; spot-fix any remaining in the merged pool.
 - [ ] General teach-note quality spot-check (restyled + modern already regenerated; sample the rest).
