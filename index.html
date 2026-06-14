@@ -513,7 +513,7 @@ function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
     <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
-const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
+const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude</div>`;
 
 // ---------- retention helpers ----------
 function todayStr(){const d=new Date();return localDateStr(d);}
