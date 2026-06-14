@@ -1318,12 +1318,14 @@ function renderFinal(){
     ${ml?`<div class="study"><div class="kick">Session mastery</div><div class="why" style="font-size:15px">${ml}</div></div>`:''}
     <div style="padding:8px 24px 24px"><button class="btn" id="copy">Copy result to share</button>
       <button class="btn" id="imageShare" style="margin-top:10px">Share / Download image</button>
+      <button class="btn" id="copylink" style="margin-top:10px">Copy link to this puzzle</button>
       <button class="btn" id="streak" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">${runArchive?'Back to streak':'Come back tomorrow'}</button>
       <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
   </div>`;
   countUps();
   document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
+  document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.textContent='Link copied ✓';setTimeout(()=>b.textContent='Copy link to this puzzle',1600);});};
   document.getElementById('streak').onclick=renderStreak;
   document.getElementById('again').onclick=()=>renderStart();
 }
