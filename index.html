@@ -63,22 +63,26 @@ const DEMONYM={japanese:'japan',chinese:'china',korean:'korea',persian:'persia',
 function cultureKey(s){let k=String(s||'').toLowerCase().replace(/[^a-z ]/g,'').trim().split(' ')[0];return DEMONYM[k]||k;}
 function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(ans);
   const isCult=it.styleKind==='culture';
-  // a culture's geographic "root" (dominant country) — keeps options from overlapping, e.g. "Meiji" + "Japan"
-  const root=s=>styleCountry[s]||cultureKey(s);
+  const root=s=>styleCountry[s]||cultureKey(s); // a label's geographic root (dominant country)
   const aRoot=root(ans);
-  // drop near-duplicate synonyms of the answer ("Japan" vs "Japanese"); for cultures also drop same-country labels
-  const pool=(isCult?CULTS:MOVS).filter(s=>s===ans||(cultureKey(s)!==aKey&&(!isCult||root(s)!==aRoot)));
-  const sameReg=pool.filter(s=>s!==ans&&styleRegion[s]===it.region);
-  const related=(RELATED_MOV[ans]||[]).filter(s=>pool.includes(s));
-  let picks; if(look==='far')picks=pickN(pool.filter(s=>s!==ans),3);
-  else if(look==='near')picks=[...pickN(related,2),...pickN(sameReg,3)].slice(0,3);
-  else picks=[...pickN(related,1),...pickN(sameReg.length?sameReg:pool,2)];
-  if(!isCult) return fill3(ans,picks,pool);
-  // cultures: guarantee the 4 options come from distinct countries (no Meiji + Edo + Japan together)
-  const out=[ans], used=new Set([aRoot]);
-  for(const s of [...picks,...shuffle(sameReg),...shuffle(pool)]){
-    if(out.length>=4)break; if(s===ans||out.includes(s))continue;
-    const r=root(s); if(used.has(r))continue; out.push(s); used.add(r);}
+  // pool: drop only demonym-synonyms of the answer ("Japan" vs "Japanese")
+  const pool=(isCult?CULTS:MOVS).filter(s=>s===ans||cultureKey(s)!==aKey);
+  const others=pool.filter(s=>s!==ans);
+  const sameReg=shuffle(others.filter(s=>styleRegion[s]===it.region));
+  const diffReg=shuffle(others.filter(s=>styleRegion[s]&&styleRegion[s]!==it.region));
+  const related=shuffle((RELATED_MOV[ans]||[]).filter(s=>others.includes(s)));
+  // DIFFICULTY GRAIN: easy=far (cross-region, obviously different) → impossible=near (same-region / related lookalikes)
+  let ordered;
+  if(look==='far')       ordered=[...diffReg, ...sameReg, ...shuffle(others)];
+  else if(look==='near') ordered=[...related, ...sameReg, ...diffReg];
+  else                   ordered=[...related.slice(0,1), ...sameReg.slice(0,1), ...diffReg, ...sameReg, ...shuffle(others)];
+  // in 'far' (easy) keep options from distinct countries for spread; in 'near' allow same-country lookalikes (Tang vs Song)
+  const distinctCountry = isCult && look==='far';
+  const out=[ans], usedRoot=new Set([aRoot]);
+  for(const s of ordered){ if(out.length>=4)break; if(out.includes(s))continue;
+    if(distinctCountry){const r=root(s);if(usedRoot.has(r))continue;usedRoot.add(r);}
+    out.push(s);}
+  if(out.length<4) for(const s of shuffle(others)){ if(out.length>=4)break; if(!out.includes(s))out.push(s);}
   return shuffle(out);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
