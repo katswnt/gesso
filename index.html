@@ -644,7 +644,8 @@ function tierItems(i){
   // fame-sorted pool sliced by percentage so tiers scale with pool size:
   // Easy = top 15% (most recognizable), Medium 15–45%, Hard 45–72%, Impossible 72–100%.
   const n=POOL.length;
-  const cuts=[0, Math.round(n*0.10), Math.round(n*0.40), Math.round(n*0.70), n];
+  // graduated: few famous works, many obscure → tiers widen toward Impossible
+  const cuts=[0, Math.round(n*0.10), Math.round(n*0.35), Math.round(n*0.65), n];
   return POOL.slice(cuts[i], cuts[i+1]);
 }
 const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
