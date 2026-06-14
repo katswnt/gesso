@@ -25,6 +25,19 @@ Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings ve
 ## ✅ Checked — Collections page uses live data
 `renderCollections()` is fully data-driven from `window.ARTEFACTUM_COLLECTIONS` (no hardcoded stats in the render; prose is qualitative). `data/collections.js` is a generated snapshot (`scripts/make-collections.mjs`) and is currently IN SYNC with the pool (regenerate → zero diff). Only staleness risk: must re-run `make-collections.mjs` after any pool change. Optional future: compute from `window.ARTEFACTUM_POOL` at runtime to remove the build step entirely.
 
+## Movement reclassification (de-Eurocentrism) — in progress
+- [x] Japan ukiyo-e (163), China (342), Persia/India/Andes (169) → real schools/dynasties/cultures.
+- [x] Blank-medium guardrail added to both generators (don't guess a material when medium unknown — the Bernini→marble bug).
+- [ ] **Remaining generic buckets (~1,000–1,200 of 1,800 worth doing):** Egypt (dynasties/Amarna/Coptic, 265), Greek pottery (black-/red-figure/geometric, 77), Japan-ink (Kanō/Rinpa/Nanga, ~120), Africa (Kuba/Kongo/Yoruba/Benin/Baule/Dan, ~50), US painting (Hudson River/Ashcan, subset of 254), French/Dutch/German painting (subset). Same Claude/Codex taxonomy-pilot approach.
+
+## Note-accuracy verification (drafts are unverified)
+- [ ] **Verify pass over blank-field works first** (923 no medium, 633 no style) — highest hallucination risk. Vision pass: compare each note's claims to the image. The text linter only triages (overcounts on depicted materials/synonyms).
+- [ ] Medium/dimensions enrichment fills the 923 blanks (removes the need to guess).
+- [ ] Small data cleanup: medium-field errors surfaced by the linter (e.g. Bronze-Age helmet + lacquer writing box mislabeled "Oil paint").
+
+## Report endpoint — needs env wiring
+- [x] `/api/report` + client POST shipped. [ ] Add Upstash Redis (Vercel Marketplace) so `KV_REST_API_URL`/`KV_REST_API_TOKEN` are set; reports land in `gesso:reports`.
+
 ## C. Data quality
 - [ ] Legacy place-vs-origin geocode mismatches (works tagged to holding museum, not origin) — consolidate now prefers origin; spot-fix any remaining in the merged pool.
 - [ ] General teach-note quality spot-check (restyled + modern already regenerated; sample the rest).

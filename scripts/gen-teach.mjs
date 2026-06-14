@@ -43,7 +43,8 @@ For EACH work below return an item with EXACTLY these fields:
 ACCURACY GUARDRAILS (critical — these ship with no human review):
 - The metadata below is ground truth. Beyond it, assert ONLY facts that are genuinely well-known for the work/artist.
 - NEVER invent a named figure or person. If you cannot confidently identify who is depicted, DESCRIBE WHAT IS VISIBLE ("a seated woman in red holding a book") instead of guessing a name. Wrong names are the worst failure.
-- For obscure works with thin data, lean on what is always safe: medium reasoning, visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
+- If the medium below shows "—" (unknown), DO NOT name or guess a specific material (no "marble", "oil", "bronze", etc.) anywhere in the note — describe the visible surface/form instead ("a worked, matte surface"), and make the medium question about visible technique rather than asserting a material. (This prevents the classic error of guessing "marble" for what is actually terracotta.)
+- For obscure works with thin data, lean on what is always safe: medium reasoning (only if the medium is known), visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
 - No hedging filler ("it is believed perhaps"). State it plainly because it's solid, or describe the visible instead.
 No markdown, no prose outside the JSON.
 Works:
