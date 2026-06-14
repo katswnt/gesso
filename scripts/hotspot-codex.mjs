@@ -33,13 +33,12 @@ async function pool(items, fn, n){
   return out;
 }
 
-function gitCommit(total){
+function gitCommit(total,doPush){
   for(let t=0;t<4;t++){
     try{
       sh(`git add data/hotspots.js`);
       sh(`git -c user.name="Kathryn Swint" -c user.email="kathryn.swint@gmail.com" commit -q -m "Add look-closer hotspots batch (${total}) [codex]\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"`);
-      try{ sh(`git pull --rebase -q`); }catch{}
-      sh(`git push -q`);
+      if(doPush){ try{ sh(`git pull --rebase -q`); }catch{} sh(`git push -q`); }
       return true;
     }catch(e){ console.error("git retry",t,String(e).slice(0,100)); execSync("sleep 3"); }
   }
@@ -51,12 +50,12 @@ while(true){
   const out = JSON.parse(sh(`node scripts/next-hotspots.mjs ${BATCH}`));
   if(!out.batch || out.batch.length===0 || out.remaining===0){ console.log(`DONE. remaining=${out.remaining}`); break; }
   const results = await pool(out.batch, w=>codexHotspots(w), CONCURRENCY);
+  if(results.every(r=>r===null)){ console.error("all codex calls failed (token limit?), stopping — re-run to resume"); break; }
   const merged={};
-  out.batch.forEach((w,k)=>{ const hs=results[k]; if(hs&&hs.length) merged[w.id]=hs; });
-  if(Object.keys(merged).length===0){ console.error("batch produced no hotspots; stopping to avoid spin"); break; }
+  out.batch.forEach((w,k)=>{ const hs=results[k]; if(hs!==null) merged[w.id]=hs; }); // store [] too → marks zero-hotspot works done
   writeFileSync("/tmp/hot/out.json", JSON.stringify(merged));
   const saveOut = sh(`node scripts/save-hotspots.mjs`).trim();
   const m = saveOut.match(/total (\d+\/\d+)/);
   console.log(`round ${++round}: ${saveOut}`);
-  gitCommit(m?m[1]:"?");
+  gitCommit(m?m[1]:"?", round%12===0);
 }
