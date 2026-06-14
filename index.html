@@ -85,11 +85,56 @@ function openSettings(){
     <div class="settingsbody">
       <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
       <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
+      <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
     </div><div class="settingsfoot">Preferences save to this browser.</div></div>`;
   const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
   const escClose=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}});
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}});
   document.addEventListener('keydown',escClose);document.body.appendChild(veil);
+}
+// ---------- "How to play" onboarding ----------
+const HOWTO_STEPS=[
+  {key:'welcome',title:'Guess what you can',body:"Five works a day. You don't need to know everything — a thoughtful guess beats a blank, and close still counts."},
+  {key:'when',title:'When was it made?',body:"Drag the dot along the timeline to your best year. It updates as you slide, showing something like “1700 CE.”"},
+  {key:'where',title:'Where in the world?',body:"Tap the map to drop a pin. Pinch or use the +/− buttons to zoom — scrolling moves the page, not the map."},
+  {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — that one's a bonus."},
+  {key:'lock',title:'Lock in & learn',body:"Hit Lock in to reveal the answer and a short story about the work. Even a rough guess beats a blank — partial credit always counts. Stuck? A hint costs 500."},
+];
+function howtoIcon(key){
+  const s='fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const m={
+    welcome:`<path ${s} d="M12 4.3c-4.5 0-8.1 3-8.1 6.8 0 2.5 1.9 3.9 3.8 3.9 1.4 0 1.6 1.1 1.1 2-.5 1 .1 2 1.6 2.1 4.8.5 9.7-3.1 9.7-7.7 0-4.5-3.5-7.1-8.1-7.1Z"/><circle cx="8" cy="10" r="1" fill="#fff" stroke="none"/><circle cx="12" cy="8.3" r="1" fill="#fff" stroke="none"/><circle cx="15.6" cy="10" r="1" fill="#fff" stroke="none"/>`,
+    when:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M12 7.4V12l3.1 1.9"/>`,
+    where:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M3.7 12h16.6M12 3.7v16.6"/><ellipse ${s} cx="12" cy="12" rx="3.9" ry="8.3"/>`,
+    choose:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="#fff"/>`,
+    lock:`<path ${s} d="M4 12.5l5 5 11-11"/>`,
+  };
+  return `<svg viewBox="0 0 24 24" width="40" height="40">${m[key]||m.welcome}</svg>`;
+}
+function openHowTo(){
+  let i=0;
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="How to play">
+    <div class="settingshead"><span class="ttl">How to play</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
+    <div class="obbody"><div class="obillus"><span class="obdab"></span></div><div class="obtitle"></div><div class="obtext"></div></div>
+    <div class="obdots"></div>
+    <div class="obfoot"><button type="button" class="obskip">Skip</button>
+      <div class="obnav"><button type="button" class="obback">Back</button><button type="button" class="obnext">Next</button></div></div></div>`;
+  const $=s=>veil.querySelector(s);
+  const close=()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{};veil.remove();document.removeEventListener('keydown',keyNav);};
+  const draw=()=>{const st=HOWTO_STEPS[i];
+    $('.obdab').innerHTML=howtoIcon(st.key); $('.obtitle').textContent=st.title; $('.obtext').textContent=st.body;
+    $('.obdots').innerHTML=HOWTO_STEPS.map((_,k)=>`<span class="${k===i?'on':''}" data-d="${k}"></span>`).join('');
+    $('.obback').style.visibility=i===0?'hidden':'visible';
+    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';};
+  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0; draw();};
+  const keyNav=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
+  veil.addEventListener('click',e=>{
+    if(e.target===veil||e.target.closest('.settingsclose')||e.target.closest('.obskip'))return close();
+    if(e.target.closest('.obnext'))return go(1);
+    if(e.target.closest('.obback'))return go(-1);
+    const dot=e.target.closest('[data-d]'); if(dot){i=+dot.dataset.d;draw();}});
+  document.addEventListener('keydown',keyNav); document.body.appendChild(veil); draw();
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
@@ -466,7 +511,7 @@ function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class=
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
@@ -536,6 +581,7 @@ window.addEventListener('popstate',renderFromPath);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-howto]');if(b){e.preventDefault();openHowTo();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.wordmark');if(b){e.preventDefault();renderStart();}});
 function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}}
 
@@ -562,6 +608,7 @@ function renderStart(dateStr,push=true){
       <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.'}</div>
       <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art &mdash; its date, place, school &amp; hand</span>'}</div>
       <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
+      <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
     </div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
@@ -644,9 +691,10 @@ function renderRound(){
   let n=1; const fields=[];
   fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('when')}When made</span></div>
-    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
-    <input type="range" id="yr" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
+    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="dragtag">· drag to change</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
+    <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
     <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
+    <div class="dragslide">↔ grab the dot and slide</div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
     const ch=mediumChoices(it.medium);
@@ -679,12 +727,13 @@ function renderRound(){
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
         <div>
-          <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">CLICK TO MARK</span></div>
-          <div id="map" style="height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+          <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">TAP TO PIN · PINCH / +&minus; TO ZOOM</span></div>
+          <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"><span class="maptap" id="maptap"></span></div>
         </div>
       </div>
     </div>
     <div style="padding:0 24px 24px">
+      <div class="lockinfo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/><path d="M12 8v4M12 16h.01"/></svg><span>Not sure on one? <strong>Don't leave it blank</strong> — even a rough guess earns partial credit.</span></div>
       <button class="btn" id="submit">Lock in &amp; file record &rarr;</button>${ATTRIB}</div>
   </div>`;
   // wire slider
@@ -706,7 +755,7 @@ function renderRound(){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   addPalestine(map);
-  map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
+  map.on('click',e=>{const tip=document.getElementById('maptap');if(tip)tip.remove();const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
     else marker=L.circleMarker(ll,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
@@ -1148,7 +1197,9 @@ if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><
 else{ buildIndexes();
   // on a cold deep-link, seed a Home entry beneath so Back returns to the app, not off-site
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
-  renderFromPath(); }
+  renderFromPath();
+  // first-visit: auto-show the walkthrough once (set flag on close)
+  try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{} }
 </script>
 </body>
 </html>

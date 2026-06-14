@@ -353,3 +353,52 @@
   .mblob span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid var(--surface);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
   .colbar{height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;color:#fff;font:700 11px 'IBM Plex Mono',monospace;min-width:42px}
   .colcard{flex:1 1 200px;max-width:300px;background:var(--surface);border:1px solid var(--line-card);border-radius:9px;padding:13px}
+
+  /* ---------- "How to play" onboarding ---------- */
+  .blob{border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
+  .obbody{padding:26px 24px 6px;text-align:center;min-height:206px}
+  .obillus{height:96px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .obdab{width:84px;height:80px;background:var(--accent);display:flex;align-items:center;justify-content:center;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
+  body.motion-ok .obdab{animation:dabWobble 5s ease-in-out infinite}
+  .obtitle{font:800 21px 'Archivo',sans-serif;letter-spacing:-.01em;margin-bottom:8px}
+  .obtext{font:400 14px/1.55 'Archivo',sans-serif;color:var(--muted);max-width:300px;margin:0 auto}
+  .obdots{display:flex;justify-content:center;gap:8px;padding:10px 0 2px}
+  .obdots span{width:8px;height:8px;background:var(--line-card);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:pointer;transition:width .18s,background .18s}
+  .obdots span.on{width:22px;background:var(--accent)}
+  .obfoot{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 20px}
+  .obskip{font:600 12px 'IBM Plex Mono',monospace;color:var(--faint);cursor:pointer;background:none;border:0}
+  .obskip:hover{color:var(--muted)}
+  .obnav{display:flex;gap:9px}
+  .obback,.obnext{border-radius:7px;font:700 12px 'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
+  .obback{background:transparent;border:1px solid var(--line-card);color:var(--muted)}
+  .obnext{background:var(--accent);border:0;color:#fff}
+  /* help button in header */
+  .helpdab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;font:700 14px 'Archivo',sans-serif;cursor:pointer;padding:0}
+  .helpdab:hover{background:var(--accent);color:#fff}
+  body.motion-ok .helpdab{animation:dabWobble 6s ease-in-out infinite}
+  /* inline play-screen cues */
+  .dragtag{font:600 11px 'IBM Plex Mono',monospace;color:var(--accent);margin-left:7px}
+  .dragslide{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}
+  body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 1.6s ease-in-out 2}
+  body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 1.6s ease-in-out 2}
+  @keyframes tapPulse{0%{transform:translate(-50%,-50%) scale(.6);opacity:.85}70%{transform:translate(-50%,-50%) scale(1.6);opacity:0}100%{opacity:0}}
+  .maptap{position:absolute;left:50%;top:50%;width:34px;height:34px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;z-index:500;transform:translate(-50%,-50%)}
+  body.motion-ok .maptap{animation:tapPulse 1.8s ease-out 3}
+  .lockinfo{display:flex;align-items:center;gap:8px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:9px 12px;margin-bottom:11px;font:500 12px/1.4 'Archivo',sans-serif;color:var(--ink)}
+  .lockinfo svg{flex:0 0 auto}
+  .newhere{display:inline-block;margin-top:6px;background:none;border:0;font:600 12px 'IBM Plex Mono',monospace;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  body.reduce-motion .obdab,body.reduce-motion .helpdab{animation:none!important}
+  @media (max-width:680px){ .navbits .helpdab{order:-1} }
+
+  /* ---------- dab family: vary repeated dabs so they don't look stamped from one mould (canonical #01 reserved for the .dabo logo) ---------- */
+  .pip:nth-child(5n+1){border-radius:58% 42% 52% 48% / 58% 52% 48% 42%;transform:rotate(-4deg)}
+  .pip:nth-child(5n+2){border-radius:42% 58% 47% 53% / 62% 44% 56% 38%;transform:rotate(3deg)}
+  .pip:nth-child(5n+3){border-radius:55% 45% 35% 65% / 45% 60% 40% 55%;transform:rotate(-2deg)}
+  .pip:nth-child(5n+4){border-radius:48% 52% 60% 40% / 50% 56% 44% 50%;transform:rotate(5deg)}
+  .pip:nth-child(5n+5){border-radius:70% 30% 52% 48% / 40% 62% 38% 60%;transform:rotate(-5deg)}
+  .imgloader i:nth-child(1){border-radius:58% 42% 52% 48% / 58% 52% 48% 42%}
+  .imgloader i:nth-child(2){border-radius:42% 58% 47% 53% / 62% 44% 56% 38%}
+  .imgloader i:nth-child(3){border-radius:50% 50% 46% 54% / 60% 60% 40% 40%}
+  .obdots span:nth-child(2n){border-radius:42% 58% 47% 53% / 62% 44% 56% 38%}
+  .obdots span:nth-child(3n){border-radius:55% 45% 35% 65% / 45% 60% 40% 55%}

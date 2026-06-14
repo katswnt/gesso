@@ -2,12 +2,13 @@
 
 _Most of the original build plan, all museum pulls, the fame system, design touches, archive, Collections page, and the early-modern pull are DONE. This is what's actually open._
 
-## ⭐ TOP — "How to play" onboarding (design brief: `tasks/howto-design-brief.md`)
-Real first-time players (Kat's mom & aunt) didn't know what to tap first, whether to answer every category, that the timeline is a slider, or that the map zooms. Need: first-visit "How to play" overlay (reopenable) + inline affordance cues (draggable slider, map pinch/+− zoom, "skip what you don't know"). **Awaiting Claude Design `.dc.html`; Claude Code ports it.**
+## ✅ DONE — "How to play" onboarding (design handoff 7)
+Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings veil/panel + mobile sheet, dab dots, ←/→/Esc), auto-shows on first visit (`gesso.onboarded`), reopen from header `?` dab + start-screen "New here?" + Settings → Replay the tutorial. Inline cues: slider "drag to change" tag + one-time nudge, map label "TAP TO PIN · PINCH / +− TO ZOOM" + tap-ripple, lock-in partial-credit info chip. Also handoff 8 dab-family variety on pips/loader/dots.
 
 ## A. Enrichment pipeline — in flight (Codex on reset), HOLD re-freeze until done
 - [ ] Teach-notes for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard` over the staged candidate files.
 - [ ] Hotspots for the same — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
+- [ ] **Dimensions enrichment** (new — requested): add a size field to every work (Wikidata P2048 height / P2049 width; Met/AIC/Cleveland/Harvard/V&A `dimensions` from their APIs by `src`). Then show a reveal line like "Oil on canvas · 73 × 92 cm". No play-screen exposure (reveal only). Codex/subagent network pull → `data/dimensions.js` overlay keyed by id.
 - [ ] THEN: final fame re-score over the full 3,260 pool → regenerate `fame.js` (`make-fame-js.mjs`) → **re-freeze daily** (`freeze-daily.mjs`) so modern + canon + new-museum works enter daily play, fully enriched.
 
 ## B. Bug backlog (from the bug hunt)
