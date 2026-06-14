@@ -392,7 +392,6 @@ function openSettings(){
     <div class="settingsbody">
       <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
       <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
-      <div class="setrow disabled"><div><div class="name">Hard mode</div><div class="hint">Tighter scoring, no 50/50 hint &middot; soon</div></div><span class="soonchip">SOON</span></div>
     </div><div class="settingsfoot">Preferences save to this browser.</div></div>`;
   const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
   const escClose=e=>{if(e.key==='Escape')close();};
@@ -923,7 +922,7 @@ function wireHints(it){
   const opts=[];
   opts.push({key:"century",label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
   opts.push({key:"continent",label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
-  if(it.cats.includes('style')) opts.push({key:"50/50",label:"50/50",txt:()=>{const k=apply5050(it); return k>0?`Two unlikely options ruled out.`:`Already narrowed to two.`;}});
+  if(it.cats.includes('style')) opts.push({key:"50/50",label:"50/50",txt:()=>{const k=apply5050(it); return k>0?{text:`Two unlikely options ruled out.`}:{text:`Already narrowed to two — no charge.`,charged:false};}});
   if(it.cats.includes('artist')&&it.artist) opts.push({key:"initials",label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
   chips.innerHTML=opts.map(o=>`<button type="button" class="hintchip" data-k="${o.key}">${o.label}<span class="cost">&minus;${HINT_COST}</span></button>`).join('');
   const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem;
@@ -931,9 +930,11 @@ function wireHints(it){
   chips.querySelectorAll('.hintchip').forEach(b=>{
     b.onclick=()=>{if(hintsUsed>=HINT_LIMIT||b.classList.contains('used'))return;
       const o=opts.find(x=>x.key===b.dataset.k); if(!o)return;
-      guess.hints.add(o.label); hintsUsed++;
-      b.classList.add('used'); b.disabled=true;
-      out.style.display='block'; out.insertAdjacentHTML('beforeend',`<div>${o.txt()} <span style="color:var(--accent)">−${HINT_COST}</span></div>`);
+      const r=o.txt(), text=typeof r==='string'?r:r.text, charged=typeof r==='string'?true:r.charged!==false;
+      b.classList.add('used'); b.disabled=true; out.style.display='block';
+      if(charged){ guess.hints.add(o.label); hintsUsed++;
+        out.insertAdjacentHTML('beforeend',`<div>${text} <span style="color:var(--accent)">−${HINT_COST}</span></div>`); }
+      else out.insertAdjacentHTML('beforeend',`<div>${text}</div>`);
       refresh();};
   });
   refresh();
@@ -949,9 +950,9 @@ function timeScore(diff){
 function score(){
   const it=game[idx], cells={}, D=dcfg();
   // when (leniency scales with difficulty; 🎯 bullseye always = within a real decade)
-  const dy=Math.abs(guess.year-it.y), ts=timeScore(Math.round(dy/D.timeMult)), bull=dy<=10;
-  cells.when={pts:bull?MAX_CAT:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
-    note:bull?"right to the decade":periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+  const dy=Math.abs(guess.year-it.y), ts=timeScore(Math.round(dy/D.timeMult)), bull=!!ts.bull;
+  cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
+    note:bull?(dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   // where (distance falloff is gentler on easy, steeper on hard)
   let dist=null,sp=0,rad=radiusFor(it.place); if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
     sp = dist<=rad ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(dist-rad)/D.distK));}
@@ -982,9 +983,11 @@ function score(){
   const bonus=cells.artist?cells.artist.pts:0;
   const hintPen=guess.hints.size*HINT_COST;
   const coreNet=Math.max(0,core-hintPen);
-  // mastery
-  if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
-  bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
+  // mastery — only the genuine daily play counts (not infinite grind or archive replay)
+  if(!infinite&&!runArchive){
+    if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
+    bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
+  }
   results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
   renderReveal(results[results.length-1]);
 }
@@ -1013,7 +1016,7 @@ function setupReportFlow(it,study){
 function renderReveal(r){
   const it=r.it;
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
-  if(glossName)bumpGlossary(glossName);
+  if(glossName&&!infinite&&!runArchive)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
   const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
     return `<div class="swatch">${swatchBox(f)}<div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
@@ -1065,7 +1068,7 @@ function renderReveal(r){
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
-      ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>+ Added to glossary</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
+      ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
     <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(idx<ROUNDS-1?'Next masterwork →':'See final score →')}</button>${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
   </div>`;
