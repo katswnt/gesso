@@ -26,6 +26,7 @@
 <script src="data/pool.js"></script>
 <script src="data/fame.js"></script>
 <script src="data/daily-order.js"></script>
+<script src="data/collections.js"></script>
 <script>
 "use strict";
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
@@ -367,6 +368,63 @@ function bumpGlossary(name){
   saveGlossary(g); return g;
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
+function renderCollections(){
+  clearTimers();
+  const C=window.ARTEFACTUM_COLLECTIONS||{total:0,region:[],sources:[],canon:[]};
+  const dom=u=>u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
+  const pinnable=C.sources.filter(s=>s.lat!=null).length;
+  const maxR=Math.max(1,...C.region.map(r=>r[1]));
+  const REGCOL={Asia:'#7480d4',Europe:'#3f4cbe','North America':'#aeb6e3',Africa:'#2f8f5b','South America':'#cf9f3a',Oceania:'#c14b3a'};
+  const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><div style="font:700 15px Archivo,sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
+      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px Archivo;font-variant-numeric:tabular-nums">${s.count}</span></div>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
+    <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} &#8599;</div></a>`).join('');
+  const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+    <span class="mono" style="width:118px;flex:0 0 auto;font-size:12px;color:var(--ink)">${esc(name)}</span>
+    <div class="colbar" style="width:${Math.max(8,Math.round(c/maxR*72))}%;background:${REGCOL[name]||'var(--accent)'}">${c}</div>
+    <span class="mono" style="font-size:11px;color:var(--muted)">${Math.round(c/C.total*100)}%</span></div>`).join('');
+  const canonCards=C.canon.map(c=>`<a class="colcard" href="${c.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;max-width:300px;flex:1 1 200px">
+    <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
+    <div style="font-size:12px;color:var(--accent);margin-top:6px">${esc(c.work)}</div></a>`).join('');
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div style="padding:26px 24px 40px">
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+      <div style="flex:1 1 320px"><div class="kick" style="color:var(--accent)">Collections</div>
+        <h1 style="font:800 32px Archivo,sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
+        <p style="color:var(--muted);line-height:1.6;font-size:15px">Every work here is shown under an open license — public domain or CC0. That one rule shapes the whole collection: what&rsquo;s here, what isn&rsquo;t, and why.</p></div>
+      <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:10px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
+        <div><div style="font:800 28px Archivo">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
+        <div><div style="font:800 28px Archivo">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
+        <div><div style="font:800 28px Archivo">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
+    </div>
+    <div class="kick" style="margin:34px 0 14px">The open collections</div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
+    <div class="kick" style="margin:34px 0 14px">The collections, mapped</div>
+    <div id="colmap" style="height:340px;border:1px solid var(--line-card);border-radius:8px;overflow:hidden"></div>
+    <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Wikidata / Wikimedia is distributed online — not pinned.</div>
+    <div class="kick" style="margin:36px 0 6px">Why the collection looks like this</div>
+    <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">By origin the pool actually leans <strong style="color:var(--ink)">Asian</strong> — but the works most people <em>recognise</em> skew Western. The honest why:</p>
+    <div style="margin-bottom:22px">${regBars}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px">
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-1929, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
+    </div>
+    <div style="background:var(--study-bg);border:1px solid var(--study-border);border-radius:10px;padding:18px;margin-top:16px">
+      <div style="font:700 14px Archivo;margin-bottom:6px">04 &middot; The African-museum gap</div>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.</div></div>
+    <div class="kick" style="margin:36px 0 14px">Where the canon hangs</div>
+    <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
+    ${ATTRIB}
+  </div></div>`;
+  try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
+    const pts=[];C.sources.filter(s=>s.lat!=null).forEach(s=>{const ic=L.divIcon({className:'mblob',html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
+    if(pts.length)m.fitBounds(pts,{padding:[40,40],maxZoom:5});
+    setTimeout(()=>m.invalidateSize(),200);
+  }catch(e){}
+}
 function renderGlossary(){
   clearTimers();
   const g=loadGlossary(), total=glossaryTotal(), metCount=MOVEMENT_NAMES.filter(n=>g.met[n]).length, pct=total?metCount/total*100:0;
@@ -406,7 +464,7 @@ function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class=
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> with a little help from Claude</div>`;
 
@@ -453,7 +511,7 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else renderStart(undefined,false);}
+function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else renderStart(undefined,false);}
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
@@ -462,7 +520,7 @@ function renderFromPath(){
   if(!parts.length) return renderStart(undefined,false);
   if(parts[0]==='movement'&&parts[1]) return renderMovement(decodeURIComponent(parts[1]));
   if(parts[0]==='infinite'&&parts[1]&&TIERS.some(t=>t.key===parts[1])) return startInfinite(parts[1],false);
-  if(['archive','streak','stats','glossary'].includes(parts[0])) return route(parts[0],false);
+  if(['archive','streak','stats','glossary','collections'].includes(parts[0])) return route(parts[0],false);
   if(/^\d{4}-\d\d-\d\d$/.test(parts[0])){ const date=parts[0];
     if(parts[1]&&TIERS.some(t=>t.key===parts[1])){
       const key=parts[1], rd=date===todayStr()?undefined:date, eff=rd||todayStr();
