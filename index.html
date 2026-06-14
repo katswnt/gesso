@@ -641,10 +641,11 @@ function buildIndexes(){
 // Easy = a small elite slice of the most-recognized works (everyone should at least KNOW them);
 // the rest split across medium/hard/impossible. POOL is fame-sorted in buildIndexes().
 function tierItems(i){
-  const n=POOL.length, EASY=Math.min(42, Math.max(20, Math.floor(n*0.15)));
-  if(i===0) return POOL.slice(0, EASY);
-  const rest=POOL.slice(EASY), per=Math.ceil(rest.length/3);
-  return rest.slice((i-1)*per, Math.min(rest.length, i*per));
+  // fame-sorted pool sliced by percentage so tiers scale with pool size:
+  // Easy = top 15% (most recognizable), Medium 15–45%, Hard 45–72%, Impossible 72–100%.
+  const n=POOL.length;
+  const cuts=[0, Math.round(n*0.15), Math.round(n*0.45), Math.round(n*0.72), n];
+  return POOL.slice(cuts[i], cuts[i+1]);
 }
 const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
   {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
