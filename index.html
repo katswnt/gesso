@@ -511,7 +511,7 @@ function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class=
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude</div>`;
 
@@ -582,6 +582,23 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-howto]');if(b){e.preventDefault();openHowTo();}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-menu]');if(b){e.preventDefault();openMenu();}});
+// mobile nav menu (the header nav collapses into this hamburger ≤680px)
+function openMenu(){
+  const items=[['How to play','howto'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="settingshead"><span class="ttl">Menu</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
+    <div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div></div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  veil.addEventListener('click',e=>{
+    if(e.target===veil||e.target.closest('.settingsclose'))return close();
+    const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
+    if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else route(k);
+  });
+  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.wordmark');if(b){e.preventDefault();renderStart();}});
 function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}}
 
