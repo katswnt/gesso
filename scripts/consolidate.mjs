@@ -33,13 +33,13 @@ function mediumClass(s){ if(!s) return ""; s=String(s).toLowerCase(); const has=
 function cleanMov(m){return m?String(m).replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim():"";}
 
 const CENTROIDS = [
-  [/japan|ukiyo|kyoto|nara|heian|meiji|edo/i,35.68,139.69,"Japan"],
+  [/japan|ukiyo|kyoto|nara|heian|meiji|edo period/i,35.68,139.69,"Japan"],
   [/chin|qing|ming|tang|song dynasty|han dynasty|qianlong|jingdezhen|beijing|lake tai/i,39.9,116.4,"China"],
   [/korea|joseon|goryeo/i,37.57,126.98,"Korea"],
   [/tibet|nepal|himalaya|kathmandu/i,27.7,85.3,"Nepal / Tibet"],
   [/india|mughal|rajput|deccan|pala|chola|gandhara|jain|hindu|bengal/i,28.6,77.2,"India"],
   [/iran|persia|safavid|qajar|sasanian|achaemenid|isfahan|shiraz|iznik?|kashan/i,35.7,51.4,"Iran"],
-  [/edo peoples|nigeria|benin|yoruba|ife|igbo/i,6.5,3.38,"Nigeria"],
+  [/edo peoples|edo,? nigeria|\boba\b|nigeria|benin|yoruba|ife|igbo/i,6.5,3.38,"Nigeria"],
   [/turk|ottoman|anatolia|byzan/i,41.0,28.98,"Turkey"],
   [/palestin|jerusalem|west bank|gaza|holy land/i,31.95,35.23,"Palestine"],
   [/syria|levant|damascus|palmyra/i,33.5,36.3,"Syria"],

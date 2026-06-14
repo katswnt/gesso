@@ -96,3 +96,7 @@ Note: index-5.html predates the favicon/fame-overlay/FAQ changes already shipped
 - [ ] JS touch #2 — paintBurst() dab-particle burst from banner center on a perfect piece (motion-gated). Banner needs position:relative;overflow:hidden.
 - [ ] JS touch #3 — pin-vs-truth polyline draws on via stroke-dashoffset animation on the reveal map after fitBounds settles (motion-gated; static dashed fallback).
 - Reference demos: Downloads/design_handoff 4/04_touches/Gesso Touches.dc.html + Gesso Gold.dc.html (chose C). support.js has helper snippets.
+
+## Data-quality caveat for merge (flagged by teach subagents 2026-06-13)
+- [ ] Some candidate `place` fields are the HOLDING collection, not origin (e.g. a Joos van Cleve panel & a Hittite relief tagged "United States"; Tula candelabra tagged France; a Pataky vessel under "Italy (Rome)"). These geocode/plot wrong. Before/at merge: prefer `style`/culture for origin when it conflicts with `place`; spot-fix obvious mismatches. The teach notes already reasoned from stylistic origin, so notes are fine — it's the lat/lng + region that need a correction pass.
+- [ ] GEOCODE BUG (fix before merge): Japan centroid regex contains bare `edo`, which matches Benin "Edo peoples"/oba works → mis-plots them to Japan (caught: harvard230607 Benin oba head tagged Japan). Fix in BOTH build-pool.mjs and consolidate.mjs CENTROIDS: change Japan's `edo` → `edo period`, add `oba|benin` strength to the Nigeria rule, and/or move Nigeria above Japan. Re-run consolidate after (candidate ids are stable, so teach-shard notes stay valid).
