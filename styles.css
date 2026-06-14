@@ -388,6 +388,13 @@
   .agrow{background:var(--study-bg);border:1px solid var(--study-border);border-radius:9px;overflow:hidden}
   .agq{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:11px 13px;background:transparent;border:0;cursor:pointer;text-align:left;font:600 13px 'Archivo',sans-serif;color:var(--ink)}
   .agnum{flex:0 0 auto;width:18px;height:17px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;background:#efece4;color:var(--muted);font:700 9px 'Archivo',sans-serif;display:flex;align-items:center;justify-content:center}
+  /* vary the dab per row so the column of badges isn't identical */
+  .aglist .agrow:nth-child(6n+1) .agnum{border-radius:58% 42% 52% 48% / 58% 52% 48% 42%;transform:rotate(-5deg)}
+  .aglist .agrow:nth-child(6n+2) .agnum{border-radius:42% 58% 47% 53% / 62% 44% 56% 38%;transform:rotate(4deg)}
+  .aglist .agrow:nth-child(6n+3) .agnum{border-radius:55% 45% 35% 65% / 45% 60% 40% 55%;transform:rotate(-3deg)}
+  .aglist .agrow:nth-child(6n+4) .agnum{border-radius:48% 52% 60% 40% / 50% 56% 44% 50%;transform:rotate(6deg)}
+  .aglist .agrow:nth-child(6n+5) .agnum{border-radius:70% 30% 52% 48% / 40% 62% 38% 60%;transform:rotate(-2deg)}
+  .aglist .agrow:nth-child(6n+6) .agnum{border-radius:38% 62% 63% 37% / 60% 38% 62% 40%;transform:rotate(5deg)}
   .agqt{flex:1}
   .agplus{flex:0 0 auto;font:700 16px/1 'Archivo',sans-serif;color:var(--muted);transition:transform .2s,color .2s}
   .agq[aria-expanded="true"] .agnum{background:var(--accent);color:#fff}
