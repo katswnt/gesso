@@ -150,6 +150,8 @@ function geoElim(it,leave){
   return toStrike;
 }
 const apply5050=it=>geoElim(it,2); // paid hint = full 50/50 (leave answer + 1)
+// Only offer an initials hint when the artist is an actual named person (not "Incan artist", "unidentified", a culture, etc.)
+const isNamedArtist=a=>!!a && !/\b(artist|artists|unknown|unidentified|anonymous|workshop|atelier|follower|circle|school|manner|attributed|maker|makers|culture|cultures|people|peoples|dynasty|period|tradition|various|unrecorded)\b/i.test(a);
 // how many style options a correct-region pin leaves you, by tier (null = no geo help)
 const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
 // "right country" = full credit within this radius (km); big countries get a generous radius, then falloff beyond
@@ -741,8 +743,9 @@ function wireHints(it){
   const opts=[];
   opts.push({key:"century",label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
   opts.push({key:"continent",label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
-  if(it.cats.includes('style')) opts.push({key:"50/50",label:"50/50",txt:()=>{const k=apply5050(it); return k>0?{text:`Two unlikely options ruled out.`}:{text:`Already narrowed to two — no charge.`,charged:false};}});
-  if(it.cats.includes('artist')&&it.artist) opts.push({key:"initials",label:"initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
+  if(it.cats.includes('style')){const kind=(typeof CULTS!=='undefined'&&CULTS.includes(it.style))?'cultures':'movements';
+    opts.push({key:"50/50",label:`rule out 2 ${kind}`,txt:()=>{const k=apply5050(it); return k>0?{text:`Two unlikely ${kind} removed from the options.`}:{text:`Already narrowed to two — no charge.`,charged:false};}});}
+  if(it.cats.includes('artist')&&isNamedArtist(it.artist)) opts.push({key:"initials",label:"artist's initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
   chips.innerHTML=opts.map(o=>`<button type="button" class="hintchip" data-k="${o.key}">${o.label}<span class="cost">&minus;${HINT_COST}</span></button>`).join('');
   const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem;
     chips.querySelectorAll('.hintchip').forEach(b=>{if(!b.classList.contains('used'))b.disabled=rem<=0;});};
