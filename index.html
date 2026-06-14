@@ -401,7 +401,11 @@ function mediumChoices(ans){const look=dcfg().look;
   return fill3(ans,picks,ALL_MED);}
 // style choices: themed to the answer's own region/kind (so European works show European movements,
 // Asian works show Asian schools); hard pulls confusable related/same-region neighbours
-function styleChoices(it){const look=dcfg().look, ans=it.style, pool=it.styleKind==='culture'?CULTS:MOVS;
+const DEMONYM={japanese:'japan',chinese:'china',korean:'korea',persian:'persia',iranian:'persia',indian:'india',egyptian:'egypt',greek:'greece',roman:'rome',italian:'italy',french:'france',german:'germany',spanish:'spain',dutch:'netherlands',flemish:'netherlands',english:'england',british:'britain',american:'usa',mexican:'mexico',peruvian:'peru',tibetan:'tibet',nepalese:'nepal',thai:'thailand',vietnamese:'vietnam'};
+function cultureKey(s){let k=String(s||'').toLowerCase().replace(/[^a-z ]/g,'').trim().split(' ')[0];return DEMONYM[k]||k;}
+function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(ans);
+  // drop near-duplicate synonyms of the answer (e.g. "Japan" vs "Japanese") from the option pool
+  const pool=(it.styleKind==='culture'?CULTS:MOVS).filter(s=>s===ans||cultureKey(s)!==aKey);
   const sameReg=pool.filter(s=>s!==ans&&styleRegion[s]===it.region);
   const related=(RELATED_MOV[ans]||[]).filter(s=>pool.includes(s));
   let picks; if(look==='far')picks=pickN(pool.filter(s=>s!==ans),3);
@@ -502,9 +506,15 @@ function imgFail(img){
   const pl=img.parentNode&&img.parentNode.querySelector('.imgloader');if(pl)pl.remove();img.style.display='none';if(img.parentNode&&!img.parentNode.querySelector('.imgfail')){const d=document.createElement('div');d.className='imgfail';d.textContent='Image unavailable';img.parentNode.appendChild(d);}}
 function accession(){const d=new Date();const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `NO. ${d.getFullYear()}·${mm}${dd}`;}
 function sourceURL(it){
-  if(it.src==='met') return `https://www.metmuseum.org/art/collection/search/${it.id.slice(3)}`;
-  if(it.id&&it.id.indexOf('wikidata.org')>=0) return it.id.replace('http://','https://');
-  return `https://commons.wikimedia.org/`;
+  const id=it.id||"", q=encodeURIComponent(((it.title||"")+" "+(it.artist||"")).trim());
+  if(id.indexOf('wikidata.org')>=0) return id.replace('http://','https://');
+  if(id.indexOf('wikidata:')===0) return `https://www.wikidata.org/wiki/${id.slice(9)}`;
+  if(/^met\d/.test(id)) return `https://www.metmuseum.org/art/collection/search/${id.slice(3)}`;
+  if(/^aic\d/.test(id)) return `https://www.artic.edu/artworks/${id.slice(3)}`;
+  if(/^cleveland\d/.test(id)) return `https://www.clevelandart.org/art/${id.slice(9)}`;
+  if(/^harvard\d/.test(id)) return `https://harvardartmuseums.org/collections/object/${id.slice(7)}`;
+  if(/^vaO/.test(id)) return `https://collections.vam.ac.uk/item/${id.slice(2)}`;
+  return `https://www.google.com/search?q=${q}`; // smithsonian & anything else → reliable search
 }
 const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint",
   "Bronze":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
@@ -889,7 +899,7 @@ function renderInfiniteSummary(){
   const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner"><div><div class="kick">Infinite session &middot; ${tier}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px"><span class="big">${avg.toLocaleString()}</span>
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted)">avg pts / round &middot; ${rounds} round${rounds===1?'':'s'}</span></div></div></div>
     <div style="padding:20px 24px;display:flex;flex-direction:column;gap:9px">
       <div class="metarow"><span class="k">ROUNDS</span><span class="v">${rounds}</span></div>
@@ -973,13 +983,13 @@ function renderRound(){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   addPalestine(map);
-  map.on('click',e=>{guess.ll=e.latlng; if(marker)marker.setLatLng(e.latlng);
-    else marker=L.circleMarker(e.latlng,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
-    curScheme=schemeFromLatLng(e.latlng.lat,e.latlng.lng); updEra();
+  map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
+    else marker=L.circleMarker(ll,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
+    curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
     const leave=GEO_LEAVE[tier];
-    const rightRegion=continentOf(e.latlng.lat,e.latlng.lng)===it.region || km(e.latlng.lat,e.latlng.lng,it.lat,it.lng)<2000;
+    const rightRegion=continentOf(lat,lng)===it.region || km(lat,lng,it.lat,it.lng)<2000;
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
@@ -1132,7 +1142,7 @@ function renderReveal(r){
 
     <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
         <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${perfect?'<span class="perfectstamp">&starf; PERFECT</span>':''}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
@@ -1343,7 +1353,7 @@ function renderFinal(){
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
 
     <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
+      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
         <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; incl. +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
     <div class="matrix"><table><thead><tr><th style="text-align:left">Work</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
