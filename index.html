@@ -853,7 +853,7 @@ function renderStart(dateStr,push=true){
       ${TIERS.map(t=>`<button class="navbtn inf" data-inf="${t.key}" style="margin:3px 3px">∞ ${t.label}</button>`).join('')}
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool (Wikidata + The Met's open collection) is ${b.europe}% European:</p>
+      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia — is ${b.europe}% European:</p>
       <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
     </div>
     <details class="faq" style="max-width:620px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding-top:14px;text-align:center">
@@ -1242,7 +1242,7 @@ async function renderShareCard(data){
   const wordW=ctx.measureText('gess').width,dabR=(ctx.measureText('x').actualBoundingBoxAscent||41)/2,dabX=82+wordW+7+dabR,dabY=120-dabR;
   ctx.beginPath();ctx.arc(dabX,dabY,dabR,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=cssVar('--surface');ctx.beginPath();ctx.arc(dabX-dabR*.32,dabY-dabR*.32,dabR*.16,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillText('THE DAILY ART GAME',84,166);
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillText('THE DAILY ART GAME · '+String(rs.tier||tier||'').toUpperCase(),84,166);
   ctx.textAlign='right';ctx.font='500 25px IBM Plex Mono, monospace';ctx.fillText(accessionFor(cardDate),996,106);ctx.fillText(niceDate(cardDate),996,144);ctx.textAlign='left';
   const icons=await Promise.all(cols.map(iconImage)), x0=84,y0=250,labelW=44,gap=18,cell=(1080-x0*2-labelW-gap*5)/5,rowH=128;
   icons.forEach((img,i)=>{if(img)ctx.drawImage(img,x0+labelW+gap+i*(cell+gap)+cell/2-24,y0-58,48,48);});
@@ -1262,7 +1262,7 @@ async function renderShareCard(data){
   ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
   ctx.fillStyle=cssVar('--ink');ctx.font='800 78px Archivo, sans-serif';ctx.fillText(rs.grand.toLocaleString(),84,1260);
   ctx.fillStyle=cssVar('--muted');ctx.font='600 30px IBM Plex Mono, monospace';ctx.fillText(' / 50k',390,1255);
-  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px IBM Plex Mono, monospace';ctx.textAlign='right';ctx.fillText('playgesso.com',996,1258);
+  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px IBM Plex Mono, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
   return canvas.toDataURL('image/png');
 }
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}

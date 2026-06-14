@@ -103,3 +103,12 @@ Note: index-5.html predates the favicon/fame-overlay/FAQ changes already shipped
 
 ## Data quality (2026-06-13)
 - [ ] Some candidate style/culture values are over-long descriptive strings (e.g. "Japan, Muromachi period (1392–1573) to Momoyama period (1573–1615)"). These (a) used to break mobile layout (fixed via pill wrapping) and (b) SPOIL the answer by stating the date range. Clean: truncate/normalize long style strings in consolidate (cap length, strip parenthetical date ranges), and exclude works whose culture string embeds the date from the 'style' guess category.
+
+## Queue from playtest 2026-06-14
+- [ ] Archive: indicate which days/levels you've played (you already store streak.scores by date — extend to per-tier completion; Claude Design to style the day cell with which tiers are done).
+- [ ] Archive day view: forward/back arrows to paginate to previous/next day.
+- [ ] Hint not counting: investigate a real case where a hint was used but points weren't subtracted (could be the no-op-50/50 = no-charge by design, OR a real miss). Repro needed.
+- [ ] Some teach notes shallow/unhelpful + some long culture strings spoil the answer (e.g. "Japan, Muromachi period (1392–1573)…") — normalize/clean style+culture strings (strip parenthetical date ranges; cap length) and regenerate weak teach notes.
+- [ ] MODERN/CONTEMPORARY art: user wants 20th/21st-c. work. CAVEAT: most is under copyright → no open images (MoMA/Whitney/Tate metadata is open but images are NOT CC0). Gettable: pre-1929 (now US public domain, rising yearly) via AIC/Met/NGA/Wikidata; some museum-photographed PD works. Plan: targeted pull of PD modern (1900–1929) + CC0 design/photography; set expectation that living-artist contemporary can't be shown openly.
+- [x] Share image now includes date + difficulty; fixed wrong URL (playgesso.com → gesso.katswint.com).
+- [x] Canon note now credits all source museums, not just Wikidata+Met.
