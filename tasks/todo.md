@@ -53,3 +53,33 @@
 - [ ] Generate teach-notes (Codex) for the 74 new works.
 - [ ] Generate hotspots for new works (hotspot loop).
 - [ ] Re-pull Met Islamic Art (returned 0 ids — transient API failure this run).
+
+## Pool expansion — multi-museum enrichment waves (planned 2026-06-13)
+Goal: grow to thousands of works that match our criteria (good image, datable, geocodable, has movement/culture), batch-enriched (geocode → teach-notes via Codex → hotspots) BEFORE merging. Balanced across difficulty tiers and regions each wave.
+
+### Adapter layer (one normalizer per source → our schema {id,title,artist,y,lat,lng,place,region,style,styleKind,medium,fame,img,src})
+- [ ] Art Institute of Chicago — open JSON API, IIIF images, CC0. (cleanest first win)
+- [ ] Cleveland Museum of Art — open API, CC0; strong Asian/Islamic/African.
+- [ ] Harvard Art Museums — API (free key); deep Asian & Islamic, rich culture/period fields.
+- [ ] Smithsonian (NMAfA African + National Museum of Asian Art) — open API, CC0; direct diversity boost.
+- [ ] Victoria & Albert (London) — open API; global decorative arts, South/East Asia.
+- [ ] Rijksmuseum — API (free key); huge, European-heavy.
+- [ ] Brooklyn Museum — open API; African, Egyptian, Indigenous-American.
+- [ ] Europeana — aggregator API (~50M, uneven metadata) — later.
+- [ ] British Museum — no REST API; pull via Wikidata/SPARQL + IIIF.
+- [ ] MoMA — no API but full CC0 collection CSV on GitHub (modern/contemporary; thin images).
+
+### Pipeline rules
+- [ ] Only CC0 / open-access-flagged images (no hotlinking unlicensed).
+- [ ] Filter: must have image + inception year + geocodable place + (movement OR culture).
+- [ ] Dedup across sources by normalized title+artist AND by Wikidata id where resolvable.
+- [ ] Assign fame/difficulty via Wikidata sitelinks (see fame brainstorm below) — NOT Met isHighlight, so non-Western works aren't auto-dumped into "Impossible".
+- [ ] Batch-enrich each wave fully (teach + hotspots) before merge; never ship half-baked.
+
+### Fame / "how well known" ranking — brainstorm (to decide)
+- [ ] Wikidata **sitelinks count** (# language Wikipedias) — best single proxy; already used for WD works. Cross-reference EVERY work (any source) to its Wikidata item to inherit sitelinks.
+- [ ] Wikipedia **pageviews** (REST API) — popularity over time; tiebreaker for works with similar sitelinks.
+- [ ] Presence on Wikipedia "mega lists" / curated sets: "List of most famous paintings", per-movement list articles, museum "highlights"/"masterpieces" categories, Google Arts & Culture features.
+- [ ] Commons category size / "featured"/"quality image" flags.
+- [ ] Museum "highlight"/"on view"/"masterpiece" flags (Met isHighlight, AIC is_on_view, etc.) as a secondary signal.
+- [ ] Composite fame score = weighted blend (sitelinks heavy, pageviews medium, list/highlight bonuses) → quartile into easy/medium/hard/impossible.
