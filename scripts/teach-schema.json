@@ -8,9 +8,22 @@
         "properties": {
           "id": { "type": "string" },
           "why": { "type": "string" },
-          "cues": { "type": "array", "items": { "type": "string" } }
+          "cues": { "type": "array", "items": { "type": "string" } },
+          "guide": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+              "type": "object",
+              "properties": {
+                "q": { "type": "string" },
+                "a": { "type": "string" }
+              },
+              "required": ["q", "a"],
+              "additionalProperties": false
+            }
+          }
         },
-        "required": ["id", "why", "cues"],
+        "required": ["id", "why", "cues", "guide"],
         "additionalProperties": false
       }
     }
