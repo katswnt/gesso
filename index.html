@@ -913,7 +913,10 @@ function setupReportFlow(it,study){
   const renderForm=()=>{root.className='studyfoot reportform';root.innerHTML=`<div class="kick">Report an error</div><div class="reportchips">${reasons.map(r=>`<button type="button" class="reportchip ${r===reason?'sel':''}" data-reason="${esc(r)}">${esc(r)}</button>`).join('')}</div><input type="text" id="reportDetail" maxlength="180" placeholder="Add a detail (optional)..." autocomplete="off"><div class="reportactions"><button type="button" class="btn" id="sendReport">Send report</button><button type="button" class="btn2" id="cancelReport">Cancel</button></div>`;
     root.querySelectorAll('.reportchip').forEach(ch=>ch.onclick=()=>{reason=ch.dataset.reason;root.querySelectorAll('.reportchip').forEach(x=>x.classList.toggle('sel',x===ch));});
     root.querySelector('#cancelReport').onclick=renderDefault;
-    root.querySelector('#sendReport').onclick=()=>{const detail=(root.querySelector('#reportDetail').value||'').trim(),payload={workId:it.id,movement:it.style||'',reason,detail,note:study.why||'',date:new Date().toISOString()};let arr=[];try{arr=JSON.parse(localStorage.getItem('gesso.reports'))||[];}catch{}arr.push(payload);try{localStorage.setItem('gesso.reports',JSON.stringify(arr));}catch{}root.className='studyfoot';root.innerHTML=`<div class="reportthanks"><i>✓</i><span>Thanks — flagged for a curator to review.</span></div>`;};
+    root.querySelector('#sendReport').onclick=()=>{const detail=(root.querySelector('#reportDetail').value||'').trim(),payload={workId:it.id,movement:it.style||'',reason,detail,note:study.why||'',date:new Date().toISOString()};
+      // send to the backend so reports actually reach a curator; keep a local copy as backup
+      try{fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});}catch{}
+      let arr=[];try{arr=JSON.parse(localStorage.getItem('gesso.reports'))||[];}catch{}arr.push(payload);try{localStorage.setItem('gesso.reports',JSON.stringify(arr));}catch{}root.className='studyfoot';root.innerHTML=`<div class="reportthanks"><i>✓</i><span>Thanks — flagged for a curator to review.</span></div>`;};
   };
   renderDefault();
 }
