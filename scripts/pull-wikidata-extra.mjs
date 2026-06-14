@@ -125,6 +125,11 @@ function bindingValue(row, key) {
   return row[key]?.value ?? "";
 }
 
+function cleanLabel(value) {
+  const trimmed = value.trim();
+  return /^https?:\/\//.test(trimmed) ? "" : trimmed;
+}
+
 function qidFromEntityUrl(entityUrl) {
   return entityUrl.match(/\/(Q\d+)$/)?.[1] ?? "";
 }
@@ -153,8 +158,8 @@ function commonsFilePathUrl(value) {
 
 function normalizeRow(row) {
   const qid = qidFromEntityUrl(bindingValue(row, "item"));
-  const title = bindingValue(row, "itemLabel").trim();
-  const country = bindingValue(row, "countryLabel").trim();
+  const title = cleanLabel(bindingValue(row, "itemLabel"));
+  const country = cleanLabel(bindingValue(row, "countryLabel"));
   const image = commonsFilePathUrl(bindingValue(row, "image"));
   const year = yearFromWikidataTime(bindingValue(row, "inception"));
   const fameHint = Number.parseInt(bindingValue(row, "sitelinks"), 10);
@@ -166,12 +171,12 @@ function normalizeRow(row) {
   return {
     id: `${SOURCE}:${qid}`,
     title,
-    artist: bindingValue(row, "artistLabel").trim(),
+    artist: cleanLabel(bindingValue(row, "artistLabel")),
     year,
     place: country,
     culture: country,
-    movement: bindingValue(row, "movementLabels").trim(),
-    medium: bindingValue(row, "materialLabels").trim(),
+    movement: cleanLabel(bindingValue(row, "movementLabels")),
+    medium: cleanLabel(bindingValue(row, "materialLabels")),
     image,
     src: SOURCE,
     fameHint: Number.isFinite(fameHint) ? fameHint : null,
@@ -233,9 +238,9 @@ async function main() {
         continue;
       }
 
-      record.artist = bindingValue(row, "artistLabel").trim();
-      record.movement = bindingValue(row, "movementLabels").trim();
-      record.medium = bindingValue(row, "materialLabels").trim();
+      record.artist = cleanLabel(bindingValue(row, "artistLabel"));
+      record.movement = cleanLabel(bindingValue(row, "movementLabels"));
+      record.medium = cleanLabel(bindingValue(row, "materialLabels"));
     }
   }
 
