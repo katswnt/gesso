@@ -6,15 +6,20 @@ _Most of the original build plan, all museum pulls, the fame system, design touc
 Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings veil/panel + mobile sheet, dab dots, ←/→/Esc), auto-shows on first visit (`gesso.onboarded`), reopen from header `?` dab + start-screen "New here?" + Settings → Replay the tutorial. Inline cues: slider "drag to change" tag + one-time nudge, map label "TAP TO PIN · PINCH / +− TO ZOOM" + tap-ripple, lock-in partial-credit info chip. Also handoff 8 dab-family variety on pips/loader/dots.
 
 ## A. Enrichment pipeline — in flight (Codex on reset), HOLD re-freeze until done
-- [ ] Teach-notes for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard` over the staged candidate files.
-- [ ] Hotspots for the same — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
-- [ ] **Dimensions enrichment** (new — requested): add a size field to every work (Wikidata P2048 height / P2049 width; Met/AIC/Cleveland/Harvard/V&A `dimensions` from their APIs by `src`). Then show a reveal line like "Oil on canvas · 73 × 92 cm". No play-screen exposure (reveal only). Codex/subagent network pull → `data/dimensions.js` overlay keyed by id.
-- [ ] THEN: final fame re-score over the full 3,260 pool → regenerate `fame.js` (`make-fame-js.mjs`) → **re-freeze daily** (`freeze-daily.mjs`) so modern + canon + new-museum works enter daily play, fully enriched.
+**Richer teaching schema now governs all of this — see `tasks/teaching-notes-guidelines.md`.** Each work ships `why` + `cues[4]` + `hotspots` + NEW `guide[]` ("Ask the guide" accordion: 5 required Q&A slots incl. story/context, plus as many extra accurate ones as the work supports).
+- [ ] **Update `gen-teach-shard` prompt** to the richer schema (adds `guide[]`; keeps `why`+`cues`). Bake in the §accuracy guardrails (never invent a named figure; obscure works lean on visible-description + medium/technique).
+- [ ] Teach-notes (full schema) for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard`.
+- [ ] **Back-fill `guide[]` for all 2,738 existing works** (Kat: backfill for sure). Order: famous tiers first, then long tail.
+- [ ] Hotspots for the new works — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
+- [ ] **Dimensions enrichment**: add a size field to every work (Wikidata P2048/P2049; Met/AIC/Cleveland/Harvard/V&A `dimensions` by `src`) → `data/dimensions.js` overlay; reveal-only line "Oil on canvas · 73 × 92 cm".
+- [ ] THEN: final fame re-score over the full 3,260 pool → regenerate `fame.js` → **re-freeze daily** (`freeze-daily.mjs`).
 
-## B. Bug backlog (from the bug hunt)
-- [ ] #5 Geo-reward radius: free style 50/50 fires at 2000 km but WHERE scoring radius is ~450 km — key the reward off `radiusFor(it.place)`.
-- [ ] #13 Distractor shuffle uses `Math.random` → same-day players get different difficulty; seed off `runDate|idx`.
-- [ ] #15 Glossary labels cultures as "Movement" (cards read "c. unknown") — label cultures correctly / fill culture metadata.
+## A2. Reveal UI ports (design handoffs — depend on enrichment above)
+- [ ] **"Look closer" annotated reveal** (design handoff 9): loupe overlay + numbered markers driven by per-work `cues[4]` + `hotspots {n,x,y}`. NOTE the data-model reconciliation (handoff assumed movement-level 3 cues + `{x,y,zoom}`; reality is per-work 4 cues + `{n,x,y}` — derive zoom from x/y). Button on the revealed painting; hide if no hotspots.
+- [ ] **"Ask the guide" accordion** (brief: `tasks/guide-accordion-design-brief.md`): renders `guide[]` as a collapse-by-default, one-open-at-a-time accordion below Look closer. **Awaiting Claude Design `.dc.html`.**
+
+## B. Bug backlog
+- [x] #5 Geo-reward radius keyed off `radiusFor` · #13 deterministic per-day distractor shuffle · #15 culture vs movement label — all shipped (`c483110`).
 - [ ] Hint-not-counted: needs a concrete repro (a hint clearly used but points not subtracted) — may just be the intended no-op-50/50-is-free behavior.
 
 ## C. Data quality
