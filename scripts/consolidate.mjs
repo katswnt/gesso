@@ -102,10 +102,14 @@ const GAZ = [
   [/tunisia|carthage/i,36.8,10.18,"Tunisia"],
   [/central africa|africa/i,6.6,20.94,"Central Africa"],
 ];
-function geocode(culture,place){
-  const s=[culture,place].filter(Boolean).join(" ");
-  for(const [re,la,ln,lab] of CENTROIDS) if(re.test(s)) return {lat:la,lng:ln,place:lab};
-  for(const [re,la,ln,lab] of GAZ) if(re.test(s)) return {lat:la,lng:ln,place:lab};
+// Test each origin signal in priority order — style/movement/culture (true origin) BEFORE
+// place (often the holding museum's country, e.g. an Austrian Pietà catalogued under "United States").
+function geocode(...fields){
+  for(const field of fields){
+    if(!field) continue;
+    for(const [re,la,ln,lab] of CENTROIDS) if(re.test(field)) return {lat:la,lng:ln,place:lab};
+    for(const [re,la,ln,lab] of GAZ) if(re.test(field)) return {lat:la,lng:ln,place:lab};
+  }
   return null;
 }
 
@@ -114,7 +118,7 @@ function httpsImg(u){ return u? String(u).replace(/^http:/,"https:") : ""; }
 function norm(r){
   const y=normYear(r.year); const img=httpsImg(r.image);
   if(!y||!img) return null;
-  const g=geocode(r.culture,r.place); if(!g) return {__nogeo:`${r.culture||""}|${r.place||""}`};
+  const g=geocode(r.movement,r.culture,r.place); if(!g) return {__nogeo:`${r.culture||""}|${r.place||""}`};
   const movement=cleanMov(r.movement); const culture=cleanMov(r.culture);
   const style = movement || (culture||""); const styleKind = movement?"movement":(culture?"culture":"");
   const medium = mediumClass(r.medium);

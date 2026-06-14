@@ -754,7 +754,7 @@ function dailyItems(key,dateStr){
   const out=[]; for(let k=0;k<ROUNDS;k++) out.push(perm[(start+k)%len]);
   return out;
 }
-function addPalestine(m){ try{ L.marker([31.95,35.23],{interactive:false,keyboard:false,
+function addPalestine(m){ return; /* label overlay removed — clashed with localized basemap labels */ try{ L.marker([31.95,35.23],{interactive:false,keyboard:false,
   icon:L.divIcon({className:'palabel',html:'Palestine',iconSize:[60,14],iconAnchor:[30,7]})}).addTo(m); }catch{} }
 function loadStreak(){try{const s=JSON.parse(localStorage.getItem("artefactum.streak"))||{};return {current:+s.current||0,longest:+s.longest||0,lastPlayed:s.lastPlayed||"",playedDates:Array.isArray(s.playedDates)?s.playedDates:[],scores:s.scores||{}};}catch{return{current:0,longest:0,lastPlayed:"",playedDates:[],scores:{}}}}
 function saveStreak(s){try{localStorage.setItem("artefactum.streak",JSON.stringify(s))}catch{}}
