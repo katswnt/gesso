@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 const [INPUT, K, N, OUT] = [process.argv[2], +process.argv[3], +process.argv[4], process.argv[5]];
 if(!INPUT||!OUT||!Number.isInteger(K)||!Number.isInteger(N)){ console.error("args: <input.json> <shardIdx> <numShards> <out.json>"); process.exit(1); }
 const SCHEMA = "scripts/teach-schema.json";
-const BATCH = 8; // richer schema (why + cues + variable-length guide) → smaller batches keep responses reliable
+const BATCH = 4; // richer schema (why + cues + variable-length guide) is a big payload → small batches avoid Codex timeouts
 const fy = y => y<0 ? (-y)+" BCE" : y+" CE";
 
 const all = JSON.parse(readFileSync(INPUT,"utf8"));
@@ -44,7 +44,7 @@ ${list}`;
   let js=null;
   try{
     const so = execFileSync("codex",["exec","-s","read-only","--ephemeral","--skip-git-repo-check","--color","never","--output-schema",SCHEMA,"-"],
-      {input:prompt,encoding:"utf8",maxBuffer:1e8,timeout:300000});
+      {input:prompt,encoding:"utf8",maxBuffer:1e8,timeout:600000});
     const a=so.indexOf("{"), b=so.lastIndexOf("}");
     if(a>=0&&b>a){ try{ js=JSON.parse(so.slice(a,b+1)); }catch{} }
   }catch(e){ console.error(`shard ${K} batch @${i} codex error`, String(e).slice(0,120)); }
