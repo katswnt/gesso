@@ -13,6 +13,7 @@ Wikidata items that are COUNTRIES/CULTURES (e.g. "Uganda", "Ethiopia") got pulle
   - artist-origin mismatch (place ≠ where the artist worked) — caught Goya→"Italy (Rome)", Gauguin/Sargent/Copley mislocated;
   - fame collisions (anon/generic-title works with implausibly high fame — "Madurodam" 451, "Iznik dish", "Spandrel");
   - non-artwork entities (#0);
+  - **image problems**: dead URLs (HEAD-check → "Image unavailable" / #3), red-flag filenames (watermark/verso/detail/diagram/map), shared images across works. (Scan found these aren't widespread: 8 filename-suspicious mostly false-positive, 1 shared-image pair — so the Men's-Bath class of *wrong P18 under an innocuous name* needs an OPTIONAL vision spot-check, token cost.)
   - duplicates, lowercase/messy fields, missing place/region/medium, cats-vs-fields consistency.
 **1b. Work-data clean pass:**
   - **Re-geocode by ARTIST nationality first** (artist is a stronger origin signal than holding-museum place) — fixes Goya→Spain, El Greco→Spain, raw-polity strings ("French Third Republic", "Kingdom of Great Britain", "Papal States" leftovers). For full coverage do a one-time Wikidata pass: fetch artist P27 / work P937, flag/fix place mismatches.
