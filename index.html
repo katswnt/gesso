@@ -235,9 +235,25 @@ function sourceURL(it){
   if(/^vaO/.test(id)) return `https://collections.vam.ac.uk/item/${id.slice(2)}`;
   return `https://www.google.com/search?q=${q}`; // smithsonian & anything else → reliable search
 }
-const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint",
+const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint","Drawing":"paint",
   "Bronze":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
-  "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft" };
+  "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft" };
+// collapse a verbose catalogue medium ("Fritware, covered in salmon-pink slip…") to a clean, guessable family
+function simplifyMedium(s){const t=" "+String(s||"").toLowerCase()+" ";
+  if(/\boil\b/.test(t))return "Oil paint"; if(/tempera/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
+  if(/water-?colou?r|gouache/.test(t))return "Watercolor";
+  if(/woodcut|woodblock|engrav|etch|lithograph|\bprint\b/.test(t))return "Woodblock print";
+  if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing/.test(t))return "Drawing";
+  if(/photograph|gelatin|albumen|daguerreotype|collotype/.test(t))return "Photograph";
+  if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
+  if(/terracotta|porcelain|stoneware|earthenware|faience|fritware|pottery|ceramic|\bclay\b/.test(t))return "Ceramic";
+  if(/lacquer|maki-e/.test(t))return "Lacquer"; if(/ivory/.test(t))return "Ivory"; if(/glass/.test(t))return "Glass";
+  if(/\bgold\b|gilt|gild/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
+  if(/bronze|brass|copper|\btin\b|pewter|\bmetal\b/.test(t))return "Bronze";
+  if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet/.test(t))return "Textile";
+  if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|\bstone\b/.test(t))return "Stone";
+  if(/lacquer|wood|panel|\boak\b|\bpine\b/.test(t))return "Wood"; if(/\bpaper\b/.test(t))return "Ink";
+  return s?"Mixed media":""; }
 const RELATED_MOV={
   "Renaissance":["Italian Renaissance","Mannerism","Baroque","Northern Renaissance"],
   "Italian Renaissance":["Renaissance","Mannerism","Baroque"],
@@ -368,7 +384,8 @@ function buildIndexes(){
   // which is canon-skewed toward the West — surfaced as the teaching note on the start screen.
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
   MINY=Math.min(...POOL.map(p=>p.y));
-  ALL_MED=[...new Set(POOL.map(p=>p.medium).filter(Boolean))];
+  for(const p of POOL){ p.medSimple=simplifyMedium(p.medium); } // clean family label for the guessing UI
+  ALL_MED=[...new Set(POOL.map(p=>p.medSimple).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
   MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -735,13 +752,13 @@ function renderRound(){
   let n=1; const fields=[];
   fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('when')}When made</span></div>
-    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="dragtag">· drag to change</span><span class="eratag" id="era">[ EARLY MODERN ]</span></div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px;flex-wrap:wrap"><span class="year" id="yv" style="white-space:nowrap">1700 CE</span><span class="dragtag">· drag to change</span><span class="eratag" id="era" style="white-space:nowrap">[ EARLY MODERN ]</span></div>
     <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
     <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
-    const ch=mediumChoices(it.medium);
+    const ch=mediumChoices(it.medSimple);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('medium')}Medium</span></div>
       <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
   }
@@ -875,10 +892,10 @@ function score(){
     note:dist==null?"no pin dropped":dist<=rad?"right country":`${Math.round(dist)} km off`};
   // medium
   if(it.cats.includes('medium')){let s=0,note="no answer";
-    if(guess.medium){ if(guess.medium===it.medium){s=MAX_CAT;note="exact";}
-      else if(MED_FAMILY[guess.medium]&&MED_FAMILY[guess.medium]===MED_FAMILY[it.medium]){s=Math.round(MAX_CAT*0.5);note="same family";}
+    if(guess.medium){ if(guess.medium===it.medSimple){s=MAX_CAT;note="exact";}
+      else if(MED_FAMILY[guess.medium]&&MED_FAMILY[guess.medium]===MED_FAMILY[it.medSimple]){s=Math.round(MAX_CAT*0.5);note="same family";}
       else note="wrong";}
-    cells.medium={pts:s,you:guess.medium||"—",actual:it.medium,note};}
+    cells.medium={pts:s,you:guess.medium||"—",actual:it.medSimple,note};}
   // style
   if(it.cats.includes('style')){let s=0,note="no answer";
     if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
