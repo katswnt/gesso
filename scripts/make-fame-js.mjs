@@ -15,16 +15,17 @@ const GENERIC = new Set(["mask","vessel","head","jar","bowl","figure","figurine"
   "textile","fragment of a textile","tapestry","cup and saucer","teapot","candlestick","incense burner","altarpiece"]);
 const isGeneric = t => GENERIC.has(String(t||"").toLowerCase().replace(/[.,;:!?'"`’]/g,"").trim());
 
-const byId = Object.fromEntries(pool.map(p=>[p.id,p]));
 let zeroed=0;
 const o={};
-for(const id in fame){
-  const e=fame[id], p=byId[id];
-  const sl=Number.isFinite(e.sitelinks)?e.sitelinks:0, pv=Number.isFinite(e.pageviews)?e.pageviews:0;
+// iterate the POOL (not just fame.json) so freshly-promoted works get a CONSISTENT formula score:
+// use fame.json's sitelinks/pageviews if present, else fall back to the work's own fame (= Wikidata sitelinks).
+for(const p of pool){
+  const e=fame[p.id]||{};
+  const sl=Number.isFinite(e.sitelinks)?e.sitelinks:(Number.isFinite(p.fame)?p.fame:0);
+  const pv=Number.isFinite(e.pageviews)?e.pageviews:0;
   let f = 100*ln(sl+1) + 12*ln(pv+1);
-  // anti-collision: anonymous + generic title => the sitelinks are almost certainly the concept article
-  if(f>0 && p && !p.artist && isGeneric(p.title)){ f=0; zeroed++; }
-  o[id]=Math.round(f*10)/10;
+  if(f>0 && !p.artist && isGeneric(p.title)){ f=0; zeroed++; } // generic-title concept-collision guard
+  o[p.id]=Math.round(f*10)/10;
 }
 writeFileSync("data/fame.js","window.ARTEFACTUM_FAME="+JSON.stringify(o)+";\n");
 console.log("wrote data/fame.js |", Object.keys(o).length, "scores |", Object.values(o).filter(v=>v>0).length, "with fame>0 | zeroed", zeroed, "generic-title collisions");
