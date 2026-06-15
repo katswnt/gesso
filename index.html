@@ -92,8 +92,13 @@ function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
 const motionQuery=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
 let settings=loadSettings();
-function loadSettings(){try{const s=JSON.parse(localStorage.getItem("gesso.settings"))||{};return {reduceMotion:typeof s.reduceMotion==='boolean'?s.reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:!!s.colorblind};}catch{return{reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:false};}}
-function saveSettings(){try{localStorage.setItem("gesso.settings",JSON.stringify({reduceMotion:!!settings.reduceMotion,colorblind:!!settings.colorblind}));}catch{}}
+function loadSettings(){try{const s=JSON.parse(localStorage.getItem("gesso.settings"))||{};return {reduceMotion:typeof s.reduceMotion==='boolean'?s.reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:!!s.colorblind,units:s.units==='in'?'in':'cm'};}catch{return{reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:false,units:'cm'};}}
+function saveSettings(){try{localStorage.setItem("gesso.settings",JSON.stringify({reduceMotion:!!settings.reduceMotion,colorblind:!!settings.colorblind,units:settings.units||'cm'}));}catch{}}
+// dimensions display, honoring the cm/inches preference ("73.7 × 92.1 cm" → "29.0 × 36.3 in")
+function fmtDim(dim){ const s=String(dim||"").trim(); if(!s) return s; if((settings.units||'cm')!=='in') return s;
+  const m=s.match(/^([\d.]+)\s*[×x]\s*([\d.]+)(?:\s*[×x]\s*([\d.]+))?\s*cm/i); if(!m) return s;
+  const toIn=v=>v?(Math.round(parseFloat(v)/2.54*10)/10):null; const a=toIn(m[1]),b=toIn(m[2]),c=toIn(m[3]);
+  return (c!=null?`${a} × ${b} × ${c}`:`${a} × ${b}`)+" in"; }
 function applySettings(){document.body.classList.toggle('reduce-motion',!!settings.reduceMotion);document.body.classList.toggle('motion-ok',!settings.reduceMotion);document.body.classList.toggle('colorblind',!!settings.colorblind);const sh=document.getElementById('share');if(sh&&results.length){const fresh=resultSummary().share;sh.textContent=fresh;if(lastFinal)lastFinal.share=fresh;}}
 function prefersReducedChanged(e){try{const stored=JSON.parse(localStorage.getItem("gesso.settings"))||{};if(typeof stored.reduceMotion!=='boolean'){settings.reduceMotion=!!e.matches;applySettings();}}catch{}}
 if(motionQuery&&motionQuery.addEventListener)motionQuery.addEventListener('change',prefersReducedChanged);
@@ -103,11 +108,13 @@ function openSettings(){
     <div class="settingsbody">
       <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
       <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
+      <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in cm or inches</div></div><button type="button" class="unitseg" data-units aria-label="Toggle units">${settings.units==='in'?'inches':'cm'}</button></div>
       <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
     </div><div class="settingsfoot">Preferences save to this browser.</div></div>`;
   const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
   const escClose=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}});
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
+    const u=e.target.closest('[data-units]');if(u){settings.units=settings.units==='in'?'cm':'in';u.textContent=settings.units==='in'?'inches':'cm';saveSettings();}});
   document.addEventListener('keydown',escClose);document.body.appendChild(veil);
 }
 // ---------- "How to play" onboarding ----------
@@ -820,6 +827,9 @@ function renderInfiniteSummary(){
   clearTimers();
   const rounds=results.length, total=results.reduce((a,x)=>a+x.coreNet+x.bonus,0);
   const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
+  const isPerf=x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT);
+  const perfects=results.filter(isPerf).length;
+  const masterpieces=results.filter(x=>isPerf(x)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length; // perfect + artist
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner"><div><div class="kick">Learning session &middot; ${tier}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
@@ -828,6 +838,8 @@ function renderInfiniteSummary(){
       <div class="metarow"><span class="k">ROUNDS</span><span class="v">${rounds}</span></div>
       <div class="metarow"><span class="k">TOTAL</span><span class="v">${total.toLocaleString()} pts</span></div>
       <div class="metarow"><span class="k">BEST</span><span class="v">${best.toLocaleString()} pts in one round</span></div>
+      <div class="metarow"><span class="k">★ PERFECTS</span><span class="v">${perfects} <span style="color:var(--muted)">(all core categories maxed)</span></span></div>
+      <div class="metarow"><span class="k">✦ MASTERPIECES</span><span class="v">${masterpieces} <span style="color:var(--muted)">(perfect + nailed the artist)</span></span></div>
     </div>
     <div style="padding:8px 24px 24px"><button class="btn" id="againinf">Play again →</button>
       <button class="btn" id="homeinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Home</button>${ATTRIB}</div>
@@ -879,7 +891,7 @@ function renderRound(){
       <div style="display:flex;flex-direction:column">
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
-        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(it.dim)):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
+        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(fmtDim(it.dim))):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`free &middot; <span id="hintsleft">&infin;</span> in learning mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
           <div class="hintchips" id="hintchips"></div>
@@ -1079,6 +1091,7 @@ function renderReveal(r){
   window.scrollTo(0,0);
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
+  const masterpiece = perfect && r.cells.artist && r.cells.artist.pts===MAX_CAT; // perfect + nailed the artist
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
   if(glossName&&!infinite&&!runArchive)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
@@ -1098,7 +1111,7 @@ function renderReveal(r){
     <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
-        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${perfect?'<span class="perfectstamp">&starf; PERFECT</span>':''}</span>
+        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?'<span class="perfectstamp">&#10022; MASTERPIECE</span>':perfect?'<span class="perfectstamp">&starf; PERFECT</span>':''}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
@@ -1111,7 +1124,7 @@ function renderReveal(r){
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
           ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
-          ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(it.dim)}</span></div>`:''}
+          ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
         </div>
         <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record &#8599;</a>
       </div>
