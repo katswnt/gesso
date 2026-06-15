@@ -921,7 +921,7 @@ function renderRound(){
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(displaySrc(it.img))}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(fmtDim(it.dim))):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
@@ -1150,7 +1150,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -1405,6 +1405,13 @@ function renderFinal(){
 }
 
 // ---------- zoom lightbox ----------
+// sharper image for the on-screen display (not the deep-zoom): Met web-large is only ~620px → use
+// original (also pre-warms the zoom cache); AIC/V&A IIIF 843px → 1200px. Others already adequate.
+function displaySrc(src){
+  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/");
+  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1200,/");
+  return src;
+}
 function hiRes(src){
   if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met: 622px → ~3800px
   if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1600,/"); // IIIF (AIC, V&A): 843px → 1600px
