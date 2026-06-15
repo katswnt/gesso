@@ -8,13 +8,13 @@
 <title>Gesso — the daily art-guessing game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cpath%20fill='%232230b8'%20d='M8%2034C8%2017%2021%206%2037%2010c14%204%2023%2018%2017%2032-5%2013-22%2018-35%2011C11%2049%207%2042%208%2034Z'/%3E%3Ccircle%20cx='25'%20cy='25'%20r='7'%20fill='%23f6f4ee'%20fill-opacity='.82'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=3">
 </head>
 <body>
 <div class="wrap"><div id="stage"></div></div>
@@ -112,29 +112,49 @@ function howtoIcon(key){
   return `<svg viewBox="0 0 24 24" width="40" height="40">${m[key]||m.welcome}</svg>`;
 }
 function openHowTo(){
+  const HOWTO_IMAGES={
+    welcome:'/assets/guess what you can.png',
+    when:'/assets/when was it made.png',
+    where:'/assets/where in the world.png',
+    choose:'/assets/pick what fits.png',
+    lock:'/assets/lock in and learn.png',
+  };
   let i=0;
   const veil=document.createElement('div');veil.className='settingsveil';
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="How to play">
-    <div class="settingshead"><span class="ttl">How to play</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div class="obbody"><div class="obillus"><span class="obdab"></span></div><div class="obtitle"></div><div class="obtext"></div></div>
-    <div class="obdots"></div>
-    <div class="obfoot"><button type="button" class="obskip">Skip</button>
-      <div class="obnav"><button type="button" class="obback">Back</button><button type="button" class="obnext">Next</button></div></div></div>`;
+  veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="How to play">
+    <div class="htohead">&middot; how to play &middot;</div>
+    <div class="htocontent"><div class="htotrack"><div class="htopanel">
+      <div class="htoimg"><img class="htoimg-el" src="" alt=""></div>
+      <div class="htobody"><div class="htotitle"></div><div class="htotext"></div></div>
+    </div></div></div>
+    <div class="htopips"></div>
+    <div class="htofoot">
+      <button type="button" class="obskip navbtn">Skip</button>
+      <div class="obnav">
+        <button type="button" class="obback navbtn">Back</button>
+        <button type="button" class="obnext navbtn navbtn--filled">Next</button>
+      </div>
+    </div>
+  </div>`;
   const $=s=>veil.querySelector(s);
-  const close=()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{};veil.remove();document.removeEventListener('keydown',keyNav);};
-  const draw=()=>{const st=HOWTO_STEPS[i];
-    $('.obdab').innerHTML=howtoIcon(st.key); $('.obtitle').textContent=st.title; $('.obtext').textContent=st.body;
-    $('.obdots').innerHTML=HOWTO_STEPS.map((_,k)=>`<span class="${k===i?'on':''}" data-d="${k}"></span>`).join('');
+  const close=()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{};veil.remove();document.removeEventListener('keydown',keyNav);document.body.style.overflow='';};
+  const draw=()=>{
+    const st=HOWTO_STEPS[i];
+    $('.htoimg-el').src=HOWTO_IMAGES[st.key]||'';
+    $('.htotitle').textContent=st.title;
+    $('.htotext').textContent=st.body;
+    $('.htopips').innerHTML=pipsHTML(i,i);
     $('.obback').style.visibility=i===0?'hidden':'visible';
-    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';};
-  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0; draw();};
+    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';
+  };
+  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0; const track=$('.htotrack'),panel=$('.htopanel'); if(!track||!panel){draw();return;} const old=panel.cloneNode(true); draw(); if(d>0){track.insertBefore(old,panel);track.style.cssText='transition:none;transform:translateX(0);width:200%;display:flex';void track.offsetWidth;track.style.cssText='transition:transform 0.4s cubic-bezier(.22,1,.36,1);transform:translateX(-50%);width:200%;display:flex';}else{track.appendChild(old);track.style.cssText='transition:none;transform:translateX(-50%);width:200%;display:flex';void track.offsetWidth;track.style.cssText='transition:transform 0.4s cubic-bezier(.22,1,.36,1);transform:translateX(0);width:200%;display:flex';} setTimeout(()=>{if(old.parentElement)old.remove();track.style.cssText='width:200%;display:flex';},450);};
   const keyNav=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
   veil.addEventListener('click',e=>{
-    if(e.target===veil||e.target.closest('.settingsclose')||e.target.closest('.obskip'))return close();
+    if(e.target===veil||e.target.closest('.obskip'))return close();
     if(e.target.closest('.obnext'))return go(1);
     if(e.target.closest('.obback'))return go(-1);
-    const dot=e.target.closest('[data-d]'); if(dot){i=+dot.dataset.d;draw();}});
-  document.addEventListener('keydown',keyNav); document.body.appendChild(veil); draw();
+  });
+  document.addEventListener('keydown',keyNav); document.body.style.overflow='hidden'; document.body.appendChild(veil); draw();
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
@@ -374,8 +394,8 @@ function tierItems(i){
   const cuts=[0, Math.round(n*0.10), Math.round(n*0.35), Math.round(n*0.65), n];
   return POOL.slice(cuts[i], cuts[i+1]);
 }
-const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
-  {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
+const TIERS=[{key:"easy",label:"Easy",blurb:"world-famous masterpieces"},{key:"medium",label:"Medium",blurb:"well-known works"},
+  {key:"hard",label:"Hard",blurb:"for art-history buffs"},{key:"impossible",label:"Impossible",blurb:"deep cuts and obscurities"}];
 
 // ---------- mastery ----------
 function loadMastery(){try{return JSON.parse(localStorage.getItem("artefactum.mastery"))||{byStyle:{},byRegion:{}}}catch{return{byStyle:{},byRegion:{}}}}
@@ -424,8 +444,8 @@ function renderCollections(){
   const REGCOL={Asia:'#7480d4',Europe:'#3f4cbe','North America':'#aeb6e3',Africa:'#2f8f5b','South America':'#cf9f3a',Oceania:'#c14b3a'};
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div><div style="font:700 15px Archivo,sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
-      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px Archivo;font-variant-numeric:tabular-nums">${s.count}</span></div>
+      <div><div style="font:700 15px Faculty Glyphic,sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
+      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px Faculty Glyphic;font-variant-numeric:tabular-nums">${s.count}</span></div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
     <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} &#8599;</div></a>`).join('');
   const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
@@ -433,17 +453,17 @@ function renderCollections(){
     <div class="colbar" style="width:${Math.max(8,Math.round(c/maxR*72))}%;background:${REGCOL[name]||'var(--accent)'}">${c}</div>
     <span class="mono" style="font-size:11px;color:var(--muted)">${Math.round(c/C.total*100)}%</span></div>`).join('');
   const canonCards=C.canon.map(c=>`<a class="colcard" href="${c.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;max-width:300px;flex:1 1 200px">
-    <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
+    <div style="font:700 13px Faculty Glyphic,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
     <div style="font-size:12px;color:var(--accent);margin-top:6px">${esc(c.work)}</div></a>`).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div style="padding:26px 24px 40px">
     <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 320px"><div class="kick" style="color:var(--accent)">Collections</div>
-        <h1 style="font:800 32px Archivo,sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
+        <h1 style="font:800 32px Faculty Glyphic,sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
         <p style="color:var(--muted);line-height:1.6;font-size:15px">Every work here is shown under an open license — public domain or CC0. That one rule shapes the whole collection: what&rsquo;s here, what isn&rsquo;t, and why.</p></div>
       <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:10px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
-        <div><div style="font:800 28px Archivo">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
-        <div><div style="font:800 28px Archivo">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
-        <div><div style="font:800 28px Archivo">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
+        <div><div style="font:800 28px Faculty Glyphic">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
+        <div><div style="font:800 28px Faculty Glyphic">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
+        <div><div style="font:800 28px Faculty Glyphic">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
     </div>
     <div class="kick" style="margin:34px 0 14px">The open collections</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
@@ -454,12 +474,12 @@ function renderCollections(){
     <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">By origin the pool actually leans <strong style="color:var(--ink)">Asian</strong> — but the works most people <em>recognise</em> skew Western. The honest why:</p>
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-1929, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Faculty Glyphic;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-1929, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Faculty Glyphic;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Faculty Glyphic;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
     <div style="background:var(--study-bg);border:1px solid var(--study-border);border-radius:10px;padding:18px;margin-top:16px">
-      <div style="font:700 14px Archivo;margin-bottom:6px">04 &middot; The African-museum gap</div>
+      <div style="font:700 14px Faculty Glyphic;margin-bottom:6px">04 &middot; The African-museum gap</div>
       <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.</div></div>
     <div class="kick" style="margin:36px 0 14px">Where the canon hangs</div>
     <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
@@ -507,13 +527,27 @@ function renderMovement(name){
 let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marker, infinite=false;
 let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archiveMonth=null;
 
-function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
-const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
-function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+function pipsHTML(filled,cur){
+  let s='';
+  for(let i=0;i<ROUNDS;i++){
+    const state=i<filled?'done':i===cur?'cur':'';
+    const front=i%2===0; // pips 1,3,5 → front; pips 2,4 → back
+    let src;
+    if(state==='done') src=front?'/assets/coin.front.filled.png':'/assets/coin.back.filled.png';
+    else if(state==='cur') src='/assets/coin.current.png';
+    else src=front?'/assets/coin.front.empty.png':'/assets/coin.back.empty.png';
+    s+=`<span class="pip ${state}"><img src="${src}" alt="" width="16" height="16"></span>`;
+  }
+  return s;
 }
-const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude</div>`;
+const DIAMOND_SVG=`<svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg>`;
+const PALETTE_SVG=`<svg viewBox="0 0 47 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.6045 0C37.4654 0.000215233 46.4443 8.61997 46.4443 19.4697C46.4443 30.5186 37.6647 39.6599 26.6045 39.6602C13.5568 39.6602 0.000109138 32.5039 0 19.4697C0 6.60382 13.7253 0 26.6045 0ZM21.917 5.74023C19.3233 5.7403 17.2209 7.84288 17.2207 10.4365C17.2207 13.0304 19.3232 15.1337 21.917 15.1338C24.5109 15.1338 26.6133 13.0304 26.6133 10.4365C26.6131 7.84284 24.5107 5.74023 21.917 5.74023Z" fill="#292929"/><circle cx="10.6973" cy="12.2637" r="1.82646" fill="#EC7777"/><circle cx="7.56669" cy="19.5694" r="1.82646" fill="#EFD867"/><circle cx="10.6973" cy="26.875" r="1.82646" fill="#8AC98B"/><circle cx="18.0032" cy="31.0494" r="1.82646" fill="#D99AF2"/></svg>`;
+const SETTINGS_ICON=`<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.16675 8.55817L5.83341 2.78317M9.16675 11.4415L5.83341 17.2165M10.0001 18.3332V16.6665M10.0001 16.6665C13.682 16.6665 16.6667 13.6817 16.6667 9.99984C16.6667 6.31794 13.682 3.33317 10.0001 3.33317M10.0001 16.6665C6.31818 16.6665 3.33341 13.6817 3.33341 9.99984M10.0001 1.6665V3.33317M10.0001 3.33317C6.31818 3.33317 3.33341 6.31794 3.33341 9.99984M11.6667 9.99984H18.3334M11.6667 9.99984C11.6667 10.9203 10.9206 11.6665 10.0001 11.6665C9.07961 11.6665 8.33341 10.9203 8.33341 9.99984C8.33341 9.07936 9.07961 8.33317 10.0001 8.33317C10.9206 8.33317 11.6667 9.07936 11.6667 9.99984ZM14.1667 17.2165L13.3334 15.7748M14.1667 2.78317L13.3334 4.22484M1.66675 9.99984H3.33341M17.2167 14.1665L15.7751 13.3332M17.2167 5.83317L15.7751 6.6665M2.78341 14.1665L4.22508 13.3332M2.78341 5.83317L4.22508 6.6665" stroke="currentColor" stroke-linecap="square" stroke-linejoin="round"/></svg>`;
+function header(filled,cur,withStamp){
+  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo">${PALETTE_SVG}</span></span></div>
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="navbtn navbtn--filled" type="button" data-howto>how to play</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+}
+const ATTRIB=`<div class="attrib-section"><div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude</div></div>`;
 
 // ---------- retention helpers ----------
 function todayStr(){const d=new Date();return localDateStr(d);}
@@ -558,7 +592,7 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else renderStart(undefined,false);}
+function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderArchive();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else renderStart(undefined,false);}
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
@@ -606,7 +640,7 @@ function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdow
 function regionBars(){
   const dist={};for(const p of POOL)dist[p.region]=(dist[p.region]||0)+1;
   const order=["Europe","Asia","Africa","North America","South America","Oceania"];
-  const colors={Europe:"#2230b8",Asia:"#cf9f3a",Africa:"#2f8f5b",["North America"]:"#7a86d8",["South America"]:"#c14b3a",Oceania:"#8a8472"};
+  const colors={Europe:"var(--accent)",Asia:"var(--partial)",Africa:"var(--full)",["North America"]:"#D99AF2",["South America"]:"var(--miss)",Oceania:"var(--muted)"};
   const total=POOL.length||1;
   const segs=order.filter(r=>dist[r]).map(r=>`<span style="width:${(dist[r]/total*100).toFixed(1)}%;background:${colors[r]}"></span>`).join('');
   const key=order.filter(r=>dist[r]).map(r=>`<span><i style="background:${colors[r]}"></i>${r} ${Math.round(dist[r]/total*100)}%</span>`).join('');
@@ -618,50 +652,61 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
+  const img1=`<div class="heroimg"><img src="/assets/MET picture frame.png" alt="" style="width:10.5rem;height:5rem;object-fit:contain"></div>`;
+  const img2=`<div class="heroimg"><img src="/assets/silver pin.png" alt="" style="width:16rem;height:3rem;object-fit:contain"></div>`;
+  const img3=`<div class="heroimg"><img src="/assets/dagger.png" alt="" style="width:9.047rem;height:4rem;object-fit:contain"></div>`;
+  const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
-      <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
-      <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em>.'}</div>
-      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art &mdash; its date, place, school &amp; hand</span>'}</div>
-      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
-      <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
+      <div class="herokick">&middot; ${replay?'archive replay':'daily art guessing game'} &middot;</div>
+      <div class="herobig">${replay?'pick a difficulty.':`take a gess<span class="dabo-float"><span class="dabo dabo-lg">${PALETTE_SVG}</span></span>.`}</div>
+      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} &mdash; choose a tier for this date&rsquo;s works`:'<strong>ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; noun &middot; the white primer brushed onto a canvas before the first brushstroke<br><strong>ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; verb, informal &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand'}</div>
+    </div>
+    ${img1}
+    <div style="text-align:center;padding:0 24px 24px">
+      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="font-weight:700">${POOL.length}</span> works</div>
+      <div style="margin-top:6px;font:400 12px 'Manrope',sans-serif;color:var(--muted)">select your difficulty to start guessing</div>
     </div>
     <div class="difs">
-      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
-        <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
-        <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
+      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
+        <div class="nm">${t.label}</div>
+        <span class="difdot" style="color:${TDCOL[i]}">${DIAMOND_SVG}</span>
+        <div class="bl">${t.blurb}</div>
+        <div class="ct">${tierItems(i).length} works available</div>
+      </button>`).join('')}
     </div>
-    ${replay?'':`<div style="text-align:center;padding:0 24px 16px">
-      <span class="kick" style="margin-right:8px">Or play endlessly</span>
-      ${TIERS.map(t=>`<button class="navbtn inf" data-inf="${t.key}" style="margin:3px 3px">∞ ${t.label}</button>`).join('')}
-    </div>`}
-    <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia — is ${b.europe}% European:</p>
-      <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
-    </div>
-    <details class="faq" style="max-width:620px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding-top:14px;text-align:center">
-      <summary style="cursor:pointer;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;text-align:center">FAQ &amp; credits</summary>
-      <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;text-align:left">
-        <p style="margin:0 0 10px"><strong style="color:var(--ink)">How is difficulty decided?</strong><br>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent (see the note above on why the canon still skews that way).</p>
-        <p style="margin:0 0 6px"><strong style="color:var(--ink)">Where does the art come from?</strong><br>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p>
-        <ul style="margin:0 0 10px 18px;padding:0">
-          <li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li>
-          <li>Cleveland Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li>
-          <li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li>
-          <li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li>
-          <li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses, credited to the holding institutions</li>
-        </ul>
-        <p style="margin:0 0 10px">Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p>
-        <p style="margin:0"><strong style="color:var(--ink)">Are the study notes reliable?</strong><br>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p>
+    ${replay?'':`<div style="text-align:center;padding:20px 24px 0">
+      <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px">
+        <span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">or play in learning mode</span>
+        ${TIERS.map((t,i)=>`<button class="navbtn inf" data-inf="${t.key}" style="display:inline-flex;align-items:center;gap:5px"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
       </div>
-    </details>
+      <p style="font:400 10px/12px 'Manrope',sans-serif;color:var(--muted);max-width:400px;margin:10px auto 0;padding-bottom:40px">Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
+    </div>`}
+    ${img2}
+    <div class="homesec">
+      <div class="homesechd">&middot; notice what &ldquo;easy&rdquo; is &middot;</div>
+      <p class="homesecbody">Difficulty here tracks what people actually recognize &mdash; and <strong>&ldquo;Easy&rdquo; is ${easyEuro}% European</strong>. That&rsquo;s not because the world&rsquo;s art is European; it&rsquo;s because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we&rsquo;re taught to know. Try the harder tiers and the rest of the world appears.</p>
+      <p class="homesecbody">The whole pool &mdash; drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia &mdash; is ${b.europe}% European:</p>
+      <div style="max-width:560px;margin:0 auto"><div class="bars">${b.segs}</div><div class="barkey">${b.key}</div></div>
+    </div>
+    ${img3}
+    <div class="homesec">
+      <div class="homesechd">&middot; frequently asked questions &middot;</div>
+      <div class="faqacc">
+        <div class="faqitem"><button class="faqq">how is difficulty decided?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
+        <div class="faqitem"><button class="faqq">where does the art come from?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
+        <div class="faqitem"><button class="faqq">are the study notes reliable?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
+      </div>
+    </div>
     ${ATTRIB}
   </div>`;
   document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
   document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
+  document.querySelectorAll('.faqq').forEach(btn=>{btn.onclick=()=>{const a=btn.nextElementSibling,open=a.style.height&&a.style.height!=='0px';document.querySelectorAll('.faqa').forEach(x=>{x.style.height='0px';});document.querySelectorAll('.faqq').forEach(x=>x.setAttribute('aria-expanded','false'));if(!open){a.style.height=a.scrollHeight+'px';btn.setAttribute('aria-expanded','true');}}});
 }
 function startGame(key,dateStr,push=true){
   if(push)pushNav({v:'play',key,date:dateStr||todayStr()});
@@ -712,7 +757,7 @@ function renderRound(){
     <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
     <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
-    <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
+    <div id="schemehint" style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   if(it.cats.includes('medium')){
     const ch=mediumChoices(it.medium);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('medium')}Medium</span></div>
@@ -722,7 +767,7 @@ function renderRound(){
     const ch=styleChoices(it);
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
-      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
+      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   }
   if(it.cats.includes('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
@@ -964,7 +1009,7 @@ function renderReveal(r){
         ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
+          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
@@ -973,10 +1018,10 @@ function renderReveal(r){
     </div>
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
       <div class="why">${why}</div>
-      ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
+      ${study.cues&&study.cues.length?`<div style="font:700 10px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
       ${guideHTML(study.guide)}
-      ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
+      ${ml?`<div class="mastery"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
@@ -1044,15 +1089,15 @@ async function renderShareCard(data){
   const rs=data||lastFinal||{...resultSummary(),results:results.slice(),date:runDate||todayStr(),tier}, cardDate=rs.date||runDate||todayStr(), canvas=document.createElement('canvas'), ctx=canvas.getContext('2d'), cols=["when","where","medium","style","artist"];
   canvas.width=1080;canvas.height=1350;
   ctx.fillStyle=cssVar('--surface');ctx.fillRect(0,0,1080,1350);
-  ctx.fillStyle=cssVar('--accent');ctx.font='800 82px Archivo, sans-serif';ctx.fillText('gess',82,120);
+  ctx.fillStyle=cssVar('--accent');ctx.font='800 82px Faculty Glyphic, sans-serif';ctx.fillText('gess',82,120);
   const wordW=ctx.measureText('gess').width,dabR=(ctx.measureText('x').actualBoundingBoxAscent||41)/2,dabX=82+wordW+7+dabR,dabY=120-dabR;
   ctx.beginPath();ctx.arc(dabX,dabY,dabR,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=cssVar('--surface');ctx.beginPath();ctx.arc(dabX-dabR*.32,dabY-dabR*.32,dabR*.16,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillText('THE DAILY ART GAME · '+String(rs.tier||tier||'').toUpperCase(),84,166);
-  ctx.textAlign='right';ctx.font='500 25px IBM Plex Mono, monospace';ctx.fillText(accessionFor(cardDate),996,106);ctx.fillText(niceDate(cardDate),996,144);ctx.textAlign='left';
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px Manrope, monospace';ctx.fillText('THE DAILY ART GAME · '+String(rs.tier||tier||'').toUpperCase(),84,166);
+  ctx.textAlign='right';ctx.font='500 25px Manrope, monospace';ctx.fillText(accessionFor(cardDate),996,106);ctx.fillText(niceDate(cardDate),996,144);ctx.textAlign='left';
   const icons=await Promise.all(cols.map(iconImage)), x0=84,y0=250,labelW=44,gap=18,cell=(1080-x0*2-labelW-gap*5)/5,rowH=128;
   icons.forEach((img,i)=>{if(img)ctx.drawImage(img,x0+labelW+gap+i*(cell+gap)+cell/2-24,y0-58,48,48);});
-  ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillStyle=cssVar('--faint');ctx.textAlign='center';
+  ctx.font='600 24px Manrope, monospace';ctx.fillStyle=cssVar('--faint');ctx.textAlign='center';
   rs.results.forEach((r,ri)=>{
     const y=y0+ri*rowH;ctx.fillStyle=cssVar('--faint');ctx.fillText(String(ri+1),x0+18,y+74);
     cols.forEach((c,ci)=>{
@@ -1060,15 +1105,15 @@ async function renderShareCard(data){
       const cellData=r.cells[c], x=x0+labelW+gap+ci*(cell+gap);
       ctx.fillStyle=cellColor(cellData.pts);roundRect(ctx,x,y,cell,rowH-26,16);ctx.fill();
       const mark=c==='artist'&&cellData.pts===MAX_CAT?'⭐':cellData.pts===MAX_CAT?'🎯':'';
-      if(settings.colorblind){ctx.font='800 48px Archivo, sans-serif';ctx.fillStyle='#fff';ctx.fillText(cellGlyph(cellData.pts),x+cell/2,y+62);}
+      if(settings.colorblind){ctx.font='800 48px Faculty Glyphic, sans-serif';ctx.fillStyle='#fff';ctx.fillText(cellGlyph(cellData.pts),x+cell/2,y+62);}
       else if(mark){ctx.font='46px Arial, sans-serif';ctx.fillStyle='#fff';ctx.fillText(mark,x+cell/2,y+62);}
     });
   });
   ctx.strokeStyle=cssVar('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(84,1130);ctx.lineTo(996,1130);ctx.stroke();
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
-  ctx.fillStyle=cssVar('--ink');ctx.font='800 78px Archivo, sans-serif';ctx.fillText(rs.grand.toLocaleString(),84,1260);
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px IBM Plex Mono, monospace';ctx.fillText(' / 50k',390,1255);
-  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px IBM Plex Mono, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px Manrope, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
+  ctx.fillStyle=cssVar('--ink');ctx.font='800 78px Faculty Glyphic, sans-serif';ctx.fillText(rs.grand.toLocaleString(),84,1260);
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px Manrope, monospace';ctx.fillText(' / 50k',390,1255);
+  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px Manrope, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
   return canvas.toDataURL('image/png');
 }
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
@@ -1096,10 +1141,10 @@ function renderStreak(){
   const score=+s.scores[today]||0, avg=avgScore(s), days=['S','M','T','W','T','F','S'], now=parseLocalDate(today), start=new Date(now);start.setDate(now.getDate()-now.getDay());
   const week=days.map((d,i)=>{const cur=new Date(start);cur.setDate(start.getDate()+i);const ds=localDateStr(cur),cls=ds===today?'today':s.playedDates.includes(ds)?'played':cur>now?'future':'';return `<div class="weekd ${cls}"><span class="weekdab"></span><span>${d}</span></div>`;}).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
-    <div class="retcap"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">DAILY ${accessionFor(today)}</span></div>
+    <div class="retcap"><span class="wordmark">gess<span class="dabo">${PALETTE_SVG}</span></span><span class="accn">DAILY ${accessionFor(today)}</span></div>
     <div class="streakbody">${missed?`
       <div class="streakdab reset"><span>0</span></div><div class="streaklabel" style="color:var(--muted)">Streak reset</div>
-      <div style="margin:10px auto 0;max-width:360px;font:400 14px/1.5 'Archivo',sans-serif;color:var(--muted)">Missed yesterday. Play today to start a new one — your best was <strong style="color:var(--ink)">${s.longest}</strong>.</div>
+      <div style="margin:10px auto 0;max-width:360px;font:400 14px/1.5 'Faculty Glyphic',sans-serif;color:var(--muted)">Missed yesterday. Play today to start a new one — your best was <strong style="color:var(--ink)">${s.longest}</strong>.</div>
       <div class="retactions" style="max-width:260px;margin-left:auto;margin-right:auto"><button class="btn" id="playtoday">Play today</button></div>`:`
       <div class="filedline">${playedToday?'✓ Filed for today · '+score.toLocaleString()+' pts':'Not filed today yet'}</div>
       <div class="streakdab"><span>${playedToday?s.current:Math.max(0,s.current)}</span></div><div class="streaklabel">Day streak</div>
@@ -1118,12 +1163,12 @@ function renderDayView(ds,push=true){
   const s=loadStreak(), today=todayStr(), bd=s.byDay[ds]||{}, done=TIERS.filter(t=>bd[t.key]!=null).length, canNext=ds<today;
   const rows=TIERS.map(t=>{const sc=bd[t.key], isDone=sc!=null;
     return `<div class="dayrow"><i class="td" style="width:13px;height:13px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>
-      <div style="flex:1;min-width:0"><div style="font:700 14px Archivo,sans-serif">${t.label}</div><div class="mono" style="font-size:11px;color:var(--muted)">${esc(t.blurb)}</div></div>
+      <div style="flex:1;min-width:0"><div style="font:700 14px Faculty Glyphic,sans-serif">${t.label}</div><div class="mono" style="font-size:11px;color:var(--muted)">${esc(t.blurb)}</div></div>
       ${isDone?`<span class="mono" style="color:var(--full);font-size:12px;white-space:nowrap">&check; ${sc.toLocaleString()}</span><button class="btn2 dayplay" data-k="${t.key}" style="padding:6px 12px">Replay</button>`:`<button class="btn dayplay" data-k="${t.key}" style="width:auto;padding:8px 18px">Play</button>`}</div>`;}).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
     <div class="retcap"><button class="moveback" id="bkarch">&lsaquo; Archive</button>
       <div class="daypager"><button class="btn2" id="pday" data-ds="${ds}" aria-label="Previous day" style="padding:5px 11px">&lsaquo;</button><span class="mono" style="font-weight:600;letter-spacing:.04em">${niceDate(ds)}</span><button class="btn2" id="nday" aria-label="Next day" ${canNext?'':'disabled'} style="padding:5px 11px">&rsaquo;</button></div></div>
-    <div style="padding:16px 16px 2px"><div style="font:800 22px Archivo,sans-serif">${niceDate(ds)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:3px">${accessionFor(ds)} &middot; ${done} / 4 tiers filed</div></div>
+    <div style="padding:16px 16px 2px"><div style="font:800 22px Faculty Glyphic,sans-serif">${niceDate(ds)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:3px">${accessionFor(ds)} &middot; ${done} / 4 tiers filed</div></div>
     <div class="daygrid">${rows}</div>
   </div>${ATTRIB}</div></div>`;
   document.getElementById('bkarch').onclick=()=>renderArchive();
@@ -1134,17 +1179,40 @@ function renderDayView(ds,push=true){
 }
 function renderArchive(monthDate){
   clearTimers();
-  const s=loadStreak(), today=todayStr(), td=parseLocalDate(today);archiveMonth=monthDate||archiveMonth||new Date(td.getFullYear(),td.getMonth(),1);
+  const s=loadStreak(), today=todayStr(), td=parseLocalDate(today);
+  const playedToday=s.playedDates.includes(today)||s.lastPlayed===today, missed=!!s.lastPlayed&&s.lastPlayed!==addDays(today,-1)&&!playedToday;
+  const score=+s.scores[today]||0, avg=avgScore(s), days=['S','M','T','W','T','F','S'], now=parseLocalDate(today), wstart=new Date(now);wstart.setDate(now.getDate()-now.getDay());
+  const week=days.map((d,i)=>{const cur=new Date(wstart);cur.setDate(wstart.getDate()+i);const ds=localDateStr(cur),cls=ds===today?'today':s.playedDates.includes(ds)?'played':cur>now?'future':'';return `<div class="weekd ${cls}"><span class="weekdab"></span><span>${d}</span></div>`;}).join('');
+  const streakInner=missed?`
+    <div class="streakdab reset"><span>0</span></div><div class="streaklabel" style="color:var(--muted)">Streak reset</div>
+    <div style="margin:10px auto 0;max-width:360px;font:400 14px/1.5 'Faculty Glyphic',sans-serif;color:var(--muted)">Missed yesterday. Play today to start a new one — your best was <strong style="color:var(--ink)">${s.longest}</strong>.</div>
+    <div class="retactions" style="max-width:260px;margin-left:auto;margin-right:auto"><button class="btn" id="playtoday">Play today</button></div>`:`
+    <div class="filedline">${playedToday?'✓ Filed for today · '+score.toLocaleString()+' pts':'Not filed today yet'}</div>
+    <div class="streakdab"><span>${playedToday?s.current:Math.max(0,s.current)}</span></div><div class="streaklabel">Day streak</div>
+    <div class="weekrow">${week}</div>
+    <div class="streakmeta">Longest <strong>${s.longest}</strong> &nbsp;·&nbsp; Played <strong>${s.playedDates.length}</strong> &nbsp;·&nbsp; Avg <strong>${shortScore(avg)}</strong></div>
+    <div class="countpanel"><div class="lbl">Next masterwork in</div><div class="time" id="countdown">--:--:--</div></div>
+    <div class="retactions"><button class="btn" id="shareimg">Share result</button></div>`;
+  archiveMonth=monthDate||archiveMonth||new Date(td.getFullYear(),td.getMonth(),1);
   const y=archiveMonth.getFullYear(),m=archiveMonth.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),canNext=y<td.getFullYear()||m<td.getMonth();
   let cells='';for(let i=0;i<first.getDay();i++)cells+='<div class="daycell blank"></div>';
   for(let d=1;d<=last.getDate();d++){const ds=localDateStr(new Date(y,m,d)),dt=parseLocalDate(ds),bd=s.byDay[ds]||{},played=Object.keys(bd).length>0||s.playedDates.includes(ds),isToday=ds===today,future=dt>td;let cls=future?'future':isToday?'today':played?'played':'missed';
     let dots=future?'':`<span class="tierdots">${TIERS.map(t=>{const done=bd[t.key]!=null;return `<i class="td" style="${done?`background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}`:'background:transparent;border-color:#d3ccbb'}"></i>`;}).join('')}</span>`;
     let click=future?'':` data-date="${ds}"`;cells+=`<button class="daycell ${cls}"${click}><span class="dn">${d}</span>${dots}</button>`;}
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
-    <div class="retcap"><span class="ttl">Archive</span><div style="display:flex;align-items:center;gap:14px"><button class="btn2" id="prevmo" style="padding:5px 10px">‹</button><span class="mono" style="font-weight:600;letter-spacing:.08em">${archiveMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'}).toUpperCase()}</span><button class="btn2" id="nextmo" ${canNext?'':'disabled'} style="padding:5px 10px">›</button></div></div>
-    <div class="dowgrid"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="archivegrid">${cells}</div>
-    <div class="legend"><span style="display:flex;align-items:center;gap:5px">${TIERS.map(t=>`<i class="td" style="width:8px;height:8px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>`).join('')}&nbsp;easy → impossible · filled = filed</span><span style="margin-left:auto">Tap any day to play / replay</span></div>
-  </div>${ATTRIB}</div></div>`;
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap">
+    <div class="retcard">
+      <div class="retcap"><span class="wordmark">gess<span class="dabo">${PALETTE_SVG}</span></span><span class="accn">DAILY ${accessionFor(today)}</span></div>
+      <div class="streakbody">${streakInner}</div>
+    </div>
+    <div class="retcard" style="margin-top:16px">
+      <div class="retcap"><span class="ttl">Archive</span><div style="display:flex;align-items:center;gap:14px"><button class="btn2" id="prevmo" style="padding:5px 10px">‹</button><span class="mono" style="font-weight:600;letter-spacing:.08em">${archiveMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'}).toUpperCase()}</span><button class="btn2" id="nextmo" ${canNext?'':'disabled'} style="padding:5px 10px">›</button></div></div>
+      <div class="dowgrid"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="archivegrid">${cells}</div>
+      <div class="legend"><span style="display:flex;align-items:center;gap:5px">${TIERS.map(t=>`<i class="td" style="width:8px;height:8px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>`).join('')}&nbsp;easy → impossible · filled = filed</span><span style="margin-left:auto">Tap any day to play / replay</span></div>
+    </div>
+  ${ATTRIB}</div></div>`;
+  const pt=document.getElementById('playtoday');if(pt)pt.onclick=()=>renderStart();
+  const sh=document.getElementById('shareimg');if(sh)sh.onclick=()=>lastFinal?downloadShareImage(sh,lastFinal):navigator.clipboard.writeText(`Gesso · ${score.toLocaleString()} pts · ${s.current} day streak`).then(()=>sh.textContent='Copied ✓');
+  const cd=document.getElementById('countdown');if(cd){const tick=()=>{const n=new Date(),mo=new Date(n);mo.setHours(24,0,0,0);let ms=mo-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
   document.getElementById('prevmo').onclick=()=>{archiveMonth=new Date(y,m-1,1);renderArchive(archiveMonth);};
   document.getElementById('nextmo').onclick=()=>{if(canNext){archiveMonth=new Date(y,m+1,1);renderArchive(archiveMonth);}};
   document.querySelectorAll("[data-date]").forEach(b=>b.onclick=()=>renderDayView(b.dataset.date));
@@ -1198,7 +1266,7 @@ function renderFinal(){
   document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
   document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.textContent='Link copied ✓';setTimeout(()=>b.textContent='Copy link to this puzzle',1600);});};
-  document.getElementById('streak').onclick=renderStreak;
+  document.getElementById('streak').onclick=renderArchive;
   document.getElementById('again').onclick=()=>renderStart();
 }
 
@@ -1225,6 +1293,7 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 
 // ---------- boot ----------
 applySettings();
+let __st;window.addEventListener("scroll",()=>{document.documentElement.classList.add("scrolling");clearTimeout(__st);__st=setTimeout(()=>document.documentElement.classList.remove("scrolling"),800);},{passive:true});
 if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
 else{ buildIndexes();
   // on a cold deep-link, seed a Home entry beneath so Back returns to the app, not off-site
