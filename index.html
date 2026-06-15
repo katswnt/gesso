@@ -76,13 +76,16 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   if(look==='far')       ordered=[...diffReg, ...sameReg, ...shuffle(others)];
   else if(look==='near') ordered=[...related, ...sameReg, ...diffReg];
   else                   ordered=[...related.slice(0,1), ...sameReg.slice(0,1), ...diffReg, ...sameReg, ...shuffle(others)];
-  // in 'far' (easy) keep options from distinct countries for spread; in 'near' allow same-country lookalikes (Tang vs Song)
-  const distinctCountry = isCult && look==='far';
-  const out=[ans], usedRoot=new Set([aRoot]);
+  // never show two options from the SAME movement family at different granularity (Renaissance / High
+  // Renaissance / Italian Renaissance / renaissance). For cultures, spread by country only in 'far'.
+  const movFam=s=>s.toLowerCase().replace(/\b(high|early|late|proto|northern|southern|italian|french|german|dutch|flemish|spanish|english|british|american|venetian|florentine|sienese|early\s)\b/g,"").replace(/\b(school|movement|art|painting|style|era|period)\b/g,"").replace(/[^a-z]/g,"");
+  const famKey=s=> isCult ? root(s) : movFam(s);
+  const dedup = isCult ? (look==='far') : true; // movements always family-dedup; cultures only in far
+  const out=[ans], used=new Set([famKey(ans)]);
   for(const s of ordered){ if(out.length>=4)break; if(out.includes(s))continue;
-    if(distinctCountry){const r=root(s);if(usedRoot.has(r))continue;usedRoot.add(r);}
+    const k=famKey(s); if(dedup && k && used.has(k))continue; used.add(k);
     out.push(s);}
-  if(out.length<4) for(const s of shuffle(others)){ if(out.length>=4)break; if(!out.includes(s))out.push(s);}
+  if(out.length<4) for(const s of shuffle(others)){ if(out.length>=4)break; if(!out.includes(s)){const k=famKey(s); if(dedup&&k&&used.has(k))continue; used.add(k); out.push(s);} }
   return shuffle(out);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
@@ -218,6 +221,7 @@ const PLACE_RADIUS=[[/united states|america|u\.s\./i,1500],[/russia|soviet/i,200
 function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))return r;return 360;}
 function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
+function deaccent(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();} // accent-insensitive matching (Dürer ↔ durer)
 function lastName(s){return norm(s).split(' ').pop();}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function imgFail(img){
@@ -384,7 +388,15 @@ function buildIndexes(){
   // which is canon-skewed toward the West — surfaced as the teaching note on the start screen.
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
   MINY=Math.min(...POOL.map(p=>p.y));
-  for(const p of POOL){ p.medSimple=simplifyMedium(p.medium); } // clean family label for the guessing UI
+  // recompute the guessable categories from the ACTUAL fields (stale stored cats caused: medium known but
+  // not guessable / shown pre-lock, artist red-box when anonymous). Generic period buckets aren't quizzed.
+  const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$|[- ]era$/i;
+  for(const p of POOL){ p.medSimple=simplifyMedium(p.medium);
+    const c=["when","where"];
+    if(p.medSimple) c.push("medium");
+    if(p.style && p.styleKind && !PERIOD_STYLE.test(p.style)) c.push("style");
+    if(isNamedArtist(p.artist)) c.push("artist");
+    p.cats=c; }
   ALL_MED=[...new Set(POOL.map(p=>p.medSimple).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
@@ -881,7 +893,7 @@ function renderRound(){
 function setupAutocomplete(){
   const inp=document.getElementById('artist'),list=document.getElementById('aclist');let active=-1,items=[];
   const close=()=>{list.style.display='none';active=-1;};
-  const render=q=>{const ql=q.toLowerCase().trim();items=ql?ARTIST_POOL.filter(a=>a.toLowerCase().includes(ql)).slice(0,8):[];
+  const render=q=>{const ql=deaccent(q).trim();items=ql?ARTIST_POOL.filter(a=>deaccent(a).includes(ql)).slice(0,8):[];
     if(!items.length){close();return;}
     list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${esc(a)}</div>`).join('');
     list.style.display='block';
