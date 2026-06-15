@@ -1,21 +1,56 @@
 # Gesso — Long-term goals
 
-## Additional data sources (keyless / durable — CC0 datasets, not fragile API pages)
-Add adapters for these in future enrichment waves (Brooklyn & Rijksmuseum APIs were deprecated/removed):
-- [ ] **National Gallery of Art, Washington** — full open-data on GitHub, CC0 (Euro/American canon; great for Easy tier depth).
+## Additional data sources (spec)
+**Why:** broaden coverage (more global, more depth per tier) and reduce reliance on any single museum API. Prefer **keyless, durable CC0 datasets** (GitHub data dumps) over fragile live API pages — Brooklyn & Rijksmuseum APIs were deprecated/removed, which is the cautionary tale.
+
+**Candidate sources (priority order):**
+- [ ] **National Gallery of Art, Washington** — full open-data on GitHub, CC0 (Euro/American canon; great Easy/Medium depth).
 - [ ] **Minneapolis Institute of Art (MIA)** — open-data CSV on GitHub, CC0 (decent global spread).
-- [ ] **Walters Art Museum** — strong Islamic, Ethiopian, Asian, medieval holdings.
-- [ ] **Getty** & **Yale (LUX)** — large Linked-Open-Data / IIIF datasets.
+- [ ] **Walters Art Museum** — strong Islamic, Ethiopian, Asian, medieval holdings (helps de-Eurocentrism).
+- [ ] **Getty** & **Yale (LUX)** — large Linked-Open-Data / IIIF datasets (deep, but heavier to parse).
 
-Each needs: a normalizer into our schema, dedup vs existing pool (Wikidata id / title+artist), fame scoring via Wikidata sitelinks, then batch enrichment (teach-notes + hotspots) before merge.
+**The adapter pattern (reuse the existing pipeline — `scripts/consolidate.mjs` + the audit/enrich scripts):**
+1. **Fetch** the dump to `data/incoming/<source>.json` (gitignored). Pin a snapshot; don't hot-call at runtime.
+2. **License gate** — keep ONLY public-domain / CC0 images (per-record rights field). This is non-negotiable (same reason there's little post-1929 art).
+3. **Normalize** into our schema { id, title, artist, y, place, lat/lng, medium, style, styleKind, img, region, src }. Give each source a stable `src` tag + id prefix (e.g. `nga<id>`).
+4. **Geocode** origin (origin-first via CENTROIDS/GAZ tables, not holding-museum).
+5. **Dedup vs the live pool** — Wikidata Q-id first, then title+artist, then shared-image URL (the `dedup-pool.mjs` logic).
+6. **Realness check** — run `audit-p31.mjs` (drops cities/taxa/buildings/concepts) + image validation (`check-images.mjs`, Commons-API-style existence).
+7. **Fame** — Wikipedia pageviews (`grab-pageviews.mjs`) > Wikidata sitelinks fallback; canon flag if it's a known icon.
+8. **Enrich** — teach-notes + hotspots (Claude vision pass) for the high-fame additions; long tail can stay note-light.
+9. **Merge → regenerate fame → re-freeze daily**, then spot-check the new works in-app before shipping.
 
-## Training mode (targeted practice on weak spots)
-A dedicated mode (evolution of Learning mode) where the player drills exactly what they want to improve. Builds on the per-category strength/weakness stats already shown in the Learning-session summary.
-- [ ] **Auto-target weak spots:** "Practice your weak spots" — serve works that stress the categories the player scores lowest on (e.g. heavy on Movement if that's their weakest), using their session/aggregate stats.
-- [ ] **Custom filters:** let the player constrain the practice set — e.g. a single **century**, single **medium**, single **region/country**, single **movement/culture**, or any combination ("18th-century French oil paintings").
-- [ ] **Persistent skill profile:** track per-category accuracy over time (extend the `mastery` localStorage) and surface trends ("your Movement accuracy is up 12% this week").
-- [ ] **Drill formats:** optionally isolate ONE category at a time (date-only drills, map-only drills) for focused reps.
-- [ ] Needs: rich, queryable metadata on every work (century/medium/region/movement) — the recent backfill makes this feasible — plus a filter UI and a stats store.
+**Effort:** ~1 day per source for steps 1–6 (mostly a normalizer + field mapping), then enrichment is the token cost. Net-new "famous" works are the highest value (they deepen Easy/Medium); obscure long-tail mostly pads Impossible.
+
+## Training mode (spec)
+**Why:** turns endless Learning mode into *deliberate* practice — drill exactly what you're bad at, or study a slice you care about. Builds directly on the per-category / per-movement / per-region strength stats already shown in the Learning-session summary, and is the payoff for the persistent skill profile. Great differentiator + retention driver for engaged players.
+
+**Effort:** ~2–4 days for an MVP, *given* the prerequisites below are met. The work selection is just filtering the pool; the UI + a stats store are the bulk.
+
+### Prerequisites (mostly already true)
+- **Queryable per-work metadata** — century (from `y`), medium family, region, movement/culture. The recent backfill makes this real for the live pool.
+- **A skill profile** — per-category + per-movement + per-region accuracy. Session-level exists now; *persistent* needs the `mastery` localStorage extended (and ideally synced to the account — see Accounts spec).
+
+### Modes
+- [ ] **Auto weak-spot drill** — "Practice your weak spots." Pick the player's lowest-scoring axis (category, movement, or region) from their profile and bias the served set toward works that stress it (e.g. lots of Baroque if Baroque is weakest; or movement-heavy works if Movement is the weak category).
+- [ ] **Custom filters** — constrain the practice set by **century**, **medium**, **region/country**, **movement/culture**, or any combination ("18th-century French oil paintings"). Filter UI = chips/dropdowns over the metadata facets.
+- [ ] **Single-category drills** — isolate ONE guess type for focused reps (date-only, map-only, movement-only). Hides the other inputs; scores just that axis.
+
+### Mechanics
+- No streak/stats impact (like Learning mode); unlimited, free hints optional.
+- Reuse `tierItems`-style filtering but over the *whole* pool with the active facet filters applied; shuffle; serve.
+- End-of-session summary shows movement/before-after on the drilled axis ("Baroque: 54% → 71% this session").
+- Empty-filter guard: if a filter combo yields too few works, tell the player + loosen.
+
+### Persistent skill profile (shared with Accounts)
+- Extend `mastery` (currently `{byStyle, byRegion}`) to also track `byCategory` and `byCentury`, with counts + rolling accuracy.
+- Surface trends over time ("your Movement accuracy is up 12% this week") — needs dated samples, so this is best once accounts exist (server-side history); localStorage gives a single-device version in the meantime.
+
+### Phasing
+1. **Custom-filter practice** (no profile needed) — ship the facet filters over the pool. Immediately useful.
+2. **Single-category drills.**
+3. **Auto weak-spot targeting** (needs the persistent profile).
+4. **Cross-session trends** (needs accounts).
 
 ## Accounts + leaderboards (spec)
 **Why:** unlocks the thing the game is missing — *measurable retention* and a competitive/social loop. Turns "cool build" into a product with real metrics (DAU, D1/D7 retention, share rate, repeat-play lift). Dailies are already **deterministic** (everyone plays the identical puzzle), so cross-user comparison is fair with zero extra work. Stack is familiar (Upstash Redis already used on letterboxd-wrappd; `/api/` pattern + `vercel.json` routing already in place).
