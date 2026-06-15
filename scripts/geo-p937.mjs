@@ -44,13 +44,13 @@ async function sparql(qids){
     return (await r.json()).results.bindings;
   }catch(e){ await sleep(1500*(t+1)); } } return null; }
 
-const foot={}; // workQ -> {countries:Set, wl:[ordered]}
+const foot={}; // workQ -> {countries:Set, wl:[ordered], cit:Set}
 const B=45;
 for(let i=0;i<wdWorks.length;i+=B){
   const batch=wdWorks.slice(i,i+B).map(p=>qid(p.id));
   const rows=await sparql(batch);
-  if(rows){ for(const b of rows){ const w=b.work.value.split("/").pop(); const f=foot[w]=foot[w]||{countries:new Set(),wl:[]};
-    const cit=toCountry(b.p27Label&&b.p27Label.value); if(cit)f.countries.add(cit);
+  if(rows){ for(const b of rows){ const w=b.work.value.split("/").pop(); const f=foot[w]=foot[w]||{countries:new Set(),wl:[],cit:new Set()};
+    const cit=toCountry(b.p27Label&&b.p27Label.value); if(cit){f.countries.add(cit);f.cit.add(cit);}
     const wl=toCountry(b.wlcLabel&&b.wlcLabel.value); if(wl){ f.countries.add(wl); f.wl.push(wl); } } }
   if(i%450===0) console.error(`  ${i}/${wdWorks.length}`);
   await sleep(300);
@@ -65,7 +65,8 @@ for(const p of wdWorks){ const w=qid(p.id), f=foot[w]; if(!f||!f.countries.size)
   else target=[...f.countries][0];
   if(!target||!CO_BYNAME[target]) continue;
   const cc=CO_BYNAME[target], [lat,lng]=centroid(cc);
-  changes.push({id:p.id,title:p.title,artist:p.artist,from:p.place,fromC:cur,to:cc.n,footprint:[...f.countries],lat,lng});
+  const cit=[...f.cit]; const citTarget=cit.length===1?cit[0]:null; // single, unambiguous nationality
+  changes.push({id:p.id,title:p.title,artist:p.artist,from:p.place,fromC:cur,to:cc.n,footprint:[...f.countries],cit,citTarget,lat,lng});
 }
 writeFileSync("data/incoming/geo-p937-changes.json", JSON.stringify(changes,null,1));
 console.log(`\nproposed re-geocodes: ${changes.length} of ${wdWorks.length} wd works`);
