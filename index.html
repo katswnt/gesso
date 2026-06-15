@@ -828,8 +828,18 @@ function renderInfiniteSummary(){
   const rounds=results.length, total=results.reduce((a,x)=>a+x.coreNet+x.bonus,0);
   const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
   const isPerf=x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT);
+  const isMaster=x=>isPerf(x)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT;
   const perfects=results.filter(isPerf).length;
-  const masterpieces=results.filter(x=>isPerf(x)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length; // perfect + artist
+  const masterpieces=results.filter(isMaster).length; // perfect + artist
+  // which works you nailed (Perfect or Masterpiece), most impressive first
+  const nailed=results.filter(isPerf).map(r=>({title:r.it.title,master:isMaster(r)})).sort((a,b)=>b.master-a.master);
+  // per-category accuracy across the session → strengths & weaknesses
+  const CATLBL={when:'When',where:'Where',medium:'Medium',style:'Movement',artist:'Artist'};
+  const agg={}; for(const r of results){ const cats=[...r.coreCats,...(r.cells.artist?['artist']:[])];
+    for(const c of cats){ const cell=r.cells[c]; if(!cell)continue; (agg[c]=agg[c]||{sum:0,n:0}); agg[c].sum+=cell.pts; agg[c].n++; } }
+  const catPct=Object.entries(agg).map(([c,a])=>({c,pct:Math.round(a.sum/a.n/MAX_CAT*100),n:a.n})).sort((a,b)=>b.pct-a.pct);
+  const barColor=p=>p>=75?'var(--full)':p>=45?'var(--partial)':'var(--miss)';
+  const strong=catPct[0], weak=catPct.length>1?catPct[catPct.length-1]:null;
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner"><div><div class="kick">Learning session &middot; ${tier}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
@@ -841,6 +851,16 @@ function renderInfiniteSummary(){
       <div class="metarow"><span class="k">★ PERFECTS</span><span class="v">${perfects} <span style="color:var(--muted)">(all core categories maxed)</span></span></div>
       <div class="metarow"><span class="k">✦ MASTERPIECES</span><span class="v">${masterpieces} <span style="color:var(--muted)">(perfect + nailed the artist)</span></span></div>
     </div>
+    ${catPct.length?`<div style="padding:4px 24px 8px">
+      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Your strengths this session</div>
+      ${catPct.map(x=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span style="width:64px;font:600 12px 'IBM Plex Mono',monospace;color:var(--muted)">${CATLBL[x.c]||x.c}</span><span style="flex:1;height:8px;border-radius:4px;background:var(--track);overflow:hidden"><span style="display:block;height:100%;width:${x.pct}%;background:${barColor(x.pct)}"></span></span><span style="width:38px;text-align:right;font:600 12px 'IBM Plex Mono',monospace">${x.pct}%</span></div>`).join('')}
+      ${strong?`<div style="font-size:12px;color:var(--muted);margin-top:8px">💪 Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong>${weak&&weak.c!==strong.c?` &middot; 📚 most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong>`:''}.</div>`:''}
+    </div>`:''}
+    ${nailed.length?`<div style="padding:4px 24px 12px">
+      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Works you nailed</div>
+      ${nailed.slice(0,12).map(w=>`<div style="font-size:13px;margin-bottom:4px">${w.master?'✦':'★'} ${esc(w.title)}${w.master?' <span style="color:var(--muted);font-size:11px">— masterpiece</span>':''}</div>`).join('')}
+      ${nailed.length>12?`<div style="font-size:12px;color:var(--muted);margin-top:4px">+${nailed.length-12} more</div>`:''}
+    </div>`:''}
     <div style="padding:8px 24px 24px"><button class="btn" id="againinf">Play again →</button>
       <button class="btn" id="homeinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Home</button>${ATTRIB}</div>
   </div>`;
