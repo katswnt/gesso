@@ -23,23 +23,25 @@ Just edit `index.html` and refresh. (Open `file://` directly mostly works, but a
 
 ## 🎨 Design guide (start here, Briana!)
 
-Everything visual lives in **`index.html`** (one self-contained file). Two places to edit:
+All the page CSS lives in **`styles.css`** (linked from `index.html`'s `<head>` as `/styles.css`). Structure + behavior live in **`index.html`**.
 
-### 1. Design tokens — `:root` at the top of the `<style>` block (~line 18)
+> **Paths:** `index.html` has `<base href="/">`, and the app uses clean URLs like `/2026-06-15/easy`. So link assets **root-absolute** (`/styles.css`) or rely on the base tag — plain relative paths (`./x.css`) break on deep links.
+
+### 1. Design tokens — `:root` at the top of `styles.css`
 All colors/theme live here as CSS variables. Change these to restyle globally:
 ```
 --bg --surface --surface-strong --ink --muted --faint --line --line-card
 --accent (ultramarine #2230b8)  --full (green)  --partial (gold)  --miss (red)
 --study-bg --study-border  --track
 ```
-Fonts: **Archivo** (display/body) + **IBM Plex Mono** (labels/numbers), loaded from Google Fonts in `<head>`.
+Light theme overrides live under `[data-theme="light"]`. Fonts: **Archivo** (display/body) + **IBM Plex Mono** (labels/numbers), loaded from Google Fonts in `<head>`.
 
-### 2. The `<style>` block (~lines 17–366)
+### 2. Component CSS — `styles.css`
 All reusable component CSS, by class. Key classes:
-`.sheet` (page frame) · `.hd` (header bar) · `.plate` (artwork frame w/ crop-marks) · `.pill` (medium/movement options) · `.banner` (reveal score) · `.study` (teach-me note) · `.daycell`/`.tierdots` (archive) · `.btn`/`.btn2` (buttons) · responsive rules in `@media(max-width:680px)` (~line 330).
+`.sheet` (page frame) · `.hd` (header bar) · `.plate` (artwork frame w/ crop-marks) · `.pill` (medium/movement options) · `.banner` (reveal score) · `.study` (teach-me note) · `.daycell`/`.tierdots` (archive) · `.btn`/`.btn2` (buttons) · responsive rules in `@media(max-width:680px)`.
 
 ### ⚠️ The gotcha: inline styles
-~120 elements are styled **inline** (`style="…"`) inside JS template strings, not in the `<style>` block. To find a screen's markup, open the matching **render function** (below) and search there. When you can, prefer moving repeated inline styles into a class in the `<style>` block.
+~200 elements are still styled **inline** (`style="…"`) inside JS template strings in `index.html`, not in `styles.css`. To find a screen's markup, open the matching **render function** (below) and search there. When you can, prefer moving repeated inline styles into a class in `styles.css`.
 
 ### Screen → function map (all in the one `<script>`)
 | Screen | Function |
@@ -47,10 +49,11 @@ All reusable component CSS, by class. Key classes:
 | Home / tier picker | `renderStart()` |
 | A round (guessing) | `renderRound()` |
 | Reveal (score + study note) | `renderReveal()` |
-| Final results | `renderResults()` |
+| Final results | `renderFinal()` |
+| Learning mode (endless) summary | `renderInfiniteSummary()` |
 | Archive calendar | `renderArchive()` |
 | A single day (paginated) | `renderDayView()` |
-| Streak / Stats / Glossary / Movement | `renderStreak()` / `renderStats()` / `renderGlossary()` / `renderMovement()` |
+| Streak / Stats / Glossary / Movement / Collections | `renderStreak()` / `renderStats()` / `renderGlossary()` / `renderMovement()` / `renderCollections()` |
 | Settings panel | `openSettings()` |
 | Share image (canvas) | `downloadShareImage()` |
 
@@ -75,19 +78,23 @@ Vercel posts a **preview URL on every branch/PR** — open it to see your change
 ## Project structure
 
 ```
-index.html            the entire app (HTML + CSS + vanilla JS, Leaflet for maps)
+index.html            app structure + vanilla JS (Leaflet for maps)
+styles.css            all page CSS (design tokens + components) — linked as /styles.css
 vercel.json           SPA routing (so /YYYY-MM-DD/<level> deep links work)
 favicon.* etc.        icons
 data/                 generated content (don't hand-edit):
   pool.js             the artworks (window.ARTEFACTUM_POOL)
-  fame.js             recognizability scores → difficulty tiers
-  daily-order.js      frozen per-tier rotation (keeps dailies stable)
-  teach-works.js      per-work "teach me" notes
+  fame.js             recognizability scores (pageviews-driven) → difficulty tiers
+  daily-order.js      frozen rotation — Easy = curated icons (4 per day) + 1 recognizable
+  teach-works.js      per-work "teach me" notes (why + cues + guide)
   hotspots.js         look-closer marker coordinates
   cues.js             movement/culture teaching cards
-scripts/              data pipeline (Node) — pulls from museum APIs, scores fame,
-                      generates teach notes/hotspots, freezes dailies. Not needed for design work.
-tasks/                planning notes + backlog (todo.md, long-term-goals.md)
+  collections.js      themed groupings (collections page)
+  countries.js        compact country polygons for point-in-country geo scoring
+scripts/              data pipeline (Node) — pulls museum/Wikidata APIs, scores fame,
+                      generates teach notes/hotspots, audits data (P31 collisions,
+                      images), freezes dailies. Not needed for design work.
+tasks/                planning notes + backlog (todo.md, afk-plan.md)
 ```
 
 ## Data & licensing
