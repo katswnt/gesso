@@ -453,10 +453,15 @@ function loadMastery(){try{return JSON.parse(localStorage.getItem("artefactum.ma
 function saveMastery(m){try{localStorage.setItem("artefactum.mastery",JSON.stringify(m))}catch{}}
 function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]; b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m);}
 function masteryLine(){
-  const m=loadMastery(), all={...{},...m.byStyle,...m.byRegion};
-  const entries=Object.entries(m.byStyle).filter(([,v])=>v.total>=2);
+  const m=loadMastery();
+  // combine styles AND regions; tie-break by volume so the line evolves as you play more
+  // (was style-only + total>=2, which froze on an early 2/2 entry while new styles sat at total=1)
+  const merge={}; for(const b of [m.byStyle,m.byRegion]) for(const[k,v] of Object.entries(b||{})){ if(!k)continue; const e=merge[k]||(merge[k]={correct:0,total:0}); e.correct+=v.correct; e.total+=v.total; }
+  let entries=Object.entries(merge).filter(([,v])=>v.total>=2);
+  if(!entries.length) entries=Object.entries(merge).filter(([,v])=>v.total>=1); // early game: show something
   if(!entries.length) return "";
-  entries.sort((a,b)=>(b[1].correct/b[1].total)-(a[1].correct/a[1].total));
+  const ratio=v=>v.correct/v.total;
+  entries.sort((a,b)=> ratio(b[1])-ratio(a[1]) || b[1].total-a[1].total);
   const best=entries[0], worst=entries[entries.length-1];
   let s=`Sharp on <strong>${esc(best[0])}</strong> (${best[1].correct}/${best[1].total})`;
   if(worst!==best) s+=` &middot; <span class="weak">${esc(worst[0])} still slips (${worst[1].correct}/${worst[1].total})</span>`;
@@ -864,6 +869,7 @@ function renderRound(){
       <div style="display:flex;flex-direction:column">
         <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/></div>
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
+        ${it.dim&&String(it.dim).trim()?`<div class="cap" style="border-top:none;padding-top:0;margin-top:-4px;color:var(--muted)"><span>SIZE</span><span>&approx; ${esc(it.dim)}</span></div>`:''}
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
           <div class="hintchips" id="hintchips"></div>
