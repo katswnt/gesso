@@ -12,6 +12,19 @@ Up to **2,500 pts/category**, partial credit for near-misses, a shareable emoji 
 
 ---
 
+## Gameplay features
+
+- **Adaptive categories.** Each work only quizzes the categories it has data for. Artist is always a **bonus** (shown only when the maker is known). Missing categories aren't hidden — they show an explicit **"Not recorded" / "Anonymous"** placeholder in their slot, on both the play and reveal screens, so the layout stays consistent and players understand *why* something isn't asked.
+- **Difficulty tiers** (Easy → Medium → Hard → Impossible) come from **recognizability** (Wikipedia pageviews). **Easy is a curated canon**: each daily serves **4 instantly-recognizable icons + 1 very-recognizable work**, so newcomers feel smart. ~82 of the 100 most-famous works appear in any given month of Easy.
+- **Scoring.** Per-category curves with partial credit. **Time** scoring is tier-flat (a ~100-yr miss costs the same everywhere — obscure works aren't *more* dateable, so harder tiers aren't punished harder on dates). **Geo** uses real **point-in-country** containment (full credit if your pin is in the work's country, graceful distance decay otherwise, ~25 km border grace).
+- **Perfect & Masterpiece.** A **Perfect** = all core categories maxed. A **Masterpiece** = Perfect *and* you nailed the artist (the elite badge).
+- **Learning mode** (the endless "practice" mode): **free unlimited hints**, an optional **look-closer marker toggle** (reveal the hotspots before you lock in), and a session summary that counts your **Perfects** and **Masterpieces**. Doesn't affect streaks/stats.
+- **Look-closer hotspots.** Numbered markers on the reveal point at the visual cues that give away period/place/style.
+- **Settings** (gear icon): reduce-motion, colorblind swatches, and a **cm ⇄ inches** toggle for artwork dimensions.
+- **Daily, stable & shareable.** Dailies are frozen per tier (everyone gets the same puzzle); deep-linkable at `/YYYY-MM-DD/<level>`; results share as an emoji grid + a generated image card.
+
+---
+
 ## Running it locally (no build step!)
 
 ```bash
