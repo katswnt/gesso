@@ -5,7 +5,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
 const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.ARTEFACTUM_FAME=","").replace(/;\s*$/,""));
-const fameOf = id => overlay[id]||0;
+const poolFame = Object.fromEntries(pool.map(p=>[p.id, p.fame||0])); // fallback for freshly-promoted works not yet in the overlay — matches buildIndexes
+const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);
 
 // deterministic PRNG + shuffle (seeded), independent of fame so the order is frozen
 function seedHash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}

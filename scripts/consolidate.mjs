@@ -100,6 +100,17 @@ const GAZ = [
   [/tanzania|kenya|east africa/i,-3.0,36.0,"East Africa"],
   [/morocco|fez|fes/i,33.97,-6.85,"Morocco"],
   [/tunisia|carthage/i,36.8,10.18,"Tunisia"],
+  // historical states / regions (recover famous works tagged to old polities)
+  [/papal states|signoria|grand duchy of tuscany|republic of (florence|venice|genoa|siena|lucca|pisa)|duchy of (modena|ferrara|milan|savoy|urbino|mantua|parma)|kingdom of (naples|sicily|sardinia)|correggio|romagna|tuscany|lombardy|piedmont|umbria/i,41.9,12.5,"Italy"],
+  [/crown of castile|crown of aragon|kingdom of (castile|aragon|spain)|castile|andalusia|valencia/i,40.42,-3.7,"Spain"],
+  [/duchy of (lorraine|burgundy)|kingdom of france|county of (provence|toulouse)|normandy|burgundy/i,48.85,2.35,"France"],
+  [/northern low countries|dutch republic|united provinces|county of holland/i,52.37,4.9,"Netherlands"],
+  [/southern low countries|duchy of brabant|county of flanders|spanish netherlands|habsburg netherlands|prince-bishopric of li[eè]ge/i,50.85,4.35,"Belgium"],
+  [/holy roman empire|electorate of|duchy of (saxony|bavaria|w[uü]rttemberg)|kingdom of (prussia|bavaria)|free imperial city|franconia|swabia|rhineland|westphalia/i,52.52,13.4,"Germany"],
+  [/chaozhou|guangdong|jiangxi|zhejiang|fujian|sichuan|shaanxi|jiangsu|shanxi|hebei|henan|yunnan/i,39.9,116.4,"China"],
+  [/chicago|new york|boston|philadelphia|washington|massachusetts|virginia|pennsylvania/i,38.9,-77.04,"United States"],
+  [/eritrea|horn of africa/i,15.3,38.9,"Eritrea"],
+  [/arab world|middle east|near east|islamic world|mamluk|abbasid|umayyad/i,33.5,36.3,"Syria"],
   [/central africa|africa/i,6.6,20.94,"Central Africa"],
 ];
 // Test each origin signal in priority order — style/movement/culture (true origin) BEFORE
@@ -121,11 +132,11 @@ function norm(r){
   const g=geocode(r.movement,r.culture,r.place); if(!g) return {__nogeo:`${r.culture||""}|${r.place||""}`};
   const movement=cleanMov(r.movement); const culture=cleanMov(r.culture);
   const style = movement || (culture||""); const styleKind = movement?"movement":(culture?"culture":"");
-  const medium = mediumClass(r.medium);
+  const medium = r.medium||""; // keep the rich catalogue medium; the app simplifies at runtime (simplifyMedium)
   const cats=["when","where"]; if(medium)cats.push("medium"); if(style)cats.push("style"); if(r.artist)cats.push("artist");
   const region=continentOf(g.lat,g.lng);
   return { id:String(r.id), title:r.title||"Untitled", artist:r.artist||"", y, lat:g.lat, lng:g.lng,
-    place:g.place, region, style, styleKind, medium, fame: Number.isFinite(r.fameHint)?r.fameHint:0,
+    place:g.place, region, style, styleKind, medium, dim:r.dim||"", fame: Number.isFinite(r.fameHint)?r.fameHint:0,
     img, src:r.src||"mus", cats };
 }
 
