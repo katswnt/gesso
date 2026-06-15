@@ -424,7 +424,7 @@ function buildIndexes(){
   MINY=Math.min(...POOL.map(p=>p.y));
   // recompute the guessable categories from the ACTUAL fields (stale stored cats caused: medium known but
   // not guessable / shown pre-lock, artist red-box when anonymous). Generic period buckets aren't quizzed.
-  const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$|[- ]era$/i;
+  const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$/i; // vague period+geo labels are cleared in data; legit "X era/period" cultures (Meiji era, Edo period) stay quizzable
   for(const p of POOL){ p.medSimple=simplifyMedium(p.medium);
     const c=["when","where"];
     if(p.medSimple) c.push("medium");
