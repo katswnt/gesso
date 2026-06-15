@@ -1110,14 +1110,14 @@ function renderReveal(r){
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
           ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
-          ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:''}
+          ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
           ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(it.dim)}</span></div>`:''}
         </div>
         <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record &#8599;</a>
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}${!it.cats.includes('medium')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">not scored — medium not recorded for this work</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
