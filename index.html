@@ -850,22 +850,25 @@ function renderRound(){
     <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
+  // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
+  const naField=(label,icon,reason)=>({na:true, html:`<div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML(icon)}${label}</span></div>
+      <div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
   if(it.cats.includes('medium')){
     const ch=mediumChoices(it.medSimple);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('medium')}Medium</span></div>
       <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
-  }
+  } else fields.push(naField('Medium','medium','Medium not recorded — not part of this round.'));
   if(it.cats.includes('style')){
     const ch=styleChoices(it);
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
-  }
+  } else fields.push(naField('Movement','style','No movement or school recorded — not part of this round.'));
   if(it.cats.includes('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
       <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
-  }
+  } else fields.push(naField('Attributed to · bonus','artist','Anonymous — no artist on record for this work.'));
   const whereN=n;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
 
