@@ -214,8 +214,8 @@ const isNamedArtist=a=>!!a && !/\b(artist|artists|unknown|unidentified|anonymous
 // how many style options a correct-region pin leaves you, by tier (null = no geo help)
 const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
 // "right country" = full credit within this radius (km); big countries get a generous radius, then falloff beyond
-const PLACE_RADIUS=[[/united states|america|u\.s\./i,2200],[/russia|soviet/i,3000],[/canada/i,2500],[/china/i,2000],[/australia/i,1900],[/brazil/i,1800],[/india/i,1500],[/kazakh/i,1300],[/argentin/i,1500],[/indonesia/i,1700],[/mexico/i,1100],[/iran|persia/i,950],[/egypt/i,750],[/turkey|ottoman|türkiye/i,800],[/japan/i,700]];
-function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))return r;return 450;}
+const PLACE_RADIUS=[[/united states|america|u\.s\./i,1500],[/russia|soviet/i,2000],[/canada/i,1700],[/china/i,1200],[/australia/i,1300],[/brazil/i,1200],[/india/i,950],[/kazakh/i,900],[/argentin/i,1000],[/indonesia/i,1300],[/mexico/i,750],[/iran|persia/i,600],[/egypt/i,520],[/turkey|ottoman|türkiye/i,480],[/japan/i,480]];
+function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))return r;return 360;}
 function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function lastName(s){return norm(s).split(' ').pop();}
