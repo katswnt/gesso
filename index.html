@@ -840,6 +840,13 @@ function renderInfiniteSummary(){
   const catPct=Object.entries(agg).map(([c,a])=>({c,pct:Math.round(a.sum/a.n/MAX_CAT*100),n:a.n})).sort((a,b)=>b.pct-a.pct);
   const barColor=p=>p>=75?'var(--full)':p>=45?'var(--partial)':'var(--miss)';
   const strong=catPct[0], weak=catPct.length>1?catPct[catPct.length-1]:null;
+  // strengths by MOVEMENT and by REGION (round accuracy = coreNet/baseMax), groups with ≥2 works
+  const groupAcc=keyFn=>{ const g={}; for(const r of results){ const k=keyFn(r.it); if(!k)continue; const acc=r.baseMax?r.coreNet/r.baseMax:0; (g[k]=g[k]||{s:0,n:0}); g[k].s+=acc; g[k].n++; }
+    return Object.entries(g).filter(([,a])=>a.n>=2).map(([k,a])=>({k,pct:Math.round(a.s/a.n*100)})).sort((a,b)=>b.pct-a.pct); };
+  const byMov=groupAcc(it=>(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null);
+  const byReg=groupAcc(it=>it.region);
+  const insight=(arr,label)=>{ if(arr.length<1)return''; const hi=arr[0], lo=arr.length>1?arr[arr.length-1]:null;
+    return `<div style="font-size:12.5px;margin-bottom:5px"><span style="color:var(--muted)">${label}:</span> 💪 <strong>${esc(hi.k)}</strong> ${hi.pct}%${lo&&lo.k!==hi.k?` &middot; 📚 <strong>${esc(lo.k)}</strong> ${lo.pct}%`:''}</div>`; };
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner"><div><div class="kick">Learning session &middot; ${tier}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
@@ -855,6 +862,11 @@ function renderInfiniteSummary(){
       <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Your strengths this session</div>
       ${catPct.map(x=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span style="width:64px;font:600 12px 'IBM Plex Mono',monospace;color:var(--muted)">${CATLBL[x.c]||x.c}</span><span style="flex:1;height:8px;border-radius:4px;background:var(--track);overflow:hidden"><span style="display:block;height:100%;width:${x.pct}%;background:${barColor(x.pct)}"></span></span><span style="width:38px;text-align:right;font:600 12px 'IBM Plex Mono',monospace">${x.pct}%</span></div>`).join('')}
       ${strong?`<div style="font-size:12px;color:var(--muted);margin-top:8px">💪 Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong>${weak&&weak.c!==strong.c?` &middot; 📚 most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong>`:''}.</div>`:''}
+    </div>`:''}
+    ${(byMov.length||byReg.length)?`<div style="padding:0 24px 10px">
+      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">By movement &amp; region</div>
+      ${insight(byMov,'Movements')}${insight(byReg,'Regions')}
+      <div style="font-size:11px;color:var(--faint);margin-top:4px">Based on this session — play more to sharpen the picture.</div>
     </div>`:''}
     ${nailed.length?`<div style="padding:4px 24px 12px">
       <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Works you nailed</div>
