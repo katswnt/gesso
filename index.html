@@ -879,8 +879,7 @@ function renderRound(){
       <div style="display:flex;flex-direction:column">
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
-        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
-        ${it.dim&&String(it.dim).trim()?`<div class="cap" style="border-top:none;padding-top:0;margin-top:-4px;color:var(--muted)"><span>SIZE</span><span>&approx; ${esc(it.dim)}</span></div>`:''}
+        <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(it.dim)):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
           <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`free &middot; <span id="hintsleft">&infin;</span> in learning mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
           <div class="hintchips" id="hintchips"></div>
