@@ -118,6 +118,9 @@ const HOWTO_STEPS=[
   {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — that one's a bonus."},
   {key:'lock',title:'Lock in & learn',body:"Hit Lock in to reveal the answer and a short story about the work. Even a rough guess beats a blank — partial credit always counts. Stuck? A hint costs 500."},
 ];
+// learning-mode look-closer toggle glyphs (retire 👁 / 🙈) — loupe-with-dot / eye-struck-through
+const LOOK_EYE='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.3"/><path d="M15.3 15.3L21 21"/><circle cx="10.5" cy="10.5" r="1.7" fill="currentColor" stroke="none"/></svg>';
+const LOOK_EYE_OFF='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M2.5 12S5.8 5.8 12 5.8s9.5 6.2 9.5 6.2-3.3 6.2-9.5 6.2c-1 0-1.9-.16-2.7-.42"/><path d="M7.4 7.4 18.6 18.6" stroke-width="1.9"/><path d="M9.6 9.6a3.4 3.4 0 004.8 4.8"/></svg>';
 function howtoIcon(key){
   const s='fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
   const m={
@@ -875,7 +878,7 @@ function renderRound(){
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
-        ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px">👁 Reveal look-closer markers</button>`:''}
+        ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         ${it.dim&&String(it.dim).trim()?`<div class="cap" style="border-top:none;padding-top:0;margin-top:-4px;color:var(--muted)"><span>SIZE</span><span>&approx; ${esc(it.dim)}</span></div>`:''}
         <div class="hintbox">
@@ -911,7 +914,7 @@ function renderRound(){
   wireHints(it);
   // learning-mode: reveal look-closer markers before locking in
   const ht=document.getElementById('hottoggle'); if(ht) ht.onclick=()=>{ const lm=document.getElementById('prelookmarks'); if(!lm)return;
-    const on=lm.style.display==='none'; lm.style.display=on?'block':'none'; ht.textContent=on?'🙈 Hide look-closer markers':'👁 Reveal look-closer markers'; };
+    const on=lm.style.display==='none'; lm.style.display=on?'block':'none'; ht.innerHTML=on?`${LOOK_EYE_OFF} Hide look-closer markers`:`${LOOK_EYE} Reveal look-closer markers`; };
   // map
   marker=null;
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
