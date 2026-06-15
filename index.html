@@ -1406,7 +1406,9 @@ function renderFinal(){
 
 // ---------- zoom lightbox ----------
 function hiRes(src){
-  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met full-res
+  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met: 622px → ~3800px
+  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1600,/"); // IIIF (AIC, V&A): 843px → 1600px
+  if(src.includes("clevelandart.org")) return src.replace("_web.jpg","_print.jpg"); // Cleveland: 900px → ~3400px
   return src.replace(/width=\d+/,"width=2000"); // Wikimedia Commons larger render
 }
 function openZoom(src){
