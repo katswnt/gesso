@@ -27,6 +27,7 @@
 <script src="data/fame.js"></script>
 <script src="data/daily-order.js"></script>
 <script src="data/collections.js"></script>
+<script src="data/countries.js"></script>
 <script>
 "use strict";
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
@@ -219,6 +220,29 @@ const GEO_LEAVE={easy:2, medium:2, hard:3, impossible:null};
 // "right country" = full credit within this radius (km); big countries get a generous radius, then falloff beyond
 const PLACE_RADIUS=[[/united states|america|u\.s\./i,1500],[/russia|soviet/i,2000],[/canada/i,1700],[/china/i,1200],[/australia/i,1300],[/brazil/i,1200],[/india/i,950],[/kazakh/i,900],[/argentin/i,1000],[/indonesia/i,1300],[/mexico/i,750],[/iran|persia/i,600],[/egypt/i,520],[/turkey|ottoman|türkiye/i,480],[/japan/i,480]];
 function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))return r;return 360;}
+
+// --- point-in-country containment (data/countries.js) — full credit iff pin's country === work's country ---
+const COUNTRIES = (window.ARTEFACTUM_COUNTRIES||[]);
+const CO_BYNAME = {}; for(const c of COUNTRIES) CO_BYNAME[c.n.toLowerCase()] = c;
+// map our place strings → Natural-Earth country names (only the mismatches; most match directly)
+const PLACE_ALIAS = {"united states":"united states of america","usa":"united states of america","u.s.":"united states of america","america":"united states of america","korea":"south korea","dr congo":"democratic republic of the congo","congo":"democratic republic of the congo","côte d'ivoire":"ivory coast","cote d'ivoire":"ivory coast","türkiye":"turkey","ottoman empire":"turkey","czech republic":"czechia","russia (soviet)":"russia","soviet union":"russia","ussr":"russia"};
+function placeCountry(place){ // resolve a work's place string to a COUNTRIES feature (or null)
+  let c=String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim().toLowerCase(); // strip "(Rome)", take first of "Nepal / Tibet"
+  if(!c) return null; c = PLACE_ALIAS[c]||c;
+  return CO_BYNAME[c]||null;
+}
+function ptInRing(x,y,ring){ let inside=false; for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
+  if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; }
+function ptInCountry(lat,lng,c){ if(!c) return false; const[mnx,mny,mxx,mxy]=c.b; if(lng<mnx||lng>mxx||lat<mny||lat>mxy) return false;
+  for(const ring of c.r) if(ptInRing(lng,lat,ring)) return true; return false; }
+function countryOf(lat,lng){ for(const c of COUNTRIES){ const[mnx,mny,mxx,mxy]=c.b; if(lng<mnx||lng>mxx||lat<mny||lat>mxy) continue;
+  for(const ring of c.r) if(ptInRing(lng,lat,ring)) return c; } return null; }
+// inside the country OR within graceKm of its border — fixes coastal false-negatives from the
+// simplified outline AND gives a little border grace (borders are modern; just-across still counts)
+function nearCountry(lat,lng,c,graceKm=25){ if(!c) return false; if(ptInCountry(lat,lng,c)) return true;
+  const cos=Math.cos(lat*Math.PI/180); let best=1e9;
+  for(const ring of c.r) for(const[x,y] of ring){ const d=Math.hypot((x-lng)*cos,(y-lat))*111; if(d<best){ best=d; if(best<=graceKm) return true; } }
+  return false; }
 function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function deaccent(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();} // accent-insensitive matching (Dürer ↔ durer)
@@ -882,7 +906,8 @@ function renderRound(){
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
     const leave=GEO_LEAVE[tier];
-    const rightRegion=continentOf(lat,lng)===it.region || km(lat,lng,it.lat,it.lng)<=radiusFor(it.place);
+    const wcR=placeCountry(it.place);
+    const rightRegion=continentOf(lat,lng)===it.region || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
@@ -946,10 +971,13 @@ function score(){
   cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
     note:bull?(dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   // where (distance falloff is gentler on easy, steeper on hard)
-  let dist=null,sp=0,rad=radiusFor(it.place); if(guess.ll){dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
-    sp = dist<=rad ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(dist-rad)/D.distK));}
+  let dist=null,sp=0,inC=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
+  if(guess.ll){ dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
+    inC = wc ? nearCountry(guess.ll.lat,guess.ll.lng,wc) : (dist<=rad); // in the work's country = full credit
+    // outside the country still scores by distance (borders are modern; close-by is not zero)
+    sp = inC ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(Math.max(0,dist-rad))/D.distK));}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
-    note:dist==null?"no pin dropped":dist<=rad?"right country":`${Math.round(dist)} km off`};
+    note:dist==null?"no pin dropped":inC?"right country":`${Math.round(dist)} km off`};
   // medium
   if(it.cats.includes('medium')){let s=0,note="no answer";
     if(guess.medium){ if(guess.medium===it.medSimple){s=MAX_CAT;note="exact";}
