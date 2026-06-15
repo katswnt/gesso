@@ -15,9 +15,23 @@ function seededShuffle(arr,seedStr){const r=mulberry32(seedHash(seedStr));const 
 
 const ranked = pool.slice().sort((a,b)=>fameOf(b.id)-fameOf(a.id));
 const n = ranked.length;
-const cuts=[0, Math.round(n*0.10), Math.round(n*0.35), Math.round(n*0.65), n];
-const keys=["easy","medium","hard","impossible"];
 const out={};
-keys.forEach((k,i)=>{ const ids=ranked.slice(cuts[i],cuts[i+1]).map(p=>p.id); out[k]=seededShuffle(ids,`gesso-daily-freeze-v1|${k}`); });
+
+// --- EASY = two bands so every daily is 4 instantly-recognizable icons + 1 very-recognizable work ---
+const T1_SIZE=110, T2_SIZE=300; // T1 icons (canon + top pageviews), T2 recognizable
+const T1ids = ranked.slice(0, T1_SIZE).map(p=>p.id);
+const T2ids = ranked.slice(T1_SIZE, T1_SIZE+T2_SIZE).map(p=>p.id);
+const T1s=seededShuffle(T1ids,"gesso-easy-t1-v2"), T2s=seededShuffle(T2ids,"gesso-easy-t2-v2");
+const nBlocks=Math.max(Math.ceil(T1s.length/4), T2s.length); // cycle both bands fully
+const easy=[];
+for(let b=0;b<nBlocks;b++){ for(let k=0;k<4;k++) easy.push(T1s[(b*4+k)%T1s.length]); easy.push(T2s[b%T2s.length]); }
+out.easy=easy; // length nBlocks*5; dailyItems windows by 5 → 4 T1 + 1 T2 per day
+
+// --- MEDIUM / HARD / IMPOSSIBLE = the remaining works by recognizability, split in thirds ---
+const rest=ranked.slice(T1_SIZE+T2_SIZE).map(p=>p.id); const r=rest.length;
+const mc=[0, Math.round(r*0.34), Math.round(r*0.67), r];
+["medium","hard","impossible"].forEach((k,i)=>{ out[k]=seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`); });
+
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
-console.log("froze daily order:", keys.map(k=>`${k} ${out[k].length}`).join(" / "), "— each work recurs no sooner than (len/5) days:", keys.map(k=>`${k} ~${Math.round(out[k].length/5)}d`).join(", "));
+console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2s.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);
+console.log("Easy daily = 4 icons + 1 recognizable; icons recur ~"+Math.round(T1s.length/4)+"d");

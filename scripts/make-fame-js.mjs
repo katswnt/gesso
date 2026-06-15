@@ -23,7 +23,10 @@ for(const p of pool){
   const e=fame[p.id]||{};
   const sl=Number.isFinite(e.sitelinks)?e.sitelinks:(Number.isFinite(p.fame)?p.fame:0);
   const pv=Number.isFinite(e.pageviews)?e.pageviews:0;
-  let f = 100*ln(sl+1) + 12*ln(pv+1);
+  // RECOGNIZABILITY: Wikipedia pageviews (real pop-fame) dominate; sitelinks a weak tiebreak.
+  // (Old formula was sitelink-dominant → buried icons under museum-catalog-rich obscurities.)
+  let f = 120*ln(pv+1) + 8*ln(sl+1);
+  if(p.canon) f += 2000; // hand-curated icons always rank at the very top (Easy)
   if(f>0 && !p.artist && isGeneric(p.title)){ f=0; zeroed++; } // generic-title concept-collision guard
   // structural collision guard: anonymous work + implausibly high fame + a short bare-noun title
   // (no digits/proper-noun markers) almost always matched the *concept* article, not the object
