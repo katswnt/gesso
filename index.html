@@ -759,7 +759,7 @@ function renderStart(dateStr,push=true){
     </div>
     ${replay?'':`<div class="practice">
       <div class="pinf">&infin;</div>
-      <div class="ptxt"><div class="h">Practice mode</div><p>Done with today&rsquo;s five? Keep going &mdash; endless works, no limit. Won&rsquo;t affect your streak or stats.</p></div>
+      <div class="ptxt"><div class="h">Learning mode</div><p>Keep going &mdash; endless works, <strong>free unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
       <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
@@ -815,7 +815,7 @@ function renderInfiniteSummary(){
   const rounds=results.length, total=results.reduce((a,x)=>a+x.coreNet+x.bonus,0);
   const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
-    <div class="banner"><div><div class="kick">Infinite session &middot; ${tier}</div>
+    <div class="banner"><div><div class="kick">Learning session &middot; ${tier}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted)">avg pts / round &middot; ${rounds} round${rounds===1?'':'s'}</span></div></div></div>
     <div style="padding:20px 24px;display:flex;flex-direction:column;gap:9px">
@@ -836,6 +836,7 @@ function renderRound(){
   // seed distractor shuffles per date+tier+work so the option set is the same for everyone (fair/deterministic)
   window.__RNG=mulberry32(seedHash((runDate||todayStr())+'|'+tier+'|'+idx)); Promise.resolve().then(()=>{window.__RNG=null;});
   const it=game[idx];
+  const pstudy = infinite ? studyFor(it) : {cues:[]}; // learning-mode pre-lock hotspot tooltips
   guess={year:1700, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
   let n=1; const fields=[];
@@ -867,11 +868,12 @@ function renderRound(){
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
-        <div class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/></div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(it.img)}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px">👁 Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         ${it.dim&&String(it.dim).trim()?`<div class="cap" style="border-top:none;padding-top:0;margin-top:-4px;color:var(--muted)"><span>SIZE</span><span>&approx; ${esc(it.dim)}</span></div>`:''}
         <div class="hintbox">
-          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left</span></div>
+          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`free &middot; <span id="hintsleft">&infin;</span> in learning mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
           <div class="hintchips" id="hintchips"></div>
           <div class="hinttext" id="hintout" style="display:none"></div>
         </div>
@@ -901,6 +903,9 @@ function renderRound(){
   if(it.cats.includes('artist')) setupAutocomplete();
   // hints
   wireHints(it);
+  // learning-mode: reveal look-closer markers before locking in
+  const ht=document.getElementById('hottoggle'); if(ht) ht.onclick=()=>{ const lm=document.getElementById('prelookmarks'); if(!lm)return;
+    const on=lm.style.display==='none'; lm.style.display=on?'block':'none'; ht.textContent=on?'🙈 Hide look-closer markers':'👁 Reveal look-closer markers'; };
   // map
   marker=null;
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
@@ -947,16 +952,17 @@ function wireHints(it){
   if(it.cats.includes('style')){const kind=(typeof CULTS!=='undefined'&&CULTS.includes(it.style))?'cultures':'movements';
     opts.push({key:"50/50",label:`rule out 2 ${kind}`,txt:()=>{const k=apply5050(it); return k>0?{text:`Two unlikely ${kind} removed from the options.`}:{text:`Already narrowed to two — no charge.`,charged:false};}});}
   if(it.cats.includes('artist')&&isNamedArtist(it.artist)) opts.push({key:"initials",label:"artist's initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
-  chips.innerHTML=opts.map(o=>`<button type="button" class="hintchip" data-k="${o.key}">${o.label}<span class="cost">&minus;${HINT_COST}</span></button>`).join('');
-  const refresh=()=>{const rem=HINT_LIMIT-hintsUsed; left.textContent=rem;
+  const HL=infinite?Infinity:HINT_LIMIT, HC=infinite?0:HINT_COST; // learning mode: unlimited + free hints
+  chips.innerHTML=opts.map(o=>`<button type="button" class="hintchip" data-k="${o.key}">${o.label}${HC?`<span class="cost">&minus;${HC}</span>`:''}</button>`).join('');
+  const refresh=()=>{const rem=HL-hintsUsed; if(left)left.textContent=Number.isFinite(rem)?rem:'∞';
     chips.querySelectorAll('.hintchip').forEach(b=>{if(!b.classList.contains('used'))b.disabled=rem<=0;});};
   chips.querySelectorAll('.hintchip').forEach(b=>{
-    b.onclick=()=>{if(hintsUsed>=HINT_LIMIT||b.classList.contains('used'))return;
+    b.onclick=()=>{if(hintsUsed>=HL||b.classList.contains('used'))return;
       const o=opts.find(x=>x.key===b.dataset.k); if(!o)return;
       const r=o.txt(), text=typeof r==='string'?r:r.text, charged=typeof r==='string'?true:r.charged!==false;
       b.classList.add('used'); b.disabled=true; out.style.display='block';
-      if(charged){ guess.hints.add(o.label); hintsUsed++;
-        out.insertAdjacentHTML('beforeend',`<div>${text} <span style="color:var(--accent)">−${HINT_COST}</span></div>`); }
+      if(charged){ if(HC)guess.hints.add(o.label); hintsUsed++;
+        out.insertAdjacentHTML('beforeend',`<div>${text}${HC?` <span style="color:var(--accent)">−${HC}</span>`:''}</div>`); }
       else out.insertAdjacentHTML('beforeend',`<div>${text}</div>`);
       refresh();};
   });
