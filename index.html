@@ -36,9 +36,9 @@ const HOTSPOTS = window.ARTEFACTUM_HOTSPOTS || {};
 // difficulty tunes scoring leniency + how confusable the distractors are
 const DIFF={
   easy:      {distK:4500, relMov:0.70, timeMult:1.3, look:'far'},
-  medium:    {distK:2500, relMov:0.50, timeMult:1.1, look:'mix'},
-  hard:      {distK:1500, relMov:0.35, timeMult:0.9, look:'near'},
-  impossible:{distK:1000, relMov:0.25, timeMult:0.75, look:'near'},
+  medium:    {distK:2500, relMov:0.50, timeMult:1.3, look:'mix'},
+  hard:      {distK:1500, relMov:0.35, timeMult:1.35, look:'near'},
+  impossible:{distK:1000, relMov:0.25, timeMult:1.4, look:'near'},
 };
 const dcfg=()=>DIFF[tier]||DIFF.medium;
 
@@ -436,7 +436,7 @@ function buildIndexes(){
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
   MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
-  ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra])].sort();
+  ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra].map(a=>a.normalize("NFC")))].sort();
   artistStyle={}; styleRegion={}; styleCountry={};
   const placeCounts={};
   for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
