@@ -11,6 +11,7 @@ Wikidata items that are COUNTRIES/CULTURES (e.g. "Uganda", "Ethiopia") got pulle
 ## ✅ 1. DONE — Audit tool + data clean pass (commit 3b42457)
 - `scripts/audit-data.mjs` built (permanent, read-only → data/incoming/audit/*.json).
 - Normalized 13 historical-polity place labels → modern country+centroid; purged 2 stray country-entities (South Africa, Eritrea); structural fame-collision guard (anon + high fame + short bare-noun title) zeroed 61 (Strigil/Garden Carpet/Opium Pipe class). fame.js + daily re-frozen. fameCollision & entities now 0 in re-audit.
+- ✅ **P937 pass DONE** (`scripts/geo-p937.mjs`): applied 28 Wikidata-verified single-country holding-museum fixes (Constable/Gainsborough italy→UK, Flemish Primitives netherlands→Belgium, Renoir/Cleopatra, Rossetti). Excluded 3 bad-source cases. 54 ambiguous multi-country cases (Rubens/van Dyck Prado works) → data/incoming/geo-p937-review.json for a careful manual pass. Original note below kept for context.
 - **DEFERRED (needs Wikidata P937):** 153 artist-origin flags are mostly LEGIT (Van Gogh painted Starry Night in France; Whistler in UK; Benin mask correctly Nigeria). A few are real holding-museum contamination ("Pink and Blue"/Renoir → Brazil = São Paulo museum). Left flagged in data/incoming/audit/artistOrigin.json for a targeted location-of-creation (P937) pass — blanket birth-country re-geocode would break more than it fixes.
 - 1c (alias/typo artist matching) still TODO.
 
