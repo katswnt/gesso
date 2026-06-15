@@ -8,7 +8,16 @@ Wikidata items that are COUNTRIES/CULTURES (e.g. "Uganda", "Ethiopia") got pulle
 - After purge: regenerate fame.js + re-freeze daily.
 - Build this into the audit tool (flag P31=country/place) so it can't recur.
 
-## 1. Audit tool + data clean pass (highest leverage — catches the El-Greco/Goya class)
+## ✅ 1. DONE — Audit tool + data clean pass (commit 3b42457)
+- `scripts/audit-data.mjs` built (permanent, read-only → data/incoming/audit/*.json).
+- Normalized 13 historical-polity place labels → modern country+centroid; purged 2 stray country-entities (South Africa, Eritrea); structural fame-collision guard (anon + high fame + short bare-noun title) zeroed 61 (Strigil/Garden Carpet/Opium Pipe class). fame.js + daily re-frozen. fameCollision & entities now 0 in re-audit.
+- **DEFERRED (needs Wikidata P937):** 153 artist-origin flags are mostly LEGIT (Van Gogh painted Starry Night in France; Whistler in UK; Benin mask correctly Nigeria). A few are real holding-museum contamination ("Pink and Blue"/Renoir → Brazil = São Paulo museum). Left flagged in data/incoming/audit/artistOrigin.json for a targeted location-of-creation (P937) pass — blanket birth-country re-geocode would break more than it fixes.
+- 1c (alias/typo artist matching) still TODO.
+
+## ✅ 2. DONE — point-in-country geo (commit fb97bb2)
+data/countries.js (NE 110m, 177 countries, 159KB static). Full credit iff pin in/within 25km of work's country, else graceful distance decay (never hard-zero for close-but-cross-border, per Kat: borders are modern). Verified Beijing≠Japan, Amsterdam≠Belgium, Guatemala labelled right.
+
+## (orig) 1. Audit tool + data clean pass
 **1a. `scripts/audit-data.mjs`** (permanent, deterministic — already prototyped, it works): flags
   - artist-origin mismatch (place ≠ where the artist worked) — caught Goya→"Italy (Rome)", Gauguin/Sargent/Copley mislocated;
   - fame collisions (anon/generic-title works with implausibly high fame — "Madurodam" 451, "Iznik dish", "Spandrel");
@@ -27,14 +36,25 @@ Radius-from-the-work's-point is fundamentally leaky for adjacent/small countries
 - Score: **full credit iff pin's country === work's country**, else decay by distance. Keep a small border grace so a pin just over a line still scores high.
 - One change fixes all three geo bugs + the Guatemala "Mexico" mislabel.
 
-## 3. Quick pair — dimensions pre-lock + mastery tracker
+## ✅ 3. DONE (commit a0ed177) — dimensions pre-lock + mastery fix
+SIZE row on play screen; masteryLine merges style+region & tie-breaks by volume (no longer freezes on early 2/2).
+
+## ✅ 4. DONE (commit 85bdb97) — Learning mode
+Renamed Practice→Learning; free unlimited hints; pre-lock look-closer marker toggle; notes still post-lock.
+
+## (orig) 3. Quick pair — dimensions pre-lock + mastery tracker
 - **Dimensions pre-lock (T2):** show "≈ 73 × 92 cm" near the image on the PLAY screen (dimensions aren't a guess category → safe, gives scale). Dim survived promotion (3,184/4,583 have it).
 - **Mastery (#8):** "Your mastery" stuck at "Sharp on Regionalism (2/2)…" — trace whether saveMastery persists / masteryLine reads current data (likely stale-display or limited-keys). Quick.
 
 ## 4. Learning mode (T1)
 Rename infinite → "Learning mode": **unlimited hints**; a **hotspot toggle** visible pre-lock; notes still gated to post-lock.
 
-## 5. Lower-urgency data
+## 🔄 5. IN PROGRESS — lower-urgency data
+- ✅ #12 duplicates: session-level guard (no same-title work twice per game) + removed 1 true shared-image dup (commit pending push). Did NOT title-dedup the pool — sets like 23 Shabti of Nauny are real distinct objects.
+- 🔄 #3 broken images: `scripts/check-images.mjs` running in background → data/incoming/broken-images.json. Process when done (try alt Commons file, else drop + refreeze).
+- ⏳ ~181 place-less staged works: recover via artist-nationality geocode — folds into the deferred Wikidata P937 pass (see #1).
+
+## (orig) 5. Lower-urgency data
 - **#12 duplicates** (same work, different photo): conservative dedup — anonymous works on `title+place+year` (NOT generic-title alone, to avoid merging distinct "Figure"/"Untitled" objects); flag rest.
 - **#3 broken images** ("Image unavailable", some with hotspots): URL-validation pass (HEAD) → for 404s try the alternate Commons file or flag/drop.
 - The ~181 staged works that were too place-less to promote (recoverable via artist-nationality geocode in 1b).
