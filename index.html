@@ -670,7 +670,10 @@ function dailyItems(key,dateStr){
   const len=perm.length; if(!len) return [];
   const day=Math.floor(parseLocalDate(dateStr).getTime()/86400000);
   const start=((day*ROUNDS)%len+len)%len;
-  const out=[]; for(let k=0;k<ROUNDS;k++) out.push(perm[(start+k)%len]);
+  // never show the same work twice in one session: skip same-title repeats, pull the next distinct work
+  const out=[], seen=new Set(); const tkey=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  for(let k=0;k<len&&out.length<ROUNDS;k++){ const p=perm[(start+k)%len]; if(!p)continue; const tk=tkey(p); if(seen.has(tk))continue; seen.add(tk); out.push(p); }
+  while(out.length<ROUNDS&&len) out.push(perm[(start+out.length)%len]); // tiny-pool safety pad
   return out;
 }
 function addPalestine(m){ return; /* label overlay removed — clashed with localized basemap labels */ try{ L.marker([31.95,35.23],{interactive:false,keyboard:false,
