@@ -450,11 +450,55 @@ function bumpGlossary(name){
   saveGlossary(g); return g;
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
+// Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
+const COLL_BUCKET={aic:"aic",modern:"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard",va:"va",smithsonian:"smithsonian",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
+const COLL_META={
+  aic:{name:"Art Institute of Chicago",city:"Chicago, USA",lat:41.8796,lng:-87.6237,url:"https://www.artic.edu",blurb:"Open-access API; thousands of CC0 public-domain works."},
+  met:{name:"The Metropolitan Museum of Art",city:"New York, USA",lat:40.7794,lng:-73.9632,url:"https://www.metmuseum.org",blurb:"CC0 open access — a global collection, strong outside the West."},
+  wiki:{name:"Wikidata & Wikimedia Commons",city:"Distributed · online",lat:null,lng:null,url:"https://www.wikidata.org",blurb:"The famous canon: metadata from Wikidata, images from Commons."},
+  cleveland:{name:"Cleveland Museum of Art",city:"Cleveland, USA",lat:41.5085,lng:-81.6116,url:"https://www.clevelandart.org",blurb:"Open Access — CC0 images and data since 2019."},
+  harvard:{name:"Harvard Art Museums",city:"Cambridge, USA",lat:42.3744,lng:-71.1144,url:"https://www.harvardartmuseums.org",blurb:"One open API across three museums; deep Asian & Islamic holdings."},
+  va:{name:"Victoria and Albert Museum",city:"London, UK",lat:51.4966,lng:-0.1722,url:"https://www.vam.ac.uk",blurb:"The V&A — the world's leading art & design collection, via API."},
+  smithsonian:{name:"Smithsonian Open Access",city:"Washington, DC, USA",lat:38.8888,lng:-77.0260,url:"https://www.si.edu",blurb:"CC0 across the Smithsonian, incl. the National Museums of African & Asian Art."},
+};
+const COLL_VIA_WD=[ // famous collections we draw from via Wikidata (sitelink-ranked); shown on the map
+  {name:"Museo del Prado",city:"Madrid",lat:40.4138,lng:-3.6921,url:"https://www.museodelprado.es"},
+  {name:"Louvre",city:"Paris",lat:48.8606,lng:2.3376,url:"https://www.louvre.fr"},
+  {name:"National Gallery",city:"London",lat:51.5089,lng:-0.1283,url:"https://www.nationalgallery.org.uk"},
+  {name:"Uffizi",city:"Florence",lat:43.7678,lng:11.2553,url:"https://www.uffizi.it"},
+  {name:"Rijksmuseum",city:"Amsterdam",lat:52.3600,lng:4.8852,url:"https://www.rijksmuseum.nl"},
+  {name:"National Gallery of Art",city:"Washington, DC",lat:38.8913,lng:-77.0200,url:"https://www.nga.gov"},
+  {name:"Fine Arts Museums of SF",city:"San Francisco",lat:37.7715,lng:-122.4687,url:"https://www.famsf.org"},
+  {name:"National Palace Museum",city:"Taipei",lat:25.1024,lng:121.5485,url:"https://www.npm.gov.tw"},
+  {name:"Tokyo National Museum",city:"Tokyo",lat:35.7188,lng:139.7766,url:"https://www.tnm.jp"},
+  {name:"National Museum of Korea",city:"Seoul",lat:37.5240,lng:126.9803,url:"https://www.museum.go.kr"},
+  {name:"Topkapı Palace Museum",city:"Istanbul",lat:41.0115,lng:28.9834,url:"https://www.millisaraylar.gov.tr"},
+  {name:"Egyptian Museum",city:"Cairo",lat:30.0478,lng:31.2336,url:"https://egymonuments.gov.eg"},
+];
+const COLL_CANON=[
+  {name:"Musée du Louvre",city:"Paris",url:"https://www.louvre.fr",work:"Mona Lisa"},
+  {name:"Museo del Prado",city:"Madrid",url:"https://www.museodelprado.es",work:"Las Meninas"},
+  {name:"Rijksmuseum",city:"Amsterdam",url:"https://www.rijksmuseum.nl",work:"The Night Watch"},
+  {name:"Museum of Modern Art",city:"New York",url:"https://www.moma.org",work:"The Starry Night"},
+  {name:"Musée d'Orsay",city:"Paris",url:"https://www.musee-orsay.fr",work:"Luncheon on the Grass"},
+  {name:"Galleria degli Uffizi",city:"Florence",url:"https://www.uffizi.it",work:"The Birth of Venus"},
+  {name:"Vatican Museums",city:"Vatican City",url:"https://www.museivaticani.va",work:"Laocoön and His Sons"},
+  {name:"National Palace Museum",city:"Taipei",url:"https://www.npm.gov.tw",work:"Dwelling in the Fuchun Mountains"},
+  {name:"Egyptian Museum",city:"Cairo",url:"https://egymonuments.gov.eg",work:"Narmer Palette"},
+  {name:"Tokyo National Museum",city:"Tokyo",url:"https://www.tnm.jp",work:"The Great Wave"},
+];
+function computeCollections(){
+  const by=f=>{const o={};for(const p of POOL){const k=f(p);if(k)o[k]=(o[k]||0)+1;}return Object.entries(o).sort((a,b)=>b[1]-a[1]);};
+  const era=p=>{const y=p.y;return y<0?"Before 1 CE":y<500?"1–500":y<1400?"500–1400":y<1600?"1400–1600":y<1750?"1600–1750":y<1860?"1750–1860":y<1900?"1860–1900":"1900+";};
+  const counts={};for(const p of POOL){const b=COLL_BUCKET[p.src]||"wiki";counts[b]=(counts[b]||0)+1;}
+  const sources=Object.keys(COLL_META).map(k=>({...COLL_META[k],count:counts[k]||0})).sort((a,b)=>b.count-a.count);
+  return { total:POOL.length, region:by(p=>p.region), origins:by(p=>p.place).slice(0,20), sources, canon:COLL_CANON, viaWd:COLL_VIA_WD };
+}
 function renderCollections(){
   clearTimers();
-  const C=window.ARTEFACTUM_COLLECTIONS||{total:0,region:[],sources:[],canon:[]};
+  const C=computeCollections();
   const dom=u=>u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
-  const pinnable=C.sources.filter(s=>s.lat!=null).length;
+  const pinnable=C.sources.filter(s=>s.lat!=null).length+C.viaWd.length;
   const maxR=Math.max(1,...C.region.map(r=>r[1]));
   const REGCOL={Asia:'#7480d4',Europe:'#3f4cbe','North America':'#aeb6e3',Africa:'#2f8f5b','South America':'#cf9f3a',Oceania:'#c14b3a'};
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
@@ -484,7 +528,10 @@ function renderCollections(){
     <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
     <div class="kick" style="margin:34px 0 14px">The collections, mapped</div>
     <div id="colmap" style="height:340px;border:1px solid var(--line-card);border-radius:8px;overflow:hidden"></div>
-    <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Wikidata / Wikimedia is distributed online — not pinned.</div>
+    <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Smaller pins: famous collections we draw from via Wikidata.</div>
+    <div class="kick" style="margin:30px 0 10px">Famous collections, via Wikidata</div>
+    <p style="color:var(--muted);line-height:1.55;font-size:14px;margin:0 0 14px">Their most-recognized works reach us through Wikidata &amp; Wikimedia Commons (public-domain images), credited to each holding museum:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${C.viaWd.map(m=>`<a class="colcard" href="${m.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;flex:0 1 auto;padding:9px 13px"><span style="font:700 13px Archivo,sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}</span></a>`).join('')}</div>
     <div class="kick" style="margin:36px 0 6px">Why the collection looks like this</div>
     <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">By origin the pool actually leans <strong style="color:var(--ink)">Asian</strong> — but the works most people <em>recognise</em> skew Western. The honest why:</p>
     <div style="margin-bottom:22px">${regBars}</div>
@@ -504,6 +551,7 @@ function renderCollections(){
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
     const pts=[];C.sources.filter(s=>s.lat!=null).forEach(s=>{const ic=L.divIcon({className:'mblob',html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
+    C.viaWd.forEach(s=>{const ic=L.divIcon({className:'mblob mblob-wd',html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · via Wikidata`);pts.push([s.lat,s.lng]);});
     if(pts.length)m.fitBounds(pts,{padding:[40,40],maxZoom:5});
     setTimeout(()=>m.invalidateSize(),200);
   }catch(e){}
