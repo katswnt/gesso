@@ -864,58 +864,85 @@ function startInfinite(key,push=true){
 function renderInfiniteSummary(){
   clearTimers();
   const rounds=results.length, total=results.reduce((a,x)=>a+x.coreNet+x.bonus,0);
-  const avg=rounds?Math.round(total/rounds):0, best=results.reduce((m,x)=>Math.max(m,x.coreNet+x.bonus),0);
+  const avg=rounds?Math.round(total/rounds):0;
   const isPerf=x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT);
   const isMaster=x=>isPerf(x)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT;
   const perfects=results.filter(isPerf).length;
   const masterpieces=results.filter(isMaster).length; // perfect + artist
-  // which works you nailed (Perfect or Masterpiece), most impressive first
-  const nailed=results.filter(isPerf).map(r=>({title:r.it.title,master:isMaster(r)})).sort((a,b)=>b.master-a.master);
   // per-category accuracy across the session → strengths & weaknesses
   const CATLBL={when:'When',where:'Where',medium:'Medium',style:'Movement',artist:'Artist'};
   const agg={}; for(const r of results){ const cats=[...r.coreCats,...(r.cells.artist?['artist']:[])];
     for(const c of cats){ const cell=r.cells[c]; if(!cell)continue; (agg[c]=agg[c]||{sum:0,n:0}); agg[c].sum+=cell.pts; agg[c].n++; } }
   const catPct=Object.entries(agg).map(([c,a])=>({c,pct:Math.round(a.sum/a.n/MAX_CAT*100),n:a.n})).sort((a,b)=>b.pct-a.pct);
-  const barColor=p=>p>=75?'var(--full)':p>=45?'var(--partial)':'var(--miss)';
   const strong=catPct[0], weak=catPct.length>1?catPct[catPct.length-1]:null;
   // strengths by MOVEMENT and by REGION (round accuracy = coreNet/baseMax), groups with ≥2 works
   const groupAcc=keyFn=>{ const g={}; for(const r of results){ const k=keyFn(r.it); if(!k)continue; const acc=r.baseMax?r.coreNet/r.baseMax:0; (g[k]=g[k]||{s:0,n:0}); g[k].s+=acc; g[k].n++; }
     return Object.entries(g).filter(([,a])=>a.n>=2).map(([k,a])=>({k,pct:Math.round(a.s/a.n*100)})).sort((a,b)=>b.pct-a.pct); };
   const byMov=groupAcc(it=>(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null);
   const byReg=groupAcc(it=>it.region);
-  const insight=(arr,label)=>{ if(arr.length<1)return''; const hi=arr[0], lo=arr.length>1?arr[arr.length-1]:null;
-    return `<div style="font-size:12.5px;margin-bottom:5px"><span style="color:var(--muted)">${label}:</span> 💪 <strong>${esc(hi.k)}</strong> ${hi.pct}%${lo&&lo.k!==hi.k?` &middot; 📚 <strong>${esc(lo.k)}</strong> ${lo.pct}%`:''}</div>`; };
+  // session core accuracy (coreNet vs the achievable core max) — replaces the old "best round" emphasis
+  const sumCore=results.reduce((a,x)=>a+x.coreNet,0), sumBase=results.reduce((a,x)=>a+(x.baseMax||0),0);
+  const accuracy=sumBase?Math.round(sumCore/sumBase*100):0;
+  const nailed=results.filter(isPerf).map(r=>({title:r.it.title,master:isMaster(r),url:sourceURL(r.it)})).sort((a,b)=>b.master-a.master);
+  const tierName=tier?tier.charAt(0).toUpperCase()+tier.slice(1):'';
+  const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
+  // category line-icons (neutral stroke; color + number carry the score → colorblind-safe)
+  const catIcon=k=>{ const key=k==='style'?'movement':k; const s='fill="none" stroke="#6a645b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+    const m={ when:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M12 7.4V12l3.1 1.9"/>`,
+      where:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M3.7 12h16.6M12 3.7v16.6"/><ellipse ${s} cx="12" cy="12" rx="3.9" ry="8.3"/>`,
+      movement:`<path ${s} d="M12 4.3c-4.5 0-8.1 3-8.1 6.8 0 2.5 1.9 3.9 3.8 3.9 1.4 0 1.6 1.1 1.1 2-.5 1 .1 2 1.6 2.1 4.8.5 9.7-3.1 9.7-7.7 0-4.5-3.5-7.1-8.1-7.1Z"/>`,
+      medium:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="#6a645b"/>`,
+      artist:`<path ${s} d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"/><path ${s} d="M3.6 18h13.8"/>` };
+    return `<svg viewBox="0 0 24 24" width="16" height="16">${m[key]||''}</svg>`; };
+  const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px 'Archivo',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'IBM Plex Mono',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
-    <div class="banner"><div><div class="kick">Learning session &middot; ${tier}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap"><span class="big">${avg.toLocaleString()}</span>
-      <span class="mono" style="font-size:13px;color:var(--muted)">avg pts / round &middot; ${rounds} round${rounds===1?'':'s'}</span></div></div></div>
-    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:9px">
-      <div class="metarow"><span class="k">ROUNDS</span><span class="v">${rounds}</span></div>
-      <div class="metarow"><span class="k">TOTAL</span><span class="v">${total.toLocaleString()} pts</span></div>
-      <div class="metarow"><span class="k">BEST</span><span class="v">${best.toLocaleString()} pts in one round</span></div>
-      <div class="metarow"><span class="k">★ PERFECTS</span><span class="v">${perfects} <span style="color:var(--muted)">(all core categories maxed)</span></span></div>
-      <div class="metarow"><span class="k">✦ MASTERPIECES</span><span class="v">${masterpieces} <span style="color:var(--muted)">(perfect + nailed the artist)</span></span></div>
+    <div class="banner" style="background:linear-gradient(180deg,#eceffb,var(--surface))"><div style="width:100%">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span class="kick">Practice session &middot; ${esc(tierName)}</span>
+        <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
+      <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
+      <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div></div></div>
+    <div class="statgrid">
+      <div><div class="sv">${rounds}</div><div class="kick" style="color:var(--muted);margin-top:3px">Rounds</div></div>
+      <div><div class="sv" data-cu="${total}">${total.toLocaleString()}</div><div class="kick" style="color:var(--muted);margin-top:3px">Total pts</div></div>
+      <div><div class="sv" data-cu="${avg}">${avg.toLocaleString()}</div><div class="kick" style="color:var(--muted);margin-top:3px">Avg round</div></div>
+      <div><div class="sv">${accuracy}<span style="font-size:13px;color:var(--muted)">%</span></div><div class="kick" style="color:var(--muted);margin-top:3px">Accuracy</div></div>
     </div>
-    ${catPct.length?`<div style="padding:4px 24px 8px">
-      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Your strengths this session</div>
-      ${catPct.map(x=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span style="width:64px;font:600 12px 'IBM Plex Mono',monospace;color:var(--muted)">${CATLBL[x.c]||x.c}</span><span style="flex:1;height:8px;border-radius:4px;background:var(--track);overflow:hidden"><span style="display:block;height:100%;width:${x.pct}%;background:${barColor(x.pct)}"></span></span><span style="width:38px;text-align:right;font:600 12px 'IBM Plex Mono',monospace">${x.pct}%</span></div>`).join('')}
-      ${strong?`<div style="font-size:12px;color:var(--muted);margin-top:8px">💪 Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong>${weak&&weak.c!==strong.c?` &middot; 📚 most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong>`:''}.</div>`:''}
+    <div style="padding:18px 24px;border-bottom:1px solid var(--line)"><div class="pmcards">
+      <div class="pmcard"><span class="badge">&starf;</span><div><div class="cnt tab">${perfects}</div><div class="kick" style="color:var(--muted);margin-top:2px">Perfect${perfects===1?'':'s'}</div></div><span class="note">all core maxed</span></div>
+      <div class="pmcard gold"><span class="badge">&#10022;</span><div><div class="cnt tab">${masterpieces}</div><div class="kick" style="color:var(--muted);margin-top:2px">Masterpiece${masterpieces===1?'':'s'}</div></div><span class="note">perfect + artist</span></div>
+    </div></div>
+    ${catPct.length?`<div style="padding:2px 24px 6px">
+      <div class="sech"><span class="t">Your strengths this session</span><span class="r"></span></div>
+      <div style="display:flex;flex-direction:column;gap:11px">${catPct.map((x,i)=>{const col=bandCol(x.pct);return `<div style="display:flex;align-items:center;gap:11px"><span class="ico">${catIcon(x.c)}</span><span style="flex:0 0 74px;font:600 12px 'Archivo',sans-serif;color:var(--ink-soft)">${CATLBL[x.c]||x.c}</span><span class="rbar"><i style="width:${x.pct}%;background:${col};animation-delay:${(i*0.09).toFixed(2)}s"></i></span><span class="tab mono" style="flex:0 0 auto;min-width:34px;text-align:right;font:600 12px 'IBM Plex Mono',monospace;color:${col}">${x.pct}%</span></div>`;}).join('')}</div>
+      ${strong?`<div style="margin:14px 0 4px;font:400 13px/1.5 'Archivo',sans-serif;color:var(--ink-soft);display:flex;gap:18px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--full)"></span>Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong></span>
+        ${weak&&weak.c!==strong.c?`<span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--miss)"></span>Most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong></span>`:''}</div>`:''}
     </div>`:''}
-    ${(byMov.length||byReg.length)?`<div style="padding:0 24px 10px">
-      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">By movement &amp; region</div>
-      ${insight(byMov,'Movements')}${insight(byReg,'Regions')}
-      <div style="font-size:11px;color:var(--faint);margin-top:4px">Based on this session — play more to sharpen the picture.</div>
+    ${(byMov.length||byReg.length)?`<div style="padding:0 24px 6px">
+      <div class="sech"><span class="t">By movement &amp; region</span><span class="r"></span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${byMov.length?`<div><div class="kick" style="color:var(--faint);margin-bottom:9px">Movements</div>${colCell(byMov)}</div>`:'<div></div>'}
+        ${byReg.length?`<div><div class="kick" style="color:var(--faint);margin-bottom:9px">Regions</div>${colCell(byReg)}</div>`:'<div></div>'}
+      </div>
+      <div style="margin-top:11px;font:italic 12px 'Archivo',sans-serif;color:var(--faint)">Based on this session — play more to sharpen the picture.</div>
     </div>`:''}
-    ${nailed.length?`<div style="padding:4px 24px 12px">
-      <div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Works you nailed</div>
-      ${nailed.slice(0,12).map(w=>`<div style="font-size:13px;margin-bottom:4px">${w.master?'✦':'★'} ${esc(w.title)}${w.master?' <span style="color:var(--muted);font-size:11px">— masterpiece</span>':''}</div>`).join('')}
-      ${nailed.length>12?`<div style="font-size:12px;color:var(--muted);margin-top:4px">+${nailed.length-12} more</div>`:''}
+    ${nailed.length?`<div style="padding:0 24px 6px">
+      <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
+      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?'&#10022;':'&starf;';const row=`<span style="flex:0 0 auto;color:${col};font:700 13px 'Archivo',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px 'Archivo',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'IBM Plex Mono',monospace">&#8599;</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
+        return w.url?`<a class="wlink" href="${esc(w.url)}" target="_blank" rel="noopener">${row}</a>`:`<div class="wlink" style="cursor:default">${row}</div>`;}).join('')}</div>
     </div>`:''}
-    <div style="padding:8px 24px 24px"><button class="btn" id="againinf">Play again →</button>
-      <button class="btn" id="homeinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Home</button>${ATTRIB}</div>
+    <div style="padding:18px 24px 22px;display:flex;gap:11px;flex-wrap:wrap">
+      <button class="btn" id="againinf" style="flex:1 1 auto;min-width:150px">Keep practising</button>
+      <button class="btn" id="shareinf" style="flex:0 1 auto;background:transparent;border:1.5px solid var(--line-card);color:var(--ink)">Share recap</button>
+      <button class="btn" id="homeinf" style="flex:0 1 auto;background:transparent;border:1.5px solid var(--line-card);color:var(--muted)">Done</button>${ATTRIB}</div>
   </div>`;
+  countUps(); // motion #2 — totals ease into place (no-op under reduce-motion; markup is pre-seeded)
   document.getElementById('againinf').onclick=()=>startInfinite(tier);
   document.getElementById('homeinf').onclick=()=>{infinite=false;renderStart();};
+  const sb=document.getElementById('shareinf');
+  sb.onclick=()=>{ const txt=`Gesso practice · ${tierName}\n${avg.toLocaleString()} avg pts/round · ${rounds} rounds · ${accuracy}% accuracy\n★ ${perfects} perfect · ✦ ${masterpieces} masterpiece${masterpieces===1?'':'s'}\n${location.origin}`;
+    navigator.clipboard.writeText(txt).then(()=>{ sb.textContent='Recap copied ✓'; setTimeout(()=>{sb.textContent='Share recap';},1600); }).catch(()=>{ sb.textContent='Copy failed'; setTimeout(()=>{sb.textContent='Share recap';},1600); }); };
 }
 
 // ---------- PLAY ----------

@@ -3,6 +3,7 @@
     --faint:#a39d8c; --ink-soft:#3a362d; --line:#e3ded1; --line-card:#ddd8ca; --accent:#2230b8;
     --accent-underline:#b0b5e0; --study-bg:#eceffb; --study-border:#d3d8ef;
     --full:#2f8f5b; --partial:#cf9f3a; --miss:#c14b3a; --track:#dcd6c6;
+    --silver:#9aa0a6; --silver-ink:#6c7177; --gold:#b3892f; --gold-ink:#9a7b2e;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--surface);color:var(--ink);font-family:'Archivo',sans-serif;
@@ -304,6 +305,36 @@
   .mastergrid{padding:6px 22px 8px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
   .mbar{margin-bottom:11px}.mbar .top{display:flex;justify-content:space-between;gap:10px;font:600 11px 'IBM Plex Mono',monospace;margin-bottom:4px}.mbar .top span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mbar .top span:last-child{color:var(--muted);white-space:nowrap}
   .track{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.fill{height:100%;background:var(--full)}.fill.weakfill{background:var(--miss)}.fill.midfill{background:var(--partial)}
+  /* practice session recap (handoff 13/14) */
+  .tab{font-variant-numeric:tabular-nums}
+  .sech{display:flex;align-items:center;gap:11px;margin:24px 0 14px}
+  .sech .t{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .sech .r{flex:1;height:1px;background:var(--line)}
+  .rbar{height:9px;border-radius:5px;background:var(--track);overflow:hidden;flex:1}
+  .rbar > i{display:block;height:100%;border-radius:5px}
+  @keyframes growbar{from{width:0}}
+  body.motion-ok .rbar > i{animation:growbar .9s cubic-bezier(.2,.7,.25,1) both}
+  .ico{flex:0 0 auto;display:flex}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .statgrid > div{padding:15px 16px;border-right:1px solid var(--line)}
+  .statgrid > div:last-child{border-right:none}
+  .statgrid .sv{font:800 21px 'Archivo',sans-serif;font-variant-numeric:tabular-nums}
+  .pmcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pmcard{display:flex;align-items:center;gap:12px;border:1px solid var(--line-card);border-radius:10px;padding:12px 14px}
+  .pmcard.gold{border-color:#e7d8b4;background:linear-gradient(180deg,rgba(231,200,115,.12),transparent)}
+  .pmcard .badge{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 16px 'Archivo',sans-serif;border:2px solid var(--silver);color:var(--silver-ink)}
+  .pmcard.gold .badge{border-color:var(--gold);color:var(--gold-ink)}
+  .pmcard .cnt{font:800 23px 'Archivo',sans-serif;line-height:1;font-variant-numeric:tabular-nums;color:var(--silver-ink)}
+  .pmcard.gold .cnt{color:var(--gold-ink)}
+  .pmcard .note{margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);max-width:84px;text-align:right;line-height:1.3}
+  .wlink{display:flex;align-items:center;gap:9px;padding:4px 6px;margin:0 -6px;text-decoration:none;color:inherit;border-radius:6px;transition:background .12s}
+  .wlink:hover,.wlink:focus-visible{background:rgba(34,48,184,.06);outline:none}
+  .wlink:hover .wt,.wlink:focus-visible .wt{color:var(--accent)}
+  .wlink .warr{opacity:0;transition:opacity .12s}
+  .wlink:hover .warr,.wlink:focus-visible .warr{opacity:1}
+  .tchip{flex:0 0 auto;font:600 8px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;border-radius:20px;padding:2px 7px;border:1px solid #d6d2cb;color:var(--silver-ink)}
+  .tchip.gold{border-color:#e0c795;color:var(--gold-ink)}
+  @media(max-width:560px){ .statgrid{grid-template-columns:1fr 1fr} .statgrid > div:nth-child(2){border-right:none} .statgrid > div:nth-child(1),.statgrid > div:nth-child(2){border-bottom:1px solid var(--line)} #worksgrid{grid-template-columns:1fr!important} }
   /* zoom */
   .lightbox{position:fixed;inset:0;background:rgba(20,18,14,.94);z-index:5000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
   .lightbox img{max-width:94vw;max-height:94vh;cursor:zoom-in;will-change:transform;user-select:none}
