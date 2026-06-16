@@ -5,7 +5,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 const UA="GessoWishlistPromote/1.0 (kathryn.swint@gmail.com)";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const adds=JSON.parse(readFileSync("data/incoming/wishlist-fetched.json","utf8"));
+const FILE=process.argv[2]||"data/incoming/wishlist-fetched.json";
+const SRC=process.argv[3]||"wd-wishlist";
+const adds=JSON.parse(readFileSync(FILE,"utf8"));
 global.window={}; new Function(readFileSync("data/countries.js","utf8"))();
 const CO={}; for(const c of window.ARTEFACTUM_COUNTRIES) CO[c.n.toLowerCase()]=c;
 function centroid(c){ let big=c.r[0]; for(const r of c.r) if(r.length>big.length) big=r; let sx=0,sy=0; for(const[x,y]of big){sx+=x;sy+=y;} return [Math.round(sy/big.length*1000)/1000,Math.round(sx/big.length*1000)/1000]; }
