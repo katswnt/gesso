@@ -817,10 +817,21 @@ function startGame(key,dateStr,push=true){
   renderRound();
 }
 function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
+// practice ordering: for Easy, weave so ~1-in-5 is a top-100 icon (reliable, not random-clumpy);
+// the other 4 spread the recognizable tier. Other tiers just shuffle. No repeats until the tier cycles.
+function practiceOrder(key){
+  const works=tierItems(tierIndex(key));
+  if(key!=='easy') return shuffle(works);
+  const ICON=new Set(POOL.slice(0,100).map(p=>p.id)); // POOL is recognizability-sorted in buildIndexes()
+  const icons=shuffle(works.filter(p=>ICON.has(p.id))), rest=shuffle(works.filter(p=>!ICON.has(p.id)));
+  const out=[]; let i=0,r=0;
+  while(i<icons.length||r<rest.length){ if(i<icons.length)out.push(icons[i++]); for(let k=0;k<4&&r<rest.length;k++)out.push(rest[r++]); }
+  return out;
+}
 function startInfinite(key,push=true){
   if(push)pushNav({v:'inf',key});
   clearTimers(); infinite=true; tier=key; runDate=todayStr(); runArchive=false;
-  game=shuffle(tierItems(tierIndex(key))); idx=0; results=[]; hintsUsed=0;
+  game=practiceOrder(key); idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
 function renderInfiniteSummary(){
@@ -1214,7 +1225,7 @@ function renderReveal(r){
       requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; }); }catch{} }
   },settings.reduceMotion?0:260);
   if(infinite){
-    document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(shuffle(tierItems(tierIndex(tier)))); renderRound(); };
+    document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(practiceOrder(tier)); renderRound(); };
     const eb=document.getElementById('endinf'); if(eb) eb.onclick=renderInfiniteSummary;
   } else {
     document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
