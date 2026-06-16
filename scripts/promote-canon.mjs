@@ -38,3 +38,6 @@ writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES="+JSON.stringify(CUE
 console.log(`promoted ${added} canon icons (skipped ${skipped}) | pool now ${pool.length} | notes added ${notesAdded}`);
 const noCoord=pool.filter(p=>p.canon&&(p.lat==null)).map(p=>p.title);
 if(noCoord.length) console.log("WARN no coords (place unmapped):",noCoord.join(", "));
+// auto-run the audit suite after import
+console.log("\n› running audits on the updated pool…");
+(await import("node:child_process")).execSync("node scripts/audit-all.mjs",{stdio:"inherit"});

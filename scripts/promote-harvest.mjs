@@ -27,3 +27,6 @@ for(const id in notes){ if(!CUES.work[id]){ CUES.work[id]=notes[id]; nn++; } }
 writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES="+JSON.stringify(CUES)+";\n");
 console.log("promoted harvest:",added,"| notes:",nn,"| pool now",pool.length);
 const noco=pool.filter(p=>p.harvest&&p.lat==null).map(p=>p.title); if(noco.length) console.log("no-coord:",noco.join(", "));
+// auto-run the audit suite after import
+console.log("\n› running audits on the updated pool…");
+(await import("node:child_process")).execSync("node scripts/audit-all.mjs",{stdio:"inherit"});

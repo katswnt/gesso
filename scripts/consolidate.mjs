@@ -183,6 +183,8 @@ if(MERGE){
   const out=[...pool,...kept];
   writeFileSync("data/pool.js","window.ARTEFACTUM_POOL = "+JSON.stringify(out)+";\n");
   console.log(`MERGED -> data/pool.js now ${out.length} works`);
+  console.log("\n› running audits on the updated pool…");
+  (await import("node:child_process")).execSync("node scripts/audit-all.mjs",{stdio:"inherit"});
 } else {
   console.log("DRY RUN — re-run with --merge to append into data/pool.js");
 }
