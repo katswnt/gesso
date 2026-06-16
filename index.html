@@ -257,6 +257,23 @@ function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function deaccent(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();} // accent-insensitive matching (Dürer ↔ durer)
 function lastName(s){return norm(s).split(' ').pop();}
+// forgiving artist matching: full name, surname, a distinctive token ("Leonardo", "Vermeer"),
+// the surname phrase ("da Vinci"), or a light typo — so players aren't punished for partial/misspelled names.
+function lev(a,b){ if(Math.abs(a.length-b.length)>2)return 9; const m=a.length,n=b.length,d=[];
+  for(let i=0;i<=m;i++){d[i]=[i];} for(let j=0;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[m][n]; }
+const NAME_PARTICLES=new Set(["de","da","del","della","di","van","von","der","den","la","le","el","du","of","the","y","dos","das","ten","ter"]);
+function artistMatch(g,a){ g=deaccent(g).replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim(); a=deaccent(a).replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim();
+  if(!g||!a) return false; if(g===a) return true;
+  const at=a.split(" ").filter(Boolean), gt=g.split(" ").filter(Boolean);
+  const aSur=at[at.length-1], aDist=at.filter(t=>t.length>=4 && !NAME_PARTICLES.has(t));
+  // typos only forgiven on longer names (≥7) so near-collisions like Monet/Manet stay distinct
+  if(g===aSur || (aSur.length>=7 && lev(g,aSur)<=1)) return true;            // surname (exact, or 1 typo if long)
+  if(a.length>=10 && lev(g,a)<=2) return true;                              // full name with typos
+  if(gt.length===1 && aDist.some(t=>t===g || (t.length>=7 && lev(t,g)<=1))) return true; // distinctive single name
+  if(gt.length>=2 && a.endsWith(g)) return true;                           // surname phrase ("da vinci")
+  return false; }
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function imgFail(img){
   if(!img.dataset.retry){ img.dataset.retry='1'; const base=img.src; setTimeout(()=>{ img.src=base+(base.includes('?')?'&':'?')+'_r=1'; },1500); return; }
@@ -1069,7 +1086,7 @@ function score(){
     cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
   // artist (bonus)
   if(it.cats.includes('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
-    if(ga){ if(ga===norm(it.artist)||(lastName(guess.artist)&&lastName(guess.artist)===lastName(it.artist))){s=MAX_CAT;note="exact match";}
+    if(ga){ if(artistMatch(guess.artist,it.artist)){s=MAX_CAT;note="matched";}
       else if(artistStyle[ga]&&it.style&&artistStyle[ga].has(norm(it.style))){s=Math.round(MAX_CAT*0.4);note="same school";}
       else note="not matched";}
     cells.artist={pts:s,bonus:true,you:guess.artist||"—",actual:it.artist,note};}
