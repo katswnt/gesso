@@ -275,8 +275,18 @@ function artistMatch(g,a){ g=deaccent(g).replace(/[^a-z ]/g,"").replace(/\s+/g,"
   if(gt.length>=2 && a.endsWith(g)) return true;                           // surname phrase ("da vinci")
   return false; }
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+// Resilient image loading: (1) one cache-bust retry, then (2) re-fetch through the weserv proxy
+// server-side — bypasses flaky third-party CDNs (AIC behind Cloudflare bot-checks, oversized Harvard
+// folios, spotty mobile networks) the same way it already rescues Wikimedia. Only kicks in on failure.
 function imgFail(img){
-  if(!img.dataset.retry){ img.dataset.retry='1'; const base=img.src; setTimeout(()=>{ img.src=base+(base.includes('?')?'&':'?')+'_r=1'; },1500); return; }
+  const stage=img.dataset.stage||'0';
+  if(stage==='0'){ img.dataset.stage='1'; img.dataset.base=img.src;
+    setTimeout(()=>{ img.src=img.dataset.base+(img.dataset.base.includes('?')?'&':'?')+'_r=1'; },1200); return; }
+  if(stage==='1'){ img.dataset.stage='2';
+    const clean=(img.dataset.base||img.src).replace(/[?&]_r=1$/,'');
+    if(!/images\.weserv\.nl/.test(clean)){
+      img.src='https://images.weserv.nl/?url='+encodeURIComponent(clean.replace(/^https?:\/\//,''))+'&w=1200&output=jpg'; return; }
+  }
   const pl=img.parentNode&&img.parentNode.querySelector('.imgloader');if(pl)pl.remove();img.style.display='none';if(img.parentNode&&!img.parentNode.querySelector('.imgfail')){const d=document.createElement('div');d.className='imgfail';d.textContent='Image unavailable';img.parentNode.appendChild(d);}}
 function accession(){const d=new Date();const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `NO. ${d.getFullYear()}·${mm}${dd}`;}
 function sourceURL(it){
@@ -307,7 +317,7 @@ function simplifyMedium(s){const t=" "+String(s||"").toLowerCase()+" ";
   if(/bronze|brass|copper|\btin\b|pewter|\bmetal\b/.test(t))return "Bronze";
   if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet/.test(t))return "Textile";
   if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|\bstone\b/.test(t))return "Stone";
-  if(/lacquer|wood|panel|\boak\b|\bpine\b/.test(t))return "Wood"; if(/\bpaper\b/.test(t))return "Ink";
+  if(/lacquer|wood|panel|\boak\b|\bpine\b|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut/.test(t))return "Wood"; if(/\bpaper\b/.test(t))return "Ink";
   return s?"Mixed media":""; }
 const RELATED_MOV={
   "Renaissance":["Italian Renaissance","Mannerism","Baroque","Northern Renaissance"],
