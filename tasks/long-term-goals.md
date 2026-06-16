@@ -100,6 +100,16 @@
 
 ## Contemporary / modern art (the copyright gap) — plan
 Full findings: tasks/contemporary-art-research.md. TL;DR prioritized:
+
+> **✅ Options 1 & 2 DONE (2026-06).** Added 36 US-PD modern icons (Klimt, Schiele, Modigliani,
+> Munch, Kandinsky, Mondrian, Klee, Matisse, Malevich, Boccioni, Marc, Rousseau, Kirchner,
+> Coolidge…) under the US-safe rule (inception <1931 AND creator d.≤1955). 16 canon (Easy);
+> 100% notes + hotspots + origin coords. Reusable pipeline: `scripts/fetch-modern.mjs` →
+> `reresolve-modern` → `clean-modern` → `promote-modern` → `inject-modern-fame`.
+> **Annual TODO (every Jan 1):** bump the seed to the new year−96 cohort (2027 → 1931 works:
+> Dalí *Persistence of Memory*, etc.) and re-run the pipeline. Options 3 (in-copyright thumbnails)
+> & 4 (licensing) remain future work, needing an IP-attorney review first.
+
 1. **Rolling public domain (free, zero risk — do this).** US = publication year + 96. 1930 works are PD *now* (since Jan 1 2026): Mondrian *Composition in Red, Blue and Yellow*, Klee, van Doesburg, Orozco, Grant Wood *American Gothic*. Dalí *Persistence of Memory* (1931) → PD Jan 2027. Build an **annual Jan-1 harvest**: Wikidata SPARQL `inception = year−96 AND hasImage`, verify first-publication. Keyed to publication year (work-by-work), NOT artist death — so Picasso/Matisse free piece-by-piece over time.
 2. **Mine open-access museum APIs for existing early-modern PD (free).** AIC (server-side PD filter + IIIF), Cleveland, SMK (~39k PD), LoC WPA posters (CC0), Smithsonian. Already-free famous moderns: Klimt, Schiele, Modigliani, Klee, Kandinsky, Mondrian, Munch, Léger. (MoMA/Rijksmuseum = no open modern images.) Stay US-safe: creator death ≤1955 AND inception <1931 (avoids the URAA trap).
 3. **Blue-chip in-copyright (Warhol, Pollock, Kahlo, late Picasso): low-res fair-use thumbnails OR link-out/IIIF.** Thumbnail fair-use is reasonably strong (Kelly v. Arriba, Perfect 10 v. Google) but Warhol v. Goldsmith (2023) means lean on *different purpose + non-competition*: recognition quiz only, ≤~400px, non-downloadable, one per work, per-work rationale (Wikipedia non-free playbook). Risk = occasional DMCA takedown, not lawsuit (Vercel safe harbor). Avoid raw-JPEG hotlinking (Goldman v. Breitbart). **Get a short IP-attorney review before shipping copyrighted thumbnails.**
