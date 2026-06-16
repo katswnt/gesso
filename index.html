@@ -618,8 +618,8 @@ function renderCollections(){
   </div></div>`;
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
-    const pts=[];C.sources.filter(s=>s.lat!=null).forEach(s=>{const ic=L.divIcon({className:'mblob',html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
-    C.viaWd.forEach(s=>{const ic=L.divIcon({className:'mblob mblob-wd',html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · via Wikidata`);pts.push([s.lat,s.lng]);});
+    const pts=[];C.sources.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
+    C.viaWd.forEach((s,i)=>{const ic=L.divIcon({className:'mblob mblob-wd v'+((i+3)%6+1),html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · via Wikidata`);pts.push([s.lat,s.lng]);});
     if(pts.length)m.fitBounds(pts,{padding:[40,40],maxZoom:5});
     setTimeout(()=>m.invalidateSize(),200);
   }catch(e){}
