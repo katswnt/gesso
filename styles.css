@@ -98,10 +98,9 @@
   .timeline-line-wrap{display:flex;align-items:center;gap:6px;margin:14px 0 0}
   .timeline-end-d{display:inline-flex;flex-shrink:0;color:var(--ink)}
   .timeline-line-mid{flex:1;min-width:0}
-  .tltick-wrap{position:relative;height:28px;margin-top:2px;padding:0 9px;box-sizing:border-box}
+  .tltick-wrap{position:relative;height:28px;margin-top:2px}
+  .tltick-inner{position:absolute;left:9px;right:9px;height:100%}
   .tltick{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px}
-  .tltick:first-child{transform:translateX(-50%);left:2% !important}
-  .tltick:last-child{transform:translateX(-50%);left:98% !important}
   .tltick::before{content:'';display:block;width:1px;height:6px}
   .tltick.major::before{background:var(--ink)}
   .tltick.minor::before{background:var(--muted)}

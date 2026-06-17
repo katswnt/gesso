@@ -763,7 +763,7 @@ function renderRound(){
         <input type="range" id="yr" class="nudge" min="${MINY}" max="${MAXY}" value="1700" step="1" />
       </div>
     </div>
-    <div class="tltick-wrap">${(()=>{const range=MAXY-MINY;const start=Math.ceil(MINY/500)*500;const tt=[];for(let y=start;y<=2000;y+=500){if(MAXY-y<100)continue;const yy=y===0?-1:y;const major=y%1000===0;tt.push({y:yy,major});}tt.push({y:MAXY,major:true});return tt.map(({y,major})=>`<div class="tltick ${major?'major':'minor'}" style="left:${((y-MINY)/range*100).toFixed(2)}%"><span class="tltick-lb">${fmtYear(y)}</span></div>`).join('');})()}</div>`}); n++;
+    <div class="tltick-wrap"><div class="tltick-inner">${(()=>{const range=MAXY-MINY;const start=Math.ceil(MINY/500)*500;const tt=[];for(let y=start;y<=2000;y+=500){if(MAXY-y<100)continue;const yy=y===0?-1:y;const major=y%1000===0;tt.push({y:yy,major});}tt.push({y:MAXY,major:true});return tt.map(({y,major})=>`<div class="tltick ${major?'major':'minor'}" style="left:${((y-MINY)/range*100).toFixed(2)}%"><span class="tltick-lb">${fmtYear(y)}</span></div>`).join('');})()}</div></div>`}); n++;
   if(it.cats.includes('medium')){
     const ch=mediumChoices(it.medium);
     fields.push({k:'medium', html:`<div class="roundhd"><span>${n}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>medium</span></div>
