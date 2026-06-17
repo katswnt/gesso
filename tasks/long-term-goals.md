@@ -114,3 +114,45 @@ Full findings: tasks/contemporary-art-research.md. TL;DR prioritized:
 2. **Mine open-access museum APIs for existing early-modern PD (free).** AIC (server-side PD filter + IIIF), Cleveland, SMK (~39k PD), LoC WPA posters (CC0), Smithsonian. Already-free famous moderns: Klimt, Schiele, Modigliani, Klee, Kandinsky, Mondrian, Munch, Léger. (MoMA/Rijksmuseum = no open modern images.) Stay US-safe: creator death ≤1955 AND inception <1931 (avoids the URAA trap).
 3. **Blue-chip in-copyright (Warhol, Pollock, Kahlo, late Picasso): low-res fair-use thumbnails OR link-out/IIIF.** Thumbnail fair-use is reasonably strong (Kelly v. Arriba, Perfect 10 v. Google) but Warhol v. Goldsmith (2023) means lean on *different purpose + non-competition*: recognition quiz only, ≤~400px, non-downloadable, one per work, per-work rationale (Wikipedia non-free playbook). Risk = occasional DMCA takedown, not lawsuit (Vercel safe harbor). Avoid raw-JPEG hotlinking (Goldman v. Breitbart). **Get a short IP-attorney review before shipping copyrighted thumbnails.**
 4. **Formal licensing (ARS/DACS/Bridgeman) = last resort** — quote-only, ~$300–1000+/blue-chip image, often declines games. VG Bild-Kunst cheapest (~€10/work). Artstor/JSTOR: terms BAN website embedding — do not use.
+
+## Scoring refinements (spec)
+**Why:** the scoring intent is "reward partial knowledge" — knowing the era, the school, or a same-movement artist should earn credit, not a flat miss. Today **When** and **Where** already do this gracefully (continuous curves). **Movement** and **Artist** do NOT — they're binary with flat partial credit, which is the gap Kat half-remembered as "gradients." This spec makes them true gradients and widens coverage.
+
+### Current state (as built — for reference)
+- Per category = **2,500 pts**. Core = When/Where/Medium/Movement (10k base); **Artist is a +2,500 bonus** on top. Hints −500 each (max 3), off core.
+- **When:** `|guess−actual|` ÷ tier factor (Easy/Med 1.3, Hard 1.35, Imp 1.4) → step bands 2500/2250/1900/1300/700/250/0 at ≤12/20/40/80/160/320 yrs. *Good — leave as-is.*
+- **Where:** inside the work's country (point-in-polygon) = full; else `2500·exp(−(dist−countryRadius)/distK)`, distK Easy 4500 → Imp 1000. *Good — leave as-is.*
+- **Medium:** exact 2500; same `MED_FAMILY` (paint/sculpt/craft) 1250; else 0. *OK; could refine families later.*
+- **Movement:** exact 2500; in `RELATED_MOV[answer]` (a hand-curated, **binary** neighbor list) → flat `relMov` (Easy .70/Med .50/Hard .35/Imp .25); else 0. **Gaps:** the map covers ~20 movements; anything not listed scores 0 partial (e.g. Romanticism's only neighbors are Neoclassicism & Realism → Academic-art guess = 0).
+- **Artist (bonus):** fuzzy exact 2500; else if guessed artist shares ANY movement with the work (`artistStyle` map built from the pool) → flat 1000 (40%); else 0. **No era/region awareness.**
+
+### A. Movement → true similarity gradient
+Replace the binary list + flat fraction with a **taxonomy-derived 0–1 similarity**, so every movement pair gets a sensible partial score and we stop hand-maintaining edges.
+- **Data:** extend the existing `MOVEMENTS` meta (already has `dates`,`region`) with `{start, end, region, family}` where `family` groups siblings (e.g. `renaissance`, `baroque`, `post-impressionist`, `modernist`, `avant-garde`, `edo`…). One-time authored table (~80 movements).
+- **Similarity** `sim(a,b) ∈ [0,1]` = weighted blend:
+  - same `family` → 0.6 base
+  - temporal overlap of [start,end] (Jaccard of the year ranges) → up to 0.25
+  - same `region` → 0.15
+  - clamp to 1; `sim=1` only for exact match.
+- **Score** = `2500 · simCap(tier) · sim(guess, actual)`, where `simCap` is the tier ceiling (reuse current relMov: .70/.50/.35/.25) so partial credit still tightens with difficulty.
+- **Result:** Romanticism↔Academic art (same era+region, different family) ≈ 0.4·cap; Romanticism↔Edo (no overlap) ≈ 0 — matching the intuition. Keep `RELATED_MOV` as an optional hand-tuned override layer for special cases.
+
+### B. Artist → graded credit (era + region + school)
+Replace the flat 40% with a descending blend of what the guess got right.
+- **Data:** build `artistMeta[name] = {movements:Set, born, died, region}` — `movements` already derivable from the pool; add `born`/`died` (Wikidata P569/P570) and `region` (P27 nationality → region) via a one-time harvest step over `ARTIST_POOL` (cache to `data/artist-meta.js`).
+- **Score** (bonus, vs the work's actual artist) = `2500 ·` max of:
+  - exact (fuzzy) → 1.0
+  - shares a movement/school → 0.45
+  - active in the same era (floruit within ±~30 yrs of the work) → 0.25
+  - same region/nationality → 0.15
+  - (take the **max**, or a capped sum, of whichever apply — tune so "same school" ≥ "same era" ≥ "same region")
+- **Result:** guessing a contemporaneous compatriot in the same school earns real partial credit; a random wrong artist still 0.
+
+### C. Widen Movement coverage (quick win, do regardless)
+Even before the taxonomy, audit which pool movements have **no** `RELATED_MOV` entry and add neighbors — many cultures/schools (Edo, Ukiyo-e, Mughal, Qing, Byzantine…) currently get 0 partial credit for near-misses.
+
+### Effort & phasing
+1. **C — expand the neighbor map** (½ day, pure data, immediate fairness win).
+2. **A — movement taxonomy + sim()** (~1 day: author the family/era/region table, swap the scoring branch). Backward-compatible; `RELATED_MOV` becomes an override.
+3. **B — artist meta harvest + graded credit** (~1–2 days: the P569/P570/P27 harvest is the bulk; scoring change is small).
+Keep When/Where untouched. All changes are isolated to `score()` + small data tables; deterministic, so dailies stay fair.
