@@ -529,7 +529,7 @@ function bumpGlossary(name){
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
 // Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
-const COLL_BUCKET={aic:"aic",modern:"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard",va:"va",smithsonian:"smithsonian",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
+const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
 const COLL_META={
   aic:{name:"Art Institute of Chicago",city:"Chicago, USA",lat:41.8796,lng:-87.6237,url:"https://www.artic.edu",blurb:"Open-access API; thousands of CC0 public-domain works."},
   met:{name:"The Metropolitan Museum of Art",city:"New York, USA",lat:40.7794,lng:-73.9632,url:"https://www.metmuseum.org",blurb:"CC0 open access — a global collection, strong outside the West."},
@@ -538,6 +538,7 @@ const COLL_META={
   harvard:{name:"Harvard Art Museums",city:"Cambridge, USA",lat:42.3744,lng:-71.1144,url:"https://www.harvardartmuseums.org",blurb:"One open API across three museums; deep Asian & Islamic holdings."},
   va:{name:"Victoria and Albert Museum",city:"London, UK",lat:51.4966,lng:-0.1722,url:"https://www.vam.ac.uk",blurb:"The V&A — the world's leading art & design collection, via API."},
   smithsonian:{name:"Smithsonian Open Access",city:"Washington, DC, USA",lat:38.8888,lng:-77.0260,url:"https://www.si.edu",blurb:"CC0 across the Smithsonian, incl. the National Museums of African & Asian Art."},
+  loc:{name:"Library of Congress",city:"Washington, DC, USA",lat:38.8887,lng:-77.0047,url:"https://www.loc.gov",blurb:"Public-domain US government works — incl. the FSA/OWI Depression-era photography."},
 };
 const COLL_VIA_WD=[ // famous collections we draw from via Wikidata (sitelink-ranked); shown on the map
   {name:"Museo del Prado",city:"Madrid",lat:40.4138,lng:-3.6921,url:"https://www.museodelprado.es"},
