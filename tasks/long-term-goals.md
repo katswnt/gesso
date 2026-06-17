@@ -115,7 +115,10 @@ Full findings: tasks/contemporary-art-research.md. TL;DR prioritized:
 3. **Blue-chip in-copyright (Warhol, Pollock, Kahlo, late Picasso): low-res fair-use thumbnails OR link-out/IIIF.** Thumbnail fair-use is reasonably strong (Kelly v. Arriba, Perfect 10 v. Google) but Warhol v. Goldsmith (2023) means lean on *different purpose + non-competition*: recognition quiz only, ≤~400px, non-downloadable, one per work, per-work rationale (Wikipedia non-free playbook). Risk = occasional DMCA takedown, not lawsuit (Vercel safe harbor). Avoid raw-JPEG hotlinking (Goldman v. Breitbart). **Get a short IP-attorney review before shipping copyrighted thumbnails.**
 4. **Formal licensing (ARS/DACS/Bridgeman) = last resort** — quote-only, ~$300–1000+/blue-chip image, often declines games. VG Bild-Kunst cheapest (~€10/work). Artstor/JSTOR: terms BAN website embedding — do not use.
 
-## Scoring refinements (spec)
+## Scoring refinements (spec) — ✅ IMPLEMENTED 2026-06
+Shipped in `score()` (index.html): **A** `movementSim()` (family + era-overlap + region taxonomy, curated `RELATED_MOV` kept as a full-credit override) and **B** graded artist credit (same school 0.45 / same era ±30y 0.25 / same region 0.15). **B used pool-derived `artistMeta`** (each artist's active-year range + regions, built in `buildIndexes`) instead of a Wikidata P569/P570/P27 harvest — simpler, no new data file. **C** is subsumed by A (the taxonomy now gives Edo/Ukiyo-e, Ming/Qing, etc. partial credit they previously scored 0 for). Original spec below for reference.
+
+
 **Why:** the scoring intent is "reward partial knowledge" — knowing the era, the school, or a same-movement artist should earn credit, not a flat miss. Today **When** and **Where** already do this gracefully (continuous curves). **Movement** and **Artist** do NOT — they're binary with flat partial credit, which is the gap Kat half-remembered as "gradients." This spec makes them true gradients and widens coverage.
 
 ### Current state (as built — for reference)
