@@ -124,6 +124,8 @@
   .tltick-wrap{position:relative;height:28px;margin-top:2px}
   .tltick-inner{position:absolute;left:9px;right:9px;height:100%}
   .tltick{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px}
+  .tltick:first-child .tltick-lb{position:absolute;top:9px;left:50%;transform:none;white-space:nowrap}
+  .tltick:last-child .tltick-lb{position:absolute;top:9px;right:50%;transform:none;white-space:nowrap}
   .tltick::before{content:'';display:block;width:1px;height:6px}
   .tltick.major::before{background:var(--ink)}
   .tltick.minor::before{background:var(--muted)}
