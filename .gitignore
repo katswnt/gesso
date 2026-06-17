@@ -3,3 +3,8 @@ data/incoming/
 scripts/codex-prompts/
 
 .env
+node_modules/
+package-lock.json
+.env.local
+.vercel
+.env*
