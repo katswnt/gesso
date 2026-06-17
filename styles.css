@@ -530,6 +530,11 @@
   body.motion-ok .maptap{animation:tapPulse 1.8s ease-out 3}
   .lockinfo{display:flex;align-items:center;gap:8px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:8px;padding:9px 12px;margin-bottom:11px;font:500 12px/1.4 'Faculty Glyphic',sans-serif;color:var(--ink)}
   .lockinfo svg{flex:0 0 auto}
+  .submit-cta{background:var(--ink)!important;border:1px solid var(--ink)!important;border-radius:1px!important;font:400 1.25rem 'Faculty Glyphic',sans-serif!important;letter-spacing:.02em!important;text-transform:none!important;padding:20px!important;transform:scale(1);transition:transform .12s cubic-bezier(.22,1,.36,1)}
+  .submit-cta:hover{background:var(--line-card)!important;border-color:var(--ink)!important;color:var(--ink)!important;filter:none!important}
+  .submit-cta:active{transform:scale(0.97)!important;transition:transform .08s ease!important}
+  body.reduce-motion .submit-cta{transition:none!important}
+  .submit-hint{font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--accent);text-align:center;margin:16px 0 0}
   .newhere{display:inline-block;margin-top:6px;background:none;border:0;font:600 12px 'Manrope',monospace;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
   body.reduce-motion .obdab,body.reduce-motion .helpdab{animation:none!important}
   @media (max-width:680px){ .navbits .helpdab{order:-1} }
