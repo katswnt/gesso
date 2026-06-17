@@ -796,7 +796,7 @@ function renderRound(){
             <div class="cap">${it.dim?`<span>FIG.&nbsp;${idx+1}</span><span>${esc(it.dim)}</span>`:`<span style="display:block;text-align:center;width:100%">FIG.&nbsp;${idx+1}</span>`}</div>
           </div>
           <div class="hintbox">
-            <button type="button" class="hintbox-toggle" id="hintToggle"><span>out of ideas?</span><span class="hintbox-icon">+</span></button>
+            <button type="button" class="hintbox-toggle" id="hintToggle"><span>out of ideas?</span><span class="hintbox-icon"><img src="/assets/plus.svg" width="16" height="16" alt="expand"></span></button>
             <div class="hintbox-body" id="hintboxBody" style="display:none">
               <p class="hint-desc">You can get a hint to reveal details about the art.</p>
               <p class="hint-count" id="hintsleft"></p>
@@ -877,14 +877,14 @@ function wireHints(it){
   const rows=document.getElementById('hintrows'),left=document.getElementById('hintsleft');
   const toggle=document.getElementById('hintToggle'),body=document.getElementById('hintboxBody');
   // toggle expand/collapse
-  toggle.onclick=()=>{const open=body.style.display!=='none';body.style.display=open?'none':'block';toggle.querySelector('.hintbox-icon').textContent=open?'+':'\u2014';};
+  toggle.onclick=()=>{const open=body.style.display!=='none';body.style.display=open?'none':'block';toggle.querySelector('.hintbox-icon').innerHTML=open?'<img src="/assets/plus.svg" width="16" height="16" alt="expand">':'<img src="/assets/minus.svg" width="16" height="16" alt="collapse">';};
   const opts=[];
   opts.push({key:"century",disp:"REVEAL CENTURY",label:"century",txt:()=>`Made in the ${centuryStr(it.y)}.`});
   opts.push({key:"continent",disp:"REVEAL CONTINENT",label:"continent",txt:()=>`Made somewhere in ${it.region}.`});
   if(it.cats.includes('style')){const kind=(typeof CULTS!=='undefined'&&CULTS.includes(it.style))?'cultures':'movements';
     opts.push({key:"50/50",disp:`RULE OUT 2 ${kind.toUpperCase()}`,label:`rule out 2 ${kind}`,txt:()=>{const k=apply5050(it); return k>0?{text:`Two unlikely ${kind} removed from the options.`}:{text:`Already narrowed to two — no charge.`,charged:false};}});}
   if(it.cats.includes('artist')&&isNamedArtist(it.artist)) opts.push({key:"initials",disp:"REVEAL ARTIST\u2019S INITIALS",label:"artist's initials",txt:()=>`The artist's initials are ${it.artist.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+'.').join(' ')}.`});
-  rows.innerHTML=opts.map(o=>`<div class="hintrow"><button type="button" class="hintrow-btn" data-k="${o.key}"><span class="hintrow-label">${o.disp}</span><span class="hintrow-icon">+</span></button><div class="hintrow-text" style="display:none"></div></div>`).join('');
+  rows.innerHTML=opts.map(o=>`<div class="hintrow"><button type="button" class="hintrow-btn" data-k="${o.key}"><span class="hintrow-label">${o.disp}</span><span class="hintrow-icon"><img src="/assets/plus.svg" width="16" height="16" alt="expand"></span></button><div class="hintrow-text" style="display:none"></div></div>`).join('');
   const refresh=()=>{const rem=HINT_LIMIT-hintsUsed;left.textContent=`${rem}/${HINT_LIMIT} HINTS AVAILABLE \u00b7 EACH HINT WILL COST YOU ${HINT_COST} POINTS`;
     rows.querySelectorAll('.hintrow-btn:not(.used)').forEach(b=>{b.disabled=rem<=0;});};
   rows.querySelectorAll('.hintrow-btn').forEach(b=>{
