@@ -251,13 +251,6 @@
     "fame": 498.128,
     "tier": "easy"
   },
-  "http://www.wikidata.org/entity/Q860129": {
-    "wikidata": "Q860129",
-    "sitelinks": 26,
-    "pageviews": 291395,
-    "fame": 475.64,
-    "tier": "easy"
-  },
   "http://www.wikidata.org/entity/Q2983399": {
     "wikidata": "Q2983399",
     "sitelinks": 25,
@@ -629,13 +622,6 @@
     "fame": 399.448,
     "tier": "easy"
   },
-  "http://www.wikidata.org/entity/Q713211": {
-    "wikidata": "Q713211",
-    "sitelinks": 17,
-    "pageviews": 195069,
-    "fame": 424.814,
-    "tier": "easy"
-  },
   "http://www.wikidata.org/entity/Q3173195": {
     "wikidata": "Q3173195",
     "sitelinks": 17,
@@ -783,20 +769,6 @@
     "fame": 387.991,
     "tier": "easy"
   },
-  "http://www.wikidata.org/entity/Q714794": {
-    "wikidata": "Q714794",
-    "sitelinks": 15,
-    "pageviews": 35486,
-    "fame": 392.966,
-    "tier": "easy"
-  },
-  "http://www.wikidata.org/entity/Q668343": {
-    "wikidata": "Q668343",
-    "sitelinks": 15,
-    "pageviews": 74943,
-    "fame": 403.599,
-    "tier": "easy"
-  },
   "http://www.wikidata.org/entity/Q3299143": {
     "wikidata": "Q3299143",
     "sitelinks": 15,
@@ -900,13 +872,6 @@
     "sitelinks": 14,
     "pageviews": 39751,
     "fame": 393.747,
-    "tier": "easy"
-  },
-  "http://www.wikidata.org/entity/Q714804": {
-    "wikidata": "Q714804",
-    "sitelinks": 14,
-    "pageviews": 39088,
-    "fame": 386.465,
     "tier": "easy"
   },
   "http://www.wikidata.org/entity/Q1224572": {
@@ -2603,13 +2568,6 @@
     "fame": 0,
     "tier": "hard"
   },
-  "wikidata:Q2410932": {
-    "wikidata": "Q2410932",
-    "sitelinks": 29,
-    "pageviews": 181313,
-    "fame": 482.322,
-    "tier": "easy"
-  },
   "wikidata:Q1362177": {
     "wikidata": "Q1362177",
     "sitelinks": 28,
@@ -2630,13 +2588,6 @@
     "pageviews": 152184,
     "fame": 206.456,
     "tier": "medium"
-  },
-  "wikidata:Q1757822": {
-    "wikidata": "Q1757822",
-    "sitelinks": 24,
-    "pageviews": 87380,
-    "fame": 448.108,
-    "tier": "easy"
   },
   "wikidata:Q1016771": {
     "wikidata": "Q1016771",
@@ -3058,13 +3009,6 @@
     "fame": 433.809,
     "tier": "easy"
   },
-  "wikidata:Q3697109": {
-    "wikidata": "Q3697109",
-    "sitelinks": 5,
-    "pageviews": 19529,
-    "fame": 293.523,
-    "tier": "medium"
-  },
   "wikidata:Q29018504": {
     "wikidata": "Q29018504",
     "sitelinks": 5,
@@ -3247,13 +3191,6 @@
     "fame": 244.296,
     "tier": "medium"
   },
-  "wikidata:Q63033647": {
-    "wikidata": "Q63033647",
-    "sitelinks": 4,
-    "pageviews": 0,
-    "fame": 160.944,
-    "tier": "medium"
-  },
   "wikidata:Q29385812": {
     "wikidata": "Q29385812",
     "sitelinks": 4,
@@ -3280,13 +3217,6 @@
     "sitelinks": 3,
     "pageviews": 0,
     "fame": 138.629,
-    "tier": "medium"
-  },
-  "wikidata:Q7597386": {
-    "wikidata": "Q7597386",
-    "sitelinks": 3,
-    "pageviews": 1556,
-    "fame": 200.536,
     "tier": "medium"
   },
   "wikidata:Q24764950": {
@@ -3429,20 +3359,6 @@
     "fame": 109.861,
     "tier": "medium"
   },
-  "wikidata:Q79565462": {
-    "wikidata": "Q79565462",
-    "sitelinks": 2,
-    "pageviews": 0,
-    "fame": 109.861,
-    "tier": "medium"
-  },
-  "wikidata:Q109501468": {
-    "wikidata": "Q109501468",
-    "sitelinks": 2,
-    "pageviews": 0,
-    "fame": 109.861,
-    "tier": "medium"
-  },
   "wikidata:Q132602738": {
     "wikidata": null,
     "sitelinks": null,
@@ -3534,13 +3450,6 @@
     "fame": 109.861,
     "tier": "medium"
   },
-  "wikidata:Q9557758": {
-    "wikidata": "Q67203959",
-    "sitelinks": 1,
-    "pageviews": 0,
-    "fame": 69.315,
-    "tier": "medium"
-  },
   "wikidata:Q17324780": {
     "wikidata": "Q138642483",
     "sitelinks": 0,
@@ -3574,13 +3483,6 @@
     "sitelinks": 2,
     "pageviews": 0,
     "fame": 109.861,
-    "tier": "medium"
-  },
-  "wikidata:Q18160599": {
-    "wikidata": "Q18160599",
-    "sitelinks": 2,
-    "pageviews": 2162,
-    "fame": 174.218,
     "tier": "medium"
   },
   "wikidata:Q18471918": {
@@ -3704,13 +3606,6 @@
   },
   "wikidata:Q111828117": {
     "wikidata": "Q111828117",
-    "sitelinks": 2,
-    "pageviews": 0,
-    "fame": 109.861,
-    "tier": "medium"
-  },
-  "wikidata:Q56784304": {
-    "wikidata": "Q56784304",
     "sitelinks": 2,
     "pageviews": 0,
     "fame": 109.861,
@@ -28428,11 +28323,6 @@
     "sitelinks": 6,
     "pageviews": 4057
   },
-  "http://www.wikidata.org/entity/Q17107995": {
-    "wikidata": "Q17107995",
-    "sitelinks": 6,
-    "pageviews": 60196
-  },
   "http://www.wikidata.org/entity/Q17796023": {
     "wikidata": "Q17796023",
     "sitelinks": 6,
@@ -28607,16 +28497,6 @@
     "wikidata": "Q20190485",
     "sitelinks": 4,
     "pageviews": 1656
-  },
-  "http://www.wikidata.org/entity/Q97353990": {
-    "wikidata": "Q97353990",
-    "sitelinks": 4,
-    "pageviews": 27994
-  },
-  "http://www.wikidata.org/entity/Q97356851": {
-    "wikidata": "Q97356851",
-    "sitelinks": 4,
-    "pageviews": 6675
   },
   "http://www.wikidata.org/entity/Q104847773": {
     "wikidata": "Q104847773",
