@@ -63,7 +63,7 @@
     .roundimgcol{grid-area:image}
     .roundtimeline{grid-area:timeline}
     .roundcontrols{grid-area:controls}
-    .roundsheet{box-sizing:border-box;max-width:1440px;margin:0 auto;padding-left:104px;padding-right:32px}
+    .roundsheet{box-sizing:border-box;max-width:1440px;margin:0 auto;padding-left:72px;padding-right:32px}
   }
   /* medium: single column — heading, image, timeline, controls */
   @media(max-width:960px){
@@ -72,7 +72,7 @@
     .roundimgcol{border-right:none}
     .roundimgcol .plate img{max-width:540px;margin:0 auto}
     .roundsidebar{width:64px}
-    .roundsheet{margin-left:72px;padding-left:8px}
+    .roundsheet{margin-left:72px}
     .tl-year-row{flex-wrap:wrap}
     .tl-drag-text{order:-1;width:100%;margin-left:0;margin-bottom:6px}
     .tltick.minor{display:none}
@@ -81,7 +81,7 @@
     .obnext,.obback,.obskip{min-height:48px;padding:12px 20px}
   }
   .roundtimeline{padding:20px 24px 16px}
-  .roundimgcol{display:flex;flex-direction:column;padding:24px;gap:16px}
+  .roundimgcol{display:flex;flex-direction:column;padding:24px;gap:24px}
   .roundcontrols{display:flex;flex-direction:column;gap:22px;padding:24px}
   .roundhd{display:flex;align-items:center;gap:8px;margin-bottom:14px;font:400 1.25rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;color:var(--ink)}
   .rdhd-drag{margin-left:auto;font:400 0.625rem/1 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -95,7 +95,7 @@
   .daygrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:14px}
   .dayrow{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--line-card);border-radius:8px;background:var(--surface)}
   @media(max-width:680px){.td{width:6px;height:6px}.daygrid{grid-template-columns:1fr}}
-  .cap{display:flex;justify-content:space-between;padding:8px 10px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+  .cap{display:flex;justify-content:space-between;padding:12px 4px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
   .btn{width:100%;padding:15px;border:none;border-radius:5px;background:var(--accent);color:#fff;
     font:700 12px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
   .btn:hover{filter:brightness(1.08)}
@@ -131,7 +131,7 @@
   .tltick.minor .tltick-lb{display:none}
   @media(max-width:960px){.tltick.minor{display:none}}
   .pills{display:flex;flex-wrap:wrap;gap:7px}
-  .pill{background:transparent;color:var(--ink);border:1px solid var(--line-card);padding:12px;border-radius:1px;
+  .pill{background:#fff;color:var(--ink);border:1px solid var(--line-card);padding:12px;border-radius:1px;
     cursor:pointer;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;white-space:normal;overflow-wrap:anywhere;max-width:100%}
   .pill:hover:not(.sel):not(.ruledout){background:var(--line-card)}
   .pill.sel{background:var(--accent);color:var(--bg);border-color:var(--accent)}

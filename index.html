@@ -678,7 +678,7 @@ function renderStart(dateStr,push=true){
     ${replay?'':`<div style="text-align:center;padding:20px 24px 0">
       <div style="text-align:center;margin-bottom:8px"><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">or play in learning mode</span></div>
       <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px">
-        ${TIERS.map((t,i)=>`<button class="pill inf" data-inf="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
+        ${TIERS.map((t,i)=>`<button class="navbtn inf" data-inf="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
       </div>
       <p style="font:400 10px/12px 'Manrope',sans-serif;color:var(--muted);max-width:400px;margin:10px auto 0;padding-bottom:40px">Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
     </div>`}
@@ -756,7 +756,7 @@ function renderRound(){
   let n=1; const fields=[];
   fields.push({k:'when', html:`
     <div class="roundhd"><span>${n}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>timeline</span></div>
-    <div class="tl-year-row" style="display:flex;align-items:center;gap:12px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="eratag" id="era">EARLY MODERN</span><span class="tl-drag-text" style="margin-left:auto;font:400 10px/12px 'Manrope',sans-serif;color:var(--muted)">drag to adjust <span style="display:inline-flex;align-items:center;line-height:0;margin:0 3px"><svg width="5" height="5" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span> <span id="schemehint">select a location on the map to reveal that region&rsquo;s general time periods</span></span></div>
+    <div class="tl-year-row" style="display:flex;align-items:center;gap:12px;margin-bottom:9px"><span class="year" id="yv">1700 CE</span><span class="eratag" id="era">EARLY MODERN</span><span class="tl-drag-text" style="margin-left:auto;font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--muted)">drag to adjust <span style="display:inline-flex;align-items:center;vertical-align:middle;margin:0 3px"><svg width="5" height="5" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span> <span id="schemehint">select a location on the map to reveal that region&rsquo;s general time periods</span></span></div>
     <div class="timeline-line-wrap">
       <div class="timeline-line-mid">
         <input type="range" id="yr" class="nudge" min="${MINY}" max="${MAXY}" value="1700" step="1" />
@@ -777,7 +777,7 @@ function renderRound(){
   const whereN=n; n++;
   let artistHTML='';
   if(it.cats.includes('artist')){
-    artistHTML=`<div class="roundhd"><span>${n}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>attributed to <span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">bonus</span></span></div>
+    artistHTML=`<div class="roundhd"><span>${n}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>attributed to</span><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);margin-left:auto">bonus</span></div>
       <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`; n++;
   }
@@ -807,7 +807,7 @@ function renderRound(){
         <div class="roundtimeline">${fields.find(f=>f.k==='when').html}</div>
         <div class="roundcontrols">${fields.filter(f=>f.k!=='when').map(f=>`<div>${f.html}</div>`).join('')}
           <div>
-            <div class="roundhd"><span>${whereN}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>place of origin</span><span class="rdhd-hint">tap to pin · pinch / +&minus; to zoom</span></div>
+            <div class="roundhd"><span>${whereN}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>place of origin</span><span class="rdhd-hint">tap to pin · Pinch or use +/&minus; to zoom</span></div>
             <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"><span class="maptap" id="maptap"></span></div>
           </div>
           ${artistHTML?`<div>${artistHTML}</div>`:''}
