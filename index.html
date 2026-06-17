@@ -413,6 +413,34 @@ const MOVEMENTS={
   "Vietnam":{dates:"c. 1000–1800",region:"Vietnam",palette:["#1f6f8b","#6f8a61","#d8b46a","#e8ddc3"]},
   "Western India, Rajasthan, Mewar":{dates:"c. 1600–1900",region:"Mewar / Rajasthan",palette:["#c0392b","#d79b32","#1f6f8b","#e8ddc3"]}
 };
+// ---- movement similarity (graded partial credit for near-miss movements) ----
+// families group sibling movements; era+region come from MOVEMENTS meta. movementSim → 0..1.
+const MOV_FAMILY={
+  renaissance:["Renaissance","Italian Renaissance","High Renaissance","Northern Renaissance","Early Netherlandish","Mannerism","Venetian school","Florentine school","Sienese school"],
+  baroque:["Baroque","Dutch Golden Age","Flemish Baroque","Rococo","Caravaggisti"],
+  academic19:["Neoclassicism","Romanticism","Academic art","Realism","French Realism","American Realism","Pre-Raphaelite","Orientalism","Barbizon school","Hudson River School"],
+  impressionist:["Impressionism","Post-Impressionism","Neo-Impressionism","Pointillism","Luminism"],
+  modernist:["Symbolism","Art Nouveau","Fauvism","Expressionism","Cubism","Futurism","Surrealism","Dada","Constructivism","Suprematism","De Stijl","Bauhaus","American modernism","Modernism","Orphism","Vorticism","Precisionism"],
+  japanese:["Ukiyo-e","Edo period","Rinpa","Kanō school","Meiji","Nihonga"],
+  chinese:["Ming dynasty","Qing dynasty","Song dynasty","Tang dynasty","Yuan dynasty"],
+};
+const MOV_FAM_OF={}; for(const f in MOV_FAMILY) for(const m of MOV_FAMILY[f]) MOV_FAM_OF[m]=f;
+function movEra(name){ const d=(MOVEMENTS[name]||{}).dates; if(!d)return null;
+  const nums=[...d.matchAll(/(\d{1,4})\s*(BCE)?/g)].map(m=>({y:+m[1],bce:!!m[2]})).filter(x=>x.y);
+  if(!nums.length)return null; const bce=/BCE/.test(d);
+  const ys=nums.map((n,i)=>{ const isBce = n.bce || (bce && i<nums.length-1) || (bce && nums.length===1); return isBce? -n.y : n.y; });
+  return [Math.min(...ys), Math.max(...ys)]; }
+function movRegion(name){ return (MOVEMENTS[name]||{}).region || (typeof styleRegion!=='undefined'?styleRegion[name]:'') || ''; }
+function movementSim(a,b){ if(!a||!b||a===b) return a===b?1:0;
+  let sim=0;
+  if(MOV_FAM_OF[a]&&MOV_FAM_OF[a]===MOV_FAM_OF[b]) sim+=0.5;          // same family
+  const ea=movEra(a), eb=movEra(b);
+  if(ea&&eb){ const lo=Math.max(ea[0],eb[0]), hi=Math.min(ea[1],eb[1]); const overlap=Math.max(0,hi-lo);
+    const span=Math.max(ea[1]-ea[0], eb[1]-eb[0], 1); sim+=0.35*Math.min(1,overlap/span); }   // era overlap
+  if(sim>0){ const ra=movRegion(a), rb=movRegion(b);   // region only sweetens an existing family/era match
+    if(ra&&rb&&(ra===rb || ra.split(/[\/]/)[0].trim()===rb.split(/[\/]/)[0].trim())) sim+=0.15; }
+  return Math.min(1,sim);
+}
 const LOCKED_PALETTE=["#d6cfbe","#ddd6c6","#ddd6c6","#d6cfbe"];
 const GLOSSARY_EMBLEM=["#2230b8","#cf9f3a","#2f8f5b","#1b1916"];
 const CUE_ALIASES={
@@ -437,7 +465,7 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
-let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={};
+let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
@@ -464,11 +492,14 @@ function buildIndexes(){
   MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra].map(a=>a.normalize("NFC")))].sort();
-  artistStyle={}; styleRegion={}; styleCountry={};
+  artistStyle={}; styleRegion={}; styleCountry={}; artistMeta={};
   const placeCounts={};
   for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
     if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region;
-    if(p.style&&p.place){ const pc=placeCounts[p.style]=placeCounts[p.style]||{}; pc[p.place]=(pc[p.place]||0)+1; } }
+    if(p.style&&p.place){ const pc=placeCounts[p.style]=placeCounts[p.style]||{}; pc[p.place]=(pc[p.place]||0)+1; }
+    // artist meta from the pool itself (active-years range + regions) → graded artist credit, no harvest
+    if(p.artist){ const k=norm(p.artist); const m=artistMeta[k]=artistMeta[k]||{lo:Infinity,hi:-Infinity,regions:new Set()};
+      if(p.y!=null){ m.lo=Math.min(m.lo,p.y); m.hi=Math.max(m.hi,p.y); } if(p.region) m.regions.add(p.region); } }
   // dominant country per style → used to keep culture options from overlapping (e.g. "Meiji" + "Japan")
   for(const s in placeCounts){ styleCountry[s]=Object.entries(placeCounts[s]).sort((a,b)=>b[1]-a[1])[0][0]; }
 }
@@ -1138,14 +1169,18 @@ function score(){
   // style
   if(it.cats.includes('style')){let s=0,note="no answer";
     if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
-      else if((RELATED_MOV[it.style]||[]).includes(guess.style)){s=Math.round(MAX_CAT*D.relMov);note="related";}
-      else note="wrong";}
+      else { // graded: curated neighbors keep full tier credit; taxonomy-similar movements get partial
+        const sim=(RELATED_MOV[it.style]||[]).includes(guess.style)?1:movementSim(guess.style,it.style);
+        if(sim>0){ s=Math.round(MAX_CAT*D.relMov*sim); note=sim>=0.999?"related":"similar"; } else note="wrong"; } }
     cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
-  // artist (bonus)
+  // artist (bonus) — graded: exact > same school > same era > same region (from pool-derived artistMeta)
   if(it.cats.includes('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
     if(ga){ if(artistMatch(guess.artist,it.artist)){s=MAX_CAT;note="matched";}
-      else if(artistStyle[ga]&&it.style&&artistStyle[ga].has(norm(it.style))){s=Math.round(MAX_CAT*0.4);note="same school";}
-      else note="not matched";}
+      else { let f=0; const am=artistMeta[ga];
+        if(artistStyle[ga]&&it.style&&artistStyle[ga].has(norm(it.style))){f=Math.max(f,0.45);note="same school";}
+        if(am){ if(it.y!=null&&am.lo<=it.y+30&&am.hi>=it.y-30&&f<0.45){f=Math.max(f,0.25);note="same era";}
+          if(it.region&&am.regions.has(it.region)&&f<0.25){f=Math.max(f,0.15);note="same region";} }
+        if(f>0){ s=Math.round(MAX_CAT*f); } else note="not matched"; } }
     cells.artist={pts:s,bonus:true,you:guess.artist||"—",actual:it.artist,note};}
   // totals
   const coreCats=it.cats.filter(c=>c!=='artist');
