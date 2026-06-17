@@ -251,6 +251,9 @@
   .glosscard.locked .nm{color:#b3ac9a}
   .glosscard .sub{font:500 10px/1.35 'IBM Plex Mono',monospace;color:var(--muted);margin-top:4px}
   .glosscard.locked .sub{color:#bcb4a2}
+  /* motion #3 — glossary unlock flip (content swaps edge-on at 50%); honors reduce-motion */
+  @keyframes glossflip{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
+  body.motion-ok .glosscard.unlock{animation:glossflip .7s ease forwards;transform-style:preserve-3d}
   .moveback{appearance:none;border:0;background:transparent;color:var(--accent);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:0}
   .movehero{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--line)}
   .movename{font:800 26px/1.05 'Archivo',sans-serif;letter-spacing:-.01em}

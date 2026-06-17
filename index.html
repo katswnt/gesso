@@ -506,7 +506,7 @@ function masteryLine(){
 }
 
 // ---------- movement glossary ----------
-function loadGlossary(){try{const g=JSON.parse(localStorage.getItem("gesso.glossary"))||{};return {met:g.met&&typeof g.met==='object'?g.met:{}}}catch{return{met:{}}}}
+function loadGlossary(){try{const g=JSON.parse(localStorage.getItem("gesso.glossary"))||{};return {met:g.met&&typeof g.met==='object'?g.met:{}, pending:Array.isArray(g.pending)?g.pending:[]}}catch{return{met:{},pending:[]}}}
 function saveGlossary(g){try{localStorage.setItem("gesso.glossary",JSON.stringify(g))}catch{}}
 function movementMeta(name){return MOVEMENTS[name]||{dates:"c. unknown",region:styleRegion[name]||"Unknown",palette:GLOSSARY_EMBLEM};}
 function emblemHTML(palette,size,locked){
@@ -522,10 +522,23 @@ function canonicalWork(name){return POOL.filter(p=>p.style===name).sort((a,b)=>(
 function bumpGlossary(name){
   if(!name)return loadGlossary();
   const g=loadGlossary(), today=runDate||todayStr();
+  const isNew=!g.met[name]; // first time this movement is met → queue its glossary card to flip-unlock
   g.met[name]=g.met[name]||{firstSeen:today,count:0};
   if(!g.met[name].firstSeen)g.met[name].firstSeen=today;
   g.met[name].count=(+g.met[name].count||0)+1;
+  if(isNew && !g.pending.includes(name)) g.pending.push(name);
   saveGlossary(g); return g;
+}
+// shared inner markup for a glossary card (locked = masked/dim, unlocked = revealed) — used for the flip
+function glossCardInner(name){const meta=movementMeta(name);return `${emblemHTML(meta.palette,15,false)}<div class="nm">${esc(name)}</div><div class="sub">${esc(meta.dates)} &middot; ${esc(meta.region)}</div>`;}
+function glossCardInnerLocked(name){return `${emblemHTML(movementMeta(name).palette,15,true)}<div class="nm">${esc(maskName(name))}</div><div class="sub">Not yet met</div>`;}
+// motion #3 — flip a just-unlocked card from locked → revealed (content swaps edge-on at 50%)
+function unlockCard(card,revealedInner){
+  card.classList.remove('pending-unlock');
+  if(typeof settings!=='undefined'&&settings.reduceMotion){card.innerHTML=revealedInner;return;}
+  card.classList.add('unlock');
+  setTimeout(()=>{card.innerHTML=revealedInner;},350);
+  setTimeout(()=>card.classList.remove('unlock'),700);
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
 // Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
@@ -638,16 +651,22 @@ function renderCollections(){
 function renderGlossary(){
   clearTimers();
   const g=loadGlossary(), total=glossaryTotal(), metCount=MOVEMENT_NAMES.filter(n=>g.met[n]).length, pct=total?metCount/total*100:0;
+  const pending=new Set(g.pending||[]); // newly-met this session → render locked, then flip-unlock on mount
   const cards=MOVEMENT_NAMES.map(name=>{
-    const meta=movementMeta(name), met=g.met[name], unlocked=!!met, em=emblemHTML(meta.palette,15,!unlocked);
-    const body=`${em}<div class="nm">${unlocked?esc(name):esc(maskName(name))}</div><div class="sub">${unlocked?`${esc(meta.dates)} &middot; ${esc(meta.region)}`:'Not yet met'}</div>`;
-    return unlocked?`<button type="button" class="glosscard" data-movement="${esc(name)}">${body}</button>`:`<div class="glosscard locked" aria-label="Locked glossary card">${body}</div>`;
+    const unlocked=!!g.met[name], flip=unlocked&&pending.has(name);
+    if(flip) return `<button type="button" class="glosscard pending-unlock" data-movement="${esc(name)}">${glossCardInnerLocked(name)}</button>`;
+    return unlocked?`<button type="button" class="glosscard" data-movement="${esc(name)}">${glossCardInner(name)}</button>`:`<div class="glosscard locked" aria-label="Locked glossary card">${glossCardInnerLocked(name)}</div>`;
   }).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
     <div class="glosshead"><div class="glosstitle">${emblemHTML(GLOSSARY_EMBLEM,9,false)}<span>Glossary</span></div><div class="glossmeta">${metCount} / ${total} met</div></div>
     <div style="padding:16px 22px 0"><div class="glossbar"><span style="width:${pct.toFixed(1)}%"></span></div></div>
     <div class="glossgrid">${cards}</div>
   </div>${ATTRIB}</div></div>`;
+  if(pending.size){ // flip each newly-unlocked card, then clear the queue so it only animates once
+    const stage=document.getElementById('stage');
+    pending.forEach(name=>{ const card=stage.querySelector(`.pending-unlock[data-movement="${name.replace(/"/g,'\\"')}"]`); if(card) unlockCard(card,glossCardInner(name)); });
+    const g2=loadGlossary(); g2.pending=[]; saveGlossary(g2);
+  }
 }
 function renderMovement(name){
   clearTimers();
