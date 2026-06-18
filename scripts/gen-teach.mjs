@@ -4,8 +4,10 @@
 //   optional: node scripts/gen-teach.mjs <shardIdx> <numShards>   (to split across parallel runs)
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { readGlobal } from "./lib/static-module.mjs";
 
-const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
+// robust load (writeAssignment writes "window.X=[...]" without spaces; a naive string-replace breaks on it)
+const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const SCHEMA = "scripts/teach-schema.json";
 const OUT = "data/teach-works.js";
 const BATCH = 8; // richer schema (why + cues + variable-length guide) → smaller batches keep responses reliable
@@ -17,7 +19,10 @@ try { const t=readFileSync(OUT,"utf8"); out = JSON.parse(t.slice(t.indexOf("{",t
 const fy = y => y<0 ? (-y)+" BCE" : y+" CE";
 // done = has the FULL richer schema (why + cues + guide). Entries with only why+cues get back-filled.
 const done = id => out[id] && Array.isArray(out[id].guide) && out[id].guide.length>=5;
-let work = pool.filter(p=>!done(p.id));
+// generate easy→medium→hard: order missing-notes works by recognizability (fame.js overlay, else pool fame)
+let FAME={}; try{ const f=readFileSync("data/fame.js","utf8"); FAME=JSON.parse(f.slice(f.indexOf("{"), f.lastIndexOf("}")+1)); }catch{}
+const fameOf = p => (FAME[p.id]!=null ? FAME[p.id] : (p.fame||0));
+let work = pool.filter(p=>!done(p.id)).sort((a,b)=>fameOf(b)-fameOf(a));
 if(sharded) work = work.filter((_,i)=> i%N===K);
 const todo = work;
 const missingGuide = pool.filter(p=>out[p.id] && !done(p.id)).length;
