@@ -159,3 +159,16 @@ Even before the taxonomy, audit which pool movements have **no** `RELATED_MOV` e
 2. **A — movement taxonomy + sim()** (~1 day: author the family/era/region table, swap the scoring branch). Backward-compatible; `RELATED_MOV` becomes an override.
 3. **B — artist meta harvest + graded credit** (~1–2 days: the P569/P570/P27 harvest is the bulk; scoring change is small).
 Keep When/Where untouched. All changes are isolated to `score()` + small data tables; deterministic, so dailies stay fair.
+
+## Historical geographic regions (the "where to place your pin" range) — APPROVED, build after the current queue
+**Why:** like Anthropeum, show the work's true geographic/cultural range on the reveal map (the Roman Empire for a Roman flask, not just modern Italy) so players LEARN where to pin. Modern-country shading alone misteaches ancient/cross-border cultures.
+
+**Findings (researched 2026-06):** Anthropeum's method is undocumented, but the empire-extent shading means a historical-boundaries dataset. Wikidata `P3896` geoshape is NOT viable (tested: ~1/10 major cultures have one — only Roman Empire). The real sources are open GIS datasets: **historical-basemaps** (aourednik; GeoJSON world boundaries by year, NAME/PARTOF fields — lean, likely what Anthropeum uses) or **Cliopatria** (Nature Sci Data; 1600+ polities 3400 BCE–2024 CE — comprehensive, larger). Decision: **historical-basemaps** (lean) as the source.
+
+**Approach (regenerable reference data — fits the no-stale-data rule, same category as countries.js):**
+1. `scripts/gen-regions.mjs`: read historical-basemaps era files; for each distinct **culture + era** in the pool, extract the matching polity polygon → write a slim, compact **`data/regions.js`** (`cultureKey → GeoJSON`). Only the shapes we use → small; re-run to refresh from upstream → never stale.
+2. The one curated bit: a small **culture/style-name → dataset-NAME map** (our "Roman art" → "Roman Empire"), with a **modern-country fallback** (`countries.js`) when a work has no mapped historical region. Add an audit that flags pool cultures with no region mapping (so coverage gaps surface, don't silently fall back).
+3. **Reveal map:** shade the work's region polygon (the ~20-line Leaflet bit) so players see the range.
+4. **Region-aware scoring:** for works with a historical region, give full WHERE credit anywhere inside it (so shading and scoring agree); modern-country point-in-polygon for national schools, as today. This is arguably more correct for ancient art ("it's Roman" shouldn't require guessing one modern nation).
+
+**Effort:** medium — gen-regions + the name map + region-scoring are the work; dataset + shading are easy. Phase 1: the ~40 biggest cross-border empires/cultures (covers most ancient works). Source: https://github.com/aourednik/historical-basemaps (CC).
