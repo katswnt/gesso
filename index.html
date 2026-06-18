@@ -1417,7 +1417,8 @@ function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const ta
 
 // ---------- RESULTS ----------
 function shareSquare(c,r){const it=r.it,cell=r.cells[c];const f=cell.pts/MAX_CAT;
-  if(c==='when'&&cell.bull)return "🎯"; if(c==='artist'&&cell.pts===MAX_CAT)return "⭐"; return emFor(f);}
+  // bullseye 🎯 for any category nailed exactly (⭐ for the artist bonus) — mirrors the share-card logic
+  if(c==='artist'&&cell.pts===MAX_CAT)return "⭐"; if(cell.pts===MAX_CAT||(c==='when'&&cell.bull))return "🎯"; return emFor(f);}
 function resultSummary(){
   const base=results.reduce((a,r)=>a+r.coreNet,0), bonus=results.reduce((a,r)=>a+r.bonus,0);
   const bonusMax=results.reduce((a,r)=>a+(r.cells.artist?MAX_CAT:0),0);
