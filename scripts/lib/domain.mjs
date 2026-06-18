@@ -2,6 +2,18 @@
 // process, NOT the support). Imported by pipeline scripts; the client keeps a mirror in index.html that
 // tests/medium.test.mjs asserts stays in sync. Keep this and the client copy identical.
 
+// Normalize a Wikidata artist label so the same person doesn't appear under multiple spellings.
+// Conservative: strips appended CJK/Japanese characters (and the space before them) and tidies
+// whitespace — e.g. "Katsushika Hokusai 葛飾北斎" → "Katsushika Hokusai". Leaves Latin diacritics
+// (ō/é/ʿ) intact and never merges genuinely different names (no hyphen/case guessing).
+const CJK_RE = /[぀-ヿ㐀-䶿一-鿿豈-﫿　]/;
+export function normalizeArtist(name){
+  let s = String(name||"");
+  // drop a trailing run of CJK (optionally space-separated) at the end of the string
+  s = s.replace(/[\s　]*[぀-ヿ㐀-䶿一-鿿豈-﫿　][぀-ヿ㐀-䶿一-鿿豈-﫿　\s]*$/, "");
+  return s.replace(/\s+/g, " ").trim();
+}
+
 // Player-facing medium → coarse family (used for "same family" partial credit + distractor selection).
 export const MED_FAMILY = {
   "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint","Drawing":"paint",

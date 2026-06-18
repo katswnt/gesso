@@ -5,6 +5,7 @@
 // guessable "style". Run: node scripts/fetch-collection.mjs <museumQid> <srcTag> [cap]
 //   e.g. node scripts/fetch-collection.mjs Q167863 quaibranly 400
 import { readFileSync, writeFileSync } from "node:fs";
+import { normalizeArtist } from "./lib/domain.mjs";
 const [QID, SRC="collection", CAP="600"] = process.argv.slice(2);
 if(!/^Q\d+$/.test(QID||"")){ console.error("usage: node scripts/fetch-collection.mjs <museumQid> <srcTag> [cap]"); process.exit(1); }
 const UA="GessoCollection/1.0 (kathryn.swint@gmail.com)";
@@ -50,7 +51,7 @@ for(const b of j.results.bindings){
   const country=(b.country&&toCo(b.country.value))||(b.locCountry&&toCo(b.locCountry.value))||"";
   const co=country?CO[country.toLowerCase()]:null; const [lat,lng]=co?centroid(co):[null,null];
   const culture=b.culture?b.culture.value:""; const movement=b.movement?b.movement.value:"";
-  out.push({ id, title, artist:b.creator?b.creator.value:"", y:b.year?yr(b.year.value):null,
+  out.push({ id, title, artist:b.creator?normalizeArtist(b.creator.value):"", y:b.year?yr(b.year.value):null,
     place:country, region:country?(CONT[country.toLowerCase()]||"Africa"):"", lat, lng,
     medium:b.material?b.material.value:"", style:culture||movement, styleKind:culture?"culture":(movement?"movement":""),
     img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`, src:SRC,
