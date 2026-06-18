@@ -203,7 +203,9 @@ function schemeFor(it){
   if(/india|mughal|rajput|deccan|nepal|tibet/.test(t))return 'india';
   if(/iran|persia|islam|ottoman|turkey|safavid|qajar|syria/.test(t))return 'persia';
   if(/egypt/.test(t))return 'egypt';
-  if(/greece|rome|roman|greek/.test(t))return 'classical';
+  // classical scheme is ANTIQUITY-only — a Renaissance/Baroque work made in "Italy (Rome)" must NOT get
+  // the ancient periods (its "Late Antique" bucket spans 476–3000, which collapsed 1505 & 2025 into one period)
+  if(/greece|rome|roman|greek|hellenistic|etruscan/.test(t) && it.y!=null && it.y<600)return 'classical';
   if(it.region==='Europe'||it.region==='North America')return 'western';
   return 'neutral';
 }
