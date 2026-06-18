@@ -21,7 +21,11 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
-<script src="data/teach-works.js"></script>
+<!-- teach-works.js is ~9MB of per-work study notes, needed only at reveal (not first paint), so it's
+     deferred. It MERGES window.ARTEFACTUM_CUES.work into the object cues.js created (same reference the
+     app captured), so notes hydrate live once it loads; until then studyFor() falls back to the
+     style/culture/region cues from cues.js. -->
+<script src="data/teach-works.js" defer></script>
 <script src="data/hotspots.js"></script>
 <script src="data/pool.js"></script>
 <script src="data/fame.js"></script>

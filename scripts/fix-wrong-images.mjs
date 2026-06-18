@@ -20,5 +20,5 @@ const before=pool.length;
 const removed=pool.filter(p=>REMOVE.has(p.title)).map(p=>p.title);
 pool=pool.filter(p=>!REMOVE.has(p.title));
 writeFileSync("data/pool.js", raw.slice(0,raw.indexOf("["))+JSON.stringify(pool)+raw.slice(raw.lastIndexOf("]")+1));
-writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES="+JSON.stringify(CUES)+";\n");
+writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES=window.ARTEFACTUM_CUES||{};\nwindow.ARTEFACTUM_CUES.work="+JSON.stringify(CUES.work||CUES)+";\n");
 console.log("fixed collisions (Irises, Olympia):",fixed,"| removed non-art:",removed.join(", "),"| pool",before,"→",pool.length);

@@ -33,7 +33,7 @@ global.window.ARTEFACTUM_CUES=undefined; new Function(readFileSync("data/teach-w
 const CUES=window.ARTEFACTUM_CUES; CUES.work=CUES.work||{};
 let notesAdded=0;
 for(const n of notes){ if(!CUES.work[n.id]){ CUES.work[n.id]={why:n.why,cues:n.cues,guide:n.guide}; notesAdded++; } }
-writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES="+JSON.stringify(CUES)+";\n");
+writeFileSync("data/teach-works.js","window.ARTEFACTUM_CUES=window.ARTEFACTUM_CUES||{};\nwindow.ARTEFACTUM_CUES.work="+JSON.stringify(CUES.work||CUES)+";\n");
 
 console.log(`promoted ${added} canon icons (skipped ${skipped}) | pool now ${pool.length} | notes added ${notesAdded}`);
 const noCoord=pool.filter(p=>p.canon&&(p.lat==null)).map(p=>p.title);
