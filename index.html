@@ -1527,16 +1527,21 @@ function renderFinal(){
 // ---------- zoom lightbox ----------
 // sharper image for the on-screen display (not the deep-zoom): Met web-large is only ~620px → use
 // original (also pre-warms the zoom cache); AIC/V&A IIIF 843px → 1200px. Others already adequate.
+// CARD = a light ~1000–1200px image for every source (fast + reliable on slow networks); the bigger
+// image is fetched ONLY when the zoom view opens (hiRes). Never pull a full-res original onto the card.
 function displaySrc(src){
-  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/");
-  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1200,/");
-  return src;
+  if(src.includes("images.metmuseum.org")) return src;                                   // Met: keep web-large (~600), not original
+  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1200,/");      // IIIF: Harvard / V&A / AIC-direct
+  if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=1000"):src+(src.includes("?")?"&":"?")+"width=1000"; // guard against full-res Commons cards
+  return src;                                                                            // Cleveland _web, LoC tile, Smithsonian, Blob — already card-sized
 }
+// ZOOM = source max, loaded on demand when the lightbox opens.
 function hiRes(src){
-  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met: 622px → ~3800px
-  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1600,/"); // IIIF (AIC, V&A): 843px → 1600px
-  if(src.includes("clevelandart.org")) return src.replace("_web.jpg","_print.jpg"); // Cleveland: 900px → ~3400px
-  return src.replace(/width=\d+/,"width=2000"); // Wikimedia Commons larger render
+  if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met: ~600 → full original
+  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/2000,/");        // IIIF: → 2000px
+  if(src.includes("clevelandart.org")) return src.replace("_web.jpg","_print.jpg");          // Cleveland: → ~3400px
+  if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=2400"):src+(src.includes("?")?"&":"?")+"width=2400"; // Commons larger render
+  return src;                                                                              // LoC, Smithsonian, Blob — single fixed size
 }
 function openZoom(src){
   const lb=document.createElement('div');lb.className='lightbox';
