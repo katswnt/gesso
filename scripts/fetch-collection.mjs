@@ -23,10 +23,13 @@ async function sparql(qy){ const u="https://query.wikidata.org/sparql?format=jso
     catch(e){ await sleep(1500*(t+1)); } } return null; }
 
 // one row per object (SAMPLE collapses multi-valued props); label/material/culture in English
+// ORDER BY sitelinks DESC so the CAP grabs the MOST FAMOUS objects (most Wikipedia language links)
+// first, not an arbitrary slice. sitelinks is a per-item count, so MAX over the GROUP BY = the value.
 const Q=`SELECT ?i (SAMPLE(?img) AS ?image) (SAMPLE(?t) AS ?title) (SAMPLE(?inc) AS ?year)
   (SAMPLE(?creatorL) AS ?creator) (SAMPLE(?countryL) AS ?country) (SAMPLE(?locCountryL) AS ?locCountry)
-  (SAMPLE(?cultureL) AS ?culture) (SAMPLE(?matL) AS ?material) (SAMPLE(?movL) AS ?movement) WHERE {
-  ?i wdt:P195 wd:${QID}; wdt:P18 ?img.
+  (SAMPLE(?cultureL) AS ?culture) (SAMPLE(?matL) AS ?material) (SAMPLE(?movL) AS ?movement)
+  (MAX(?sl) AS ?sitelinks) WHERE {
+  ?i wdt:P195 wd:${QID}; wdt:P18 ?img; wikibase:sitelinks ?sl.
   OPTIONAL { ?i rdfs:label ?t. FILTER(LANG(?t)="en") }
   OPTIONAL { ?i wdt:P571 ?inc. }
   OPTIONAL { ?i wdt:P170 ?cr. ?cr rdfs:label ?creatorL. FILTER(LANG(?creatorL)="en") }
@@ -35,7 +38,7 @@ const Q=`SELECT ?i (SAMPLE(?img) AS ?image) (SAMPLE(?t) AS ?title) (SAMPLE(?inc)
   OPTIONAL { ?i wdt:P2596 ?cul. ?cul rdfs:label ?cultureL. FILTER(LANG(?cultureL)="en") }
   OPTIONAL { ?i wdt:P186 ?m. ?m rdfs:label ?matL. FILTER(LANG(?matL)="en") }
   OPTIONAL { ?i wdt:P135 ?mv. ?mv rdfs:label ?movL. FILTER(LANG(?movL)="en") }
-} GROUP BY ?i LIMIT ${parseInt(CAP,10)}`;
+} GROUP BY ?i ORDER BY DESC(?sitelinks) LIMIT ${parseInt(CAP,10)}`;
 
 const j=await sparql(Q);
 if(!j||!j.results){ console.error("no results"); process.exit(1); }
@@ -50,7 +53,8 @@ for(const b of j.results.bindings){
   out.push({ id, title, artist:b.creator?b.creator.value:"", y:b.year?yr(b.year.value):null,
     place:country, region:country?(CONT[country.toLowerCase()]||"Africa"):"", lat, lng,
     medium:b.material?b.material.value:"", style:culture||movement, styleKind:culture?"culture":(movement?"movement":""),
-    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`, src:SRC });
+    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`, src:SRC,
+    sitelinks:b.sitelinks?parseInt(b.sitelinks.value,10):0 });
 }
 const file=`data/incoming/collection-${SRC}.json`;
 writeFileSync(file, JSON.stringify(out,null,1));
