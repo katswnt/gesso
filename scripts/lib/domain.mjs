@@ -46,7 +46,11 @@ export function simplifyMedium(s){
   if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing|tracing|cartoon/.test(t))return "Drawing";
   if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
   if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
-  if(/lacquer|maki-e/.test(t))return "Lacquer"; if(/ivory|tusk|^\s*bone\s*$/.test(t))return "Ivory"; if(/glass|enamel|cloisonn/.test(t))return "Glass";
+  if(/lacquer|maki-e/.test(t))return "Lacquer";
+  // ivory the carving material — NOT "ivory black" (a pigment) or "ivory wove/laid paper" (a paper colour);
+  // those are works on paper, handled by the drawing/paper rules above/below.
+  if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory";
+  if(/glass|enamel|cloisonn/.test(t))return "Glass";
   if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
   if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
   if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
