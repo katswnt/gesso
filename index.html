@@ -29,6 +29,7 @@
 <script src="data/hotspots.js"></script>
 <script src="data/pool.js"></script>
 <script src="data/fame.js"></script>
+<script src="data/regions.js"></script>
 <script src="data/daily-order.js"></script>
 <script src="data/collections.js"></script>
 <script src="data/countries.js"></script>
@@ -1370,6 +1371,7 @@ function renderReveal(r){
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
+          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#2f8f5b;opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
         </div>
       </div>
     </div>
@@ -1405,7 +1407,13 @@ function renderReveal(r){
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
     poly=L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:settings.reduceMotion?'5,6':null}).addTo(rm);
     L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
-  try{rm.fitBounds(pts,{padding:[28,28],maxZoom:5,animate:!settings.reduceMotion});}catch{}
+  // shade the work's historical culture/empire range (Anthropeum-style) — data: historical-basemaps (GPL-3.0)
+  let regionLayer=null; const reg=(window.ARTEFACTUM_REGIONS||{})[it.style];
+  if(reg&&reg.geometry&&reg.geometry.length){ try{
+    const gj={type:"Feature",geometry:{type:"MultiPolygon",coordinates:reg.geometry.map(ring=>[ring])}};
+    regionLayer=L.geoJSON(gj,{style:{color:'#2f8f5b',weight:1,fillColor:'#2f8f5b',fillOpacity:.15}}).addTo(rm);
+  }catch{} }
+  try{ let b=L.latLngBounds(pts); if(regionLayer){try{b=b.extend(regionLayer.getBounds());}catch{}} rm.fitBounds(b,{padding:[28,28],maxZoom:5,animate:!settings.reduceMotion});}catch{}
   setTimeout(()=>{rm.invalidateSize();
     if(poly&&!settings.reduceMotion){ try{ const path=poly.getElement(); const len=path.getTotalLength();
       path.style.transition='none'; path.style.strokeDasharray=len; path.style.strokeDashoffset=len;
