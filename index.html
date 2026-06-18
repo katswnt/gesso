@@ -526,11 +526,29 @@ function buildIndexes(){
   // dominant country per style → used to keep culture options from overlapping (e.g. "Meiji" + "Japan")
   for(const s in placeCounts){ styleCountry[s]=Object.entries(placeCounts[s]).sort((a,b)=>b[1]-a[1])[0][0]; }
 }
-// Easy = a small elite slice of the most-recognized works (everyone should at least KNOW them);
-// the rest split across medium/hard/impossible. POOL is fame-sorted in buildIndexes().
+function frozenTierItems(key){
+  const daily=window.ARTEFACTUM_DAILY||{};
+  if(!daily.meta) return null;
+  const ids=daily[key];
+  if(!Array.isArray(ids)) return null;
+  const byId = window.__BYID || (window.__BYID = Object.fromEntries(POOL.map(p=>[p.id,p])));
+  const seen=new Set(), out=[];
+  for(const id of ids){ if(seen.has(id)) continue; const p=byId[id]; if(!p) continue; seen.add(id); out.push(p); }
+  return out.length ? out : null;
+}
+function tierCount(i){
+  const key=TIERS[i]&&TIERS[i].key;
+  const meta=(window.ARTEFACTUM_DAILY||{}).meta;
+  const count=key&&meta&&meta.tiers&&meta.tiers[key]&&meta.tiers[key].distinctCount;
+  return Number.isFinite(count) ? count : tierItems(i).length;
+}
+// When the freeze ships metadata, use the frozen ID tiers as the source of truth.
+// Older data/daily-order.js files have no meta, so keep the live percentage fallback.
 function tierItems(i){
-  // fame-sorted pool sliced by percentage so tiers scale with pool size:
-  // Easy = top 15% (most recognizable), Medium 15–45%, Hard 45–72%, Impossible 72–100%.
+  const key=TIERS[i]&&TIERS[i].key;
+  const frozen=key&&frozenTierItems(key);
+  if(frozen) return frozen;
+  // fame-sorted pool sliced by percentage so tiers scale with pool size.
   const n=POOL.length;
   // graduated: few famous works, many obscure → tiers widen toward Impossible
   const cuts=[0, Math.round(n*0.10), Math.round(n*0.35), Math.round(n*0.65), n];
@@ -596,7 +614,7 @@ function unlockCard(card,revealedInner){
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
 // Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
-const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
+const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard","harvard-blob":"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
 const COLL_META={
   aic:{name:"Art Institute of Chicago",city:"Chicago, USA",lat:41.8796,lng:-87.6237,url:"https://www.artic.edu",blurb:"Open-access API; thousands of CC0 public-domain works."},
   met:{name:"The Metropolitan Museum of Art",city:"New York, USA",lat:40.7794,lng:-73.9632,url:"https://www.metmuseum.org",blurb:"CC0 open access — a global collection, strong outside the West."},
@@ -878,7 +896,7 @@ function renderStart(dateStr,push=true){
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
-        <div class="ct">${tierItems(i).length} works available</div></button>`).join('')}
+        <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
     ${replay?'':`<div class="practice">
       <div class="pinf">&infin;</div>

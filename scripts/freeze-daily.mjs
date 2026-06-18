@@ -32,6 +32,27 @@ const rest=ranked.slice(T1_SIZE+T2_SIZE).map(p=>p.id); const r=rest.length;
 const mc=[0, Math.round(r*0.34), Math.round(r*0.67), r];
 ["medium","hard","impossible"].forEach((k,i)=>{ out[k]=seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`); });
 
+const easyDistinctCount = new Set([...T1ids, ...T2ids]).size;
+out.meta = {
+  version: 1,
+  policy: "gesso-daily-freeze-v2",
+  poolSize: n,
+  easy: {
+    t1Size: T1ids.length,
+    t2Size: T2ids.length,
+    t1PerDay: 4,
+    t2PerDay: 1,
+    distinctCount: easyDistinctCount,
+    rotationCount: easy.length
+  },
+  tiers: {
+    easy: { distinctCount: easyDistinctCount, rotationCount: easy.length },
+    medium: { distinctCount: out.medium.length, rotationCount: out.medium.length },
+    hard: { distinctCount: out.hard.length, rotationCount: out.hard.length },
+    impossible: { distinctCount: out.impossible.length, rotationCount: out.impossible.length }
+  }
+};
+
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
 console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2s.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);
 console.log("Easy daily = 4 icons + 1 recognizable; icons recur ~"+Math.round(T1s.length/4)+"d");
