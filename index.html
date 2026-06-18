@@ -877,7 +877,9 @@ function openMenu(){
   });
   document.addEventListener('keydown',esc);document.body.appendChild(veil);
 }
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.wordmark');if(b){e.preventDefault();renderStart();}});
+// Logo → home. Match the whole .brand (and any .wordmark), not just the tiny wordmark text, so clicking
+// anywhere on the logo reliably navigates home from every screen.
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.brand,.wordmark');if(b){e.preventDefault();renderStart();}});
 function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}}
 
 // ---------- START ----------

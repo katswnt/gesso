@@ -20,7 +20,7 @@
   /* header */
   .hd{position:sticky;top:0;z-index:600;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .hdinner{max-width:1080px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between}
-  .hd .brand{display:flex;align-items:baseline;gap:13px}
+  .hd .brand{display:flex;align-items:baseline;gap:13px;cursor:pointer}
   .wordmark{font:700 19px 'Archivo',sans-serif;letter-spacing:-.01em;color:var(--accent);text-transform:lowercase;cursor:pointer}
   .accn{font:500 11px 'IBM Plex Mono',monospace;color:var(--muted)}
   .hd .right{display:flex;align-items:center;gap:18px}
