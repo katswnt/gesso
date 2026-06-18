@@ -544,7 +544,9 @@ const MOVEMENTS={
   "Arts and Crafts (movement)":{dates:"c. 1880–1920",region:"Britain",palette:["#2f5f4a","#7a3e24","#c9a24b","#ece4d6"]},
   "Pictorialism":{dates:"c. 1885–1915",region:"Europe / United States",palette:["#3a352e","#6f6657","#a89e86","#e7e2d6"]},
   "Punic":{dates:"c. 800–146 BCE",region:"Carthage / Tunisia",palette:["#7a1f1f","#2f5f73","#d8b46a","#e8ddc3"]},
-  "Rapa Nui people":{dates:"c. 1200–1860",region:"Rapa Nui / Chile",palette:["#3a4a44","#6f6a5b","#a98244","#e8ddc3"]}
+  "Rapa Nui people":{dates:"c. 1200–1860",region:"Rapa Nui / Chile",palette:["#3a4a44","#6f6a5b","#a98244","#e8ddc3"]},
+  "Islamic art":{dates:"c. 650–1500",region:"Middle East / N. Africa",palette:["#1f3a5f","#2f8f6a","#d79b32","#e8ddc3"]},
+  "Ethiopian art":{dates:"c. 1300–1900",region:"Ethiopia",palette:["#7a1f1f","#d4af37","#2f6f5f","#e8ddc3"]}
 };
 // ---- movement similarity (graded partial credit for near-miss movements) ----
 // movementSim(a,b) returns a 0..1 taxonomy similarity only. score() then multiplies
@@ -560,11 +562,11 @@ const MOV_FAMILY={
   chinese:["Ming dynasty","Qing dynasty","Song dynasty","Tang dynasty","Yuan dynasty","Han dynasty","Literati painting","Chinese court painting","Bird-and-flower painting","Chinese Buddhist art","Neolithic Chinese jade","Shang–Zhou bronze"],
   egyptian:["Egypt","Ancient Egypt","Predynastic Egypt","Old Kingdom","Middle Kingdom","New Kingdom","Third Intermediate Period","Late Period Egypt","Ptolemaic Egypt","Roman Egypt","Coptic art","Islamic Egypt"],
   greek:["Cycladic","Greek Geometric art","Black-figure pottery","Red-figure pottery","Greek Archaic","Archaic Greek sculpture","Greek Classical","Hellenistic art"],
-  islamicworld:["Safavid","Qajar art","Ottoman","Iznik","Timurid","Seljuq","Ilkhanid art","Persian miniature"],
+  islamicworld:["Safavid","Qajar art","Ottoman","Iznik","Timurid","Seljuq","Ilkhanid art","Persian miniature","Islamic art","Persian Islamic pottery"],
   southasian:["Mughal painting","Rajput painting","Pahari painting","Chola bronze","Jain art","Hindu temple sculpture"],
   andean:["Moche","Inca","Chimú","Wari","Calima (Ilama)"],
   meso:["Maya","Aztec","Olmec","Teotihuacan","Veracruz"],
-  african:["Dogon people","Yoruba","Luba","Kongo","Edo peoples","Baule"],
+  african:["Dogon people","Yoruba","Luba","Kongo","Edo peoples","Baule","Ethiopian art","Bembe","Pende","Songye","Chokwe","Kuba","Lega"],
 };
 const MOV_FAM_OF={}; for(const f in MOV_FAMILY) for(const m of MOV_FAMILY[f]) MOV_FAM_OF[m]=f;
 function movEra(name){ const d=(MOVEMENTS[name]||{}).dates; if(!d)return null;
