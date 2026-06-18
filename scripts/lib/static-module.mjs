@@ -26,7 +26,7 @@ export function writeAtomic(path, body){
 
 // Canonical `window.NAME = <json>;` module (pool/fame/hotspots/daily-order/countries/…).
 export function writeAssignment(path, name, value){
-  writeAtomic(path, `window.${name}=${JSON.stringify(value)};\n`);
+  writeAtomic(path, `window.${name} = ${JSON.stringify(value)};\n`); // spaced form: many legacy scripts parse via .replace("window.NAME = ","")
 }
 
 // teach-works.js merge form: adds `.work` to whatever cues.js already put on window.ARTEFACTUM_CUES,
