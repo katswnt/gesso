@@ -683,6 +683,8 @@ function renderCollections(){
     ? `By origin the pool leans <strong style="color:var(--ink)">${topAdj}</strong>, and the works most people <em>recognise</em> skew Western too — the canon's bias runs deep, in the holdings and in what we're taught to know. The honest why:`
     : `By origin the pool actually leans <strong style="color:var(--ink)">${topAdj}</strong> — but the works most people <em>recognise</em> skew Western. The honest why:`;
   const regPct=n=>{const r=C.region.find(x=>x[0]===n);return r?Math.round(r[1]/C.total*100):0;}; // live %, never stale
+  // live list of the open-access source museums (auto-includes any source we add — no stale prose)
+  const srcList=C.sources.filter(s=>s.count>0 && s.name!=='Wikidata & Wikimedia Commons').map(s=>s.name).join(', ');
   const canonCards=C.canon.map(c=>`<a class="colcard" href="${c.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;max-width:300px;flex:1 1 200px">
     <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
     <div style="font-size:12px;color:var(--accent);margin-top:6px">e.g. ${esc(c.work)}</div></a>`).join('');
@@ -914,7 +916,7 @@ function renderStart(dateStr,push=true){
       <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia — is ${b.europe}% European:</p>
+      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of ${srcList}, plus works surfaced via Wikidata/Wikimedia Commons — is ${b.europe}% European:</p>
       <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
     </div>
     <details class="faq" style="max-width:520px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding:14px 24px 0;text-align:center">
