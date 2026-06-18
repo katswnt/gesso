@@ -653,6 +653,13 @@ function renderCollections(){
     <span class="mono" style="width:118px;flex:0 0 auto;font-size:12px;color:var(--ink)">${esc(name)}</span>
     <div class="colbar" style="width:${Math.max(8,Math.round(c/maxR*72))}%;background:${REGCOL[name]||'var(--accent)'}">${c}</div>
     <span class="mono" style="font-size:11px;color:var(--muted)">${Math.round(c/C.total*100)}%</span></div>`).join('');
+  // data-driven "leans X" line (was hardcoded "Asian" and drifted as the pool grew). If the top
+  // origin is itself Western, drop the "but recognition skews Western" contrast — it would be false.
+  const REG_ADJ={Europe:'European',Asia:'Asian',Africa:'African','North America':'North American','South America':'South American',Oceania:'Oceanian'};
+  const topReg=(C.region[0]||['',0])[0], topAdj=REG_ADJ[topReg]||topReg, topWestern=(topReg==='Europe'||topReg==='North America');
+  const leansLine=topWestern
+    ? `By origin the pool leans <strong style="color:var(--ink)">${topAdj}</strong>, and the works most people <em>recognise</em> skew Western too — the canon's bias runs deep, in the holdings and in what we're taught to know. The honest why:`
+    : `By origin the pool actually leans <strong style="color:var(--ink)">${topAdj}</strong> — but the works most people <em>recognise</em> skew Western. The honest why:`;
   const canonCards=C.canon.map(c=>`<a class="colcard" href="${c.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;max-width:300px;flex:1 1 200px">
     <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
     <div style="font-size:12px;color:var(--accent);margin-top:6px">${esc(c.work)}</div></a>`).join('');
@@ -675,7 +682,7 @@ function renderCollections(){
     <p style="color:var(--muted);line-height:1.55;font-size:14px;margin:0 0 14px">Their most-recognized works reach us through Wikidata &amp; Wikimedia Commons (public-domain images), credited to each holding museum:</p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${C.viaWd.map(m=>`<a class="colcard" href="${m.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;flex:0 1 auto;padding:9px 13px"><span style="font:700 13px Archivo,sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}</span></a>`).join('')}</div>
     <div class="kick" style="margin:36px 0 6px">Why the collection looks like this</div>
-    <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">By origin the pool actually leans <strong style="color:var(--ink)">Asian</strong> — but the works most people <em>recognise</em> skew Western. The honest why:</p>
+    <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">${leansLine}</p>
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-1929, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
@@ -685,7 +692,11 @@ function renderCollections(){
     <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
       <div class="mono" style="color:var(--accent);font-weight:700">04</div>
       <div style="font:700 15px Archivo;margin:4px 0 7px">The African-museum gap</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.55">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.</div></div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.55">We wanted to source directly from museums across Africa. But on Wikidata, the Bardo (Tunis), Iziko (Cape Town), and the National Museum (Lagos) have effectively zero works with open images — only the Egyptian Museum, Cairo has real coverage. African heritage is overwhelmingly catalogued under <em>Western</em> museums (the Benin Bronzes sit in London and New York, not Lagos). So African art reaches this site mostly through Western holding-museums or by country of origin — a digital echo of how that art was dispersed. We name it rather than hide it.
+      <div style="margin-top:10px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em">Learn more &middot; restitution &amp; the digital record:
+        <a href="https://en.wikipedia.org/wiki/Dahomey_(film)" target="_blank" rel="noopener" style="color:var(--accent)">Mati Diop, <em>Dahomey</em> (2024)</a> &middot;
+        <a href="https://digitalbenin.org/" target="_blank" rel="noopener" style="color:var(--accent)">Digital Benin</a> &middot;
+        <a href="https://restitutionreport2018.com/" target="_blank" rel="noopener" style="color:var(--accent)">the Sarr&ndash;Savoy Report</a></div></div></div>
     <div class="kick" style="margin:36px 0 14px">Where the canon hangs</div>
     <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
     ${ATTRIB}
