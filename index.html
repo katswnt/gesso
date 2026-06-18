@@ -682,9 +682,10 @@ function renderCollections(){
   const leansLine=topWestern
     ? `By origin the pool leans <strong style="color:var(--ink)">${topAdj}</strong>, and the works most people <em>recognise</em> skew Western too — the canon's bias runs deep, in the holdings and in what we're taught to know. The honest why:`
     : `By origin the pool actually leans <strong style="color:var(--ink)">${topAdj}</strong> — but the works most people <em>recognise</em> skew Western. The honest why:`;
+  const regPct=n=>{const r=C.region.find(x=>x[0]===n);return r?Math.round(r[1]/C.total*100):0;}; // live %, never stale
   const canonCards=C.canon.map(c=>`<a class="colcard" href="${c.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;max-width:300px;flex:1 1 200px">
     <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}</div>
-    <div style="font-size:12px;color:var(--accent);margin-top:6px">${esc(c.work)}</div></a>`).join('');
+    <div style="font-size:12px;color:var(--accent);margin-top:6px">e.g. ${esc(c.work)}</div></a>`).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div style="padding:26px 24px 40px">
     <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 320px"><div class="kick" style="color:var(--accent)">Collections</div>
@@ -719,7 +720,16 @@ function renderCollections(){
         <a href="https://en.wikipedia.org/wiki/Dahomey_(film)" target="_blank" rel="noopener" style="color:var(--accent)">Mati Diop, <em>Dahomey</em> (2024)</a> &middot;
         <a href="https://digitalbenin.org/" target="_blank" rel="noopener" style="color:var(--accent)">Digital Benin</a> &middot;
         <a href="https://restitutionreport2018.com/" target="_blank" rel="noopener" style="color:var(--accent)">the Sarr&ndash;Savoy Report</a></div></div></div>
-    <div class="kick" style="margin:36px 0 14px">Where the canon hangs</div>
+    <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
+      <div class="mono" style="color:var(--accent);font-weight:700">05</div>
+      <div style="font:700 15px Archivo;margin:4px 0 7px">Why the Americas &amp; Oceania are thin</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.55">
+        <strong>North America (${regPct('North America')}%)</strong> looks low because the big US museums we draw from are <em>encyclopedic</em> — most of what they hold (and what Wikipedia documents) is European and Asian; and since origin means <em>where a work was made</em>, much of what hangs in New York or Chicago counts as European here.<br>
+        <strong>South America (${regPct('South America')}%)</strong> is squeezed from both sides: pre-Columbian work is rarely <em>recognised</em> (low Wikipedia footprint), while the great 20th-century Latin American canon — Kahlo, Rivera, Tarsila — is mostly post-1930 and still under copyright (the 1900 cliff). Few South American museums offer open images.<br>
+        <strong>Oceania (${regPct('Oceania')}%)</strong> is the steepest: it&rsquo;s overwhelmingly traditional, often anonymous work held in <em>Western</em> ethnographic museums (the quai Branly, the British Museum, the Met&rsquo;s Rockefeller Wing) that don&rsquo;t openly license their photography — the same dispersal story as African art, plus a very thin Wikipedia trail.<br>
+        We&rsquo;re actively widening these by harvesting open-licensed works from Wikimedia Commons; they tend to land in the harder tiers (rarely <em>recognised</em>), but they put the rest of the world on the board.</div></div>
+    <div class="kick" style="margin:36px 0 6px">Where the canon hangs</div>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px">A single signature work names each museum below — but these collections hold thousands more (we just show one you'd know).</p>
     <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
     ${ATTRIB}
   </div></div>`;
