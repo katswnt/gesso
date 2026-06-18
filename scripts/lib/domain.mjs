@@ -16,7 +16,10 @@ export function normalizeArtist(name){
 
 // Player-facing medium → coarse family (used for "same family" partial credit + distractor selection).
 export const MED_FAMILY = {
-  "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint","Drawing":"paint",
+  // split out of the old catch-all "paint": paintings, drawings, and prints are no longer mutual 50%-givers
+  "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint",
+  "Drawing":"draw",
+  "Woodblock print":"print",
   "Bronze":"sculpt","Copper":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
   "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft"
 };

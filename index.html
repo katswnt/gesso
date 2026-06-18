@@ -319,7 +319,8 @@ function sourceURL(it){
   if(/^vaO/.test(id)) return `https://collections.vam.ac.uk/item/${id.slice(2)}`;
   return `https://www.google.com/search?q=${q}`; // smithsonian & anything else → reliable search
 }
-const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint","Drawing":"paint",
+const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint",
+  "Drawing":"draw","Woodblock print":"print",
   "Bronze":"sculpt","Copper":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
   "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft" };
 // Normalize museum catalogue medium strings into player-facing answer buckets.
