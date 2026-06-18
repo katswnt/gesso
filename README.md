@@ -35,7 +35,7 @@ Difficulty is based on recognizability, not intrinsic art-historical difficulty.
 Each core category is worth up to 2,500 points:
 
 - Date uses a tier-scaled year-difference curve with decade-level bullseyes.
-- Place gives full credit for the artist’s country of origin, with distance decay outside that country.
+- Place gives full credit for the country where the work was physically made (its place of creation), with distance decay outside that country.
 - Medium uses a simplified artistic-medium taxonomy, not support material.
 - Movement/culture gives exact credit for exact matches and capped partial credit for related movements.
 - Artist is a bonus category with forgiving exact-name matching and conservative pool-derived partial credit.
@@ -48,7 +48,7 @@ The corpus is restricted to public-domain or CC0-safe images. The working rule i
 
 Domain conventions are intentional:
 
-- Origin means the artist’s country of origin, not museum location.
+- Place/origin means where the work was physically made (its place of creation) — not the holding museum, and not the artist’s nationality.
 - Medium means artistic medium or process, not support.
 - Dailies must remain deterministic and shared by date/tier.
 - Secrets belong only in `.env` / `.env.local` or Vercel env vars; they are gitignored and must never be shipped in client data.
@@ -98,5 +98,5 @@ Several scripts require API keys (`HARVARD_KEY`, `SI_KEY`, `BLOB_READ_WRITE_TOKE
 - Static data modules keep runtime simple and hosting cheap, but large generated files make initial load size a real performance constraint.
 - A single-file SPA is easy to deploy and inspect, but it concentrates product logic, rendering, and scoring in one file; comments and section boundaries have to carry more weight.
 - Fame-based difficulty makes the product approachable, but it inherits canon bias. The UI calls that out rather than pretending the bias is neutral.
-- Country-origin scoring is a pragmatic approximation for a game. It uses country containment and border grace, while preserving the project rule that museum location is irrelevant.
+- Place scoring targets where the work was physically made (its place of creation) — not the holding museum and not the artist’s nationality — using country containment with border grace as a pragmatic approximation for a game.
 - Image reliability is handled defensively because public-domain image hosts vary widely in CORS, rate limits, file size, and mobile availability.
