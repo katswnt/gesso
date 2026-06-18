@@ -1,4 +1,16 @@
 {
+  "name": "gesso",
+  "private": true,
+  "description": "Daily art-history guessing game — no-build static-data SPA.",
+  "scripts": {
+    "test": "node tests/scoring.test.mjs",
+    "check:syntax": "node --check tests/scoring.test.mjs && for f in scripts/*.mjs api/*.js; do node --check \"$f\" || exit 1; done",
+    "audit": "node scripts/audit-all.mjs",
+    "audit:images": "node scripts/audit-all.mjs --images",
+    "audit:copyright": "node scripts/audit-copyright.mjs",
+    "freeze": "node scripts/freeze-daily.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
   "dependencies": {
     "@vercel/blob": "^2.4.0"
   }

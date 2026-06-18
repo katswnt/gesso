@@ -4,7 +4,12 @@
 //   node scripts/audit-all.mjs --images   (also the slow Commons broken-image scan)
 import { execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
-const run=(label,cmd)=>{ console.log(`\n━━━━━━ ${label} ━━━━━━`); try{ execSync(cmd,{stdio:"inherit"}); }catch(e){ console.log("  ⚠ audit errored (continuing):",e.message); } };
+// Fail closed: an audit command that crashes is a broken verifier — record it and exit nonzero at the
+// end (so CI / promote pipelines don't look green on broken tooling). --soft downgrades to a warning
+// for exploratory local runs. Note: this fails on a verifier CRASH, not on findings.
+const SOFT=process.argv.includes("--soft");
+const failed=[];
+const run=(label,cmd)=>{ console.log(`\n━━━━━━ ${label} ━━━━━━`); try{ execSync(cmd,{stdio:"inherit"}); }catch(e){ console.log("  ⚠ audit errored:",e.message); failed.push(label); } };
 const jlen=(f,pick)=>{ try{ const j=JSON.parse(readFileSync(f,"utf8")); const v=pick?pick(j):j; return Array.isArray(v)?v.length:Object.keys(v).length; }catch{ return null; } };
 
 run("Data audit — origin / fame / entities / dups / images / missing", "node scripts/audit-data.mjs");
@@ -37,3 +42,9 @@ if(v) row("verbose catalog mediums (kept by design)", fcat(v.mediums,["verboseMe
 
 console.log("\nDetails: data/incoming/audit/*.json · vocab-audit.json · p31-flags.json"+(existsSync("data/incoming/broken-images.json")?" · broken-images.json":""));
 console.log("(Read-only — nothing changed. Address ⚠ items, then re-run.)");
+
+if(failed.length){
+  console.error(`\n✗ ${failed.length} audit(s) FAILED TO RUN: ${failed.join(", ")}`);
+  if(!SOFT){ console.error("  Failing closed (exit 1). Re-run with --soft to downgrade to a warning."); process.exit(1); }
+  console.error("  --soft set → continuing despite failures.");
+}

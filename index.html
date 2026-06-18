@@ -745,7 +745,7 @@ function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
     <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
 }
-const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude</div>`;
+const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude Code and Codex</div>`;
 
 // ---------- retention helpers ----------
 function todayStr(){const d=new Date();return localDateStr(d);}
@@ -1146,8 +1146,8 @@ function wireHints(it){
       const r=o.txt(), text=typeof r==='string'?r:r.text, charged=typeof r==='string'?true:r.charged!==false;
       b.classList.add('used'); b.disabled=true; out.style.display='block';
       if(charged){ if(HC)guess.hints.add(o.label); hintsUsed++;
-        out.insertAdjacentHTML('beforeend',`<div>${text}${HC?` <span style="color:var(--accent)">−${HC}</span>`:''}</div>`); }
-      else out.insertAdjacentHTML('beforeend',`<div>${text}</div>`);
+        out.insertAdjacentHTML('beforeend',`<div>${esc(text)}${HC?` <span style="color:var(--accent)">−${HC}</span>`:''}</div>`); }
+      else out.insertAdjacentHTML('beforeend',`<div>${esc(text)}</div>`);
       refresh();};
   });
   refresh();
@@ -1281,7 +1281,7 @@ function renderReveal(r){
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
-  const why=study.why.replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
+  const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
 
@@ -1320,7 +1320,7 @@ function renderReveal(r){
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
       <div class="why">${why}</div>
       ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
-        <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
+        <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}
       ${guideHTML(study.guide)}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
