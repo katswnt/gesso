@@ -1,119 +1,102 @@
 # Gesso
 
-A daily art-guessing game — *"Wordle meets GeoGuessr, for art history."* Live at **[gesso.katswint.com](https://gesso.katswint.com)**.
+Daily art-history guessing: GeoGuessr-style place, date, medium, movement, and artist clues for public-domain artworks.
 
-You're shown an artwork. For each, guess (categories adapt per work):
+> Screenshot/GIF placeholder: add a current gameplay capture here before sharing the portfolio.
 
-- **🕰️ When** it was made (timeline slider, scored by era band)
-- **🗺️ Where** it was made (drop a pin on the map; scored by distance)
-- **🖼️ Medium** (pills) · **🎨 Movement / Culture** (pills) · **🖌️ Artist** (typed autocomplete, bonus)
+Live: [gesso.katswint.com](https://gesso.katswint.com)
 
-Up to **2,500 pts/category**, partial credit for near-misses, a shareable emoji grid + image, streaks, archive, and a "teach me" study note on every reveal.
+## What It Is
 
----
+Gesso is a no-login, daily guessing game for art history. Each round shows an artwork and asks the player to identify when it was made, where it originated, its medium, its movement or culture, and optionally the artist. It is interesting technically because the app is intentionally small at runtime while the data pipeline does the heavy lifting: public-domain filtering, museum/Wikidata enrichment, recognizability ranking, daily freezing, image validation, and teaching-note generation.
 
-## Gameplay features
+The project is deliberately a vanilla-JS SPA with no build step. That keeps the deployed artifact inspectable and durable, but it raises the bar for code organization: `index.html` contains the app shell and client logic, `styles.css` contains the design system and components, and `data/*.js` ships precomputed static modules on `window`.
 
-- **Adaptive categories.** Each work only quizzes the categories it has data for. Artist is always a **bonus** (shown only when the maker is known). Missing categories aren't hidden — they show an explicit **"Not recorded" / "Anonymous"** placeholder in their slot, on both the play and reveal screens, so the layout stays consistent and players understand *why* something isn't asked.
-- **Difficulty tiers** (Easy → Medium → Hard → Impossible) come from **recognizability** (Wikipedia pageviews). **Easy is a curated canon**: each daily serves **4 instantly-recognizable icons + 1 very-recognizable work**, so newcomers feel smart. ~82 of the 100 most-famous works appear in any given month of Easy.
-- **Scoring.** Per-category curves with partial credit. **Time** scoring is tier-flat (a ~100-yr miss costs the same everywhere — obscure works aren't *more* dateable, so harder tiers aren't punished harder on dates). **Geo** uses real **point-in-country** containment (full credit if your pin is in the work's country, graceful distance decay otherwise, ~25 km border grace).
-- **Perfect & Masterpiece.** A **Perfect** = all core categories maxed. A **Masterpiece** = Perfect *and* you nailed the artist (the elite badge).
-- **Learning mode** (the endless "practice" mode): **free unlimited hints**, an optional **look-closer marker toggle** (reveal the hotspots before you lock in), and a session summary that counts your **Perfects** and **Masterpieces**. Doesn't affect streaks/stats.
-- **Look-closer hotspots.** Numbered markers on the reveal point at the visual cues that give away period/place/style.
-- **Settings** (gear icon): reduce-motion, colorblind swatches, and a **cm ⇄ inches** toggle for artwork dimensions.
-- **Daily, stable & shareable.** Dailies are frozen per tier (everyone gets the same puzzle); deep-linkable at `/YYYY-MM-DD/<level>`; results share as an emoji grid + a generated image card.
+## Architecture
 
----
+- `index.html`: single-file SPA, routing, gameplay state, scoring, Leaflet maps, image fallback logic, local stats, and share cards.
+- `styles.css`: design tokens, responsive layout, result states, settings, maps, reveal cards, and utility components.
+- `data/pool.js`: artwork corpus loaded as `window.ARTEFACTUM_POOL`.
+- `data/fame.js` / `data/fame.json`: recognizability scores used for difficulty tiers.
+- `data/daily-order.js`: frozen per-tier daily rotation, by artwork ID.
+- `data/countries.js`: compact country polygons for point-in-country scoring.
+- `data/teach-works.js`, `data/hotspots.js`, `data/cues.js`: teaching notes, look-closer markers, and movement/culture cues.
+- `api/report.js`: Vercel serverless endpoint for “report an error” submissions, backed by Upstash/Vercel KV env vars.
+- `scripts/*.mjs`: Node data pipeline for pulling, normalizing, auditing, re-hosting, and freezing the corpus.
 
-## Running it locally (no build step!)
+No bundler is required. Leaflet and fonts load from CDNs; generated data files are plain script tags.
 
-```bash
-python3 -m http.server 8000     # from the repo root, then open http://localhost:8000
-```
-Just edit `index.html` and refresh. (Open `file://` directly mostly works, but a local server is needed for the data files + clean URLs.)
+## Daily, Scoring, And Difficulty
 
----
+Dailies are deterministic and frozen. `scripts/freeze-daily.mjs` writes `data/daily-order.js`; the client uses that ID order so every player receives the same five works for a given date and tier. If the frozen file is absent, the client falls back to a seeded rotation, but production should use the frozen order.
 
-## 🎨 Design guide (start here, Briana!)
+Difficulty is based on recognizability, not intrinsic art-historical difficulty. Fame scores are derived from Wikidata sitelinks and pageviews, then sliced into tiers. Easy is intentionally canon-heavy because it reflects what broad audiences are likely to recognize; harder tiers expose more of the global corpus.
 
-All the page CSS lives in **`styles.css`** (linked from `index.html`'s `<head>` as `/styles.css`). Structure + behavior live in **`index.html`**.
+Each core category is worth up to 2,500 points:
 
-> **Paths:** `index.html` has `<base href="/">`, and the app uses clean URLs like `/2026-06-15/easy`. So link assets **root-absolute** (`/styles.css`) or rely on the base tag — plain relative paths (`./x.css`) break on deep links.
+- Date uses a tier-scaled year-difference curve with decade-level bullseyes.
+- Place gives full credit for the artist’s country of origin, with distance decay outside that country.
+- Medium uses a simplified artistic-medium taxonomy, not support material.
+- Movement/culture gives exact credit for exact matches and capped partial credit for related movements.
+- Artist is a bonus category with forgiving exact-name matching and conservative pool-derived partial credit.
 
-### 1. Design tokens — `:root` at the top of `styles.css`
-All colors/theme live here as CSS variables. Change these to restyle globally:
-```
---bg --surface --surface-strong --ink --muted --faint --line --line-card
---accent (ultramarine #2230b8)  --full (green)  --partial (gold)  --miss (red)
---study-bg --study-border  --track
-```
-Light theme overrides live under `[data-theme="light"]`. Fonts: **Archivo** (display/body) + **IBM Plex Mono** (labels/numbers), loaded from Google Fonts in `<head>`.
+Hints subtract from core score only. Artist points are bonus points and do not define a Perfect; a Masterpiece is a Perfect plus exact artist credit.
 
-### 2. Component CSS — `styles.css`
-All reusable component CSS, by class. Key classes:
-`.sheet` (page frame) · `.hd` (header bar) · `.plate` (artwork frame w/ crop-marks) · `.pill` (medium/movement options) · `.banner` (reveal score) · `.study` (teach-me note) · `.daycell`/`.tierdots` (archive) · `.btn`/`.btn2` (buttons) · responsive rules in `@media(max-width:680px)`.
+## Data And Licensing Discipline
 
-### ⚠️ The gotcha: inline styles
-~200 elements are still styled **inline** (`style="…"`) inside JS template strings in `index.html`, not in `styles.css`. To find a screen's markup, open the matching **render function** (below) and search there. When you can, prefer moving repeated inline styles into a class in `styles.css`.
+The corpus is restricted to public-domain or CC0-safe images. The working rule is US-safe public domain: creator died by 1955 and/or the work was published before 1930; FSA and US-government works are public domain regardless. `scripts/audit-copyright.mjs` audits Wikidata-sourced works against creator death years and writes review flags.
 
-### Screen → function map (all in the one `<script>`)
-| Screen | Function |
-|---|---|
-| Home / tier picker | `renderStart()` |
-| A round (guessing) | `renderRound()` |
-| Reveal (score + study note) | `renderReveal()` |
-| Final results | `renderFinal()` |
-| Learning mode (endless) summary | `renderInfiniteSummary()` |
-| Archive calendar | `renderArchive()` |
-| A single day (paginated) | `renderDayView()` |
-| Streak / Stats / Glossary / Movement / Collections | `renderStreak()` / `renderStats()` / `renderGlossary()` / `renderMovement()` / `renderCollections()` |
-| Settings panel | `openSettings()` |
-| Share image (canvas) | `downloadShareImage()` |
+Domain conventions are intentional:
 
-Motion respects a **reduce-motion** setting — gate any new animation on `body.motion-ok` / `settings.reduceMotion`.
+- Origin means the artist’s country of origin, not museum location.
+- Medium means artistic medium or process, not support.
+- Dailies must remain deterministic and shared by date/tier.
+- Secrets belong only in `.env` / `.env.local` or Vercel env vars; they are gitignored and must never be shipped in client data.
 
----
+Images come from mixed public-domain sources: museum image services, Wikimedia Commons, and Vercel Blob for sources that gatekeep or fail in normal browsers. `displaySrc()` loads a card-sized image; `hiRes()` fetches a larger source only when the zoom lightbox opens; `imgFail()` retries and then proxies through weserv before showing a graceful fallback.
 
-## Working together (recommended workflow)
-
-The site auto-deploys to Vercel from `main`, so **don't commit straight to `main`**. Instead:
+## Running Locally
 
 ```bash
-git checkout -b briana/whatever      # branch
-# …edit index.html…
-git commit -am "tweak: …"  &&  git push -u origin briana/whatever
-# open a Pull Request on GitHub
-```
-Vercel posts a **preview URL on every branch/PR** — open it to see your changes live, share it for review, then merge the PR to ship. This keeps prod safe and lets you iterate visually.
-
----
-
-## Project structure
-
-```
-index.html            app structure + vanilla JS (Leaflet for maps)
-styles.css            all page CSS (design tokens + components) — linked as /styles.css
-vercel.json           SPA routing (so /YYYY-MM-DD/<level> deep links work)
-favicon.* etc.        icons
-data/                 generated content (don't hand-edit):
-  pool.js             the artworks (window.ARTEFACTUM_POOL)
-  fame.js             recognizability scores (pageviews-driven) → difficulty tiers
-  daily-order.js      frozen rotation — Easy = curated icons (4 per day) + 1 recognizable
-  teach-works.js      per-work "teach me" notes (why + cues + guide)
-  hotspots.js         look-closer marker coordinates
-  cues.js             movement/culture teaching cards
-  collections.js      themed groupings (collections page)
-  countries.js        compact country polygons for point-in-country geo scoring
-scripts/              data pipeline (Node) — pulls museum/Wikidata APIs, scores fame,
-                      generates teach notes/hotspots, audits data (P31 collisions,
-                      images), freezes dailies. Not needed for design work.
-tasks/                planning notes + backlog (todo.md, afk-plan.md)
+python3 -m http.server 8000
 ```
 
-## Data & licensing
+Open `http://localhost:8000`. A local server is preferred because the app uses script-loaded data files and clean routes such as `/2026-06-18/easy`.
 
-Artworks come from open-access museum collections — the Met, Art Institute of Chicago, Cleveland, V&A, Harvard, Smithsonian — plus Wikidata/Wikimedia. **Images are public-domain / CC0 only** (this is why there's little post-1929 / contemporary art — most is still under copyright). See the in-app **FAQ & credits** on the home screen.
+Useful checks:
 
-## Tech
+```bash
+node --check scripts/audit-copyright.mjs
+node --check scripts/freeze-daily.mjs
+node scripts/audit-all.mjs
+node scripts/audit-all.mjs --images
+```
 
-Vanilla JS, single file, zero npm dependencies to run. Maps via [Leaflet](https://leafletjs.com/) (CDN). Deployed on Vercel.
+## Deployment
+
+The site deploys to Vercel from `main`. `vercel.json` rewrites clean SPA routes back to `index.html`, and `api/report.js` runs as a Vercel serverless function when configured with KV/Upstash environment variables.
+
+## Data Pipeline
+
+The pipeline is a set of small Node scripts rather than one monolithic ETL job. Important entry points:
+
+- `scripts/build-pool.mjs`: early corpus builder from Wikidata and the Met.
+- `scripts/pull-*.mjs`: source adapters for AIC, Cleveland, Harvard, Smithsonian, V&A, Wikidata subsets, and modern/public-domain slices.
+- `scripts/consolidate.mjs`: merges staged candidates into the pool with dedupe/geocoding checks.
+- `scripts/fame-score.mjs`, `scripts/make-fame-js.mjs`, `scripts/check-fame.mjs`: recognizability scoring and review.
+- `scripts/audit-data.mjs`, `scripts/audit-vocab.mjs`, `scripts/audit-p31.mjs`, `scripts/audit-copyright.mjs`, `scripts/audit-all.mjs`: data, vocabulary, entity, and copyright audits.
+- `scripts/check-images.mjs`: resumable image validation with Commons API batching.
+- `scripts/rehost-aic-blob.mjs`, `scripts/rehost-harvard-blob.mjs`: Vercel Blob re-hosting for fragile image hosts.
+- `scripts/enrich-dimensions.mjs`, `scripts/enrich-wd-medium.mjs`, `scripts/geo-p937.mjs`: enrichment/backfill passes.
+- `scripts/gen-teach*.mjs`, `scripts/merge-notes.mjs`, `scripts/hotspot-*.mjs`: teaching notes and look-closer marker generation.
+- `scripts/freeze-daily.mjs`: writes the frozen deterministic daily order.
+
+Several scripts require API keys (`HARVARD_KEY`, `SI_KEY`, `BLOB_READ_WRITE_TOKEN`) and should be run from a local environment or Vercel configuration, never from committed client code.
+
+## Design Decisions And Tradeoffs
+
+- Static data modules keep runtime simple and hosting cheap, but large generated files make initial load size a real performance constraint.
+- A single-file SPA is easy to deploy and inspect, but it concentrates product logic, rendering, and scoring in one file; comments and section boundaries have to carry more weight.
+- Fame-based difficulty makes the product approachable, but it inherits canon bias. The UI calls that out rather than pretending the bias is neutral.
+- Country-origin scoring is a pragmatic approximation for a game. It uses country containment and border grace, while preserving the project rule that museum location is irrelevant.
+- Image reliability is handled defensively because public-domain image hosts vary widely in CORS, rate limits, file size, and mobile availability.

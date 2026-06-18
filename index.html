@@ -30,6 +30,15 @@
 <script src="data/countries.js"></script>
 <script>
 "use strict";
+/*
+  Gesso intentionally stays a no-build, static-data SPA: every player loads the same
+  frozen corpus and the same frozen daily order, then all scoring happens locally.
+  Treat the functions below as product rules, not incidental UI glue. In particular:
+  - origin means the artist's country of origin, never holding museum location;
+  - medium means artistic medium, not support;
+  - dailies and distractors must be deterministic for a given date/tier/work;
+  - public-domain eligibility is enforced in the Node pipeline, not at runtime.
+*/
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
 const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
 const HOTSPOTS = window.ARTEFACTUM_HOTSPOTS || {};
@@ -43,6 +52,8 @@ const DIFF={
 const dcfg=()=>DIFF[tier]||DIFF.medium;
 
 // ---------- helpers ----------
+// shuffle() is deliberately RNG-injectable. Daily play temporarily installs a
+// seeded RNG before building answer choices so every player sees the same set.
 function shuffle(a){const rnd=window.__RNG||Math.random;a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pickN(a,n){return shuffle(a).slice(0,n);}
 // last meaningful token, e.g. "Eastern Tibet"->"Tibet", "Central Tibet"->"Tibet" (but "Greek, Attic"->"Attic")
@@ -52,14 +63,16 @@ function fill3(ans,picks,fromAll){const at=lastTok(ans), sib=x=>lastTok(x)===at;
   const rest=shuffle(fromAll.filter(x=>x!==ans&&!p.includes(x)&&!sib(x)));
   while(p.length<3&&rest.length)p.push(rest.shift());
   return shuffle([ans,...p.slice(0,3)]);}
-// medium choices: easy = different families (obvious); hard = same family (lookalikes)
+// Build medium distractors around the simplified medium taxonomy. Easy should feel
+// visually separable; hard/impossible intentionally choose same-family lookalikes.
 function mediumChoices(ans){const look=dcfg().look;
   const same=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
   const diff=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
   let picks; if(look==='far')picks=pickN(diff,3); else if(look==='near')picks=[...pickN(same,3),...pickN(diff,3)].slice(0,3); else picks=[...pickN(same,1),...pickN(diff,2)];
   return fill3(ans,picks,ALL_MED);}
-// style choices: themed to the answer's own region/kind (so European works show European movements,
-// Asian works show Asian schools); hard pulls confusable related/same-region neighbours
+// Build style/culture choices from the answer's own taxonomy. The important invariant:
+// culture labels compete with cultures, movements with movements, and difficulty
+// controls visual confusion without mixing coarse/fine synonyms in one option set.
 const DEMONYM={japanese:'japan',chinese:'china',korean:'korea',persian:'persia',iranian:'persia',indian:'india',egyptian:'egypt',greek:'greece',roman:'rome',italian:'italy',french:'france',german:'germany',spanish:'spain',dutch:'netherlands',flemish:'netherlands',english:'england',british:'britain',american:'usa',mexican:'mexico',peruvian:'peru',tibetan:'tibet',nepalese:'nepal',thai:'thailand',vietnamese:'vietnam'};
 function cultureKey(s){let k=String(s||'').toLowerCase().replace(/[^a-z ]/g,'').trim().split(' ')[0];return DEMONYM[k]||k;}
 function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(ans);
@@ -303,7 +316,10 @@ function sourceURL(it){
 const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint","Woodblock print":"paint","Drawing":"paint",
   "Bronze":"sculpt","Copper":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
   "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft" };
-// collapse a verbose catalogue medium ("Fritware, covered in salmon-pink slip…") to a clean, guessable family
+// Normalize museum catalogue medium strings into player-facing answer buckets.
+// This encodes the domain convention that "medium" is the art-making material or
+// process. Supports such as panel/paper/copper only win when no stronger medium
+// signal (oil, print, photograph, etc.) is present earlier in the string.
 function simplifyMedium(s){const t=" "+String(s||"").toLowerCase()+" ";
   if(/\boil\b/.test(t))return "Oil paint"; if(/tempera/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
   if(/water-?colou?r|gouache/.test(t))return "Watercolor";
@@ -414,7 +430,9 @@ const MOVEMENTS={
   "Western India, Rajasthan, Mewar":{dates:"c. 1600–1900",region:"Mewar / Rajasthan",palette:["#c0392b","#d79b32","#1f6f8b","#e8ddc3"]}
 };
 // ---- movement similarity (graded partial credit for near-miss movements) ----
-// families group sibling movements; era+region come from MOVEMENTS meta. movementSim → 0..1.
+// movementSim(a,b) returns a 0..1 taxonomy similarity only. score() then multiplies
+// by the tier's relMov cap, so partial movement credit can never outrank an exact
+// movement match. Families are curated; era/region are derived from MOVEMENTS meta.
 const MOV_FAMILY={
   renaissance:["Renaissance","Italian Renaissance","High Renaissance","Northern Renaissance","Early Netherlandish","Mannerism","Venetian school","Florentine school","Sienese school"],
   baroque:["Baroque","Dutch Golden Age","Flemish Baroque","Rococo","Caravaggisti"],
@@ -497,7 +515,8 @@ function buildIndexes(){
   for(const p of POOL){ if(p.artist&&p.style){ const k=norm(p.artist); (artistStyle[k]=artistStyle[k]||new Set()).add(norm(p.style)); }
     if(p.style&&!styleRegion[p.style]) styleRegion[p.style]=p.region;
     if(p.style&&p.place){ const pc=placeCounts[p.style]=placeCounts[p.style]||{}; pc[p.place]=(pc[p.place]||0)+1; }
-    // artist meta from the pool itself (active-years range + regions) → graded artist credit, no harvest
+    // Artist partial credit uses only metadata already shipped in the static pool.
+    // That keeps scoring deterministic and avoids client-side lookups or hidden APIs.
     if(p.artist){ const k=norm(p.artist); const m=artistMeta[k]=artistMeta[k]||{lo:Infinity,hi:-Infinity,regions:new Set()};
       if(p.y!=null){ m.lo=Math.min(m.lo,p.y); m.hi=Math.max(m.hi,p.y); } if(p.region) m.regions.add(p.region); } }
   // dominant country per style → used to keep culture options from overlapping (e.g. "Meiji" + "Japan")
@@ -764,8 +783,6 @@ function dailyItems(key,dateStr){
   while(out.length<ROUNDS&&len) out.push(perm[(start+out.length)%len]); // tiny-pool safety pad
   return out;
 }
-function addPalestine(m){ return; /* label overlay removed — clashed with localized basemap labels */ try{ L.marker([31.95,35.23],{interactive:false,keyboard:false,
-  icon:L.divIcon({className:'palabel',html:'Palestine',iconSize:[60,14],iconAnchor:[30,7]})}).addTo(m); }catch{} }
 function loadStreak(){try{const s=JSON.parse(localStorage.getItem("artefactum.streak"))||{};return {current:+s.current||0,longest:+s.longest||0,lastPlayed:s.lastPlayed||"",playedDates:Array.isArray(s.playedDates)?s.playedDates:[],scores:s.scores||{},byDay:(s.byDay&&typeof s.byDay==='object')?s.byDay:{}};}catch{return{current:0,longest:0,lastPlayed:"",playedDates:[],scores:{},byDay:{}}}}
 function saveStreak(s){try{localStorage.setItem("artefactum.streak",JSON.stringify(s))}catch{}}
 function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=loadStreak();
@@ -1078,7 +1095,6 @@ function renderRound(){
   marker=null;
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
-  addPalestine(map);
   map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
     else marker=L.circleMarker(ll,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
@@ -1139,6 +1155,9 @@ function wireHints(it){
 function centuryStr(y){const c=Math.floor((Math.abs(y)-1)/100)+1;const s=(c%100>10&&c%100<14)?"th":["th","st","nd","rd"][c%10]||"th";return `${c}${s} century${y<0?" BCE":""}`;}
 
 // ---------- scoring ----------
+// Score one locked-in round. Core categories max at MAX_CAT each; artist is a
+// separate bonus, and hint penalties subtract only from the core score. Keep this
+// function pure with respect to answer evaluation: no network, no clock, no random.
 function timeScore(diff){
   // diff is years-off already scaled by the tier's timeMult. Steeper mid-curve: near-misses stay
   // rewarding, but a ~century off clearly costs you (Easy ÷1.3 → 100yrs≈77 → 1300).
@@ -1160,20 +1179,24 @@ function score(){
     sp = inC ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(Math.max(0,dist-rad))/D.distK));}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
     note:dist==null?"no pin dropped":inC?"right country":`${Math.round(dist)} km off`};
-  // medium
+  // medium: exact beats same-family, and same-family is intentionally a fixed 50%.
+  // Because medSimple is computed from the raw catalogue string at index time, stale
+  // generated cats cannot make a missing medium scorable.
   if(it.cats.includes('medium')){let s=0,note="no answer";
     if(guess.medium){ if(guess.medium===it.medSimple){s=MAX_CAT;note="exact";}
       else if(MED_FAMILY[guess.medium]&&MED_FAMILY[guess.medium]===MED_FAMILY[it.medSimple]){s=Math.round(MAX_CAT*0.5);note="same family";}
       else note="wrong";}
     cells.medium={pts:s,you:guess.medium||"—",actual:it.medSimple,note};}
-  // style
+  // style/culture: exact is always 2500. Similarity is capped by DIFF.relMov, so a
+  // near-miss can be useful feedback but cannot exceed or equal an exact answer.
   if(it.cats.includes('style')){let s=0,note="no answer";
     if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
       else { // graded: curated neighbors keep full tier credit; taxonomy-similar movements get partial
         const sim=(RELATED_MOV[it.style]||[]).includes(guess.style)?1:movementSim(guess.style,it.style);
         if(sim>0){ s=Math.round(MAX_CAT*D.relMov*sim); note=sim>=0.999?"related":"similar"; } else note="wrong"; } }
     cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
-  // artist (bonus) — graded: exact > same school > same era > same region (from pool-derived artistMeta)
+  // artist (bonus): exact typed credit uses forgiving name matching; partial credit
+  // is deliberately conservative and pool-derived (same school > same era > region).
   if(it.cats.includes('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
     if(ga){ if(artistMatch(guess.artist,it.artist)){s=MAX_CAT;note="matched";}
       else { let f=0; const am=artistMeta[ga];
@@ -1320,7 +1343,6 @@ function renderReveal(r){
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
-  addPalestine(rm);
   const t=[it.lat,it.lng], pts=[t];
   L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
   let poly=null;
