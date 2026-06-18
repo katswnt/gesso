@@ -3,6 +3,7 @@
 // placeholder), rebuild fame.js, run audits. No bulk canon-tagging. Run: node scripts/promote-wishlist.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { readGlobal, writeAssignment } from "./lib/static-module.mjs"; // robust read + atomic write of data/pool.js
 const UA="GessoWishlistPromote/1.0 (kathryn.swint@gmail.com)";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const FILE=process.argv[2]||"data/incoming/wishlist-fetched.json";
@@ -11,8 +12,7 @@ const adds=JSON.parse(readFileSync(FILE,"utf8"));
 global.window={}; new Function(readFileSync("data/countries.js","utf8"))();
 const CO={}; for(const c of window.ARTEFACTUM_COUNTRIES) CO[c.n.toLowerCase()]=c;
 function centroid(c){ let big=c.r[0]; for(const r of c.r) if(r.length>big.length) big=r; let sx=0,sy=0; for(const[x,y]of big){sx+=x;sy+=y;} return [Math.round(sy/big.length*1000)/1000,Math.round(sx/big.length*1000)/1000]; }
-const raw=readFileSync("data/pool.js","utf8");
-const pool=JSON.parse(raw.slice(raw.indexOf("["),raw.lastIndexOf("]")+1));
+const pool=readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const have=new Set(pool.map(p=>p.id));
 let added=0,skip=0;
 for(const w of adds){ if(have.has(w.id)){skip++;continue;}
@@ -23,7 +23,7 @@ for(const w of adds){ if(have.has(w.id)){skip++;continue;}
     ...(w.govReview?{govReview:true}:{}), ...(w.marginalReview?{marginalReview:true}:{}) });
   have.add(w.id); added++;
 }
-writeFileSync("data/pool.js", raw.slice(0,raw.indexOf("["))+JSON.stringify(pool)+raw.slice(raw.lastIndexOf("]")+1));
+writeAssignment("data/pool.js","ARTEFACTUM_POOL",pool); // atomic: temp → node --check → rename
 console.log(`promoted ${added} wishlist works (skipped ${skip} dups) | pool now ${pool.length}`);
 const noco=pool.filter(p=>p.src==="wd-wishlist"&&p.lat==null).map(p=>p.title); if(noco.length) console.log("no-coord:",noco.join(", "));
 
