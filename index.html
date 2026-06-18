@@ -1069,7 +1069,7 @@ function renderRound(){
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(displaySrc(it.img))}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="The painting to identify" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/>${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<div class="lookmarks" id="prelookmarks" style="display:none">${HOTSPOTS[it.id].map(h=>`<button type="button" class="lookmark" style="top:${h.y}%;left:${h.x}%" title="${esc((pstudy.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(fmtDim(it.dim))):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
@@ -1308,7 +1308,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -1566,16 +1566,21 @@ function renderFinal(){
 // original (also pre-warms the zoom cache); AIC/V&A IIIF 843px → 1200px. Others already adequate.
 // CARD = a light ~1000–1200px image for every source (fast + reliable on slow networks); the bigger
 // image is fetched ONLY when the zoom view opens (hiRes). Never pull a full-res original onto the card.
+// IIIF size rewrite: the size segment sits between /full/ and the rotation, e.g. .../full/843,/0/default.jpg.
+// Handles width-only, height-only, !w,h, pct:, full and max forms → a target width. No-op for non-IIIF URLs,
+// so adding a new IIIF source won't silently skip card/zoom sizing. (Current sources all use the "N," form.)
+const IIIF_RE=/\/full\/(?:\d+,|,\d+|!\d+,\d+|pct:\d+(?:\.\d+)?|max|full)\/(\d+)\/(default|native|color|gray|bitonal)/;
+function rewriteIiif(src,w){ return src.replace(IIIF_RE, `/full/${w},/$1/$2`); }
 function displaySrc(src){
   if(src.includes("images.metmuseum.org")) return src;                                   // Met: keep web-large (~600), not original
-  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/1200,/");      // IIIF: Harvard / V&A / AIC-direct
+  if(IIIF_RE.test(src)) return rewriteIiif(src,1200);                                     // IIIF: Harvard / V&A / AIC-direct → 1200px card
   if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=1000"):src+(src.includes("?")?"&":"?")+"width=1000"; // guard against full-res Commons cards
   return src;                                                                            // Cleveland _web, LoC tile, Smithsonian, Blob — already card-sized
 }
 // ZOOM = source max, loaded on demand when the lightbox opens.
 function hiRes(src){
   if(src.includes("images.metmuseum.org")) return src.replace("/web-large/","/original/"); // Met: ~600 → full original
-  if(/\/full\/\d+,\//.test(src)) return src.replace(/\/full\/\d+,\//,"/full/2000,/");        // IIIF: → 2000px
+  if(IIIF_RE.test(src)) return rewriteIiif(src,2000);                                       // IIIF: → 2000px zoom
   if(src.includes("clevelandart.org")) return src.replace("_web.jpg","_print.jpg");          // Cleveland: → ~3400px
   if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=2400"):src+(src.includes("?")?"&":"?")+"width=2400"; // Commons larger render
   return src;                                                                              // LoC, Smithsonian, Blob — single fixed size
@@ -1606,7 +1611,9 @@ function openZoom(src){
   const hint=document.createElement('div');hint.className='lb-hint';hint.textContent='Tap/click to zoom · drag to pan · pinch or scroll to zoom · Esc to close';
   lb.append(img,x,hint);document.body.appendChild(lb);apply();
 }
-document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('art'))openZoom(e.target.src);});
+// zoom from the ORIGINAL artwork source (data-zoom), not the on-screen src — which imgFail() may have
+// swapped to a downsized proxy fallback. Falls back to src for imgs without data-zoom.
+document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('art'))openZoom(e.target.dataset.zoom||e.target.src);});
 
 // ---------- boot ----------
 applySettings();
