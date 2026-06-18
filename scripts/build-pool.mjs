@@ -2,6 +2,7 @@
 // Open Access API (global/non-Western). Run: node scripts/build-pool.mjs
 // Output: data/pool.js  (window.ARTEFACTUM_POOL = [...])
 import { writeFileSync, mkdirSync } from "node:fs";
+import { simplifyMedium as mediumClass } from "./lib/domain.mjs"; // single source of truth for medium buckets
 
 const UA = "ArtefactumGame/0.3 (kathryn.swint@gmail.com)";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -29,31 +30,6 @@ function continentOf(lat, lng){
   if(lat>=-35&&lat<36&&lng>=-20&&lng<=52) return "Africa";
   if(lng>40) return "Asia";
   return "Europe";
-}
-function mediumClass(s){
-  if(!s) return "";
-  s=s.toLowerCase();
-  const has=w=>s.includes(w);
-  if(has("woodblock")||has("woodcut")) return "Woodblock print";
-  if(has("oil")) return "Oil paint";
-  if(has("tempera")) return "Tempera";
-  if(has("fresco")) return "Fresco";
-  if(has("watercolor")||has("watercolour")||has("gouache")) return "Watercolor";
-  if(has("ink")) return "Ink";
-  if(has("bronze")) return "Bronze";
-  if(has("marble")) return "Marble";
-  if(has("jade")) return "Jade";
-  if(has("gold")||has("gilt")) return "Gold";
-  if(has("silver")) return "Silver";
-  if(has("porcelain")||has("stoneware")||has("earthenware")||has("ceramic")||has("terracotta")||has("faience")) return "Ceramic";
-  if(has("silk")||has("cotton")||has("wool")||has("textile")||has("tapestry")) return "Textile";
-  if(has("wood")) return "Wood";
-  if(has("limestone")||has("granite")||has("basalt")||has("sandstone")||has("stone")) return "Stone";
-  if(has("ivory")) return "Ivory";
-  if(has("glass")) return "Glass";
-  if(has("paper")) return "Ink";
-  if(has("canvas")) return "Oil paint";
-  return "";
 }
 function cleanMov(m){return m?m.replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim():"";}
 

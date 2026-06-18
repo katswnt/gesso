@@ -327,9 +327,9 @@ const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Water
 function simplifyMedium(s){const t=" "+String(s||"").toLowerCase()+" ";
   if(/\boil\b/.test(t))return "Oil paint"; if(/tempera/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
   if(/water-?colou?r|gouache/.test(t))return "Watercolor";
+  if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock)
   if(/woodcut|woodblock|engrav|etch|lithograph|\bprint\b/.test(t))return "Woodblock print";
   if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing/.test(t))return "Drawing";
-  if(/photograph|gelatin|albumen|daguerreotype|collotype/.test(t))return "Photograph";
   if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
   if(/terracotta|porcelain|stoneware|earthenware|faience|fritware|pottery|ceramic|\bclay\b/.test(t))return "Ceramic";
   if(/lacquer|maki-e/.test(t))return "Lacquer"; if(/ivory/.test(t))return "Ivory"; if(/glass/.test(t))return "Glass";

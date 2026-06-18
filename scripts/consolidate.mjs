@@ -18,18 +18,8 @@ function continentOf(lat,lng){
   if(lng>40) return "Asia";
   return "Europe";
 }
-function mediumClass(s){ if(!s) return ""; s=String(s).toLowerCase(); const has=w=>s.includes(w);
-  if(has("woodblock")||has("woodcut")) return "Woodblock print";
-  if(has("oil")) return "Oil paint"; if(has("tempera")) return "Tempera"; if(has("fresco")) return "Fresco";
-  if(has("watercolor")||has("watercolour")||has("gouache")) return "Watercolor"; if(has("ink")) return "Ink";
-  if(has("bronze")) return "Bronze"; if(has("marble")) return "Marble"; if(has("jade")) return "Jade";
-  if(has("gold")||has("gilt")) return "Gold"; if(has("silver")) return "Silver";
-  if(has("porcelain")||has("stoneware")||has("earthenware")||has("ceramic")||has("terracotta")||has("faience")) return "Ceramic";
-  if(has("silk")||has("cotton")||has("wool")||has("textile")||has("tapestry")||has("embroider")) return "Textile";
-  if(has("wood")) return "Wood"; if(has("lacquer")) return "Lacquer";
-  if(has("limestone")||has("granite")||has("basalt")||has("sandstone")||has("stone")) return "Stone";
-  if(has("ivory")) return "Ivory"; if(has("glass")) return "Glass";
-  if(has("paper")) return "Ink"; if(has("canvas")) return "Oil paint"; return ""; }
+// (dead medium classifier removed — consolidate keeps the raw catalogue medium; the client simplifies
+//  at runtime via the shared rule in scripts/lib/domain.mjs / index.html simplifyMedium)
 function cleanMov(m){return m?String(m).replace(/\s+painting$/i,'').replace(/\s+art$/i,'').trim():"";}
 
 const CENTROIDS = [
