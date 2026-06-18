@@ -6,7 +6,7 @@ import { simplifyMedium as libSimplify } from "../scripts/lib/domain.mjs";
 
 // extract the client's simplifyMedium straight from index.html so we test the shipped code
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?return s\s*\?\s*"Mixed media"\s*:\s*"";\s*\}/);
+const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?return tidyFallback\(raw\);\s*\}/);
 if(!fnSrc) throw new Error("could not extract client simplifyMedium from index.html");
 const clientSimplify = new Function(fnSrc[0] + "\nreturn simplifyMedium;")();
 
@@ -23,9 +23,25 @@ const CASES = [
   ["Carved olive pit", "Wood"],               // fruit-stone carving → Wood, not Mixed media
   ["Albumen silver print from glass negative", "Photograph"],
   ["Fritware, underglaze-painted", "Ceramic"],
+  ["Fritware, polychrome underglaze painted", "Ceramic"],
+  ["Quartzite", "Stone"],
+  ["Greywacke", "Stone"],
+  ["Granodiorite", "Stone"],
+  ["Travertine (tecali)", "Stone"],
   ["Ink and gold on paper", "Ink"],
+  ["Leather", "Leather"],
+  ["leather", "Leather"],
+  ["Wax", "Wax"],
+  ["wax", "Wax"],
+  ["egyptian blue", "Egyptian blue"],
+  ["gesso", "Gesso"],
+  ["unclassified material, secondary material", "Unclassified material"],
+  ["verbose unclassified material record", "Verbose"],
   ["", ""],
-  ["assemblage of found plastic and wire", "Mixed media"], // genuine fallback
+  ["—", ""],
+  ["mixed media on paper", "Mixed media"],
+  ["mixed-media collage", "Mixed media"],
+  ["assemblage of found plastic and wire", "Mixed media"],
 ];
 
 let pass=0, fail=0;
