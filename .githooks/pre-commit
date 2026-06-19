@@ -1,0 +1,3 @@
+#!/bin/sh
+# Gesso: block commits that fail tests + the pool data-quality gate (bypass with --no-verify).
+npm test || { echo "❌ pre-commit: npm test / check-pool failed — fix before committing."; exit 1; }

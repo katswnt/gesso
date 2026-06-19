@@ -3,7 +3,7 @@
 // LOCAL only (no network); the creator-death copyright check is scripts/audit-copyright.mjs (Wikidata).
 import { readFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
-import { simplifyMedium } from "./lib/domain.mjs";
+import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
 
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const html = readFileSync("index.html","utf8");
@@ -12,10 +12,6 @@ let fame={}; try{ const f=readFileSync("data/fame.js","utf8"); fame=JSON.parse(f
 const fa = p => fame[p.id]!=null?fame[p.id]:(p.fame||0);
 
 const BUCKETS = new Set(["Oil paint","Tempera","Fresco","Watercolor","Ink","Drawing","Woodblock print","Bronze","Copper","Marble","Stone","Wood","Ivory","Jade","Ceramic","Glass","Textile","Gold","Silver","Lacquer","Photograph","Mixed media"]);
-// styles that are really a nationality / country / region, not a movement-or-culture
-const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa|democratic republic|sierra leone|holy roman empire|netherlandish|contemporary art)$/i;
-// living / died-after-1955 artists that must never be in the pool (museum-API works the SPARQL audit skips)
-const IC_ARTIST = /Georgia O.?Keeffe|Marcel Breuer|Berndt Friberg|Walter Gropius|Lyonel Feininger|Edward Steichen|Ravinder Reddy|Pablo Picasso|Salvador Dal[ií]|Andy Warhol|Roy Lichtenstein|Jackson Pollock|Ren[ée] Magritte|Frida Kahlo|Mark Rothko|Edward Hopper|Diego Rivera/i;
 
 const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
@@ -35,7 +31,7 @@ for(const p of pool){
   if(p.artist && /[぀-ヿ㐀-䶿一-鿿]/.test(p.artist)) add(hard,"artist-CJK",p,`"${p.artist}"`);
   if(p.artist && /^Q\d+$/.test(p.artist)) add(hard,"artist-qid",p,`"${p.artist}"`);
   // COPYRIGHT (local denylist; full check = audit-copyright.mjs)
-  if(IC_ARTIST.test(p.artist||"")) add(hard,"in-copyright",p,`"${p.artist}"`);
+  if(isInCopyright(p.artist)) add(hard,"in-copyright",p,`"${p.artist}"`);
   // SCHEMA integrity
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);

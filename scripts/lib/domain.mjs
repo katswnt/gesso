@@ -14,6 +14,25 @@ export function normalizeArtist(name){
   return s.replace(/\s+/g, " ").trim();
 }
 
+// --- style + copyright cleaners (shared by promote-shortlist.mjs and check-pool.mjs, single source of truth) ---
+export const STYLE_MERGE = {
+  "Hudson River school":"Hudson River School","Neoclassical":"Neoclassicism","Safavid Iran":"Safavid",
+  "Naïve":"Naïve art","Edo people":"Edo peoples","Benin (Edo) art":"Edo peoples","Pre-Raphaelite Brotherhood":"Pre-Raphaelite",
+};
+// style strings that are really a nationality / country / region, not a movement-or-culture → dropped.
+export const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa(,.*)?|democratic republic.*|sierra leone|holy roman empire|netherlandish|contemporary art)$/i;
+// canonical style; returns "" when the label is really a place (so movement just isn't quizzed).
+export function canonicalizeStyle(style){
+  let s = String(style||"").trim(); if(!s) return "";
+  s = STYLE_MERGE[s] || s;
+  if(BAD_STYLE.test(s)) return "";
+  if(/^[a-z]/.test(s)) s = s.charAt(0).toUpperCase()+s.slice(1); // sentence-case lowercase movement labels
+  return s;
+}
+// living / died-after-1955 creators that must never enter the pool (museum-API works the SPARQL audit skips).
+export const IC_ARTISTS = /Georgia O.?Keeffe|Marcel Breuer|Berndt Friberg|Walter Gropius|Lyonel Feininger|Edward Steichen|Ravinder Reddy|Pablo Picasso|Salvador Dal[ií]|Andy Warhol|Roy Lichtenstein|Jackson Pollock|Ren[ée] Magritte|Frida Kahlo|Mark Rothko|Edward Hopper|Diego Rivera/i;
+export const isInCopyright = artist => IC_ARTISTS.test(String(artist||""));
+
 // Player-facing medium → coarse family (used for "same family" partial credit + distractor selection).
 export const MED_FAMILY = {
   // split out of the old catch-all "paint": paintings, drawings, and prints are no longer mutual 50%-givers
