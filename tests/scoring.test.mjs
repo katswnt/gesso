@@ -14,7 +14,9 @@ const sandbox = [
   grab(/function timeScore\(diff\)\{[\s\S]*?\n\}/, "timeScore"),
   grab(/const MOVEMENTS=\{[\s\S]*?\n\};/, "MOVEMENTS"),
   grab(/const MOV_FAMILY=\{[\s\S]*?return Math\.min\(1,sim\);\n\}/, "movementSim block"),
-  "globalThis.MAX_CAT=MAX_CAT; globalThis.DIFF=DIFF; globalThis.timeScore=timeScore; globalThis.movementSim=movementSim; globalThis.movEra=movEra;",
+  grab(/function ptInRing\(x,y,ring\)\{[\s\S]*?return inside; \}/, "ptInRing"),
+  grab(/function ptInRegion\(lat,lng,reg\)\{[\s\S]*?return false; \}/, "ptInRegion"),
+  "globalThis.MAX_CAT=MAX_CAT; globalThis.DIFF=DIFF; globalThis.timeScore=timeScore; globalThis.movementSim=movementSim; globalThis.movEra=movEra; globalThis.ptInRegion=ptInRegion;",
 ].join("\n");
 new Function(sandbox)();
 
@@ -45,6 +47,14 @@ ok(MAX_CAT * relMovMax * 1 < MAX_CAT, "INVARIANT: max partial movement credit ca
 for (const a of ["Romanticism", "Cubism", "Edo period"]) for (const b of ["Academic art", "Futurism", "Baroque"]) {
   const s = movementSim(a, b); ok(s >= 0 && s <= 1, `sim(${a},${b}) in [0,1]`);
 }
+
+// --- ptInRegion: full WHERE credit anywhere inside a historical culture/empire polygon ---
+// a simple 10x10 deg box around (0,0) as a stand-in region; geometry is [[ [lng,lat], ... ]]
+const box = { geometry: [[[-5,-5],[5,-5],[5,5],[-5,5],[-5,-5]]] };
+ok(globalThis.ptInRegion(0, 0, box) === true, "ptInRegion: pin inside polygon = true");
+ok(globalThis.ptInRegion(20, 20, box) === false, "ptInRegion: pin outside polygon = false");
+ok(globalThis.ptInRegion(0, 0, null) === false, "ptInRegion: no region entry = false (falls back to country logic)");
+ok(globalThis.ptInRegion(0, 0, {}) === false, "ptInRegion: missing geometry = false");
 
 console.log(`\nscoring.test: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);
