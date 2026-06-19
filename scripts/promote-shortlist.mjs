@@ -9,24 +9,30 @@ import { readGlobal, writeAssignment } from "./lib/static-module.mjs";
 import { normalizeArtist, canonicalizeStyle, isInCopyright } from "./lib/domain.mjs";
 const { ready } = JSON.parse(readFileSync("data/incoming/promotion-shortlist.json","utf8"));
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
-const qOf = id => (String(id||"").match(/Q\d+/)||[""])[0];
-const poolQ = new Set(pool.map(p=>qOf(p.id)).filter(Boolean));
+// dedup by EXACT id (same-source + same-run) AND by Wikidata Q (cross-source) — kept consistent so a
+// work can't slip in twice. wikidataid is stored on promoted entries so future harvests dedup against them.
+const qOfW = w => (String(w.wikidataid||"").match(/Q\d+/)||[])[0] || (String(w.id||"").match(/Q\d+/)||[])[0];
+const poolIds = new Set(pool.map(p=>String(p.id)));
+const poolQs = new Set(pool.flatMap(p=>[(String(p.id).match(/Q\d+/)||[])[0],(String(p.wikidataid||"").match(/Q\d+/)||[])[0]]).filter(Boolean));
 const junk = t => /\d{2,}[.\-]\d|[-_]\d{3,}|inv\.?|\bMS\b|\d{4,}/i.test(t||"") || /[-_]\d/.test(t||"");
 const fameOf = sl => Math.round(100*Math.log((sl||0)+1));
+const tidyMedium = m => { m=String(m||"").trim(); return m ? m.charAt(0).toUpperCase()+m.slice(1) : ""; }; // no lowercase display
 
 let promoted=0, skipJunk=0, skipNoYear=0, skipDup=0, skipCopyright=0;
 for(const w of ready){
-  if(poolQ.has(qOf(w.id))){ skipDup++; continue; }
+  const q=qOfW(w);
+  if(poolIds.has(String(w.id)) || (q && poolQs.has(q))){ skipDup++; continue; }
   if(junk(w.title)){ skipJunk++; continue; }
   if(w.y==null){ skipNoYear++; continue; }
   const artist = normalizeArtist(w.artist||"");          // strip CJK / tidy at entry
   if(isInCopyright(artist)){ skipCopyright++; continue; }  // never admit known in-copyright creators
   const style = canonicalizeStyle(w.style||"");          // merge variants, drop nationality-as-style, sentence-case
-  pool.push({ id:w.id, title:w.title, artist, y:w.y, lat:w.lat, lng:w.lng,
-    place:w.place, region:w.region, medium:w.medium||"", style,
+  const e={ id:w.id, title:w.title, artist, y:w.y, lat:w.lat, lng:w.lng,
+    place:w.place, region:w.region, medium:tidyMedium(w.medium), style,
     styleKind: style?(w.styleKind||"movement"):"", fame:fameOf(w.sitelinks),
-    img:w.img, src:w.src, cats:["when","where","medium","style","artist"] });
-  poolQ.add(qOf(w.id)); promoted++;
+    img:w.img, src:w.src, cats:["when","where","medium","style","artist"] };
+  if(w.wikidataid) e.wikidataid=w.wikidataid;
+  pool.push(e); poolIds.add(String(w.id)); if(q)poolQs.add(q); promoted++;
 }
 writeAssignment("data/pool.js","ARTEFACTUM_POOL",pool);
 console.log(`promoted ${promoted} | skipped: dup ${skipDup}, junk-title ${skipJunk}, no-year ${skipNoYear}, in-copyright ${skipCopyright}`);
