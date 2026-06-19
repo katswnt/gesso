@@ -1044,7 +1044,7 @@ function renderStart(dateStr,push=true){
     </div>
     ${replay?'':`<div class="practice">
       <div class="pinf">&infin;</div>
-      <div class="ptxt"><div class="h">Practice</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
+      <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
       <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
@@ -1143,7 +1143,7 @@ function renderInfiniteSummary(){
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,#eceffb,var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <span class="kick">Practice session &middot; ${esc(tierName)}</span>
+        <span class="kick">Infinite session &middot; ${esc(tierName)}</span>
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div></div></div>
@@ -1186,7 +1186,7 @@ function renderInfiniteSummary(){
   document.getElementById('againinf').onclick=()=>startInfinite(tier);
   document.getElementById('homeinf').onclick=()=>{infinite=false;renderStart();};
   const sb=document.getElementById('shareinf');
-  sb.onclick=()=>{ const txt=`Gesso practice · ${tierName}\n${avg.toLocaleString()} avg pts/round · ${rounds} rounds · ${accuracy}% accuracy\n★ ${perfects} perfect · ✦ ${masterpieces} masterpiece${masterpieces===1?'':'s'}\n${location.origin}`;
+  sb.onclick=()=>{ const txt=`Gesso infinite · ${tierName}\n${avg.toLocaleString()} avg pts/round · ${rounds} rounds · ${accuracy}% accuracy\n★ ${perfects} perfect · ✦ ${masterpieces} masterpiece${masterpieces===1?'':'s'}\n${location.origin}`;
     navigator.clipboard.writeText(txt).then(()=>{ sb.textContent='Recap copied ✓'; setTimeout(()=>{sb.textContent='Share recap';},1600); }).catch(()=>{ sb.textContent='Copy failed'; setTimeout(()=>{sb.textContent='Share recap';},1600); }); };
 }
 
@@ -1235,7 +1235,7 @@ function renderRound(){
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(fmtDim(it.dim))):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
-          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`&minus;${HINT_COST} each &middot; <span id="hintsleft">&infin;</span> in practice`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
+          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`&minus;${HINT_COST} each &middot; <span id="hintsleft">&infin;</span> in infinite mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
           <div class="hintchips" id="hintchips"></div>
           <div class="hinttext" id="hintout" style="display:none"></div>
         </div>
