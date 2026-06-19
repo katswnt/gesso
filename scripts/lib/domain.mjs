@@ -8,9 +8,9 @@
 // (ō/é/ʿ) intact and never merges genuinely different names (no hyphen/case guessing).
 const CJK_RE = /[぀-ヿ㐀-䶿一-鿿豈-﫿　]/;
 export function normalizeArtist(name){
-  let s = String(name||"");
-  // drop a trailing run of CJK (optionally space-separated) at the end of the string
-  s = s.replace(/[\s　]*[぀-ヿ㐀-䶿一-鿿豈-﫿　][぀-ヿ㐀-䶿一-鿿豈-﫿　\s]*$/, "");
+  let s = String(name||"")
+    .replace(/[\u3000\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+/g, "")  // strip ALL CJK (trailing names AND "(attrib)" marks)
+    .replace(/\(\s*\)/g, "");                       // drop empty parens left behind, e.g. "Wu Daozi (X)" -> "Wu Daozi"
   return s.replace(/\s+/g, " ").trim();
 }
 
