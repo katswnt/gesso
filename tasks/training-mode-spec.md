@@ -16,7 +16,13 @@ Training Mode is **Learning mode with a constrained, facet-selected work set and
 6. **The before→after delta ("54% → 71% ↑") is the hero of the training recap** — big, with the up-arrow, the visual centerpiece, NOT a line atop the strengths section. It's the only place a player sees themselves improve; spend the design budget there.
 7. **Normalize the weak-spot thresholds.** `byCategory` for `style`/`movement` uses `===MAX_CAT` (exact) while `when`/`where` use `≥75%` — so movement looks artificially weaker and gets over-served. Normalize the comparison (consistent ≥ threshold, or weight movement) before weak-spot targeting ships (Phase 3).
 
-**Still-needed design work (not in this spec):** mockups of (a) the chip-led Training setup screen on its own route, and (b) the map-only single-axis round (so it reads as a map screen, not a round with dead inputs). These two screens are where the experience is made or lost.
+**Still-needed design work (not in this spec):** mockup of the map-only single-axis round (so it reads as a map screen, not a round with dead inputs). *(The Training setup / filter-builder screen IS now mocked — design handoff in `tasks/17_training/`.)*
+
+## ✅ Filter-builder handoff review — DECISIONS (tasks/17_training/)
+8. **Artist facet shows only artists with ≥5 works.** 1,145 named artists but only 164 clear the empty-guard floor; surfacing the rest makes the tab a field of dead-ends ("Vermeer = 3 works = loosen a filter"). Gate the Artist browse/search to artists with ≥5 pool works.
+9. **Per-option counts are standalone (cacheable); the funnel carries the combined truth.** Show each option's own `trainingSet({facet}).length` (precompute once), and rely on the narrowing funnel for the real after-each-family result — don't recompute conditioned counts per option.
+10. **Place facet = `canonicalizePlace`d country (+ Region), not raw place strings.** Use `scripts/lib/places.mjs` so the facet options are clean countries (no "United States" vs "...of America"); offer Region as the coarse option. Movement+Culture stay ONE facet (`style`) as the handoff notes.
+11. **#4 axis wiring (single-axis drills):** the Focus control on the Training screen sets `TRAIN.axis ∈ {none|when|where|style}`. `startTraining(TRAIN)` carries `{facets, axis}`. In `renderRound`, when `TRAIN.axis` is set, render ONLY that input and OMIT the others entirely (per decision #3 — not greyed naFields); `score()` scores only that axis. `axis:'none'` = normal full round over the filtered set.
 
 ---
 
