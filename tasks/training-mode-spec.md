@@ -6,6 +6,20 @@ Training Mode is **Learning mode with a constrained, facet-selected work set and
 
 ---
 
+## ✅ Design review — DECISIONS (2026-06, supersede any conflicting detail below)
+
+1. **Chips are the hero; free-text is power-user sugar.** Lead the setup UI with tappable facet chips; the text box is a shortcut, not a dependency. The parser failing gracefully ("couldn't match: portraits") is acceptable *because nothing relies on it.* When text DOES resolve, immediately echo it back as removable chips — trust comes from the echo, not the parse. (Gap the parser exposes: there's no *subject* facet, so "renaissance portraits" can't fully resolve — chips sidestep this.)
+2. **Training is its own route/screen (`/training`), not a 5th block on the start screen.** The start screen is at its hierarchy limit (4 daily tiers + Practice). Add ONE calm entry that opens the dedicated Training setup screen. Do NOT stack free-text + chips + tray + focus + count + start under the Practice panel.
+3. **Single-axis drills OMIT the other inputs entirely** (default, not "optional polish"). A map-only round should look like a *map screen* — the single active input fills the space — not a normal round with three greyed-out "not scored" boxes.
+4. **Weak-spot drill: surface the "why" AND the mix.** Label says why ("You're at 54% on Baroque — let's fix that"), and one line makes the 30% non-target mix visible ("mostly Baroque, with a few others to keep you honest") so the filter never feels broken.
+5. **Naming (decide before ship — recap, start panel, leaderboard all reference these):** **Practice = endless random; Training = targeted drills.** Retire "Learning/Infinite" as *user-facing* vocabulary (keep `infinite` internal only).
+6. **The before→after delta ("54% → 71% ↑") is the hero of the training recap** — big, with the up-arrow, the visual centerpiece, NOT a line atop the strengths section. It's the only place a player sees themselves improve; spend the design budget there.
+7. **Normalize the weak-spot thresholds.** `byCategory` for `style`/`movement` uses `===MAX_CAT` (exact) while `when`/`where` use `≥75%` — so movement looks artificially weaker and gets over-served. Normalize the comparison (consistent ≥ threshold, or weight movement) before weak-spot targeting ships (Phase 3).
+
+**Still-needed design work (not in this spec):** mockups of (a) the chip-led Training setup screen on its own route, and (b) the map-only single-axis round (so it reads as a map screen, not a round with dead inputs). These two screens are where the experience is made or lost.
+
+---
+
 ## 0. What already exists (the substrate we build on)
 
 - **Infinite / Learning mode** is the template. Entry: `startInfinite(key, push)` (~line 1101) sets `infinite=true`, builds `game=practiceOrder(key)` (~1092), `idx=0`, `results=[]`, then `renderRound()`. "End session" → `renderInfiniteSummary()` (~1107). Navigation via `pushNav({v:'inf',key})` and `routeFrom` handles `/infinite/<level>` (~974) and `pathFor` maps `s.v==='inf'` (~968).
