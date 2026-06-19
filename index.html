@@ -1283,6 +1283,9 @@ function renderRound(){
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
   setTimeout(()=>map.invalidateSize(),settings.reduceMotion?0:250);
   document.getElementById('submit').onclick=score;
+  // reset scroll AFTER the new round paints + force a reflow — fixes the blank-until-you-scroll glitch
+  // when advancing via "Next" (innerHTML swap left the viewport unpainted on mobile)
+  requestAnimationFrame(()=>{ window.scrollTo(0,0); void document.body.offsetHeight; });
 }
 
 function setupAutocomplete(){
