@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html,body{margin:0}*{box-sizing:border-box}svg{display:block}
+  :root{--accent:#2230b8;--surface:#f6f4ee;--surface2:#edeae0;--line:#e3ded1;--line2:#ddd8ca;--ink:#1b1916;--muted:#8a8472;--faint:#a39d8c;--full:#2f8f5b;--partial:#cf9f3a;--miss:#c14b3a;--gold-ink:#9a7b2e}
+  .blob{border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
+  .leaflet-container{background:#e7e1d3;font-family:inherit}.leaflet-control-attribution{display:none}
+  ::selection{background:var(--accent);color:#fff}
+  .mono{font-family:'IBM Plex Mono',monospace}.tab{font-variant-numeric:tabular-nums}
+  .kick{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .chip{appearance:none;background:#fff;border:1px solid var(--line2);border-radius:20px;color:var(--ink);font:600 12px 'IBM Plex Mono',monospace;padding:8px 13px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip .ct{font:500 10px 'IBM Plex Mono',monospace;opacity:.6}
+  .chip.on .ct{opacity:.8}
+  .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line2);border-radius:9px;padding:3px;flex-wrap:wrap}
+  .seg button{appearance:none;background:transparent;border:none;border-radius:6px;padding:8px 13px;font:600 11px 'IBM Plex Mono',monospace;color:var(--muted);cursor:pointer}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(35,32,26,.12)}
+  .seclbl{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+  .tray{display:flex;gap:7px;flex-wrap:wrap;min-height:34px}
+  .tchip{display:inline-flex;align-items:center;gap:7px;background:#eceffb;border:1px solid #d3d8ef;border-radius:20px;color:var(--accent);font:600 12px 'IBM Plex Mono',monospace;padding:7px 12px}
+  .tchip b{cursor:pointer;font-weight:700}
+  .tray{align-items:center}
+  .grp{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border:1px dashed #cdd2e8;border-radius:24px;padding:5px 7px}
+  .conj{font:700 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;align-self:center}
+  .conj.or{color:var(--faint)}
+  .conj.and{color:var(--accent);background:#eceffb;border:1px solid #d3d8ef;border-radius:5px;padding:3px 7px}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#dcd8d0;color:#1b1916;font-family:'Archivo',sans-serif;padding:38px 30px 80px">
+
+  <div style="max-width:1200px;margin:0 auto 8px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8a8273">gesso &middot; training mode</div>
+
+  <div style="max-width:1200px;margin:16px auto 0;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+
+    <!-- ============ A · SETUP SCREEN (chip-led, own route) ============ -->
+    <div style="flex:1 1 600px;min-width:340px;background:var(--surface);border:1px solid var(--line2);border-radius:13px;overflow:hidden;box-shadow:0 18px 46px rgba(35,32,26,.13)">
+      <div style="padding:20px 24px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#eceffb,#f6f4ee)">
+        <div style="display:flex;align-items:center;gap:9px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a8472"><span style="cursor:pointer">&lsaquo; back</span></div>
+        <h1 style="font:800 27px 'Archivo';letter-spacing:-.02em;margin:9px 0 4px">Train on exactly what you want</h1>
+        <p style="font:400 14px/1.5 'Archivo';color:#56514a;margin:0">Pick a focus and a slice of art history. Won&rsquo;t affect your streak or stats.</p>
+      </div>
+
+      <!-- weak spot -->
+      <div style="padding:18px 24px 0">
+        <button style="width:100%;display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #d3d8ef;border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;cursor:pointer;text-align:left">
+          <span class="blob" style="flex:0 0 auto;width:40px;height:38px;background:var(--accent);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9 2.6.9-5.5-4-3.9 5.5-.8z" transform="scale(.85) translate(2 1)"/></svg></span>
+          <span style="flex:1"><span style="display:block;font:700 14px 'Archivo'">Drill my weak spots</span><span class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted)">You&rsquo;re at <b style="color:var(--miss)">54%</b> on Baroque &mdash; let&rsquo;s fix that</span></span>
+          <span style="color:var(--accent);font:700 16px Archivo">&rsaquo;</span>
+        </button>
+      </div>
+
+      <!-- free text -->
+      <div style="padding:20px 24px 0">
+        <div class="seclbl">Drill me on&hellip; <span style="text-transform:none;letter-spacing:0;color:var(--faint);font-weight:500">type or tap below</span></div>
+        <input id="freetext" placeholder="e.g. 15th century, Italian, Baroque…" style="width:100%;padding:12px 14px;background:#fff;border:1px solid var(--line2);border-radius:8px;color:var(--ink);font:500 15px 'Archivo';outline:none" />
+        <div id="unresolved" class="mono" style="font:500 10px 'IBM Plex Mono';color:var(--faint);margin-top:6px;display:none"></div>
+      </div>
+
+      <!-- quick chips -->
+      <div style="padding:18px 24px 0">
+        <div class="seclbl">Quick picks</div>
+        <div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- selected tray -->
+      <div style="padding:18px 24px 0">
+        <div class="seclbl">Selected</div>
+        <div class="tray" id="tray"></div>
+        <div id="trainsent" style="margin-top:12px;font:400 14px/1.5 'Archivo';color:#3a362d"></div>
+      </div>
+
+      <!-- focus -->
+      <div style="padding:18px 24px 0">
+        <div class="seclbl">Focus</div>
+        <div class="seg" id="focus">
+          <button class="on" data-a="all">All axes</button>
+          <button data-a="when">Date only</button>
+          <button data-a="where">Map only</button>
+          <button data-a="style">Movement only</button>
+        </div>
+      </div>
+
+      <!-- count + start -->
+      <div style="margin:20px 24px 22px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span class="mono" id="count" style="font:600 13px 'IBM Plex Mono';color:var(--ink)"><b class="tab" style="color:var(--accent)">142</b> works match</span>
+        <button id="start" style="margin-left:auto;padding:13px 22px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:700 12px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Start training &rarr;</button>
+      </div>
+    </div>
+
+    <!-- ============ B · MAP-ONLY DRILL ROUND ============ -->
+    <div style="width:330px;flex:0 0 330px;background:#100e0a;border:1px solid #2a2418;border-radius:36px;padding:9px;box-shadow:0 26px 64px rgba(40,34,24,.24)">
+      <div style="border-radius:29px;overflow:hidden;background:var(--surface)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line)">
+          <span style="font:700 15px 'Archivo';color:var(--accent);text-transform:lowercase">gess<span class="blob" style="display:inline-block;width:8px;height:8px;background:var(--accent);vertical-align:baseline"></span></span>
+          <span class="mono" style="font:600 9px 'IBM Plex Mono';letter-spacing:.08em;color:var(--accent);border:1px solid #c8cef0;background:#eceffb;border-radius:20px;padding:3px 9px">MAP DRILL &middot; 4/12</span>
+        </div>
+        <div style="padding:18px 16px 10px;display:flex;flex-direction:column;align-items:center;background:#efe9dc">
+          <div style="padding:8px;background:#fff;border:1px solid #d8cfbe;box-shadow:0 12px 28px rgba(40,34,24,.2)"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/1665_Girl_with_a_Pearl_Earring.jpg?width=420" alt="" style="display:block;max-height:170px;max-width:100%;background:#000" /></div>
+        </div>
+        <!-- single axis fills the space -->
+        <div style="padding:14px 16px 6px;text-align:center">
+          <div class="kick" style="margin-bottom:4px">Only one question</div>
+          <h2 style="font:800 21px 'Archivo';letter-spacing:-.01em;margin:0 0 3px">Where was it made?</h2>
+          <p class="mono" style="font:500 10px 'IBM Plex Mono';color:var(--muted);margin:0 0 12px">Date &amp; movement are off in this drill</p>
+        </div>
+        <div style="padding:0 16px 14px"><div id="drillmap" style="height:210px;border:1px solid #d8cfbe;border-radius:6px;overflow:hidden"></div><div style="margin-top:8px;font:italic 12px 'Archivo';color:var(--muted);text-align:center">tap to place your pin &middot; pinch / +&minus; to zoom</div></div>
+        <div style="padding:2px 16px 18px"><button style="width:100%;padding:13px;border:none;border-radius:3px;background:#1c1a17;color:#f4f1ea;font:600 14px 'Archivo';cursor:pointer">lock in</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ C · RECAP HERO DELTA ============ -->
+  <div style="max-width:1200px;margin:30px auto 0">
+    <div class="seclbl" style="margin-bottom:13px">Training recap &middot; the hero moment</div>
+    <div style="max-width:560px;background:var(--surface);border:1px solid var(--line2);border-radius:13px;overflow:hidden;box-shadow:0 14px 36px rgba(35,32,26,.1)">
+      <div style="padding:22px 24px;background:linear-gradient(180deg,#eceffb,#f6f4ee);border-bottom:1px solid var(--line)">
+        <span class="kick">Training session &middot; Baroque</span>
+        <div style="display:flex;align-items:center;gap:18px;margin-top:14px;flex-wrap:wrap">
+          <div style="text-align:center"><div class="tab" style="font:700 30px 'Archivo';color:var(--miss)">54%</div><div class="mono" style="font:600 9px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:var(--faint)">before</div></div>
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#2f8f5b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M5 19L19 5M19 5h-9M19 5v9"/></svg>
+          <div style="text-align:center"><div class="tab" style="font:800 46px/.9 'Archivo';letter-spacing:-.02em;color:var(--full)">71%</div><div class="mono" style="font:600 9px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:var(--full)">after &middot; +17</div></div>
+        </div>
+        <p style="font:400 13px/1.5 'Archivo';color:#56514a;margin:14px 0 0">Your Baroque eye sharpened this session. Mostly Baroque works, with a few others to keep you honest.</p>
+      </div>
+      <div style="padding:16px 24px 18px;display:flex;gap:10px;flex-wrap:wrap">
+        <button style="flex:1;min-width:130px;padding:12px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Keep drilling</button>
+        <button style="flex:0 1 auto;padding:12px 16px;border:1.5px solid var(--line2);border-radius:8px;background:transparent;color:var(--ink);font:600 11px 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Change drill</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state={ sel:{'Baroque':{fam:'movement',n:58},'France':{fam:'country',n:34}}, axis:'all' };
+  quick(){ return [
+    {l:'15th c.',fam:'century',n:46},{l:'17th c.',fam:'century',n:88},{l:'Renaissance',fam:'movement',n:72},
+    {l:'Baroque',fam:'movement',n:58},{l:'Impressionism',fam:'movement',n:41},{l:'Italian',fam:'country',n:120},
+    {l:'Dutch',fam:'country',n:64},{l:'Egypt',fam:'country',n:31},{l:'Japan',fam:'country',n:52},
+    {l:'Oil paint',fam:'medium',n:430},{l:'Sculpture',fam:'medium',n:88},{l:'Prints',fam:'medium',n:96},
+  ]; }
+  componentDidMount(){ this.renderChips(); this.renderTray(); this.renderSentence(); this.wire(); this.boot(); }
+  renderChips(){
+    const el=document.getElementById('chips'); if(!el) return;
+    el.innerHTML=this.quick().map(q=>`<button class="chip${this.state.sel[q.l]?' on':''}" data-l="${q.l}" data-fam="${q.fam}" data-n="${q.n}">${q.l}<span class="ct">${q.n}</span></button>`).join('');
+    el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ const l=b.dataset.l; const s={...this.state.sel}; if(s[l])delete s[l]; else s[l]={fam:b.dataset.fam,n:+b.dataset.n}; this.setState({sel:s}); setTimeout(()=>{this.renderChips();this.renderTray();this.updateCount();},0); });
+  }
+  famLabel(f){ return {century:'Era',movement:'Movement',country:'Place',region:'Region',medium:'Medium'}[f]||f; }
+  renderTray(){
+    const el=document.getElementById('tray'); if(!el) return;
+    const keys=Object.keys(this.state.sel);
+    if(!keys.length){ el.innerHTML='<span class="mono" style="font:500 11px \'IBM Plex Mono\';color:var(--faint)">nothing yet — tap a pick or type above</span>'; return; }
+    // group by family
+    const groups={}; keys.forEach(k=>{ const f=this.state.sel[k].fam; (groups[f]=groups[f]||[]).push(k); });
+    const fams=Object.keys(groups);
+    let html='';
+    fams.forEach((f,gi)=>{
+      if(gi>0) html+=`<span class="conj and" title="must match all groups">AND</span>`;
+      const items=groups[f];
+      html+=`<span class="grp">`;
+      items.forEach((k,ii)=>{
+        if(ii>0) html+=`<span class="conj or" title="any of these counts">or</span>`;
+        html+=`<span class="tchip">${k} <b data-rm="${k}">&times;</b></span>`;
+      });
+      html+=`</span>`;
+    });
+    el.innerHTML=html;
+    el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ const s={...this.state.sel}; delete s[b.dataset.rm]; this.setState({sel:s}); setTimeout(()=>{this.renderChips();this.renderTray();this.updateCount();this.renderSentence();},0); });
+    this.renderSentence();
+  }
+  renderSentence(){
+    const el=document.getElementById('trainsent'); if(!el) return;
+    const keys=Object.keys(this.state.sel);
+    if(!keys.length){ el.innerHTML='<span style="color:var(--faint)">Training you on <b style="color:var(--ink)">all works</b> — add a pick to narrow it down.</span>'; return; }
+    const groups={}; keys.forEach(k=>{ const f=this.state.sel[k].fam; (groups[f]=groups[f]||[]).push(k); });
+    const fams=Object.keys(groups);
+    const multi=fams.length>1;
+    const phrase=items=>{
+      if(items.length===1) return `<b>${items[0]}</b>`;
+      // single-family: "X, Y, or both"; nested inside AND: parenthesised "(X or Y)" to stay grammatical
+      if(!multi){
+        if(items.length===2) return `<b>${items[0]}</b>, <b>${items[1]}</b>, or both`;
+        return items.slice(0,-1).map(i=>`<b>${i}</b>`).join(', ')+`, or <b>${items[items.length-1]}</b>`;
+      }
+      const or=items.map(i=>`<b>${i}</b>`).join(' or ');
+      return `(${or})`;
+    };
+    const AND=`<u style="text-decoration:none;color:var(--accent);font-weight:700">and</u>`;
+    const parts=fams.map(f=>phrase(groups[f]));
+    let joined;
+    if(parts.length===1) joined=parts[0];
+    else if(parts.length===2) joined=`${parts[0]} ${AND} ${parts[1]}`;
+    else joined=parts.slice(0,-1).join(', ')+`, ${AND} ${parts[parts.length-1]}`;
+    el.innerHTML=`Training you on works that are ${joined}.`;
+  }
+  updateCount(){
+    // crude demo intersection: min of selected family counts, floored
+    const vals=Object.values(this.state.sel); let n= vals.length? Math.max(8, Math.round(vals.reduce((a,b)=>Math.min(a,b.n), 999)*0.7)) : 283;
+    const c=document.getElementById('count'); if(c) c.innerHTML=`<b class="tab" style="color:var(--accent)">${n}</b> works match`;
+    const st=document.getElementById('start'); if(st){ const ok=n>=8; st.style.opacity=ok?'1':'.4'; st.style.pointerEvents=ok?'auto':'none'; }
+  }
+  wire(){
+    const ft=document.getElementById('freetext');
+    if(ft) ft.oninput=()=>{ const v=ft.value.toLowerCase(); const un=document.getElementById('unresolved');
+      const found=this.quick().find(q=>v.includes(q.l.toLowerCase()));
+      if(found && !this.state.sel[found.l]){ const s={...this.state.sel}; s[found.l]={fam:found.fam,n:found.n}; this.setState({sel:s}); this.renderChips(); this.renderTray(); this.updateCount(); ft.value=''; }
+    };
+    document.querySelectorAll('#focus button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#focus button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); this.setState({axis:b.dataset.a}); });
+  }
+  boot(){ const go=()=>{ if(!window.L) return setTimeout(go,120); const el=document.getElementById('drillmap'); if(!el||el._i)return; el._i=1;
+    const m=L.map(el,{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false}).setView([34,12],1);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
+    let mk=null; m.on('click',e=>{ if(mk)mk.setLatLng(e.latlng); else mk=L.circleMarker(e.latlng,{radius:8,color:'#1c1a17',fillColor:'#1c1a17',fillOpacity:.9,weight:2}).addTo(m); });
+    setTimeout(()=>m.invalidateSize(),260);
+  }; go(); }
+}
+</script>
+</body>
+</html>
