@@ -8,6 +8,26 @@ const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.A
 const poolFame = Object.fromEntries(pool.map(p=>[p.id, p.fame||0])); // fallback for freshly-promoted works not yet in the overlay — matches buildIndexes
 const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);
 
+// --- daily diversity: no two works by the same NAMED artist in one day's set; soft region/era spread ---
+const byId = Object.fromEntries(pool.map(p=>[p.id,p]));
+const namedArtist = id => { const a=String(byId[id]?.artist||"").trim(); return (a && !/^(unknown|anonymous|unidentified)/i.test(a)) ? a.toLowerCase() : ""; };
+const regionOf = id => byId[id]?.region||"";
+const centOf = id => { const y=byId[id]?.y; return y==null?"~":Math.floor(y/100); };
+// Reorder so any window of `win` consecutive avoids a repeated NAMED artist (hard) and spreads region+century (soft).
+function diversify(ids, win){
+  const rem=ids.slice(), out=[];
+  while(rem.length){
+    const recent=out.slice(-(win-1));
+    const ra=recent.map(namedArtist).filter(Boolean), rr=recent.map(regionOf), rc=recent.map(centOf);
+    let bestI=0, best=Infinity;
+    for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id);
+      const score=(a&&ra.includes(a)?1000:0)+(rr.includes(regionOf(id))?2:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
+      if(score<best){best=score;bestI=i; if(best<0.5)break;} }
+    out.push(rem.splice(bestI,1)[0]);
+  }
+  return out;
+}
+
 // deterministic PRNG + shuffle (seeded), independent of fame so the order is frozen
 function seedHash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -21,16 +41,26 @@ const out={};
 const T1_SIZE=110, T2_SIZE=300; // T1 icons (canon + top pageviews), T2 recognizable
 const T1ids = ranked.slice(0, T1_SIZE).map(p=>p.id);
 const T2ids = ranked.slice(T1_SIZE, T1_SIZE+T2_SIZE).map(p=>p.id);
-const T1s=seededShuffle(T1ids,"gesso-easy-t1-v2"), T2s=seededShuffle(T2ids,"gesso-easy-t2-v2");
-const nBlocks=Math.max(Math.ceil(T1s.length/4), T2s.length); // cycle both bands fully
-const easy=[];
-for(let b=0;b<nBlocks;b++){ for(let k=0;k<4;k++) easy.push(T1s[(b*4+k)%T1s.length]); easy.push(T2s[b%T2s.length]); }
+// Easy keeps the 4-icons + 1-recognizable structure (recognizability rule untouched); diversity only REORDERS
+// within the bands — never swaps an icon out. T1 diversified so each day's 4 icons have distinct artists +
+// region/era spread; T2 picked to not repeat a named artist already in that day's icons. Region stays soft
+// (Easy is ~91% European — can't be forced diverse without breaking the canon rule).
+const T1s=diversify(seededShuffle(T1ids,"gesso-easy-t1-v2"),4), T2q=seededShuffle(T2ids,"gesso-easy-t2-v2");
+const nBlocks=Math.max(Math.ceil(T1s.length/4), T2q.length); // cycle both bands fully
+const easy=[]; let t2i=0;
+for(let b=0;b<nBlocks;b++){
+  const four=[]; for(let k=0;k<4;k++) four.push(T1s[(b*4+k)%T1s.length]);
+  const fa=four.map(namedArtist).filter(Boolean);
+  let t2=T2q[t2i%T2q.length];
+  for(let tries=0; tries<T2q.length && fa.includes(namedArtist(t2)); tries++){ t2i++; t2=T2q[t2i%T2q.length]; }
+  t2i++; easy.push(...four, t2);
+}
 out.easy=easy; // length nBlocks*5; dailyItems windows by 5 → 4 T1 + 1 T2 per day
 
 // --- MEDIUM / HARD / IMPOSSIBLE = the remaining works by recognizability, split in thirds ---
 const rest=ranked.slice(T1_SIZE+T2_SIZE).map(p=>p.id); const r=rest.length;
 const mc=[0, Math.round(r*0.34), Math.round(r*0.67), r];
-["medium","hard","impossible"].forEach((k,i)=>{ out[k]=seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`); });
+["medium","hard","impossible"].forEach((k,i)=>{ out[k]=diversify(seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`),5); });
 
 const easyDistinctCount = new Set([...T1ids, ...T2ids]).size;
 out.meta = {
@@ -54,5 +84,5 @@ out.meta = {
 };
 
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
-console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2s.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);
+console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2q.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);
 console.log("Easy daily = 4 icons + 1 recognizable; icons recur ~"+Math.round(T1s.length/4)+"d");
