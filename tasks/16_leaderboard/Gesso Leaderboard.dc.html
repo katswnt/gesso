@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0}*{box-sizing:border-box}
+  :root{--accent:#2230b8;--surface:#f6f4ee;--surface2:#edeae0;--line:#e3ded1;--line2:#ddd8ca;--ink:#1b1916;--muted:#8a8472;--faint:#a39d8c;--full:#2f8f5b;--partial:#cf9f3a;--miss:#c14b3a;--silver:#9aa0a6;--silver-ink:#6c7177;--gold:#b3892f;--gold-ink:#9a7b2e}
+  .blob{border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
+  ::selection{background:var(--accent);color:#fff}
+  .mono{font-family:'IBM Plex Mono',monospace}.tab{font-variant-numeric:tabular-nums}
+  .kick{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line2);border-radius:9px;padding:3px}
+  .seg button{appearance:none;background:transparent;border:none;border-radius:6px;padding:8px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(35,32,26,.12)}
+  .pill2{display:inline-flex;align-items:center;gap:5px;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.04em;border-radius:20px;padding:3px 8px;white-space:nowrap}
+  .row{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);transition:background .12s}
+  .row:hover{background:#faf8f2}
+  .av{flex:0 0 auto;width:34px;height:33px;display:flex;align-items:center;justify-content:center;font:700 13px Archivo;color:#fff}
+  .sech{display:flex;align-items:center;gap:11px;margin:30px 0 14px}
+  .sech .t{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .sech .r{flex:1;height:1px;background:var(--line)}
+  .swatch{width:32px;height:30px;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+  .swatch:hover{transform:scale(1.08)}
+  .swatch.on{border-color:var(--ink)}
+  .nfield{width:100%;padding:12px 14px;background:#fff;border:1px solid var(--line2);border-radius:8px;color:var(--ink);font:600 16px 'Archivo';outline:none}
+  .nfield:focus{border-color:var(--accent)}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#dcd8d0;color:#1b1916;font-family:'Archivo',sans-serif;padding:38px 30px 80px">
+
+  <div style="max-width:1180px;margin:0 auto 6px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8a8273">gesso &middot; leaderboard &middot; the salon register</div>
+
+  <div style="max-width:1180px;margin:16px auto 0;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+
+    <!-- ============ MAIN BOARD ============ -->
+    <div style="flex:1 1 660px;min-width:340px;background:var(--surface);border:1px solid var(--line2);border-radius:13px;overflow:hidden;box-shadow:0 18px 46px rgba(35,32,26,.13)">
+
+      <!-- header -->
+      <div style="padding:20px 22px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#eceffb,#f6f4ee)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h1 style="font:800 26px 'Archivo';letter-spacing:-.02em;margin:0">The Register</h1>
+          <span class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted)">no. 2026·0616 &middot; closes in 14:32:07</span>
+        </div>
+        <!-- tabs -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+          <div class="seg" data-seg="board">
+            <button class="on" data-v="today">Today</button>
+            <button data-v="all">All-time</button>
+            <button data-v="tier">By tier</button>
+          </div>
+          <div class="seg" data-seg="who">
+            <button class="on" data-v="global">Global</button>
+            <button data-v="friends">Friends</button>
+          </div>
+          <div class="seg" data-seg="tier" style="opacity:.5;pointer-events:none">
+            <button class="on" data-v="easy">Easy</button>
+            <button data-v="medium">Medium</button>
+            <button data-v="hard">Hard</button>
+            <button data-v="imp">Impossible</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- podium -->
+      <div style="padding:22px 22px 8px;display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end">
+        <!-- 2nd -->
+        <div style="text-align:center">
+          <div style="width:54px;height:51px;margin:0 auto;background:#5b6470;display:flex;align-items:center;justify-content:center;color:#fff;font:700 19px Archivo;border:2px solid #c8ccd1;border-radius:42% 58% 47% 53% / 62% 44% 56% 38%">SK</div>
+          <div style="margin-top:8px;font:700 14px 'Archivo'">sigrid_k</div>
+          <div class="tab mono" style="font:600 12px 'IBM Plex Mono';color:var(--silver-ink)">9,840</div>
+          <div style="margin:7px auto 0;height:42px;width:78%;background:#d4d8dc;border:1px solid #c2c7cd;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 18px Archivo;color:#6c7177">2</div>
+        </div>
+        <!-- 1st -->
+        <div style="text-align:center">
+          <div style="font:700 13px Archivo;color:var(--gold-ink);margin-bottom:5px">&#9819;</div>
+          <div class="blob" style="width:66px;height:62px;margin:0 auto;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font:700 23px Archivo;border:2.5px solid var(--gold)">MR</div>
+          <div style="margin-top:8px;font:700 16px 'Archivo'">m_rossi</div>
+          <div class="tab mono" style="font:700 13px 'IBM Plex Mono';color:var(--gold-ink)">10,000</div>
+          <div style="margin:7px auto 0;height:64px;width:80%;background:#ecca6f;border:1px solid #cda948;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 24px Archivo;color:#7a5c14">1</div>
+        </div>
+        <!-- 3rd -->
+        <div style="text-align:center">
+          <div style="width:50px;height:47px;margin:0 auto;background:#a06a3a;display:flex;align-items:center;justify-content:center;color:#fff;font:700 17px Archivo;border:2px solid #cb9b6e;border-radius:55% 45% 35% 65% / 45% 60% 40% 55%">JD</div>
+          <div style="margin-top:8px;font:700 14px 'Archivo'">jdiaz</div>
+          <div class="tab mono" style="font:600 12px 'IBM Plex Mono';color:#9a6f3a">9,610</div>
+          <div style="margin:7px auto 0;height:32px;width:78%;background:#dcab7c;border:1px solid #bd8a5c;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 16px Archivo;color:#8a5a2c">3</div>
+        </div>
+      </div>
+
+      <!-- list -->
+      <div id="rows"></div>
+
+      <!-- you (pinned) -->
+      <div style="position:sticky;bottom:0;background:#eceffb;border-top:2px solid var(--accent)">
+        <div class="row" style="border-bottom:none;background:#eceffb">
+          <span class="tab mono" style="font:700 14px 'IBM Plex Mono';color:var(--accent);text-align:center">142</span>
+          <span style="display:flex;align-items:center;gap:11px;min-width:0">
+            <span class="av blob" style="background:var(--accent)">YOU</span>
+            <span style="min-width:0">
+              <span style="display:flex;align-items:center;gap:7px"><span style="font:700 14px 'Archivo'">you</span><span class="pill2" style="background:#fff;border:1px solid #d3d8ef;color:var(--accent)">your rank</span><span id="editid" class="mono" style="font:600 9px 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--line2)">edit</span></span>
+              <span class="mono" style="display:flex;gap:9px;font:500 10px 'IBM Plex Mono';color:var(--muted);margin-top:2px"><span style="color:var(--silver-ink)">&starf; 1 perfect</span></span>
+            </span>
+          </span>
+          <span class="tab mono" style="font:700 15px 'IBM Plex Mono';text-align:right">7,280</span>
+        </div>
+      </div>
+
+      <!-- footer actions -->
+      <div style="padding:15px 22px 20px;display:flex;gap:10px;flex-wrap:wrap">
+        <button style="flex:1 1 auto;min-width:150px;padding:13px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:700 12px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Share your rank</button>
+        <button style="flex:0 1 auto;padding:13px 18px;border:1.5px solid var(--line2);border-radius:8px;background:transparent;color:var(--ink);font:600 12px 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Invite friends</button>
+      </div>
+    </div>
+
+    <!-- ============ RIGHT RAIL ============ -->
+    <div style="width:330px;flex:1 1 300px;display:flex;flex-direction:column;gap:18px">
+
+      <!-- share-rank card -->
+      <div>
+        <div class="kick" style="color:#8a8273;margin-bottom:10px">Share-your-rank card</div>
+        <div style="background:var(--surface);border:1px solid var(--line2);border-radius:12px;overflow:hidden;box-shadow:0 10px 26px rgba(35,32,26,.1)">
+          <div style="padding:18px 18px 14px;background:linear-gradient(180deg,#eceffb,#f6f4ee)">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:800 19px 'Archivo';color:var(--accent)">gess<span class="blob" style="display:inline-block;width:12px;height:11px;background:var(--accent);vertical-align:baseline"></span></span><span class="mono" style="font:500 9px 'IBM Plex Mono';color:var(--muted)">no. 2026·0616</span></div>
+            <div style="margin-top:14px;display:flex;align-items:baseline;gap:9px"><span class="tab" style="font:800 36px 'Archivo';letter-spacing:-.02em">#142</span><span class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted)">of 4,821 today</span></div>
+            <div class="tab" style="font:700 15px 'Archivo';margin-top:2px">7,280 <span class="mono" style="font:500 10px 'IBM Plex Mono';color:var(--muted)">pts</span></div>
+          </div>
+          <div style="padding:12px 18px 16px">
+            <div style="display:flex;gap:4px">
+              <span style="flex:1;height:14px;border-radius:3px;background:var(--full)"></span>
+              <span style="flex:1;height:14px;border-radius:3px;background:var(--full)"></span>
+              <span style="flex:1;height:14px;border-radius:3px;background:var(--partial)"></span>
+              <span style="flex:1;height:14px;border-radius:3px;background:var(--miss)"></span>
+              <span style="flex:1;height:14px;border-radius:3px;background:var(--full)"></span>
+            </div>
+            <div class="mono" style="font:500 9px 'IBM Plex Mono';color:var(--faint);margin-top:9px;text-align:center">top 3% &middot; sharpest on Dutch Golden Age</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- specialist badges legend -->
+      <div>
+        <div class="kick" style="color:#8a8273;margin-bottom:10px">Specialist badges</div>
+        <div style="background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><span class="pill2" style="background:#eaf3ee;border:1px solid #bcdcc8;color:#2f7d52">&#9670; Baroque</span><span style="font:400 12px 'Archivo';color:#6a645b">90%+ in a movement</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pill2" style="background:#eef0fb;border:1px solid #c8cef0;color:#2230b8">&#9670; Europe</span><span style="font:400 12px 'Archivo';color:#6a645b">90%+ in a region</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pill2" style="background:#f6efe0;border:1px solid #e0cfa6;color:#9a7b2e">&#10022; Attributor</span><span style="font:400 12px 'Archivo';color:#6a645b">10+ artists nailed</span></div>
+        </div>
+      </div>
+
+      <!-- identity explorations -->
+      <div>
+        <div class="kick" style="color:#8a8273;margin-bottom:10px">How players show up &middot; 3 options</div>
+        <div style="background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:12px"><span class="av blob" style="width:36px;height:34px;background:#b4ab98;color:#fff">MR</span><div><div style="font:700 13px 'Archivo'">Initials only</div><div class="mono" style="font:400 10px 'IBM Plex Mono';color:var(--muted)">anonymous &middot; no login</div></div></div>
+          <div style="display:flex;align-items:center;gap:12px"><span class="av blob" style="width:36px;height:34px;background:var(--accent);color:#fff;position:relative"><span style="position:absolute;top:8px;left:9px;width:4px;height:4px;border-radius:50%;background:rgba(246,244,238,.85)"></span></span><div><div style="font:700 13px 'Archivo'">Pick-a-name + dab</div><div class="mono" style="font:400 10px 'IBM Plex Mono';color:var(--muted)">lightweight &middot; chosen handle</div></div></div>
+          <div style="display:flex;align-items:center;gap:12px"><span class="av blob" style="width:36px;height:34px;background:#3a4a6b;color:#fff;overflow:hidden;font-size:0">img</span><div><div style="font:700 13px 'Archivo'">Account + avatar</div><div class="mono" style="font:400 10px 'IBM Plex Mono';color:var(--muted)">username &middot; full profile</div></div></div>
+        </div>
+        <div style="font:italic 12px/1.5 'Archivo';color:#8a8273;margin-top:10px">My rec: ship <strong>pick-a-name + dab</strong> first (no login friction, on-brand), upgrade to accounts when Friends needs them.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ PICK NAME & COLOR MODAL ============ -->
+  <div id="idmodal" style="position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;padding:20px">
+    <div id="idveil" style="position:absolute;inset:0;background:rgba(27,25,22,.46)"></div>
+    <div style="position:relative;width:380px;max-width:100%;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.34)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--line)">
+        <span class="kick">Your register name</span>
+        <span id="idclose" style="font:700 18px 'Archivo';color:var(--muted);cursor:pointer">&times;</span>
+      </div>
+      <div style="padding:22px 20px 8px;display:flex;flex-direction:column;align-items:center">
+        <div id="preview" style="width:64px;height:60px;display:flex;align-items:center;justify-content:center;color:#fff;font:700 22px Archivo;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%">YOU</div>
+        <div class="mono" style="font:500 10px 'IBM Plex Mono';color:var(--faint);margin-top:8px">your dab</div>
+      </div>
+      <div style="padding:8px 20px 4px">
+        <div class="kick" style="color:var(--muted);margin-bottom:8px">Display name</div>
+        <input id="namein" class="nfield" maxlength="16" value="you" placeholder="pick a name…" />
+        <div class="mono" style="font:500 9px 'IBM Plex Mono';color:var(--faint);margin-top:6px">up to 16 characters &middot; shown on the board</div>
+      </div>
+      <div style="padding:16px 20px 4px">
+        <div class="kick" style="color:var(--muted);margin-bottom:10px">Dab colour</div>
+        <div id="swatches" style="display:flex;gap:9px;flex-wrap:wrap"></div>
+      </div>
+      <div style="padding:18px 20px 20px;display:flex;gap:10px">
+        <button id="idsave" style="flex:1;padding:13px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:700 12px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  rows(){
+    return [
+      {r:4, name:'a_haddad', av:'AH', c:'#7a5cc0', pts:9540, badge:['&#9670; Mughal','#f6efe0','#e0cfa6','#9a7b2e'], stat:'&starf; 3 perfect'},
+      {r:5, name:'lena.b', av:'LB', c:'#2f7d52', pts:9475, badge:['&#9670; Europe','#eef0fb','#c8cef0','#2230b8'], stat:'&#10022; 2 masterpiece'},
+      {r:6, name:'tomoko_n', av:'TN', c:'#b8623f', pts:9410, badge:['&#9670; Ukiyo-e','#f6efe0','#e0cfa6','#9a7b2e'], stat:'&starf; 4 perfect'},
+      {r:7, name:'pwhite', av:'PW', c:'#3a6ea5', pts:9360, badge:null, stat:'&starf; 2 perfect'},
+      {r:8, name:'isabela_c', av:'IC', c:'#9a7b2e', pts:9295, badge:['&#9670; Baroque','#eaf3ee','#bcdcc8','#2f7d52'], stat:'&#10022; 1 masterpiece'},
+      {r:9, name:'k_olsen', av:'KO', c:'#5b6470', pts:9240, badge:null, stat:'&starf; 1 perfect'},
+      {r:10, name:'marco88', av:'M8', c:'#b04a4a', pts:9180, badge:null, stat:''},
+    ];
+  }
+  componentDidMount(){ this.paint(); this.wireTabs(); this.cycleDabs(); this.wireModal(); }
+  DABS(){ return ['63% 37% 56% 44% / 55% 48% 52% 45%','58% 42% 52% 48% / 58% 52% 48% 42%','42% 58% 47% 53% / 62% 44% 56% 38%','55% 45% 35% 65% / 45% 60% 40% 55%','48% 52% 60% 40% / 50% 56% 44% 50%','70% 30% 52% 48% / 40% 62% 38% 60%','50% 50% 46% 54% / 60% 60% 40% 40%']; }
+  cycleDabs(){ const D=this.DABS(); document.querySelectorAll('.av.blob').forEach((el,i)=>{ el.style.borderRadius=D[(i+1)%D.length]; el.style.transform='rotate('+(((i*37)%13)-6)+'deg)'; }); }
+  wireModal(){
+    const m=document.getElementById('idmodal'), open=document.getElementById('editid'), close=document.getElementById('idclose'), veil=document.getElementById('idveil');
+    const sw=document.getElementById('swatches'), prev=document.getElementById('preview'), namein=document.getElementById('namein'), save=document.getElementById('idsave');
+    const COLORS=['#2230b8','#2f7d52','#b04a4a','#9a7b2e','#7a5cc0','#b8623f','#3a6ea5','#5b6470'];
+    let chosen='#2230b8';
+    sw.innerHTML=COLORS.map((c,i)=>`<span class="swatch blob${i===0?' on':''}" data-c="${c}" style="background:${c};border-radius:${this.DABS()[i%this.DABS().length]}"></span>`).join('');
+    const initials=s=>{ const p=s.trim().replace(/[^a-z0-9 _]/gi,'').split(/[ _]+/).filter(Boolean); return ((p[0]?.[0]||'')+(p[1]?.[0]||p[0]?.[1]||'')).toUpperCase()||'YOU'; };
+    const syncPrev=()=>{ prev.style.background=chosen; prev.textContent=initials(namein.value); };
+    sw.querySelectorAll('.swatch').forEach(s=>s.onclick=()=>{ sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('on')); s.classList.add('on'); chosen=s.dataset.c; syncPrev(); });
+    namein.oninput=syncPrev;
+    const show=()=>{ m.style.display='flex'; syncPrev(); setTimeout(()=>namein.focus(),40); };
+    const hide=()=>m.style.display='none';
+    if(open) open.onclick=show; if(close) close.onclick=hide; if(veil) veil.onclick=hide;
+    if(save) save.onclick=()=>{ const av=document.querySelector('.row .av.blob[style*="--accent"], .av.blob'); hide(); };
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+  }
+  paint(){
+    const el=document.getElementById('rows'); if(!el) return;
+    el.innerHTML=this.rows().map(p=>`
+      <div class="row">
+        <span class="tab mono" style="font:600 13px 'IBM Plex Mono';color:var(--muted);text-align:center">${p.r}</span>
+        <span style="display:flex;align-items:center;gap:11px;min-width:0">
+          <span class="av blob" style="background:${p.c}">${p.av}</span>
+          <span style="min-width:0">
+            <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font:600 14px 'Archivo'">${p.name}</span>${p.badge?`<span class="pill2" style="background:${p.badge[1]};border:1px solid ${p.badge[2]};color:${p.badge[3]}">${p.badge[0]}</span>`:''}</span>
+            ${p.stat?`<span class="mono" style="display:block;font:500 10px 'IBM Plex Mono';color:var(--muted);margin-top:2px">${p.stat}</span>`:''}
+          </span>
+        </span>
+        <span class="tab mono" style="font:700 14px 'IBM Plex Mono';text-align:right">${p.pts.toLocaleString()}</span>
+      </div>`).join('');
+  }
+  wireTabs(){
+    document.querySelectorAll('.seg').forEach(seg=>{
+      if(seg.style.pointerEvents==='none') return;
+      seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{ seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+        if(seg.getAttribute('data-seg')==='board'){ const t=document.querySelector('[data-seg="tier"]'); const on=b.dataset.v==='tier'; t.style.opacity=on?'1':'.5'; t.style.pointerEvents=on?'auto':'none'; }
+      });
+    });
+  }
+}
+</script>
+</body>
+</html>
