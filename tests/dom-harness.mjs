@@ -67,7 +67,7 @@ ctx.window = ctx; ctx.globalThis = ctx; ctx.self = ctx;
 import vm from "node:vm";
 vm.createContext(ctx);
 const DATA = ["data/cues.js","data/teach-works.js","data/hotspots.js","data/pool.js","data/fame.js",
-  "data/regions.js","data/daily-order.js","data/collections.js","data/countries.js"];
+  "data/regions.js","data/daily-order.js","data/countries.js"];
 for (const f of DATA) {
   try { vm.runInContext(readFileSync(f, "utf8"), ctx, { filename: f }); }
   catch (e) { fail(`loading ${f}`, e); }
