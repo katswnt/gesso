@@ -991,8 +991,8 @@ function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?'50% 50%
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
   const veil=document.createElement('div');veil.className='settingsveil';
-  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="colour ${c}" style="width:34px;height:34px;border-radius:50% 50% 50% 12%;background:${c};border:3px solid ${c===cur.color?'var(--ink)':'transparent'}"></button>`).join('');
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Your name and colour">
+  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:34px;height:34px;border-radius:50% 50% 50% 12%;background:${c};border:3px solid ${c===cur.color?'var(--ink)':'transparent'}"></button>`).join('');
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Your name and color">
     <div class="settingshead"><span class="ttl">Your register entry</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
     <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
@@ -1020,8 +1020,8 @@ async function renderLeaderboard(tierKey){
     <div class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted);margin-bottom:14px">no. ${esc(accession)} &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span></div>
     <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
     <div id="lbbody" aria-live="polite"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
-    <div style="margin-top:18px"><button class="btn2" id="lbedit">Edit your name &amp; colour</button>
-      <button class="btn2" data-route="home" style="margin-top:10px">Back</button></div>
+    <div style="margin-top:18px"><button class="btn2" data-editid>Edit your name &amp; color</button>
+      <button class="btn2" data-route="home" style="margin-top:10px">&larr; Back to home</button></div>
   </div></div>`;
   veilWire();
   // live countdown to next puzzle (midnight local) — registered via clearTimers cleanup
@@ -1056,15 +1056,13 @@ async function renderLeaderboard(tierKey){
       <div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 8px">
         <span class="mono" style="width:30px;text-align:right;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums">${data.you.rank}</span>
         ${dabAvatar(id.name,id.color,34)}
-        <span style="flex:1;min-width:0;font:700 14px Archivo">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" id="lbedit2" class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'IBM Plex Mono';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
+        <span style="flex:1;min-width:0;font:700 14px Archivo">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" data-editid class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'IBM Plex Mono';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
         <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${data.you.score.toLocaleString()}</span></div></div>`;
   }
   const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
   body.innerHTML=podium+rest.map(rowHTML).join('')+selfRow+youLine;
-  const e2=document.getElementById('lbedit2');if(e2)e2.onclick=()=>openIdentityModal(()=>renderLeaderboard());
 }
-function veilWire(){ const e=document.getElementById('lbedit'); if(e)e.onclick=()=>openIdentityModal(()=>renderLeaderboard());
-  document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
+function veilWire(){ document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
 
 // ---------- Supabase Auth (Accounts Phase 2) ----------
 const SUPA_URL="https://jmrpqmejupouqfergyyg.supabase.co";
@@ -1149,6 +1147,7 @@ function renderFromPath(){
 window.addEventListener('popstate',renderFromPath);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-login]');if(b){e.preventDefault();openLogin();}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-editid]');if(b){e.preventDefault();openIdentityModal(()=>renderLeaderboard());}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-howto]');if(b){e.preventDefault();openHowTo();}});
