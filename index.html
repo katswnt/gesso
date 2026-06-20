@@ -27,6 +27,7 @@
      style/culture/region cues from cues.js. -->
 <script src="data/teach-works.js" defer></script>
 <script src="data/hotspots.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="data/pool.js"></script>
 <script src="data/fame.js"></script>
 <script src="data/regions.js"></script>
@@ -1065,6 +1066,54 @@ async function renderLeaderboard(tierKey){
 }
 function veilWire(){ const e=document.getElementById('lbedit'); if(e)e.onclick=()=>openIdentityModal(()=>renderLeaderboard());
   document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
+
+// ---------- Supabase Auth (Accounts Phase 2) ----------
+const SUPA_URL="https://jmrpqmejupouqfergyyg.supabase.co";
+const SUPA_ANON="sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_";
+let __sb=null;
+function sb(){ if(__sb)return __sb; if(typeof window.supabase==='undefined'||!window.supabase.createClient)return null;
+  __sb=window.supabase.createClient(SUPA_URL,SUPA_ANON,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}); return __sb; }
+let authUser=null;
+async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}=await c.auth.getSession(); authUser=data&&data.session?data.session.user:null;
+  if(authUser){ await claimDevice(); } return authUser; }catch{ return null; } }
+async function claimDevice(){ // bind this device's leaderboard rows to the account (server verifies the JWT)
+  const c=sb(); if(!c||!authUser)return; try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return;
+    await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); }catch{} }
+// OAuth providers — each must ALSO be enabled in Supabase Dashboard → Authentication → Providers (+ a provider
+// OAuth app). Buttons here work the moment a provider is enabled; magic-link + email/password work out of the box.
+const OAUTH=[['google','Google'],['apple','Apple'],['github','GitHub'],['facebook','Facebook'],['discord','Discord'],['azure','Microsoft']];
+function openLogin(){
+  const c=sb();
+  const veil=document.createElement('div');veil.className='settingsveil';
+  const oauthBtns=OAUTH.map(([p,l])=>`<button type="button" class="btn2 oauth" data-oauth="${p}" style="text-align:center">Continue with ${l}</button>`).join('');
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Sign in">
+    <div class="settingshead"><span class="ttl">Sign in to Gesso</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+      ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div><button class="btn" id="signout">Sign out</button>`:`
+      <div style="display:flex;flex-direction:column;gap:8px">${oauthBtns}</div>
+      <div class="mono" style="text-align:center;color:var(--muted);font-size:11px">— or —</div>
+      <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <input id="apass" type="password" placeholder="password (for email + password)" autocomplete="current-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <div style="display:flex;gap:8px"><button class="btn" id="signin" style="flex:1">Sign in</button><button class="btn2" id="signup" style="flex:1">Create account</button></div>
+      <button class="btn2" id="magic">Email me a magic link</button>
+      <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>`}
+    </div></div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  const msg=t=>{const m=veil.querySelector('#amsg');if(m)m.textContent=t;};
+  veil.addEventListener('click',async e=>{
+    if(e.target===veil||e.target.closest('.settingsclose'))return close();
+    if(!c){ msg('Auth still loading — try again in a moment.'); return; }
+    const ob=e.target.closest('[data-oauth]'); if(ob){ try{ await c.auth.signInWithOAuth({provider:ob.dataset.oauth,options:{redirectTo:location.origin}}); }catch(err){ msg(err.message||'Provider not enabled yet.'); } return; }
+    if(e.target.id==='signout'){ await c.auth.signOut(); authUser=null; close(); return; }
+    const email=()=>veil.querySelector('#aemail')&&veil.querySelector('#aemail').value.trim();
+    const pass=()=>veil.querySelector('#apass')&&veil.querySelector('#apass').value;
+    if(e.target.id==='magic'){ if(!email())return msg('Enter your email first.'); try{ const {error}=await c.auth.signInWithOtp({email:email(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Check your email for the link ✓'); }catch(err){ msg(err.message); } return; }
+    if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
+    if(e.target.id==='signup'){ try{ const {error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Account created — check your email to confirm ✓'); }catch(err){ msg(err.message); } return; }
+  });
+  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+}
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
@@ -1092,7 +1141,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-menu]');if(b){e.preventDefault();openMenu();}});
 // mobile nav menu (the header nav collapses into this hamburger ≤680px)
 function openMenu(){
-  const items=[['How to play','howto'],['Leaderboard','register'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
+  const items=[['How to play','howto'],[authUser?'Account':'Sign in','login'],['Leaderboard','register'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
   const veil=document.createElement('div');veil.className='settingsveil';
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="settingshead"><span class="ttl">Menu</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
@@ -1102,7 +1151,7 @@ function openMenu(){
   veil.addEventListener('click',e=>{
     if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
-    if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else route(k);
+    if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else if(k==='login')openLogin(); else route(k);
   });
   document.addEventListener('keydown',esc);document.body.appendChild(veil);
 }
@@ -1909,7 +1958,9 @@ else{ buildIndexes();
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
   renderFromPath();
   // first-visit: auto-show the walkthrough once (set flag on close)
-  try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{} }
+  try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{}
+  // pick up an existing session (and any OAuth/magic-link redirect) once supabase-js has loaded
+  setTimeout(()=>{ try{ refreshAuth(); }catch{} },600); }
 </script>
 <!-- Vercel Web Analytics (framework-agnostic; enable Analytics in the Vercel project dashboard) -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
