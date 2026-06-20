@@ -1088,15 +1088,27 @@ function openLogin(){
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Sign in">
     <div class="settingshead"><span class="ttl">Sign in to Gesso</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
     <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
-      ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div><button class="btn" id="signout">Sign out</button>`:`
+      ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div>
+      <div class="kick" style="margin-top:2px">Linked sign-in methods</div>
+      <div id="linked" style="display:flex;flex-direction:column;gap:8px"><span class="mono" style="font-size:12px;color:var(--muted)">Loading…</span></div>
+      <input id="apass2" type="password" placeholder="set or change password" autocomplete="new-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <button class="btn2" id="setpass">Save password</button>
+      <button class="btn" id="signout" style="margin-top:4px">Sign out</button>`:`
       <div style="display:flex;flex-direction:column;gap:8px">${oauthBtns}</div>
       <div class="mono" style="text-align:center;color:var(--muted);font-size:11px">— or —</div>
       <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
       <input id="apass" type="password" placeholder="password" autocomplete="current-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
       <div style="display:flex;gap:8px"><button class="btn" id="signin" style="flex:1">Sign in</button><button class="btn2" id="signup" style="flex:1">Create account</button></div>
-      <button class="btn2" id="magic">Email me a magic link</button>
-      <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>`}
+      <button class="btn2" id="magic">Email me a magic link</button>`}
+      <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>
     </div></div>`;
+  // populate linked methods for a signed-in user
+  if(authUser){ (async()=>{ try{ const {data}=await c.auth.getUserIdentities(); const have=new Set((data&&data.identities||[]).map(i=>i.provider));
+    const box=veil.querySelector('#linked'); if(!box)return; const labels={google:'Google',apple:'Apple',email:'Email & password'};
+    box.innerHTML=Object.entries(labels).map(([p,l])=>have.has(p)
+      ?`<div class="mono" style="font-size:12px;color:var(--full)">✓ ${l} linked</div>`
+      :(p==='email'?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
+  }catch{} })(); }
   const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
   const esc=e=>{if(e.key==='Escape')close();};
   const msg=t=>{const m=veil.querySelector('#amsg');if(m)m.textContent=t;};
@@ -1104,6 +1116,8 @@ function openLogin(){
     if(e.target===veil||e.target.closest('.settingsclose'))return close();
     if(!c){ msg('Auth still loading — try again in a moment.'); return; }
     const ob=e.target.closest('[data-oauth]'); if(ob){ try{ await c.auth.signInWithOAuth({provider:ob.dataset.oauth,options:{redirectTo:location.origin}}); }catch(err){ msg(err.message||'Provider not enabled yet.'); } return; }
+    const lb=e.target.closest('[data-link]'); if(lb){ try{ const {error}=await c.auth.linkIdentity({provider:lb.dataset.link,options:{redirectTo:location.origin}}); if(error)msg(error.message); }catch(err){ msg(err.message||'Could not link.'); } return; }
+    if(e.target.id==='setpass'){ const p=veil.querySelector('#apass2'); if(!p||!p.value)return msg('Enter a password first.'); try{ const {error}=await c.auth.updateUser({password:p.value}); msg(error?error.message:'Password saved — you can now sign in with email too ✓'); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signout'){ await c.auth.signOut(); authUser=null; close(); return; }
     const email=()=>veil.querySelector('#aemail')&&veil.querySelector('#aemail').value.trim();
     const pass=()=>veil.querySelector('#apass')&&veil.querySelector('#apass').value;
