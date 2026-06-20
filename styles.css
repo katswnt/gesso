@@ -175,6 +175,13 @@
   .herobig em{font-style:normal;color:var(--accent)}
   .heroglos{font:500 12px/1.7 'IBM Plex Mono',monospace;color:var(--faint);letter-spacing:.01em;max-width:560px;margin:15px auto 0;text-wrap:balance}
   .practice{max-width:620px;margin:0 auto 8px;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-md);padding:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  /* Infinite + Training as a 2-up row aligned with the tier tiles above */
+  .practwo{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 12px}
+  .practwo .practice{max-width:none;margin:0;flex-direction:column;align-items:flex-start;gap:12px;height:100%}
+  .practwo .practice .pchips{margin-top:auto}
+  .practwo .practice:nth-child(1) .pinf{transform:rotate(-4deg)}
+  .practwo .practice:nth-child(2) .pinf{border-radius:55% 45% 35% 65% / 45% 60% 40% 55%;transform:rotate(5deg)}
+  @media(max-width:680px){.practwo{grid-template-columns:1fr}}
   .practice .pinf{flex:0 0 auto;width:38px;height:36px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font:700 21px 'Archivo',sans-serif;line-height:1}
   .practice .ptxt{flex:1 1 200px;min-width:180px}
   .practice .ptxt .h{font:700 14px 'Archivo',sans-serif;margin-bottom:2px}
