@@ -1022,21 +1022,29 @@ function openIdentityModal(after){
   document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 let lbTier='medium';
-async function renderLeaderboard(tierKey){
-  clearTimers(); lbTier=tierKey||lbTier; const date=todayStr(); const id=loadIdentity();
+let lbDate=null; // viewed leaderboard date (null = today)
+async function renderLeaderboard(tierKey,dateStr){
+  clearTimers(); lbTier=tierKey||lbTier; const today=todayStr();
+  lbDate = dateStr!==undefined ? dateStr : today; // fresh entry → today; tab-switch passes lbDate to stay
+  const date=lbDate, isToday=date===today; const id=loadIdentity();
+  const prevD=addDays(date,-1), nextD=addDays(date,1), hasNext=date<today;
   const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
   const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
     <div class="kick" style="color:var(--accent)">The Register</div>
-    <div style="font:800 28px Archivo;margin:2px 0 2px">Today&rsquo;s leaderboard</div>
-    <div class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted);margin-bottom:14px">no. ${esc(accession)} &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:2px 0 2px">
+      <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:pointer;font:700 16px Archivo;color:var(--accent)">‹</button>
+      <div style="font:800 24px Archivo;flex:1">${isToday?'Today&rsquo;s leaderboard':esc(niceDate(date))}</div>
+      <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:${hasNext?'pointer':'default'};font:700 16px Archivo;color:${hasNext?'var(--accent)':'var(--line-card)'}">›</button></div>
+    <div class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted);margin-bottom:14px">no. ${esc(accession)}${isToday?` &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span>`:''}</div>
     <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
     <div id="lbbody" aria-live="polite"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
     <div style="margin-top:18px"><button class="btn2" data-editid>Edit your name &amp; color</button>
       <button class="btn2" data-route="home" style="margin-top:10px">&larr; Back to home</button></div>
   </div></div>`;
   veilWire();
-  // live countdown to next puzzle (midnight local) — registered via clearTimers cleanup
+  document.querySelectorAll('.lbday').forEach(b=>{ if(!b.disabled) b.onclick=()=>{ const d=b.dataset.lbd; pushNav({v:'register',date:d===today?undefined:d}); renderLeaderboard(lbTier,d); }; });
+  // live countdown (today only)
   const cd=document.getElementById('lbcd');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
   const body=document.getElementById('lbbody');
   let data=null; try{ const r=await fetch(`/api/leaderboard?date=${date}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}`); data=r.ok?await r.json():null; }catch{}
@@ -1074,7 +1082,7 @@ async function renderLeaderboard(tierKey){
   const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
   body.innerHTML=podium+rest.map(rowHTML).join('')+selfRow+youLine;
 }
-function veilWire(){ document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
+function veilWire(){ document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt, lbDate)); }
 
 // ---------- Supabase Auth (Accounts Phase 2) ----------
 const SUPA_URL="https://jmrpqmejupouqfergyyg.supabase.co";
@@ -1239,14 +1247,14 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   const st=document.getElementById('tstart'); if(st)st.onclick=()=>{ if(facetCount({facets:T.facets,axis:T.axis})<1)return; const movs=[...T.facets.movements]; startTraining({facets:T.facets,axis:T.axis,label:facetChips(T).map(c=>c[2]).join(' · ')||'Everything'}); };
 }
 
-function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; if(s.v==='train')return '/training'; return `/${s.v}`; }
+function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
 function renderFromPath(){
   const parts=location.pathname.split('/').filter(Boolean);
   if(!parts.length) return renderStart(undefined,false);
   if(parts[0]==='movement'&&parts[1]) return renderMovement(decodeURIComponent(parts[1]));
   if(parts[0]==='infinite'&&parts[1]&&TIERS.some(t=>t.key===parts[1])) return startInfinite(parts[1],false);
-  if(parts[0]==='register') return renderLeaderboard();
+  if(parts[0]==='leaderboard'||parts[0]==='register'){ const d=parts[1]&&/^\d{4}-\d\d-\d\d$/.test(parts[1])?parts[1]:undefined; return renderLeaderboard(undefined,d); }
   if(parts[0]==='training') return renderTraining(false);
   if(['archive','streak','stats','glossary','collections'].includes(parts[0])) return route(parts[0],false);
   if(/^\d{4}-\d\d-\d\d$/.test(parts[0])){ const date=parts[0];
