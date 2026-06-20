@@ -1009,12 +1009,14 @@ function openIdentityModal(after){
   const onEsc=e=>{if(e.key==='Escape')close();};
   veil.addEventListener('click',async e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>{b.style.outline=b.dataset.c===cur.color?'2.5px solid var(--ink)':'none';b.style.outlineOffset='2px';});prev();return;}
-    if(e.target.closest('#idsave')){ cur.name=veil.querySelector('#idname').value.trim();
-      const m=veil.querySelector('#idmsg');
-      if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true}; if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; return; } }catch{} }
+    const btn=e.target.closest('#idsave');
+    if(btn){ if(btn.disabled)return; cur.name=veil.querySelector('#idname').value.trim();
+      const m=veil.querySelector('#idmsg'); btn.disabled=true; const orig=btn.textContent; btn.textContent='Saving…';
+      if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true};
+        if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; btn.disabled=false; btn.textContent=orig; return; } }catch{} }
       saveIdentity(cur);
-      // push to the server so the board reflects the new name/color immediately (not just on next score)
-      try{ await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),name:cur.name,color:cur.color})}); }catch{}
+      // push to the server so the board reflects the new name/color (fire-and-forget — don't delay the close)
+      fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),name:cur.name,color:cur.color})}).catch(()=>{});
       close();if(after)after(); } });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
   document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
