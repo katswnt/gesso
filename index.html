@@ -688,9 +688,9 @@ const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"m
   {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
 
 // ---------- mastery ----------
-function loadMastery(){try{return JSON.parse(localStorage.getItem("artefactum.mastery"))||{byStyle:{},byRegion:{}}}catch{return{byStyle:{},byRegion:{}}}}
+function loadMastery(){try{const m=JSON.parse(localStorage.getItem("artefactum.mastery"))||{};return{byStyle:m.byStyle||{},byRegion:m.byRegion||{},byCategory:m.byCategory||{},byCentury:m.byCentury||{}}}catch{return{byStyle:{},byRegion:{},byCategory:{},byCentury:{}}}}
 function saveMastery(m){try{localStorage.setItem("artefactum.mastery",JSON.stringify(m))}catch{}}
-function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]; b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m);}
+function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]||(m[bucket]={}); b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m);}
 function masteryLine(){
   const m=loadMastery();
   // combine styles AND regions; tie-break by volume so the line evolves as you play more
@@ -918,7 +918,7 @@ function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class=
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="navbtn" type="button" data-login>${authUser?'account':'sign in'}</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier}</span>`:''}</div></div></div>`;
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="streak">streak</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="navbtn" type="button" data-login>${authUser?'account':'sign in'}</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier||'training'}</span>`:''}</div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude Code and Codex</div>`;
 
@@ -1322,6 +1322,11 @@ function renderStart(dateStr,push=true){
       <div class="pinf">&infin;</div>
       <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
       <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
+    </div>
+    <div class="practice" style="margin-top:12px">
+      <div class="pinf" style="font-size:22px">◎</div>
+      <div class="ptxt"><div class="h">Training</div><p>Drill exactly what you want — a movement, a place, a century, or your weak spots. Won&rsquo;t affect your streak or stats.</p></div>
+      <div class="pchips"><button class="pchip inf" data-route="training">Drill me on… →</button></div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
       <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of ${srcList}, plus works surfaced via Wikidata/Wikimedia Commons — is ${b.europe}% European:</p>
@@ -1361,7 +1366,7 @@ function startGame(key,dateStr,push=true){
   if(push)pushNav({v:'play',key,date:dateStr||todayStr()});
   clearTimers();
   infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
-  game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
+  TRAIN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
 function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
@@ -1378,7 +1383,7 @@ function practiceOrder(key){
 }
 function startInfinite(key,push=true){
   if(push)pushNav({v:'inf',key});
-  clearTimers(); infinite=true; tier=key; runDate=todayStr(); runArchive=false;
+  clearTimers(); infinite=true; TRAIN=null; tier=key; runDate=todayStr(); runArchive=false;
   game=practiceOrder(key); idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
@@ -1406,6 +1411,15 @@ function renderInfiniteSummary(){
   const accuracy=sumBase?Math.round(sumCore/sumBase*100):0;
   const nailed=results.filter(isPerf).map(r=>({title:r.it.title,master:isMaster(r),url:sourceURL(r.it)})).sort((a,b)=>b.master-a.master);
   const tierName=tier?tier.charAt(0).toUpperCase()+tier.slice(1):'';
+  const isTrain=infinite&&TRAIN;
+  // training before→after delta on the drilled slice
+  let sessPct=null, sliceLabel='';
+  if(isTrain){
+    if(TRAIN.axis){ const rs=results.filter(r=>r.cells[TRAIN.axis]); if(rs.length)sessPct=Math.round(rs.reduce((a,r)=>a+r.cells[TRAIN.axis].pts/MAX_CAT,0)/rs.length*100); sliceLabel=({when:'Date',where:'Map',style:'Movement'})[TRAIN.axis]||''; }
+    else if(TRAIN.baseline){ const mv=TRAIN.baseline.label; const rs=results.filter(r=>r.it.style===mv||r.it.region===mv); if(rs.length)sessPct=Math.round(rs.reduce((a,r)=>a+(r.baseMax?r.coreNet/r.baseMax:0),0)/rs.length*100); sliceLabel=mv; }
+  }
+  const baseP = isTrain&&TRAIN.baseline&&TRAIN.baseline.pct!=null ? TRAIN.baseline.pct : null;
+  const deltaLine = isTrain&&sessPct!=null ? `${esc(sliceLabel)}: ${baseP!=null?baseP+'% &rarr; ':''}<strong>${sessPct}%</strong> this session${baseP!=null?` (${sessPct-baseP>=0?'+':''}${sessPct-baseP})`:''}` : '';
   const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
   // category line-icons (neutral stroke; color + number carry the score → colorblind-safe)
   const catIcon=k=>{ const key=k==='style'?'movement':k; const s='fill="none" stroke="#6a645b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
@@ -1419,10 +1433,11 @@ function renderInfiniteSummary(){
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,#eceffb,var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <span class="kick">Infinite session &middot; ${esc(tierName)}</span>
+        <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Infinite session &middot; '+esc(tierName)}</span>
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
-      <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div></div></div>
+      <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>
+      ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:9px;font:600 15px Archivo;color:var(--ink)">${deltaLine}</div>`:''}</div></div>
     <div class="statgrid">
       <div><div class="sv">${rounds}</div><div class="kick" style="color:var(--muted);margin-top:3px">Rounds</div></div>
       <div><div class="sv" data-cu="${total}">${total.toLocaleString()}</div><div class="kick" style="color:var(--muted);margin-top:3px">Total pts</div></div>
@@ -1454,13 +1469,15 @@ function renderInfiniteSummary(){
         return w.url?`<a class="wlink" href="${esc(w.url)}" target="_blank" rel="noopener">${row}</a>`:`<div class="wlink" style="cursor:default">${row}</div>`;}).join('')}</div>
     </div>`:''}
     <div style="padding:18px 24px 22px;display:flex;gap:11px;flex-wrap:wrap">
-      <button class="btn" id="againinf" style="flex:1 1 auto;min-width:150px">Keep practising</button>
+      <button class="btn" id="againinf" style="flex:1 1 auto;min-width:150px">Keep ${isTrain?'drilling':'practising'}</button>
+      ${isTrain?`<button class="btn" id="changedrill" style="flex:0 1 auto;background:transparent;border:1.5px solid var(--accent);color:var(--accent)">Change drill</button>`:''}
       <button class="btn" id="shareinf" style="flex:0 1 auto;background:transparent;border:1.5px solid var(--line-card);color:var(--ink)">Share recap</button>
       <button class="btn" id="homeinf" style="flex:0 1 auto;background:transparent;border:1.5px solid var(--line-card);color:var(--muted)">Done</button>${ATTRIB}</div>
   </div>`;
   countUps(); // motion #2 — totals ease into place (no-op under reduce-motion; markup is pre-seeded)
-  document.getElementById('againinf').onclick=()=>startInfinite(tier);
-  document.getElementById('homeinf').onclick=()=>{infinite=false;renderStart();};
+  document.getElementById('againinf').onclick=()=> isTrain?startTraining(TRAIN):startInfinite(tier);
+  { const cd=document.getElementById('changedrill'); if(cd)cd.onclick=()=>{infinite=false;renderTraining();}; }
+  document.getElementById('homeinf').onclick=()=>{infinite=false;TRAIN=null;renderStart();};
   const sb=document.getElementById('shareinf');
   sb.onclick=()=>{ const txt=`Gesso infinite · ${tierName}\n${avg.toLocaleString()} avg pts/round · ${rounds} rounds · ${accuracy}% accuracy\n★ ${perfects} perfect · ✦ ${masterpieces} masterpiece${masterpieces===1?'':'s'}\n${location.origin}`;
     navigator.clipboard.writeText(txt).then(()=>{ sb.textContent='Recap copied ✓'; setTimeout(()=>{sb.textContent='Share recap';},1600); }).catch(()=>{ sb.textContent='Copy failed'; setTimeout(()=>{sb.textContent='Share recap';},1600); }); };
@@ -1502,6 +1519,11 @@ function renderRound(){
       <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · bonus','artist','Anonymous — no artist on record for this work.'));
+  // single-axis training drill: hide every field except the drilled axis
+  const drillAxis = TRAIN && TRAIN.axis;
+  if(drillAxis){ const lbls={when:'When made',medium:'Medium',style:'Movement',artist:'Attributed to · bonus'};
+    for(let i=0;i<fields.length;i++){ const f=fields[i]; if(f.k && f.k!==drillAxis) fields[i]=naField(lbls[f.k]||f.k, f.k, 'Hidden in this drill.'); } }
+  const hideMap = drillAxis && drillAxis!=='where';
   const whereN=n;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
 
@@ -1517,10 +1539,10 @@ function renderRound(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
-        <div>
+        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
           <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">TAP TO PIN · PINCH / +&minus; TO ZOOM</span></div>
           <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
-        </div>
+        </div>`}
       </div>
     </div>
     <div style="padding:0 24px 24px">
@@ -1545,7 +1567,8 @@ function renderRound(){
   const ht=document.getElementById('hottoggle'); if(ht) ht.onclick=()=>{ const lm=document.getElementById('prelookmarks'); if(!lm)return;
     const on=lm.style.display==='none'; lm.style.display=on?'block':'none'; ht.innerHTML=on?`${LOOK_EYE_OFF} Hide look-closer markers`:`${LOOK_EYE} Reveal look-closer markers`; };
   // map
-  marker=null;
+  marker=null; map=null;
+  if(!hideMap){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
@@ -1559,7 +1582,8 @@ function renderRound(){
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
-  setTimeout(()=>map.invalidateSize(),settings.reduceMotion?0:250);
+  setTimeout(()=>{if(map)map.invalidateSize();},settings.reduceMotion?0:250);
+  }
   document.getElementById('submit').onclick=score;
   // reset scroll AFTER the new round paints + force a reflow — fixes the blank-until-you-scroll glitch
   // when advancing via "Next" (innerHTML swap left the viewport unpainted on mobile)
@@ -1675,6 +1699,10 @@ function score(){
   if(!infinite&&!runArchive){
     if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
     bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
+    bumpMastery('when','byCategory',cells.when.pts>=MAX_CAT*0.75);
+    bumpMastery('where','byCategory',cells.where.pts>=MAX_CAT*0.75);
+    if(it.cats.includes('style')) bumpMastery('style','byCategory',cells.style.pts===MAX_CAT);
+    if(it.y!=null) bumpMastery(String(centuryOf(it.y)),'byCentury',cells.when.pts>=MAX_CAT*0.75);
   }
   results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
   renderReveal(results[results.length-1]);
@@ -1827,7 +1855,7 @@ function renderReveal(r){
       requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; }); }catch{} }
   },settings.reduceMotion?0:260);
   if(infinite){
-    document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(practiceOrder(tier)); renderRound(); };
+    document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(TRAIN?trainingSet(TRAIN):practiceOrder(tier)); renderRound(); };
     const eb=document.getElementById('endinf'); if(eb) eb.onclick=renderInfiniteSummary;
   } else {
     document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
