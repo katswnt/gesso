@@ -180,3 +180,10 @@ Keep When/Where untouched. All changes are isolated to `score()` + small data ta
 - [ ] Account = the "You" hub (absorbs Stats; Glossary stays its own page, surfaced as a progress card). Sections: identity strip (dab avatar + name + edit) → at-a-glance (streak/points/rank/perfect+masterpiece) → eye-mastery panel (strong/weak by movement & region) with a **"Train your weak spots →"** button into the Training filter builder → side rail (glossary progress, specialist badges, this-week activity) → Settings (two doors: inline + header sheet) + Account management (email, sign out, **delete account**).
 - DECISIONS: render for logged-OUT users from localStorage (don't login-wall it); account-only bits (member-since, rank, badges, account mgmt) layer in when signed in. Avatar → Account directly (drop the "You ▾" dropdown). Stats-share card deferred. "Delete account" is real authed work (delete Supabase user + profiles/scores rows). Build AFTER Training mode exists so the weak-spot button has a destination.
 - Dab colors: tasks/19_dab_colors/ — 48-color palette (8 families × 6) for the avatar picker; new players get a random color/shape; selected swatch = 2.5px var(--ink) outline.
+
+## Account signup prompts — design handoff in tasks/20_account_prompts/
+- [ ] Contextual "make an account" nudges. Principles: NEVER gate play (anyone plays/streaks/ranks/picks a name+dab without an account); account = permanence (survive cache clear, sync devices, lock your leaderboard name) — never imply local progress is fragile. Migrate-don't-reset on signup. One soft dismiss per prompt → back off to a bigger milestone.
+- Tier 1 (build first, ~80% of conversions): after-the-daily modal, streak-milestone modal, signed-out leaderboard "make this name mine".
+- Tier 2: glossary-unlock toast, mastery/stats card, perfect/masterpiece banner, share-card footer.
+- Tier 3 ambient: signed-out header avatar pill, archive hint, settings sync line, return-visit banner.
+- Custom line icons (NO emoji): flame F3-Chunky, glossary pennant B5, eye, sync, ×. Paths in the handoff + Gesso Icon Variants.dc.html.

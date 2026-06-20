@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</helmet>
+<div style="min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e9e7e0;width:max-content;font-family:'Archivo',sans-serif;color:#1b1916">
+
+  <div style="font:700 13px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#2230b8;margin-bottom:6px">Gesso &middot; account prompts</div>
+  <div style="font:400 14px/1.5 'Archivo';color:#6b6557;max-width:660px;margin-bottom:8px">Never gate play, and never imply progress is fragile. Your streak &amp; stats already live on this device &mdash; an account just <b>backs them up against a cache clear, syncs them across devices, and lets you claim a name on the leaderboard.</b></div>
+  <div style="font:400 13px/1.5 'Archivo';color:#8a8472;max-width:660px;margin-bottom:32px">One shared modal/banner pattern, ultramarine CTA, custom line icons (no emoji). One soft dismiss, then back off until a bigger milestone.</div>
+
+  <!-- ============ TIER 1 ============ -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <span style="background:#2230b8;color:#fff;font:700 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:3px">Tier 1</span>
+    <span style="font:700 16px 'Archivo';color:#1b1916">High-intent moments &mdash; the money spots</span>
+  </div>
+  <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px">
+
+    <!-- post-daily modal -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">After the daily &middot; modal (best moment)</div>
+      <div style="background:#fff;border:1.5px solid #1b1916;border-radius:14px;box-shadow:0 18px 44px rgba(27,25,22,.24);overflow:hidden">
+        <div style="background:#eceffb;padding:24px 26px 20px;text-align:center;position:relative">
+          <div style="position:absolute;top:14px;right:16px;font:400 18px 'Archivo';color:#a39d8c;cursor:pointer">&times;</div>
+          <div style="width:54px;height:54px;background:#2230b8;border-radius:60% 40% 47% 53%/42% 56% 44% 58%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3c3.4 3.2 5.2 5.4 5.2 8.4a5.2 5.2 0 11-10.4 0c0-1.4.5-2.6 1.3-3.6.2 1.3.9 2 1.9 2.3C9.4 9 10.3 6.2 12 3z"/></svg>
+          </div>
+          <div style="font:700 20px 'Archivo';color:#1b1916">Day 1 &mdash; nice start.</div>
+          <div style="font:400 13px/1.5 'Archivo';color:#3a362d;margin-top:5px">Make a free account to back up your progress and claim your name on the leaderboard.</div>
+        </div>
+        <div style="padding:18px 26px 22px">
+          <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
+            <div style="text-align:center"><div style="font:700 22px 'Archivo';color:#2230b8">19,840</div><div style="font:500 9px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#a39d8c">today's score</div></div>
+            <div style="width:1px;background:#e3ded1"></div>
+            <div style="text-align:center"><div style="font:700 22px 'Archivo';color:#2230b8">1</div><div style="font:500 9px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#a39d8c">day streak</div></div>
+          </div>
+          <button style="width:100%;padding:14px;border:none;border-radius:6px;background:#2230b8;color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Create free account &rarr;</button>
+          <div style="text-align:center;margin-top:12px;font:500 11px 'IBM Plex Mono';color:#8a8472;cursor:pointer">Maybe later</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- streak milestone -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Streak milestone &middot; "back it up"</div>
+      <div style="background:#fff;border:1.5px solid #1b1916;border-radius:14px;box-shadow:0 18px 44px rgba(27,25,22,.24);overflow:hidden">
+        <div style="background:#fbeee2;padding:24px 26px 20px;text-align:center;position:relative;border-bottom:1px solid #f0dcc8">
+          <div style="position:absolute;top:14px;right:16px;font:400 18px 'Archivo';color:#a39d8c;cursor:pointer">&times;</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c14b3a" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3c3.4 3.2 5.2 5.4 5.2 8.4a5.2 5.2 0 11-10.4 0c0-1.4.5-2.6 1.3-3.6.2 1.3.9 2 1.9 2.3C9.4 9 10.3 6.2 12 3z"/></svg>
+            <span style="font:700 32px 'Archivo';color:#c14b3a">3</span>
+          </div>
+          <div style="font:700 19px 'Archivo';color:#1b1916;margin-top:8px">Three days in.</div>
+          <div style="font:400 13px/1.5 'Archivo';color:#3a362d;margin-top:5px">Your streak's safe on this device. An account keeps it &mdash; even if you clear your browser or pick up your phone instead.</div>
+        </div>
+        <div style="padding:18px 26px 22px">
+          <button style="width:100%;padding:14px;border:none;border-radius:6px;background:#2230b8;color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Back up my progress &rarr;</button>
+          <div style="text-align:center;margin-top:12px;font:500 11px 'IBM Plex Mono';color:#8a8472;cursor:pointer">Not now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- signed-out leaderboard: already ON the board with a random identity -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Leaderboard &middot; signed-out (already ranked, random name)</div>
+      <div style="background:#f6f4ee;border:1.5px solid #ddd8ca;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#edeae0;padding:14px 20px;border-bottom:1.5px solid #1b1916;font:700 13px 'Archivo';color:#1b1916">Today's board</div>
+        <div style="padding:8px 0">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font:700 13px 'IBM Plex Mono';color:#cf9f3a;width:22px">3</span><span style="width:26px;height:26px;background:#6b4fb8;border-radius:60% 40% 47% 53%/42% 56% 44% 58%"></span><span style="flex:1;font:600 13px 'Archivo'">marguerite</span><span style="font:700 13px 'IBM Plex Mono';color:#1b1916">22,100</span></div>
+          <!-- you row: ranked, with an auto-assigned name + dab -->
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 20px;background:#eceffb;border-top:1px solid #b0b5e0;border-bottom:1px solid #b0b5e0;margin:4px 0">
+            <span style="font:700 13px 'IBM Plex Mono';color:#2230b8;width:22px">4</span>
+            <span style="width:26px;height:26px;background:#cf9f3a;border-radius:48% 52% 38% 62%/56% 41% 59% 44%"></span>
+            <span style="flex:1;font:600 13px 'Archivo';color:#1b1916">quiet-heron <span style="font:500 9px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#2230b8;border:1px solid #b0b5e0;border-radius:3px;padding:1px 5px;margin-left:4px">You</span></span>
+            <span style="font:700 13px 'IBM Plex Mono';color:#1b1916">19,840</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px"><span style="font:700 13px 'IBM Plex Mono';color:#8a8472;width:22px">5</span><span style="width:26px;height:26px;background:#2f8f5b;border-radius:37% 63% 54% 46%/49% 60% 40% 51%"></span><span style="flex:1;font:600 13px 'Archivo'">artnerd</span><span style="font:700 13px 'IBM Plex Mono';color:#1b1916">18,400</span></div>
+        </div>
+        <div style="padding:4px 20px 20px">
+          <div style="font:400 12px/1.5 'Archivo';color:#6b6557;margin-bottom:11px">You're already ranked as <b style="color:#1b1916">quiet-heron</b> &mdash; a random name we gave this device. Make it yours so no one else takes it and it follows you everywhere.</div>
+          <button style="width:100%;padding:13px;border:none;border-radius:6px;background:#2230b8;color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Make this name mine &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TIER 2 ============ -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <span style="background:#5663d4;color:#fff;font:700 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:3px">Tier 2</span>
+    <span style="font:700 16px 'Archivo';color:#1b1916">Value-accrual nudges</span>
+  </div>
+  <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;flex-wrap:wrap;max-width:1392px">
+
+    <!-- glossary unlock toast -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Glossary unlock &middot; toast</div>
+      <div style="background:#1b1916;border-radius:12px;box-shadow:0 14px 36px rgba(27,25,22,.3);padding:16px 18px;display:flex;align-items:center;gap:14px">
+        <div style="width:40px;height:40px;background:#2230b8;border-radius:37% 63% 54% 46%/49% 60% 40% 51%;flex:none;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font:700 13px 'Archivo';color:#fff">New movement met &mdash; Vienna Secession</div>
+          <div style="font:400 12px/1.4 'Archivo';color:#b8b3a6">18 met. <span style="color:#9aa3e0;border-bottom:1px solid #5663d4;cursor:pointer">Keep your collection on any device &rarr;</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- mastery card -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Mastery / stats &middot; inline card</div>
+      <div style="background:#fff;border:1px solid #ddd8ca;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.6" stroke-linejoin="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          <div style="font:700 14px 'Archivo';color:#1b1916">Your eye is taking shape</div>
+        </div>
+        <div style="font:400 12px/1.5 'Archivo';color:#6b6557;margin-bottom:14px">You're sharp on <b style="color:#2f8f5b">Baroque</b> and shaky on <b style="color:#c14b3a">Edo Japan</b>. An account keeps this history even if your browser forgets.</div>
+        <div style="display:flex;gap:10px">
+          <button style="flex:1;padding:11px;border:none;border-radius:5px;background:#2230b8;color:#fff;font:700 10px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Back up my stats</button>
+          <button style="padding:11px 14px;border:1.5px solid #ddd8ca;border-radius:5px;background:transparent;color:#8a8472;font:600 10px 'IBM Plex Mono';letter-spacing:.05em;text-transform:uppercase;cursor:pointer">Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- perfect/masterpiece -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Perfect / Masterpiece &middot; achievement banner</div>
+      <div style="background:#1b1916;border-radius:12px;box-shadow:0 14px 36px rgba(27,25,22,.3);overflow:hidden">
+        <div style="padding:20px 22px;text-align:center">
+          <div style="display:inline-block;border:2px solid #cf9f3a;color:#cf9f3a;font:700 11px 'IBM Plex Mono';letter-spacing:.18em;text-transform:uppercase;padding:5px 14px;border-radius:4px;transform:rotate(-2deg)">Masterpiece</div>
+          <div style="font:700 17px 'Archivo';color:#fff;margin-top:12px">A flawless attribution.</div>
+          <div style="font:400 12px/1.5 'Archivo';color:#b8b3a6;margin-top:4px">Claim it on your profile and the leaderboard with a free account.</div>
+          <button style="margin-top:14px;padding:12px 22px;border:none;border-radius:6px;background:#cf9f3a;color:#1b1916;font:700 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;cursor:pointer">Claim badge</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- share card footer -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Share card &middot; footer (also acquisition)</div>
+      <div style="background:#f6f4ee;border:1px solid #ddd8ca;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="padding:18px 20px;background:#edeae0">
+          <div style="display:flex;gap:5px;margin-bottom:10px"><span style="flex:1;height:30px;border-radius:4px;background:#2f8f5b"></span><span style="flex:1;height:30px;border-radius:4px;background:#2f8f5b"></span><span style="flex:1;height:30px;border-radius:4px;background:#cf9f3a"></span><span style="flex:1;height:30px;border-radius:4px;background:#2f8f5b"></span><span style="flex:1;height:30px;border-radius:4px;background:#c14b3a"></span></div>
+          <div style="font:700 15px 'Archivo';color:#1b1916">Gesso &middot; 19,840 pts</div>
+        </div>
+        <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #ddd8ca">
+          <span style="font:500 11px 'IBM Plex Mono';color:#8a8472">gesso.app &mdash; play &amp; track your scores</span>
+          <span style="width:18px;height:18px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TIER 3 ============ -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <span style="background:#8a8472;color:#fff;font:700 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:3px">Tier 3</span>
+    <span style="font:700 16px 'Archivo';color:#1b1916">Ambient, low-pressure</span>
+  </div>
+  <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;max-width:1392px">
+
+    <!-- header avatar signed out -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Header avatar &middot; signed-out (always present)</div>
+      <div style="border:1.5px solid #1b1916;border-radius:8px;overflow:hidden">
+        <div style="background:#edeae0;padding:13px 20px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font:700 17px 'Archivo';color:#2230b8">gess<span style="display:inline-block;width:10px;height:10px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%;margin-left:1px"></span></span>
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">training</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">glossary</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid #2230b8;border-radius:20px;padding:5px 12px 5px 8px;cursor:pointer">
+              <span style="width:20px;height:20px;border:1.5px dashed #2230b8;border-radius:50%"></span>
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;color:#2230b8">Sign in</span>
+            </span>
+          </div>
+        </div>
+        <div style="padding:14px 20px;font:400 12px/1.5 'Archivo';color:#6b6557">Signed-out avatar = a dashed dab + "Sign in". Hover/tap reveals: <i>"Back up your progress &amp; claim a name."</i> Always present, never naggy.</div>
+      </div>
+    </div>
+
+    <!-- archive hint -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Archive &middot; inline hint</div>
+      <div style="background:#f6f4ee;border:1px solid #ddd8ca;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px 18px;display:flex;align-items:center;gap:13px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 8a8 8 0 0114-3.3L21 7"/><path d="M21 4v3h-3"/><path d="M20 16a8 8 0 01-14 3.3L3 17"/><path d="M3 20v-3h3"/></svg>
+        <div style="flex:1"><div style="font:600 13px 'Archivo';color:#1b1916">Keep your play history</div><div style="font:400 12px/1.4 'Archivo';color:#6b6557">Sign in so the days you've played follow you across devices. <span style="color:#2230b8;border-bottom:1px solid #b0b5e0;cursor:pointer">Sign in &rarr;</span></div></div>
+      </div>
+    </div>
+
+    <!-- settings sync line -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Settings &middot; sync line</div>
+      <div style="background:#f6f4ee;border:1px solid #ddd8ca;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 13px 'Archivo';color:#1b1916">Reduce motion</span><span style="width:38px;height:22px;border-radius:12px;background:#2230b8;position:relative"><span style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+        <div style="border-top:1px solid #e3ded1;margin-top:13px;padding-top:13px;font:400 12px/1.5 'Archivo';color:#6b6557">These are saved here. <span style="color:#2230b8;border-bottom:1px solid #b0b5e0;cursor:pointer">Make an account</span> to sync settings across devices.</div>
+      </div>
+    </div>
+
+    <!-- return visit pickup -->
+    <div style="flex:none;width:430px">
+      <div style="font:500 12px 'IBM Plex Mono';color:#8a8472;margin-bottom:8px">Return visit / new device &middot; one-time banner</div>
+      <div style="background:#eceffb;border:1px solid #d3d8ef;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:13px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="5" width="13" height="9" rx="1.5"/><rect x="14" y="9" width="7" height="11" rx="1.5"/></svg>
+        <div style="flex:1"><div style="font:600 13px 'Archivo';color:#1b1916">Welcome back.</div><div style="font:400 12px/1.4 'Archivo';color:#3a362d">Make an account so your streak &amp; stats follow you to any device.</div></div>
+        <button style="flex:none;padding:9px 13px;border:none;border-radius:5px;background:#2230b8;color:#fff;font:700 9px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Set up</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
