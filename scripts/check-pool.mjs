@@ -9,6 +9,7 @@ import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.m
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const html = readFileSync("index.html","utf8");
 const movKeys = new Set([...html.slice(html.indexOf("const MOVEMENTS={"),html.indexOf("const MOV_FAMILY=")).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1]));
+const COUNTRY_NAMES = new Set((readGlobal("data/countries.js","ARTEFACTUM_COUNTRIES")||[]).map(c=>c.n)); // a style that's a bare country name (and not a curated culture) is the place-as-style bug
 let fame={}; try{ const f=readFileSync("data/fame.js","utf8"); fame=JSON.parse(f.slice(f.indexOf("{"),f.lastIndexOf("}")+1)); }catch{}
 const fa = p => fame[p.id]!=null?fame[p.id]:(p.fame||0);
 
@@ -26,6 +27,7 @@ for(const p of pool){
   // STYLE
   if(p.style && /^[a-z]/.test(p.style)) add(hard,"style-lowercase",p,`"${p.style}"`);
   if(p.style && BAD_STYLE.test(p.style.trim())) add(hard,"style-is-place",p,`"${p.style}"`);
+  if(p.style && COUNTRY_NAMES.has(p.style) && !movKeys.has(p.style)) add(hard,"style-is-country",p,`"${p.style}"`);
   if(p.style && /[,;]/.test(p.style) && !movKeys.has(p.style)) add(hard,"style-comma",p,`"${p.style}"`); // descriptive/listy style string (keep only curated comma-cultures)
   if(p.style && p.styleKind && !movKeys.has(p.style)) add(warn,"style-no-metadata",p,`"${p.style}"`);
   // TITLE
