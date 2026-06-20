@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { readGlobal, writeAssignment } from "./lib/static-module.mjs";
 import { normalizeArtist, canonicalizeStyle, isInCopyright } from "./lib/domain.mjs";
-import { canonicalizePlace } from "./lib/places.mjs";
+import { canonicalizePlace, continentOf } from "./lib/places.mjs";
 const { ready } = JSON.parse(readFileSync("data/incoming/promotion-shortlist.json","utf8"));
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 // dedup by EXACT id (same-source + same-run) AND by Wikidata Q (cross-source) — kept consistent so a
@@ -29,7 +29,7 @@ for(const w of ready){
   if(isInCopyright(artist)){ skipCopyright++; continue; }  // never admit known in-copyright creators
   const style = canonicalizeStyle(w.style||"");          // merge variants, drop nationality-as-style, sentence-case
   const e={ id:w.id, title:w.title, artist, y:w.y, lat:w.lat, lng:w.lng,
-    place:canonicalizePlace(w.place), region:w.region, medium:tidyMedium(w.medium), style,
+    place:canonicalizePlace(w.place), region:continentOf(w.place)||w.region, medium:tidyMedium(w.medium), style,
     styleKind: style?(w.styleKind||"movement"):"", fame:fameOf(w.sitelinks),
     img:w.img, src:w.src, cats:["when","where","medium","style","artist"] };
   if(w.wikidataid) e.wikidataid=w.wikidataid;

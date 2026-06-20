@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
-import { isPlaceCanonical, canonicalizePlace } from "./lib/places.mjs";
+import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
 
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const html = readFileSync("index.html","utf8");
@@ -37,6 +37,7 @@ for(const p of pool){
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);
   if(p.place && !isPlaceCanonical(p.place)) add(hard,"place-noncanon",p,`"${p.place}" → "${canonicalizePlace(p.place)}"`);
+  if(p.place){ const c=continentOf(p.place); if(!c) add(warn,"place-unmapped-continent",p,`"${p.place}"`); else if(p.region!==c) add(hard,"region-mismatch",p,`${p.place} → region "${p.region}" should be "${c}"`); }
 }
 
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};

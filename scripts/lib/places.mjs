@@ -22,3 +22,25 @@ export function canonicalizePlace(place){
   return raw;
 }
 export const isPlaceCanonical = place => canonicalizePlace(place) === String(place||"").trim();
+
+// Continent of a place of creation → the work's `region`. Single source of truth so region always follows
+// place (the museum harvester used to default unknown regions to "Africa", giving French/Italian works
+// region:"Africa"). Keyed by the base country (suffixes like "(Rome)" / "/Tibet" stripped).
+const CONTINENT = {
+  // Europe
+  austria:"Europe","austria–hungary":"Europe","austria-hungary":"Europe",belgium:"Europe",cyprus:"Europe",czechia:"Europe",denmark:"Europe",france:"Europe",germany:"Europe",greece:"Europe",hungary:"Europe",italy:"Europe",netherlands:"Europe",norway:"Europe",poland:"Europe",portugal:"Europe",romania:"Europe",russia:"Europe","russian empire":"Europe",spain:"Europe",sweden:"Europe",switzerland:"Europe","united kingdom":"Europe","holy roman empire":"Europe",
+  // North America
+  "united states of america":"North America",mexico:"North America",guatemala:"North America","north america":"North America",canada:"North America",
+  // South America
+  brazil:"South America",bolivia:"South America",chile:"South America",colombia:"South America",ecuador:"South America",peru:"South America",argentina:"South America",venezuela:"South America",uruguay:"South America",
+  // Asia (incl. Near East / Mesopotamia / Anatolia)
+  afghanistan:"Asia",cambodia:"Asia",china:"Asia",india:"Asia",indonesia:"Asia",iran:"Asia",iraq:"Asia",japan:"Asia",korea:"Asia","south korea":"Asia",nepal:"Asia",pakistan:"Asia","sri lanka":"Asia",sumer:"Asia",syria:"Asia",thailand:"Asia",vietnam:"Asia",turkey:"Asia",
+  // Africa
+  cameroon:"Africa","central africa":"Africa","dr congo":"Africa","democratic republic of the congo":"Africa","east africa":"Africa",egypt:"Africa",ethiopia:"Africa",gabon:"Africa",ghana:"Africa",guinea:"Africa","ivory coast":"Africa",mali:"Africa",morocco:"Africa",nigeria:"Africa","sierra leone":"Africa","south africa":"Africa",sudan:"Africa",tunisia:"Africa",uganda:"Africa",
+  // Oceania
+  australia:"Oceania","french polynesia":"Oceania","papua new guinea":"Oceania",polynesia:"Oceania",vanuatu:"Oceania","new zealand":"Oceania",
+};
+export function continentOf(place){
+  const base = String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim().toLowerCase();
+  return CONTINENT[base] || "";
+}
