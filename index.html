@@ -1001,13 +1001,13 @@ function openIdentityModal(after){
       <button class="btn" id="idsave">Save</button>
     </div></div>`;
   const prev=()=>veil.querySelector('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
-  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
-  const esc=e=>{if(e.key==='Escape')close();};
+  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
+  const onEsc=e=>{if(e.key==='Escape')close();};
   veil.addEventListener('click',e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>b.style.border='3px solid '+(b.dataset.c===cur.color?'var(--ink)':'transparent'));prev();return;}
     if(e.target.closest('#idsave')){cur.name=veil.querySelector('#idname').value.trim();saveIdentity(cur);close();if(after)after();} });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
-  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 let lbTier='medium';
 async function renderLeaderboard(tierKey){
@@ -1107,8 +1107,8 @@ function openLogin(){
       ?`<div class="mono" style="font-size:12px;color:var(--full)">✓ ${l} linked</div>`
       :(p==='email'?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
   }catch{} })(); }
-  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
-  const esc=e=>{if(e.key==='Escape')close();};
+  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
+  const onEsc=e=>{if(e.key==='Escape')close();};
   const msg=t=>{const m=veil.querySelector('#amsg');if(m)m.textContent=t;};
   veil.addEventListener('click',async e=>{
     if(e.target===veil||e.target.closest('.settingsclose'))return close();
@@ -1123,7 +1123,7 @@ function openLogin(){
     if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signup'){ try{ const {error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Account created — check your email to confirm ✓'); }catch(err){ msg(err.message); } return; }
   });
-  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; return `/${s.v}`; }
@@ -1159,14 +1159,14 @@ function openMenu(){
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="settingshead"><span class="ttl">Menu</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
     <div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div></div>`;
-  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
-  const esc=e=>{if(e.key==='Escape')close();};
+  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
+  const onEsc=e=>{if(e.key==='Escape')close();};
   veil.addEventListener('click',e=>{
     if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
     if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else if(k==='login')openLogin(); else route(k);
   });
-  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 // Logo → home. Match the whole .brand (and any .wordmark), not just the tiny wordmark text, so clicking
 // anywhere on the logo reliably navigates home from every screen.
