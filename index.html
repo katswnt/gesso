@@ -965,15 +965,82 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else renderStart(undefined,false);}
+function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='register')renderLeaderboard();else renderStart(undefined,false);}
+
+// ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
+function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
+function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:'#2230b8'};}catch{return{name:'',color:'#2230b8'};}}
+function saveIdentity(i){try{localStorage.setItem("gesso.identity",JSON.stringify({name:String(i.name||'').slice(0,16),color:i.color}));}catch{}}
+function initialsOf(name){const w=String(name||'').trim().split(/\s+/).filter(Boolean);return w.length?w.slice(0,2).map(x=>x[0].toUpperCase()).join(''):'YOU';}
+async function submitScore(date,tierKey,summary){ // fire-and-forget; never blocks the recap
+  try{ const id=loadIdentity();
+    const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      deviceId:deviceId(),name:id.name,color:id.color,date,tier:tierKey,total:summary.grand,
+      perfects:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)).length,
+      masterpieces:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length,
+      rounds:results.map(x=>({id:x.it.id,cells:Object.fromEntries(Object.entries(x.cells).map(([k,v])=>[k,v.pts])),guess:{year:x.guess.year,ll:x.guess.ll,medium:x.guess.medium,style:x.guess.style,artist:x.guess.artist}}))
+    })}); return r.ok?await r.json():null; }catch{ return null; }
+}
+const SWATCHES=['#2230b8','#b3892f','#7a1f1f','#2f6f5f','#6a2f8f','#1f6f8b','#a8324a','#3a4a55'];
+function dabAvatar(name,color,size){size=size||40;return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50% 50% 50% 12%;background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
+function openIdentityModal(after){
+  const id=loadIdentity();let cur={name:id.name,color:id.color};
+  const veil=document.createElement('div');veil.className='settingsveil';
+  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="colour ${c}" style="width:34px;height:34px;border-radius:50% 50% 50% 12%;background:${c};border:3px solid ${c===cur.color?'var(--ink)':'transparent'}"></button>`).join('');
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Your name and colour">
+    <div class="settingshead"><span class="ttl">Your register entry</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
+        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">${swatches}</div>
+      <button class="btn" id="idsave">Save</button>
+    </div></div>`;
+  const prev=()=>veil.querySelector('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  veil.addEventListener('click',e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
+    const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>b.style.border='3px solid '+(b.dataset.c===cur.color?'var(--ink)':'transparent'));prev();return;}
+    if(e.target.closest('#idsave')){cur.name=veil.querySelector('#idname').value.trim();saveIdentity(cur);close();if(after)after();} });
+  veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
+  document.addEventListener('keydown',esc);document.body.appendChild(veil);
+}
+let lbTier='medium';
+async function renderLeaderboard(tierKey){
+  clearTimers(); lbTier=tierKey||lbTier; const date=todayStr(); const id=loadIdentity();
+  pushNav({v:'register'});
+  const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
+    <div class="kick" style="color:var(--accent)">The Register</div>
+    <div style="font:800 28px Archivo;margin:2px 0 14px">Today&rsquo;s leaderboard</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
+    <div id="lbbody"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
+    <div style="margin-top:18px"><button class="btn2" id="lbedit">Edit your name &amp; colour</button>
+      <button class="btn2" data-route="home" style="margin-top:10px">Back</button></div>
+  </div></div>`;
+  veilWire();
+  const body=document.getElementById('lbbody');
+  let data=null; try{ const r=await fetch(`/api/leaderboard?date=${date}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}`); data=r.ok?await r.json():null; }catch{}
+  if(!data){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">Couldn&rsquo;t load the board. Play today&rsquo;s ${lbTier} puzzle to join.</div>`; return; }
+  if(!data.rows.length){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">No entries yet for ${lbTier} today — be the first.</div>`; return; }
+  const rowHTML=(r)=>`<div style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.06);border-left:3px solid var(--accent)':''}">
+    <span class="mono" style="width:28px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
+    ${dabAvatar(r.name,r.color,34)}
+    <span style="flex:1;font:600 15px Archivo">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
+    <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</span></div>`;
+  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
+  body.innerHTML=data.rows.map(rowHTML).join('')+youLine;
+}
+function veilWire(){ const e=document.getElementById('lbedit'); if(e)e.onclick=()=>openIdentityModal(()=>renderLeaderboard());
+  document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
-function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; return `/${s.v}`; }
+function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
 function renderFromPath(){
   const parts=location.pathname.split('/').filter(Boolean);
   if(!parts.length) return renderStart(undefined,false);
   if(parts[0]==='movement'&&parts[1]) return renderMovement(decodeURIComponent(parts[1]));
   if(parts[0]==='infinite'&&parts[1]&&TIERS.some(t=>t.key===parts[1])) return startInfinite(parts[1],false);
+  if(parts[0]==='register') return renderLeaderboard();
   if(['archive','streak','stats','glossary','collections'].includes(parts[0])) return route(parts[0],false);
   if(/^\d{4}-\d\d-\d\d$/.test(parts[0])){ const date=parts[0];
     if(parts[1]&&TIERS.some(t=>t.key===parts[1])){
@@ -992,7 +1059,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-menu]');if(b){e.preventDefault();openMenu();}});
 // mobile nav menu (the header nav collapses into this hamburger ≤680px)
 function openMenu(){
-  const items=[['How to play','howto'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
+  const items=[['How to play','howto'],['Leaderboard','register'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
   const veil=document.createElement('div');veil.className='settingsveil';
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="settingshead"><span class="ttl">Menu</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
@@ -1729,6 +1796,8 @@ function renderFinal(){
     <div style="padding:8px 24px 24px"><button class="btn" id="copy">Copy result to share</button>
       <button class="btn" id="imageShare" style="margin-top:10px">Share / Download image</button>
       <button class="btn" id="copylink" style="margin-top:10px">Copy link to this puzzle</button>
+      ${runArchive?'':`<div id="lbrank" class="mono" style="margin-top:12px;color:var(--muted);text-align:center"></div>
+      <button class="btn" id="viewlb" style="margin-top:10px">View today&rsquo;s leaderboard &rarr;</button>`}
       <button class="btn" id="streak" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">${runArchive?'Back to streak':'Come back tomorrow'}</button>
       <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
   </div>`;
@@ -1738,6 +1807,11 @@ function renderFinal(){
   document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.textContent='Link copied ✓';setTimeout(()=>b.textContent='Copy link to this puzzle',1600);});};
   document.getElementById('streak').onclick=renderStreak;
   document.getElementById('again').onclick=()=>renderStart();
+  // leaderboard: submit this daily run + surface "#N today" (today only, not archive replays)
+  const vlb=document.getElementById('viewlb');
+  if(vlb && !runArchive){ vlb.onclick=()=>renderLeaderboard(tier);
+    submitScore(runDate||todayStr(),tier,summary).then(r=>{ const el=document.getElementById('lbrank');
+      if(el&&r&&r.rank)el.innerHTML=`You ranked <span style="color:var(--accent);font-weight:700">#${r.rank}</span> of ${r.count} today`; }); }
 }
 
 // ---------- zoom lightbox ----------
