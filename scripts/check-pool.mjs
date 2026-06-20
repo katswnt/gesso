@@ -26,7 +26,10 @@ for(const p of pool){
   // STYLE
   if(p.style && /^[a-z]/.test(p.style)) add(hard,"style-lowercase",p,`"${p.style}"`);
   if(p.style && BAD_STYLE.test(p.style.trim())) add(hard,"style-is-place",p,`"${p.style}"`);
+  if(p.style && /[,;]/.test(p.style) && !movKeys.has(p.style)) add(hard,"style-comma",p,`"${p.style}"`); // descriptive/listy style string (keep only curated comma-cultures)
   if(p.style && p.styleKind && !movKeys.has(p.style)) add(warn,"style-no-metadata",p,`"${p.style}"`);
+  // TITLE
+  if(p.title && /^[a-z]/.test(p.title)) add(hard,"title-lowercase",p,`"${p.title.slice(0,40)}"`);
   if(!p.style && fa(p)>=300) add(warn,"famous-no-movement",p,`fame ${Math.round(fa(p))}`);
   // ARTIST
   if(p.artist && /[぀-ヿ㐀-䶿一-鿿]/.test(p.artist)) add(hard,"artist-CJK",p,`"${p.artist}"`);

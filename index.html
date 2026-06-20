@@ -1152,7 +1152,94 @@ function openLogin(){
   document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
-function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; return `/${s.v}`; }
+// ---------- Training mode (custom-filter "Drill me on…" + single-axis drills) ----------
+let TRAIN=null; // null = normal play/infinite; object = a training run (infinite stays true too)
+const MIN_TRAIN=8;
+function centuryOf(y){ return y==null?null:Math.floor((y-(y<=0?1:0))/100); } // 1450→14 (15th c.); -50→-1 (1st c. BCE)
+function centuryLabel(c){ const n=c>=0?c+1:-c; const suf=(n%10==1&&n%100!=11)?'st':(n%10==2&&n%100!=12)?'nd':(n%10==3&&n%100!=13)?'rd':'th'; return `${n}${suf} c.${c<0?' BCE':''}`; }
+function countryNameOf(place){ const c=placeCountry(place); return c?c.n:''; }
+function trainingSet(T){ let w=POOL.slice(); const f=T.facets;
+  if(f.centuries.size) w=w.filter(p=>f.centuries.has(centuryOf(p.y)));
+  if(f.regions.size)   w=w.filter(p=>f.regions.has(p.region));
+  if(f.countries.size) w=w.filter(p=>f.countries.has(countryNameOf(p.place)));
+  if(f.movements.size) w=w.filter(p=>p.style&&f.movements.has(p.style));
+  if(f.mediaFamilies.size) w=w.filter(p=>MED_FAMILY[p.medSimple]&&f.mediaFamilies.has(MED_FAMILY[p.medSimple]));
+  if(T.axis==='style') w=w.filter(p=>p.cats.includes('style'));
+  return seededShuffle(w, 'train|'+Math.floor(Date.now()/1000)+'|'+Math.random());
+}
+const newFacets=()=>({centuries:new Set(),regions:new Set(),countries:new Set(),movements:new Set(),mediaFamilies:new Set()});
+const REGIONS=['Europe','Asia','Africa','North America','South America','Oceania'];
+const TRAIN_DEMONYM={italian:'Italy',french:'France',german:'Germany',spanish:'Spain',dutch:'Netherlands',flemish:'Netherlands',english:'United Kingdom',british:'United Kingdom',scottish:'United Kingdom',american:'United States of America',japanese:'Japan',chinese:'China',korean:'Korea',indian:'India',egyptian:'Egypt',greek:'Greece',roman:'Italy',persian:'Iran',iranian:'Iran',mexican:'Mexico',brazilian:'Brazil',russian:'Russia',austrian:'Austria',belgian:'Belgium',turkish:'Turkey',ethiopian:'Ethiopia',nigerian:'Nigeria',peruvian:'Peru'};
+const MEDIA_FAM_ALIAS={oil:'paint',oils:'paint',painting:'paint',paintings:'paint',painted:'paint',tempera:'paint',fresco:'paint',watercolor:'paint',watercolour:'paint',ink:'paint',drawing:'draw',drawings:'draw',drawn:'draw',print:'print',prints:'print',woodblock:'print',ukiyoe:'print',sculpture:'sculpt',sculptures:'sculpt',sculpted:'sculpt',bronze:'sculpt',marble:'sculpt',stone:'sculpt',statue:'sculpt',ceramic:'craft',ceramics:'craft',pottery:'craft',textile:'craft',textiles:'craft',glass:'craft',photograph:'craft',photo:'craft',photography:'craft',photos:'craft'};
+function matchCentury(ph,out){ let m;
+  if((m=ph.match(/^(\d{1,2})(?:st|nd|rd|th)?\s*c(?:entury)?\.?\s*(bce|bc)?$/))){ const n=+m[1]; out.centuries.add(m[2]?-(n):(n-1)); return true; }
+  if((m=ph.match(/^(\d{3,4})s?$/))){ const y=+m[1]; out.centuries.add(centuryOf(y)); return true; }
+  return false; }
+function matchMovement(ph,out){ const hit=MOVEMENT_NAMES.find(n=>n.toLowerCase()===ph)||MOVEMENT_NAMES.find(n=>n.toLowerCase().includes(ph)&&ph.length>=4); if(hit){out.movements.add(hit);return true;} return false; }
+function matchRegionCountry(ph,out){
+  const reg=REGIONS.find(r=>r.toLowerCase()===ph||r.toLowerCase()+'n'===ph||r.toLowerCase().replace(' ','')===ph.replace(' ','')); if(reg){out.regions.add(reg);return true;}
+  if(ph==='european')return out.regions.add('Europe'),true; if(ph==='asian')return out.regions.add('Asia'),true; if(ph==='african')return out.regions.add('Africa'),true;
+  if(TRAIN_DEMONYM[ph]){out.countries.add(TRAIN_DEMONYM[ph]);return true;}
+  const co=(window.ARTEFACTUM_COUNTRIES||[]).find(c=>c.n.toLowerCase()===ph); if(co){out.countries.add(co.n);return true;}
+  return false; }
+function matchMedium(ph,out){ const fam=MEDIA_FAM_ALIAS[ph.replace(/[^a-z]/g,'')]; if(fam){out.mediaFamilies.add(fam);return true;} return false; }
+function resolveFacets(text){ const out=newFacets(), unresolved=[];
+  for(const ph of String(text).toLowerCase().split(/\s*(?:,|;|\band\b|\+)\s*/).map(s=>s.trim()).filter(Boolean)){
+    if(matchCentury(ph,out)||matchMovement(ph,out)||matchRegionCountry(ph,out)||matchMedium(ph,out))continue; unresolved.push(ph); }
+  return {facets:out,unresolved}; }
+function facetCount(T){ return trainingSet(T).length; }
+function facetChips(T){ const f=T.facets, out=[];
+  for(const c of f.centuries) out.push(['centuries',c,centuryLabel(c)]);
+  for(const r of f.regions) out.push(['regions',r,r]);
+  for(const c of f.countries) out.push(['countries',c,c]);
+  for(const m of f.movements) out.push(['movements',m,m]);
+  for(const fm of f.mediaFamilies) out.push(['mediaFamilies',fm,({paint:'Paintings',draw:'Drawings',print:'Prints',sculpt:'Sculpture',craft:'Craft'})[fm]||fm]);
+  return out; }
+function startTraining(T){ clearTimers(); infinite=true; TRAIN=T; tier=null; runDate=todayStr(); runArchive=false;
+  // slice baseline for the before→after delta
+  const m=loadMastery(); const movs=[...T.facets.movements]; const regs=[...T.facets.regions];
+  T.baseline = movs.length&&m.byStyle[movs[0]] ? {label:movs[0], pct:pctOf(m.byStyle[movs[0]])} : regs.length&&m.byRegion[regs[0]] ? {label:regs[0], pct:pctOf(m.byRegion[regs[0]])} : null;
+  game=trainingSet(T); idx=0; results=[]; hintsUsed=0; renderRound(); }
+function pctOf(s){ return s&&s.total?Math.round(s.correct/s.total*100):null; }
+let __train=null; // working setup state
+function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
+  if(!__train) __train={facets:newFacets(), axis:null};
+  const T=__train;
+  const QUICK=[['movements','Baroque','Baroque'],['movements','Impressionism','Impressionism'],['movements','Italian Renaissance','Italian Renaissance'],['movements','Ukiyo-e','Ukiyo-e'],['movements','Romanticism','Romanticism'],['regions','Europe','Europe'],['regions','Asia','Asia'],['regions','Africa','Africa'],['countries','Italy','Italy'],['countries','France','France'],['countries','Japan','Japan'],['countries','Egypt','Egypt'],['mediaFamilies','paint','Paintings'],['mediaFamilies','sculpt','Sculpture'],['mediaFamilies','print','Prints'],['centuries',14,'15th c.'],['centuries',16,'17th c.'],['centuries',18,'19th c.']];
+  const has=(fam,v)=>T.facets[fam].has(v);
+  const chip=(fam,v,lbl,on)=>`<button class="tchip" data-tf="${fam}" data-tv="${typeof v==='number'?'#'+v:esc(String(v))}" style="padding:7px 12px;border:1px solid ${on?'var(--accent)':'var(--line-card)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--ink)'};border-radius:18px;font:600 13px Archivo;cursor:pointer">${esc(lbl)}${on?' ✕':''}</button>`;
+  const sel=facetChips(T);
+  const cnt=facetCount(T);
+  const focus=[['',"All"],['when','Date only'],['where','Map only'],['style','Movement only']];
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:640px;margin:0 auto">
+    <div class="kick" style="color:var(--accent)">Training</div>
+    <div style="font:800 28px Archivo;margin:2px 0 4px">Drill me on…</div>
+    <div style="color:var(--muted);font-size:14px;margin-bottom:18px">Pick what you want to practice. Won't affect your streak or stats.</div>
+    <input id="tquery" type="text" placeholder="type a slice — e.g. 'Baroque, France' or '15th century'" style="width:100%;font:600 15px Archivo;padding:11px 13px;border:1px solid var(--line-card);border-radius:9px;margin-bottom:6px"/>
+    <div id="tunres" class="mono" style="font-size:11px;color:var(--miss,#a13526);min-height:14px;margin-bottom:10px"></div>
+    <div class="kick" style="margin-bottom:8px">Quick picks</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px">${QUICK.map(([f,v,l])=>chip(f,v,l,has(f,v))).join('')}</div>
+    ${sel.length?`<div class="kick" style="margin-bottom:8px">Your drill</div><div id="tsel" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px">${sel.map(([f,v,l])=>chip(f,v,l,true)).join('')}</div>`:''}
+    <div class="kick" style="margin-bottom:8px">Focus</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border:1px solid ${(T.axis||'')===a?'var(--accent)':'var(--line-card)'};background:${(T.axis||'')===a?'var(--accent)':'transparent'};color:${(T.axis||'')===a?'#fff':'var(--ink)'};border-radius:8px;font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="mono" style="font-weight:700;color:${cnt<MIN_TRAIN?'var(--miss,#a13526)':'var(--ink)'}">${cnt} works match</span>
+      <button class="btn" id="tstart" style="flex:1${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button></div>
+    ${cnt<MIN_TRAIN?`<div class="mono" style="font-size:12px;color:var(--muted);margin-top:8px">${cnt<1?'No works match — loosen a filter.':'Small set ('+cnt+') — works will repeat quickly. Loosen a filter for more variety.'}</div>`:''}
+    <button class="btn2" data-route="home" style="margin-top:14px">← Back to home</button>
+  </div></div>`;
+  // wire
+  const q=document.getElementById('tquery'); let qt;
+  q.oninput=()=>{ clearTimeout(qt); qt=setTimeout(()=>{ const {facets,unresolved}=resolveFacets(q.value);
+    for(const k in facets) for(const v of facets[k]) T.facets[k].add(v);
+    const u=document.getElementById('tunres'); if(u)u.textContent=unresolved.length?`couldn't match: ${unresolved.join(', ')}`:'';
+    if([...facets.centuries,...facets.regions,...facets.countries,...facets.movements,...facets.mediaFamilies].length){ q.value=''; renderTraining(false); } },450); };
+  document.querySelectorAll('.tchip').forEach(b=>b.onclick=()=>{ const fam=b.dataset.tf; let v=b.dataset.tv; if(v[0]==='#')v=+v.slice(1); if(T.facets[fam].has(v))T.facets[fam].delete(v); else T.facets[fam].add(v); renderTraining(false); });
+  document.querySelectorAll('.tfocus').forEach(b=>b.onclick=()=>{ T.axis=b.dataset.ax||null; renderTraining(false); });
+  const st=document.getElementById('tstart'); if(st)st.onclick=()=>{ if(facetCount({facets:T.facets,axis:T.axis})<1)return; const movs=[...T.facets.movements]; startTraining({facets:T.facets,axis:T.axis,label:facetChips(T).map(c=>c[2]).join(' · ')||'Everything'}); };
+}
+
+function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/register'; if(s.v==='train')return '/training'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
 function renderFromPath(){
   const parts=location.pathname.split('/').filter(Boolean);
@@ -1160,6 +1247,7 @@ function renderFromPath(){
   if(parts[0]==='movement'&&parts[1]) return renderMovement(decodeURIComponent(parts[1]));
   if(parts[0]==='infinite'&&parts[1]&&TIERS.some(t=>t.key===parts[1])) return startInfinite(parts[1],false);
   if(parts[0]==='register') return renderLeaderboard();
+  if(parts[0]==='training') return renderTraining(false);
   if(['archive','streak','stats','glossary','collections'].includes(parts[0])) return route(parts[0],false);
   if(/^\d{4}-\d\d-\d\d$/.test(parts[0])){ const date=parts[0];
     if(parts[1]&&TIERS.some(t=>t.key===parts[1])){
