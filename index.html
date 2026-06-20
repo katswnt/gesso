@@ -121,20 +121,30 @@ function fmtDim(dim){ const s=String(dim||"").trim(); if(!s) return s; if((setti
 function applySettings(){document.body.classList.toggle('reduce-motion',!!settings.reduceMotion);document.body.classList.toggle('motion-ok',!settings.reduceMotion);document.body.classList.toggle('colorblind',!!settings.colorblind);const sh=document.getElementById('share');if(sh&&results.length){const fresh=resultSummary().share;sh.textContent=fresh;if(lastFinal)lastFinal.share=fresh;}}
 function prefersReducedChanged(e){try{const stored=JSON.parse(localStorage.getItem("gesso.settings"))||{};if(typeof stored.reduceMotion!=='boolean'){settings.reduceMotion=!!e.matches;applySettings();}}catch{}}
 if(motionQuery&&motionQuery.addEventListener)motionQuery.addEventListener('change',prefersReducedChanged);
+// One modal scaffold for every .settingsveil dialog: builds veil > panel > (head: title + close) + body,
+// wires Esc + backdrop + close-button once, returns {veil,close,$}. Callers add their own veil click
+// listener for internal actions (no need to re-handle backdrop/close). onClose runs after removal;
+// onKey(e,{close}) lets a modal add extra keys (return true to swallow before the default Esc).
+function openModal({title,ariaLabel,body,onClose,onKey}){
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="${esc(ariaLabel||title||'')}">
+    <div class="settingshead"><span class="ttl">${title||''}</span><button type="button" class="settingsclose" aria-label="Close">${ICONS.close}</button></div>
+    ${body||''}</div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',key);if(onClose)onClose();};
+  const key=e=>{if(onKey&&onKey(e,{close})===true)return;if(e.key==='Escape')close();};
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();});
+  document.addEventListener('keydown',key);document.body.appendChild(veil);
+  return {veil,close,$:s=>veil.querySelector(s)};
+}
 function openSettings(){
-  const veil=document.createElement('div');veil.className='settingsveil';veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Settings">
-    <div class="settingshead"><span class="ttl">Settings</span><button type="button" class="settingsclose" aria-label="Close settings">&times;</button></div>
-    <div class="settingsbody">
+  const {veil,close}=openModal({title:'Settings',body:`<div class="settingsbody">
       <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
       <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
       <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in cm or inches</div></div><button type="button" class="unitseg" data-units aria-label="Toggle units">${settings.units==='in'?'inches':'cm'}</button></div>
       <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
-    </div><div class="settingsfoot">Preferences save to this browser.</div></div>`;
-  const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
-  const escClose=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
+    </div><div class="settingsfoot">Preferences save to this browser.</div>`});
+  veil.addEventListener('click',e=>{if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
     const u=e.target.closest('[data-units]');if(u){settings.units=settings.units==='in'?'cm':'in';u.textContent=settings.units==='in'?'inches':'cm';saveSettings();}});
-  document.addEventListener('keydown',escClose);document.body.appendChild(veil);
 }
 // ---------- "How to play" onboarding ----------
 const HOWTO_STEPS=[
@@ -159,29 +169,26 @@ function howtoIcon(key){
   return `<svg viewBox="0 0 24 24" width="40" height="40">${m[key]||m.welcome}</svg>`;
 }
 function openHowTo(){
-  let i=0;
-  const veil=document.createElement('div');veil.className='settingsveil';
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="How to play">
-    <div class="settingshead"><span class="ttl">How to play</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div class="obbody"><div class="obillus"><span class="obdab"></span></div><div class="obtitle"></div><div class="obtext"></div></div>
+  let i=0,api;
+  const draw=()=>{const st=HOWTO_STEPS[i];
+    api.$('.obdab').innerHTML=howtoIcon(st.key); api.$('.obtitle').textContent=st.title; api.$('.obtext').textContent=st.body;
+    api.$('.obdots').innerHTML=HOWTO_STEPS.map((_,k)=>`<span class="${k===i?'on':''}" data-d="${k}"></span>`).join('');
+    api.$('.obback').style.visibility=i===0?'hidden':'visible';
+    api.$('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';};
+  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){api.close();return;} if(i<0)i=0; draw();};
+  api=openModal({title:'How to play',
+    body:`<div class="obbody"><div class="obillus"><span class="obdab"></span></div><div class="obtitle"></div><div class="obtext"></div></div>
     <div class="obdots"></div>
     <div class="obfoot"><button type="button" class="obskip">Skip</button>
-      <div class="obnav"><button type="button" class="obback">Back</button><button type="button" class="obnext">Next</button></div></div></div>`;
-  const $=s=>veil.querySelector(s);
-  const close=()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{};veil.remove();document.removeEventListener('keydown',keyNav);};
-  const draw=()=>{const st=HOWTO_STEPS[i];
-    $('.obdab').innerHTML=howtoIcon(st.key); $('.obtitle').textContent=st.title; $('.obtext').textContent=st.body;
-    $('.obdots').innerHTML=HOWTO_STEPS.map((_,k)=>`<span class="${k===i?'on':''}" data-d="${k}"></span>`).join('');
-    $('.obback').style.visibility=i===0?'hidden':'visible';
-    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';};
-  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0; draw();};
-  const keyNav=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
-  veil.addEventListener('click',e=>{
-    if(e.target===veil||e.target.closest('.settingsclose')||e.target.closest('.obskip'))return close();
+      <div class="obnav"><button type="button" class="obback">Back</button><button type="button" class="obnext">Next</button></div></div>`,
+    onClose:()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{}},
+    onKey:e=>{if(e.key==='ArrowRight'){go(1);return true;}if(e.key==='ArrowLeft'){go(-1);return true;}}});
+  api.veil.addEventListener('click',e=>{
+    if(e.target.closest('.obskip'))return api.close();
     if(e.target.closest('.obnext'))return go(1);
     if(e.target.closest('.obback'))return go(-1);
     const dot=e.target.closest('[data-d]'); if(dot){i=+dot.dataset.d;draw();}});
-  document.addEventListener('keydown',keyNav); document.body.appendChild(veil); draw();
+  draw();
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
@@ -594,6 +601,12 @@ function movementSim(a,b){ if(!a||!b||a===b) return a===b?1:0;
 }
 const LOCKED_PALETTE=["#d6cfbe","#ddd6c6","#ddd6c6","#d6cfbe"];
 const GLOSSARY_EMBLEM=["#2230b8","#cf9f3a","#2f8f5b","#1b1916"];
+// Single source of truth for region→color (used by the collections map bars AND the mastery chart).
+// Distinct-hue scale so every region reads differently in a legend. Don't redeclare per-view.
+const REGION_COLORS={Europe:'#2230b8',Asia:'#cf9f3a',Africa:'#2f8f5b','North America':'#7a86d8','South America':'#c14b3a',Oceania:'#8a8472'};
+// JS-side mirror of the :root chrome tokens — for canvas/Leaflet/template strings that can't use var().
+// Keep values in sync with styles.css :root (check-design.mjs guards style-attr usage).
+const PALETTE={accent:'#2230b8',full:'#2f8f5b',partial:'#cf9f3a',miss:'#c14b3a',gold:'#b3892f',muted:'#8a8472',ink:'#1b1916'};
 const CUE_ALIASES={
   "Assyrian":"Iran","Calima (Ilama)":"Peru","Central Tibet":"Nepal / Tibet","Cypriot":"Greece","East Greek, Clazomenian":"Greece","Eastern Tibet":"Nepal / Tibet","Edo peoples":"Nigeria","Etruscan":"Italy (Rome)","Greece / Rome":"Greece","Greek, Attic":"Greece","Greek, Boeotian":"Greece","Greek, Laconian":"Greece","Greek, Ptolemaic, Cretan":"Greece","Greek, South Italian, Apulian":"Greece","Greek, South Italian, Campanian, Teano":"Greece","Greek, Tarentine":"Greece","Helladic":"Greece","Hittite":"Iran","Indonesia (Java)":"India","Lambayeque (Sicán)":"Peru","Minoan":"Greece","Nepal, Kathmandu Valley":"Nepal / Tibet","Old Assyrian Trading Colony":"Iran","Olmec":"Mexico","Pakistan, Khyber-Pakhtunkhwa province, possibly Takht-i-bahi monastery, ancient region of Gandhara":"India","Parthian":"Iran","Roman":"Italy (Rome)","Roman, Pompeian":"Italy (Rome)","Roman, Rhenish":"Italy (Rome)","Romkun, Breri, or Igana people":"Nigeria","Syria":"Iran","Teotihuacan":"Mexico","Thailand":"India","Tibet":"Nepal / Tibet","Tolita-Tumaco":"Peru","Torres Strait Islander":"Nigeria","Vietnam":"China","Western India, Rajasthan, Mewar":"India"
 };
@@ -610,7 +623,14 @@ const ICONS = {
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
   style:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.3c-4.5 0-8.1 3-8.1 6.8 0 2.5 1.9 3.9 3.8 3.9 1.4 0 1.6 1.1 1.1 2-.5 1 .1 2 1.6 2.1 4.8.5 9.7-3.1 9.7-7.7 0-4.5-3.5-7.1-8.1-7.1Z"></path><circle cx="8" cy="10" r="1" fill="currentColor" stroke="none"></circle><circle cx="12" cy="8.3" r="1" fill="currentColor" stroke="none"></circle><circle cx="15.6" cy="10" r="1" fill="currentColor" stroke="none"></circle></svg>`,
   medium:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"></rect><path d="M5.4 19 H12 L5.4 12.4 Z" fill="currentColor" stroke="none"></path></svg>`,
-  artist:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"></path><path d="M3.6 18h13.8"></path></svg>`
+  artist:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"></path><path d="M3.6 18h13.8"></path></svg>`,
+  x:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>`,
+  // inline glyph icons — sized in em so they inherit the surrounding font-size + color (currentColor)
+  close:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px"><path d="M6 6l12 12M18 6L6 18"></path></svg>`,
+  crown:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" stroke="none" style="vertical-align:-1px"><path d="M2.6 7.3 6.4 11l3.6-5.4a2 2 0 0 1 4 0L17.6 11l3.8-3.7-1.7 10.4a1 1 0 0 1-1 .8H5.3a1 1 0 0 1-1-.8z"></path></svg>`,
+  star:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 17l-5.3 2.8 1.1-6L3.4 9.5l6-.8z"></path></svg>`,
+  spark:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M12 2l1.7 7.1L21 11l-7.3 1.9L12 20l-1.7-7.1L3 11l7.3-1.9z"></path></svg>`,
+  ext:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M8 6h10v10M18 6L7 17"></path></svg>`
 };
 function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:'';}
 
@@ -794,13 +814,13 @@ function renderCollections(){
   const dom=u=>u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
   const pinnable=C.sources.filter(s=>s.lat!=null).length+C.viaWd.length;
   const maxR=Math.max(1,...C.region.map(r=>r[1]));
-  const REGCOL={Asia:'#7480d4',Europe:'#3f4cbe','North America':'#aeb6e3',Africa:'#2f8f5b','South America':'#cf9f3a',Oceania:'#c14b3a'};
+  const REGCOL=REGION_COLORS;
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <div><div style="font:700 15px Archivo,sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
       <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px Archivo;font-variant-numeric:tabular-nums">${s.count}</span></div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
-    <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} &#8599;</div></a>`).join('');
+    <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} ${ICONS.ext}</div></a>`).join('');
   const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
     <span class="mono" style="width:118px;flex:0 0 auto;font-size:12px;color:var(--ink)">${esc(name)}</span>
     <div class="colbar" style="width:${Math.max(8,Math.round(c/maxR*72))}%;background:${REGCOL[name]||'var(--accent)'}">${c}</div>
@@ -988,26 +1008,23 @@ const SWATCHES=['#2230b8','#1b2570','#3f4cbe','#5663d4','#7480d4','#9aa3e0','#0f
 function defaultColor(){let h=0,d=deviceId();for(let i=0;i<d.length;i++)h=(h*31+d.charCodeAt(i))>>>0;return SWATCHES[h%SWATCHES.length];}
 // Dab family (handoff 08): DABS[0] reserved for logo; rows/podium cycle DABS[(i+1)%len] with a per-index rotation so a column never looks stamped.
 const DABS=['63% 37% 56% 44% / 55% 48% 52% 45%','58% 42% 52% 48% / 58% 52% 48% 42%','42% 58% 47% 53% / 62% 44% 56% 38%','55% 45% 35% 65% / 45% 60% 40% 55%','48% 52% 60% 40% / 50% 56% 44% 50%','70% 30% 52% 48% / 40% 62% 38% 60%','50% 50% 46% 54% / 60% 60% 40% 40%'];
+const ID_SHAPE='50% 50% 50% 12%'; // the gesso "dab" identity blob — single source for avatar + swatches
 function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
 function dabRot(i){return ((i|0)*37)%13-6;}
-function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?'50% 50% 50% 12%':dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
+function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
-  const veil=document.createElement('div');veil.className='settingsveil';
-  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:32px;height:32px;border:0;border-radius:50% 50% 50% 12%;background:${c};outline:${c===cur.color?'2.5px solid var(--ink)':'none'};outline-offset:2px;cursor:pointer"></button>`).join('');
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Your name and color">
-    <div class="settingshead"><span class="ttl">Your register entry</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
+  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:32px;height:32px;border:0;border-radius:${ID_SHAPE};background:${c};outline:${c===cur.color?'2.5px solid var(--ink)':'none'};outline-offset:2px;cursor:pointer"></button>`).join('');
+  const {veil,close,$}=openModal({title:'Your register entry',ariaLabel:'Your name and color',
+    body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
         <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:170px;overflow-y:auto">${swatches}</div>
       <button class="btn" id="idsave">Save</button>
       <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
-    </div></div>`;
-  const prev=()=>veil.querySelector('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
-  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
-  const onEsc=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',async e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
+    </div>`});
+  const prev=()=>$('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
+  veil.addEventListener('click',async e=>{
     const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>{b.style.outline=b.dataset.c===cur.color?'2.5px solid var(--ink)':'none';b.style.outlineOffset='2px';});prev();return;}
     const btn=e.target.closest('#idsave');
     if(btn){ if(btn.disabled)return; cur.name=veil.querySelector('#idname').value.trim();
@@ -1019,7 +1036,6 @@ function openIdentityModal(after){
       fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),name:cur.name,color:cur.color})}).catch(()=>{});
       close();if(after)after(); } });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
-  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 let lbTier='medium';
 let lbDate=null; // viewed leaderboard date (null = today)
@@ -1054,7 +1070,7 @@ async function renderLeaderboard(tierKey,dateStr){
   // podium order: 2nd, 1st, 3rd
   const podOrder=[1,0,2];
   const top=data.rows.slice(0,3);
-  const podiumCell=(rank)=>{const r=top[rank];if(!r)return '<div></div>';const m=METAL[rank];const crown=rank===0?`<div style="font:700 13px Archivo;color:${m.pink};margin-bottom:5px">&#9819;</div>`:'';
+  const podiumCell=(rank)=>{const r=top[rank];if(!r)return '<div></div>';const m=METAL[rank];const crown=rank===0?`<div style="font:700 13px Archivo;color:${m.pink};margin-bottom:5px">${ICONS.crown}</div>`:'';
     return `<div style="text-align:center;min-width:0">${crown}
       <span style="display:inline-flex">${dabAvatar(r.name,r.color,m.av,rank)}</span>
       <div style="margin-top:8px;font:700 ${rank===0?16:14}px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
@@ -1067,7 +1083,7 @@ async function renderLeaderboard(tierKey,dateStr){
   const youShown=data.rows.some(r=>r.isYou);
   let selfRow='';
   if(data.you && !youShown){
-    selfRow=`<div style="position:sticky;bottom:0;background:#eceffb;border-top:2px solid var(--accent);margin:0 -8px;padding:0 8px">
+    selfRow=`<div style="position:sticky;bottom:0;background:var(--study-bg);border-top:2px solid var(--accent);margin:0 -8px;padding:0 8px">
       <div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 8px">
         <span class="mono" style="width:30px;text-align:right;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums">${data.you.rank}</span>
         ${dabAvatar(id.name,id.color,34)}
@@ -1125,25 +1141,22 @@ function onAuthApplied(s){ try{
 const OAUTH=[['google','Google'],['apple','Apple']];
 function openLogin(){
   const c=sb();
-  const veil=document.createElement('div');veil.className='settingsveil';
   const oauthBtns=OAUTH.map(([p,l])=>`<button type="button" class="btn2 oauth" data-oauth="${p}" style="text-align:center">Continue with ${l}</button>`).join('');
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Sign in">
-    <div class="settingshead"><span class="ttl">Sign in to Gesso</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+  const {veil,close}=openModal({title:'Sign in to Gesso',body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
       ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div>
       <div class="kick" style="margin-top:2px">Linked sign-in methods</div>
       <div id="linked" style="display:flex;flex-direction:column;gap:8px"><span class="mono" style="font-size:12px;color:var(--muted)">Loading…</span></div>
-      <input id="apass2" type="password" placeholder="set or change password" autocomplete="new-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <input id="apass2" type="password" placeholder="set or change password" autocomplete="new-password" class="ginput"/>
       <button class="btn2" id="setpass">Save password</button>
       <button class="btn" id="signout" style="margin-top:4px">Sign out</button>`:`
       <div style="display:flex;flex-direction:column;gap:8px">${oauthBtns}</div>
       <div class="mono" style="text-align:center;color:var(--muted);font-size:11px">— or —</div>
-      <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
-      <input id="apass" type="password" placeholder="password" autocomplete="current-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" class="ginput"/>
+      <input id="apass" type="password" placeholder="password" autocomplete="current-password" class="ginput"/>
       <div style="display:flex;gap:8px"><button class="btn" id="signin" style="flex:1">Sign in</button><button class="btn2" id="signup" style="flex:1">Create account</button></div>
       <button class="btn2" id="magic">Email me a magic link</button>`}
       <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>
-    </div></div>`;
+    </div>`});
   // populate linked methods for a signed-in user
   if(authUser){ (async()=>{ try{ const {data}=await c.auth.getUserIdentities(); const have=new Set((data&&data.identities||[]).map(i=>i.provider));
     const box=veil.querySelector('#linked'); if(!box)return; const labels={google:'Google',apple:'Apple',email:'Email & password'};
@@ -1151,11 +1164,9 @@ function openLogin(){
       ?`<div class="mono" style="font-size:12px;color:var(--full)">✓ ${l} linked</div>`
       :(p==='email'||!MANUAL_LINKING?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
   }catch{} })(); }
-  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
-  const onEsc=e=>{if(e.key==='Escape')close();};
   const msg=t=>{const m=veil.querySelector('#amsg');if(m)m.textContent=t;};
   veil.addEventListener('click',async e=>{
-    if(e.target===veil||e.target.closest('.settingsclose'))return close();
+    if(e.target===veil||e.target.closest('.settingsclose'))return;
     if(!c){ msg('Auth still loading — try again in a moment.'); return; }
     const ob=e.target.closest('[data-oauth]'); if(ob){ try{ await c.auth.signInWithOAuth({provider:ob.dataset.oauth,options:{redirectTo:location.origin}}); }catch(err){ msg(err.message||'Provider not enabled yet.'); } return; }
     const lb=e.target.closest('[data-link]'); if(lb){ try{ const {error}=await c.auth.linkIdentity({provider:lb.dataset.link,options:{redirectTo:location.origin}}); if(error)msg(error.message); }catch(err){ msg(err.message||'Could not link.'); } return; }
@@ -1167,7 +1178,6 @@ function openLogin(){
     if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signup'){ try{ const {error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Account created — check your email to confirm ✓'); }catch(err){ msg(err.message); } return; }
   });
-  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 // ---------- Training mode (custom-filter "Drill me on…" + single-axis drills) ----------
@@ -1176,16 +1186,20 @@ const MIN_TRAIN=8;
 function centuryOf(y){ return y==null?null:Math.floor((y-(y<=0?1:0))/100); } // 1450→14 (15th c.); -50→-1 (1st c. BCE)
 function centuryLabel(c){ const n=c>=0?c+1:-c; const suf=(n%10==1&&n%100!=11)?'st':(n%10==2&&n%100!=12)?'nd':(n%10==3&&n%100!=13)?'rd':'th'; return `${n}${suf} c.${c<0?' BCE':''}`; }
 function countryNameOf(place){ const c=placeCountry(place); return c?c.n:''; }
-function trainingSet(T){ let w=POOL.slice(); const f=T.facets;
+function trainingApply(T,w){ const f=T.facets;
   if(f.centuries.size) w=w.filter(p=>f.centuries.has(centuryOf(p.y)));
-  if(f.regions.size)   w=w.filter(p=>f.regions.has(p.region));
-  if(f.countries.size) w=w.filter(p=>f.countries.has(countryNameOf(p.place)));
+  // Place family = countries OR regions (one logical group); empty-guard keeps it agnostic.
+  if(f.countries.size||f.regions.size) w=w.filter(p=>(f.countries.size&&f.countries.has(countryNameOf(p.place)))||(f.regions.size&&f.regions.has(p.region)));
   if(f.movements.size) w=w.filter(p=>p.style&&f.movements.has(p.style));
   if(f.mediaFamilies.size) w=w.filter(p=>MED_FAMILY[p.medSimple]&&f.mediaFamilies.has(MED_FAMILY[p.medSimple]));
+  if(f.artists&&f.artists.size) w=w.filter(p=>p.artist&&f.artists.has(p.artist));
   if(T.axis==='style') w=w.filter(p=>p.cats.includes('style'));
+  return w;
+}
+function trainingSet(T){ const w=trainingApply(T,POOL.slice());
   return seededShuffle(w, 'train|'+Math.floor(Date.now()/1000)+'|'+Math.random());
 }
-const newFacets=()=>({centuries:new Set(),regions:new Set(),countries:new Set(),movements:new Set(),mediaFamilies:new Set()});
+const newFacets=()=>({centuries:new Set(),regions:new Set(),countries:new Set(),movements:new Set(),mediaFamilies:new Set(),artists:new Set()});
 const REGIONS=['Europe','Asia','Africa','North America','South America','Oceania'];
 const TRAIN_DEMONYM={italian:'Italy',french:'France',german:'Germany',spanish:'Spain',dutch:'Netherlands',flemish:'Netherlands',english:'United Kingdom',british:'United Kingdom',scottish:'United Kingdom',american:'United States of America',japanese:'Japan',chinese:'China',korean:'Korea',indian:'India',egyptian:'Egypt',greek:'Greece',roman:'Italy',persian:'Iran',iranian:'Iran',mexican:'Mexico',brazilian:'Brazil',russian:'Russia',austrian:'Austria',belgian:'Belgium',turkish:'Turkey',ethiopian:'Ethiopia',nigerian:'Nigeria',peruvian:'Peru'};
 const MEDIA_FAM_ALIAS={oil:'paint',oils:'paint',painting:'paint',paintings:'paint',painted:'paint',tempera:'paint',fresco:'paint',watercolor:'paint',watercolour:'paint',ink:'paint',drawing:'draw',drawings:'draw',drawn:'draw',print:'print',prints:'print',woodblock:'print',ukiyoe:'print',sculpture:'sculpt',sculptures:'sculpt',sculpted:'sculpt',bronze:'sculpt',marble:'sculpt',stone:'sculpt',statue:'sculpt',ceramic:'craft',ceramics:'craft',pottery:'craft',textile:'craft',textiles:'craft',glass:'craft',photograph:'craft',photo:'craft',photography:'craft',photos:'craft'};
@@ -1211,51 +1225,142 @@ function facetChips(T){ const f=T.facets, out=[];
   for(const r of f.regions) out.push(['regions',r,r]);
   for(const c of f.countries) out.push(['countries',c,c]);
   for(const m of f.movements) out.push(['movements',m,m]);
-  for(const fm of f.mediaFamilies) out.push(['mediaFamilies',fm,({paint:'Paintings',draw:'Drawings',print:'Prints',sculpt:'Sculpture',craft:'Craft'})[fm]||fm]);
+  for(const fm of f.mediaFamilies) out.push(['mediaFamilies',fm,MED_FAM_LABEL[fm]||fm]);
+  if(f.artists) for(const a of f.artists) out.push(['artists',a,a]);
   return out; }
+const MED_FAM_LABEL={paint:'Paintings',draw:'Drawings',print:'Prints',sculpt:'Sculpture',craft:'Craft'};
+// ---- Training filter-builder vocab + REAL per-option counts (decision #9: standalone, cacheable) ----
+// Each family slot is agnostic: {fam, key (facet bucket), val, label, count}. The funnel carries combined truth.
+let __trainVocab=null;
+function trainVocab(){ if(__trainVocab) return __trainVocab;
+  const countOne=(fam,val)=>{ const T={facets:newFacets(),axis:null}; T.facets[fam].add(val); return trainingApply(T,POOL).length; };
+  const out=[];
+  // Era — century buckets present in the pool
+  const cents=[...new Set(POOL.map(p=>centuryOf(p.y)).filter(c=>c!=null))].sort((a,b)=>a-b);
+  for(const c of cents){ const n=countOne('centuries',c); if(n) out.push({famKey:'century',fam:'centuries',val:c,label:centuryLabel(c),count:n,sort:-n}); }
+  // Place — Region (coarse) + canonical country (point-in-polygon via countryNameOf)
+  for(const r of REGIONS){ const n=countOne('regions',r); if(n) out.push({famKey:'place',fam:'regions',val:r,label:r,count:n,tag:'Region',sort:-n}); }
+  const cc={}; for(const p of POOL){ const c=countryNameOf(p.place); if(c) cc[c]=(cc[c]||0)+1; }
+  for(const c of Object.keys(cc)){ if(cc[c]>=MIN_TRAIN) out.push({famKey:'place',fam:'countries',val:c,label:c,count:cc[c],sort:-cc[c]}); }
+  // Movement + Culture = ONE category (style)
+  for(const m of MOVEMENT_NAMES){ const n=countOne('movements',m); if(n>=MIN_TRAIN) out.push({famKey:'style',fam:'movements',val:m,label:m,count:n,sort:-n}); }
+  // Medium — MED_FAMILY families
+  for(const fm of Object.keys(MED_FAM_LABEL)){ const n=countOne('mediaFamilies',fm); if(n) out.push({famKey:'medium',fam:'mediaFamilies',val:fm,label:MED_FAM_LABEL[fm],count:n,sort:-n}); }
+  // Artist — only artists with >=5 pool works (decision #8)
+  const ac={}; for(const p of POOL){ if(isNamedArtist(p.artist)) ac[p.artist]=(ac[p.artist]||0)+1; }
+  for(const a of Object.keys(ac)){ if(ac[a]>=5) out.push({famKey:'artist',fam:'artists',val:a,label:a,count:ac[a],sort:-ac[a]}); }
+  out.sort((a,b)=>a.sort-b.sort);
+  __trainVocab=out; return out; }
+const TRAIN_FAMS=[['century','Era'],['place','Place'],['style','Movement'],['medium','Medium'],['artist','Artist']];
 function startTraining(T){ clearTimers(); infinite=true; TRAIN=T; tier=null; runDate=todayStr(); runArchive=false;
   // slice baseline for the before→after delta
   const m=loadMastery(); const movs=[...T.facets.movements]; const regs=[...T.facets.regions];
   T.baseline = movs.length&&m.byStyle[movs[0]] ? {label:movs[0], pct:pctOf(m.byStyle[movs[0]])} : regs.length&&m.byRegion[regs[0]] ? {label:regs[0], pct:pctOf(m.byRegion[regs[0]])} : null;
   game=trainingSet(T); idx=0; results=[]; hintsUsed=0; renderRound(); }
 function pctOf(s){ return s&&s.total?Math.round(s.correct/s.total*100):null; }
-let __train=null; // working setup state
+let __train=null;          // working setup state {facets, axis}
+let __trainCat='style';    // active browse tab
+let __trainBreak=false;    // breakdown disclosure open
+// which vocab bucket(s) belong to each browse tab
+const TRAIN_TAB_FAMS={century:['centuries'],place:['regions','countries'],style:['movements'],medium:['mediaFamilies'],artist:['artists']};
+// render order for the stacked drill groups + funnel
+const TRAIN_GROUP_ORDER=[['centuries','Era'],['regions','Region'],['countries','Place'],['movements','Movement'],['mediaFamilies','Medium'],['artists','Artist']];
+function trainGroups(T){ const g=[]; for(const [fam,label] of TRAIN_GROUP_ORDER){ const vals=[...T.facets[fam]]; if(vals.length) g.push({fam,label,vals}); } return g; }
 function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   if(!__train) __train={facets:newFacets(), axis:null};
-  const T=__train;
-  const QUICK=[['movements','Baroque','Baroque'],['movements','Impressionism','Impressionism'],['movements','Italian Renaissance','Italian Renaissance'],['movements','Ukiyo-e','Ukiyo-e'],['movements','Romanticism','Romanticism'],['regions','Europe','Europe'],['regions','Asia','Asia'],['regions','Africa','Africa'],['countries','Italy','Italy'],['countries','France','France'],['countries','Japan','Japan'],['countries','Egypt','Egypt'],['mediaFamilies','paint','Paintings'],['mediaFamilies','sculpt','Sculpture'],['mediaFamilies','print','Prints'],['centuries',14,'15th c.'],['centuries',16,'17th c.'],['centuries',18,'19th c.']];
-  const has=(fam,v)=>T.facets[fam].has(v);
-  const chip=(fam,v,lbl,on)=>`<button class="tchip" data-tf="${fam}" data-tv="${typeof v==='number'?'#'+v:esc(String(v))}" style="padding:7px 12px;border:1px solid ${on?'var(--accent)':'var(--line-card)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--ink)'};border-radius:18px;font:600 13px Archivo;cursor:pointer">${esc(lbl)}${on?' ✕':''}</button>`;
-  const sel=facetChips(T);
+  const T=__train, V=trainVocab();
   const cnt=facetCount(T);
+  const groups=trainGroups(T);
   const focus=[['',"All"],['when','Date only'],['where','Map only'],['style','Movement only']];
-  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:640px;margin:0 auto">
-    <div class="kick" style="color:var(--accent)">Training</div>
-    <div style="font:800 28px Archivo;margin:2px 0 4px">Drill me on…</div>
-    <div style="color:var(--muted);font-size:14px;margin-bottom:18px">Pick what you want to practice. Won't affect your streak or stats.</div>
-    <input id="tquery" type="text" placeholder="type a slice — e.g. 'Baroque, France' or '15th century'" style="width:100%;font:600 15px Archivo;padding:11px 13px;border:1px solid var(--line-card);border-radius:9px;margin-bottom:6px"/>
-    <div id="tunres" class="mono" style="font-size:11px;color:var(--miss,#a13526);min-height:14px;margin-bottom:10px"></div>
-    <div class="kick" style="margin-bottom:8px">Quick picks</div>
-    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px">${QUICK.map(([f,v,l])=>chip(f,v,l,has(f,v))).join('')}</div>
-    ${sel.length?`<div class="kick" style="margin-bottom:8px">Your drill</div><div id="tsel" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px">${sel.map(([f,v,l])=>chip(f,v,l,true)).join('')}</div>`:''}
-    <div class="kick" style="margin-bottom:8px">Focus</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border:1px solid ${(T.axis||'')===a?'var(--accent)':'var(--line-card)'};background:${(T.axis||'')===a?'var(--accent)':'transparent'};color:${(T.axis||'')===a?'#fff':'var(--ink)'};border-radius:8px;font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
-    <div style="display:flex;align-items:center;gap:14px">
-      <span class="mono" style="font-weight:700;color:${cnt<MIN_TRAIN?'var(--miss,#a13526)':'var(--ink)'}">${cnt} works match</span>
-      <button class="btn" id="tstart" style="flex:1${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button></div>
-    ${cnt<MIN_TRAIN?`<div class="mono" style="font-size:12px;color:var(--muted);margin-top:8px">${cnt<1?'No works match — loosen a filter.':'Small set ('+cnt+') — works will repeat quickly. Loosen a filter for more variety.'}</div>`:''}
-    <button class="btn2" data-route="home" style="margin-top:14px">← Back to home</button>
+  // ---- browse tabs ----
+  const tabs=TRAIN_FAMS.map(([cat,lbl])=>`<button class="catpick${__trainCat===cat?' on':''}" data-tcat="${cat}" role="tab" aria-selected="${__trainCat===cat}">${lbl}</button>`).join('');
+  // ---- stacked drill groups ----
+  let drill;
+  if(!groups.length){ drill=`<div class="mono" style="font-size:12px;color:var(--faint);padding:4px 0 4px">Nothing yet — training on all ${POOL.length.toLocaleString()} works.</div>`; }
+  else { drill=groups.map((g,i)=>{
+      const chips=g.vals.map((v,ii)=>`${ii>0?'<span class="orw">or</span>':''}<span class="gchip">${esc(trainLabel(g.fam,v))} <b class="trm" data-tf="${g.fam}" data-tv="${trainEnc(v)}" role="button" aria-label="remove">${ICONS.x}</b></span>`).join(' ');
+      const rail=i>0?`<div class="andrail"><span class="b">AND</span><span class="r"></span></div>`:'';
+      return `${rail}<div class="grp"><div class="grpL">${esc(g.label)}${g.vals.length>1?' <span style="color:var(--accent);text-transform:lowercase;letter-spacing:0;font-weight:600">· any of</span>':''}</div><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">${chips}</div></div>`;
+    }).join(''); }
+  // ---- narrowing funnel (cumulative, real counts) ----
+  const rounds=Math.max(1,Math.round(cnt/5));
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 40px;max-width:640px;margin:0 auto">
+    <div class="kick" style="color:var(--accent)">Gesso · Training</div>
+    <div style="font:800 28px Archivo;margin:2px 0 6px">What do you want to practise?</div>
+    <div style="color:var(--muted);font-size:14px;margin-bottom:18px">Search or browse to add filters. The count updates as you go, so you always know what you'll get. Won't affect your streak or stats.</div>
+
+    <div style="position:relative;margin-bottom:18px">
+      <div class="tsearchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="tsearch" type="text" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" style="flex:1;border:none;outline:none;background:transparent;font:500 14px Archivo;color:var(--ink)"/></div>
+      <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:9px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
+    </div>
+
+    <div role="tablist" aria-label="Browse by category" style="display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line)">${tabs}</div>
+    <div id="tcatopts" style="display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 4px"></div>
+    <div id="tcatmore" class="mono" style="font-size:10px;color:var(--faint);padding:0 0 4px"></div>
+
+    <div class="seclbl" style="margin:16px 0 10px">Your drill</div>
+    <div id="tgroups" style="display:flex;flex-direction:column;margin-bottom:4px">${drill}</div>
+
+    <div class="tcount" aria-live="polite" style="margin-top:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <span style="display:flex;align-items:baseline;gap:7px"><b class="tab" style="font:800 26px Archivo;color:var(--accent)">${cnt.toLocaleString()}</b><span class="mono" style="font-size:11px;color:var(--muted)">works match</span></span>
+        <button id="tbreaktog" class="mono" style="background:none;border:none;font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--accent-underline)">${__trainBreak?'hide':'show'} breakdown</button>
+      </div>
+      <div id="tnarrow" style="margin-top:12px;${__trainBreak?'display:flex':'display:none'};flex-direction:column;gap:6px">${trainFunnel(T,cnt)}</div>
+      <div class="mono" style="font-size:11px;margin-top:10px;${cnt<MIN_TRAIN?'color:var(--miss);font-weight:600':'color:var(--muted)'}">${cnt<1?'No works match — loosen a filter.':cnt<MIN_TRAIN?`Only ${cnt} works — loosen a filter for a fuller drill.`:`about ${rounds} rounds before any repeat`}</div>
+    </div>
+
+    <div class="seclbl" style="margin:18px 0 9px">Focus</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:8px;font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
+
+    <button class="btn" id="tstart" style="width:100%${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button>
+    <button class="btn2" data-route="home" style="margin-top:12px">← Back to home</button>
   </div></div>`;
-  // wire
-  const q=document.getElementById('tquery'); let qt;
-  q.oninput=()=>{ clearTimeout(qt); qt=setTimeout(()=>{ const {facets,unresolved}=resolveFacets(q.value);
-    for(const k in facets) for(const v of facets[k]) T.facets[k].add(v);
-    const u=document.getElementById('tunres'); if(u)u.textContent=unresolved.length?`couldn't match: ${unresolved.join(', ')}`:'';
-    if([...facets.centuries,...facets.regions,...facets.countries,...facets.movements,...facets.mediaFamilies].length){ q.value=''; renderTraining(false); } },450); };
-  document.querySelectorAll('.tchip').forEach(b=>b.onclick=()=>{ const fam=b.dataset.tf; let v=b.dataset.tv; if(v[0]==='#')v=+v.slice(1); if(T.facets[fam].has(v))T.facets[fam].delete(v); else T.facets[fam].add(v); renderTraining(false); });
+  renderTrainCat();
+  // ---- wire search ----
+  const s=document.getElementById('tsearch'), res=document.getElementById('tresults');
+  s.oninput=()=>{ const q=norm(s.value); if(!q){ res.style.display='none'; return; }
+    const hits=V.filter(v=>norm(v.label).includes(q)).slice(0,10);
+    res.style.display='block';
+    res.innerHTML=hits.length?hits.map(v=>{ const on=T.facets[v.fam].has(v.val); const tag=v.tag||(TRAIN_FAMS.find(f=>f[0]===v.famKey)||[])[1]||v.famKey;
+      return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:600 14px Archivo">${esc(v.label)}</span></span><span class="mono" style="font-size:11px;color:${on?'var(--accent)':'var(--faint)'}">${on?'added':v.count}</span></div>`;
+    }).join(''):`<div class="sr" style="cursor:default;color:var(--faint)">No match for "${esc(s.value)}"</div>`;
+    res.querySelectorAll('[data-tf]').forEach(r=>r.onclick=()=>{ trainToggle(r.dataset.tf,r.dataset.tv); s.value=''; res.style.display='none'; renderTraining(false); });
+  };
+  document.addEventListener('click',trainDocClose);
+  // ---- wire tabs / chips / focus / start ----
+  document.querySelectorAll('.catpick').forEach(b=>b.onclick=()=>{ __trainCat=b.dataset.tcat; renderTraining(false); });
+  document.querySelectorAll('.trm').forEach(b=>b.onclick=()=>{ trainToggle(b.dataset.tf,b.dataset.tv); renderTraining(false); });
   document.querySelectorAll('.tfocus').forEach(b=>b.onclick=()=>{ T.axis=b.dataset.ax||null; renderTraining(false); });
-  const st=document.getElementById('tstart'); if(st)st.onclick=()=>{ if(facetCount({facets:T.facets,axis:T.axis})<1)return; const movs=[...T.facets.movements]; startTraining({facets:T.facets,axis:T.axis,label:facetChips(T).map(c=>c[2]).join(' · ')||'Everything'}); };
+  const tog=document.getElementById('tbreaktog'); if(tog)tog.onclick=()=>{ __trainBreak=!__trainBreak; const n=document.getElementById('tnarrow'); if(n)n.style.display=__trainBreak?'flex':'none'; tog.textContent=(__trainBreak?'hide':'show')+' breakdown'; };
+  const st=document.getElementById('tstart'); if(st)st.onclick=()=>{ if(facetCount(T)<1)return; startTraining({facets:T.facets,axis:T.axis,label:facetChips(T).map(c=>c[2]).join(' · ')||'Everything'}); };
 }
+function trainDocClose(e){ if(!e.target.closest('#tsearch')&&!e.target.closest('#tresults')){ const r=document.getElementById('tresults'); if(r)r.style.display='none'; } }
+// encode a facet value for a data attr (numbers prefixed with #) and decode back
+function trainEnc(v){ return typeof v==='number'?'#'+v:esc(String(v)); }
+function trainDec(s){ return s[0]==='#'?+s.slice(1):s; }
+function trainToggle(fam,enc){ const v=trainDec(enc); const set=__train.facets[fam]; if(set.has(v))set.delete(v); else set.add(v); }
+function trainLabel(fam,v){ if(fam==='centuries')return centuryLabel(v); if(fam==='mediaFamilies')return MED_FAM_LABEL[v]||v; return v; }
+function renderTrainCat(){ const el=document.getElementById('tcatopts'), more=document.getElementById('tcatmore'); if(!el)return;
+  const fams=TRAIN_TAB_FAMS[__trainCat]||[]; const all=trainVocab().filter(v=>fams.includes(v.fam));
+  const show=all.slice(0,8);
+  el.innerHTML=show.map(v=>{ const on=__train.facets[v.fam].has(v.val);
+    return `<button class="opt${on?' on':''}" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}">${esc(v.label)}<span class="ct">${v.count}</span></button>`;
+  }).join('');
+  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ trainToggle(b.dataset.tf,b.dataset.tv); renderTraining(false); });
+  more.textContent = all.length>show.length ? `+ ${all.length-show.length} more — type to search above` : 'type to search above for more';
+}
+function trainFunnel(T,finalCnt){ const groups=trainGroups(T);
+  const rows=[`<div class="narr"><span style="flex:0 0 116px">All works</span><span class="bar"><i style="width:100%;background:var(--track)"></i></span><span class="tab" style="flex:0 0 48px;text-align:right">${POOL.length.toLocaleString()}</span></div>`];
+  const acc=newFacets(); let running=POOL.length;
+  groups.forEach((g,i)=>{ for(const v of g.vals) acc[g.fam].add(v);
+    running=trainingApply({facets:acc,axis:T.axis},POOL).length;
+    const w=Math.max(3,running/POOL.length*100), last=i===groups.length-1;
+    const lab=g.vals.map(v=>trainLabel(g.fam,v)).join('/');
+    rows.push(`<div class="narr"><span style="flex:0 0 116px;color:var(--ink)">+ ${esc(lab)}</span><span class="bar"><i style="width:${w}%;background:${last?'var(--accent)':'rgba(34,48,184,.6)'}"></i></span><span class="tab" style="flex:0 0 48px;text-align:right;${last?'color:var(--accent);font-weight:700':''}">${running.toLocaleString()}</span></div>`);
+  });
+  return rows.join(''); }
 
 // ---------- Account hub ("You" page) ----------
 // lowest-accuracy slice with enough data → a TRAIN config for the weak-spot button
@@ -1301,14 +1406,14 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
     ${w?`<button class="btn" id="trainweak" style="margin-bottom:24px">Train your weak spot${w.kind!=='axis'?': '+esc(w.key):''} &rarr;</button>`:`<div class="mono" style="font-size:12px;color:var(--faint);margin-bottom:24px">Play more dailies to unlock weak-spot training.</div>`}
     <div class="kick" style="color:var(--accent);margin-bottom:10px">More</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
-      <button class="btn2" data-route="glossary" style="text-align:left">Glossary &middot; ${metCount}/${glossTot} movements met &rarr;</button>
-      <button class="btn2" data-route="archive" style="text-align:left">Archive &middot; replay past days &rarr;</button>
-      <button class="btn2" data-route="collections" style="text-align:left">Collections &rarr;</button>
-      <button class="btn2" data-settings style="text-align:left">Settings &rarr;</button></div>
+      <button class="btn2" data-route="glossary" style="text-align:left">Glossary</button>
+      <button class="btn2" data-route="archive" style="text-align:left">Archive</button>
+      <button class="btn2" data-route="collections" style="text-align:left">Collections</button>
+      <button class="btn2" data-settings style="text-align:left">Settings</button></div>
     <div class="kick" style="color:var(--accent);margin-bottom:10px">Account</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      ${authUser?`<button class="btn2" id="acsignout">Sign out</button><button class="btn2" id="acdelete" style="border-color:var(--miss,#a13526);color:var(--miss,#a13526)">Delete account</button>`:`<button class="btn" data-login>Sign in to save across devices</button>`}
-      <button class="btn2" data-route="home" style="margin-top:6px">&larr; Back to home</button></div>
+      ${authUser?`<button class="btn2" id="acsignout">Sign out</button><button class="btn2" id="acdelete" style="border-color:var(--miss);color:var(--miss)">Delete account</button>`:`<button class="btn" data-login>Sign in to save across devices</button>`}
+      <button class="btn2" data-route="home" style="margin-top:18px">&larr; Back to home</button></div>
   </div></div>`;
   { const tw=document.getElementById('trainweak'); if(tw&&w)tw.onclick=()=>startTraining(weakTrain(w)); }
   { const so=document.getElementById('acsignout'); if(so)so.onclick=async()=>{const c=sb();if(c){await c.auth.signOut();}authUser=null;renderAccount(false);}; }
@@ -1319,18 +1424,14 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
     const el=document.getElementById('acrank'); if(el)el.textContent=best?'#'+best:'—'; })();
 }
 function confirmDeleteAccount(){
-  const veil=document.createElement('div');veil.className='settingsveil';
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Delete account"><div class="settingshead"><span class="ttl">Delete account?</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div style="padding:18px 22px"><p style="margin:0 0 16px;font-size:14px;color:var(--ink)">This permanently deletes your account, leaderboard entries, and synced progress. This can&rsquo;t be undone.</p>
-    <button class="btn" id="acdelconfirm" style="background:var(--miss,#a13526)">Delete everything</button><div id="acdelmsg" class="mono" style="font-size:12px;color:var(--miss,#a13526);min-height:15px;margin-top:8px"></div></div></div>`;
-  const close=()=>veil.remove();
-  veil.addEventListener('click',async e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
+  const {veil,close}=openModal({title:'Delete account?',body:`<div style="padding:18px 22px"><p style="margin:0 0 16px;font-size:14px;color:var(--ink)">This permanently deletes your account, leaderboard entries, and synced progress. This can&rsquo;t be undone.</p>
+    <button class="btn" id="acdelconfirm" style="background:var(--miss)">Delete everything</button><div id="acdelmsg" class="mono" style="font-size:12px;color:var(--miss);min-height:15px;margin-top:8px"></div></div>`});
+  veil.addEventListener('click',async e=>{
     if(e.target.id==='acdelconfirm'){ const c=sb(); const m=veil.querySelector('#acdelmsg'); m.textContent='Deleting…';
       try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token;
         const r=await fetch('/api/delete-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})});
         if(r.ok){ await c.auth.signOut(); authUser=null; close(); renderStart(); } else m.textContent='Could not delete — try again.';
       }catch{ m.textContent='Could not delete — try again.'; } } });
-  document.body.appendChild(veil);
 }
 
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }
@@ -1364,18 +1465,11 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 // mobile nav menu (the header nav collapses into this hamburger ≤680px)
 function openMenu(){
   const items=[['How to play','howto'],['Account','account'],['Leaderboard','register'],['Training','training'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
-  const veil=document.createElement('div');veil.className='settingsveil';
-  veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Menu">
-    <div class="settingshead"><span class="ttl">Menu</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
-    <div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div></div>`;
-  const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
-  const onEsc=e=>{if(e.key==='Escape')close();};
+  const {veil,close}=openModal({title:'Menu',body:`<div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div>`});
   veil.addEventListener('click',e=>{
-    if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
     if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else if(k==='login')openLogin(); else route(k);
   });
-  document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }
 // Logo → home. Match the whole .brand (and any .wordmark), not just the tiny wordmark text, so clicking
 // anywhere on the logo reliably navigates home from every screen.
@@ -1386,7 +1480,7 @@ function clearTimers(){if(countdownTimer){clearInterval(countdownTimer);countdow
 function regionBars(){
   const dist={};for(const p of POOL)dist[p.region]=(dist[p.region]||0)+1;
   const order=["Europe","Asia","Africa","North America","South America","Oceania"];
-  const colors={Europe:"#2230b8",Asia:"#cf9f3a",Africa:"#2f8f5b",["North America"]:"#7a86d8",["South America"]:"#c14b3a",Oceania:"#8a8472"};
+  const colors=REGION_COLORS;
   const total=POOL.length||1;
   const segs=order.filter(r=>dist[r]).map(r=>`<span style="width:${(dist[r]/total*100).toFixed(1)}%;background:${colors[r]}"></span>`).join('');
   const key=order.filter(r=>dist[r]).map(r=>`<span><i style="background:${colors[r]}"></i>${r} ${Math.round(dist[r]/total*100)}%</span>`).join('');
@@ -1467,14 +1561,27 @@ function startGame(key,dateStr,push=true){
 function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
 // practice ordering: for Easy, weave so ~1-in-5 is a top-100 icon (reliable, not random-clumpy);
 // the other 4 spread the recognizable tier. Other tiers just shuffle. No repeats until the tier cycles.
+// Spread works so the same NAMED artist never lands back-to-back (e.g. several Bosch in the icon set).
+// Greedy: when the previous item's artist would repeat, skip ahead to the next different-artist work;
+// anonymous works (no artist) are left as-is, and an unavoidable run (only that artist left) stays.
+function spreadByArtist(list){
+  const out=[], pending=list.slice();
+  while(pending.length){
+    const last=out.length?out[out.length-1].artist:null;
+    let pick=0;
+    if(last){ const j=pending.findIndex(p=>p.artist!==last); if(j>=0)pick=j; }
+    out.push(pending.splice(pick,1)[0]);
+  }
+  return out;
+}
 function practiceOrder(key){
   const works=tierItems(tierIndex(key));
-  if(key!=='easy') return shuffle(works);
+  if(key!=='easy') return spreadByArtist(shuffle(works));
   const ICON=new Set(POOL.slice(0,100).map(p=>p.id)); // POOL is recognizability-sorted in buildIndexes()
   const icons=shuffle(works.filter(p=>ICON.has(p.id))), rest=shuffle(works.filter(p=>!ICON.has(p.id)));
   const out=[]; let i=0,r=0;
   while(i<icons.length||r<rest.length){ if(i<icons.length)out.push(icons[i++]); for(let k=0;k<4&&r<rest.length;k++)out.push(rest[r++]); }
-  return out;
+  return spreadByArtist(out);
 }
 function startInfinite(key,push=true){
   if(push)pushNav({v:'inf',key});
@@ -1526,7 +1633,7 @@ function renderInfiniteSummary(){
     return `<svg viewBox="0 0 24 24" width="16" height="16">${m[key]||''}</svg>`; };
   const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px 'Archivo',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'IBM Plex Mono',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
-    <div class="banner" style="background:linear-gradient(180deg,#eceffb,var(--surface))"><div style="width:100%">
+    <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Infinite session &middot; '+esc(tierName)}</span>
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
@@ -1540,8 +1647,8 @@ function renderInfiniteSummary(){
       <div><div class="sv">${accuracy}<span style="font-size:13px;color:var(--muted)">%</span></div><div class="kick" style="color:var(--muted);margin-top:3px">Accuracy</div></div>
     </div>
     <div style="padding:18px 24px;border-bottom:1px solid var(--line)"><div class="pmcards">
-      <div class="pmcard"><span class="badge">&starf;</span><div><div class="cnt tab">${perfects}</div><div class="kick" style="color:var(--muted);margin-top:2px">Perfect${perfects===1?'':'s'}</div></div><span class="note">all core maxed</span></div>
-      <div class="pmcard gold"><span class="badge">&#10022;</span><div><div class="cnt tab">${masterpieces}</div><div class="kick" style="color:var(--muted);margin-top:2px">Masterpiece${masterpieces===1?'':'s'}</div></div><span class="note">perfect + artist</span></div>
+      <div class="pmcard"><span class="badge">${ICONS.star}</span><div><div class="cnt tab">${perfects}</div><div class="kick" style="color:var(--muted);margin-top:2px">Perfect${perfects===1?'':'s'}</div></div><span class="note">all core maxed</span></div>
+      <div class="pmcard gold"><span class="badge">${ICONS.spark}</span><div><div class="cnt tab">${masterpieces}</div><div class="kick" style="color:var(--muted);margin-top:2px">Masterpiece${masterpieces===1?'':'s'}</div></div><span class="note">perfect + artist</span></div>
     </div></div>
     ${catPct.length?`<div style="padding:2px 24px 6px">
       <div class="sech"><span class="t">Your strengths this session</span><span class="r"></span></div>
@@ -1560,7 +1667,7 @@ function renderInfiniteSummary(){
     </div>`:''}
     ${nailed.length?`<div style="padding:0 24px 6px">
       <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
-      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?'&#10022;':'&starf;';const row=`<span style="flex:0 0 auto;color:${col};font:700 13px 'Archivo',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px 'Archivo',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'IBM Plex Mono',monospace">&#8599;</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
+      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?ICONS.spark:ICONS.star;const row=`<span style="flex:0 0 auto;color:${col};font:700 13px 'Archivo',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px 'Archivo',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'IBM Plex Mono',monospace">${ICONS.ext}</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
         return w.url?`<a class="wlink" href="${esc(w.url)}" target="_blank" rel="noopener">${row}</a>`:`<div class="wlink" style="cursor:default">${row}</div>`;}).join('')}</div>
     </div>`:''}
     <div style="padding:18px 24px 22px;display:flex;gap:11px;flex-wrap:wrap">
@@ -1667,7 +1774,7 @@ function renderRound(){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
-    else marker=L.circleMarker(ll,{radius:8,color:'#2230b8',fillColor:'#2230b8',fillOpacity:.92,weight:2}).addTo(map);
+    else marker=L.circleMarker(ll,{radius:8,color:PALETTE.accent,fillColor:PALETTE.accent,fillOpacity:.92,weight:2}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
@@ -1791,7 +1898,9 @@ function score(){
   const hintPen=guess.hints.size*HINT_COST;
   const coreNet=Math.max(0,core-hintPen);
   // mastery — only the genuine daily play counts (not infinite grind or archive replay)
-  if(!infinite&&!runArchive){
+  // Your Eye (persisted mastery) reflects daily AND infinite play; training (TRAIN set) is self-chosen so it
+  // stays ephemeral, and archive replays don't count. Streak/points/leaderboard remain daily-only (handled elsewhere).
+  if(!TRAIN&&!runArchive){
     if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
     bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
     bumpMastery('when','byCategory',cells.when.pts>=MAX_CAT*0.75);
@@ -1829,7 +1938,7 @@ function setupReportFlow(it,study){
 }
 function paintBurst(host){
   if(!host||(typeof settings!=='undefined'&&settings.reduceMotion))return;
-  const cols=['#2230b8','#2f8f5b','#cf9f3a','#b3892f'];
+  const cols=[PALETTE.accent,PALETTE.full,PALETTE.partial,PALETTE.gold];
   const cx=host.clientWidth/2, cy=host.clientHeight/2;
   for(let i=0;i<16;i++){ const d=document.createElement('span'), ang=i/16*6.2832, dist=34+(i%5)*13, sz=6+(i%4)*3;
     d.style.cssText=`position:absolute;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:${cols[i%4]};border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;transform:translate(-50%,-50%);transition:transform .7s cubic-bezier(.2,.7,.3,1),opacity .7s;pointer-events:none;z-index:5`;
@@ -1870,7 +1979,7 @@ function renderReveal(r){
     <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
-        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?'<span class="perfectstamp">&#10022; MASTERPIECE</span>':perfect?'<span class="perfectstamp">&starf; PERFECT</span>':''}</span>
+        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
@@ -1885,7 +1994,7 @@ function renderReveal(r){
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
           ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
         </div>
-        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record &#8599;</a>
+        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record ${ICONS.ext}</a>
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
@@ -1896,7 +2005,7 @@ function renderReveal(r){
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
-          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#2f8f5b;opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
+          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
         </div>
       </div>
     </div>
@@ -1930,8 +2039,8 @@ function renderReveal(r){
   L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
   let poly=null;
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
-    poly=L.polyline([g,t],{color:'#2230b8',weight:2,dashArray:settings.reduceMotion?'5,6':null}).addTo(rm);
-    L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:'#2230b8',fillOpacity:1}).addTo(rm);}
+    poly=L.polyline([g,t],{color:PALETTE.accent,weight:2,dashArray:settings.reduceMotion?'5,6':null}).addTo(rm);
+    L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:PALETTE.accent,fillOpacity:1}).addTo(rm);}
   // shade the work's historical culture/empire range (Anthropeum-style) — data: historical-basemaps (GPL-3.0)
   let regionLayer=null; const reg=(window.ARTEFACTUM_REGIONS||{})[it.style];
   if(reg&&reg.geometry&&reg.geometry.length){ try{

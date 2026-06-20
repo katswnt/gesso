@@ -3,7 +3,7 @@
   "private": true,
   "description": "Daily art-history guessing game — no-build static-data SPA.",
   "scripts": {
-    "test": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node scripts/check-pool.mjs",
+    "test": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs",
     "check:pool": "node scripts/check-pool.mjs",
     "check:syntax": "node --check tests/scoring.test.mjs && for f in scripts/*.mjs api/*.js; do node --check \"$f\" || exit 1; done",
     "audit": "node scripts/audit-all.mjs",
