@@ -1080,7 +1080,7 @@ async function claimDevice(){ // bind this device's leaderboard rows to the acco
     await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); }catch{} }
 // OAuth providers — each must ALSO be enabled in Supabase Dashboard → Authentication → Providers (+ a provider
 // OAuth app). Buttons here work the moment a provider is enabled; magic-link + email/password work out of the box.
-const OAUTH=[['google','Google'],['apple','Apple'],['github','GitHub'],['facebook','Facebook'],['discord','Discord'],['azure','Microsoft']];
+const OAUTH=[['google','Google'],['apple','Apple']];
 function openLogin(){
   const c=sb();
   const veil=document.createElement('div');veil.className='settingsveil';
@@ -1092,7 +1092,7 @@ function openLogin(){
       <div style="display:flex;flex-direction:column;gap:8px">${oauthBtns}</div>
       <div class="mono" style="text-align:center;color:var(--muted);font-size:11px">— or —</div>
       <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
-      <input id="apass" type="password" placeholder="password (for email + password)" autocomplete="current-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
+      <input id="apass" type="password" placeholder="password" autocomplete="current-password" style="font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/>
       <div style="display:flex;gap:8px"><button class="btn" id="signin" style="flex:1">Sign in</button><button class="btn2" id="signup" style="flex:1">Create account</button></div>
       <button class="btn2" id="magic">Email me a magic link</button>
       <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>`}
