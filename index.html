@@ -1084,11 +1084,24 @@ let __sb=null;
 function sb(){ if(__sb)return __sb; if(typeof window.supabase==='undefined'||!window.supabase.createClient)return null;
   __sb=window.supabase.createClient(SUPA_URL,SUPA_ANON,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}); return __sb; }
 let authUser=null;
-async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}=await c.auth.getSession(); authUser=data&&data.session?data.session.user:null;
-  if(authUser){ await claimDevice(); } return authUser; }catch{ return null; } }
-async function claimDevice(){ // bind this device's leaderboard rows to the account (server verifies the JWT)
-  const c=sb(); if(!c||!authUser)return; try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return;
-    await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); }catch{} }
+async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}=await c.auth.getSession(); const was=!!authUser; authUser=data&&data.session?data.session.user:null;
+  if(authUser){ const synced=await syncAccount(); if(synced&&!was) onAuthApplied(synced); } return authUser; }catch{ return null; } }
+// Phase 2b cross-device sync: bind device→account, merge local identity+streak UP, pull canonical identity
+// + merged streak DOWN (so progress follows you to any device). Falls back to /api/claim if sync fails.
+async function syncAccount(){
+  const c=sb(); if(!c||!authUser)return null;
+  try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return null;
+    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:loadIdentity().name,color:loadIdentity().color})});
+    if(r.ok)return await r.json();
+    // fallback: at least bind the device
+    await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
+  }catch{ return null; }
+}
+// apply the account's canonical identity + merged streak to this device (on a fresh login)
+function onAuthApplied(s){ try{
+  if(s.name||s.color) saveIdentity({name:s.name||loadIdentity().name,color:s.color||loadIdentity().color});
+  if(s.streak) saveStreak(s.streak);
+}catch{} }
 // OAuth providers — each must ALSO be enabled in Supabase Dashboard → Authentication → Providers (+ a provider
 // OAuth app). Buttons here work the moment a provider is enabled; magic-link + email/password work out of the box.
 const OAUTH=[['google','Google'],['apple','Apple']];
