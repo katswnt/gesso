@@ -982,7 +982,11 @@ async function submitScore(date,tierKey,summary){ // fire-and-forget; never bloc
     })}); return r.ok?await r.json():null; }catch{ return null; }
 }
 const SWATCHES=['#2230b8','#b3892f','#7a1f1f','#2f6f5f','#6a2f8f','#1f6f8b','#a8324a','#3a4a55'];
-function dabAvatar(name,color,size){size=size||40;return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50% 50% 50% 12%;background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
+// Dab family (handoff 08): DABS[0] reserved for logo; rows/podium cycle DABS[(i+1)%len] with a per-index rotation so a column never looks stamped.
+const DABS=['63% 37% 56% 44% / 55% 48% 52% 45%','58% 42% 52% 48% / 58% 52% 48% 42%','42% 58% 47% 53% / 62% 44% 56% 38%','55% 45% 35% 65% / 45% 60% 40% 55%','48% 52% 60% 40% / 50% 56% 44% 50%','70% 30% 52% 48% / 40% 62% 38% 60%','50% 50% 46% 54% / 60% 60% 40% 40%'];
+function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
+function dabRot(i){return ((i|0)*37)%13-6;}
+function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?'50% 50% 50% 12%':dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
   const veil=document.createElement('div');veil.className='settingsveil';
@@ -1009,26 +1013,55 @@ async function renderLeaderboard(tierKey){
   clearTimers(); lbTier=tierKey||lbTier; const date=todayStr(); const id=loadIdentity();
   pushNav({v:'register'});
   const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
+  const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
     <div class="kick" style="color:var(--accent)">The Register</div>
-    <div style="font:800 28px Archivo;margin:2px 0 14px">Today&rsquo;s leaderboard</div>
+    <div style="font:800 28px Archivo;margin:2px 0 2px">Today&rsquo;s leaderboard</div>
+    <div class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted);margin-bottom:14px">no. ${esc(accession)} &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span></div>
     <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
-    <div id="lbbody"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
+    <div id="lbbody" aria-live="polite"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
     <div style="margin-top:18px"><button class="btn2" id="lbedit">Edit your name &amp; colour</button>
       <button class="btn2" data-route="home" style="margin-top:10px">Back</button></div>
   </div></div>`;
   veilWire();
+  // live countdown to next puzzle (midnight local) — registered via clearTimers cleanup
+  const cd=document.getElementById('lbcd');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
   const body=document.getElementById('lbbody');
   let data=null; try{ const r=await fetch(`/api/leaderboard?date=${date}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}`); data=r.ok?await r.json():null; }catch{}
   if(!data){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">Couldn&rsquo;t load the board. Play today&rsquo;s ${lbTier} puzzle to join.</div>`; return; }
   if(!data.rows.length){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">No entries yet for ${lbTier} today — be the first.</div>`; return; }
-  const rowHTML=(r)=>`<div style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.06);border-left:3px solid var(--accent)':''}">
-    <span class="mono" style="width:28px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
-    ${dabAvatar(r.name,r.color,34)}
-    <span style="flex:1;font:600 15px Archivo">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
+  const METAL=[{plinth:'#ecca6f',pb:'#cda948',pink:'#7a5c14',ph:64,av:66,sub:'#9a7b2e'},{plinth:'#d4d8dc',pb:'#c2c7cd',pink:'#6c7177',ph:42,av:54,sub:'#6c7177'},{plinth:'#dcab7c',pb:'#bd8a5c',pink:'#8a5a2c',ph:32,av:50,sub:'#9a6f3a'}];
+  // podium order: 2nd, 1st, 3rd
+  const podOrder=[1,0,2];
+  const top=data.rows.slice(0,3);
+  const podiumCell=(rank)=>{const r=top[rank];if(!r)return '<div></div>';const m=METAL[rank];const crown=rank===0?`<div style="font:700 13px Archivo;color:${m.pink};margin-bottom:5px">&#9819;</div>`:'';
+    return `<div style="text-align:center;min-width:0">${crown}
+      <span style="display:inline-flex">${dabAvatar(r.name,r.color,m.av,rank)}</span>
+      <div style="margin-top:8px;font:700 ${rank===0?16:14}px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
+      <div class="mono" style="font:700 12px 'IBM Plex Mono';color:${m.sub};font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</div>
+      <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px Archivo;color:${m.pink}">${r.rank}</div>
+    </div>`;};
+  const podium=`<div style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;padding:6px 0 14px">${podOrder.map(podiumCell).join('')}</div>`;
+  const rest=data.rows.slice(3);
+  const rowHTML=(r,i)=>`<div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:7px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.07);border-left:3px solid var(--accent)':''}" onmouseover="this.style.background='${r.isYou?'rgba(34,48,184,.07)':'rgba(34,48,184,.035)'}'" onmouseout="this.style.background='${r.isYou?'rgba(34,48,184,.07)':'transparent'}'">
+    <span class="mono" style="width:30px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
+    ${dabAvatar(r.name,r.color,34,r.rank-1)}
+    <span style="flex:1;min-width:0;font:600 15px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
     <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</span></div>`;
-  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
-  body.innerHTML=data.rows.map(rowHTML).join('')+youLine;
+  // sticky self-row: pin only if you're not already shown in the rendered rows
+  const youShown=data.rows.some(r=>r.isYou);
+  let selfRow='';
+  if(data.you && !youShown){
+    selfRow=`<div style="position:sticky;bottom:0;background:#eceffb;border-top:2px solid var(--accent);margin:0 -8px;padding:0 8px">
+      <div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 8px">
+        <span class="mono" style="width:30px;text-align:right;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums">${data.you.rank}</span>
+        ${dabAvatar(id.name,id.color,34)}
+        <span style="flex:1;min-width:0;font:700 14px Archivo">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" id="lbedit2" class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'IBM Plex Mono';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
+        <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${data.you.score.toLocaleString()}</span></div></div>`;
+  }
+  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
+  body.innerHTML=podium+rest.map(rowHTML).join('')+selfRow+youLine;
+  const e2=document.getElementById('lbedit2');if(e2)e2.onclick=()=>openIdentityModal(()=>renderLeaderboard());
 }
 function veilWire(){ const e=document.getElementById('lbedit'); if(e)e.onclick=()=>openIdentityModal(()=>renderLeaderboard());
   document.querySelectorAll('[data-lbt]').forEach(b=>b.onclick=()=>renderLeaderboard(b.dataset.lbt)); }
