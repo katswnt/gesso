@@ -970,7 +970,7 @@ function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')rend
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
-function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:'#2230b8'};}catch{return{name:'',color:'#2230b8'};}}
+function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:'',color:defaultColor()};}}
 function saveIdentity(i){try{localStorage.setItem("gesso.identity",JSON.stringify({name:String(i.name||'').slice(0,16),color:i.color}));}catch{}}
 function initialsOf(name){const w=String(name||'').trim().split(/\s+/).filter(Boolean);return w.length?w.slice(0,2).map(x=>x[0].toUpperCase()).join(''):'YOU';}
 async function submitScore(date,tierKey,summary){ // fire-and-forget; never blocks the recap
@@ -982,7 +982,10 @@ async function submitScore(date,tierKey,summary){ // fire-and-forget; never bloc
       rounds:results.map(x=>({id:x.it.id,cells:Object.fromEntries(Object.entries(x.cells).map(([k,v])=>[k,v.pts])),guess:{year:x.guess.year,ll:x.guess.ll,medium:x.guess.medium,style:x.guess.style,artist:x.guess.artist}}))
     })}); return r.ok?await r.json():null; }catch{ return null; }
 }
-const SWATCHES=['#2230b8','#b3892f','#7a1f1f','#2f6f5f','#6a2f8f','#1f6f8b','#a8324a','#3a4a55'];
+// 48-color dab palette (handoff 19: 8 families × 6 steps) — white initial stays legible on each; harmonizes on cream.
+const SWATCHES=['#2230b8','#1b2570','#3f4cbe','#5663d4','#7480d4','#9aa3e0','#0f5b63','#166b6b','#1f7a8c','#2a9d9d','#3aa6a0','#5cc0b6','#1f6b45','#2f8f5b','#3a9d4f','#5a8f3a','#6b9e3f','#86ab57','#a7741f','#b5852a','#c9962f','#cf9f3a','#d9a441','#e0b14a','#a13526','#b33d2e','#c14b3a','#cf5b45','#d97150','#e08c6a','#a83a5c','#b8466b','#c4577a','#d06b8a','#d98ba3','#e0a0b5','#4d3590','#5a3fa0','#6b4fb8','#7d5fc4','#8e6fd0','#a487da','#1b1916','#3a362d','#4a4640','#6b6557','#7d7866','#8a8472'];
+// stable per-device default color so new players get varied (not all-ultramarine) boards out of the box
+function defaultColor(){let h=0,d=deviceId();for(let i=0;i<d.length;i++)h=(h*31+d.charCodeAt(i))>>>0;return SWATCHES[h%SWATCHES.length];}
 // Dab family (handoff 08): DABS[0] reserved for logo; rows/podium cycle DABS[(i+1)%len] with a per-index rotation so a column never looks stamped.
 const DABS=['63% 37% 56% 44% / 55% 48% 52% 45%','58% 42% 52% 48% / 58% 52% 48% 42%','42% 58% 47% 53% / 62% 44% 56% 38%','55% 45% 35% 65% / 45% 60% 40% 55%','48% 52% 60% 40% / 50% 56% 44% 50%','70% 30% 52% 48% / 40% 62% 38% 60%','50% 50% 46% 54% / 60% 60% 40% 40%'];
 function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
@@ -991,13 +994,13 @@ function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?'50% 50%
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
   const veil=document.createElement('div');veil.className='settingsveil';
-  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:34px;height:34px;border-radius:50% 50% 50% 12%;background:${c};border:3px solid ${c===cur.color?'var(--ink)':'transparent'}"></button>`).join('');
+  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:32px;height:32px;border:0;border-radius:50% 50% 50% 12%;background:${c};outline:${c===cur.color?'2.5px solid var(--ink)':'none'};outline-offset:2px;cursor:pointer"></button>`).join('');
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Your name and color">
     <div class="settingshead"><span class="ttl">Your register entry</span><button type="button" class="settingsclose" aria-label="Close">&times;</button></div>
     <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
         <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap">${swatches}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:170px;overflow-y:auto">${swatches}</div>
       <button class="btn" id="idsave">Save</button>
       <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
     </div></div>`;
@@ -1005,7 +1008,7 @@ function openIdentityModal(after){
   const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
   const onEsc=e=>{if(e.key==='Escape')close();};
   veil.addEventListener('click',async e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
-    const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>b.style.border='3px solid '+(b.dataset.c===cur.color?'var(--ink)':'transparent'));prev();return;}
+    const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>{b.style.outline=b.dataset.c===cur.color?'2.5px solid var(--ink)':'none';b.style.outlineOffset='2px';});prev();return;}
     if(e.target.closest('#idsave')){ cur.name=veil.querySelector('#idname').value.trim();
       const m=veil.querySelector('#idmsg');
       if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true}; if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; return; } }catch{} }
@@ -1071,6 +1074,7 @@ function veilWire(){ document.querySelectorAll('[data-lbt]').forEach(b=>b.onclic
 // ---------- Supabase Auth (Accounts Phase 2) ----------
 const SUPA_URL="https://jmrpqmejupouqfergyyg.supabase.co";
 const SUPA_ANON="sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_";
+const MANUAL_LINKING=false; // flip to true ONLY when "Allow manual linking" is enabled in Supabase; otherwise the Link buttons just error, so we hide them (same-email auto-linking still works)
 let __sb=null;
 function sb(){ if(__sb)return __sb; if(typeof window.supabase==='undefined'||!window.supabase.createClient)return null;
   __sb=window.supabase.createClient(SUPA_URL,SUPA_ANON,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}); return __sb; }
@@ -1109,7 +1113,7 @@ function openLogin(){
     const box=veil.querySelector('#linked'); if(!box)return; const labels={google:'Google',apple:'Apple',email:'Email & password'};
     box.innerHTML=Object.entries(labels).map(([p,l])=>have.has(p)
       ?`<div class="mono" style="font-size:12px;color:var(--full)">✓ ${l} linked</div>`
-      :(p==='email'?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
+      :(p==='email'||!MANUAL_LINKING?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
   }catch{} })(); }
   const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
   const onEsc=e=>{if(e.key==='Escape')close();};
@@ -1707,9 +1711,11 @@ function renderReveal(r){
   }catch{} }
   // with a culture polygon, zoom to the REGION (+ the true origin) so it's readable — the guess pin may fall
   // off-frame, but the "X km off" readout still conveys the distance. Without a region, frame both pins.
-  try{ let b; if(regionLayer){ b=regionLayer.getBounds(); try{b.extend(t);}catch{} } else { b=L.latLngBounds(pts); }
-    rm.fitBounds(b,{padding:[22,22],maxZoom:6,animate:!settings.reduceMotion});}catch{}
-  setTimeout(()=>{rm.invalidateSize();
+  // fitBounds MUST run AFTER invalidateSize — the container has no size at first paint, so an earlier fit
+  // silently fails and the map stays at the default world view.
+  const fitReveal=()=>{ try{ let b; if(regionLayer){ b=regionLayer.getBounds(); try{b.extend(t);}catch{} } else { b=L.latLngBounds(pts); }
+    rm.fitBounds(b,{padding:[22,22],maxZoom:6,animate:!settings.reduceMotion});}catch{} };
+  setTimeout(()=>{rm.invalidateSize(); fitReveal();
     if(poly&&!settings.reduceMotion){ try{ const path=poly.getElement(); const len=path.getTotalLength();
       path.style.transition='none'; path.style.strokeDasharray=len; path.style.strokeDashoffset=len;
       requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; }); }catch{} }
