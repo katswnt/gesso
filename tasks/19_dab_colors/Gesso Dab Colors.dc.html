@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</helmet>
+<div style="min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e9e7e0;width:max-content;font-family:'Archivo',sans-serif;color:#1b1916">
+
+  <div style="font:700 13px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#2230b8;margin-bottom:6px">Gesso &middot; dab colors</div>
+  <div style="font:400 14px/1.5 'Archivo';color:#6b6557;max-width:600px;margin-bottom:36px">A curated set for the leaderboard / profile dab. Eight hue families &times; six steps &mdash; all muted &amp; editorial so a white initial reads on every one, and the whole set sits on cream without clashing. Shapes cycle for variety.</div>
+
+  <div style="display:flex;gap:44px;align-items:flex-start">
+
+    <!-- swatch library -->
+    <div style="flex:none;width:760px">
+      <div style="font:500 12px 'IBM Plex Mono',monospace;color:#8a8472;margin-bottom:12px">THE SET &middot; <span id="cnt"></span> colors</div>
+      <div style="background:#f6f4ee;border:2px solid #ddd8ca;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:28px 30px;display:flex;flex-direction:column;gap:26px">
+        <sc-for list="{{ families }}" as="fam" hint-placeholder-count="8">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#1b1916">{{ fam.name }}</span><span style="flex:1;height:1px;background:#e3ded1"></span></div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap">
+              <sc-for list="{{ fam.swatches }}" as="sw" hint-placeholder-count="6">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:88px">
+                  <div style="width:50px;height:50px;background:{{ sw.hex }};border-radius:{{ sw.shape }};display:flex;align-items:center;justify-content:center;color:#fff;font:700 19px 'Archivo';box-shadow:0 2px 6px rgba(27,25,22,.14)">K</div>
+                  <span style="font:500 10px 'IBM Plex Mono';color:#8a8472;text-transform:uppercase">{{ sw.hex }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- picker mock + notes -->
+    <div style="flex:none;width:400px;display:flex;flex-direction:column;gap:24px">
+      <div>
+        <div style="font:500 12px 'IBM Plex Mono',monospace;color:#8a8472;margin-bottom:12px">IN THE NAME + COLOR PICKER</div>
+        <div style="background:#f6f4ee;border:1.5px solid #1b1916;border-radius:12px;box-shadow:0 16px 40px rgba(27,25,22,.22);overflow:hidden">
+          <div style="padding:22px 24px 8px">
+            <div style="font:700 18px 'Archivo';color:#1b1916;margin-bottom:3px">Pick your dab</div>
+            <div style="font:400 12px/1.4 'Archivo';color:#6b6557">This is how you'll show up on the board.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 24px 10px">
+            <div style="width:78px;height:78px;background:#2f8f5b;border-radius:60% 40% 47% 53%/42% 56% 44% 58%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 34px 'Archivo';box-shadow:0 4px 12px rgba(27,25,22,.2)">K</div>
+            <input type="text" value="katswint" style="width:100%;padding:11px 13px;background:#fff;border:1px solid #ddd8ca;border-radius:4px;color:#1b1916;font:13px 'IBM Plex Mono';outline:none;text-align:center" />
+          </div>
+          <div style="padding:6px 24px 22px">
+            <div style="font:500 9px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#a39d8c;margin-bottom:10px">Color</div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <sc-for list="{{ pickerRow }}" as="p" hint-placeholder-count="12">
+                <span style="width:30px;height:30px;background:{{ p.hex }};border-radius:{{ p.shape }};cursor:pointer;outline:{{ p.ring }};outline-offset:2px"></span>
+              </sc-for>
+            </div>
+            <div style="font:500 10px 'IBM Plex Mono';color:#a39d8c;margin-top:12px;text-align:center">scroll for all {{ count }} &middot; or shuffle 🎲</div>
+          </div>
+          <button style="display:block;width:calc(100% - 48px);margin:0 24px 22px;padding:13px;border:none;border-radius:5px;background:#2230b8;color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Save</button>
+        </div>
+      </div>
+
+      <div style="background:#f6f4ee;border:1px solid #ddd8ca;border-radius:10px;padding:18px 20px">
+        <div style="font:700 13px 'Archivo';color:#1b1916;margin-bottom:10px">Rules baked in</div>
+        <ul style="margin:0;padding-left:18px;font:400 12px/1.7 'Archivo';color:#3a362d">
+          <li>Every color is mid-to-deep enough that a <b>white initial stays legible</b> &mdash; no pale yellows or pastels that lose the letter.</li>
+          <li>All muted (editorial, not neon) so they <b>harmonize on cream</b> and with the ultramarine accent.</li>
+          <li>Default = <b>ultramarine</b> #2230b8. New players get a <b>random</b> one so boards look varied out of the box.</li>
+          <li>Dab <b>shape cycles</b> independently of color for extra variety on the board.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const shapes=[
+      '63% 37% 56% 44% / 55% 48% 52% 45%',
+      '48% 52% 38% 62% / 56% 41% 59% 44%',
+      '60% 40% 47% 53% / 42% 56% 44% 58%',
+      '37% 63% 54% 46% / 49% 60% 40% 51%',
+      '55% 45% 62% 38% / 58% 46% 54% 42%',
+      '42% 58% 49% 51% / 63% 37% 60% 40%'
+    ];
+    const fam=(name,hexes)=>({name,swatches:hexes.map((hex,i)=>({hex,shape:shapes[i%shapes.length]}))});
+    const families=[
+      fam('Ultramarine',['#2230b8','#1b2570','#3f4cbe','#5663d4','#7480d4','#9aa3e0']),
+      fam('Teal',       ['#0f5b63','#166b6b','#1f7a8c','#2a9d9d','#3aa6a0','#5cc0b6']),
+      fam('Green',      ['#1f6b45','#2f8f5b','#3a9d4f','#5a8f3a','#6b9e3f','#86ab57']),
+      fam('Ochre',      ['#a7741f','#b5852a','#c9962f','#cf9f3a','#d9a441','#e0b14a']),
+      fam('Terracotta', ['#a13526','#b33d2e','#c14b3a','#cf5b45','#d97150','#e08c6a']),
+      fam('Rose',       ['#a83a5c','#b8466b','#c4577a','#d06b8a','#d98ba3','#e0a0b5']),
+      fam('Violet',     ['#4d3590','#5a3fa0','#6b4fb8','#7d5fc4','#8e6fd0','#a487da']),
+      fam('Ink & stone',['#1b1916','#3a362d','#4a4640','#6b6557','#7d7866','#8a8472'])
+    ];
+    const count=families.reduce((n,f)=>n+f.swatches.length,0);
+    // picker row: one representative per family + a couple extras, second swatch ringed as "selected"
+    const reps=['#2f8f5b','#2230b8','#1f7a8c','#c9962f','#c14b3a','#c4577a','#6b4fb8','#3a362d','#3aa6a0','#d97150','#7d5fc4','#5a8f3a'];
+    const pickerRow=reps.map((hex,i)=>({hex,shape:shapes[i%shapes.length],ring:i===0?'2.5px solid #1b1916':'none'}));
+    const c=document.getElementById('cnt'); if(c) c.textContent=count;
+    return { families, pickerRow, count };
+  }
+}
+</script>
+</body>
+</html>

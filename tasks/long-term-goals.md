@@ -172,3 +172,11 @@ Keep When/Where untouched. All changes are isolated to `score()` + small data ta
 4. **Region-aware scoring:** for works with a historical region, give full WHERE credit anywhere inside it (so shading and scoring agree); modern-country point-in-polygon for national schools, as today. This is arguably more correct for ancient art ("it's Roman" shouldn't require guessing one modern nation).
 
 **Effort:** medium — gen-regions + the name map + region-scoring are the work; dataset + shading are easy. Phase 1: the ~40 biggest cross-border empires/cultures (covers most ancient works). Source: https://github.com/aourednik/historical-basemaps (CC).
+
+## Drill me on ___ (custom practice filter, natural-language)
+- [ ] Let players drill a slice: "15th century", "Renaissance", "Italian art", "Baroque", "Egypt", a medium, a region — any facet or combo. Maps onto the queryable per-work metadata (century from y, movement/culture, region/country, medium). UI: a "Drill me on…" entry that accepts chips OR free text resolved to facets. Serve a practice set biased to that slice; end-of-session shows accuracy on the drilled slice. (Extends the existing Custom-filters / weak-spot-drill items.)
+
+## Account hub ("You" page) — design handoff in tasks/18_account/
+- [ ] Account = the "You" hub (absorbs Stats; Glossary stays its own page, surfaced as a progress card). Sections: identity strip (dab avatar + name + edit) → at-a-glance (streak/points/rank/perfect+masterpiece) → eye-mastery panel (strong/weak by movement & region) with a **"Train your weak spots →"** button into the Training filter builder → side rail (glossary progress, specialist badges, this-week activity) → Settings (two doors: inline + header sheet) + Account management (email, sign out, **delete account**).
+- DECISIONS: render for logged-OUT users from localStorage (don't login-wall it); account-only bits (member-since, rank, badges, account mgmt) layer in when signed in. Avatar → Account directly (drop the "You ▾" dropdown). Stats-share card deferred. "Delete account" is real authed work (delete Supabase user + profiles/scores rows). Build AFTER Training mode exists so the weak-spot button has a destination.
+- Dab colors: tasks/19_dab_colors/ — 48-color palette (8 families × 6) for the avatar picker; new players get a random color/shape; selected swatch = 2.5px var(--ink) outline.
