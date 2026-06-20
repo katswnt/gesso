@@ -999,13 +999,17 @@ function openIdentityModal(after){
         <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
       <div style="display:flex;gap:9px;flex-wrap:wrap">${swatches}</div>
       <button class="btn" id="idsave">Save</button>
+      <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
     </div></div>`;
   const prev=()=>veil.querySelector('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
   const close=()=>{veil.remove();document.removeEventListener('keydown',onEsc);};
   const onEsc=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
+  veil.addEventListener('click',async e=>{ if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>b.style.border='3px solid '+(b.dataset.c===cur.color?'var(--ink)':'transparent'));prev();return;}
-    if(e.target.closest('#idsave')){cur.name=veil.querySelector('#idname').value.trim();saveIdentity(cur);close();if(after)after();} });
+    if(e.target.closest('#idsave')){ cur.name=veil.querySelector('#idname').value.trim();
+      const m=veil.querySelector('#idmsg');
+      if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true}; if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; return; } }catch{} }
+      saveIdentity(cur);close();if(after)after(); } });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
   document.addEventListener('keydown',onEsc);document.body.appendChild(veil);
 }

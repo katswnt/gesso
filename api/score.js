@@ -44,9 +44,19 @@ export default async function handler(req, res) {
   const masterpieces = Math.max(0, Math.min(ROUNDS, parseInt(body.masterpieces, 10) || 0));
 
   try {
+    // name reservation: don't let this device take a name an OTHER account has claimed
+    let useName = name;
+    if (name) {
+      const claimants = await (await rest(`profiles?name=ilike.${encodeURIComponent(name)}&user_id=not.is.null&select=user_id,device_id`)).json();
+      if (Array.isArray(claimants) && claimants.length) {
+        const me = await (await rest(`profiles?device_id=eq.${encodeURIComponent(deviceId)}&select=user_id`)).json();
+        const myUserId = Array.isArray(me) && me[0] ? me[0].user_id : null;
+        if (claimants.some(c => c.user_id && c.user_id !== myUserId)) useName = ''; // reserved → drop it
+      }
+    }
     // upsert display profile (unique on device_id)
     await rest('profiles?on_conflict=device_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ device_id: deviceId, name, color }) });
+      body: JSON.stringify({ device_id: deviceId, name: useName, color }) });
 
     // best-score guard: read existing, only write if this run is higher
     const cur = await (await rest(`scores?device_id=eq.${encodeURIComponent(deviceId)}&date=eq.${date}&tier=eq.${tier}&select=total`)).json();
