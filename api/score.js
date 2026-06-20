@@ -53,8 +53,9 @@ export default async function handler(req, res) {
     const prev = Array.isArray(cur) && cur[0] ? Number(cur[0].total) : null;
     const isBest = prev == null || total > prev;
     if (isBest) {
-      await rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+      const w = await rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({ device_id: deviceId, date, tier, total, perfects, masterpieces, rounds: body.rounds || null, updated_at: new Date().toISOString() }) });
+      if (!w.ok) { const detail = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', status: w.status, detail: detail.slice(0, 200) }); }
     }
 
     // rank = (# scores strictly higher) + 1; count = total entries that day+tier
