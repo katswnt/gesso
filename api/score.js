@@ -3,7 +3,7 @@
 // Vercel as SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY). The project URL is public, hardcoded below.
 // Anonymous — keyed by a client-generated deviceId. Best-score-per-day guarded. Raw guesses stored for
 // later server re-scoring (Phase 4). Abuse controls mirror report.js: origin allowlist, honeypot.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
+import { SUPABASE_URL } from './_supabase.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const ROUNDS = 5, MAX_CAT = 2500, MAX_TOTAL = ROUNDS * (4 + 1) * MAX_CAT;
 

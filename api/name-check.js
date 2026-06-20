@@ -2,7 +2,7 @@
 // GET /api/name-check?name=X&device=Y → { available }. A name is RESERVED only if an ACCOUNT (a profile
 // row with user_id set) has claimed it; names not tied to an account are fair game. Your own account's
 // name is always available to you. Storage: Supabase (server SECRET key).
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
+import { SUPABASE_URL } from './_supabase.js';
 function allowedOrigin(o){ if(!o)return true; try{const h=new URL(o).hostname;return h==='gesso.katswint.com'||h==='localhost'||h.endsWith('.vercel.app');}catch{return false;} }
 
 export default async function handler(req, res) {

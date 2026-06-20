@@ -1,7 +1,7 @@
 // Vercel serverless function: read the daily leaderboard (Accounts+Leaderboards Phase 1).
 // GET /api/leaderboard?date=YYYY-MM-DD&tier=easy[&me=<deviceId>]  → top 50 + caller rank/percentile.
 // Storage: Supabase (Postgres via PostgREST), server-side SECRET key. Read-only. No auth.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
+import { SUPABASE_URL } from './_supabase.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const TOP_N = 50;
 

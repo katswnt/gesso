@@ -1,7 +1,7 @@
 // Vercel serverless function: update a player's leaderboard display name/color immediately (so editing
 // identity reflects on the board without waiting for the next score submit). POST { deviceId, name, color }.
 // Honors the name-reservation rule (a name claimed by another ACCOUNT is dropped). Storage: Supabase SECRET key.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
+import { SUPABASE_URL } from './_supabase.js';
 function allowedOrigin(o){ if(!o)return true; try{const h=new URL(o).hostname;return h==='gesso.katswint.com'||h==='localhost'||h.endsWith('.vercel.app');}catch{return false;} }
 
 export default async function handler(req, res) {

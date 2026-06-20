@@ -4,8 +4,7 @@
 // Storage: Supabase. Server verifies the JWT (proves identity), then uses the SECRET key for reads/writes.
 // Requires a user_state table:
 //   create table if not exists public.user_state (user_id uuid primary key, streak jsonb, updated_at timestamptz default now());
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
-const SUPA_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_';
+import { SUPABASE_URL, SUPA_ANON } from './_supabase.js';
 function allowedOrigin(o){ if(!o)return true; try{const h=new URL(o).hostname;return h==='gesso.katswint.com'||h==='localhost'||h.endsWith('.vercel.app');}catch{return false;} }
 
 // merge two streak objects, taking the better of each (max counts, union of played dates, max per-date score)

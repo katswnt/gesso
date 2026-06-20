@@ -2,8 +2,7 @@
 // POST { deviceId, accessToken }. Verifies the Supabase JWT by calling auth/v1/user, then stamps
 // profiles.user_id for that device_id so the account owns its board identity/history across devices.
 // Storage: Supabase. Server uses the SECRET key for the write; the user's accessToken proves identity.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
-const SUPA_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_';
+import { SUPABASE_URL, SUPA_ANON } from './_supabase.js';
 
 function allowedOrigin(origin) {
   if (!origin) return true;
