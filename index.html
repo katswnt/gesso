@@ -1306,16 +1306,32 @@ const SUPA_ANON="sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_";
 const MANUAL_LINKING=false; // flip to true ONLY when "Allow manual linking" is enabled in Supabase; otherwise the Link buttons just error, so we hide them (same-email auto-linking still works)
 let __sb=null;
 function sb(){ if(__sb)return __sb; if(typeof window.supabase==='undefined'||!window.supabase.createClient)return null;
-  __sb=window.supabase.createClient(SUPA_URL,SUPA_ANON,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}); return __sb; }
+  __sb=window.supabase.createClient(SUPA_URL,SUPA_ANON,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // catches OAuth/magic-link returns + token refresh that resolve after first paint; repaint the auth view on change.
+  try{ __sb.auth.onAuthStateChange((_e,session)=>{ const was=!!authUser; authUser=session?session.user:null;
+    if(was!==!!authUser){ if(authUser){ syncAccount().then(s=>{ if(s)onAuthApplied(s); reRenderForAuth(); }); } else reRenderForAuth(); } }); }catch{}
+  return __sb; }
 let authUser=null;
+// re-render the auth-dependent view when sign-in/out resolves (refreshAuth/OAuth return are async, so the
+// page is often already painted in the signed-out state). Only repaints account/leaderboard/home — never a round.
+function reRenderForAuth(){ try{ const p=location.pathname;
+  if(p==='/account') renderAccount(false);
+  else if(p.startsWith('/leaderboard')||p.startsWith('/register')) renderLeaderboard(lbTier, (lbDate&&lbDate!==todayStr())?lbDate:undefined);
+  else if(p==='/'||p==='') renderStart(undefined,false);
+}catch{} }
 async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}=await c.auth.getSession(); const was=!!authUser; authUser=data&&data.session?data.session.user:null;
-  if(authUser){ const synced=await syncAccount(); if(synced&&!was) onAuthApplied(synced); } return authUser; }catch{ return null; } }
+  if(authUser){ const synced=await syncAccount(); if(synced) onAuthApplied(synced); }
+  if(was!==!!authUser) reRenderForAuth();
+  return authUser; }catch{ return null; } }
 // Phase 2b cross-device sync: bind device→account, merge local identity+streak UP, pull canonical identity
 // + merged streak DOWN (so progress follows you to any device). Falls back to /api/claim if sync fails.
 async function syncAccount(){
   const c=sb(); if(!c||!authUser)return null;
   try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return null;
-    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:loadIdentity().name,color:loadIdentity().color})});
+    // only send the name UP if the user actually chose it — loadIdentity() falls back to a random artist
+    // handle, and sync.js would otherwise promote that auto-name as the account's permanent canonical name.
+    let chosenName=''; try{ chosenName=String((JSON.parse(localStorage.getItem('gesso.identity')||'{}')).name||'').slice(0,16); }catch{}
+    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:chosenName||undefined,color:loadIdentity().color})});
     if(r.ok)return await r.json();
     // fallback: at least bind the device
     await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
@@ -1326,6 +1342,9 @@ function onAuthApplied(s){ try{
   if(s.name||s.color) saveIdentity({name:s.name||loadIdentity().name,color:s.color||loadIdentity().color});
   if(s.streak) saveStreak(s.streak);
 }catch{} }
+// on sign-out, drop the account's local identity/streak/submitted-keys so the next (anon) session on this
+// device gets its own fresh auto-name instead of inheriting the signed-out account's.
+function localSignOutClear(){ try{ localStorage.removeItem('gesso.identity'); localStorage.removeItem('artefactum.streak'); localStorage.removeItem('gesso.sent'); }catch{} }
 // OAuth providers — each must ALSO be enabled in Supabase Dashboard → Authentication → Providers (+ a provider
 // OAuth app). Buttons here work the moment a provider is enabled; magic-link + email/password work out of the box.
 const OAUTH=[['google','Google'],['apple','Apple']];
@@ -1361,7 +1380,7 @@ function openLogin(){
     const ob=e.target.closest('[data-oauth]'); if(ob){ try{ await c.auth.signInWithOAuth({provider:ob.dataset.oauth,options:{redirectTo:location.origin}}); }catch(err){ msg(err.message||'Provider not enabled yet.'); } return; }
     const lb=e.target.closest('[data-link]'); if(lb){ try{ const {error}=await c.auth.linkIdentity({provider:lb.dataset.link,options:{redirectTo:location.origin}}); if(error)msg(error.message); }catch(err){ msg(err.message||'Could not link.'); } return; }
     if(e.target.id==='setpass'){ const p=veil.querySelector('#apass2'); if(!p||!p.value)return msg('Enter a password first.'); try{ const {error}=await c.auth.updateUser({password:p.value}); msg(error?error.message:'Password saved — you can now sign in with email too ✓'); }catch(err){ msg(err.message); } return; }
-    if(e.target.id==='signout'){ await c.auth.signOut(); authUser=null; close(); return; }
+    if(e.target.id==='signout'){ await c.auth.signOut(); authUser=null; localSignOutClear(); close(); reRenderForAuth(); return; }
     const email=()=>veil.querySelector('#aemail')&&veil.querySelector('#aemail').value.trim();
     const pass=()=>veil.querySelector('#apass')&&veil.querySelector('#apass').value;
     if(e.target.id==='magic'){ if(!email())return msg('Enter your email first.'); try{ const {error}=await c.auth.signInWithOtp({email:email(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Check your email for the link ✓'); }catch(err){ msg(err.message); } return; }
@@ -1685,7 +1704,7 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
       <button class="btn2" data-route="home" style="margin-top:18px">&larr; Back to home</button></div>
   </div></div>`;
   { const tw=document.getElementById('trainweak'); if(tw&&w)tw.onclick=()=>startTraining(weakTrain(w)); }
-  { const so=document.getElementById('acsignout'); if(so)so.onclick=async()=>{const c=sb();if(c){await c.auth.signOut();}authUser=null;renderAccount(false);}; }
+  { const so=document.getElementById('acsignout'); if(so)so.onclick=async()=>{const c=sb();if(c){await c.auth.signOut();}authUser=null;localSignOutClear();renderAccount(false);}; }
   { const dl=document.getElementById('acdelete'); if(dl)dl.onclick=()=>confirmDeleteAccount(); }
   // today's best rank across played tiers (async)
   (async()=>{ const today=todayStr(), bd=s.byDay[today]||{}; let best=null;
@@ -1699,7 +1718,7 @@ function confirmDeleteAccount(){
     if(e.target.id==='acdelconfirm'){ const c=sb(); const m=veil.querySelector('#acdelmsg'); m.textContent='Deleting…';
       try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token;
         const r=await fetch('/api/delete-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})});
-        if(r.ok){ await c.auth.signOut(); authUser=null; close(); renderStart(); } else m.textContent='Could not delete — try again.';
+        if(r.ok){ await c.auth.signOut(); authUser=null; localSignOutClear(); close(); renderStart(); } else m.textContent='Could not delete — try again.';
       }catch{ m.textContent='Could not delete — try again.'; } } });
 }
 
