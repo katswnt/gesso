@@ -2195,7 +2195,7 @@ function renderReveal(r){
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
-          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
+          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">${it.artist&&!/^(unknown|anon)/i.test(it.artist)?'None on record':'Anonymous / decorative work'}</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
           ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
         </div>
