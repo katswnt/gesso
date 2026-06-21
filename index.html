@@ -71,10 +71,15 @@ function fill3(ans,picks,fromAll){const at=lastTok(ans), sib=x=>lastTok(x)===at;
 // Build medium distractors around the simplified medium taxonomy. Easy should feel
 // visually separable; hard/impossible intentionally choose same-family lookalikes.
 function mediumChoices(ans){const look=dcfg().look;
-  const same=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
-  const diff=ALL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
+  // Training: 2+ media families pinned → restrict the option pool to only those families (the answer
+  // is one of them, so distractors should be too). 1 pin is handled upstream by dropping the question.
+  const mf=(typeof trainMediaFams==='function')?trainMediaFams():null;
+  const restrict=mf&&mf.size>=2;
+  const POOL_MED=restrict?ALL_MED.filter(m=>m===ans||(MED_FAMILY[m]&&mf.has(MED_FAMILY[m]))):ALL_MED;
+  const same=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
+  const diff=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
   let picks; if(look==='far')picks=pickN(diff,3); else if(look==='near')picks=[...pickN(same,3),...pickN(diff,3)].slice(0,3); else picks=[...pickN(same,1),...pickN(diff,2)];
-  return fill3(ans,picks,ALL_MED);}
+  return fill3(ans,picks,POOL_MED);}
 // Build style/culture choices from the answer's own taxonomy. The important invariant:
 // culture labels compete with cultures, movements with movements, and difficulty
 // controls visual confusion without mixing coarse/fine synonyms in one option set.
@@ -85,7 +90,11 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   const root=s=>styleCountry[s]||cultureKey(s); // a label's geographic root (dominant country)
   const aRoot=root(ans);
   // pool: drop only demonym-synonyms of the answer ("Japan" vs "Japanese")
-  const pool=(isCult?CULTS:MOVS).filter(s=>s===ans||cultureKey(s)!==aKey);
+  let pool=(isCult?CULTS:MOVS).filter(s=>s===ans||cultureKey(s)!==aKey);
+  // Training: 2+ movements pinned → restrict the option pool to the chosen movements (answer included).
+  // 1 pin is handled upstream by dropping the question entirely.
+  const mv=(typeof trainMovements==='function')?trainMovements():null;
+  if(mv&&mv.size>=2) pool=pool.filter(s=>s===ans||mv.has(s));
   const others=pool.filter(s=>s!==ans);
   const sameReg=shuffle(others.filter(s=>styleRegion[s]===it.region));
   const diffReg=shuffle(others.filter(s=>styleRegion[s]&&styleRegion[s]!==it.region));
@@ -1353,6 +1362,44 @@ const MIN_TRAIN=8;
 function centuryOf(y){ return y==null?null:Math.floor((y-(y<=0?1:0))/100); } // 1450→14 (15th c.); -50→-1 (1st c. BCE)
 function centuryLabel(c){ const n=c>=0?c+1:-c; const suf=(n%10==1&&n%100!=11)?'st':(n%10==2&&n%100!=12)?'nd':(n%10==3&&n%100!=13)?'rd':'th'; return `${n}${suf} c.${c<0?' BCE':''}`; }
 function countryNameOf(place){ const c=placeCountry(place); return c?c.n:''; }
+// --- Training "pin" gameplay helpers (only meaningful when TRAIN is set) ---
+// A facet pinned to exactly ONE value is "given" — re-asking it would be trivial, so we drop
+// (don't show, don't score) that question. Pinned to 2+ → keep the question but restrict its
+// answer OPTIONS to the chosen values. 0 → unchanged.
+function trainMediaFams(){ return (TRAIN&&TRAIN.facets&&TRAIN.facets.mediaFamilies)?TRAIN.facets.mediaFamilies:null; }
+function trainMovements(){ return (TRAIN&&TRAIN.facets&&TRAIN.facets.movements)?TRAIN.facets.movements:null; }
+// returns the set of core cats to DROP (given by a single pin) for the current TRAIN run
+function trainGivenCats(){ const drop=new Set(); if(!TRAIN)return drop;
+  const mf=trainMediaFams(); if(mf&&mf.size===1) drop.add('medium');
+  const mv=trainMovements(); if(mv&&mv.size===1) drop.add('style');
+  return drop; }
+// the effective answer categories for a round = the work's cats, minus single-pin "given" cats,
+// then narrowed by the single-axis FOCUS control. Guard: never return zero core questions.
+function activeCatsFor(it){
+  let cats=it.cats.slice();
+  if(TRAIN){ const drop=trainGivenCats(); cats=cats.filter(c=>!drop.has(c));
+    const ax=TRAIN.axis; if(ax){ const keep=cats.filter(c=>c===ax||c==='artist'); if(keep.some(c=>c!=='artist')) cats=keep; } }
+  // never drop EVERYTHING — fall back to the work's own (non-given) cats, else its raw cats
+  const core=cats.filter(c=>c!=='artist');
+  if(!core.length){ const drop=TRAIN?trainGivenCats():new Set(); const fb=it.cats.filter(c=>!drop.has(c));
+    cats=fb.filter(c=>c!=='artist').length?fb:it.cats.slice(); }
+  return cats;
+}
+// Compute a Leaflet-friendly fit for a PLACE-pinned run, or null for the default world view.
+// countries → bounds over their bounding boxes; regions-only → bounds over the chosen works' coords.
+function trainPlaceFit(){
+  if(!TRAIN||!TRAIN.facets)return null;
+  const cos=TRAIN.facets.countries, regs=TRAIN.facets.regions;
+  if(cos&&cos.size){ let mnx=180,mny=90,mxx=-180,mxy=-90,any=false;
+    for(const name of cos){ const c=CO_BYNAME[String(name).toLowerCase()]; if(!c||!c.b)continue; any=true;
+      mnx=Math.min(mnx,c.b[0]); mny=Math.min(mny,c.b[1]); mxx=Math.max(mxx,c.b[2]); mxy=Math.max(mxy,c.b[3]); }
+    if(any) return [[mny,mnx],[mxy,mxx]]; }
+  if(regs&&regs.size){ const w=trainingApply(TRAIN,POOL).filter(p=>regs.has(p.region));
+    if(w.length){ let mnx=180,mny=90,mxx=-180,mxy=-90;
+      for(const p of w){ if(p.lat==null||p.lng==null)continue; mnx=Math.min(mnx,p.lng); mxx=Math.max(mxx,p.lng); mny=Math.min(mny,p.lat); mxy=Math.max(mxy,p.lat); }
+      if(mxx>=mnx) return [[mny,mnx],[mxy,mxx]]; } }
+  return null;
+}
 function trainingApply(T,w){ const f=T.facets;
   if(f.centuries.size) w=w.filter(p=>f.centuries.has(centuryOf(p.y)));
   // Place family = countries OR regions (one logical group); empty-guard keeps it agnostic.
@@ -1896,8 +1943,11 @@ function renderRound(){
   const startYear = TRAIN_SPAN ? Math.round((TRAIN_SPAN.lo+TRAIN_SPAN.hi)/2) : 1700;
   guess={year:startYear, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
+  // activeCats = work's cats minus single-pin "given" facets, then narrowed by FOCUS axis (TRAIN only).
+  const activeCats = activeCatsFor(it);
+  const show = c => activeCats.includes(c);
   let n=1; const fields=[];
-  fields.push({k:'when', html:`
+  if(show('when')) fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('when')}When made</span></div>
     <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px;flex-wrap:wrap"><span class="year" id="yv" style="white-space:nowrap">${fmtYear(startYear)}</span><span class="dragtag">· drag to change</span><span class="eratag" id="era" style="white-space:nowrap">[ EARLY MODERN ]</span></div>
     <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
@@ -1907,27 +1957,28 @@ function renderRound(){
   // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
   const naField=(label,icon,reason)=>({na:true, html:`<div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML(icon)}${label}</span></div>
       <div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
-  if(it.cats.includes('medium')){
+  // explain a category that's been hidden/given/dropped this round (instead of silently omitting it)
+  const drillAxis = TRAIN && TRAIN.axis;
+  const given = TRAIN ? trainGivenCats() : new Set();
+  const naReason=(cat,base)=> drillAxis ? 'Hidden in this drill.' : given.has(cat) ? 'Given for this drill — not asked.' : base;
+  if(!show('when')) fields.push(naField('When made','when',naReason('when','Hidden in this drill.')));
+  if(show('medium')){
     const ch=mediumChoices(it.medSimple);
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('medium')}Medium</span></div>
       <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
-  } else fields.push(naField('Medium','medium','Medium not recorded — not part of this round.'));
-  if(it.cats.includes('style')){
+  } else fields.push(naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')));
+  if(show('style')){
     const ch=styleChoices(it);
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
-  } else fields.push(naField('Movement','style','No movement or school recorded — not part of this round.'));
-  if(it.cats.includes('artist')){
+  } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
+  if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
       <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
-  } else fields.push(naField('Attributed to · bonus','artist','Anonymous — no artist on record for this work.'));
-  // single-axis training drill: hide every field except the drilled axis
-  const drillAxis = TRAIN && TRAIN.axis;
-  if(drillAxis){ const lbls={when:'When made',medium:'Medium',style:'Movement',artist:'Attributed to · bonus'};
-    for(let i=0;i<fields.length;i++){ const f=fields[i]; if(f.k && f.k!==drillAxis) fields[i]=naField(lbls[f.k]||f.k, f.k, 'Hidden in this drill.'); } }
-  const hideMap = drillAxis && drillAxis!=='where';
+  } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
+  const hideMap = !show('where');
   const whereN=n;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
 
@@ -1975,6 +2026,9 @@ function renderRound(){
   if(!hideMap){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
+  // Training PLACE pin: auto-fit the map to the chosen area instead of the world view. Must run after
+  // invalidateSize (container has no size at first paint), exactly like the reveal map's fitBounds.
+  const placeFit = TRAIN ? trainPlaceFit() : null;
   map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
     else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
@@ -1986,7 +2040,8 @@ function renderRound(){
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
-  setTimeout(()=>{if(map)map.invalidateSize();},settings.reduceMotion?0:250);
+  setTimeout(()=>{ if(!map)return; map.invalidateSize();
+    if(placeFit){ try{ map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} } },settings.reduceMotion?0:250);
   }
   document.getElementById('submit').onclick=score;
   // reset scroll AFTER the new round paints + force a reflow — fixes the blank-until-you-scroll glitch
@@ -2051,11 +2106,16 @@ function timeScore(diff){
 }
 function score(){
   const it=game[idx], cells={}, D=dcfg();
+  // The categories actually asked this round (work's cats, minus single-pin "given" facets, minus FOCUS).
+  const ACT=activeCatsFor(it); const asked=c=>ACT.includes(c);
   // when (leniency scales with difficulty; 🎯 bullseye always = within a real decade)
+  if(asked('when')){
   const dy=Math.abs(guess.year-it.y), ts=timeScore(Math.round(dy/D.timeMult)), bull=!!ts.bull;
   cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
     note:bull?(dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+  }
   // where (distance falloff is gentler on easy, steeper on hard)
+  if(asked('where')){
   let dist=null,sp=0,inC=false,inReg=false,inCont=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
   const reg=(window.ARTEFACTUM_REGIONS||{})[it.style];
   if(guess.ll){ dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
@@ -2069,17 +2129,18 @@ function score(){
     sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
     note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
+  }
   // medium: exact beats same-family, and same-family is intentionally a fixed 50%.
   // Because medSimple is computed from the raw catalogue string at index time, stale
   // generated cats cannot make a missing medium scorable.
-  if(it.cats.includes('medium')){let s=0,note="no answer";
+  if(asked('medium')){let s=0,note="no answer";
     if(guess.medium){ if(guess.medium===it.medSimple){s=MAX_CAT;note="exact";}
       else if(MED_FAMILY[guess.medium]&&MED_FAMILY[guess.medium]===MED_FAMILY[it.medSimple]){s=Math.round(MAX_CAT*0.5);note="same family";}
       else note="wrong";}
     cells.medium={pts:s,you:guess.medium||"—",actual:it.medSimple,note};}
   // style/culture: exact is always 2500. Similarity is capped by DIFF.relMov, so a
   // near-miss can be useful feedback but cannot exceed or equal an exact answer.
-  if(it.cats.includes('style')){let s=0,note="no answer";
+  if(asked('style')){let s=0,note="no answer";
     if(guess.style){ if(guess.style===it.style){s=MAX_CAT;note="exact";}
       else { // graded: curated neighbors keep full tier credit; taxonomy-similar movements get partial
         const sim=(RELATED_MOV[it.style]||[]).includes(guess.style)?1:movementSim(guess.style,it.style);
@@ -2087,7 +2148,7 @@ function score(){
     cells.style={pts:s,you:guess.style||"—",actual:it.style,note};}
   // artist (bonus): exact typed credit uses forgiving name matching; partial credit
   // is deliberately conservative and pool-derived (same school > same era > region).
-  if(it.cats.includes('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
+  if(asked('artist')){let s=0,note="no answer";const ga=norm(guess.artist);
     if(ga){ if(artistMatch(guess.artist,it.artist)){s=MAX_CAT;note="matched";}
       else { let f=0; const am=artistMeta[ga];
         if(artistStyle[ga]&&it.style&&artistStyle[ga].has(norm(it.style))){f=Math.max(f,0.45);note="same school";}
@@ -2095,8 +2156,8 @@ function score(){
           if(it.region&&am.regions.has(it.region)&&f<0.25){f=Math.max(f,0.15);note="same region";} }
         if(f>0){ s=Math.round(MAX_CAT*f); } else note="not matched"; } }
     cells.artist={pts:s,bonus:true,you:guess.artist||"—",actual:it.artist,note};}
-  // totals
-  const coreCats=it.cats.filter(c=>c!=='artist');
+  // totals — only the categories actually asked this round count toward the score
+  const coreCats=ACT.filter(c=>c!=='artist');
   const baseMax=coreCats.length*MAX_CAT;
   const core=coreCats.reduce((a,c)=>a+cells[c].pts,0);
   const bonus=cells.artist?cells.artist.pts:0;
@@ -2203,12 +2264,12 @@ function renderReveal(r){
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}${!it.cats.includes('medium')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">not scored — medium not recorded for this work</div></div></div>`:''}
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
-            ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
+            ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
           ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
         </div>
@@ -2283,7 +2344,7 @@ function resultSummary(){
   const base=results.reduce((a,r)=>a+r.coreNet,0), bonus=results.reduce((a,r)=>a+r.bonus,0);
   const bonusMax=results.reduce((a,r)=>a+(r.cells.artist?MAX_CAT:0),0);
   const grand=base+bonus, gmax=results.reduce((a,r)=>a+r.baseMax,0)+bonusMax, totalHints=results.reduce((a,r)=>a+r.hints,0);
-  const lines=results.map(r=>r.it.cats.map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
+  const lines=results.map(r=>r.it.cats.filter(c=>r.cells[c]).map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
   const share=`Gesso ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
   return {grand,gmax,bonus,totalHints,lines,share};
 }
@@ -2309,7 +2370,7 @@ async function renderShareCard(data){
   rs.results.forEach((r,ri)=>{
     const y=y0+ri*rowH;ctx.fillStyle=cssVar('--faint');ctx.fillText(String(ri+1),x0+18,y+74);
     cols.forEach((c,ci)=>{
-      if(!r.it.cats.includes(c))return;
+      if(!r.cells[c])return;
       const cellData=r.cells[c], x=x0+labelW+gap+ci*(cell+gap);
       ctx.fillStyle=cellColor(cellData.pts);roundRect(ctx,x,y,cell,rowH-26,16);ctx.fill();
       const mark=c==='artist'&&cellData.pts===MAX_CAT?'⭐':cellData.pts===MAX_CAT?'🎯':'';
@@ -2430,7 +2491,7 @@ function renderFinal(){
   const cols=["when","where","medium","style","artist"];
   const head=cols.map(c=>`<th>${iconHTML(c)}${catShort(c)}</th>`).join('');
   const rows=results.map(r=>`<tr><td class="rl">${esc(r.it.title)}</td>${cols.map(c=>{
-    if(!r.it.cats.includes(c))return `<td></td>`;
+    if(!r.cells[c])return `<td></td>`;
     const f=r.cells[c].pts/MAX_CAT;return `<td>${swatchBox(f,'msq')}</td>`;}).join('')}</tr>`).join('');
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
