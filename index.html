@@ -136,14 +136,19 @@ function openModal({title,ariaLabel,body,onClose,onKey}){
   return {veil,close,$:s=>veil.querySelector(s)};
 }
 function openSettings(){
-  const {veil,close}=openModal({title:'Settings',body:`<div class="settingsbody">
+  const veil=document.createElement('div');veil.className='settingsveil';veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="settingshead"><span class="ttl">settings</span><button type="button" class="settingsclose" aria-label="Close settings" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="Close" width="28" height="28"></button></div>
+    <div class="settingsbody">
       <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
       <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
       <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in cm or inches</div></div><button type="button" class="unitseg" data-units aria-label="Toggle units">${settings.units==='in'?'inches':'cm'}</button></div>
       <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
-    </div><div class="settingsfoot">Preferences save to this browser.</div>`});
-  veil.addEventListener('click',e=>{if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
+    </div><div class="settingsfoot">Preferences saved to this browser.</div></div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
+  const escClose=e=>{if(e.key==='Escape')close();};
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
     const u=e.target.closest('[data-units]');if(u){settings.units=settings.units==='in'?'cm':'in';u.textContent=settings.units==='in'?'inches':'cm';saveSettings();}});
+  document.addEventListener('keydown',escClose);document.body.appendChild(veil);
 }
 // ---------- "How to play" onboarding ----------
 const HOWTO_STEPS=[
@@ -168,26 +173,49 @@ function howtoIcon(key){
   return `<svg viewBox="0 0 24 24" width="40" height="40">${m[key]||m.welcome}</svg>`;
 }
 function openHowTo(){
-  let i=0,api;
-  const draw=()=>{const st=HOWTO_STEPS[i];
-    api.$('.obdab').innerHTML=howtoIcon(st.key); api.$('.obtitle').textContent=st.title; api.$('.obtext').textContent=st.body;
-    api.$('.obdots').innerHTML=HOWTO_STEPS.map((_,k)=>`<span class="${k===i?'on':''}" data-d="${k}"></span>`).join('');
-    api.$('.obback').style.visibility=i===0?'hidden':'visible';
-    api.$('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';};
-  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){api.close();return;} if(i<0)i=0; draw();};
-  api=openModal({title:'How to play',
-    body:`<div class="obbody"><div class="obillus"><span class="obdab"></span></div><div class="obtitle"></div><div class="obtext"></div></div>
-    <div class="obdots"></div>
-    <div class="obfoot"><button type="button" class="obskip">Skip</button>
-      <div class="obnav"><button type="button" class="obback">Back</button><button type="button" class="obnext">Next</button></div></div>`,
-    onClose:()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{}},
-    onKey:e=>{if(e.key==='ArrowRight'){go(1);return true;}if(e.key==='ArrowLeft'){go(-1);return true;}}});
-  api.veil.addEventListener('click',e=>{
-    if(e.target.closest('.obskip'))return api.close();
+  const HOWTO_IMAGES={
+    welcome:'/assets/guess what you can.png',
+    when:'/assets/when was it made.png',
+    where:'/assets/where in the world.png',
+    choose:'/assets/pick what fits.png',
+    lock:'/assets/lock in and learn.png',
+  };
+  let i=0;
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="How to play">
+    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between"><span>&middot; how to play &middot;</span><button type="button" class="htocloseX" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="Close" width="28" height="28"></button></div>
+    <div class="htocontent"><div class="htotrack"><div class="htopanel">
+      <div class="htoimg"><img class="htoimg-el" src="" alt=""></div>
+      <div class="htobody"><div class="htotitle"></div><div class="htotext"></div></div>
+    </div></div></div>
+    <div class="htopips"></div>
+    <div class="htofoot">
+      <button type="button" class="obskip navbtn">Skip</button>
+      <div class="obnav">
+        <button type="button" class="obback navbtn">Back</button>
+        <button type="button" class="obnext navbtn navbtn--filled">Next</button>
+      </div>
+    </div>
+  </div>`;
+  const $=s=>veil.querySelector(s);
+  const close=()=>{try{localStorage.setItem("gesso.onboarded","1");}catch{};veil.remove();document.removeEventListener('keydown',keyNav);document.body.style.overflow='';};
+  const draw=()=>{
+    const st=HOWTO_STEPS[i];
+    $('.htoimg-el').src=HOWTO_IMAGES[st.key]||'';
+    $('.htotitle').textContent=st.title;
+    $('.htotext').textContent=st.body;
+    $('.htopips').innerHTML=pipsHTML(i,i);
+    $('.obback').style.visibility=i===0?'hidden':'visible';
+    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';
+  };
+  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0; const track=$('.htotrack'),panel=$('.htopanel'); if(!track||!panel){draw();return;} const old=panel.cloneNode(true); draw(); if(d>0){track.insertBefore(old,panel);track.style.cssText='transition:none;transform:translateX(0);width:200%;display:flex';void track.offsetWidth;track.style.cssText='transition:transform 0.4s cubic-bezier(.22,1,.36,1);transform:translateX(-50%);width:200%;display:flex';}else{track.appendChild(old);track.style.cssText='transition:none;transform:translateX(-50%);width:200%;display:flex';void track.offsetWidth;track.style.cssText='transition:transform 0.4s cubic-bezier(.22,1,.36,1);transform:translateX(0);width:200%;display:flex';} setTimeout(()=>{if(old.parentElement)old.remove();track.style.cssText='width:200%;display:flex';},450);};
+  const keyNav=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
+  veil.addEventListener('click',e=>{
+    if(e.target===veil||e.target.closest('.obskip')||e.target.closest('.htocloseX'))return close();
     if(e.target.closest('.obnext'))return go(1);
     if(e.target.closest('.obback'))return go(-1);
-    const dot=e.target.closest('[data-d]'); if(dot){i=+dot.dataset.d;draw();}});
-  draw();
+  });
+  document.addEventListener('keydown',keyNav); document.body.style.overflow='hidden'; document.body.appendChild(veil); draw();
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
@@ -926,8 +954,8 @@ const DIAMOND_SVG=`<svg width="10" height="10" viewBox="0 0 12 12" fill="none" x
 const PALETTE_SVG=`<svg width="47" height="40" viewBox="0 0 47 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.6045 0C37.4654 0.000215233 46.4443 8.61997 46.4443 19.4697C46.4443 30.5186 37.6647 39.6599 26.6045 39.6602C13.5568 39.6602 0.000109138 32.5039 0 19.4697C0 6.60382 13.7253 0 26.6045 0ZM21.917 5.74023C19.3233 5.7403 17.2209 7.84288 17.2207 10.4365C17.2207 13.0304 19.3232 15.1337 21.917 15.1338C24.5109 15.1338 26.6133 13.0304 26.6133 10.4365C26.6131 7.84284 24.5107 5.74023 21.917 5.74023Z" fill="#292929"/><circle cx="10.6973" cy="12.2637" r="1.82646" fill="#EC7777"/><circle cx="7.56669" cy="19.5694" r="1.82646" fill="#EFD867"/><circle cx="10.6973" cy="26.875" r="1.82646" fill="#8AC98B"/><circle cx="18.0032" cy="31.0494" r="1.82646" fill="#D99AF2"/></svg>`;
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="training">training</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="acctav" type="button" data-route="account" title="Your account" aria-label="Your account" style="flex:0 0 auto;border:0;background:none;cursor:pointer;padding:0;margin-left:2px">${dabAvatar(loadIdentity().name,loadIdentity().color,30)}</button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier||'training'}</span>`:''}</div></div></div>`;
+  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo">${PALETTE_SVG}</span></span></div>
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="navbtn" data-route="archive">archive</button><button class="navbtn" data-route="stats">stats</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="menubtn" type="button" data-menu aria-label="Menu"><img src="/assets/menu.svg" alt="" width="20" height="20"></button></nav></div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude Code and Codex</div>`;
 
@@ -1454,11 +1482,18 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 // mobile nav menu (the header nav collapses into this hamburger ≤680px)
 function openMenu(){
   const items=[['How to play','howto'],['Account','account'],['Leaderboard','register'],['Training','training'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
-  const {veil,close}=openModal({title:'Menu',body:`<div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div>`});
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="settingspanel menupanel" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="settingshead"><span class="ttl">menu</span><button type="button" class="settingsclose" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="Close" width="28" height="28"></button></div>
+    <div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div></div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
   veil.addEventListener('click',e=>{
+    if(e.target===veil||e.target.closest('.settingsclose'))return close();
     const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
-    if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else if(k==='login')openLogin(); else route(k);
+    if(k==='howto')openHowTo(); else if(k==='settings')openSettings(); else route(k);
   });
+  document.addEventListener('keydown',esc);document.body.appendChild(veil);
 }
 // Logo → home. Match the whole .brand (and any .wordmark), not just the tiny wordmark text, so clicking
 // anywhere on the logo reliably navigates home from every screen.
