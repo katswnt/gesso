@@ -2096,7 +2096,16 @@ function renderRound(){
 function setupAutocomplete(){
   const inp=document.getElementById('artist'),list=document.getElementById('aclist');let active=-1,items=[];
   const close=()=>{list.style.display='none';active=-1;};
-  const render=q=>{const ql=deaccent(q).trim();items=ql?ARTIST_POOL.filter(a=>deaccent(a).includes(ql)).slice(0,8):[];
+  const render=q=>{const ql=deaccent(q).trim();
+    if(!ql){items=[];close();return;}
+    // rank matches so typing a name's letter surfaces names that START with it (surname or given), not
+    // every alphabetically-early name that happens to contain it mid-word. 0=full prefix, 1=word prefix, 2=substring.
+    const scored=[];
+    for(const a of ARTIST_POOL){ const da=deaccent(a); const idx=da.indexOf(ql); if(idx<0)continue;
+      const score=da.startsWith(ql)?0:(da.split(/\s+/).some(w=>w.startsWith(ql))?1:2);
+      scored.push({a,score,idx}); }
+    scored.sort((x,y)=>x.score-y.score||x.idx-y.idx||x.a.localeCompare(y.a));
+    items=scored.slice(0,8).map(s=>s.a);
     if(!items.length){close();return;}
     list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${esc(a)}</div>`).join('');
     list.style.display='block';
