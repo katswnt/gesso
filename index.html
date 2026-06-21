@@ -138,10 +138,11 @@ function openModal({title,ariaLabel,body,onClose,onKey}){
   veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="${esc(ariaLabel||title||'')}">
     <div class="settingshead"><span class="ttl">${title||''}</span><button type="button" class="settingsclose" aria-label="Close">${ICONS.close}</button></div>
     ${body||''}</div>`;
-  const close=()=>{veil.remove();document.removeEventListener('keydown',key);if(onClose)onClose();};
+  const close=()=>{veil.remove();document.removeEventListener('keydown',key);if(!document.querySelector('.settingsveil'))document.documentElement.classList.remove('modalopen');if(onClose)onClose();};
   const key=e=>{if(onKey&&onKey(e,{close})===true)return;if(e.key==='Escape')close();};
   veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();});
   document.addEventListener('keydown',key);document.body.appendChild(veil);
+  document.documentElement.classList.add('modalopen'); // lock page scroll so the sheet doesn't jitter / bleed the page behind
   return {veil,close,$:s=>veil.querySelector(s)};
 }
 function openSettings(){
@@ -1018,7 +1019,7 @@ function renderCollections(){
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-1929, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the fairest cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
     <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">

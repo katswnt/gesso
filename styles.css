@@ -247,8 +247,9 @@
   .menulist button{appearance:none;border:0;border-bottom:1px solid var(--study-border);background:transparent;text-align:left;font:700 13px 'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);padding:16px 22px;cursor:pointer}
   .menulist button:last-child{border-bottom:0}
   .menulist button:active{background:var(--study-bg)}
-  .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.32);display:flex;align-items:center;justify-content:center;padding:18px}
-  .settingspanel{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 14px 36px rgba(35,32,26,.16)}
+  html.modalopen{overflow:hidden} html.modalopen body{overflow:hidden}
+  .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px;overscroll-behavior:contain}
+  .settingspanel{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-lg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;box-shadow:0 14px 36px rgba(35,32,26,.16)}
   .settingshead{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .settingshead .ttl{font:700 16px 'Archivo',sans-serif}
   .settingsclose{appearance:none;border:0;background:transparent;color:var(--muted);font:700 22px/1 'Archivo',sans-serif;cursor:pointer}
@@ -420,9 +421,9 @@
     .glosswrap{padding:16px}.glosshead{padding:13px 16px}.glossgrid{grid-template-columns:1fr 1fr;padding:12px 14px 16px;gap:9px}.glosscard{padding:12px;min-height:104px}.glosscard .nm{font-size:12px}.movehero{padding:18px 16px;gap:14px}.movename{font-size:20px}.canonical img{max-height:220px}
     .retwrap{padding:16px}.retcap{padding:13px 16px}.streakbody{padding:22px 18px}.streakdab{width:96px;height:96px}.streakdab span{font-size:42px}.retactions{flex-direction:column}
     .statsgrid{grid-template-columns:1fr 1fr;padding:14px}.mastergrid{grid-template-columns:1fr;padding:2px 14px 14px}.archivegrid{gap:5px;padding:0 14px 14px}.dowgrid{gap:5px;padding:14px 14px 6px}.daycell{height:38px}.daycell .scorechip{font-size:0;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:2px}.legend{padding:12px 14px 16px}
-    .settingsveil{align-items:flex-end;padding:0;background:rgba(27,25,22,.38)}
-    /* pin the sheet directly to the visible viewport bottom — robust on iOS Safari (no float gap) */
-    .settingspanel{position:fixed;left:0;right:0;bottom:0;z-index:4600;width:100%;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;max-height:90dvh;overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom) + 26px);box-shadow:0 60px 0 0 var(--surface)}
+    .settingsveil{align-items:flex-end;padding:0;background:rgba(27,25,22,.5)}
+    /* pin the sheet to the visible viewport bottom; page scroll is locked (html.modalopen) so no bleed/jitter */
+    .settingspanel{position:fixed;left:0;right:0;bottom:0;z-index:4600;width:100%;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;max-height:88dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(env(safe-area-inset-bottom) + 26px);box-shadow:0 -12px 32px rgba(35,32,26,.22)}
     .settingspanel::before{content:"";display:block;width:38px;height:4px;border-radius:var(--r-xs);background:var(--line-card);margin:12px auto 0}
     .settingshead{padding-top:12px}
   }
