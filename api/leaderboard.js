@@ -33,37 +33,40 @@ export default async function handler(req, res) {
   if (!TIERS.includes(tier)) return res.status(400).json({ error: 'bad tier' });
 
   try {
-    // a page of scores (desc), offset for pagination
-    const top = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces`)).json();
+    // Fire the three INDEPENDENT queries together (was sequential → ~3 round-trips of latency): the score page,
+    // the exact total count, and (if a caller is given) the caller's own score. Dependent follow-ups parallelize too.
+    const [topRes, cntRes, mineRes] = await Promise.all([
+      rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces`),
+      rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } }),
+      me ? rest(`scores?device_id=eq.${encodeURIComponent(me)}&date=eq.${date}&tier=eq.${tier}&select=total`) : Promise.resolve(null),
+    ]);
+    const top = await topRes.json();
+    const count = parseInt((cntRes.headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
     const ids = (top || []).map(r => r.device_id);
-    // names/colours for those device ids
-    let profByDev = {};
-    if (ids.length) {
-      const list = ids.map(encodeURIComponent).join(',');
-      const profs = await (await rest(`profiles?device_id=in.(${list})&select=device_id,name,color`)).json();
-      for (const p of (profs || [])) profByDev[p.device_id] = p;
-    }
+
+    // profiles for the page + the caller's "higher than me" count run together (both depend on the queries above)
+    const profsP = ids.length
+      ? rest(`profiles?device_id=in.(${ids.map(encodeURIComponent).join(',')})&select=device_id,name,color`).then(r => r.json())
+      : Promise.resolve([]);
+    let myTotal = null;
+    if (mineRes) { const mine = await mineRes.json(); if (Array.isArray(mine) && mine[0]) myTotal = Number(mine[0].total); }
+    const higherP = myTotal != null
+      ? rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${myTotal}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } })
+          .then(hr => parseInt((hr.headers.get('content-range') || '*/0').split('/')[1], 10) || 0)
+      : Promise.resolve(null);
+    const [profs, higher] = await Promise.all([profsP, higherP]);
+
+    const profByDev = {};
+    for (const p of (profs || [])) profByDev[p.device_id] = p;
     const rows = (top || []).map((r, i) => {
       const p = profByDev[r.device_id] || {};
       return { rank: offset + i + 1, name: p.name || fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
         score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, isYou: !!me && r.device_id === me };
     });
 
-    // total count
-    const cntRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
-    const count = parseInt((cntRes.headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
-
     let you = null;
-    if (me) {
-      const mine = await (await rest(`scores?device_id=eq.${encodeURIComponent(me)}&date=eq.${date}&tier=eq.${tier}&select=total`)).json();
-      if (Array.isArray(mine) && mine[0]) {
-        const myTotal = Number(mine[0].total);
-        const hr = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${myTotal}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
-        const higher = parseInt((hr.headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
-        const rank = higher + 1;
-        you = { rank, score: myTotal, count, percentile: count ? Math.round(((count - rank + 1) / count) * 100) : null };
-      }
-    }
+    if (myTotal != null) { const rank = (higher || 0) + 1;
+      you = { rank, score: myTotal, count, percentile: count ? Math.round(((count - rank + 1) / count) * 100) : null }; }
     return res.status(200).json({ date, tier, count, offset, rows, you });
   } catch (e) {
     return res.status(500).json({ error: 'read failed' });

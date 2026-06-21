@@ -1724,7 +1724,10 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   { const dl=document.getElementById('acdelete'); if(dl)dl.onclick=()=>confirmDeleteAccount(); }
   // today's best rank across played tiers (async)
   (async()=>{ const today=todayStr(), bd=s.byDay[today]||{}; let best=null;
-    for(const t of TIERS){ if(bd[t.key]==null)continue; try{ const r=await fetch(`/api/leaderboard?date=${today}&tier=${t.key}&me=${encodeURIComponent(deviceId())}`); const d=r.ok?await r.json():null; if(d&&d.you&&(best==null||d.you.rank<best))best=d.you.rank; }catch{} }
+    // fetch each played tier's rank CONCURRENTLY (was sequential — up to 4 round-trips back to back)
+    const played=TIERS.filter(t=>bd[t.key]!=null);
+    const ds=await Promise.all(played.map(async t=>{ try{ const r=await fetch(`/api/leaderboard?date=${today}&tier=${t.key}&me=${encodeURIComponent(deviceId())}`); return r.ok?await r.json():null; }catch{ return null; } }));
+    for(const d of ds){ if(d&&d.you&&(best==null||d.you.rank<best))best=d.you.rank; }
     const el=document.getElementById('acrank'); if(el)el.textContent=best?'#'+best:'—'; })();
 }
 function confirmDeleteAccount(){
