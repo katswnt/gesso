@@ -1130,6 +1130,9 @@ function defaultColor(){let h=0,d=deviceId();for(let i=0;i<d.length;i++)h=(h*31+
 // Dab family (handoff 08): DABS[0] reserved for logo; rows/podium cycle DABS[(i+1)%len] with a per-index rotation so a column never looks stamped.
 const DABS=['63% 37% 56% 44% / 55% 48% 52% 45%','58% 42% 52% 48% / 58% 52% 48% 42%','42% 58% 47% 53% / 62% 44% 56% 38%','55% 45% 35% 65% / 45% 60% 40% 55%','48% 52% 60% 40% / 50% 56% 44% 50%','70% 30% 52% 48% / 40% 62% 38% 60%','50% 50% 46% 54% / 60% 60% 40% 40%'];
 const ID_SHAPE='50% 50% 50% 12%'; // the gesso "dab" identity blob — single source for avatar + swatches
+// Home Training-card teaser: two random example facets per page render, hinting the breadth you can drill.
+const TRAIN_TEASERS=['Baroque','Impressionism','Renaissance','Surrealism','Ukiyo-e','Gothic','Rococo','Pop art','Italy','France','Japan','Mughal painting','Ancient Egypt','Ming China','Benin','Mexico','17th century','19th century','Edo period','Oil paint','Woodblock print','Fresco','Bronze','Tempera'];
+function trainTeaserChips(){const a=TRAIN_TEASERS.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,2).map(t=>`<button class="pchip inf" data-route="training">${t}</button>`).join('');}
 function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
 function dabRot(i){return ((i|0)*37)%13-6;}
 function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
@@ -1623,21 +1626,23 @@ function renderStart(dateStr,push=true){
       <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
       <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
     </div>
+    ${replay?'':`<div class="zlabel"><b>Today&rsquo;s daily</b><i>&middot; pick a difficulty</i></div>`}
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
-    ${replay?'':`<div class="practwo">
+    ${replay?'':`<div class="zlabel"><b>Practice</b><i>&middot; doesn&rsquo;t affect your streak</i></div>
+    <div class="practwo">
       <div class="practice">
         <div class="pinf">${ICONS.infinity}</div>
-        <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
+        <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in.</p></div>
         <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
       </div>
       <div class="practice">
         <div class="pinf">${ICONS.target}</div>
-        <div class="ptxt"><div class="h">Training</div><p>Drill exactly what you want — a movement, a place, a century, or your weak spots. Won&rsquo;t affect your streak or stats.</p></div>
-        <div class="pchips"><button class="pchip inf" data-route="training">Drill me on… &rarr;</button></div>
+        <div class="ptxt"><div class="h">Training</div><p>Drill exactly what you want — a movement, a place, a century, or your weak spots.</p></div>
+        <div class="pchips">${trainTeaserChips()}<button class="pchip inf setup" data-route="training">Set up training &rarr;</button></div>
       </div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
