@@ -1,35 +1,64 @@
-# Gesso — queue (current)
+# Gesso — work queue (data quality + fixes), in priority order
 
-_Most of the original build plan, all museum pulls, the fame system, design touches, archive, Collections page, and the early-modern pull are DONE. This is what's actually open._
+_Pool is now 4,583 works (promoted the 1,490-work canon expansion). Notes 4,543/4,583. Hotspots for new works running via Codex (scripts/staged-hotspots.mjs, resumable, data/incoming/staged-hotspots/). Vercel deploys are caught up. Everything below is the agreed plan — execute top-down._
 
-## ✅ DONE — "How to play" onboarding (design handoff 7)
-Ported from `design_handoff 7`: `openHowTo()` 5-step overlay (reuses settings veil/panel + mobile sheet, dab dots, ←/→/Esc), auto-shows on first visit (`gesso.onboarded`), reopen from header `?` dab + start-screen "New here?" + Settings → Replay the tutorial. Inline cues: slider "drag to change" tag + one-time nudge, map label "TAP TO PIN · PINCH / +− TO ZOOM" + tap-ripple, lock-in partial-credit info chip. Also handoff 8 dab-family variety on pips/loader/dots.
+## 🚨 0. URGENT: purge non-artwork entities (countries/places) from the pool
+Wikidata items that are COUNTRIES/CULTURES (e.g. "Uganda", "Ethiopia") got pulled as "works" — they show map/flag images, have culture "Culture of <X>", no real artist/medium, and **huge fame** (country sitelinks) so they land in **Easy**. From the wd-africa / wd-culture (and maybe wd-museums) pulls.
+- **Fix:** remove pool works that are entities, not artworks. Detect: title is a country/place name; OR style/culture matches `/^culture of /i` or is a bare country; OR no artist+no medium+map-like; cross-check Wikidata instance-of (P31) = country/state/ethnic group/geographic region if doing it thoroughly.
+- After purge: regenerate fame.js + re-freeze daily.
+- Build this into the audit tool (flag P31=country/place) so it can't recur.
 
-## A. Enrichment pipeline — in flight (Codex on reset), HOLD re-freeze until done
-**Richer teaching schema now governs all of this — see `tasks/teaching-notes-guidelines.md`.** Each work ships `why` + `cues[4]` + `hotspots` + NEW `guide[]` ("Ask the guide" accordion: 5 required Q&A slots incl. story/context, plus as many extra accurate ones as the work supports).
-- [ ] **Update `gen-teach-shard` prompt** to the richer schema (adds `guide[]`; keeps `why`+`cues`). Bake in the §accuracy guardrails (never invent a named figure; obscure works lean on visible-description + medium/technique).
-- [ ] Teach-notes (full schema) for the ~700 newest works (modern + Wikidata-museum + African) — Codex `gen-teach-shard`.
-- [ ] **Back-fill `guide[]` for all 2,738 existing works** (Kat: backfill for sure). Order: famous tiers first, then long tail.
-- [ ] Hotspots for the new works — resume `scripts/hotspot-codex.mjs` (stopped ~1,236/2,735 on token limit; resumable).
-- [ ] **Dimensions enrichment**: add a size field to every work (Wikidata P2048/P2049; Met/AIC/Cleveland/Harvard/V&A `dimensions` by `src`) → `data/dimensions.js` overlay; reveal-only line "Oil on canvas · 73 × 92 cm".
-- [ ] THEN: final fame re-score over the full 3,260 pool → regenerate `fame.js` → **re-freeze daily** (`freeze-daily.mjs`).
+## ✅ 1. DONE — Audit tool + data clean pass (commit 3b42457)
+- `scripts/audit-data.mjs` built (permanent, read-only → data/incoming/audit/*.json).
+- Normalized 13 historical-polity place labels → modern country+centroid; purged 2 stray country-entities (South Africa, Eritrea); structural fame-collision guard (anon + high fame + short bare-noun title) zeroed 61 (Strigil/Garden Carpet/Opium Pipe class). fame.js + daily re-frozen. fameCollision & entities now 0 in re-audit.
+- ✅ **P937 pass DONE** (`scripts/geo-p937.mjs`): applied 28 Wikidata-verified single-country holding-museum fixes (Constable/Gainsborough italy→UK, Flemish Primitives netherlands→Belgium, Renoir/Cleopatra, Rossetti). Excluded 3 bad-source cases. 54 ambiguous multi-country cases (Rubens/van Dyck Prado works) → data/incoming/geo-p937-review.json for a careful manual pass. Original note below kept for context.
+- **DEFERRED (needs Wikidata P937):** 153 artist-origin flags are mostly LEGIT (Van Gogh painted Starry Night in France; Whistler in UK; Benin mask correctly Nigeria). A few are real holding-museum contamination ("Pink and Blue"/Renoir → Brazil = São Paulo museum). Left flagged in data/incoming/audit/artistOrigin.json for a targeted location-of-creation (P937) pass — blanket birth-country re-geocode would break more than it fixes.
+- 1c (alias/typo artist matching) still TODO.
 
-## A2. Reveal UI ports (design handoffs — depend on enrichment above)
-- [ ] **"Look closer" annotated reveal** (design handoff 9): loupe overlay + numbered markers driven by per-work `cues[4]` + `hotspots {n,x,y}`. NOTE the data-model reconciliation (handoff assumed movement-level 3 cues + `{x,y,zoom}`; reality is per-work 4 cues + `{n,x,y}` — derive zoom from x/y). Button on the revealed painting; hide if no hotspots.
-- [ ] **"Ask the guide" accordion** (brief: `tasks/guide-accordion-design-brief.md`): renders `guide[]` as a collapse-by-default, one-open-at-a-time accordion below Look closer. **Awaiting Claude Design `.dc.html`.**
+## ✅ 2. DONE — point-in-country geo (commit fb97bb2)
+data/countries.js (NE 110m, 177 countries, 159KB static). Full credit iff pin in/within 25km of work's country, else graceful distance decay (never hard-zero for close-but-cross-border, per Kat: borders are modern). Verified Beijing≠Japan, Amsterdam≠Belgium, Guatemala labelled right.
 
-## B. Bug backlog
-- [x] #5 Geo-reward radius keyed off `radiusFor` · #13 deterministic per-day distractor shuffle · #15 culture vs movement label — all shipped (`c483110`).
-- [ ] Hint-not-counted: needs a concrete repro (a hint clearly used but points not subtracted) — may just be the intended no-op-50/50-is-free behavior.
+## (orig) 1. Audit tool + data clean pass
+**1a. `scripts/audit-data.mjs`** (permanent, deterministic — already prototyped, it works): flags
+  - artist-origin mismatch (place ≠ where the artist worked) — caught Goya→"Italy (Rome)", Gauguin/Sargent/Copley mislocated;
+  - fame collisions (anon/generic-title works with implausibly high fame — "Madurodam" 451, "Iznik dish", "Spandrel");
+  - non-artwork entities (#0);
+  - **image problems**: dead URLs (HEAD-check → "Image unavailable" / #3), red-flag filenames (watermark/verso/detail/diagram/map), shared images across works. (Scan found these aren't widespread: 8 filename-suspicious mostly false-positive, 1 shared-image pair — so the Men's-Bath class of *wrong P18 under an innocuous name* needs an OPTIONAL vision spot-check, token cost.)
+  - duplicates, lowercase/messy fields, missing place/region/medium, cats-vs-fields consistency.
+**1b. Work-data clean pass:**
+  - **Re-geocode by ARTIST nationality first** (artist is a stronger origin signal than holding-museum place) — fixes Goya→Spain, El Greco→Spain, raw-polity strings ("French Third Republic", "Kingdom of Great Britain", "Papal States" leftovers). For full coverage do a one-time Wikidata pass: fetch artist P27 / work P937, flag/fix place mismatches.
+  - **Expand fame concept-collision guard** (zero "Madurodam"/"Iznik dish"-type anon works) so they leave Easy.
+  - medium + dimensions backfill: already done.
+**1c. User-input matching pass:** accents ✅ done (deaccent). Add alias/partial matching — "Leonardo"/"da Vinci" → "Leonardo da Vinci", surname-only, light typo tolerance. Medium already collapses to clean families (simplifyMedium).
 
-## C. Data quality
-- [ ] Legacy place-vs-origin geocode mismatches (works tagged to holding museum, not origin) — consolidate now prefers origin; spot-fix any remaining in the merged pool.
-- [ ] General teach-note quality spot-check (restyled + modern already regenerated; sample the rest).
+## 2. Geo → point-in-country (fixes #5 Japan/China, #13 Belgium/Netherlands, #9 Guatemala/Mexico)
+Radius-from-the-work's-point is fundamentally leaky for adjacent/small countries. Replace with real country containment:
+- Bundle a compact country dataset (simplified polygons OR bbox+centroid table, ~50–100 KB) + a `countryOf(lat,lng)` fn.
+- Score: **full credit iff pin's country === work's country**, else decay by distance. Keep a small border grace so a pin just over a line still scores high.
+- One change fixes all three geo bugs + the Guatemala "Mexico" mislabel.
 
-## D. Optional future pulls (capped + famous-first via Wikidata collections)
-- [ ] Deeper Smithsonian NMAfA pull — the real lever for more sub-Saharan African art (Wikidata is thin there).
-- [ ] See `long-term-goals.md`: Minneapolis Institute of Art, Walters, Getty/Yale.
+## ✅ 3. DONE (commit a0ed177) — dimensions pre-lock + mastery fix
+SIZE row on play screen; masteryLine merges style+region & tie-breaks by volume (no longer freezes on early 2/2).
 
-## Done / dropped
-- Dropped: user "gallery" feature (no accounts; screenshots suffice) and "more from this artist" reveal strip.
-- Done: 368→3,260 pool across 10 open collections; Wikidata-sitelink fame + tiers; pinned daily + clean-path routing; archive tier-dots + day pagination; design touches (incl. gold PERFECT); Collections page; early-modern PD wave; African pulls (country + culture); designer README + CSS extraction.
+## ✅ 4. DONE (commit 85bdb97) — Learning mode
+Renamed Practice→Learning; free unlimited hints; pre-lock look-closer marker toggle; notes still post-lock.
+
+## (orig) 3. Quick pair — dimensions pre-lock + mastery tracker
+- **Dimensions pre-lock (T2):** show "≈ 73 × 92 cm" near the image on the PLAY screen (dimensions aren't a guess category → safe, gives scale). Dim survived promotion (3,184/4,583 have it).
+- **Mastery (#8):** "Your mastery" stuck at "Sharp on Regionalism (2/2)…" — trace whether saveMastery persists / masteryLine reads current data (likely stale-display or limited-keys). Quick.
+
+## 4. Learning mode (T1)
+Rename infinite → "Learning mode": **unlimited hints**; a **hotspot toggle** visible pre-lock; notes still gated to post-lock.
+
+## 🔄 5. IN PROGRESS — lower-urgency data
+- ✅ #12 duplicates: session-level guard (no same-title work twice per game) + removed 1 true shared-image dup (commit pending push). Did NOT title-dedup the pool — sets like 23 Shabti of Nauny are real distinct objects.
+- 🔄 #3 broken images: `scripts/check-images.mjs` running in background → data/incoming/broken-images.json. Process when done (try alt Commons file, else drop + refreeze).
+- ⏳ ~181 place-less staged works: recover via artist-nationality geocode — folds into the deferred Wikidata P937 pass (see #1).
+
+## (orig) 5. Lower-urgency data
+- **#12 duplicates** (same work, different photo): conservative dedup — anonymous works on `title+place+year` (NOT generic-title alone, to avoid merging distinct "Figure"/"Untitled" objects); flag rest.
+- **#3 broken images** ("Image unavailable", some with hotspots): URL-validation pass (HEAD) → for 404s try the alternate Commons file or flag/drop.
+- The ~181 staged works that were too place-less to promote (recoverable via artist-nationality geocode in 1b).
+
+## Done this session (for reference)
+Cats recompute (medium/artist guessability) · accent-insensitive artist · movement family-dedup · period labels not quizzed · El Greco→Spain · capitalized styles · **fame re-scored consistently (Easy cutoff 69.3→411)** · promotion 3,260→4,583 · geo radii tightened · simplifyMedium · bottom-sheet/practice/FAQ/slider mobile fixes · Collections live-compute + 12 museums · report endpoint (needs Upstash env) · Men's Bath image fix.

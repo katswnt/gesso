@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 const [INPUT, K, N, OUT] = [process.argv[2], +process.argv[3], +process.argv[4], process.argv[5]];
 if(!INPUT||!OUT||!Number.isInteger(K)||!Number.isInteger(N)){ console.error("args: <input.json> <shardIdx> <numShards> <out.json>"); process.exit(1); }
 const SCHEMA = "scripts/teach-schema.json";
-const BATCH = 8; // richer schema (why + cues + variable-length guide) → smaller batches keep responses reliable
+const BATCH = 4; // richer schema (why + cues + variable-length guide) is a big payload → small batches avoid Codex timeouts
 const fy = y => y<0 ? (-y)+" BCE" : y+" CE";
 
 const all = JSON.parse(readFileSync(INPUT,"utf8"));
@@ -36,7 +36,8 @@ For EACH work below return an item with EXACTLY these fields:
 ACCURACY GUARDRAILS (critical — these ship with no human review):
 - The metadata below is ground truth. Beyond it, assert ONLY facts that are genuinely well-known for the work/artist.
 - NEVER invent a named figure or person. If you cannot confidently identify who is depicted, DESCRIBE WHAT IS VISIBLE ("a seated woman in red holding a book") instead of guessing a name. Wrong names are the worst failure.
-- For obscure works with thin data, lean on what is always safe: medium reasoning, visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
+- If the medium below shows "—" (unknown), DO NOT name or guess a specific material (no "marble", "oil", "bronze", etc.) anywhere in the note — describe the visible surface/form instead ("a worked, matte surface"), and make the medium question about visible technique rather than asserting a material. (This prevents the classic error of guessing "marble" for what is actually terracotta.)
+- For obscure works with thin data, lean on what is always safe: medium reasoning (only if the medium is known), visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
 - No hedging filler ("it is believed perhaps"). State it plainly because it's solid, or describe the visible instead.
 No markdown, no prose outside the JSON.
 Works:
@@ -44,7 +45,7 @@ ${list}`;
   let js=null;
   try{
     const so = execFileSync("codex",["exec","-s","read-only","--ephemeral","--skip-git-repo-check","--color","never","--output-schema",SCHEMA,"-"],
-      {input:prompt,encoding:"utf8",maxBuffer:1e8,timeout:300000});
+      {input:prompt,encoding:"utf8",maxBuffer:1e8,timeout:600000});
     const a=so.indexOf("{"), b=so.lastIndexOf("}");
     if(a>=0&&b>a){ try{ js=JSON.parse(so.slice(a,b+1)); }catch{} }
   }catch(e){ console.error(`shard ${K} batch @${i} codex error`, String(e).slice(0,120)); }

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @keyframes dabFloat { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-4px) rotate(3deg)} }
+</style>
+</helmet>
+<div style="--bg:#e9e7e0;--surface:#f6f4ee;--surface-strong:#edeae0;--ink:#1b1916;--muted:#8a8472;--faint:#a39d8c;--line:#e3ded1;--line-card:#ddd8ca;--accent:#2230b8;--track:#dcd6c6;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e9e7e0;width:max-content;font-family:'Archivo',sans-serif;color:#1b1916">
+
+  <div style="font:700 13px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#2230b8;margin-bottom:6px">Gesso &middot; home entry points</div>
+  <div style="font:400 14px/1.5 'Archivo';color:#6b6557;max-width:560px;margin-bottom:36px">Where Training lives, and a slimmer header. Desktop + mobile.</div>
+
+  <!-- ROW 1: HEADER -->
+  <div style="font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a8472;margin-bottom:14px">1 &middot; Header — now vs. proposed</div>
+  <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:48px">
+
+    <!-- current header -->
+    <div style="flex:none;width:760px">
+      <div style="font:500 12px 'IBM Plex Mono',monospace;color:#c14b3a;margin-bottom:8px">NOW — 5 links + 3 icons, no hierarchy</div>
+      <div style="background:#f6f4ee;border:2px solid #ddd8ca;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="border-bottom:1.5px solid #1b1916;background:#edeae0;padding:15px 22px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:baseline;gap:12px">
+            <span style="font:700 19px 'Archivo';color:#2230b8">gess<span style="display:inline-block;width:11px;height:11px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%;margin-left:1px"></span></span>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:#8a8472">NO. 2026·0620</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;flex-wrap:wrap">
+            <span style="width:24px;height:24px;border-radius:50%;border:1.5px solid #8a8472;color:#8a8472;display:inline-flex;align-items:center;justify-content:center;font:700 12px 'IBM Plex Mono'">?</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">glossary</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">collections</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">streak</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">archive</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">stats</span>
+            <span style="width:18px;height:18px;color:#8a8472">⚙</span>
+            <span style="display:inline-flex;flex-direction:column;gap:3px;width:18px"><span style="height:2px;background:#1b1916"></span><span style="height:2px;background:#1b1916"></span><span style="height:2px;background:#1b1916"></span></span>
+          </div>
+        </div>
+        <div style="padding:18px 22px;color:#a39d8c;font:500 11px 'IBM Plex Mono'">…and a 6th (Training) has nowhere clean to go.</div>
+      </div>
+    </div>
+
+    <!-- proposed header -->
+    <div style="flex:none;width:760px">
+      <div style="font:500 12px 'IBM Plex Mono',monospace;color:#2f8f5b;margin-bottom:8px">PROPOSED — 3 explore links + a "You" menu</div>
+      <div style="background:#f6f4ee;border:2px solid #ddd8ca;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="border-bottom:1.5px solid #1b1916;background:#edeae0;padding:15px 22px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:baseline;gap:12px">
+            <span style="font:700 19px 'Archivo';color:#2230b8">gess<span style="display:inline-block;width:11px;height:11px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%;margin-left:1px"></span></span>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:#8a8472">NO. 2026·0620</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916;border-bottom:2px solid #2230b8;padding-bottom:2px">training</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">glossary</span>
+            <span style="font:600 11px 'IBM Plex Mono';color:#1b1916">collections</span>
+            <span style="width:1px;height:18px;background:#ddd8ca"></span>
+            <span style="width:24px;height:24px;border-radius:50%;border:1.5px solid #8a8472;color:#8a8472;display:inline-flex;align-items:center;justify-content:center;font:700 12px 'IBM Plex Mono'">?</span>
+            <!-- avatar + You menu -->
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="width:28px;height:28px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font:700 12px 'Archivo'">K</span>
+              <span style="font:600 10px 'IBM Plex Mono';color:#6b6557">▾</span>
+            </span>
+          </div>
+        </div>
+        <!-- open You menu -->
+        <div style="position:relative">
+          <div style="position:absolute;right:22px;top:10px;width:188px;background:#f6f4ee;border:1.5px solid #1b1916;border-radius:6px;box-shadow:0 12px 30px rgba(27,25,22,.22);overflow:hidden">
+            <div style="padding:11px 15px;border-bottom:1px solid #e3ded1;display:flex;align-items:center;justify-content:space-between"><span style="font:600 11px 'IBM Plex Mono';color:#1b1916">Streak</span><span style="font:700 11px 'IBM Plex Mono';color:#2230b8">14 🔥</span></div>
+            <div style="padding:11px 15px;border-bottom:1px solid #e3ded1;font:600 11px 'IBM Plex Mono';color:#1b1916">Archive</div>
+            <div style="padding:11px 15px;border-bottom:1px solid #e3ded1;font:600 11px 'IBM Plex Mono';color:#1b1916">Stats</div>
+            <div style="padding:11px 15px;display:flex;align-items:center;gap:8px;font:600 11px 'IBM Plex Mono';color:#1b1916"><span style="font-size:13px">⚙</span> Settings</div>
+          </div>
+          <div style="padding:18px 22px;color:#a39d8c;font:500 11px 'IBM Plex Mono'">Your-progress items tuck under the avatar. Settings joins them — gear leaves the top row.</div>
+        </div>
+      </div>
+      <div style="font:400 12px/1.5 'Archivo';color:#6b6557;margin-top:10px">Inline row goes 5→3 and gains <b style="color:#2230b8">Training</b>; <b>Streak / Archive / Stats / Settings</b> live in the avatar menu.</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: PRACTICE ZONE -->
+  <div style="font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a8472;margin-bottom:14px">2 &middot; Start screen — the "Practice" zone (sits below the daily tiers)</div>
+  <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:24px">
+
+    <!-- desktop practice -->
+    <div style="flex:none;width:760px">
+      <div style="font:500 12px 'IBM Plex Mono',monospace;color:#8a8472;margin-bottom:8px">DESKTOP — two siblings, off the clock</div>
+      <div style="background:#f6f4ee;border:2px solid #ddd8ca;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:30px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2230b8">Practice</span>
+          <span style="flex:1;height:1px;background:#e3ded1"></span>
+          <span style="font:500 10px 'IBM Plex Mono';color:#a39d8c">won't affect your streak or stats</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+          <!-- learning -->
+          <div style="border:1.5px solid #ddd8ca;border-radius:10px;background:#fdfcf9;padding:20px 20px 18px;display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font:700 22px 'Archivo';color:#2230b8">∞</span>
+              <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#a39d8c">free hints</span>
+            </div>
+            <div style="font:700 16px 'Archivo';color:#1b1916">Learning mode</div>
+            <div style="font:400 13px/1.5 'Archivo';color:#6b6557;flex:1">Endless works at a tier you pick. Free unlimited hints, and you can reveal look-closer markers before locking in.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:6px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Easy</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:6px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Medium</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:6px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Hard</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:6px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Impossible</span>
+            </div>
+          </div>
+          <!-- training -->
+          <div style="border:1.5px solid #2230b8;border-radius:10px;background:#eceffb;padding:20px 20px 18px;display:flex;flex-direction:column;gap:9px;position:relative">
+            <div style="position:absolute;top:-9px;right:16px;background:#2230b8;color:#fff;font:700 8px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:3px">New</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="#2230b8" stroke="none"/></svg>
+              <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#2230b8">you choose</span>
+            </div>
+            <div style="font:700 16px 'Archivo';color:#1b1916">Training</div>
+            <div style="font:400 13px/1.5 'Archivo';color:#3a362d;flex:1">Drill exactly what you want to get better at — pick movements, places &amp; eras, and we'll keep serving works that match.</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+              <div style="display:flex;gap:5px;flex-wrap:wrap">
+                <span style="background:#2230b8;color:#fff;border-radius:4px;padding:6px 10px;font:500 11px 'IBM Plex Mono'">Baroque</span>
+                <span style="background:#2230b8;color:#fff;border-radius:4px;padding:6px 10px;font:500 11px 'IBM Plex Mono'">Italy</span>
+                <span style="background:#fff;border:1px solid #d3d8ef;color:#2230b8;border-radius:4px;padding:6px 10px;font:500 11px 'IBM Plex Mono'">+ add</span>
+              </div>
+              <span style="font:700 18px 'Archivo';color:#2230b8;display:inline-flex;align-items:center;gap:4px">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="font:400 12px/1.5 'Archivo';color:#6b6557;margin-top:10px">Daily tier cards stay up top and win the first glance; this pair sits beneath them, lighter. Training opens the filter builder.</div>
+    </div>
+
+    <!-- mobile practice -->
+    <div style="flex:none;width:390px">
+      <div style="font:500 12px 'IBM Plex Mono',monospace;color:#8a8472;margin-bottom:8px">MOBILE — cards stack</div>
+      <div style="background:#f6f4ee;border:2px solid #ddd8ca;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <!-- mobile header -->
+        <div style="border-bottom:1.5px solid #1b1916;background:#edeae0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font:700 17px 'Archivo';color:#2230b8">gess<span style="display:inline-block;width:10px;height:10px;background:#2230b8;border-radius:63% 37% 56% 44%/55% 48% 52% 45%;margin-left:1px"></span></span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid #8a8472;color:#8a8472;display:inline-flex;align-items:center;justify-content:center;font:700 11px 'IBM Plex Mono'">?</span>
+            <span style="display:inline-flex;flex-direction:column;gap:3px;width:18px"><span style="height:2px;background:#1b1916"></span><span style="height:2px;background:#1b1916"></span><span style="height:2px;background:#1b1916"></span></span>
+          </div>
+        </div>
+        <div style="padding:20px 18px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2230b8">Practice</span>
+            <span style="flex:1;height:1px;background:#e3ded1"></span>
+          </div>
+          <!-- learning -->
+          <div style="border:1.5px solid #ddd8ca;border-radius:10px;background:#fdfcf9;padding:16px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font:700 18px 'Archivo';color:#2230b8">∞</span><span style="font:700 15px 'Archivo';color:#1b1916">Learning mode</span></div>
+            <div style="font:400 12px/1.5 'Archivo';color:#6b6557">Endless works, free hints, reveal markers early.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px">
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:7px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Easy</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:7px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Medium</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:7px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Hard</span>
+              <span style="border:1px solid #ddd8ca;background:#fff;border-radius:4px;padding:7px 11px;font:500 11px 'IBM Plex Mono';color:#1b1916">Impossible</span>
+            </div>
+          </div>
+          <!-- training -->
+          <div style="border:1.5px solid #2230b8;border-radius:10px;background:#eceffb;padding:16px;position:relative">
+            <div style="position:absolute;top:-9px;right:14px;background:#2230b8;color:#fff;font:700 8px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:3px">New</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="#2230b8" stroke="none"/></svg>
+              <span style="font:700 15px 'Archivo';color:#1b1916">Training</span>
+            </div>
+            <div style="font:400 12px/1.5 'Archivo';color:#3a362d">Drill the movements, places &amp; eras you choose.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;align-items:center">
+              <span style="background:#2230b8;color:#fff;border-radius:4px;padding:7px 10px;font:500 11px 'IBM Plex Mono'">Baroque</span>
+              <span style="background:#2230b8;color:#fff;border-radius:4px;padding:7px 10px;font:500 11px 'IBM Plex Mono'">Italy</span>
+              <span style="background:#fff;border:1px solid #d3d8ef;color:#2230b8;border-radius:4px;padding:7px 10px;font:500 11px 'IBM Plex Mono'">+ add</span>
+            </div>
+            <button style="margin-top:14px;width:100%;padding:13px;border:none;border-radius:5px;background:#2230b8;color:#fff;font:700 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;cursor:pointer">Set up training →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

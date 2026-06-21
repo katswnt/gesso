@@ -4,8 +4,10 @@
 //   optional: node scripts/gen-teach.mjs <shardIdx> <numShards>   (to split across parallel runs)
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { readGlobal } from "./lib/static-module.mjs";
 
-const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
+// robust load (writeAssignment writes "window.X=[...]" without spaces; a naive string-replace breaks on it)
+const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const SCHEMA = "scripts/teach-schema.json";
 const OUT = "data/teach-works.js";
 const BATCH = 8; // richer schema (why + cues + variable-length guide) → smaller batches keep responses reliable
@@ -17,7 +19,10 @@ try { const t=readFileSync(OUT,"utf8"); out = JSON.parse(t.slice(t.indexOf("{",t
 const fy = y => y<0 ? (-y)+" BCE" : y+" CE";
 // done = has the FULL richer schema (why + cues + guide). Entries with only why+cues get back-filled.
 const done = id => out[id] && Array.isArray(out[id].guide) && out[id].guide.length>=5;
-let work = pool.filter(p=>!done(p.id));
+// generate easy→medium→hard: order missing-notes works by recognizability (fame.js overlay, else pool fame)
+let FAME={}; try{ const f=readFileSync("data/fame.js","utf8"); FAME=JSON.parse(f.slice(f.indexOf("{"), f.lastIndexOf("}")+1)); }catch{}
+const fameOf = p => (FAME[p.id]!=null ? FAME[p.id] : (p.fame||0));
+let work = pool.filter(p=>!done(p.id)).sort((a,b)=>fameOf(b)-fameOf(a));
 if(sharded) work = work.filter((_,i)=> i%N===K);
 const todo = work;
 const missingGuide = pool.filter(p=>out[p.id] && !done(p.id)).length;
@@ -43,7 +48,8 @@ For EACH work below return an item with EXACTLY these fields:
 ACCURACY GUARDRAILS (critical — these ship with no human review):
 - The metadata below is ground truth. Beyond it, assert ONLY facts that are genuinely well-known for the work/artist.
 - NEVER invent a named figure or person. If you cannot confidently identify who is depicted, DESCRIBE WHAT IS VISIBLE ("a seated woman in red holding a book") instead of guessing a name. Wrong names are the worst failure.
-- For obscure works with thin data, lean on what is always safe: medium reasoning, visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
+- If the medium below shows "—" (unknown), DO NOT name or guess a specific material (no "marble", "oil", "bronze", etc.) anywhere in the note — describe the visible surface/form instead ("a worked, matte surface"), and make the medium question about visible technique rather than asserting a material. (This prevents the classic error of guessing "marble" for what is actually terracotta.)
+- For obscure works with thin data, lean on what is always safe: medium reasoning (only if the medium is known), visible-subject description, technique, and general regional/period context. Skip specific claims you can't support; drop optional questions rather than speculate.
 - No hedging filler ("it is believed perhaps"). State it plainly because it's solid, or describe the visible instead.
 No markdown, no prose outside the JSON.
 Works:
