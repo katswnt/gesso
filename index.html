@@ -1052,16 +1052,17 @@ function renderMovement(name){
   const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
   const count=met?+met.count||0:0, metLine=met&&met.firstSeen?` &middot; <span style="color:var(--full)">met ${esc(met.firstSeen)}</span>`:'';
   const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div class="mono" style="font-size:12px;color:var(--muted)">No eye cues available yet.</div>`;
-  const cap=work?`${work.artist||'Unknown'} &middot; ${work.title} &middot; ${fmtYear(work.y)}`:'No canonical work available';
+  const cap=work?`${work.artist||'Unknown'} · ${work.title} · ${fmtYear(work.y)}`:'No canonical work available';
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
     <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">${(typeof CULTS!=='undefined'&&CULTS.includes(name))?'Culture':'Movement'}</span></div>
     <div class="movehero">${emblemHTML(meta.palette,30,false)}<div><div class="movename">${esc(name)}</div><div class="movesub">${esc(meta.dates)} &middot; ${esc(meta.region)}${metLine}</div></div></div>
     <div style="padding:20px 24px 8px"><div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}</div>
     <div style="padding:18px 24px 24px"><div class="kick" style="color:var(--muted);margin-bottom:11px">Canonical example</div>
       <div class="canonical">${work?`<img class="art" src="${esc(work.img)}" alt="${esc(work.title)}" onerror="this.style.display='none'">`:''}<div class="cap">${esc(cap)}</div></div>
-      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="mono" style="font-size:11px;color:var(--muted)">You've met <strong style="color:var(--ink)">${count}</strong> works in this school</span><span class="mono" style="font-size:11px;color:var(--accent);font-weight:600">See them &rarr;</span></div>
+      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="mono" style="font-size:11px;color:var(--muted)">You've met <strong style="color:var(--ink)">${count}</strong> works in this school</span><button type="button" id="seeschool" class="mono" style="font-size:11px;color:var(--accent);font-weight:600;background:none;border:0;cursor:pointer;padding:0">Practise this school &rarr;</button></div>
     </div>
   </div>${ATTRIB}</div></div>`;
+  { const ss=document.getElementById('seeschool'); if(ss)ss.onclick=()=>startTraining({facets:{centuries:new Set(),countries:new Set(),regions:new Set(),movements:new Set([name]),mediaFamilies:new Set(),artists:new Set()},axis:null,label:name}); }
 }
 
 // ---------- game state ----------
