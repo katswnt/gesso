@@ -352,7 +352,7 @@ function simplifyMedium(s){const raw=String(s||"").trim(); if(!raw||raw==="—")
   if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
   if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
   if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
-  if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|\bstone\b/.test(t))return "Stone";
+  if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|magnesite|\btuff\b|\bstone\b/.test(t))return "Stone";
   if(/lacquer|wood|panel|\boak\b|\bpine\b|walnut|bamboo|sugi|sycamore|sycomore|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut|living tree/.test(t))return "Wood";
   if(/\bpaper\b|parchment|cardboard/.test(t))return "Ink";
   return tidyFallback(raw); }
@@ -673,7 +673,14 @@ const MOVEMENTS={
   "Dian kingdom":{dates:"c. 400 BCE–100 CE",region:"China",palette:["#3a4a44","#6f6a5b","#a98244","#e8ddc3"]},
   "Nage":{dates:"c. 1700–1950",region:"Indonesia (Flores)",palette:["#7a3e24","#d8b46a","#1b1916","#e8ddc3"]},
   "Swabia":{dates:"c. 1450–1600",region:"Germany",palette:["#2b2118","#8f2f24","#c9a24b","#d8c3a5"]},
-  "Native North America":{dates:"c. 1700–1950",region:"North America (Indigenous)",palette:["#7a3e24","#c98a3a","#5f7d55","#e8ddc3"]}
+  "Native North America":{dates:"c. 1700–1950",region:"North America (Indigenous)",palette:["#7a3e24","#c98a3a","#5f7d55","#e8ddc3"]},
+  "American portrait miniature":{dates:"c. 1750–1850",region:"United States",palette:["#1f2a35","#8b3f2f","#d8b46a","#e7e2d6"]},
+  "Ancient Near Eastern":{dates:"c. 3500–330 BCE",region:"Near East / Mesopotamia",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
+  "Iranian Chalcolithic":{dates:"c. 5000–3000 BCE",region:"Iran",palette:["#8f6a3a","#c9a24b","#6f6a5b","#e8ddc3"]},
+  "Eastern Nahua":{dates:"c. 1200–1521",region:"Mexico",palette:["#2f6f5f","#8f4a24","#c0392b","#2b2118"]},
+  "Ewe people":{dates:"c. 1800–1950",region:"Ghana / Togo",palette:["#7a3e24","#d2a44f","#1b1916","#e8ddc3"]},
+  "Dyula people":{dates:"c. 1850–1950",region:"Ivory Coast / Mali",palette:["#7a3e24","#d2a44f","#1b1916","#e8ddc3"]},
+  "Mbembe people":{dates:"c. 1700–1900",region:"Nigeria",palette:["#7a3e24","#d2a44f","#2f6f5f","#e8ddc3"]}
 };
 // ---- movement similarity (graded partial credit for near-miss movements) ----
 // movementSim(a,b) returns a 0..1 taxonomy similarity only. score() then multiplies

@@ -34,9 +34,9 @@ const CONTINENT = {
   // South America
   brazil:"South America",bolivia:"South America",chile:"South America",colombia:"South America",ecuador:"South America",peru:"South America",argentina:"South America",venezuela:"South America",uruguay:"South America",
   // Asia (incl. Near East / Mesopotamia / Anatolia)
-  afghanistan:"Asia",cambodia:"Asia",china:"Asia",india:"Asia",indonesia:"Asia",iran:"Asia",iraq:"Asia",japan:"Asia",korea:"Asia","south korea":"Asia",nepal:"Asia",pakistan:"Asia","sri lanka":"Asia",sumer:"Asia",syria:"Asia",thailand:"Asia",vietnam:"Asia",turkey:"Asia",
+  afghanistan:"Asia",cambodia:"Asia",china:"Asia",india:"Asia",indonesia:"Asia",iran:"Asia",iraq:"Asia",japan:"Asia",korea:"Asia","south korea":"Asia",nepal:"Asia",pakistan:"Asia","saudi arabia":"Asia","sri lanka":"Asia",sumer:"Asia",syria:"Asia",thailand:"Asia",vietnam:"Asia",turkey:"Asia",
   // Africa
-  cameroon:"Africa","central africa":"Africa","dr congo":"Africa","democratic republic of the congo":"Africa","east africa":"Africa",egypt:"Africa",ethiopia:"Africa",gabon:"Africa",ghana:"Africa",guinea:"Africa","ivory coast":"Africa",mali:"Africa",morocco:"Africa",nigeria:"Africa","sierra leone":"Africa","south africa":"Africa",sudan:"Africa",tunisia:"Africa",uganda:"Africa",
+  angola:"Africa",cameroon:"Africa","central africa":"Africa","dr congo":"Africa","democratic republic of the congo":"Africa","east africa":"Africa",egypt:"Africa",ethiopia:"Africa",gabon:"Africa",ghana:"Africa",guinea:"Africa","ivory coast":"Africa",kenya:"Africa",mali:"Africa",morocco:"Africa",nigeria:"Africa","sierra leone":"Africa","south africa":"Africa",sudan:"Africa",tanzania:"Africa",tunisia:"Africa",uganda:"Africa",
   // Oceania
   australia:"Oceania","french polynesia":"Oceania","papua new guinea":"Oceania",polynesia:"Oceania",vanuatu:"Oceania","new zealand":"Oceania",
 };
