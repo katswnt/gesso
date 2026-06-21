@@ -1996,16 +1996,19 @@ function score(){
   cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
     note:bull?(dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   // where (distance falloff is gentler on easy, steeper on hard)
-  let dist=null,sp=0,inC=false,inReg=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
+  let dist=null,sp=0,inC=false,inReg=false,inCont=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
   const reg=(window.ARTEFACTUM_REGIONS||{})[it.style];
   if(guess.ll){ dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
     // full credit inside EITHER the historical culture/empire region OR the modern country
     inReg = reg ? ptInRegion(guess.ll.lat,guess.ll.lng,reg) : false;
     inC = inReg || (wc ? nearCountry(guess.ll.lat,guess.ll.lng,wc) : (dist<=rad));
-    // outside both still scores by distance (borders are modern; close-by is not zero)
-    sp = inC ? MAX_CAT : Math.round(MAX_CAT*Math.exp(-(Math.max(0,dist-rad))/D.distK));}
+    // right cultural REGION (continent) earns a solid partial even if the country/borders are off — many
+    // cultures (Kongo, etc.) span or predate modern borders. Never score below the plain distance falloff.
+    inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region;
+    const distPts=Math.round(MAX_CAT*Math.exp(-(Math.max(0,dist-rad))/D.distK));
+    sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
-    note:dist==null?"no pin dropped":inReg?"right region":inC?"right country":`${Math.round(dist)} km off`};
+    note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
   // medium: exact beats same-family, and same-family is intentionally a fixed 50%.
   // Because medSimple is computed from the raw catalogue string at index time, stale
   // generated cats cannot make a missing medium scorable.
