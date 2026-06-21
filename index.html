@@ -1361,7 +1361,9 @@ function openLogin(){
     const pass=()=>veil.querySelector('#apass')&&veil.querySelector('#apass').value;
     if(e.target.id==='magic'){ if(!email())return msg('Enter your email first.'); try{ const {error}=await c.auth.signInWithOtp({email:email(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Check your email for the link ✓'); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
-    if(e.target.id==='signup'){ try{ const {error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Account created — check your email to confirm ✓'); }catch(err){ msg(err.message); } return; }
+    if(e.target.id==='signup'){ try{ const {data,error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); if(error)return msg(error.message);
+      if(data&&data.session){ await refreshAuth(); msg('Account created — you’re signed in ✓'); setTimeout(close,500); } // confirm-email OFF → immediate session
+      else { msg('Account created — check your email to confirm ✓'); } }catch(err){ msg(err.message); } return; }
   });
 }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
