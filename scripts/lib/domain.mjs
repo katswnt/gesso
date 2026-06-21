@@ -42,6 +42,7 @@ export function normalizeArtist(name){
 
 // --- style + copyright cleaners (shared by promote-shortlist.mjs and check-pool.mjs, single source of truth) ---
 export const STYLE_MERGE = {
+  "Sumerian art":"Sumerian","Sumer":"Sumerian",
   "Hudson River school":"Hudson River School","Neoclassical":"Neoclassicism","Safavid Iran":"Safavid",
   "Naïve":"Naïve art","Edo people":"Edo peoples","Benin (Edo) art":"Edo peoples","Pre-Raphaelite Brotherhood":"Pre-Raphaelite",
   // adjective / variant forms of movements that already exist in MOVEMENTS — collapse, don't add anew

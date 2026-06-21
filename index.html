@@ -558,7 +558,6 @@ const MOVEMENTS={
   "Luba":{dates:"c. 1700–1900",region:"DR Congo",palette:["#2b2118","#7a3e24","#d2a44f","#e8ddc3"]},
   "Kongo":{dates:"c. 1400–1900",region:"Central Africa",palette:["#2b2118","#7a3e24","#d2a44f","#e8ddc3"]},
   "Himalayan peoples":{dates:"c. 1000–1900",region:"Himalaya",palette:["#7a1f1f","#d79b32","#1f3a5f","#e8ddc3"]},
-  "Sumerian art":{dates:"c. 4500–1900 BCE",region:"Mesopotamia / Iraq",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Achaemenid":{dates:"550–330 BCE",region:"Iran / Persia",palette:["#7a1f1f","#1f3a5f","#d79b32","#e8ddc3"]},
   "Classicism":{dates:"c. 1600–1840",region:"Europe",palette:["#2b2620","#6b4e2e","#c9a24b","#e0d2af"]},
   "Korea, Joseon dynasty":{dates:"1392–1897",region:"Korea",palette:["#1f3a5f","#7a1f1f","#d8b46a","#eceae2"]},
@@ -620,7 +619,6 @@ const MOVEMENTS={
   "Tairona":{dates:"c. 900–1600",region:"Colombia",palette:["#8f4a24","#c98a3a","#d4af37","#2b2118"]},
   "Muisca":{dates:"c. 600–1600",region:"Colombia",palette:["#8f4a24","#c98a3a","#d4af37","#2b2118"]},
   "Calima (Yotoco)":{dates:"c. 1–700",region:"Colombia",palette:["#8f4a24","#c98a3a","#d4af37","#2b2118"]},
-  "Sumer":{dates:"c. 4500–1900 BCE",region:"Mesopotamia / Iraq",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Sumerian":{dates:"c. 4500–1900 BCE",region:"Mesopotamia / Iraq",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Akkadian":{dates:"c. 2334–2154 BCE",region:"Mesopotamia / Iraq",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Neo-Sumerian":{dates:"c. 2112–2004 BCE",region:"Mesopotamia / Iraq",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
@@ -1641,10 +1639,10 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   const movAcc=sliceList(m.byStyle), nail=movAcc.slice(0,3), whiff=movAcc.slice(-3).reverse().filter(x=>!nail.includes(x));
   const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:10px;padding:13px"><div style="font:800 24px Archivo">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:760px;margin:0 auto">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap">
       ${dabAvatar(id.name,id.color,64)}
-      <div style="flex:1;min-width:0"><div style="font:800 26px Archivo">${esc(id.name||'You')}</div>
-        <div class="mono" style="font-size:12px;color:var(--muted)">${authUser?esc(authUser.email||'signed in'):'playing on this device'}${daysPlayed?` &middot; ${daysPlayed} day${daysPlayed===1?'':'s'} played`:''}</div></div>
+      <div style="flex:1 1 180px;min-width:0"><div style="font:800 26px Archivo;overflow-wrap:anywhere">${esc(id.name||'You')}</div>
+        <div class="mono" style="font-size:12px;color:var(--muted);overflow-wrap:anywhere">${authUser?esc(authUser.email||'signed in'):'playing on this device'}${daysPlayed?` &middot; ${daysPlayed} day${daysPlayed===1?'':'s'} played`:''}</div></div>
       <button class="btn2" data-editid style="flex:0 0 auto">Edit profile</button></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
       ${tile(s.current,'Day streak',s.longest?`longest ${s.longest}`:'')}
