@@ -7,11 +7,37 @@
 // whitespace — e.g. "Katsushika Hokusai 葛飾北斎" → "Katsushika Hokusai". Leaves Latin diacritics
 // (ō/é/ʿ) intact and never merges genuinely different names (no hyphen/case guessing).
 const CJK_RE = /[぀-ヿ㐀-䶿一-鿿豈-﫿　]/;
+// Same-person variants that differ only by diacritics, trivial spacing/punctuation, an appended
+// "(alt name)", or an English-vs-translit form \u2014 collapsed to the canonical (most-complete, correctly-
+// accented) spelling so one painter never appears under two names. ONLY genuine same-person dupes belong
+// here; attribution qualifiers ("Studio of X", "Imitator of X", "Formerly attributed to X") and the
+// anonymous "<culture> artist"/"<name> Painter" conventions are deliberately LEFT distinct. Keyed on the
+// post-CJK-strip Latin form.
+export const ARTIST_MERGE = {
+  "Auguste Renoir":"Pierre-Auguste Renoir",
+  "Edouard Manet":"\u00c9douard Manet",
+  "Paul Cezanne":"Paul C\u00e9zanne",
+  "Edouard Vuillard":"\u00c9douard Vuillard","Edouard Jean Vuillard":"\u00c9douard Vuillard",
+  "Michelangelo Buonarroti":"Michelangelo",
+  "Joaqu\u00edn Sorolla y Bastida":"Joaqu\u00edn Sorolla",
+  "Bada Shanren (Zhu Da)":"Bada Shanren",
+  "Honami K\u014detsu":"Hon'ami K\u014detsu",
+  "Willard Metcalf":"Willard Leroy Metcalf",
+  "Jean Fr\u00e9d\u00e9ric Bazille":"Fr\u00e9d\u00e9ric Bazille",
+  "Jean-Baptiste-Camille Corot":"Jean-Baptiste Camille Corot",
+  "Jean Sim\u00e9on Chardin":"Jean-Baptiste-Sim\u00e9on Chardin",
+  "Joseph Mallord William Turner":"J. M. W. Turner",
+  "Rembrandt van Rijn":"Rembrandt",
+  "Habiballah Savaji":"Habiballah of Sava",
+  "Mir Mossavvir":"Mir Musavvir",
+};
+
 export function normalizeArtist(name){
   let s = String(name||"")
     .replace(/[\u3000\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+/g, "")  // strip ALL CJK (trailing names AND "(attrib)" marks)
     .replace(/\(\s*\)/g, "");                       // drop empty parens left behind, e.g. "Wu Daozi (X)" -> "Wu Daozi"
-  return s.replace(/\s+/g, " ").trim();
+  s = s.replace(/\s+/g, " ").trim();
+  return ARTIST_MERGE[s] || s;
 }
 
 // --- style + copyright cleaners (shared by promote-shortlist.mjs and check-pool.mjs, single source of truth) ---
@@ -48,6 +74,8 @@ export const STYLE_MERGE = {
   "Bonwire":"Akan (Asante)","Grassfields region":"Bamileke people","Sarmato-Gothic":"Visigothic",
   "Bangladesh or India (Bengal)":"India","Vietnam or Southern Cambodia":"Vietnam","Vietnam (Champa)":"Vietnam",
   "Central or northeastern Thailand":"Thailand","Uzbek and Mughal":"Mughal painting","Native American":"Native North America",
+  // batch 4: a bare place-string used as a vase-painting "style" → the broad culture it belongs to
+  "East Greek, Clazomenian":"Ancient Greece",
 };
 // style strings that are really a nationality / country / region, not a movement-or-culture → dropped.
 export const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa(,.*)?|democratic republic.*|sierra leone|holy roman empire|netherlandish|contemporary art|french|italians?|indian|persian|iranian|turkish|japanese|nepalese|syrian|colombian|peruvian|thai|buddhists|muslims|middle easterners|southeast asians|brass|polychrome|monochrome \(asia\)|kingdom of prussia|kingdom of portugal|czech republic|wales|free imperial city of strasbourg)$/i;
@@ -87,6 +115,10 @@ export function simplifyMedium(s){
     return fallback ? fallback.charAt(0).toUpperCase() + fallback.slice(1) : "";
   };
   const t = " " + raw.toLowerCase() + " ";
+  // technique-only strings name a process, not a material — drop them so they're never a guess option or
+  // scored (e.g. "Carving"). A material that happens to mention carving ("carved ivory") still falls
+  // through to its material rule below; this only fires when carving/casting/etc is ALL there is.
+  if(/^\s*(carv(ing|ed)|cast(ing)?|moulded|molded|modell?ed|incised|engraved|sculpted|relief|repouss[ée]|technique)\s*$/.test(t.trim()))return "";
   if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return "Mixed media";
   if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
   if(/water-?colou?r|gouache/.test(t))return "Watercolor";

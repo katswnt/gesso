@@ -50,6 +50,13 @@ for(const p of pool){
   if(p.place){ const c=continentOf(p.place); if(!c) add(warn,"place-unmapped-continent",p,`"${p.place}"`); else if(p.region!==c) add(hard,"region-mismatch",p,`${p.place} → region "${p.region}" should be "${c}"`); }
 }
 
+// ARTIST DEDUP gate: two distinct spellings that collapse to the same key (diacritic-strip + lowercase +
+// whitespace-collapse) are almost always the same person under two names (the "Edouard/Édouard Manet"
+// class). WARN so a new harvest's variant surfaces for an ARTIST_MERGE entry before it recurs.
+{ const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+  const byKey={}; for(const p of pool){ if(p.artist) (byKey[norm(p.artist)]=byKey[norm(p.artist)]||new Set()).add(p.artist); }
+  for(const set of Object.values(byKey)) if(set.size>1) warn.push(`[artist-near-dup] ${[...set].join(" | ")}`); }
+
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };

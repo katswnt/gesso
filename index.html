@@ -364,6 +364,7 @@ const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Water
 function simplifyMedium(s){const raw=String(s||"").trim(); if(!raw||raw==="—")return "";
   const tidyFallback=value=>{const cleaned=value.replace(/\s+/g," ").trim(); const firstToken=cleaned.split(/\s*(?:[,;]|\band\b|\bon\b)\s*/)[0].trim(); const shortToken=firstToken.length>28?firstToken.split(/\s+/)[0].trim():firstToken; const fallback=(cleaned.length>28||/[,;]|\band\b|\bon\b/.test(cleaned))&&shortToken?shortToken:cleaned; return fallback?fallback.charAt(0).toUpperCase()+fallback.slice(1):"";};
   const t=" "+raw.toLowerCase()+" ";
+  if(/^\s*(carv(ing|ed)|cast(ing)?|moulded|molded|modell?ed|incised|engraved|sculpted|relief|repouss[ée]|technique)\s*$/.test(t.trim()))return "";
   if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return "Mixed media";
   if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
   if(/water-?colou?r|gouache/.test(t))return "Watercolor";

@@ -37,6 +37,9 @@ const CASES = [
   ["gesso", "Gesso"],
   ["unclassified material, secondary material", "Unclassified material"],
   ["verbose unclassified material record", "Verbose"],
+  ["Carving", ""],                            // technique, not a material → dropped (no guess/score)
+  ["carved", ""],
+  ["Carved ivory", "Ivory"],                  // material still wins when present
   ["", ""],
   ["—", ""],
   ["mixed media on paper", "Mixed media"],
