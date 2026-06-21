@@ -1479,62 +1479,56 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
-  const srcList=computeCollections().sources.filter(s=>s.count>0 && s.name!=='Wikidata & Wikimedia Commons').map(s=>s.name).join(', ');
-  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
+  const img1=`<div class=”heroimg”><img src=”/assets/MET picture frame.png” alt=”” style=”width:10.5rem;height:5rem;object-fit:contain”></div>`;
+  const img2=`<div class=”heroimg”><img src=”/assets/silver pin.png” alt=”” style=”width:16rem;height:3rem;object-fit:contain”></div>`;
+  const img3=`<div class=”heroimg”><img src=”/assets/dagger.png” alt=”” style=”width:9.047rem;height:4rem;object-fit:contain”></div>`;
+  const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class=”sheet”>
 
-    <div class="hero">
-      <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
-      <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="dabo dabo-lg"></span></span></em><span style="margin-left:-5px">.</span>'}</div>
-      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art &mdash; its date, place, school &amp; hand</span>'}</div>
-      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
-      <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
+    <div class=”hero”>
+      <div class=”herokick”>&middot; ${replay?'archive replay':'daily art guessing game'} &middot;</div>
+      <div class=”herobig”>${replay?'pick a difficulty.':`take a gess<span class=”dabo-float”><span class=”dabo dabo-lg”>${PALETTE_SVG}</span></span>.`}</div>
+      <div class=”heroglos”>${replay?`Replaying ${niceDate(dateStr)} &mdash; choose a tier for this date&rsquo;s works`:'<strong>ges&middot;so</strong><sup style=”color:var(--accent)”>1</sup> &middot; noun &middot; the white primer brushed onto a canvas before the first brushstroke<br><strong>ges&middot;so</strong><sup style=”color:var(--accent)”>2</sup> &middot; verb, informal &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand'}</div>
     </div>
-    <div class="difs">
-      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
-        <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
-        <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
+    ${img1}
+    <div style=”text-align:center;padding:0 24px 24px”>
+      <div class=”herometa”>${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style=”font-weight:700”>${POOL.length}</span> works</div>
+      <div style=”margin-top:6px;font:400 12px 'Manrope',sans-serif;color:var(--muted)”>select your difficulty to start guessing</div>
     </div>
-    ${replay?'':`<div class="practwo">
-      <div class="practice">
-        <div class="pinf">${ICONS.infinity}</div>
-        <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in. Won&rsquo;t affect your streak or stats.</p></div>
-        <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
+    <div class=”difs”>
+      ${TIERS.map((t,i)=>`<button class=”dif” data-k=”${t.key}”>
+        <div class=”nm”>${t.label}</div>
+        <span class=”difdot” style=”color:${TDCOL[i]}”>${DIAMOND_SVG}</span>
+        <div class=”bl”>${t.blurb}</div>
+        <div class=”ct”>${tierItems(i).length} works available</div>
+      </button>`).join('')}
+    </div>
+    ${replay?'':`<div style=”text-align:center;padding:20px 24px 0”>
+      <div style=”text-align:center;margin-bottom:8px”><span style=”font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)”>or play in learning mode</span></div>
+      <div style=”display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px”>
+        ${TIERS.map((t,i)=>`<button class=”navbtn inf” data-inf=”${t.key}”><span style=”color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px”>${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
       </div>
-      <div class="practice">
-        <div class="pinf">${ICONS.target}</div>
-        <div class="ptxt"><div class="h">Training</div><p>Drill exactly what you want — a movement, a place, a century, or your weak spots. Won&rsquo;t affect your streak or stats.</p></div>
-        <div class="pchips"><button class="pchip inf" data-route="training">Drill me on… &rarr;</button></div>
-      </div>
+      <p style=”font:400 10px/12px 'Manrope',sans-serif;color:var(--muted);max-width:400px;margin:10px auto 0;padding-bottom:40px”>Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
     </div>`}
-    <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of ${srcList}, plus works surfaced via Wikidata/Wikimedia Commons — is ${b.europe}% European:</p>
-      <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
+    ${img2}
+    <div class=”homesec”>
+      <div class=”homesechd”>&middot; notice what &ldquo;easy&rdquo; is &middot;</div>
+      <p class=”homesecbody”>Difficulty here tracks what people actually recognize &mdash; and <strong>&ldquo;Easy&rdquo; is ${easyEuro}% European</strong>. That&rsquo;s not because the world&rsquo;s art is European; it&rsquo;s because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we&rsquo;re taught to know. Try the harder tiers and the rest of the world appears.</p>
+      <p class=”homesecbody”>The whole pool &mdash; drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia &mdash; is ${b.europe}% European:</p>
+      <div style=”max-width:560px;margin:0 auto”><div class=”bars”>${b.segs}</div><div class=”barkey”>${b.key}</div></div>
     </div>
-    <details class="faq" style="max-width:520px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding:14px 24px 0;text-align:center">
-      <summary style="cursor:pointer;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;text-align:center">FAQ &amp; credits</summary>
-      <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;text-align:left">
-        <p style="margin:0 0 10px"><strong style="color:var(--ink)">How is difficulty decided?</strong><br>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent (see the note above on why the canon still skews that way).</p>
-        <p style="margin:0 0 6px"><strong style="color:var(--ink)">Where does the art come from?</strong><br>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p>
-        <ul style="margin:0 0 10px 18px;padding:0">
-          <li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li>
-          <li>Cleveland Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li>
-          <li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li>
-          <li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li>
-          <li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li>
-        </ul>
-        <p style="margin:0 0 6px">Via Wikidata/Commons we also draw the most-recognized works from these collections:</p>
-        <ul style="margin:0 0 10px 18px;padding:0">
-          <li>Museo del Prado &middot; Louvre &middot; National Gallery, London &middot; Uffizi &middot; Rijksmuseum</li>
-          <li>National Gallery of Art (DC) &middot; Fine Arts Museums of San Francisco (de Young)</li>
-          <li>National Palace Museum (Taipei) &middot; Tokyo National Museum &middot; National Museum of Korea</li>
-          <li>Topkap&#305; Palace Museum (Istanbul) &middot; Egyptian Museum (Cairo)</li>
-        </ul>
-        <p style="margin:0 0 10px">Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p>
-        <p style="margin:0"><strong style="color:var(--ink)">Are the study notes reliable?</strong><br>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p>
+    ${img3}
+    <div class=”homesec”>
+      <div class=”homesechd”>&middot; frequently asked questions &middot;</div>
+      <div class=”faqacc”>
+        <div class=”faqitem”><button class=”faqq”>how is difficulty decided?<span class=”faqplus”>+</span></button>
+          <div class=”faqa”><div class=”faqa-inner”><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
+        <div class=”faqitem”><button class=”faqq”>where does the art come from?<span class=”faqplus”>+</span></button>
+          <div class=”faqa”><div class=”faqa-inner”><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
+        <div class=”faqitem”><button class=”faqq”>are the study notes reliable?<span class=”faqplus”>+</span></button>
+          <div class=”faqa”><div class=”faqa-inner”><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
       </div>
-    </details>
+    </div>
     ${ATTRIB}
   </div>`;
   document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
