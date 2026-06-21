@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     let name='', color='';
     for (const p of (profs||[])) { if (p.name && !name) name=p.name; if (p.color && !color) color=p.color; }
     if (!name && body.name) name=String(body.name).slice(0,16);
-    if (!color) color=/^#[0-9a-fA-F]{6}$/.test(body.color||'')?body.color:'#2230b8';
+    if (!color && /^#[0-9a-fA-F]{6}$/.test(body.color||'')) color=body.color;
     // write the canonical identity onto THIS device's profile so the board shows it
     await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid, name, color }) });
 

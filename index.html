@@ -1328,10 +1328,10 @@ async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}
 async function syncAccount(){
   const c=sb(); if(!c||!authUser)return null;
   try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return null;
-    // only send the name UP if the user actually chose it — loadIdentity() falls back to a random artist
-    // handle, and sync.js would otherwise promote that auto-name as the account's permanent canonical name.
-    let chosenName=''; try{ chosenName=String((JSON.parse(localStorage.getItem('gesso.identity')||'{}')).name||'').slice(0,16); }catch{}
-    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:chosenName||undefined,color:loadIdentity().color})});
+    // only send name/color UP if the user actually chose them — loadIdentity() falls back to a random artist
+    // handle + deterministic color, and sync.js would otherwise promote those auto-values as canonical.
+    let chosenName='', chosenColor=''; try{ const stored=JSON.parse(localStorage.getItem('gesso.identity')||'{}'); chosenName=String(stored.name||'').slice(0,16); chosenColor=/^#[0-9a-fA-F]{6}$/.test(stored.color||'')?stored.color:''; }catch{}
+    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:chosenName||undefined,color:chosenColor||undefined})});
     if(r.ok)return await r.json();
     // fallback: at least bind the device
     await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
