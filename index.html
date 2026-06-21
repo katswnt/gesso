@@ -2013,8 +2013,12 @@ function renderRound(){
   } else fields.push(naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')));
   if(show('style')){
     const ch=styleChoices(it);
+    // upfront nudge: on tiers where a correct region rules schools out, tell the player BEFORE they pin (it's
+    // not obvious the map feeds this field). Hidden once the bonus actually fires (geobonus takes over).
+    const styleElim = GEO_LEAVE[tier]!=null && it.cats.includes('style');
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ Pin the right region on the map to rule out unlikely schools, free</div>`:''}
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
@@ -2083,6 +2087,7 @@ function renderRound(){
     const rightRegion=continentOf(lat,lng)===it.region || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
+      const gh=document.getElementById('geohint'); if(gh)gh.style.display='none';
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
   setTimeout(()=>{ if(!map)return; map.invalidateSize();
     if(placeFit){ try{ map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} } },settings.reduceMotion?0:250);
