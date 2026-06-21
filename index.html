@@ -191,8 +191,22 @@ function openHowTo(){
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
 let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
-function posToYear(p){p=+p; return p<=BREAKP?Math.round(MINY+(p/BREAKP)*(BREAKY-MINY)):Math.round(BREAKY+((p-BREAKP)/(MAXP-BREAKP))*(MAXY-BREAKY));}
-function yearToPos(y){return y<=BREAKY?Math.round((y-MINY)/(BREAKY-MINY)*BREAKP):Math.round(BREAKP+(y-BREAKY)/(MAXY-BREAKY)*(MAXP-BREAKP));}
+// During a training run, the when-slider maps LINEARLY over the actual span of the trained
+// works ([lo,hi]); daily/infinite keep the global non-linear domain. Set in startTraining,
+// cleared (null) when leaving training. See posToYear/yearToPos branches below.
+let TRAIN_SPAN=null;
+function posToYear(p){p=+p;
+  if(TRAIN_SPAN){ const {lo,hi}=TRAIN_SPAN; return Math.round(lo+(p/MAXP)*(hi-lo)); }
+  return p<=BREAKP?Math.round(MINY+(p/BREAKP)*(BREAKY-MINY)):Math.round(BREAKY+((p-BREAKP)/(MAXP-BREAKP))*(MAXY-BREAKY));}
+function yearToPos(y){
+  if(TRAIN_SPAN){ const {lo,hi}=TRAIN_SPAN; return Math.max(0,Math.min(MAXP,Math.round((y-lo)/(hi-lo)*MAXP))); }
+  return y<=BREAKY?Math.round((y-MINY)/(BREAKY-MINY)*BREAKP):Math.round(BREAKP+(y-BREAKY)/(MAXY-BREAKY)*(MAXP-BREAKP));}
+// Compute a padded [lo,hi] span from the trained works, guarding the degenerate lo==hi case.
+function trainSpanFrom(works){ const ys=works.map(p=>p.y).filter(y=>y!=null); if(!ys.length) return null;
+  let lo=Math.min(...ys), hi=Math.max(...ys);
+  if(lo===hi){ lo-=10; hi+=10; } // give a small window for a single-year drill
+  else { lo=Math.floor(lo/10)*10; hi=Math.ceil(hi/10)*10; } // round outward to the decade
+  return {lo,hi}; }
 // Region-aware period schemes — the slider tag reflects the work's own culture's periodization
 const SCHEMES={
   western:[["Antiquity",500],["Medieval",1400],["Renaissance",1600],["Baroque",1750],["Enlightenment",1800],["19th c.",1900],["Modern",1945],["Contemporary",3000]],
@@ -1409,7 +1423,9 @@ function startTraining(T){ clearTimers(); infinite=true; TRAIN=T; tier=null; run
   // slice baseline for the before→after delta
   const m=loadMastery(); const movs=[...T.facets.movements]; const regs=[...T.facets.regions];
   T.baseline = movs.length&&m.byStyle[movs[0]] ? {label:movs[0], pct:pctOf(m.byStyle[movs[0]])} : regs.length&&m.byRegion[regs[0]] ? {label:regs[0], pct:pctOf(m.byRegion[regs[0]])} : null;
-  game=trainingSet(T); idx=0; results=[]; hintsUsed=0; renderRound(); }
+  game=trainingSet(T); idx=0; results=[]; hintsUsed=0;
+  TRAIN_SPAN=trainSpanFrom(game); // scope the when-slider to the actual span of this run
+  renderRound(); }
 function pctOf(s){ return s&&s.total?Math.round(s.correct/s.total*100):null; }
 let __train=null;          // working setup state {facets, axis}
 let __trainCat='style';    // active browse tab
@@ -1421,7 +1437,7 @@ const TRAIN_GROUP_ORDER=[['centuries','Era'],['regions','Region'],['countries','
 function trainGroups(T){ const g=[]; for(const [fam,label] of TRAIN_GROUP_ORDER){ const vals=[...T.facets[fam]]; if(vals.length) g.push({fam,label,vals}); } return g; }
 function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   if(!__train) __train={facets:newFacets(), axis:null};
-  const T=__train, V=trainVocab();
+  const T=__train; trainVocab();
   const cnt=facetCount(T);
   const groups=trainGroups(T);
   const focus=[['',"All"],['when','Date only'],['where','Map only'],['style','Movement only']];
@@ -1474,7 +1490,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   // ---- wire search ----
   const s=document.getElementById('tsearch'), res=document.getElementById('tresults');
   s.oninput=()=>{ const q=norm(s.value); if(!q){ res.style.display='none'; return; }
-    const hits=V.filter(v=>norm(v.label).includes(q)).slice(0,10);
+    const hits=__trainCatOpts.filter(v=>norm(v.label).includes(q)).slice(0,10);
     res.style.display='block';
     res.innerHTML=hits.length?hits.map(v=>{ const on=T.facets[v.fam].has(v.val); const tag=v.tag||(TRAIN_FAMS.find(f=>f[0]===v.famKey)||[])[1]||v.famKey;
       return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:600 14px Archivo">${esc(v.label)}</span></span><span class="mono" style="font-size:11px;color:${on?'var(--accent)':'var(--faint)'}">${on?'added':v.count}</span></div>`;
@@ -1495,8 +1511,36 @@ function trainEnc(v){ return typeof v==='number'?'#'+v:esc(String(v)); }
 function trainDec(s){ return s[0]==='#'?+s.slice(1):s; }
 function trainToggle(fam,enc){ const v=trainDec(enc); const set=__train.facets[fam]; if(set.has(v))set.delete(v); else set.add(v); }
 function trainLabel(fam,v){ if(fam==='centuries')return centuryLabel(v); if(fam==='mediaFamilies')return MED_FAM_LABEL[v]||v; return v; }
+// Selection-aware option list for one browse tab: options of the tab's families that
+// co-occur with the CURRENT selection, counted against the OTHER families' filters.
+// Tsub = current facets with the tab's families CLEARED (within-family OR semantics).
+// Returns vocab-shaped rows (fam,val,label,count,famKey,tag) sorted by count desc; count>0.
+function trainCatOptions(cat){
+  const tabFams=TRAIN_TAB_FAMS[cat]||[];
+  const T=__train, vocab=trainVocab().filter(v=>tabFams.includes(v.fam));
+  // build Tsub: copy current facets but clear the tab's families
+  const sub=newFacets();
+  for(const fam in T.facets){ if(!tabFams.includes(fam)) for(const v of T.facets[fam]) sub[fam].add(v); }
+  const base=trainingApply({facets:sub,axis:T.axis},POOL); // co-occurring candidate works (one pass)
+  // tally how many base works carry each option value, per family, in a single pass
+  const tally={}; const bump=(fam,val)=>{ if(val==null)return; (tally[fam]=tally[fam]||{}); tally[fam][val]=(tally[fam][val]||0)+1; };
+  for(const p of base){
+    if(tabFams.includes('centuries')) bump('centuries',centuryOf(p.y));
+    if(tabFams.includes('regions')) bump('regions',p.region);
+    if(tabFams.includes('countries')) bump('countries',countryNameOf(p.place));
+    if(tabFams.includes('movements')&&p.style) bump('movements',p.style);
+    if(tabFams.includes('mediaFamilies')) bump('mediaFamilies',MED_FAMILY[p.medSimple]);
+    if(tabFams.includes('artists')&&p.artist) bump('artists',p.artist);
+  }
+  const out=[];
+  for(const v of vocab){ const c=(tally[v.fam]||{})[v.val]||0; const on=T.facets[v.fam].has(v.val);
+    if(c>0||on) out.push({...v,count:c}); }
+  out.sort((a,b)=>b.count-a.count);
+  return out;
+}
+let __trainCatOpts=[]; // last-rendered options for the active tab (scopes the search box)
 function renderTrainCat(){ const el=document.getElementById('tcatopts'), more=document.getElementById('tcatmore'); if(!el)return;
-  const fams=TRAIN_TAB_FAMS[__trainCat]||[]; const all=trainVocab().filter(v=>fams.includes(v.fam));
+  const all=trainCatOptions(__trainCat); __trainCatOpts=all;
   const show=all.slice(0,8);
   el.innerHTML=show.map(v=>{ const on=__train.facets[v.fam].has(v.val);
     return `<button class="opt${on?' on':''}" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}">${esc(v.label)}<span class="ct">${v.count}</span></button>`;
@@ -1640,7 +1684,7 @@ function regionBars(){
   return {segs,key,europe:Math.round((dist.Europe||0)/total*100)};
 }
 function renderStart(dateStr,push=true){
-  clearTimers();
+  clearTimers(); TRAIN_SPAN=null;
   if(push)pushNav(dateStr&&dateStr!==todayStr()?{v:'pick',date:dateStr}:{v:'home'});
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
@@ -1712,7 +1756,7 @@ function startGame(key,dateStr,push=true){
   if(push)pushNav({v:'play',key,date:dateStr||todayStr()});
   clearTimers();
   infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
-  TRAIN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
+  TRAIN=null; TRAIN_SPAN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
 function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
@@ -1742,7 +1786,7 @@ function practiceOrder(key){
 }
 function startInfinite(key,push=true){
   if(push)pushNav({v:'inf',key});
-  clearTimers(); infinite=true; TRAIN=null; tier=key; runDate=todayStr(); runArchive=false;
+  clearTimers(); infinite=true; TRAIN=null; TRAIN_SPAN=null; tier=key; runDate=todayStr(); runArchive=false;
   game=practiceOrder(key); idx=0; results=[]; hintsUsed=0;
   renderRound();
 }
@@ -1849,14 +1893,15 @@ function renderRound(){
   window.__RNG=mulberry32(seedHash((runDate||todayStr())+'|'+tier+'|'+idx)); Promise.resolve().then(()=>{window.__RNG=null;});
   const it=game[idx];
   const pstudy = infinite ? studyFor(it) : {cues:[]}; // learning-mode pre-lock hotspot tooltips
-  guess={year:1700, ll:null, medium:null, style:null, artist:"", hints:new Set()};
+  const startYear = TRAIN_SPAN ? Math.round((TRAIN_SPAN.lo+TRAIN_SPAN.hi)/2) : 1700;
+  guess={year:startYear, ll:null, medium:null, style:null, artist:"", hints:new Set()};
   // build right-column adaptive fields
   let n=1; const fields=[];
   fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('when')}When made</span></div>
-    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px;flex-wrap:wrap"><span class="year" id="yv" style="white-space:nowrap">1700 CE</span><span class="dragtag">· drag to change</span><span class="eratag" id="era" style="white-space:nowrap">[ EARLY MODERN ]</span></div>
-    <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(1700)}" step="1" />
-    <div class="minmax"><span>${fmtYear(MINY)}</span><span>2025 CE</span></div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px;flex-wrap:wrap"><span class="year" id="yv" style="white-space:nowrap">${fmtYear(startYear)}</span><span class="dragtag">· drag to change</span><span class="eratag" id="era" style="white-space:nowrap">[ EARLY MODERN ]</span></div>
+    <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
+    <div class="minmax"><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.lo:MINY)}</span><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.hi:MAXY)}</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
     <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
