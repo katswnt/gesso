@@ -2232,9 +2232,9 @@ function guideHTML(guide){
 // body expands. Replaces the old cues + "Ask the guide" split.
 function notesHTML(notes){
   if(!Array.isArray(notes)||!notes.length) return '';
-  let pin=0;
   return `<div class="aglist">${notes.map((nt,i)=>{
-    const pinned=nt.x!=null&&nt.y!=null; const badge=pinned?`<span class="agnum pinnum">${++pin}</span>`:`<span class="agnum"></span>`;
+    const pinned=nt.x!=null&&nt.y!=null; // one running number 1..N; pinned (first) match the image pins, unpinned are gold
+    const badge=`<span class="agnum ${pinned?'pinnum':'qnum'}">${i+1}</span>`;
     return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
   }).join('')}</div>`;
 }
@@ -2270,7 +2270,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map((n,k)=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${k+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
