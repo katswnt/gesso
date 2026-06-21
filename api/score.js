@@ -34,9 +34,12 @@ export default async function handler(req, res) {
   if (!isDateStr(date)) return res.status(400).json({ error: 'bad date' });
   if (!TIERS.includes(tier)) return res.status(400).json({ error: 'bad tier' });
   if (!Number.isFinite(total) || total < 0 || total > MAX_TOTAL) return res.status(400).json({ error: 'bad total' });
-  const today = new Date().toISOString().slice(0, 10);
-  const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (date !== today && date !== yest) return res.status(400).json({ error: 'date not current' });
+  // Allow any non-future daily (covers backfill of pre-account history). tomorrow-UTC ceiling absorbs
+  // client-timezone skew; floor guards junk. The model already trusts client totals (raw guesses stored
+  // for Phase-4 re-scoring) and the best-score guard prevents inflation, so opening past dates is safe.
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  if (date > tomorrow) return res.status(400).json({ error: 'date in future' });
+  if (date < '2025-01-01') return res.status(400).json({ error: 'date too old' });
 
   const name = String(body.name || '').slice(0, 16);
   const color = /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : '#2230b8';

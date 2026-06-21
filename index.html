@@ -1114,6 +1114,20 @@ function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:'',color:defaultColor()};}}
 function saveIdentity(i){try{localStorage.setItem("gesso.identity",JSON.stringify({name:String(i.name||'').slice(0,16),color:i.color}));}catch{}}
 function initialsOf(name){const w=String(name||'').trim().split(/\s+/).filter(Boolean);return w.length?w.slice(0,2).map(x=>x[0].toUpperCase()).join(''):'YOU';}
+// Backfill past local daily bests to the leaderboard (e.g. days played before an account existed, or before
+// the board shipped). Device-keyed; runs once per date|tier (tracked in gesso.sent). Past days only have a
+// total locally (no per-round detail), so we send the total — the server's best-score guard dedups.
+async function backfillScores(){
+  let sent; try{ sent=new Set(JSON.parse(localStorage.getItem("gesso.sent")||"[]")); }catch{ sent=new Set(); }
+  const s=loadStreak(), id=loadIdentity();
+  for(const date in (s.byDay||{})){ if(date<"2025-01-01")continue;
+    for(const tier in s.byDay[date]){ const key=date+"|"+tier, total=+s.byDay[date][tier];
+      if(sent.has(key)||!(total>0))continue;
+      try{ const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({deviceId:deviceId(),name:id.name,color:id.color,date,tier,total})});
+        if(r.ok){ sent.add(key); localStorage.setItem("gesso.sent",JSON.stringify([...sent])); } }catch{}
+    } }
+}
 async function submitScore(date,tierKey,summary){ // fire-and-forget; never blocks the recap
   try{ const id=loadIdentity();
     const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -2451,7 +2465,8 @@ else{ buildIndexes();
   // first-visit: auto-show the walkthrough once (set flag on close)
   try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{}
   // pick up an existing session (and any OAuth/magic-link redirect) once supabase-js has loaded
-  setTimeout(()=>{ try{ refreshAuth(); }catch{} },600); }
+  setTimeout(()=>{ try{ refreshAuth(); }catch{} },600);
+  setTimeout(()=>{ try{ backfillScores(); }catch{} },1500); } // push any un-submitted past dailies to the board
 </script>
 <!-- Vercel Web Analytics (framework-agnostic; enable Analytics in the Vercel project dashboard) -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
