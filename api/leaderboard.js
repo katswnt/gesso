@@ -11,6 +11,12 @@ function allowedOrigin(origin) {
   catch { return false; }
 }
 const isDateStr = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
+// Deterministic fallback identity for rows whose profile has no name yet (e.g. submitted before client
+// auto-names shipped). MUST match the client's defaultName/defaultColor so a device reads the same everywhere.
+const SWATCHES=['#2230b8','#1b2570','#3f4cbe','#5663d4','#7480d4','#9aa3e0','#0f5b63','#166b6b','#1f7a8c','#2a9d9d','#3aa6a0','#5cc0b6','#1f6b45','#2f8f5b','#3a9d4f','#5a8f3a','#6b9e3f','#86ab57','#a7741f','#b5852a','#c9962f','#cf9f3a','#d9a441','#e0b14a','#a13526','#b33d2e','#c14b3a','#cf5b45','#d97150','#e08c6a','#a83a5c','#b8466b','#c4577a','#d06b8a','#d98ba3','#e0a0b5','#4d3590','#5a3fa0','#6b4fb8','#7d5fc4','#8e6fd0','#a487da','#1b1916','#3a362d','#4a4640','#6b6557','#7d7866','#8a8472'];
+const ARTIST_HANDLES=['Rembrandt','Vermeer','Monet','Degas','Cézanne','Matisse','Picasso','Klimt','Goya','Turner','Hokusai','Hiroshige','Kahlo','Rivera','O’Keeffe','Hopper','Rothko','Pollock','Basquiat','Warhol','Dürer','Bosch','Bruegel','Caravaggio','Titian','Raphael','Botticelli','Donatello','Michelangelo','Gentileschi','Cassatt','Morisot','Sargent','Whistler','Constable','Gainsborough','Delacroix','Courbet','Manet','Renoir','Seurat','Munch','Schiele','Mondrian','Kandinsky','Klee','Magritte','Dalí','Miró','Rodin','Brancusi','Hepworth','Sisley','Pissarro','Gauguin','Bonheur','Vigée','Tintoretto','Veronese','Hals'];
+const fbColor = d => { let h=0; d=String(d); for(let i=0;i<d.length;i++)h=(h*31+d.charCodeAt(i))>>>0; return SWATCHES[h%SWATCHES.length]; };
+const fbName = d => { let h=5381; d=String(d); for(let i=0;i<d.length;i++)h=((h<<5)+h+d.charCodeAt(i))>>>0; return ARTIST_HANDLES[h%ARTIST_HANDLES.length]; };
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
@@ -39,7 +45,7 @@ export default async function handler(req, res) {
     }
     const rows = (top || []).map((r, i) => {
       const p = profByDev[r.device_id] || {};
-      return { rank: offset + i + 1, name: p.name || '', color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : '#2230b8',
+      return { rank: offset + i + 1, name: p.name || fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
         score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, isYou: !!me && r.device_id === me };
     });
 
