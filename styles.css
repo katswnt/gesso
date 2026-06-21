@@ -182,9 +182,9 @@
   .zlabel i{font:var(--label-sm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-style:normal}
   .zlabel::after{content:"";flex:1;height:1px;background:var(--line)}
   /* Infinite + Training as a 2-up row aligned with the tier tiles above; lighter than the daily tiles so the daily wins first glance */
-  .practwo{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 12px}
-  .practwo .practice{max-width:none;margin:0;flex-direction:column;align-items:flex-start;gap:12px;height:100%;background:var(--surface-lift)}
-  .practwo .practice .pchips{margin-top:auto}
+  .practwo{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 12px;align-items:start}
+  .practwo .practice{max-width:none;margin:0;flex-direction:column;align-items:flex-start;gap:12px;background:var(--surface)}
+  .practwo .practice .ptxt{flex:0 0 auto}
   .practwo .practice:nth-child(1) .pinf{transform:rotate(-4deg)}
   .practwo .practice:nth-child(2) .pinf{border-radius:42% 58% 47% 53% / 62% 44% 56% 38%;transform:rotate(5deg)}
   .practwo .practice .pchip.setup{background:var(--study-bg);border-color:var(--study-border);color:var(--accent);font-weight:700}
