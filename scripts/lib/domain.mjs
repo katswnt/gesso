@@ -18,9 +18,39 @@ export function normalizeArtist(name){
 export const STYLE_MERGE = {
   "Hudson River school":"Hudson River School","Neoclassical":"Neoclassicism","Safavid Iran":"Safavid",
   "Naïve":"Naïve art","Edo people":"Edo peoples","Benin (Edo) art":"Edo peoples","Pre-Raphaelite Brotherhood":"Pre-Raphaelite",
+  // adjective / variant forms of movements that already exist in MOVEMENTS — collapse, don't add anew
+  "Impressionist":"Impressionism","Realist":"Realism","Romantic":"Romanticism","Post-Impressionist":"Post-Impressionism",
+  "Neo-Impressionism":"Post-Impressionism","Symbolist":"Symbolism","Neoclassic":"Neoclassicism",
+  "Spanish Baroque":"Baroque","Italian Baroque painting":"Italian Baroque","Caravaggism":"Italian Baroque",
+  "Venetian Renaissance":"Venetian school","Spanish Renaissance":"Renaissance","Florentine Renaissance":"Italian Renaissance",
+  "Renaissance humanism":"Italian Renaissance","Sienese School":"Sienese school","Umbrian school":"Italian Renaissance",
+  "Bolognese school":"Italian Baroque","Modernist":"American modernism","Modern art":"American modernism",
+  "Arts and Crafts":"Arts and Crafts (movement)","Gothic Revival":"Gothic art","Kano school":"Kanō school",
+  "Meiji":"Meiji era","Northern Song dynasty":"Song dynasty","Yuan dynasty literati painting":"Literati painting",
+  "Qing court painting":"Chinese court painting","Shan shui":"Literati painting","Etruscan art":"Etruscan",
+  "Classical Greek":"Greek Classical","Ancient Egyptian art":"Ancient Egypt","Yoruba art":"Yoruba",
+  "Bambara":"Bamana","Akan people":"Akan (Asante)","Ancient Rome":"Roman","Roman Republic":"Roman",
+  "Mexica":"Aztec (Mexica)","Mexica (Aztec)":"Aztec (Mexica)",
+  // batch 2
+  "Graeco-Roman":"Greece / Rome","Sienese school":"Italian Renaissance","Pre-Romanticism":"Pre-romanticism",
+  "Mughal India":"Mughal painting","Kathmandu Valley":"Nepal, Kathmandu Valley","Byzantium":"Byzantine",
+  "Joseon":"Korea, Joseon dynasty","Second Empire":"Empire style","École de Paris":"Modernism",
+  "Modern sculpture":"Modernism","Sino-Tibetan":"Tibet","Tibetan":"Tibet","Indian Buddhist art":"India",
+  "Northern Low Countries":"Dutch Golden Age","Empire of Ethiopia":"Ethiopian art","Edo State":"Edo peoples",
+  "Flanders":"Flemish Baroque","Republic of Venice":"Venetian school","Kei school":"Kamakura period",
+  "Sanjō school":"Heian period","Israelite":"Canaanite",
+  // batch 3: descriptive composites → primary movement; granular regions → broad culture
+  "Danish Symbolism / Interior painting":"Danish Symbolism","Abstract / Bauhaus":"Bauhaus",
+  "Skagen Painters / Naturalism":"Naturalism","Academic / Neoclassicism":"Academic art",
+  "Symbolism / Classical Revival":"Symbolism","Southwestern India":"India","Northeast India":"India",
+  "Vili people":"Kongo","Loango coast":"Kongo","Upper Lomami Province":"Luba",
+  "Segou area":"Bamana","Bougouni area":"Bamana","Twifo-Hemang region":"Akan (Asante)",
+  "Bonwire":"Akan (Asante)","Grassfields region":"Bamileke people","Sarmato-Gothic":"Visigothic",
+  "Bangladesh or India (Bengal)":"India","Vietnam or Southern Cambodia":"Vietnam","Vietnam (Champa)":"Vietnam",
+  "Central or northeastern Thailand":"Thailand","Uzbek and Mughal":"Mughal painting","Native American":"Native North America",
 };
 // style strings that are really a nationality / country / region, not a movement-or-culture → dropped.
-export const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa(,.*)?|democratic republic.*|sierra leone|holy roman empire|netherlandish|contemporary art)$/i;
+export const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa(,.*)?|democratic republic.*|sierra leone|holy roman empire|netherlandish|contemporary art|french|italians?|indian|persian|iranian|turkish|japanese|nepalese|syrian|colombian|peruvian|thai|buddhists|muslims|middle easterners|southeast asians|brass|polychrome|monochrome \(asia\)|kingdom of prussia|kingdom of portugal|czech republic|wales|free imperial city of strasbourg)$/i;
 // canonical style; returns "" when the label is really a place (so movement just isn't quizzed).
 export function canonicalizeStyle(style){
   let s = String(style||"").trim(); if(!s) return "";

@@ -30,6 +30,11 @@ for(const p of pool){
   if(p.style && COUNTRY_NAMES.has(p.style) && !movKeys.has(p.style)) add(hard,"style-is-country",p,`"${p.style}"`);
   if(p.style && /[,;]/.test(p.style) && !movKeys.has(p.style)) add(hard,"style-comma",p,`"${p.style}"`); // descriptive/listy style string (keep only curated comma-cultures)
   if(p.style && p.styleKind && !movKeys.has(p.style)) add(warn,"style-no-metadata",p,`"${p.style}"`);
+  // COVERAGE GATE: a famous work whose style has no MOVEMENTS entry would ship "c. unknown" + generic emblem to
+  // production with no human review — HARD-fail so it can't happen. Lower-fame gaps stay a warning.
+  if(p.style && !movKeys.has(p.style)){ const f=fa(p);
+    if(f>=300) add(hard,"famous-style-no-movement",p,`"${p.style}" · fame ${Math.round(f)}`);
+    else add(warn,"style-no-movement",p,`"${p.style}"`); }
   // TITLE
   if(p.title && /^[a-z]/.test(p.title)) add(hard,"title-lowercase",p,`"${p.title.slice(0,40)}"`);
   if(!p.style && fa(p)>=300) add(warn,"famous-no-movement",p,`fame ${Math.round(fa(p))}`);
@@ -49,7 +54,9 @@ const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };
 
+const unmappedStyles=new Set(); for(const p of pool){ if(p.style && !movKeys.has(p.style)) unmappedStyles.add(p.style); }
 console.log(`=== check-pool: ${pool.length} works ===`);
+console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
