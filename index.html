@@ -885,7 +885,7 @@ function unlockCard(card,revealedInner){
 }
 function glossaryTotal(){return MOVEMENT_NAMES.length;}
 // Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
-const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard","harvard-blob":"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki"};
+const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard","harvard-blob":"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",britishmuseum:"britishmuseum",lacma:"lacma",walters:"walters",brooklyn:"brooklyn",quaibranly:"quaibranly",nga:"nga",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki","wd-canon":"wiki","wd-harvest":"wiki","wd-modern":"wiki","wd-wishlist":"wiki"};
 const COLL_META={
   aic:{name:"Art Institute of Chicago",city:"Chicago, USA",lat:41.8796,lng:-87.6237,url:"https://www.artic.edu",blurb:"Open-access API; thousands of CC0 public-domain works."},
   met:{name:"The Metropolitan Museum of Art",city:"New York, USA",lat:40.7794,lng:-73.9632,url:"https://www.metmuseum.org",blurb:"CC0 open access — a global collection, strong outside the West."},
@@ -895,6 +895,12 @@ const COLL_META={
   va:{name:"Victoria and Albert Museum",city:"London, UK",lat:51.4966,lng:-0.1722,url:"https://www.vam.ac.uk",blurb:"The V&A — the world's leading art & design collection, via API."},
   smithsonian:{name:"Smithsonian Open Access",city:"Washington, DC, USA",lat:38.8888,lng:-77.0260,url:"https://www.si.edu",blurb:"CC0 across the Smithsonian, incl. the National Museums of African & Asian Art."},
   loc:{name:"Library of Congress",city:"Washington, DC, USA",lat:38.8887,lng:-77.0047,url:"https://www.loc.gov",blurb:"Public-domain US government works — incl. the FSA/OWI Depression-era photography."},
+  britishmuseum:{name:"The British Museum",city:"London, UK",lat:51.5194,lng:-0.1270,url:"https://www.britishmuseum.org",blurb:"Encyclopedic world collection; images under its open licence."},
+  lacma:{name:"Los Angeles County Museum of Art",city:"Los Angeles, USA",lat:34.0639,lng:-118.3592,url:"https://www.lacma.org",blurb:"Open-access public-domain images across a broad global collection."},
+  walters:{name:"The Walters Art Museum",city:"Baltimore, USA",lat:39.2969,lng:-76.6160,url:"https://thewalters.org",blurb:"CC0 open access — strong medieval, Islamic & ancient holdings."},
+  brooklyn:{name:"Brooklyn Museum",city:"New York, USA",lat:40.6712,lng:-73.9636,url:"https://www.brooklynmuseum.org",blurb:"Open collection API; deep Egyptian, American & global art."},
+  quaibranly:{name:"Musée du quai Branly–Jacques Chirac",city:"Paris, France",lat:48.8606,lng:2.2977,url:"https://www.quaibranly.fr",blurb:"Arts of Africa, Asia, Oceania & the Americas."},
+  nga:{name:"National Gallery of Art",city:"Washington, DC, USA",lat:38.8913,lng:-77.0200,url:"https://www.nga.gov",blurb:"Open Access — CC0 images of public-domain works."},
 };
 const COLL_VIA_WD=[ // famous collections we draw from via Wikidata (sitelink-ranked); shown on the map
   {name:"Museo del Prado",city:"Madrid",lat:40.4138,lng:-3.6921,url:"https://www.museodelprado.es"},
