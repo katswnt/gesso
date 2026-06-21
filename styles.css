@@ -444,6 +444,10 @@
   .mblob{background:none!important;border:none!important}
   .mblob span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid var(--surface);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
   .mblob-wd span{width:13px;height:12px;opacity:.5}
+  /* gameplay map pins as gesso dabs (play guess + reveal), matching the museums-map dab */
+  .dabpin{background:none!important;border:none!important}
+  .dabpin span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid #fff;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
+  .dabpin.actual span{background:var(--full)}
   /* vary the blob per pin so the mapped collections look hand-dabbed, not cloned */
   .mblob.v1 span{border-radius:58% 42% 52% 48% / 58% 52% 48% 42%}
   .mblob.v2 span{border-radius:42% 58% 47% 53% / 62% 44% 56% 38%}

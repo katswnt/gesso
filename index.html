@@ -1154,6 +1154,7 @@ const ID_SHAPE='50% 50% 50% 12%'; // the gesso "dab" identity blob — single so
 const TRAIN_TEASERS=['Baroque','Impressionism','Renaissance','Surrealism','Ukiyo-e','Gothic','Rococo','Pop art','Italy','France','Japan','Mughal painting','Ancient Egypt','Ming China','Benin','Mexico','17th century','19th century','Edo period','Oil paint','Woodblock print','Fresco','Bronze','Tempera'];
 function trainTeaserChips(){const a=TRAIN_TEASERS.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,2).map(t=>`<button class="pchip inf" data-route="training">${t}</button>`).join('');}
 function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
+function dabIcon(cls){return L.divIcon({className:'dabpin'+(cls?' '+cls:''),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});}
 function dabRot(i){return ((i|0)*37)%13-6;}
 function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
 function openIdentityModal(after){
@@ -1772,13 +1773,13 @@ function renderInfiniteSummary(){
   const deltaLine = isTrain&&sessPct!=null ? `${esc(sliceLabel)}: ${baseP!=null?baseP+'% &rarr; ':''}<strong>${sessPct}%</strong> this session${baseP!=null?` (${sessPct-baseP>=0?'+':''}${sessPct-baseP})`:''}` : '';
   const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
   // category line-icons (neutral stroke; color + number carry the score → colorblind-safe)
-  const catIcon=k=>{ const key=k==='style'?'movement':k; const s='fill="none" stroke="#6a645b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const catIcon=k=>{ const key=k==='style'?'movement':k; const s='fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
     const m={ when:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M12 7.4V12l3.1 1.9"/>`,
       where:`<circle ${s} cx="12" cy="12" r="8.3"/><path ${s} d="M3.7 12h16.6M12 3.7v16.6"/><ellipse ${s} cx="12" cy="12" rx="3.9" ry="8.3"/>`,
       movement:`<path ${s} d="M12 4.3c-4.5 0-8.1 3-8.1 6.8 0 2.5 1.9 3.9 3.8 3.9 1.4 0 1.6 1.1 1.1 2-.5 1 .1 2 1.6 2.1 4.8.5 9.7-3.1 9.7-7.7 0-4.5-3.5-7.1-8.1-7.1Z"/>`,
-      medium:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="#6a645b"/>`,
+      medium:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="currentColor"/>`,
       artist:`<path ${s} d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"/><path ${s} d="M3.6 18h13.8"/>` };
-    return `<svg viewBox="0 0 24 24" width="16" height="16">${m[key]||''}</svg>`; };
+    return `<svg viewBox="0 0 24 24" width="16" height="16" style="color:var(--ink-soft)">${m[key]||''}</svg>`; };
   const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px 'Archivo',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'IBM Plex Mono',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
@@ -1922,7 +1923,7 @@ function renderRound(){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
-    else marker=L.circleMarker(ll,{radius:8,color:PALETTE.accent,fillColor:PALETTE.accent,fillOpacity:.92,weight:2}).addTo(map);
+    else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     // correct-geo reward: pin the right continent → free 50/50 on the school
@@ -2187,11 +2188,11 @@ function renderReveal(r){
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
   const t=[it.lat,it.lng], pts=[t];
-  L.circleMarker(t,{radius:7,color:'#fff',weight:2,fillColor:'#2f8f5b',fillOpacity:1}).addTo(rm);
+  L.marker(t,{icon:dabIcon('actual')}).addTo(rm);
   let poly=null;
   if(r.guess.ll){const g=[r.guess.ll.lat,r.guess.ll.lng]; pts.push(g);
     poly=L.polyline([g,t],{color:PALETTE.accent,weight:2,dashArray:settings.reduceMotion?'5,6':null}).addTo(rm);
-    L.circleMarker(g,{radius:7,color:'#fff',weight:2,fillColor:PALETTE.accent,fillOpacity:1}).addTo(rm);}
+    L.marker(g,{icon:dabIcon('guess')}).addTo(rm);}
   // shade the work's historical culture/empire range (Anthropeum-style) — data: historical-basemaps (GPL-3.0)
   let regionLayer=null; const reg=(window.ARTEFACTUM_REGIONS||{})[it.style];
   if(reg&&reg.geometry&&reg.geometry.length){ try{
@@ -2339,7 +2340,7 @@ function renderArchive(monthDate){
   const y=archiveMonth.getFullYear(),m=archiveMonth.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),canNext=y<td.getFullYear()||m<td.getMonth();
   let cells='';for(let i=0;i<first.getDay();i++)cells+='<div class="daycell blank"></div>';
   for(let d=1;d<=last.getDate();d++){const ds=localDateStr(new Date(y,m,d)),dt=parseLocalDate(ds),bd=s.byDay[ds]||{},played=Object.keys(bd).length>0||s.playedDates.includes(ds),isToday=ds===today,future=dt>td;let cls=future?'future':isToday?'today':played?'played':'missed';
-    let dots=future?'':`<span class="tierdots">${TIERS.map(t=>{const done=bd[t.key]!=null;return `<i class="td" style="${done?`background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}`:'background:transparent;border-color:#d3ccbb'}"></i>`;}).join('')}</span>`;
+    let dots=future?'':`<span class="tierdots">${TIERS.map(t=>{const done=bd[t.key]!=null;return `<i class="td" style="${done?`background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}`:'background:transparent;border-color:var(--track)'}"></i>`;}).join('')}</span>`;
     let click=future?'':` data-date="${ds}"`;cells+=`<button class="daycell ${cls}"${click}><span class="dn">${d}</span>${dots}</button>`;}
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
     <div class="retcap"><span class="ttl">Archive</span><div style="display:flex;align-items:center;gap:14px"><button class="btn2" id="prevmo" style="padding:5px 10px">‹</button><span class="mono" style="font-weight:600;letter-spacing:.08em">${archiveMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'}).toUpperCase()}</span><button class="btn2" id="nextmo" ${canNext?'':'disabled'} style="padding:5px 10px">›</button></div></div>
