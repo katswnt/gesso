@@ -1398,6 +1398,12 @@ function trainPlaceFit(){
     if(w.length){ let mnx=180,mny=90,mxx=-180,mxy=-90;
       for(const p of w){ if(p.lat==null||p.lng==null)continue; mnx=Math.min(mnx,p.lng); mxx=Math.max(mxx,p.lng); mny=Math.min(mny,p.lat); mxy=Math.max(mxy,p.lat); }
       if(mxx>=mnx) return [[mny,mnx],[mxy,mxx]]; } }
+  // fallback: no place pinned → fit to wherever THIS drill's works actually cluster (e.g. a movement/era
+  // drill like "Dutch Golden Age" should zoom to the Netherlands without an explicit place filter)
+  { const w=(typeof game!=='undefined'&&game&&game.length)?game:trainingApply(TRAIN,POOL);
+    let mnx=180,mny=90,mxx=-180,mxy=-90,n=0;
+    for(const p of w){ if(p.lat==null||p.lng==null)continue; n++; mnx=Math.min(mnx,p.lng);mxx=Math.max(mxx,p.lng);mny=Math.min(mny,p.lat);mxy=Math.max(mxy,p.lat); }
+    if(n>=2&&mxx>=mnx) return [[mny,mnx],[mxy,mxx]]; }
   return null;
 }
 function trainingApply(T,w){ const f=T.facets;
@@ -1507,7 +1513,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
 
     <div style="position:relative;margin-bottom:18px">
       <div class="tsearchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="tsearch" type="text" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" style="flex:1;border:none;outline:none;background:transparent;font:500 14px Archivo;color:var(--ink)"/></div>
+        <input id="tsearch" type="text" name="gesso-filter-q" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex:1;border:none;outline:none;background:transparent;font:500 14px Archivo;color:var(--ink)"/></div>
       <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:9px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
     </div>
 
@@ -1975,7 +1981,7 @@ function renderRound(){
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
-      <div class="ac"><input type="text" id="artist" placeholder="surname, given name…" autocomplete="off"/>
+      <div class="ac"><input type="text" id="artist" name="gesso-artist-q" placeholder="surname, given name…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
