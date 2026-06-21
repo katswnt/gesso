@@ -1186,14 +1186,14 @@ async function backfillScores(){
   for(const date in (s.byDay||{})){ if(date<"2025-01-01")continue;
     for(const tier in s.byDay[date]){ const key=date+"|"+tier, total=+s.byDay[date][tier];
       if(sent.has(key)||!(total>0))continue;
-      try{ const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},
+      try{ const r=await fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
         body:JSON.stringify({deviceId:deviceId(),name:id.name,color:id.color,date,tier,total})});
         if(r.ok){ sent.add(key); localStorage.setItem("gesso.sent",JSON.stringify([...sent])); } }catch{}
     } }
 }
 async function submitScore(date,tierKey,summary){ // fire-and-forget; never blocks the recap
   try{ const id=loadIdentity();
-    const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const r=await fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({
       deviceId:deviceId(),name:id.name,color:id.color,date,tier:tierKey,total:summary.grand,
       perfects:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)).length,
       masterpieces:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length,
