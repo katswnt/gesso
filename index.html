@@ -923,7 +923,7 @@ let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archive
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
 const DIAMOND_SVG=`<svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg>`;
-const PALETTE_SVG=`<svg viewBox="0 0 47 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.6045 0C37.4654 0.000215233 46.4443 8.61997 46.4443 19.4697C46.4443 30.5186 37.6647 39.6599 26.6045 39.6602C13.5568 39.6602 0.000109138 32.5039 0 19.4697C0 6.60382 13.7253 0 26.6045 0ZM21.917 5.74023C19.3233 5.7403 17.2209 7.84288 17.2207 10.4365C17.2207 13.0304 19.3232 15.1337 21.917 15.1338C24.5109 15.1338 26.6133 13.0304 26.6133 10.4365C26.6131 7.84284 24.5107 5.74023 21.917 5.74023Z" fill="#292929"/><circle cx="10.6973" cy="12.2637" r="1.82646" fill="#EC7777"/><circle cx="7.56669" cy="19.5694" r="1.82646" fill="#EFD867"/><circle cx="10.6973" cy="26.875" r="1.82646" fill="#8AC98B"/><circle cx="18.0032" cy="31.0494" r="1.82646" fill="#D99AF2"/></svg>`;
+const PALETTE_SVG=`<svg width="47" height="40" viewBox="0 0 47 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.6045 0C37.4654 0.000215233 46.4443 8.61997 46.4443 19.4697C46.4443 30.5186 37.6647 39.6599 26.6045 39.6602C13.5568 39.6602 0.000109138 32.5039 0 19.4697C0 6.60382 13.7253 0 26.6045 0ZM21.917 5.74023C19.3233 5.7403 17.2209 7.84288 17.2207 10.4365C17.2207 13.0304 19.3232 15.1337 21.917 15.1338C24.5109 15.1338 26.6133 13.0304 26.6133 10.4365C26.6131 7.84284 24.5107 5.74023 21.917 5.74023Z" fill="#292929"/><circle cx="10.6973" cy="12.2637" r="1.82646" fill="#EC7777"/><circle cx="7.56669" cy="19.5694" r="1.82646" fill="#EFD867"/><circle cx="10.6973" cy="26.875" r="1.82646" fill="#8AC98B"/><circle cx="18.0032" cy="31.0494" r="1.82646" fill="#D99AF2"/></svg>`;
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
@@ -1481,54 +1481,54 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
-  const img1=`<div class=”heroimg”><img src=”/assets/MET picture frame.png” alt=”” style=”width:10.5rem;height:5rem;object-fit:contain”></div>`;
-  const img2=`<div class=”heroimg”><img src=”/assets/silver pin.png” alt=”” style=”width:16rem;height:3rem;object-fit:contain”></div>`;
-  const img3=`<div class=”heroimg”><img src=”/assets/dagger.png” alt=”” style=”width:9.047rem;height:4rem;object-fit:contain”></div>`;
+  const img1=`<div class="heroimg"><img src="/assets/MET picture frame.png" alt="" style="width:10.5rem;height:5rem;object-fit:contain"></div>`;
+  const img2=`<div class="heroimg"><img src="/assets/silver pin.png" alt="" style="width:16rem;height:3rem;object-fit:contain"></div>`;
+  const img3=`<div class="heroimg"><img src="/assets/dagger.png" alt="" style="width:9.047rem;height:4rem;object-fit:contain"></div>`;
   const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
-  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class=”sheet”>
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
-    <div class=”hero”>
-      <div class=”herokick”>&middot; ${replay?'archive replay':'daily art guessing game'} &middot;</div>
-      <div class=”herobig”>${replay?'pick a difficulty.':`take a gess<span class=”dabo-float”><span class=”dabo dabo-lg”>${PALETTE_SVG}</span></span>.`}</div>
-      <div class=”heroglos”>${replay?`Replaying ${niceDate(dateStr)} &mdash; choose a tier for this date&rsquo;s works`:'<strong>ges&middot;so</strong><sup style=”color:var(--accent)”>1</sup> &middot; noun &middot; the white primer brushed onto a canvas before the first brushstroke<br><strong>ges&middot;so</strong><sup style=”color:var(--accent)”>2</sup> &middot; verb, informal &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand'}</div>
+    <div class="hero">
+      <div class="herokick">&middot; ${replay?'archive replay':'daily art guessing game'} &middot;</div>
+      <div class="herobig">${replay?'pick a difficulty.':`take a gess<span class="dabo-float"><span class="dabo dabo-lg">${PALETTE_SVG}</span></span>.`}</div>
+      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} &mdash; choose a tier for this date&rsquo;s works`:'<strong>ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; noun &middot; the white primer brushed onto a canvas before the first brushstroke<br><strong>ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; verb, informal &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand'}</div>
     </div>
     ${img1}
-    <div style=”text-align:center;padding:0 24px 24px”>
-      <div class=”herometa”>${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style=”font-weight:700”>${POOL.length}</span> works</div>
-      <div style=”margin-top:6px;font:400 12px 'Manrope',sans-serif;color:var(--muted)”>select your difficulty to start guessing</div>
+    <div style="text-align:center;padding:0 24px 24px">
+      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="font-weight:700">${POOL.length}</span> works</div>
+      <div style="margin-top:6px;font:400 12px 'Manrope',sans-serif;color:var(--muted)">select your difficulty to start guessing</div>
     </div>
-    <div class=”difs”>
-      ${TIERS.map((t,i)=>`<button class=”dif” data-k=”${t.key}”>
-        <div class=”nm”>${t.label}</div>
-        <span class=”difdot” style=”color:${TDCOL[i]}”>${DIAMOND_SVG}</span>
-        <div class=”bl”>${t.blurb}</div>
-        <div class=”ct”>${tierItems(i).length} works available</div>
+    <div class="difs">
+      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
+        <div class="nm">${t.label}</div>
+        <span class="difdot" style="color:${TDCOL[i]}">${DIAMOND_SVG}</span>
+        <div class="bl">${t.blurb}</div>
+        <div class="ct">${tierItems(i).length} works available</div>
       </button>`).join('')}
     </div>
-    ${replay?'':`<div style=”text-align:center;padding:20px 24px 0”>
-      <div style=”text-align:center;margin-bottom:8px”><span style=”font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)”>or play in learning mode</span></div>
-      <div style=”display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px”>
-        ${TIERS.map((t,i)=>`<button class=”navbtn inf” data-inf=”${t.key}”><span style=”color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px”>${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
+    ${replay?'':`<div style="text-align:center;padding:20px 24px 0">
+      <div style="text-align:center;margin-bottom:8px"><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">or play in learning mode</span></div>
+      <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px">
+        ${TIERS.map((t,i)=>`<button class="navbtn inf" data-inf="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
       </div>
-      <p style=”font:400 10px/12px 'Manrope',sans-serif;color:var(--muted);max-width:400px;margin:10px auto 0;padding-bottom:40px”>Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
+      <p style="font:400 10px/12px 'Manrope',sans-serif;color:var(--muted);max-width:400px;margin:10px auto 0;padding-bottom:40px">Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
     </div>`}
     ${img2}
-    <div class=”homesec”>
-      <div class=”homesechd”>&middot; notice what &ldquo;easy&rdquo; is &middot;</div>
-      <p class=”homesecbody”>Difficulty here tracks what people actually recognize &mdash; and <strong>&ldquo;Easy&rdquo; is ${easyEuro}% European</strong>. That&rsquo;s not because the world&rsquo;s art is European; it&rsquo;s because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we&rsquo;re taught to know. Try the harder tiers and the rest of the world appears.</p>
-      <p class=”homesecbody”>The whole pool &mdash; drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia &mdash; is ${b.europe}% European:</p>
-      <div style=”max-width:560px;margin:0 auto”><div class=”bars”>${b.segs}</div><div class=”barkey”>${b.key}</div></div>
+    <div class="homesec">
+      <div class="homesechd">&middot; notice what &ldquo;easy&rdquo; is &middot;</div>
+      <p class="homesecbody">Difficulty here tracks what people actually recognize &mdash; and <strong>&ldquo;Easy&rdquo; is ${easyEuro}% European</strong>. That&rsquo;s not because the world&rsquo;s art is European; it&rsquo;s because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we&rsquo;re taught to know. Try the harder tiers and the rest of the world appears.</p>
+      <p class="homesecbody">The whole pool &mdash; drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian (National Museums of African &amp; Asian Art), and Wikidata/Wikimedia &mdash; is ${b.europe}% European:</p>
+      <div style="max-width:560px;margin:0 auto"><div class="bars">${b.segs}</div><div class="barkey">${b.key}</div></div>
     </div>
     ${img3}
-    <div class=”homesec”>
-      <div class=”homesechd”>&middot; frequently asked questions &middot;</div>
-      <div class=”faqacc”>
-        <div class=”faqitem”><button class=”faqq”>how is difficulty decided?<span class=”faqplus”>+</span></button>
-          <div class=”faqa”><div class=”faqa-inner”><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
-        <div class=”faqitem”><button class=”faqq”>where does the art come from?<span class=”faqplus”>+</span></button>
-          <div class=”faqa”><div class=”faqa-inner”><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
-        <div class=”faqitem”><button class=”faqq”>are the study notes reliable?<span class=”faqplus”>+</span></button>
-          <div class=”faqa”><div class=”faqa-inner”><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
+    <div class="homesec">
+      <div class="homesechd">&middot; frequently asked questions &middot;</div>
+      <div class="faqacc">
+        <div class="faqitem"><button class="faqq">how is difficulty decided?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
+        <div class="faqitem"><button class="faqq">where does the art come from?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
+        <div class="faqitem"><button class="faqq">are the study notes reliable?<span class="faqplus">+</span></button>
+          <div class="faqa"><div class="faqa-inner"><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
       </div>
     </div>
     ${ATTRIB}
