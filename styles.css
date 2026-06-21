@@ -475,6 +475,8 @@
   .aglist .agrow:nth-child(6n+4) .agnum{border-radius:48% 52% 60% 40% / 50% 56% 44% 50%;transform:rotate(6deg)}
   .aglist .agrow:nth-child(6n+5) .agnum{border-radius:70% 30% 52% 48% / 40% 62% 38% 60%;transform:rotate(-2deg)}
   .aglist .agrow:nth-child(6n+6) .agnum{border-radius:38% 62% 63% 37% / 60% 38% 62% 40%;transform:rotate(5deg)}
+  .agnum.pinnum{background:var(--accent);color:#fff} /* pinned note → number matches its image pin */
+  .agrow.flash{box-shadow:0 0 0 2px var(--accent)}
   .agqt{flex:1}
   .agplus{flex:0 0 auto;font:700 16px/1 'Archivo',sans-serif;color:var(--muted);transition:transform .2s,color .2s}
   .agq[aria-expanded="true"] .agnum{background:var(--accent);color:#fff}

@@ -2227,6 +2227,17 @@ function guideHTML(guide){
       <button type="button" class="agq" data-ag="${i}" aria-expanded="false"><span class="agnum">${i+1}</span><span class="agqt">${esc(g.q)}</span><span class="agplus">+</span></button>
       <div class="aga" hidden>${esc(g.a)}</div></div>`).join('')}</div></div>`;
 }
+// v2 unified "teach me": one list of notes; pinned notes (have x,y) lead with the visible observation and
+// carry a number matching their image pin, unpinned notes are Q&A with a dab bullet. head shows collapsed,
+// body expands. Replaces the old cues + "Ask the guide" split.
+function notesHTML(notes){
+  if(!Array.isArray(notes)||!notes.length) return '';
+  let pin=0;
+  return `<div class="aglist">${notes.map((nt,i)=>{
+    const pinned=nt.x!=null&&nt.y!=null; const badge=pinned?`<span class="agnum pinnum">${++pin}</span>`:`<span class="agnum"></span>`;
+    return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
+  }).join('')}</div>`;
+}
 function renderReveal(r){
   window.scrollTo(0,0);
   const it=r.it;
@@ -2244,6 +2255,9 @@ function renderReveal(r){
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
+  // v2 unified notes (pinned items lead with the observation + carry image-pin coords); v1 falls back to cues+hotspots+guide
+  const notesV2 = Array.isArray(study.notes) && study.notes.length ? study.notes : null;
+  const pinNotes = notesV2 ? study.notes.map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null) : null;
   const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
@@ -2256,7 +2270,7 @@ function renderReveal(r){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map((n,k)=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${k+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -2283,9 +2297,9 @@ function renderReveal(r){
     </div>
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
       <div class="why">${why}</div>
-      ${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
+      ${notesV2 ? notesHTML(study.notes) : `${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}
-      ${guideHTML(study.guide)}
+      ${guideHTML(study.guide)}`}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
@@ -2295,13 +2309,16 @@ function renderReveal(r){
   countUps();
   setupReportFlow(it,study);
   if(perfect)setTimeout(()=>paintBurst(document.getElementById('revbanner')),80);
-  // look-closer markers (feature-anchored) → highlight the matching cue
+  // look-closer pins → v2: open+scroll the matching note row; v1: flash the matching cue
+  const smooth=(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth';
   document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
+    if(b.dataset.note!=null){ const row=document.querySelector(`.agrow[data-note="${b.dataset.note}"]`); if(!row)return;
+      const q=row.querySelector('.agq'); if(q&&q.getAttribute('aria-expanded')!=='true'){q.setAttribute('aria-expanded','true');q.nextElementSibling.hidden=false;}
+      row.scrollIntoView({behavior:smooth,block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1200); return; }
     const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
-    if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
-      cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
-  // "Ask the guide" accordion: each row toggles independently (multiple can be open)
-  document.querySelectorAll('.askguide .agq').forEach(b=>b.onclick=()=>{
+    if(cue){cue.scrollIntoView({behavior:smooth,block:'center'}); cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
+  // teach-me accordion (v1 .askguide + v2 .aglist): each row toggles independently
+  document.querySelectorAll('.study .agq').forEach(b=>b.onclick=()=>{
     const open=b.getAttribute('aria-expanded')==='true';
     b.setAttribute('aria-expanded',open?'false':'true'); b.nextElementSibling.hidden=open;});
   // reveal map
