@@ -1780,7 +1780,6 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
-  const srcList=computeCollections().sources.filter(s=>s.count>0 && s.name!=='Wikidata & Wikimedia Commons').map(s=>s.name).join(', ');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
@@ -1810,7 +1809,7 @@ function renderStart(dateStr,push=true){
       </div>
     </div>`}
     <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European; it's because museums, schooling and the canon have overwhelmingly centered the West, so those are the works we're taught to know. Drop to the harder tiers and the rest of the world appears. The whole pool — drawn from the open collections of ${srcList}, plus works surfaced via Wikidata/Wikimedia Commons — is ${b.europe}% European:</p>
+      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European. It's because the Western canon decides what gets famous, and fame is what makes something easy to recognize. Drop to the harder tiers and the rest of the world appears. The whole pool is ${b.europe}% European, drawn from the open collections of Art Institute of Chicago, The Metropolitan Museum of Art, Cleveland Museum of Art, Harvard Art Museums, Victoria and Albert Museum, Smithsonian Open Access, Los Angeles County Museum of Art, The British Museum, National Gallery of Art, Brooklyn Museum, The Walters Art Museum, Musée du quai Branly&ndash;Jacques Chirac, plus works surfaced via Wikidata/Wikimedia Commons:</p>
       <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
     </div>
     <details class="faq" style="max-width:520px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding:14px 24px 0;text-align:center">
