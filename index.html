@@ -2034,15 +2034,19 @@ function renderRound(){
     const ch=styleChoices(it);
     // upfront nudge: on tiers where a correct region rules schools out, tell the player BEFORE they pin (it's
     // not obvious the map feeds this field). Hidden once the bonus actually fires (geobonus takes over).
-    const styleElim = GEO_LEAVE[tier]!=null && it.cats.includes('style');
+    // pin-rules-out-movements applies on daily tiers AND in training (tier is null there → use a default of 2);
+    // only when the map is in play (show('where')) so the hint never lies when 'where' is hidden in a drill.
+    const leaveFor = tier ? GEO_LEAVE[tier] : (TRAIN ? 2 : null);
+    const styleElim = leaveFor!=null && it.cats.includes('style') && show('where');
+    const elimKind = (typeof CULTS!=='undefined' && CULTS.includes(it.style)) ? 'cultures' : 'movements';
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
-      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ Pin the right region on the map to rule out unlikely schools, free</div>`:''}
+      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ Place a pin on the map — matching the region rules out ${elimKind} that don&rsquo;t belong there, free</div>`:''}
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
-      <div class="ac"><input type="text" id="artist" name="gesso-artist-q" placeholder="surname, given name…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
@@ -2100,8 +2104,8 @@ function renderRound(){
     else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
     curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
-    // correct-geo reward: pin the right continent → free 50/50 on the school
-    const leave=GEO_LEAVE[tier];
+    // correct-geo reward: pin the right continent → free 50/50 on the school (daily tiers + training, via leaveFor)
+    const leave=leaveFor;
     const wcR=placeCountry(it.place);
     const rightRegion=continentOf(lat,lng)===it.region || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
@@ -2119,6 +2123,7 @@ function renderRound(){
 
 function setupAutocomplete(){
   const inp=document.getElementById('artist'),list=document.getElementById('aclist');let active=-1,items=[];
+  if(inp){ const drop=()=>inp.removeAttribute('readonly'); inp.addEventListener('focus',drop); inp.addEventListener('pointerdown',drop); } // readonly-until-focus defeats native/Contacts autofill
   const close=()=>{list.style.display='none';active=-1;};
   const render=q=>{const ql=deaccent(q).trim();
     if(!ql){items=[];close();return;}
