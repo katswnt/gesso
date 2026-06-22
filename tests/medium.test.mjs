@@ -17,7 +17,7 @@ const CASES = [
   ["Gelatin silver print", "Photograph"],   // process, not the silver
   ["Silver", "Silver"],                       // a genuine silver object
   ["Copper", "Copper"],                       // not Bronze
-  ["Engraving on copperplate", "Woodblock print"], // print signal wins over copper
+  ["Engraving on copperplate", "Engraving"], // intaglio print, distinct from East-Asian woodblock
   ["Bronze", "Bronze"],
   ["Wood", "Wood"],
   ["Carved olive pit", "Wood"],               // fruit-stone carving → Wood, not Mixed media

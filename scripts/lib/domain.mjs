@@ -97,7 +97,7 @@ export const MED_FAMILY = {
   // split out of the old catch-all "paint": paintings, drawings, and prints are no longer mutual 50%-givers
   "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Watercolor":"paint","Ink":"paint",
   "Drawing":"draw",
-  "Woodblock print":"print",
+  "Woodblock print":"print","Engraving":"print","Lithograph":"print",
   "Bronze":"sculpt","Copper":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
   "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft"
 };
@@ -124,7 +124,9 @@ export function simplifyMedium(s){
   if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
   if(/water-?colou?r|gouache/.test(t))return "Watercolor";
   if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock)
-  if(/woodcut|woodblock|engrav|etch|lithograph|screenprint|silkscreen|offset print|offset printing|printed matter|\bprint\b/.test(t))return "Woodblock print";
+  if(/lithograph/.test(t))return "Lithograph"; // Western planographic print
+  if(/engrav|\betch|drypoint|aquatint|mezzotint|intaglio/.test(t))return "Engraving"; // Western intaglio print (NOT East-Asian woodblock)
+  if(/woodcut|woodblock|screenprint|silkscreen|offset print|offset printing|printed matter|\bprint\b/.test(t))return "Woodblock print";
   if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing|tracing|cartoon/.test(t))return "Drawing";
   if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
   if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
