@@ -820,7 +820,9 @@ function buildIndexes(){
   // difficulty = real recognizability: global fame quartiles. Easy = what people actually recognize,
   // which is canon-skewed toward the West — surfaced as the teaching note on the start screen.
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
-  MINY=Math.min(...POOL.map(p=>p.y));
+  // timeline floor = oldest DATE-GUESSABLE work (cats incl 'when'); deep-prehistory pieces like Venus of
+  // Willendorf opt out of date-guessing (cats without 'when') so they don't drag the slider back to -25000.
+  MINY=Math.min(...POOL.filter(p=>p.y!=null&&(!p.cats||p.cats.includes('when'))).map(p=>p.y));
   // recompute the guessable categories from the ACTUAL fields (stale stored cats caused: medium known but
   // not guessable / shown pre-lock, artist red-box when anonymous). Generic period buckets aren't quizzed.
   const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$/i; // vague period+geo labels are cleared in data; legit "X era/period" cultures (Meiji era, Edo period) stay quizzable
