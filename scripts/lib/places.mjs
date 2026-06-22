@@ -28,7 +28,7 @@ export const isPlaceCanonical = place => canonicalizePlace(place) === String(pla
 // region:"Africa"). Keyed by the base country (suffixes like "(Rome)" / "/Tibet" stripped).
 const CONTINENT = {
   // Europe
-  austria:"Europe","austria–hungary":"Europe","austria-hungary":"Europe",belgium:"Europe",cyprus:"Europe",czechia:"Europe",denmark:"Europe",france:"Europe",germany:"Europe",greece:"Europe",hungary:"Europe",italy:"Europe",netherlands:"Europe",norway:"Europe",poland:"Europe",portugal:"Europe",romania:"Europe",russia:"Europe","russian empire":"Europe",spain:"Europe",sweden:"Europe",switzerland:"Europe","united kingdom":"Europe","holy roman empire":"Europe",
+  austria:"Europe","austria–hungary":"Europe","austria-hungary":"Europe",belgium:"Europe",cyprus:"Europe",czechia:"Europe",denmark:"Europe",france:"Europe",germany:"Europe",greece:"Europe",hungary:"Europe",ireland:"Europe",italy:"Europe",netherlands:"Europe",norway:"Europe",poland:"Europe",portugal:"Europe",romania:"Europe",russia:"Europe","russian empire":"Europe",spain:"Europe",sweden:"Europe",switzerland:"Europe","united kingdom":"Europe","holy roman empire":"Europe",
   // North America
   "united states of america":"North America",mexico:"North America",guatemala:"North America","north america":"North America",canada:"North America",
   // South America
