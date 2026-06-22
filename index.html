@@ -1776,7 +1776,11 @@ function renderFromPath(){
   return renderStart(undefined,false);
 }
 window.addEventListener('popstate',renderFromPath);
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();
+  // header/menu leaderboard link always opens on Easy; the end-of-daily "view leaderboard" button (its own
+  // onclick sets lbTier=the tier just played) keeps the completed tier instead.
+  if(b.dataset.route==='register')lbTier='easy';
+  route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-login]');if(b){e.preventDefault();openLogin();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-editid]');if(b){e.preventDefault();openIdentityModal(()=>renderLeaderboard());}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
