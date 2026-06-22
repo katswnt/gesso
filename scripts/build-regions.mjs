@@ -55,10 +55,10 @@ const MAP = {
   "Old Kingdom":               { file: "bc3000", names: ["Egypt"] },        // ~2417 BCE
   "Predynastic Egypt":         { file: "bc3000", names: ["Egypt"] },        // ~4000 BCE (earliest named)
   "Ancient Egypt":             { file: "bc1500", names: ["Egypt"] },        // generic
-  "Late Period Egypt":         { file: "bc500",  names: ["Achaemenid Empire"] }, // 27th dyn = Persian-held; fallback below
-  "Ptolemaic Egypt":           { file: "bc200",  names: ["Ptolemaic Kingdom"] }, // ~181 BCE
-  "Roman Egypt":               { file: "200",    names: ["Roman Empire"] }, // province of Rome
-  "Coptic art":                { file: "600",    names: ["Eastern Roman Empire"] },
+  "Late Period Egypt":         { file: "bc500",  names: ["Achaemenid Empire"], clip: [24,21,37,32] }, // Persian-held; Egyptian art → clip to Egypt
+  "Ptolemaic Egypt":           { file: "bc200",  names: ["Ptolemaic Kingdom"], clip: [24,21,37,32] }, // Egyptian art → clip to Egypt
+  "Roman Egypt":               { file: "200",    names: ["Roman Empire"], clip: [24,21,37,32] }, // Roman province; art is Egyptian → clip to Egypt
+  "Coptic art":                { file: "600",    names: ["Eastern Roman Empire"], clip: [24,21,37,32] }, // Byzantine spanned to Spain; art is Egyptian → clip to Egypt
   "Islamic Egypt":             { file: "1000",   names: ["Fatimid Caliphate"] }, // Fatimid Egypt
 
   // ── China (dynasty polygon at the right date) ──
@@ -67,7 +67,7 @@ const MAP = {
   "Han dynasty":               { file: "200",    names: ["Han"] },
   "Tang dynasty":              { file: "800",    names: ["Tang Empire"] },
   "Song dynasty":              { file: "1100",   names: ["Song Empire"] },
-  "Yuan dynasty":              { file: "1300",   names: ["Great Khanate"] },
+  "Yuan dynasty":              { file: "1300",   names: ["Great Khanate"], clip: [73,18,135,54] }, // Mongol empire spanned Asia→Europe; Yuan art is Chinese → clip to China
   "Ming dynasty":              { file: "1500",   names: ["Ming Chinese Empire"] },
   "Qing dynasty":              { file: "1800",   names: ["Qing Empire"] },
   "Chinese":                   { file: "1500",   names: ["Ming Chinese Empire"] },
@@ -199,7 +199,23 @@ const out = {};
 const missing = [];
 const yearOfFile = (f) => (f.startsWith("bc") ? -Number(f.slice(2)) : Number(f));
 
-for (const [culture, { file, names }] of Object.entries(MAP)) {
+// Clip a [lng,lat] ring to a [W,S,E,N] box (Sutherland–Hodgman). Used to bound an over-broad SOVEREIGN
+// extent down to the art's actual cultural region (e.g. Byzantine empire → just Egypt for Coptic art), so a
+// pin in Byzantine Spain no longer counts as "in range" for a Cairo work.
+function clipRingToBox(ring, [W, S, E, N]) {
+  const clip = (pts, inside, isect) => { const o = []; for (let i = 0; i < pts.length; i++) {
+    const A = pts[i], B = pts[(i + 1) % pts.length], ai = inside(A), bi = inside(B);
+    if (ai) { o.push(A); if (!bi) o.push(isect(A, B)); } else if (bi) o.push(isect(A, B)); } return o; };
+  let p = ring.slice();
+  if (p.length > 1 && p[0][0] === p.at(-1)[0] && p[0][1] === p.at(-1)[1]) p = p.slice(0, -1);
+  p = clip(p, a => a[0] >= W, (a, b) => { const t = (W - a[0]) / (b[0] - a[0]); return [W, a[1] + t * (b[1] - a[1])]; }); if (!p.length) return [];
+  p = clip(p, a => a[0] <= E, (a, b) => { const t = (E - a[0]) / (b[0] - a[0]); return [E, a[1] + t * (b[1] - a[1])]; }); if (!p.length) return [];
+  p = clip(p, a => a[1] >= S, (a, b) => { const t = (S - a[1]) / (b[1] - a[1]); return [a[0] + t * (b[0] - a[0]), S]; }); if (!p.length) return [];
+  p = clip(p, a => a[1] <= N, (a, b) => { const t = (N - a[1]) / (b[1] - a[1]); return [a[0] + t * (b[0] - a[0]), N]; }); if (p.length < 3) return [];
+  p.push(p[0].slice()); return p;
+}
+
+for (const [culture, { file, names, clip }] of Object.entries(MAP)) {
   let fc;
   try { fc = await getEra(file); }
   catch (e) { missing.push(`${culture}: ${e.message}`); continue; }
@@ -208,6 +224,7 @@ for (const [culture, { file, names }] of Object.entries(MAP)) {
   let rings = [];
   for (const f of feats) rings.push(...ringsOf(f.geometry));
   rings = round2(rings);
+  if (clip) { rings = rings.map((r) => clipRingToBox(r, clip)).filter((r) => r.length >= 4); }
   out[culture] = { year: yearOfFile(file), name: names.join(" + "), geometry: rings };
 }
 
