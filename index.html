@@ -1145,6 +1145,13 @@ function dailyItems(key,dateStr){
   // Prefer the FROZEN per-tier order (data/daily-order.js) so dailies never drift when fame/pool changes
   // and stay shareable/replayable. Falls back to the live fame-sorted rotation if the freeze is absent.
   const byId = window.__BYID || (window.__BYID = Object.fromEntries(POOL.map(p=>[p.id,p])));
+  // EXPLICIT per-date lock: byDate[date][tier] pins served/scheduled days so re-freezes (e.g. adding works)
+  // never disturb today or the past — only un-pinned future dates fall through to the rotation below.
+  const pinned = ((window.ARTEFACTUM_DAILY||{}).byDate||{})[dateStr];
+  if(pinned && Array.isArray(pinned[key]) && pinned[key].length){
+    const got = pinned[key].map(id=>byId[id]).filter(Boolean);
+    if(got.length) return got;
+  }
   const frozen = (window.ARTEFACTUM_DAILY||{})[key];
   let perm;
   if(frozen && frozen.length>=ROUNDS){

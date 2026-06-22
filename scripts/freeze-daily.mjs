@@ -83,6 +83,24 @@ out.meta = {
   }
 };
 
+// --- PER-DATE LOCK: preserve already-served days, (re)generate only future dates from the new order ---
+// so adding works / re-freezing never disturbs today or the past. byDate[YYYY-MM-DD][tier] = [5 ids].
+{ let prior={}; try{ const s=readFileSync("data/daily-order.js","utf8"); prior=(JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1)).byDate)||{}; }catch{}
+  const RND=5, TRS=["easy","medium","hard","impossible"];
+  const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
+  const dayIds=(key,day)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
+    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set();
+    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
+      if(seen.has(t)||(a&&sa.has(a)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); } return o; };
+  const todayNum=Math.floor(Date.now()/86400000);
+  const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
+  const byDate={};
+  for(let d=todayNum-3; d<=todayNum+180; d++){ const k=iso(d);
+    if(prior[k] && d<=todayNum){ byDate[k]=prior[k]; continue; }   // lock served/today to what was already shown
+    const rec={}; for(const t of TRS) rec[t]=dayIds(t,d); byDate[k]=rec; }
+  out.byDate=byDate;
+}
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
 console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2q.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);
 console.log("Easy daily = 4 icons + 1 recognizable; icons recur ~"+Math.round(T1s.length/4)+"d");
