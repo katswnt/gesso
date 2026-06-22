@@ -1745,6 +1745,9 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
     const ds=await Promise.all(played.map(async t=>{ try{ const r=await fetch(`/api/leaderboard?date=${today}&tier=${t.key}&me=${encodeURIComponent(deviceId())}`); return r.ok?await r.json():null; }catch{ return null; } }));
     for(const d of ds){ if(d&&d.you&&(best==null||d.you.rank<best))best=d.you.rank; }
     const el=document.getElementById('acrank'); if(el)el.textContent=best?'#'+best:'—'; })();
+  // the page paints before the Supabase session resolves on a fresh load — so "Sign in to save" can show to an
+  // already-signed-in user. Re-check auth and repaint once if it flips. (Guarded by the flip so it can't loop.)
+  if(!authUser){ (async()=>{ const was=!!authUser; try{ await refreshAuth(); }catch{} if(!!authUser!==was && location.pathname.includes('account')) renderAccount(false); })(); }
 }
 function confirmDeleteAccount(){
   const {veil,close}=openModal({title:'Delete account?',body:`<div style="padding:18px 22px"><p style="margin:0 0 16px;font-size:14px;color:var(--ink)">This permanently deletes your account, leaderboard entries, and synced progress. This can&rsquo;t be undone.</p>
@@ -2228,8 +2231,12 @@ function score(){
     // right cultural REGION (continent) earns a solid partial even if the country/borders are off — many
     // cultures (Kongo, etc.) span or predate modern borders. Never score below the plain distance falloff.
     inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region;
-    const distPts=Math.round(MAX_CAT*Math.exp(-(Math.max(0,dist-rad))/D.distK));
-    sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
+    const off=Math.max(0,dist-rad);
+    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // normal falloff OUTSIDE the range
+    // INSIDE the range/country: full near the true origin, but a gentler (not zero) penalty as you get far —
+    // so pinning the actual spot beats pinning the far edge of a huge empire (Byzantine Spain for a Cairo work).
+    const inPts =Math.round(MAX_CAT*Math.exp(-off/(D.distK*2.5)));
+    sp = inC ? inPts : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
   cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
     note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
   }
