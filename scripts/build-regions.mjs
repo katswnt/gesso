@@ -89,7 +89,7 @@ const MAP = {
   "Korea":                     { file: "1500",   names: ["Korea"] },
 
   // ── Iran / Persia / Islamic world ──
-  "Achaemenid":                { file: "bc500",  names: ["Achaemenid Empire"] },
+  "Achaemenid":                { file: "bc500",  names: ["Achaemenid Empire"], clip: [44,25,64,40] }, // empire reached Egypt/Anatolia; Achaemenid royal art is Persian-core → clip to Iran
   "Parthian":                  { file: "200",    names: ["Parthian Empire"] },
   "Islamic":                   { file: "1000",   names: ["Fatimid Caliphate", "Buyid Emirate", "Caliphate of Córdoba"] }, // broad Islamic world
   "Persian Islamic pottery":   { file: "1100",   names: ["Seljuk Empire"] },
@@ -114,7 +114,7 @@ const MAP = {
 
   // ── Turkey / Ottoman ──
   "Ottoman":                   { file: "1600",   names: ["Ottoman Empire"] },
-  "Iznik":                     { file: "1600",   names: ["Ottoman Empire"] },
+  "Iznik":                     { file: "1600",   names: ["Ottoman Empire"], clip: [25,35,45,43] }, // Iznik/Kütahya pottery is Anatolian, not whole-empire → clip to Anatolia
 
   // ── India ──
   "Mughal painting":           { file: "1600",   names: ["Mughal Empire"] },
