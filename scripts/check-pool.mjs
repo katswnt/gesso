@@ -15,6 +15,7 @@ const fa = p => fame[p.id]!=null?fame[p.id]:(p.fame||0);
 
 const BUCKETS = new Set(["Oil paint","Tempera","Fresco","Watercolor","Ink","Drawing","Woodblock print","Bronze","Copper","Marble","Stone","Wood","Ivory","Jade","Ceramic","Glass","Textile","Gold","Silver","Lacquer","Photograph","Mixed media","Leather","Wax","Beadwork","Engraving","Lithograph"]);
 
+const PD_OK = new Set(["wd:Q1960268"]); // Steichen, The Pond—Moonlight (1904, US-PD by publication)
 const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
 
@@ -42,7 +43,9 @@ for(const p of pool){
   if(p.artist && /[぀-ヿ㐀-䶿一-鿿]/.test(p.artist)) add(hard,"artist-CJK",p,`"${p.artist}"`);
   if(p.artist && /^Q\d+$/.test(p.artist)) add(hard,"artist-qid",p,`"${p.artist}"`);
   // COPYRIGHT (local denylist; full check = audit-copyright.mjs)
-  if(isInCopyright(p.artist)) add(hard,"in-copyright",p,`"${p.artist}"`);
+  // PD_OK: works by a denylisted artist that are themselves verified public-domain by US publication date
+  // (e.g. Steichen's 1904 "The Pond—Moonlight", first published 1906 → pre-1929 PD). Per-id, not per-artist.
+  if(isInCopyright(p.artist) && !PD_OK.has(p.id)) add(hard,"in-copyright",p,`"${p.artist}"`);
   // SCHEMA integrity
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);
