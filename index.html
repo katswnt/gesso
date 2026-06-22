@@ -1150,7 +1150,7 @@ function dailyItems(key,dateStr){
   const pinned = ((window.ARTEFACTUM_DAILY||{}).byDate||{})[dateStr];
   if(pinned && Array.isArray(pinned[key]) && pinned[key].length){
     const got = pinned[key].map(id=>byId[id]).filter(Boolean);
-    if(got.length) return got;
+    if(got.length>=ROUNDS) return got.slice(0,ROUNDS); // only honor a COMPLETE locked day; else fall back to rotation
   }
   const frozen = (window.ARTEFACTUM_DAILY||{})[key];
   let perm;
@@ -2026,6 +2026,9 @@ function renderRound(){
   // activeCats = work's cats minus single-pin "given" facets, then narrowed by FOCUS axis (TRAIN only).
   const activeCats = activeCatsFor(it);
   const show = c => activeCats.includes(c);
+  // how many wrong schools a correct map-pin rules out (daily tiers + training); used by the style field AND
+  // the map-pin handler below, so it must live in renderRound scope (NOT inside the style-field block).
+  const leaveFor = tier ? GEO_LEAVE[tier] : (TRAIN ? 2 : null);
   let n=1; const fields=[];
   if(show('when')) fields.push({k:'when', html:`
     <div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('when')}When made</span></div>
@@ -2053,7 +2056,6 @@ function renderRound(){
     // not obvious the map feeds this field). Hidden once the bonus actually fires (geobonus takes over).
     // pin-rules-out-movements applies on daily tiers AND in training (tier is null there → use a default of 2);
     // only when the map is in play (show('where')) so the hint never lies when 'where' is hidden in a drill.
-    const leaveFor = tier ? GEO_LEAVE[tier] : (TRAIN ? 2 : null);
     const styleElim = leaveFor!=null && it.cats.includes('style') && show('where');
     const elimKind = (typeof CULTS!=='undefined' && CULTS.includes(it.style)) ? 'cultures' : 'movements';
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
