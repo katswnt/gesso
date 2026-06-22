@@ -27,11 +27,15 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+// Fall back to the PUBLIC project URL + publishable (anon) key — identical to api/_supabase.js and already
+// shipped in the web bundle, so nothing secret here. Makes the keep-alive work even when the (optional)
+// repo secrets aren't set, which is exactly why the Action was failing.
+const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://jmrpqmejupouqfergyyg.supabase.co';
 const key =
   process.env.SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'sb_publishable_ZUSDLvzDYbD222i_ycdezQ_j7IB7Xp_';
 
 if (!url || !key) {
   console.error('keep-alive: missing SUPABASE_URL / SUPABASE_ANON_KEY');
