@@ -29,6 +29,9 @@ for(const p of pool){
   if(p.style && /^[a-z]/.test(p.style)) add(hard,"style-lowercase",p,`"${p.style}"`);
   if(p.style && BAD_STYLE.test(p.style.trim())) add(hard,"style-is-place",p,`"${p.style}"`);
   if(p.style && COUNTRY_NAMES.has(p.style) && !movKeys.has(p.style)) add(hard,"style-is-country",p,`"${p.style}"`);
+  // a CULTURE tag must never be a bare modern country (use the demonym/tradition: Khmer not Cambodia, Persian
+  // not Iran). This fires even if the country was added to MOVEMENTS — that loophole let ~45 slip before.
+  if(p.style && p.styleKind==="culture" && COUNTRY_NAMES.has(p.style)) add(hard,"culture-is-country",p,`"${p.style}" → use the demonym/tradition`);
   if(p.style && /[,;]/.test(p.style) && !movKeys.has(p.style)) add(hard,"style-comma",p,`"${p.style}"`); // descriptive/listy style string (keep only curated comma-cultures)
   if(p.style && p.styleKind && !movKeys.has(p.style)) add(warn,"style-no-metadata",p,`"${p.style}"`);
   // COVERAGE GATE: a famous work whose style has no MOVEMENTS entry would ship "c. unknown" + generic emblem to
