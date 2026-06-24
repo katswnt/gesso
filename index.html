@@ -2338,7 +2338,9 @@ function notesHTML(notes){
     return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
   }).join('')}</div>`;
 }
-function renderReveal(r){
+function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
+function renderReveal(r,ri){
+  if(ri==null)ri=results.indexOf(r); const liveRound=results.length-1; // ri = round being viewed; liveRound = latest submitted
   window.scrollTo(0,0);
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
@@ -2360,10 +2362,10 @@ function renderReveal(r){
   const pinNotes = notesV2 ? study.notes.map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null) : null;
   const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
+  document.getElementById('stage').innerHTML=`${header(results.length,ri,true)}<div class="sheet">
 
     <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
-      <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
+      <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${ri+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
         <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
@@ -2404,7 +2406,7 @@ function renderReveal(r){
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
-    <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(idx<ROUNDS-1?'Next masterwork →':'See final score →')}</button>${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
+    <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(ri<liveRound?'Next →':(liveRound<ROUNDS-1?'Next masterwork →':'See final score →'))}</button>${(!infinite&&ri>0)?`<button class="btn" id="prev" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">← Back to review</button>`:''}${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
   </div>`;
   countUps();
   setupReportFlow(it,study);
@@ -2451,7 +2453,8 @@ function renderReveal(r){
     document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(TRAIN?trainingSet(TRAIN):practiceOrder(tier)); renderRound(); };
     const eb=document.getElementById('endinf'); if(eb) eb.onclick=renderInfiniteSummary;
   } else {
-    document.getElementById('next').onclick=()=>{idx++; idx<ROUNDS?renderRound():renderFinal();};
+    document.getElementById('next').onclick=()=>{ if(ri<liveRound){showReveal(ri+1);} else {idx++; idx<ROUNDS?renderRound():renderFinal();} };
+    const pv=document.getElementById('prev'); if(pv) pv.onclick=()=>showReveal(ri-1);
   }
 }
 function countUps(){document.querySelectorAll('[data-cu]').forEach(el=>{const target=+el.getAttribute('data-cu'),prefix=el.getAttribute('data-prefix')||'';
