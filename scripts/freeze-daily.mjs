@@ -89,10 +89,18 @@ out.meta = {
   const RND=5, TRS=["easy","medium","hard","impossible"];
   const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
+  const sk2=p=>String(p&&p.style||"").trim().toLowerCase();
+  const STYLE_CAP=2; // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
   const dayIds=(key,day)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
-    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set();
+    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set(),sc={};
+    // pass 1: dedupe title + named artist, and cap works per style
+    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p),s=sk2(p);
+      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP))continue;
+      seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; o.push(p.id); }
+    // pass 2: if the style cap left us short, backfill (keep title/artist dedupe, relax the cap)
     for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
-      if(seen.has(t)||(a&&sa.has(a)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); } return o; };
+      if(seen.has(t)||(a&&sa.has(a)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
+    return o; };
   const todayNum=Math.floor(Date.now()/86400000);
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
   const byDate={};
