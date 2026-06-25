@@ -302,9 +302,9 @@
   .glossbar{height:8px;border-radius:2px;background:var(--line-card);overflow:hidden;margin-bottom:28px}
   .glossbar span{display:block;height:100%;background:var(--accent);border-radius:2px}
   .glossgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .glosscard{text-align:left;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px;font-family:inherit;display:flex;flex-direction:column;gap:10px}
-  button.glosscard{cursor:pointer;transition:border-color .12s}
-  button.glosscard:hover{border-color:var(--ink)}
+  .glosscard{text-align:left;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px;font-family:inherit;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s,border-color .12s}
+  button.glosscard{cursor:pointer}
+  button.glosscard:hover,.glosscard:not(.locked):hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(41,41,41,.03),0 8px 16px rgba(41,41,41,.07),0 18px 36px rgba(41,41,41,.07)}
   .glosscard.locked{opacity:.7}
   .glosscard .nm{font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink)}
   .glosscard .locked-nm{color:var(--muted)}
@@ -473,8 +473,8 @@
   body.reduce-motion .dabo,body.reduce-motion .dabo-float,body.reduce-motion .imgloader i,body.reduce-motion .streakdab{animation:none!important}
   body.reduce-motion .hinttext,body.reduce-motion .dif,body.reduce-motion .glossnav,body.reduce-motion button.glosscard{transition:none!important;animation:none!important}
   /* collections page */
-  .srccard{display:block;flex:1 1 300px;max-width:430px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px;text-decoration:none;color:inherit;transition:border-color .12s}
-  .srccard:hover{border-color:var(--ink)}
+  .srccard{display:block;flex:1 1 300px;max-width:430px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s,border-color .12s}
+  .srccard:hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(41,41,41,.03),0 8px 16px rgba(41,41,41,.07),0 18px 36px rgba(41,41,41,.07)}
   .mblob{background:none!important;border:none!important}
   .mblob span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid var(--surface);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
   .mblob-wd span{width:13px;height:12px;opacity:.5}
