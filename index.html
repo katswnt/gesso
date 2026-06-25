@@ -218,7 +218,7 @@ function openHowTo(){
   document.addEventListener('keydown',keyNav); document.body.style.overflow='hidden'; document.body.appendChild(veil); draw();
 }
 // non-linear timeline: most works are post-1400, so give recent centuries more of the track
-let MINY=-2500; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
+let MINY=-4000; const BREAKY=1400, BREAKP=350, MAXY=2025, MAXP=1000;
 function posToYear(p){p=+p; return p<=BREAKP?Math.round(MINY+(p/BREAKP)*(BREAKY-MINY)):Math.round(BREAKY+((p-BREAKP)/(MAXP-BREAKP))*(MAXY-BREAKY));}
 function yearToPos(y){return y<=BREAKY?Math.round((y-MINY)/(BREAKY-MINY)*BREAKP):Math.round(BREAKP+(y-BREAKY)/(MAXY-BREAKY)*(MAXP-BREAKP));}
 // Region-aware period schemes — the slider tag reflects the work's own culture's periodization
@@ -676,7 +676,7 @@ function buildIndexes(){
   // difficulty = real recognizability: global fame quartiles. Easy = what people actually recognize,
   // which is canon-skewed toward the West — surfaced as the teaching note on the start screen.
   POOL.sort((a,b)=>(b.fame||0)-(a.fame||0));
-  MINY=Math.min(...POOL.map(p=>p.y));
+  MINY=-4000;
   // recompute the guessable categories from the ACTUAL fields (stale stored cats caused: medium known but
   // not guessable / shown pre-lock, artist red-box when anonymous). Generic period buckets aren't quizzed.
   const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$/i; // vague period+geo labels are cleared in data; legit "X era/period" cultures (Meiji era, Edo period) stay quizzable
@@ -1788,15 +1788,16 @@ function renderRound(){
         <div class="roundtimeline">${fields.find(f=>f.k==='when').html}</div>
         <div class="roundcontrols">${fields.filter(f=>f.k!=='when').map(f=>`<div>${f.html}</div>`).join('')}
           <div>
-            <div class="roundhd"><span>${whereN}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>place of origin</span><span class="rdhd-hint">tap to pin · Pinch or use +/&minus; to zoom</span></div>
+            <div class="roundhd"><span>${whereN}</span><span style="display:inline-flex;align-items:center;line-height:0"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span><span>place of origin</span></div>
             <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"><span class="maptap" id="maptap"></span></div>
+            <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:6px">tap to pin · pinch or use +/&minus; to zoom</div>
           </div>
           ${artistHTML?`<div>${artistHTML}</div>`:''}
         </div>
       </div>
     </div>
     <div style="padding:48px 24px 24px">
-      <button class="btn submit-cta" id="submit">lock in and submit guess</button>
+      <button class="btn submit-cta" id="submit" style="font:400 1.25rem 'Faculty Glyphic',sans-serif;text-transform:lowercase">lock in &amp; submit guess</button>
       <p class="submit-hint">Not sure on something? Don’t leave it blank, even a rough guess earns partial credit.</p>
     </div>
     ${ATTRIB}
@@ -2013,79 +2014,166 @@ function renderReveal(r){
   window.scrollTo(0,0);
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
-  const masterpiece = perfect && r.cells.artist && r.cells.artist.pts===MAX_CAT; // perfect + nailed the artist
+  const masterpiece = perfect && r.cells.artist && r.cells.artist.pts===MAX_CAT;
   const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
   if(glossName&&!infinite&&!runArchive)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
-  const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
-    return `<div class="swatch">${swatchBox(f)}<div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
-    + (r.cells.artist?`<div class="swatch">${swatchBox(r.cells.artist.pts/MAX_CAT)}<div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
-  const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
-    return `<div class="scrow">${swatchBox(f)}
-      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · bonus':''}</div>
-      <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
-      <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
-  const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
+  const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>');
+  const whyText=study.why; const dotIdx=whyText.indexOf('. '); const firstSentence=dotIdx>-1?whyText.slice(0,dotIdx+1):whyText;
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet">
-
-    <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
-      <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${idx+1} of ${ROUNDS}`}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
-        <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
-    </div><div class="swatchrow">${banner}</div></div>
+  const totalScore=r.coreNet+r.bonus; const maxScore=r.baseMax;
+  // swatch squares (top right) — match answer colors
+  const swatchBars=[...r.coreCats,...(r.cells.artist?['artist']:[])].map(c=>{
+    const f=r.cells[c].pts/MAX_CAT;
+    const isArtistMiss=c==='artist'&&f<0.35;
+    const sqInline=isArtistMiss?`background:var(--surface);border:1px solid var(--muted)`:`background:${swatchColor(f)}`;
+    return `<span style="display:inline-block;width:20px;height:20px;border-radius:1px;flex:0 0 auto;${sqInline}"></span>`;
+  }).join('');
+  // category display helpers
+  const revCatLabel=c=>({when:'timeline',where:'place of origin',medium:'medium',artist:'attributed to'})[c]||(it.styleKind==='culture'?'culture':'movement');
+  const revAnswer=c=>{
+    if(c==='when')return fmtYear(it.y);
+    if(c==='where')return it.place||it.region;
+    if(c==='medium')return it.medium||'—';
+    if(c==='style')return it.style||'—';
+    if(c==='artist')return it.artist||'Unknown';
+    return '—';
+  };
+  const scoreRow=(c,i)=>{
+    const cell=r.cells[c],f=cell.pts/MAX_CAT;
+    const isArtistMiss=c==='artist'&&f<0.35;
+    const sqStyle=isArtistMiss?`background:var(--surface);border:1px solid var(--muted)`:`background:${swatchColor(f)}`;
+    const glossLink=glossName&&c==='style'&&!infinite&&!runArchive?`<div style="margin:4px 0 6px"><a href="#" data-movement="${esc(glossName)}" class="glosslink">ADDED TO GLOSSARY <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:middle"><path d="M7.99984 3.33301L12.6665 7.99967L7.99984 12.6663M12.6665 7.99967H3.33317" stroke="currentColor" stroke-linecap="square" stroke-linejoin="round"/></svg></a></div>`:'';
+    const noAns=!cell.you||cell.you==='nothing'||cell.you===''||cell.you==='—';
+    const youText=c==='when'
+      ?`you answered ${esc(cell.you)}${cell.note?' &middot; '+esc(cell.note):''}`
+      :c==='where'
+        ?(noAns?'no answer':'')
+        :(noAns?'no answer':`you answered ${esc(cell.you)}${cell.note?' &middot; '+esc(cell.note):''}`);
+    const mapHTML=c==='where'?`
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px;font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--full);flex:0 0 auto"></span>${esc(it.place||it.region)}</span>
+        ${r.guess.ll?`<span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto"></span>your pin &middot; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="color:var(--muted)">no pin dropped</span>`}
+      </div>
+      <div id="revmap" style="height:180px;border:1px solid var(--line-card);border-radius:1px;overflow:hidden;margin-top:8px"></div>
+      ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:5px;font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--faint)">shaded = ${esc(it.style)} range</div>`:''}`:'';
+    return `<div class="scrow">
+      <div class="scrow-hd">
+        <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--ink)">${i+1} &middot; ${revCatLabel(c)}${cell.bonus?' &middot; bonus':''}</span>
+        <span style="white-space:nowrap"><span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--accent)" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)"> /${MAX_CAT.toLocaleString()} points</span></span>
+      </div>
+      <div class="scrow-ans">
+        <span class="sq swglyph-wrap" style="${sqStyle}"><span class="swglyph">${swatchGlyph(f)}</span></span>
+        <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(revAnswer(c))}</span>
+      </div>
+      ${youText?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${youText}</div>`:''}
+      ${glossLink}
+      ${mapHTML}
+    </div>`;
+  };
+  const allCats=[...r.coreCats,...(r.cells.artist?['artist']:[])];
+  const notScoredRow=(label)=>`<div class="scrow">
+    <div class="scrow-hd"><span style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${label}</span><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">not scored</span></div>
+    <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">no ${label} on record for this work</div>
+  </div>`;
+  // cue items (study notes) — cream bg/black border default; black bg/cream text when hotspot-active
+  const cueItems=(study.cues||[]).map((c,i)=>{
+    const arrow=c.indexOf(' → ');
+    const obs=arrow>-1?c.slice(0,arrow):c;
+    const interp=arrow>-1?c.slice(arrow+3):null;
+    return `<div class="agrow cue-agrow">
+      <button type="button" class="agq cueq" data-cue="${i}" aria-expanded="false"><span class="agnum cue-num">${i+1}</span><span class="agqt">${esc(obs)}</span><span class="agplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
+      <div class="aga" hidden>${interp?esc(interp):'—'}</div>
+    </div>`;
+  }).join('');
+  // guide items (follow-up questions) — no numbers
+  const guideItems=study.guide&&study.guide.length?`<div class="aglist">${study.guide.map((g,i)=>`<div class="agrow guide-agrow">
+    <button type="button" class="agq" data-ag="${i}" aria-expanded="false"><span class="agqt">${esc(g.q)}</span><span class="agplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
+    <div class="aga guide-aga" hidden>${esc(g.a)}</div></div>`).join('')}</div>`:'<div style="font:400 0.875rem/1.6 \'Manrope\',sans-serif;color:var(--muted)">No questions available.</div>';
+  const _revrd=runDate||todayStr();
+  const accn=_revrd.slice(0,4)+'·'+_revrd.slice(5).replace('-','');
+  const TDCOL_REV=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
+  const tierCol=TDCOL_REV[tierIndex(tier)]||'var(--ink)';
+  document.getElementById('stage').innerHTML=`${header(idx+1,idx,true)}<div class="sheet roundsheet">
+    <div class="roundwrap">
+      <div class="roundsidebar">
+        <span class="rsb-diamond" style="color:${tierCol};display:inline-flex;align-items:center"><svg width="16" height="16" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>
+        <span class="rsb-tier">${TIERS[tierIndex(tier)].label}</span>
+        <div class="rsb-pips">${pipsHTML(idx,idx)}</div>
+        <span class="rsb-accn">${accn?`NO.&nbsp;${accn}`:''}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+    <div class="banner" id="revbanner" style="position:relative;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">${infinite?`round ${results.length}`:`round ${idx+1}`}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" style="flex:0 0 auto"><polygon points="5,0 10,5 5,10 0,5" fill="var(--accent)"/></svg>
+        <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--accent)" data-cu="${totalScore}">${totalScore.toLocaleString()}</span>
+        <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--muted)">/ ${maxScore.toLocaleString()} points</span>
+        ${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">${swatchBars}</div>
+    </div>
     <div class="revealgrid">
       <div>
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
-        <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
-          ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
-          <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
-          <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
-          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
-          ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
-          ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
+        ${it.artist?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:6px">${esc(it.artist)}</div>`:''}
+        <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--ink);margin-top:12px">${esc(firstSentence)}</div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:9px">
+          ${it.artist?`<div class="metarow"><span class="k">artist</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">artist</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
+          <div class="metarow"><span class="k">date</span><span class="v">${fmtYear(it.y)}</span></div>
+          <div class="metarow"><span class="k">origin</span><span class="v">${esc(it.place||it.region)}</span></div>
+          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'culture':'school'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">movement</span><span class="v" style="color:var(--muted)">None — anonymous / decorative work</span></div>`}
+          ${it.medium?`<div class="metarow"><span class="k">medium</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">medium</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
+          ${it.dim?`<div class="metarow"><span class="k">size</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
         </div>
-        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record ${ICONS.ext}</a>
+        <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View source record ${ICONS.ext}</a>
       </div>
       <div>
-        <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!it.cats.includes('style')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">not scored — no movement on record for this work</div></div></div>`:''}${!it.cats.includes('medium')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">not scored — medium not recorded for this work</div></div></div>`:''}
-        <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
-          <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
-            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
-            ${r.guess.ll?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
-          </div>
-          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
+        ${allCats.map((c,i)=>scoreRow(c,i)).join('')}
+        ${!it.cats.includes('style')?notScoredRow('movement'):''}
+        ${!it.cats.includes('medium')?notScoredRow('medium'):''}
+      </div>
+    </div>
+    <div class="study" style="margin:24px 24px 0;border:1px solid var(--line-card);border-radius:1px;overflow:hidden">
+      <div class="study-grid">
+        <div style="padding:22px">
+          <div style="font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:4px">study notes</div>
+          ${study.cues&&study.cues.length?cueItems:`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:10px">No study notes for this work.</div>`}
+        </div>
+        <div style="padding:22px">
+          <div style="font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:4px">follow-up questions</div>
+          ${guideItems}
         </div>
       </div>
     </div>
-    <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
-      <div class="why">${why}</div>
-      ${study.cues&&study.cues.length?`<div style="font:700 10px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
-        <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${c}</span></div>`).join('')}</div>`:''}
-      ${guideHTML(study.guide)}
-      ${ml?`<div class="mastery"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
-      ${studyDisclosureHTML()}
-      ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
+      <div style="margin-top:8px;padding:0 24px;text-align:center">${studyDisclosureHTML()}</div>
+      ${ml?`<div style="margin:32px 24px 0;padding:24px;border:1px solid var(--line-card);border-radius:1px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--ink)">your mastery</span>
+        <span style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${ml}</span>
+      </div>`:''}
+      <div style="padding:24px"><button class="btn submit-cta" id="next" style="width:100%">${infinite?'next →':(idx<ROUNDS-1?'next round':'see final score')}</button>${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;width:100%">end session</button>`:''}${ATTRIB}</div>
+      </div>
     </div>
-    <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(idx<ROUNDS-1?'Next masterwork →':'See final score →')}</button>${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
   </div>`;
   countUps();
   setupReportFlow(it,study);
   if(perfect)setTimeout(()=>paintBurst(document.getElementById('revbanner')),80);
-  // look-closer markers (feature-anchored) → highlight the matching cue
-  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
-    const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
-    if(cue){cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});
-      cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
-  // "Ask the guide" accordion: each row toggles independently (multiple can be open)
-  document.querySelectorAll('.askguide .agq').forEach(b=>b.onclick=()=>{
+  // follow-up question accordion
+  document.querySelectorAll('.agq').forEach(b=>b.onclick=()=>{
     const open=b.getAttribute('aria-expanded')==='true';
     b.setAttribute('aria-expanded',open?'false':'true'); b.nextElementSibling.hidden=open;});
+  // hotspot lookmarks → scroll to matching study note
+  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
+    const cues=document.querySelectorAll('.study .cueq');
+    const cue=cues[+b.dataset.cue];
+    if(cue){
+      if(cue.getAttribute('aria-expanded')!=='true'){
+        cue.setAttribute('aria-expanded','true');
+        cue.nextElementSibling.hidden=false;
+      }
+      cue.scrollIntoView({behavior:(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth',block:'center'});}});
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
@@ -2297,39 +2385,77 @@ function renderFinal(){
   clearTimers();
   const summary=resultSummary(), {grand,gmax,bonus,share}=summary;
   lastFinal={...summary,results:results.slice(),tier,date:runDate||todayStr()};
-  recordDailyScore(runDate||todayStr(),grand,tier); // records per-tier completion (any date); streak credit only for today
-  // matrix
-  const cols=["when","where","medium","style","artist"];
-  const head=cols.map(c=>`<th>${iconHTML(c)}${catShort(c)}</th>`).join('');
-  const rows=results.map(r=>`<tr><td class="rl">${esc(r.it.title)}</td>${cols.map(c=>{
-    if(!r.it.cats.includes(c))return `<td></td>`;
-    const f=r.cells[c].pts/MAX_CAT;return `<td>${swatchBox(f,'msq')}</td>`;}).join('')}</tr>`).join('');
+  recordDailyScore(runDate||todayStr(),grand,tier);
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
-
-    <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
-      <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
-        <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; incl. +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
-    <div class="matrix"><table><thead><tr><th style="text-align:left">Work</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
-    <div style="padding:18px 24px 8px"><div class="kick" style="margin-bottom:8px">Share</div>
-      <div class="sharebox" id="share">${esc(share)}</div></div>
-    ${ml?`<div class="study"><div class="kick">Session mastery</div><div class="why" style="font-size:15px">${ml}</div></div>`:''}
-    <div style="padding:8px 24px 24px"><button class="btn" id="copy">Copy result to share</button>
-      <button class="btn" id="imageShare" style="margin-top:10px">Share / Download image</button>
-      <button class="btn" id="copylink" style="margin-top:10px">Copy link to this puzzle</button>
-      ${runArchive?'':`<div id="lbrank" class="mono" style="margin-top:12px;color:var(--muted);text-align:center"></div>
-      <button class="btn" id="viewlb" style="margin-top:10px">View today&rsquo;s leaderboard &rarr;</button>`}
-      <button class="btn" id="streak" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">${runArchive?'Back to streak':'Come back tomorrow'}</button>
-      <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
+  const _frd=runDate||todayStr();
+  const accn=_frd.slice(0,4)+'·'+_frd.slice(5).replace('-','');
+  const TDCOL_F=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
+  const tierCol=TDCOL_F[tierIndex(tier)]||'var(--ink)';
+  // score grid: 5 categories, map internal keys to display labels
+  const cols=["when","medium","style","where","artist"];
+  const colLabel={when:"Timeline",where:"Origin",medium:"Medium",style:"Movement",artist:"Attribution"};
+  const thStyle=`font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);padding:0 0 12px;text-align:center`;
+  const head=cols.map(c=>`<th style="${thStyle}">${colLabel[c]}</th>`).join('');
+  const rows=results.map(r=>`<tr><td style="font:400 1rem/1.3 'Faculty Glyphic',sans-serif;color:var(--ink);padding:10px 16px 10px 0;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.it.title)}</td>${cols.map(c=>{
+    if(!r.it.cats.includes(c))return `<td style="padding:10px 6px;text-align:center"></td>`;
+    const f=r.cells[c].pts/MAX_CAT;
+    const isArtistMiss=c==='artist'&&f<0.35;
+    const bg=isArtistMiss?`background:var(--surface);border:1px solid var(--muted)`:`background:${swatchColor(f)}`;
+    return `<td style="padding:10px 6px;text-align:center"><span class="msq" style="${bg}"><span class="swglyph">${swatchGlyph(f)}</span></span></td>`;}).join('')}</tr>`).join('');
+  // share action links: plain icon+text, no border
+  const actionLinkStyle=`display:inline-flex;align-items:center;gap:6px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);background:none;border:none;cursor:pointer;padding:0;transition:color .12s`;
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet roundsheet">
+    <div class="roundwrap">
+      <div class="roundsidebar">
+        <span class="rsb-diamond" style="color:${tierCol};display:inline-flex;align-items:center"><svg width="16" height="16" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>
+        <span class="rsb-tier">${TIERS[tierIndex(tier)].label}</span>
+        <div class="rsb-pips">${pipsHTML(ROUNDS,ROUNDS)}</div>
+        <span class="rsb-accn">${accn?`NO.&nbsp;${accn}`:''}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+        <div class="banner">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">today's game</span>
+            <svg width="10" height="10" viewBox="0 0 10 10" style="flex:0 0 auto"><polygon points="5,0 10,5 5,10 0,5" fill="var(--accent)"/></svg>
+            <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--accent)" data-cu="${grand}">${grand.toLocaleString()}</span>
+            <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--muted)">/ ${gmax.toLocaleString()} points${bonus?` &middot; +${bonus.toLocaleString()} bonus`:''}</span>
+          </div>
+        </div>
+        <div style="padding:32px 24px 0">
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+            <thead><tr>
+              <th style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);padding:0 0 12px;text-align:left;width:40%">Work</th>
+              ${head}
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${ml?`<div style="margin:32px 24px 0;padding:18px 24px;border:1px solid var(--line-card);border-radius:1px;display:flex;align-items:center;gap:24px;min-width:0">
+          <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;text-transform:lowercase;color:var(--ink);flex:0 0 auto">session mastery</span>
+          <span style="font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--ink);min-width:0">${ml}</span>
+        </div>`:''}
+        <div style="padding:24px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
+          <button id="copy" class="final-action-btn" style="${actionLinkStyle}"><img src="/assets/copy.svg" width="14" height="14" alt=""> COPY RESULTS</button>
+          <button id="imageShare" class="final-action-btn" style="${actionLinkStyle}"><img src="/assets/download.svg" width="14" height="14" alt=""> DOWNLOAD IMAGE</button>
+          <button id="copylink" class="final-action-btn" style="${actionLinkStyle}"><img src="/assets/link.svg" width="14" height="14" alt=""> SHARE LINK TO PUZZLE</button>
+        </div>
+        ${runArchive?'':`<div style="padding:0 24px 16px;display:flex;flex-direction:column;align-items:center;gap:10px"><div id="lbrank" style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)"></div>
+          <button id="viewlb" class="final-lb-btn" style="font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;background:transparent;border:1px solid var(--ink);border-radius:1px;color:var(--ink);padding:12px 24px;cursor:pointer">view today&rsquo;s leaderboard</button></div>`}
+        <div style="padding:8px 24px 32px;display:flex;flex-direction:column;align-items:center;gap:16px">
+          <span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">try a different difficulty</span>
+          <div style="display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap">
+            ${TIERS.filter(t=>t.key!==tier).map((t,_,arr)=>{const i=TIERS.indexOf(t);const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];return `<button class="navbtn final-tier-btn" data-inf="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`;}).join('')}
+          </div>
+        </div>
+        ${ATTRIB}
+      </div>
+    </div>
   </div>`;
   countUps();
-  document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
+  document.getElementById('copy').onclick=()=>{const b=document.getElementById('copy');navigator.clipboard.writeText(resultSummary().share).then(()=>{b.innerHTML=`${copyIcon} COPIED ✓`;setTimeout(()=>{b.innerHTML=`${copyIcon} COPY RESULTS`;},1600);});};
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
-  document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.textContent='Link copied ✓';setTimeout(()=>b.textContent='Copy link to this puzzle',1600);});};
-  document.getElementById('streak').onclick=renderArchive;
-  document.getElementById('again').onclick=()=>renderStart();
-  // leaderboard: submit this daily run + surface "#N today" (today only, not archive replays)
+  document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.innerHTML=`${linkIcon} LINK COPIED ✓`;setTimeout(()=>{b.innerHTML=`${linkIcon} SHARE LINK TO PUZZLE`;},1600);});};
+  document.querySelectorAll('.final-tier-btn').forEach(b=>b.onclick=()=>startGame(b.dataset.inf));
   const vlb=document.getElementById('viewlb');
   if(vlb && !runArchive){ vlb.onclick=()=>{ lbTier=tier; route('register'); };
     submitScore(runDate||todayStr(),tier,summary).then(r=>{ const el=document.getElementById('lbrank');
