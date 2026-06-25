@@ -787,8 +787,8 @@ function bumpGlossary(name){
   saveGlossary(g); return g;
 }
 // shared inner markup for a glossary card (locked = masked/dim, unlocked = revealed) — used for the flip
-function glossCardInner(name){const meta=movementMeta(name);return `${emblemHTML(meta.palette,15,false)}<div class="nm">${esc(name)}</div><div class="sub">${esc(meta.dates)} &middot; ${esc(meta.region)}</div>`;}
-function glossCardInnerLocked(name){return `${emblemHTML(movementMeta(name).palette,15,true)}<div class="nm">${esc(maskName(name))}</div><div class="sub">Not yet met</div>`;}
+function glossCardInner(name){const meta=movementMeta(name);return `${emblemHTML(meta.palette,16,false)}<div class="nm">${esc(name)}</div><div class="sub">${esc(meta.dates)} &middot; ${esc(meta.region)}</div>`;}
+function glossCardInnerLocked(name){return `${emblemHTML(movementMeta(name).palette,16,true)}<div class="nm locked-nm">?</div><div class="sub">not met yet</div>`;}
 // motion #3 — flip a just-unlocked card from locked → revealed (content swaps edge-on at 50%)
 function unlockCard(card,revealedInner){
   card.classList.remove('pending-unlock');
@@ -923,11 +923,18 @@ function renderGlossary(){
     if(flip) return `<button type="button" class="glosscard pending-unlock" data-movement="${esc(name)}">${glossCardInnerLocked(name)}</button>`;
     return unlocked?`<button type="button" class="glosscard" data-movement="${esc(name)}">${glossCardInner(name)}</button>`:`<div class="glosscard locked" aria-label="Locked glossary card">${glossCardInnerLocked(name)}</div>`;
   }).join('');
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
-    <div class="glosshead"><div class="glosstitle">${emblemHTML(GLOSSARY_EMBLEM,9,false)}<span>Glossary</span></div><div class="glossmeta">${metCount} / ${total} met</div></div>
-    <div style="padding:16px 22px 0"><div class="glossbar"><span style="width:${pct.toFixed(1)}%"></span></div></div>
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap">
+    <div class="glosshead">
+      <span style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--ink)">glossary</span>
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <span style="font:400 1.25rem/1 'Faculty Glyphic',sans-serif;color:var(--accent)">${metCount}</span>
+        <span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">/ ${total}</span>
+      </div>
+    </div>
+    <div class="glossbar"><span style="width:${pct.toFixed(1)}%"></span></div>
     <div class="glossgrid">${cards}</div>
-  </div>${ATTRIB}</div></div>`;
+    ${ATTRIB}
+  </div></div>`;
   if(pending.size){ // flip each newly-unlocked card, then clear the queue so it only animates once
     const stage=document.getElementById('stage');
     pending.forEach(name=>{ const card=stage.querySelector(`.pending-unlock[data-movement="${name.replace(/"/g,'\\"')}"]`); if(card) unlockCard(card,glossCardInner(name)); });
@@ -937,18 +944,41 @@ function renderGlossary(){
 function renderMovement(name){
   clearTimers();
   const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
-  const count=met?+met.count||0:0, metLine=met&&met.firstSeen?` &middot; <span style="color:var(--full)">met ${esc(met.firstSeen)}</span>`:'';
-  const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div class="mono" style="font-size:12px;color:var(--muted)">No eye cues available yet.</div>`;
-  const cap=work?`${work.artist||'Unknown'} &middot; ${work.title} &middot; ${fmtYear(work.y)}`:'No canonical work available';
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
-    <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">${(typeof CULTS!=='undefined'&&CULTS.includes(name))?'Culture':'Movement'}</span></div>
-    <div class="movehero">${emblemHTML(meta.palette,30,false)}<div><div class="movename">${esc(name)}</div><div class="movesub">${esc(meta.dates)} &middot; ${esc(meta.region)}${metLine}</div></div></div>
-    <div style="padding:20px 24px 8px"><div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}</div>
-    <div style="padding:18px 24px 24px"><div class="kick" style="color:var(--muted);margin-bottom:11px">Canonical example</div>
-      <div class="canonical">${work?`<img class="art" src="${esc(work.img)}" alt="${esc(work.title)}" onerror="this.style.display='none'">`:''}<div class="cap">${esc(cap)}</div></div>
-      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="mono" style="font-size:11px;color:var(--muted)">You've met <strong style="color:var(--ink)">${count}</strong> works in this school</span><span class="mono" style="font-size:11px;color:var(--accent);font-weight:600">See them &rarr;</span></div>
+  const total=glossaryTotal(), metCount=MOVEMENT_NAMES.filter(n=>g.met[n]).length;
+  const count=met?+met.count||0:0;
+  const metDate=met&&met.firstSeen?` &middot; met ${esc(met.firstSeen.replace(/-/g,'.'))}`:'' ;
+  const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num acctdab" style="width:24px;height:24px;font:700 ${Math.round(24*0.36)}px 'Faculty Glyphic',sans-serif;background:var(--ink);color:#fff;flex:0 0 auto">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">No eye cues available yet.</div>`;
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap" style="padding-left:16px;padding-right:16px">
+    <div style="margin-bottom:16px"><button class="moveback" data-route="glossary" style="display:inline-flex;align-items:center;gap:6px"><img src="/assets/arrow-left.svg" alt="" width="14" height="14"> <span>back to glossary</span></button></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:16px">
+        ${emblemHTML(meta.palette,24,false)}
+        <div>
+          <div style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--ink)">${esc(name)}</div>
+          <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:4px">${esc(meta.dates)} &middot; ${esc(meta.region)}${metDate}</div>
+        </div>
+      </div>
     </div>
-  </div>${ATTRIB}</div></div>`;
+    <div style="border-top:1px solid var(--line-card);margin:28px 0"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-bottom:40px">
+      <div>
+        <div class="canonical">${work?`<img class="art" src="${esc(work.img)}" alt="${esc(work.title)}" onerror="this.style.display='none'">`:''}<div style="padding-top:12px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);text-align:center">Canonical example</div></div>
+        ${work?`<div style="margin-top:16px">
+          <div style="font:400 1.25rem/1.3 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:6px">${esc(work.title)}</div>
+          <div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--ink)">${esc(work.artist||'Unknown')}</div>
+          <div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">${fmtYear(work.y)}</div>
+        </div>`:''}
+      </div>
+      <div>
+        <div style="font:400 1.25rem/1 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:20px">how the eye sees it</div>
+        ${cueHTML}
+      </div>
+    </div>
+    <div style="text-align:center;margin-bottom:12px;font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--accent)">you've met ${count} work${count===1?'':'s'} in this movement</div>
+    <button class="movepractice" id="movepractice">practice this movement</button>
+    ${ATTRIB}
+  </div></div>`;
+  const pb=document.getElementById('movepractice'); if(pb){ const w2=weakTrain({kind:'style',key:name,pct:0}); pb.onclick=()=>startTraining(w2); }
 }
 
 // ---------- game state ----------
@@ -1448,9 +1478,9 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   const movAcc=Object.entries(m.byStyle||{}).filter(([,s])=>s.total>=3).map(([k,s])=>({k,p:Math.round(s.correct/s.total*100)})).sort((a,b)=>b.p-a.p);
   const strengths=movAcc.slice(0,3), growths=movAcc.slice(-3).reverse().filter(x=>!strengths.includes(x));
   const catBar=(k,lbl)=>{ const st=(m.byCategory||{})[k]; const p=st&&st.total?Math.round(st.correct/st.total*100):0;
-    return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)">${lbl}</span><span style="font:400 0.875rem/1 'Manrope',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">${p}%</span></div><div style="height:4px;background:var(--line-card);border-radius:2px;overflow:hidden"><div style="height:100%;width:${p}%;background:var(--accent);border-radius:2px"></div></div></div>`; };
+    return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)">${lbl}</span><span style="font:400 0.875rem/1 'Manrope',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">${p}%</span></div><div style="height:8px;background:var(--line-card);border-radius:2px;overflow:hidden"><div style="height:100%;width:${p}%;background:var(--accent);border-radius:2px"></div></div></div>`; };
   const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
-  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px 14px"><div style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--accent);margin-bottom:4px">${big}</div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${lbl}</div>${sub?`<div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">${sub}</div>`:''}</div>`;
+  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px 14px"><div style="font:400 1.25rem/1 'Faculty Glyphic',sans-serif;color:var(--accent);margin-bottom:4px">${big}</div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${lbl}</div>${sub?`<div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">${sub}</div>`:''}</div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:32px 24px 48px;max-width:760px;margin:0 auto">
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px">
       <span class="acctdab" style="flex:0 0 auto;width:64px;height:64px;background:${esc(id.color)};font:700 ${Math.round(64*0.36)}px 'Faculty Glyphic',sans-serif">${esc(initialsOf(id.name))}</span>
