@@ -253,9 +253,8 @@
   .matrix td{padding:4px}
   .matrix .rl{font:11px 'Manrope',monospace;color:var(--muted);text-align:left;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .sq,.msq{position:relative;display:inline-flex;align-items:center;justify-content:center}
-  .swglyph{display:none;color:#fff;font:800 15px/1 'Faculty Glyphic',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
-  .swatch .swglyph{font-size:20px}.scrow .swglyph,.msq .swglyph{font-size:13px}
-  body.colorblind .swglyph{display:block}
+  .swglyph{display:none;align-items:center;justify-content:center;pointer-events:none}
+  body.colorblind .swglyph{display:flex}
   .msq{width:36px;height:36px;border-radius:1px;margin:0 auto}
   .msq .swglyph{display:none!important}
   .sharebox{font-family:'Manrope',monospace;background:#fff;border:1px solid var(--line-card);
@@ -281,13 +280,15 @@
   .menulist button:active{background:var(--study-bg)}
   .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.32);display:flex;align-items:center;justify-content:center;padding:18px}
   .settingspanel{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 14px 36px rgba(35,32,26,.16)}
+  .idmodal{width:480px!important;max-width:480px!important}
+  .idprevdab{width:52px!important;height:52px!important;cursor:default!important}
   .settingshead{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .settingshead .ttl{font:400 2rem 'Faculty Glyphic',sans-serif}
   .settingsclose{appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;padding:4px;display:inline-flex;align-items:center;justify-content:center}
-  .settingsbody{padding:8px 22px}
-  .setrow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .settingsbody{padding:8px 24px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0;border-bottom:1px solid var(--line-card)}
   .setrow:last-child{border-bottom:0}
-  .setrow .name{font:400 1.25rem 'Faculty Glyphic',sans-serif}.setrow .hint{font:500 11px 'Manrope',monospace;color:var(--muted);margin-top:2px}
+  .setrow .name{font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink);text-transform:lowercase}.setrow .hint{font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted);margin-top:5px}
   .setrow.disabled .name,.setrow.disabled .hint{color:var(--faint)}
   .toggle{appearance:none;border:0;width:42px;height:24px;border-radius:13px;background:#cfc8b8;position:relative;cursor:pointer;flex:0 0 auto;padding:0}
   .toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
@@ -586,6 +587,8 @@
   .newhere{display:inline-block;margin-top:6px;background:none;border:0;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
   body.reduce-motion .obdab,body.reduce-motion .helpdab{animation:none!important}
   @media (max-width:680px){ .navbits .helpdab{order:-1} }
+  .ac-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:600px){.ac-stat-grid{grid-template-columns:repeat(2,1fr)}}
 
   /* ---------- dab family: vary repeated dabs so they don't look stamped from one mould (canonical #01 reserved for the .dabo logo) ---------- */
   .imgloader i:nth-child(1){border-radius:58% 42% 52% 48% / 58% 52% 48% 42%}

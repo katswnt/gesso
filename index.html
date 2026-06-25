@@ -136,18 +136,24 @@ function openModal({title,ariaLabel,body,onClose,onKey}){
   return {veil,close,$:s=>veil.querySelector(s)};
 }
 function openSettings(){
-  const veil=document.createElement('div');veil.className='settingsveil';veil.innerHTML=`<div class="settingspanel" role="dialog" aria-modal="true" aria-label="Settings">
-    <div class="settingshead"><span class="ttl">settings</span><button type="button" class="settingsclose" aria-label="Close settings" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button></div>
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between;padding:24px 24px 0">
+      <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">settings</span>
+      <button type="button" class="htocloseX" aria-label="Close settings" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button>
+    </div>
     <div class="settingsbody">
-      <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
-      <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
-      <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in cm or inches</div></div><button type="button" class="unitseg" data-units aria-label="Toggle units">${settings.units==='in'?'inches':'cm'}</button></div>
-      <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
-    </div><div class="settingsfoot">Preferences saved to this browser.</div></div>`;
+      <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Automatically follows your system but you can override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
+      <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds icon to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
+      <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in centimeters or inches</div></div><div style="display:flex;gap:0"><button type="button" class="unitseg-btn${settings.units!=='in'?' active':''}" data-unitval="cm" style="padding:8px 16px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;border:1px solid var(--accent);border-right:none;cursor:pointer;background:${settings.units!=='in'?'var(--accent)':'transparent'};color:${settings.units!=='in'?'#fff':'var(--accent)'}">CM</button><button type="button" class="unitseg-btn${settings.units==='in'?' active':''}" data-unitval="in" style="padding:8px 16px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;border:1px solid var(--accent);cursor:pointer;background:${settings.units==='in'?'var(--accent)':'transparent'};color:${settings.units==='in'?'#fff':'var(--accent)'}">IN</button></div></div>
+      <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="navbtn" data-replaytut>Replay</button></div>
+    </div>
+    <div style="padding:0 24px 24px;font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted);text-align:center">Preferences saved to this browser.</div>
+  </div>`;
   const close=()=>{veil.remove();document.removeEventListener('keydown',escClose);};
   const escClose=e=>{if(e.key==='Escape')close();};
-  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.settingsclose'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
-    const u=e.target.closest('[data-units]');if(u){settings.units=settings.units==='in'?'cm':'in';u.textContent=settings.units==='in'?'inches':'cm';saveSettings();}});
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.htocloseX'))close();if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
+    const u=e.target.closest('[data-unitval]');if(u){settings.units=u.dataset.unitval;saveSettings();veil.querySelectorAll('[data-unitval]').forEach(b=>{const on=b.dataset.unitval===settings.units;b.style.background=on?'var(--accent)':'transparent';b.style.color=on?'#fff':'var(--accent)';});}});
   document.addEventListener('keydown',escClose);document.body.appendChild(veil);
 }
 // ---------- "How to play" onboarding ----------
@@ -183,7 +189,7 @@ function openHowTo(){
   let i=0;
   const veil=document.createElement('div');veil.className='settingsveil';
   veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="How to play">
-    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between"><span>&middot; how to play &middot;</span><button type="button" class="htocloseX" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button></div>
+    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">how to play</span><button type="button" class="htocloseX" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button></div>
     <div class="htocontent"><div class="htotrack"><div class="htopanel">
       <div class="htoimg"><img class="htoimg-el" src="" alt=""></div>
       <div class="htobody"><div class="htotitle"></div><div class="htotext"></div></div>
@@ -1043,28 +1049,41 @@ function dabRot(i){return ((i|0)*37)%13-6;}
 function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
-  const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:32px;height:32px;border:0;border-radius:${ID_SHAPE};background:${c};outline:${c===cur.color?'2.5px solid var(--ink)':'none'};outline-offset:2px;cursor:pointer"></button>`).join('');
-  const {veil,close,$}=openModal({title:'Your register entry',ariaLabel:'Your name and color',
-    body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
-        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:170px;overflow-y:auto">${swatches}</div>
-      <button class="btn" id="idsave">Save</button>
-      <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
-    </div>`});
-  const prev=()=>$('#idprev').innerHTML=dabAvatar(cur.name,cur.color,52);
+  const renderSwatches=()=>SWATCHES.map((c,i)=>{const sel=c===cur.color;return `<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:100%;aspect-ratio:1;border:0;border-radius:${dabShape(i)};transform:rotate(${dabRot(i)}deg);background:${c};box-shadow:${sel?`0 0 0 2.5px var(--surface),0 0 0 4.5px var(--ink)`:'none'};cursor:pointer;transition:box-shadow .1s"></button>`;}).join('');
+  const idAvatar=()=>`<span class="acctdab idprevdab" style="width:52px;height:52px;background:${esc(cur.color)};font:700 ${Math.round(52*0.36)}px 'Faculty Glyphic',sans-serif">${esc(initialsOf(cur.name))}</span>`;
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="howtomodal idmodal" role="dialog" aria-modal="true" aria-label="Edit profile">
+    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between;padding:24px 24px 0">
+      <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">edit profile</span>
+      <button type="button" class="htocloseX" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button>
+    </div>
+    <div style="padding:20px 24px 16px;display:flex;align-items:center;gap:16px">
+      <span id="idprev">${idAvatar()}</span>
+      <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1"/>
+    </div>
+    <div style="padding:8px 24px 20px;display:grid;grid-template-columns:repeat(8,1fr);gap:10px" id="idswatches">${renderSwatches()}</div>
+    <div style="padding:0 24px 6px;min-height:18px;text-align:center"><span id="idmsg" style="font:500 0.75rem/1.5 'Manrope',sans-serif;color:var(--miss)"></span></div>
+    <div style="padding:0 24px 24px"><button class="btn submit-cta" id="idsave" style="width:100%;font:400 0.75rem 'Faculty Glyphic',sans-serif!important;text-transform:uppercase!important;padding:16px!important">save</button></div>
+  </div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc2);if(after)after();};
+  const esc2=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',esc2);
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.htocloseX')){close();return;}});
+  const prev=()=>{veil.querySelector('#idprev').innerHTML=idAvatar();};
+  const refreshSwatches=()=>{veil.querySelector('#idswatches').innerHTML=renderSwatches();};
   veil.addEventListener('click',async e=>{
-    const sw=e.target.closest('.idsw'); if(sw){cur.color=sw.dataset.c;veil.querySelectorAll('.idsw').forEach(b=>{b.style.outline=b.dataset.c===cur.color?'2.5px solid var(--ink)':'none';b.style.outlineOffset='2px';});prev();return;}
+    const sw=e.target.closest('.idsw');if(sw){cur.color=sw.dataset.c;refreshSwatches();prev();return;}
     const btn=e.target.closest('#idsave');
-    if(btn){ if(btn.disabled)return; cur.name=veil.querySelector('#idname').value.trim();
-      const m=veil.querySelector('#idmsg'); btn.disabled=true; const orig=btn.textContent; btn.textContent='Saving…';
-      if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true};
-        if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; btn.disabled=false; btn.textContent=orig; return; } }catch{} }
+    if(btn){if(btn.disabled)return;cur.name=veil.querySelector('#idname').value.trim();
+      const m=veil.querySelector('#idmsg');btn.disabled=true;const orig=btn.textContent;btn.textContent='saving…';
+      if(cur.name){try{const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`);const j=r.ok?await r.json():{available:true};
+        if(!j.available){if(m)m.textContent='That name is taken — pick another.';btn.disabled=false;btn.textContent=orig;return;}}catch{}}
       saveIdentity(cur);
-      // push to the server so the board reflects the new name/color (fire-and-forget — don't delay the close)
       fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),name:cur.name,color:cur.color})}).catch(()=>{});
-      close();if(after)after(); } });
+      close();}});
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
+  document.body.appendChild(veil);
+  veil.querySelector('#idname').focus();
 }
 let lbTier='medium';
 let lbDate=null; // viewed leaderboard date (null = today)
@@ -1172,31 +1191,42 @@ const OAUTH=[['google','Google'],['apple','Apple']];
 function openLogin(){
   const c=sb();
   const oauthBtns=OAUTH.map(([p,l])=>`<button type="button" class="btn2 oauth" data-oauth="${p}" style="text-align:center">Continue with ${l}</button>`).join('');
-  const {veil,close}=openModal({title:'Sign in to Gesso',body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
-      ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div>
-      <div class="kick" style="margin-top:2px">Linked sign-in methods</div>
-      <div id="linked" style="display:flex;flex-direction:column;gap:8px"><span class="mono" style="font-size:12px;color:var(--muted)">Loading…</span></div>
+  const veil=document.createElement('div');veil.className='settingsveil';
+  veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="Sign in to Gesso">
+    <div class="htohead" style="display:flex;align-items:center;justify-content:space-between;padding:24px 24px 0">
+      <span style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink)">${authUser?'your account':'sign in to gesso'}</span>
+      <button type="button" class="htocloseX" aria-label="Close" style="background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center"><img src="/assets/x.svg" alt="" width="20" height="20"></button>
+    </div>
+    <div style="padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px">
+      ${authUser?`<div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">Signed in as ${esc(authUser.email||'your account')}</div>
+      <div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);margin-top:4px">Linked sign-in methods</div>
+      <div id="linked" style="display:flex;flex-direction:column;gap:8px"><span style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">Loading…</span></div>
       <input id="apass2" type="password" placeholder="set or change password" autocomplete="new-password" class="ginput"/>
       <button class="btn2" id="setpass">Save password</button>
       <button class="btn" id="signout" style="margin-top:4px">Sign out</button>`:`
-      <div style="display:flex;flex-direction:column;gap:8px">${oauthBtns}</div>
-      <div class="mono" style="text-align:center;color:var(--muted);font-size:11px">— or —</div>
-      <input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" class="ginput"/>
-      <input id="apass" type="password" placeholder="password" autocomplete="current-password" class="ginput"/>
-      <div style="display:flex;gap:8px"><button class="btn" id="signin" style="flex:1">Sign in</button><button class="btn2" id="signup" style="flex:1">Create account</button></div>
-      <button class="btn2" id="magic">Email me a magic link</button>`}
-      <div id="amsg" class="mono" style="font-size:12px;color:var(--accent);min-height:16px"></div>
-    </div>`});
+      <div style="display:flex;flex-direction:column;gap:8px">${OAUTH.map(([p,l])=>`<button type="button" data-oauth="${p}" style="width:100%;padding:15px;border:1px solid var(--line-card);border-radius:1px;background:transparent;color:var(--ink);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer;text-align:center">Continue with ${l}</button>`).join('')}</div>
+      <div style="text-align:center;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);padding:4px 0">or</div>
+      <div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);margin-bottom:8px">Email</div><input id="aemail" type="email" placeholder="you@email.com" autocomplete="email" class="ginput" style="width:100%;box-sizing:border-box"/></div>
+      <div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);margin-bottom:8px">Password</div><input id="apass" type="password" placeholder="your password" autocomplete="current-password" class="ginput" style="width:100%;box-sizing:border-box"/></div>
+      <div style="display:flex;gap:8px"><button id="signin" style="flex:1;padding:15px;border:1px solid var(--ink);border-radius:1px;background:var(--ink);color:#fff;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer">Sign in</button><button id="signup" style="flex:1;padding:15px;border:1px solid var(--line-card);border-radius:1px;background:transparent;color:var(--ink);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer">Create account</button></div>
+      <button id="magic" style="width:100%;padding:15px;border:1px solid var(--line-card);border-radius:1px;background:transparent;color:var(--ink);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer;text-align:center">Email me a magic link</button>`}
+      <div id="amsg" style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--accent)"></div>
+    </div>
+  </div>`;
+  const close=()=>{veil.remove();document.removeEventListener('keydown',esc2);};
+  const esc2=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',esc2);
+  veil.addEventListener('click',e=>{if(e.target===veil||e.target.closest('.htocloseX'))close();});
   // populate linked methods for a signed-in user
   if(authUser){ (async()=>{ try{ const {data}=await c.auth.getUserIdentities(); const have=new Set((data&&data.identities||[]).map(i=>i.provider));
     const box=veil.querySelector('#linked'); if(!box)return; const labels={google:'Google',apple:'Apple',email:'Email & password'};
     box.innerHTML=Object.entries(labels).map(([p,l])=>have.has(p)
-      ?`<div class="mono" style="font-size:12px;color:var(--full)">✓ ${l} linked</div>`
+      ?`<div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--full)">✓ ${l} linked</div>`
       :(p==='email'||!MANUAL_LINKING?'':`<button class="btn2" data-link="${p}">Link ${l}</button>`)).join('');
   }catch{} })(); }
   const msg=t=>{const m=veil.querySelector('#amsg');if(m)m.textContent=t;};
   veil.addEventListener('click',async e=>{
-    if(e.target===veil||e.target.closest('.settingsclose'))return;
+    if(e.target===veil||e.target.closest('.htocloseX'))return;
     if(!c){ msg('Auth still loading — try again in a moment.'); return; }
     const ob=e.target.closest('[data-oauth]'); if(ob){ try{ await c.auth.signInWithOAuth({provider:ob.dataset.oauth,options:{redirectTo:location.origin}}); }catch(err){ msg(err.message||'Provider not enabled yet.'); } return; }
     const lb=e.target.closest('[data-link]'); if(lb){ try{ const {error}=await c.auth.linkIdentity({provider:lb.dataset.link,options:{redirectTo:location.origin}}); if(error)msg(error.message); }catch(err){ msg(err.message||'Could not link.'); } return; }
@@ -1208,6 +1238,7 @@ function openLogin(){
     if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signup'){ try{ const {error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Account created — check your email to confirm ✓'); }catch(err){ msg(err.message); } return; }
   });
+  document.body.appendChild(veil);
 }
 // ---- clean-path routing: / (home), /YYYY-MM-DD/<level> (daily), /infinite/<level>, /archive|streak|stats|glossary ----
 // ---------- Training mode (custom-filter "Drill me on…" + single-axis drills) ----------
@@ -1408,50 +1439,53 @@ function weakTrain(w){ const f=newFacets(); let axis=null,label=w.key;
   return {facets:f,axis,label:label+` (${Math.round(w.pct*100)}%)`}; }
 function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'});
   const id=loadIdentity(), s=loadStreak(), m=loadMastery(), g=loadGlossary();
+  const today=todayStr(), bd=s.byDay&&s.byDay[today]||{};
   const pts=Object.values(s.scores||{}).reduce((a,b)=>a+(+b||0),0);
+  const todayPts=Object.values(bd).reduce((a,b)=>a+(+b||0),0);
   const daysPlayed=(s.playedDates||[]).length;
   const metCount=MOVEMENT_NAMES.filter(n=>g.met&&g.met[n]).length, glossTot=glossaryTotal();
-  const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
-  const catRow=(k,lbl)=>{ const st=(m.byCategory||{})[k]; const p=st&&st.total?Math.round(st.correct/st.total*100):null;
-    return `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font:600 13px Archivo;margin-bottom:4px"><span>${lbl}</span><span class="mono" style="color:${p==null?'var(--faint)':bandCol(p)};font-variant-numeric:tabular-nums">${p==null?'—':p+'%'}</span></div><div style="height:7px;background:var(--line-card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p||0}%;background:${p==null?'var(--line-card)':bandCol(p)}"></div></div></div>`; };
   const w=weakestSlice();
-  const sliceList=(map,n)=>Object.entries(map||{}).filter(([,s])=>s.total>=3).map(([k,s])=>({k,p:Math.round(s.correct/s.total*100)})).sort((a,b)=>b.p-a.p);
-  const movAcc=sliceList(m.byStyle), nail=movAcc.slice(0,3), whiff=movAcc.slice(-3).reverse().filter(x=>!nail.includes(x));
-  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:10px;padding:13px"><div style="font:800 24px Archivo">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
-  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:760px;margin:0 auto">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
-      ${dabAvatar(id.name,id.color,64)}
-      <div style="flex:1;min-width:0"><div style="font:800 26px Archivo">${esc(id.name||'You')}</div>
-        <div class="mono" style="font-size:12px;color:var(--muted)">${authUser?esc(authUser.email||'signed in'):'playing on this device'}${daysPlayed?` &middot; ${daysPlayed} day${daysPlayed===1?'':'s'} played`:''}</div></div>
-      <button class="btn2" data-editid style="flex:0 0 auto">Edit profile</button></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
-      ${tile(s.current,'Day streak',s.longest?`longest ${s.longest}`:'')}
-      ${tile(pts.toLocaleString(),'All-time points','')}
-      ${tile('<span id="acrank">—</span>','Today&rsquo;s rank','best tier')}
+  const movAcc=Object.entries(m.byStyle||{}).filter(([,s])=>s.total>=3).map(([k,s])=>({k,p:Math.round(s.correct/s.total*100)})).sort((a,b)=>b.p-a.p);
+  const strengths=movAcc.slice(0,3), growths=movAcc.slice(-3).reverse().filter(x=>!strengths.includes(x));
+  const catBar=(k,lbl)=>{ const st=(m.byCategory||{})[k]; const p=st&&st.total?Math.round(st.correct/st.total*100):0;
+    return `<div style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)">${lbl}</span><span style="font:400 0.875rem/1 'Manrope',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">${p}%</span></div><div style="height:4px;background:var(--line-card);border-radius:2px;overflow:hidden"><div style="height:100%;width:${p}%;background:var(--accent);border-radius:2px"></div></div></div>`; };
+  const TDCOL=['var(--miss)','var(--partial)','var(--full)','#D99AF2'];
+  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px 14px"><div style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--accent);margin-bottom:4px">${big}</div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${lbl}</div>${sub?`<div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">${sub}</div>`:''}</div>`;
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:32px 24px 48px;max-width:760px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px">
+      <span class="acctdab" style="flex:0 0 auto;width:64px;height:64px;background:${esc(id.color)};font:700 ${Math.round(64*0.36)}px 'Faculty Glyphic',sans-serif">${esc(initialsOf(id.name))}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:4px">${esc(id.name||'You')}</div>
+        <div style="font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted)">${authUser?esc(authUser.email||'signed in'):'playing on this device'}${daysPlayed?` for ${daysPlayed} day${daysPlayed===1?'':'s'}`:''}</div>
+      </div>
+      <button class="navbtn" data-editid style="flex:0 0 auto">Edit profile</button>
+    </div>
+    <div class="ac-stat-grid" style="margin-bottom:32px">
+      ${tile(s.current||0,'Day streak',s.longest?`longest ${s.longest} day${s.longest===1?'':'s'}`:'')}
+      ${tile(pts.toLocaleString(),'All-time points',todayPts?`${todayPts.toLocaleString()} today`:'')}
+      ${tile('<span id="acrank">—</span>','Today\'s rank','<span id="acranktier">best tier</span>')}
       ${tile(`${metCount}/${glossTot}`,'Movements met','')}</div>
-    <div class="kick" style="color:var(--accent);margin-bottom:10px">Your eye</div>
-    <div style="margin-bottom:14px">${catRow('style','Movement')}${catRow('when','When')}${catRow('where','Where')}</div>
-    ${nail.length?`<div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:6px">You nail: ${nail.map(x=>esc(x.k)+' '+x.p+'%').join(' · ')}</div>`:''}
-    ${whiff.length?`<div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:12px">Room to grow: ${whiff.map(x=>esc(x.k)+' '+x.p+'%').join(' · ')}</div>`:''}
-    ${w?`<button class="btn" id="trainweak" style="margin-bottom:24px">Train your weak spot${w.kind!=='axis'?': '+esc(w.key):''} &rarr;</button>`:`<div class="mono" style="font-size:12px;color:var(--faint);margin-bottom:24px">Play more dailies to unlock weak-spot training.</div>`}
-    <div class="kick" style="color:var(--accent);margin-bottom:10px">More</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
-      <button class="btn2" data-route="glossary" style="text-align:left">Glossary</button>
-      <button class="btn2" data-route="archive" style="text-align:left">Archive</button>
-      <button class="btn2" data-route="collections" style="text-align:left">Collections</button>
-      <button class="btn2" data-settings style="text-align:left">Settings</button></div>
-    <div class="kick" style="color:var(--accent);margin-bottom:10px">Account</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${authUser?`<button class="btn2" id="acsignout">Sign out</button><button class="btn2" id="acdelete" style="border-color:var(--miss);color:var(--miss)">Delete account</button>`:`<button class="btn" data-login>Sign in to save across devices</button>`}
-      <button class="btn2" data-route="home" style="margin-top:18px">&larr; Back to home</button></div>
+    <div style="font:400 1.25rem/1 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:20px">your training</div>
+    <div style="margin-bottom:20px">${catBar('when','Timeline')}${catBar('style','Movement')}${catBar('where','Origin')}</div>
+    ${strengths.length?`<div style="margin-bottom:16px"><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);margin-bottom:6px">Your strengths</div><div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${strengths.map(x=>`${esc(x.k)} ${x.p}%`).join(' &nbsp;·&nbsp; ')}</div></div>`:''}
+    ${growths.length||w?`<div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><div style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);margin-bottom:6px">Room to grow</div><div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${growths.map(x=>`${esc(x.k)} ${x.p}%`).join(' &nbsp;·&nbsp; ')||'Play more to unlock'}</div></div>${w?`<button class="navbtn" id="trainweak" style="flex:0 0 auto;white-space:nowrap">Train ${w.kind!=='axis'?esc(w.key):'weak spot'} &rarr;</button>`:''}</div>`:''}
+    ${!strengths.length&&!growths.length&&!w?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-bottom:24px">Play more dailies to unlock training insights.</div>`:''}
+    <div style="border-top:1px solid var(--line-card);margin:8px 0 24px"></div>
+    ${authUser?`<div style="display:flex;gap:8px;margin-bottom:24px"><button class="navbtn" id="acsignout">Sign out</button><button class="navbtn" id="acdelete" style="color:var(--miss);border-color:var(--miss)">Delete account</button></div>`:`<button class="btn" data-login style="margin-bottom:24px">Sign in to save across devices</button>`}
+    <div style="text-align:center;margin-bottom:10px"><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">Play today's puzzle</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:32px">
+      ${TIERS.map((t,i)=>`<button class="navbtn ac-tier-btn" data-k="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
+    </div>
+    ${ATTRIB}
   </div></div>`;
   { const tw=document.getElementById('trainweak'); if(tw&&w)tw.onclick=()=>startTraining(weakTrain(w)); }
   { const so=document.getElementById('acsignout'); if(so)so.onclick=async()=>{const c=sb();if(c){await c.auth.signOut();}authUser=null;renderAccount(false);}; }
   { const dl=document.getElementById('acdelete'); if(dl)dl.onclick=()=>confirmDeleteAccount(); }
-  // today's best rank across played tiers (async)
-  (async()=>{ const today=todayStr(), bd=s.byDay[today]||{}; let best=null;
-    for(const t of TIERS){ if(bd[t.key]==null)continue; try{ const r=await fetch(`/api/leaderboard?date=${today}&tier=${t.key}&me=${encodeURIComponent(deviceId())}`); const d=r.ok?await r.json():null; if(d&&d.you&&(best==null||d.you.rank<best))best=d.you.rank; }catch{} }
-    const el=document.getElementById('acrank'); if(el)el.textContent=best?'#'+best:'—'; })();
+  document.querySelectorAll('.ac-tier-btn').forEach(b=>b.onclick=()=>startGame(b.dataset.k));
+  (async()=>{ let best=null, bestTier=null;
+    for(const t of TIERS){ if(bd[t.key]==null)continue; try{ const r=await fetch(`/api/leaderboard?date=${today}&tier=${t.key}&me=${encodeURIComponent(deviceId())}`); const d=r.ok?await r.json():null; if(d&&d.you&&(best==null||d.you.rank<best)){best=d.you.rank;bestTier=t.label;} }catch{} }
+    const el=document.getElementById('acrank'); if(el)el.textContent=best?'#'+best:'—';
+    const et=document.getElementById('acranktier'); if(et)et.textContent=bestTier?bestTier.toLowerCase()+' tier':'best tier'; })();
 }
 function confirmDeleteAccount(){
   const {veil,close}=openModal({title:'Delete account?',body:`<div style="padding:18px 22px"><p style="margin:0 0 16px;font-size:14px;color:var(--ink)">This permanently deletes your account, leaderboard entries, and synced progress. This can&rsquo;t be undone.</p>
@@ -1487,7 +1521,7 @@ function renderFromPath(){
 window.addEventListener('popstate',renderFromPath);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-route]');if(b){e.preventDefault();route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-login]');if(b){e.preventDefault();openLogin();}});
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-editid]');if(b){e.preventDefault();openIdentityModal(()=>renderLeaderboard());}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-editid]');if(b){e.preventDefault();const snap=history.state;openIdentityModal(()=>{if(snap)route(snap.v||'home',false);else renderStart(undefined,false);});}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-howto]');if(b){e.preventDefault();openHowTo();}});
@@ -1974,7 +2008,11 @@ function studyFor(it){
     || CUES.region[it.region] || {why:`Made in ${it.place||it.region}, c. ${fmtYear(it.y)}.`,cues:[]};
 }
 function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
-function swatchGlyph(f){return f>=.75?'✓':f>=.35?'◐':'✕';}
+function swatchGlyph(f){
+  if(f>=.75)return `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.3332 4L5.99984 11.3333L2.6665 8" stroke="white" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="round"/></svg>`;
+  if(f>=.35)return `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.3335 8.00065C1.3335 11.6825 4.31826 14.6673 8.00016 14.6673V1.33398C4.31826 1.33398 1.3335 4.31875 1.3335 8.00065Z" fill="white"/><path d="M8.00016 14.6673C11.6821 14.6673 14.6668 11.6825 14.6668 8.00065C14.6668 4.31875 11.6821 1.33398 8.00016 1.33398M8.00016 14.6673C4.31826 14.6673 1.3335 11.6825 1.3335 8.00065C1.3335 4.31875 4.31826 1.33398 8.00016 1.33398M8.00016 14.6673V1.33398" stroke="white" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 5L5 15M5 5L15 15" stroke="white" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="round"/></svg>`;
+}
 function swatchBox(f,cls='sq'){return `<span class="${cls}" style="background:${swatchColor(f)}"><span class="swglyph">${swatchGlyph(f)}</span></span>`;}
 function studyDisclosureHTML(){return `<div class="studyfoot" id="studyReport"><span>Study notes are AI-generated &amp; fact-checked. Spot something off? </span><button type="button" class="reportopen">Report an error</button></div>`;}
 function setupReportFlow(it,study){
