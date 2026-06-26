@@ -90,23 +90,42 @@ out.meta = {
   const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
   const sk2=p=>String(p&&p.style||"").trim().toLowerCase();
-  const STYLE_CAP=2; // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
-  const dayIds=(key,day)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
+  const STYLE_CAP=2;    // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
+  const ARTIST_GAP=10;  // don't repeat a NAMED artist within this many days (kills "two Caravaggios in a week")
+  const WORK_GAP=21;    // don't repeat the SAME work within this many days (kills cross-refreeze near-dupes)
+  // RESHUFFLE_FUTURE=1 regenerates future dates with current rules (use only when diversity rules change).
+  // Default: PRESERVE every already-frozen date (past AND future) so re-freezing never drifts the calendar —
+  // re-running only extends the horizon. This is what stops the "same work a few days apart" from re-freezes.
+  const RESHUFFLE = process.env.RESHUFFLE_FUTURE === '1';
+  // `avoidA` = artists in the last ARTIST_GAP days; `avoidW` = work-ids in the last WORK_GAP days. Both soft.
+  const dayIds=(key,day,avoidA,avoidW)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
     const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set(),sc={};
-    // pass 1: dedupe title + named artist, and cap works per style
+    // pass 1: dedupe title + named artist within the day, cap per style, avoid recent artists AND recent works
     for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p),s=sk2(p);
-      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP))continue;
+      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP)||(a&&avoidA&&avoidA.has(a))||(avoidW&&avoidW.has(p.id)))continue;
       seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; o.push(p.id); }
-    // pass 2: if the style cap left us short, backfill (keep title/artist dedupe, relax the cap)
+    // pass 2: backfill if short — keep within-day title/artist dedupe + the WORK gap (never repeat a recent work), relax style cap + artist gap
+    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
+      if(seen.has(t)||(a&&sa.has(a))||(avoidW&&avoidW.has(p.id)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
+    // pass 3: last-resort fill if still short (only the WORK gap relaxed) — guarantees 5
     for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
       if(seen.has(t)||(a&&sa.has(a)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
     return o; };
   const todayNum=Math.floor(Date.now()/86400000);
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
-  const byDate={};
+  const artistsOf=ids=>{const s=new Set();for(const id of ids){const a=ak2(byId[id]);if(a)s.add(a);}return s;};
+  const byDate={}; const recA={}, recW={}; for(const t of TRS){recA[t]=[];recW[t]=[];} // per-tier rolling windows
   for(let d=todayNum-3; d<=todayNum+180; d++){ const k=iso(d);
-    if(prior[k] && d<=todayNum){ byDate[k]=prior[k]; continue; }   // lock served/today to what was already shown
-    const rec={}; for(const t of TRS) rec[t]=dayIds(t,d); byDate[k]=rec; }
+    let rec;
+    const preserve = prior[k] && (d<=todayNum || !RESHUFFLE);        // past+today always; future too unless reshuffling
+    if(preserve){ rec=prior[k]; }
+    else { rec={}; for(const t of TRS){
+      const avoidA=new Set(); for(const e of recA[t]) if(d-e.day<=ARTIST_GAP) for(const a of e.artists) avoidA.add(a);
+      const avoidW=new Set(); for(const e of recW[t]) if(d-e.day<=WORK_GAP) for(const id of e.ids) avoidW.add(id);
+      rec[t]=dayIds(t,d,avoidA,avoidW); } }
+    byDate[k]=rec;
+    for(const t of TRS){ const ids=(rec&&rec[t])||[]; recA[t].push({day:d,artists:artistsOf(ids)}); recW[t].push({day:d,ids}); }
+  }
   out.byDate=byDate;
 }
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
