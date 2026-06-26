@@ -1,11 +1,12 @@
 name: Supabase keep-alive
 
 # Free-tier Supabase projects auto-pause after ~7 days of inactivity. This
-# pings the database every 3 days so it never pauses. Also runnable on demand
-# from the Actions tab (workflow_dispatch).
+# pings the database DAILY so it never pauses — a daily run gives a wide safety
+# margin (the 7-day timer can't approach even if several runs are skipped or
+# fail). Also runnable on demand from the Actions tab (workflow_dispatch).
 on:
   schedule:
-    - cron: '0 9 */3 * *' # every 3 days at 09:00 UTC
+    - cron: '0 9 * * *' # daily at 09:00 UTC
   workflow_dispatch:
 
 jobs:
