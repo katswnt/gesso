@@ -58,8 +58,12 @@ for(let b=0;b<nBlocks;b++){
 out.easy=easy; // length nBlocks*5; dailyItems windows by 5 → 4 T1 + 1 T2 per day
 
 // --- MEDIUM / HARD / IMPOSSIBLE = the remaining works by recognizability, split in thirds ---
-const rest=ranked.slice(T1_SIZE+T2_SIZE).map(p=>p.id); const r=rest.length;
-const mc=[0, Math.round(r*0.34), Math.round(r*0.67), r];
+// Split the rest by FAME THRESHOLDS, not equal rank-thirds. The fame curve is a cliff, so equal thirds
+// dumped a huge range into medium (fame 1195 down to ~60) — a "medium" day could pair a famous work with a
+// fame-69 village object. Thresholds keep medium recognizable: medium = fame>=300, hard = 30-300, impossible = <30.
+const restP=ranked.slice(T1_SIZE+T2_SIZE); const rest=restP.map(p=>p.id); const r=rest.length;
+const idxBelow=thr=>{ const i=restP.findIndex(p=>fameOf(p.id)<thr); return i<0?r:i; };
+const mc=[0, idxBelow(300), idxBelow(30), r];
 ["medium","hard","impossible"].forEach((k,i)=>{ out[k]=diversify(seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`),5); });
 
 const easyDistinctCount = new Set([...T1ids, ...T2ids]).size;
@@ -91,7 +95,7 @@ out.meta = {
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
   const sk2=p=>String(p&&p.style||"").trim().toLowerCase();
   const STYLE_CAP=2;    // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
-  const ARTIST_GAP=10;  // don't repeat a NAMED artist within this many days (kills "two Caravaggios in a week")
+  const ARTIST_GAP=5;   // don't repeat a NAMED artist within this many days (prevents back-to-back clustering without over-spreading)
   const WORK_GAP=21;    // don't repeat the SAME work within this many days (kills cross-refreeze near-dupes)
   // RESHUFFLE_FUTURE=1 regenerates future dates with current rules (use only when diversity rules change).
   // Default: PRESERVE every already-frozen date (past AND future) so re-freezing never drifts the calendar —
