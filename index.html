@@ -2224,9 +2224,11 @@ function score(){
     // full credit inside EITHER the historical culture/empire region OR the modern country
     inReg = reg ? ptInRegion(guess.ll.lat,guess.ll.lng,reg) : false;
     inC = inReg || (wc ? nearCountry(guess.ll.lat,guess.ll.lng,wc) : (dist<=rad));
-    // right cultural REGION (continent) earns a solid partial even if the country/borders are off — many
-    // cultures (Kongo, etc.) span or predate modern borders. Never score below the plain distance falloff.
-    inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region;
+    // right cultural REGION earns a solid partial even if the country/borders are off (many cultures span or
+    // predate modern borders) — BUT only when the pin is genuinely near the right area. it.region is often a
+    // whole continent ("Asia"), so without a distance gate, pinning Cambodia scored "right region" for Iran
+    // (~6000 km). Cap the region bonus to ~3000 km; farther pins fall back to the plain distance falloff.
+    inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region && dist<=3000;
     const off=Math.max(0,dist-rad);
     const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // normal falloff OUTSIDE the range
     // INSIDE the range/country: full near the true origin, but a gentler (not zero) penalty as you get far —
