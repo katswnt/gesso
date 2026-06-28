@@ -94,7 +94,25 @@ for(const p of pool){
       warn.push(`[copy-integrity] ${(p?.title||id).slice(0,38)} · ${[...new Set(issues.map(s=>s.split(":")[0]))].join(",")}`); }
   }
   try{ writeFileSync("data/incoming/copy-integrity-backlog.json",JSON.stringify(backlog,null,1)); }catch{}
-  globalThis.__copyIntegrity={counts,works:backlog.length}; }
+  globalThis.__copyIntegrity={counts,works:backlog.length};
+
+  // PIN COVERAGE: figurative works should carry >=1 look-closer pin. But pins are meaningless on genuinely
+  // non-objective work (Suprematism, color fields, pure pattern) and bare monochrome/text objects — those
+  // legitimately have ZERO. So a 0-pin work is only a MISS if it's NOT abstract and NOT already reviewed.
+  // Abstract styles auto-exempt; the vision re-pin pass writes ids it judged unpinnable to no-pins-reviewed.json.
+  const ABSTRACT=new Set(["Suprematism","De Stijl","Neoplasticism","Constructivism","Abstract art","Abstract Expressionism","Color Field","Color field painting","Minimalism","Concrete art","Op Art","Orphism","Hard-edge painting"]);
+  let reviewedNoPins=new Set(); try{ reviewedNoPins=new Set(JSON.parse(readFileSync("data/incoming/no-pins-reviewed.json","utf8"))); }catch{}
+  const pinBacklog=[];
+  for(const [id,c] of Object.entries(teach)){
+    if(!c||!Array.isArray(c.notes)||!c.notes.length)continue;
+    const pinned=c.notes.some(n=>typeof n.x==="number")||(Array.isArray(hot[id])&&hot[id].length);
+    if(pinned)continue;
+    const p=pool.find(x=>x.id===id); if(!p)continue;
+    if(ABSTRACT.has(p.style)||reviewedNoPins.has(id))continue; // legitimately pin-less
+    pinBacklog.push({id,title:p.title||"?",style:p.style||null});
+  }
+  try{ writeFileSync("data/incoming/pin-backlog.json",JSON.stringify(pinBacklog,null,1)); }catch{}
+  globalThis.__pinCoverage={missing:pinBacklog.length,reviewed:reviewedNoPins.size}; }
 
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
@@ -104,6 +122,7 @@ const unmappedStyles=new Set(); for(const p of pool){ if(p.style && !movKeys.has
 console.log(`=== check-pool: ${pool.length} works ===`);
 console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
+{ const pc=globalThis.__pinCoverage; if(pc) console.log(`pin-coverage: ${pc.missing} figurative works with 0 pins (excl. abstract + ${pc.reviewed} reviewed) → data/incoming/pin-backlog.json`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
