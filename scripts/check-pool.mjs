@@ -112,7 +112,24 @@ for(const p of pool){
     pinBacklog.push({id,title:p.title||"?",style:p.style||null});
   }
   try{ writeFileSync("data/incoming/pin-backlog.json",JSON.stringify(pinBacklog,null,1)); }catch{}
-  globalThis.__pinCoverage={missing:pinBacklog.length,reviewed:reviewedNoPins.size}; }
+  globalThis.__pinCoverage={missing:pinBacklog.length,reviewed:reviewedNoPins.size};
+
+  // CENTURY CONSISTENCY: notes often state "the Nth century" — a systematic off-by-one crept in during note
+  // generation (a work dated 700 saying "8th century"). Flag CE works where a note's claimed century is off
+  // by exactly ±1 from the true century (high-signal; ignores far-off contextual mentions of other eras).
+  const trueCent=y=>Math.floor((Math.abs(y)-1)/100)+1;
+  const reCent=/\b(\d{1,2})(?:st|nd|rd|th)[- ]century\b/gi;
+  const centBacklog=[];
+  for(const [id,c] of Object.entries(teach)){
+    const p=pool.find(x=>x.id===id); if(!p||p.y==null||p.y<0||!Array.isArray(c?.notes))continue;
+    const tc=trueCent(p.y); const txt=(c.why||"")+" "+c.notes.map(n=>n.head+" "+n.body).join(" ");
+    const claimed=new Set(); let m; reCent.lastIndex=0; while((m=reCent.exec(txt))) claimed.add(+m[1]);
+    if(!claimed.size||claimed.has(tc))continue;
+    if([...claimed].some(x=>Math.abs(x-tc)===1)){ centBacklog.push({id,title:p.title,trueCentury:tc,claimed:[...claimed]});
+      warn.push(`[century-off] ${(p.title||id).slice(0,34)} · y${p.y}=${tc}th, note says ${[...claimed].join("/")}th`); }
+  }
+  try{ writeFileSync("data/incoming/century-backlog.json",JSON.stringify(centBacklog,null,1)); }catch{}
+  globalThis.__century={off:centBacklog.length}; }
 
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
@@ -123,6 +140,7 @@ console.log(`=== check-pool: ${pool.length} works ===`);
 console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
 { const pc=globalThis.__pinCoverage; if(pc) console.log(`pin-coverage: ${pc.missing} figurative works with 0 pins (excl. abstract + ${pc.reviewed} reviewed) → data/incoming/pin-backlog.json`); }
+{ const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
