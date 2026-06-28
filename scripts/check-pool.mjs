@@ -1,7 +1,7 @@
 // Single fail-closed gate for the recurring pool data-quality bugs. Run after ANY pool change:
 //   node scripts/check-pool.mjs        (exits 1 if any HARD violation — wire into npm test / pre-commit / CI)
 // LOCAL only (no network); the creator-death copyright check is scripts/audit-copyright.mjs (Wikidata).
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
@@ -63,6 +63,39 @@ for(const p of pool){
   const byKey={}; for(const p of pool){ if(p.artist) (byKey[norm(p.artist)]=byKey[norm(p.artist)]||new Set()).add(p.artist); }
   for(const set of Object.values(byKey)) if(set.size>1) warn.push(`[artist-near-dup] ${[...set].join(" | ")}`); }
 
+// COPY-INTEGRITY gate: the v1->v2 note migration left broken reveal copy in works not yet curated —
+// note bodies cut off mid-thought ("..."), heads that are stripped Q&A fragments ("does this painting
+// matter", "technique should I notice"), dangling-article heads ("Honthorst Built The"), and template
+// stubs ("Material and technique"). Also duplicate pin coordinates (fallback/never-placed pins).
+// WARN for now (the backlog is large; a pool-wide curate pass will clear it) + write the full worklist
+// to data/incoming/copy-integrity-backlog.json so the fix pass has an exact target list.
+{ let teach={}, hot={};
+  try{ const t=readFileSync("data/teach-works.js","utf8"); teach=JSON.parse(t.slice(t.indexOf("{",t.indexOf(".work")),t.lastIndexOf("}")+1)); }catch{}
+  try{ const h=readFileSync("data/hotspots.js","utf8"); hot=JSON.parse(h.slice(h.indexOf("{"),h.lastIndexOf("}")+1)); }catch{}
+  const STRIPPED=/^(is|are|was|were|does|do|did|has|have|can|could|should|would|will|what'?s|technique|material|context|scene|shows)\b/i;
+  const STUB=/^(material and technique|context and meaning|significance|medium and technique|the story|who made it|why it matters)$/i;
+  const DANGLE=/\b(the|a|an|of|by|and|in|with|to|for)$/i;
+  const counts={truncBody:0,choppedHead:0,dangleHead:0,stubHead:0,dupPins:0};
+  const backlog=[];
+  for(const [id,c] of Object.entries(teach)){
+    if(!c||!Array.isArray(c.notes))continue;
+    const issues=[]; const coords=new Set(); let dup=false;
+    for(const n of c.notes){
+      const h=(n.head||"").trim(), b=(n.body||"").trim(), ws=h.split(/\s+/).filter(Boolean);
+      if(/(\.\.\.|…)$/.test(b)){counts.truncBody++;issues.push("trunc-body");}
+      if(STRIPPED.test(h)&&!h.endsWith("?")&&ws.length<=6&&!/^(the|a|an)\b/i.test(h)){counts.choppedHead++;issues.push("chopped-head:"+h);}
+      else if(ws.length>=2&&DANGLE.test(h)){counts.dangleHead++;issues.push("dangle-head:"+h);}
+      else if(STUB.test(h)){counts.stubHead++;issues.push("stub-head:"+h);}
+      if(typeof n.x==="number"){const k=Math.round(n.x)+","+Math.round(n.y);if(coords.has(k))dup=true;coords.add(k);}
+    }
+    if(dup){counts.dupPins++;issues.push("dup-pins");}
+    if(issues.length){ const p=pool.find(x=>x.id===id);
+      backlog.push({id,title:p?.title||"?",issues:[...new Set(issues.map(s=>s.split(":")[0]))]});
+      warn.push(`[copy-integrity] ${(p?.title||id).slice(0,38)} · ${[...new Set(issues.map(s=>s.split(":")[0]))].join(",")}`); }
+  }
+  try{ writeFileSync("data/incoming/copy-integrity-backlog.json",JSON.stringify(backlog,null,1)); }catch{}
+  globalThis.__copyIntegrity={counts,works:backlog.length}; }
+
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };
@@ -70,6 +103,7 @@ const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.l
 const unmappedStyles=new Set(); for(const p of pool){ if(p.style && !movKeys.has(p.style)) unmappedStyles.add(p.style); }
 console.log(`=== check-pool: ${pool.length} works ===`);
 console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
+{ const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
