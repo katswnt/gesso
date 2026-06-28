@@ -2344,6 +2344,19 @@ function notesHTML(notes){
     return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
   }).join('')}</div>`;
 }
+// De-clutter look-closer markers at render time: nudge any pair whose centers are closer than ~24px apart
+// (≈50% overlap for our 22px markers) so they never stack. Size-aware — runs after the image lays out, so it
+// adapts to thumbnail vs full size. Does NOT change stored pin data; purely visual.
+function declutterMarks(plate){ if(!plate)return; const marks=[...plate.querySelectorAll('.lookmark')]; if(marks.length<2)return;
+  const W=plate.clientWidth, H=plate.clientHeight; if(!W||!H)return; const MIN=24, R=11;
+  const pos=marks.map(m=>({m,x:parseFloat(m.style.left)/100*W,y:parseFloat(m.style.top)/100*H}));
+  for(let it=0;it<24;it++){ let moved=false;
+    for(let a=0;a<pos.length;a++)for(let b=a+1;b<pos.length;b++){ let dx=pos[b].x-pos[a].x,dy=pos[b].y-pos[a].y,d=Math.hypot(dx,dy)||0.01;
+      if(d<MIN){ const p=(MIN-d)/2, ux=dx/d, uy=dy/d; pos[a].x-=ux*p; pos[a].y-=uy*p; pos[b].x+=ux*p; pos[b].y+=uy*p; moved=true; } }
+    if(!moved)break; }
+  for(const p of pos){ p.x=Math.max(R,Math.min(W-R,p.x)); p.y=Math.max(R,Math.min(H-R,p.y)); p.m.style.left=(p.x/W*100)+'%'; p.m.style.top=(p.y/H*100)+'%'; } }
+function declutterPlate(scope){ const plate=(scope||document).querySelector('.plate'); const img=plate&&plate.querySelector('img'); if(!plate)return;
+  const run=()=>requestAnimationFrame(()=>declutterMarks(plate)); if(!img||img.complete)run(); else img.addEventListener('load',run,{once:true}); }
 // QA deep-link: ?qa=<workId> renders just a work's image + look-closer pins + study notes (the curated
 // content), using the real reveal CSS, so any work can be spot-checked without playing. Not a real round.
 function qaView(id){ const it=POOL.find(p=>p.id===id); const stage=document.getElementById('stage');
@@ -2364,6 +2377,7 @@ function qaView(id){ const it=POOL.find(p=>p.id===id); const stage=document.getE
   stage.querySelectorAll('.agq').forEach(b=>b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden');
     stage.querySelectorAll('.aga').forEach(x=>x.setAttribute('hidden','')); stage.querySelectorAll('.agq').forEach(x=>x.setAttribute('aria-expanded','false'));
     if(open){ a.removeAttribute('hidden'); b.setAttribute('aria-expanded','true'); } });
+  declutterPlate(stage);
 }
 function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
 function renderReveal(r,ri){
@@ -2437,6 +2451,7 @@ function renderReveal(r,ri){
   </div>`;
   countUps();
   setupReportFlow(it,study);
+  declutterPlate(document.getElementById('stage')); // keep look-closer markers from stacking
   if(perfect)setTimeout(()=>paintBurst(document.getElementById('revbanner')),80);
   // look-closer pins → v2: open+scroll the matching note row; v1: flash the matching cue
   const smooth=(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth';
