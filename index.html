@@ -2432,7 +2432,12 @@ function declutterPlate(scope){ const plate=(scope||document).querySelector('.pl
   const run=()=>requestAnimationFrame(()=>declutterMarks(plate)); if(!img||img.complete)run(); else img.addEventListener('load',run,{once:true}); }
 // QA deep-link: ?qa=<workId> renders just a work's image + look-closer pins + study notes (the curated
 // content), using the real reveal CSS, so any work can be spot-checked without playing. Not a real round.
-function qaCardHTML(id){ const it=POOL.find(p=>p.id===id);
+// pool ids are heterogeneous (wikidata:Q…, http://…/entity/Q…, met…, aic…) — resolve tolerantly so a
+// deep-link works regardless of which form you paste. Match exact first, then by Q-number, then by trailing token.
+function qaResolve(id){ let it=POOL.find(p=>p.id===id); if(it)return it;
+  const q=(id.match(/Q\d+/)||[])[0]; if(q){ it=POOL.find(p=>(p.id||'').match(/Q\d+/)?.[0]===q); if(it)return it; }
+  const tail=id.split(/[\/:]/).pop(); return POOL.find(p=>(p.id||'').split(/[\/:]/).pop()===tail); }
+function qaCardHTML(id){ const it=qaResolve(id);
   if(!it) return `<div class="sheet" style="padding:30px">QA: work not found — <code>${esc(id)}</code></div>`;
   const study=studyFor(it);
   const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
