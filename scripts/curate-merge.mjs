@@ -83,6 +83,10 @@ writeFileSync("data/pool.js", psrc.slice(0, pi) + JSON.stringify(pool) + psrc.sl
 writeFileSync("data/teach-works.js", "window.ARTEFACTUM_CUES=window.ARTEFACTUM_CUES||{};\nwindow.ARTEFACTUM_CUES.work=" + JSON.stringify(teach) + ";\n");
 writeFileSync("data/hotspots.js", "window.ARTEFACTUM_HOTSPOTS=" + JSON.stringify(hot) + ";\n");
 writeFileSync("data/incoming/no-pins-reviewed.json", JSON.stringify(reviewedNoPins, null, 1));
-writeFileSync("data/incoming/curate/review-queue.json", JSON.stringify(queue, null, 1));
+// ACCUMULATE the review queue across batches (dedupe by id+type) so bulk triage sees everything.
+let priorQ = []; try { priorQ = JSON.parse(readFileSync("data/incoming/curate/review-queue.json", "utf8")); } catch {}
+const qseen = new Set(); const mergedQ = [];
+for (const q of [...priorQ, ...queue]) { const k = q.id + "|" + q.type; if (qseen.has(k)) continue; qseen.add(k); mergedQ.push(q); }
+writeFileSync("data/incoming/curate/review-queue.json", JSON.stringify(mergedQ, null, 1));
 console.error(`curate-merge: ${out.length} works | style ${stat.style} (+${stat.movAdded} new movements) | medium ${stat.medium} | notes+pins ${stat.notesPins} | style-queued ${stat.styleQueued} | risky queued ${queue.length}`);
 if (newMovements.length) console.error("  new MOVEMENTS:", newMovements.map(m => m.key).join(", "));
