@@ -2127,7 +2127,8 @@ function renderRound(){
     // correct-geo reward: pin the right continent → free 50/50 on the school (daily tiers + training, via leaveFor)
     const leave=leaveFor;
     const wcR=placeCountry(it.place);
-    const rightRegion=continentOf(lat,lng)===it.region || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
+    // same 3000 km gate as the where-scoring: a whole-continent match alone isn't "right region" (Cambodia ≠ Iran)
+    const rightRegion=(continentOf(lat,lng)===it.region && km(lat,lng,it.lat,it.lng)<=3000) || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
     if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
       const k=geoElim(it,leave); free5050=true;
       const gh=document.getElementById('geohint'); if(gh)gh.style.display='none';
