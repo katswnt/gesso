@@ -1271,6 +1271,42 @@ function openIdentityModal(after){
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
 }
 let lbTier='medium';
+// ---------- benchmark "ghost" users: art-history greats as simulated leaderboard targets ----------
+// Each is an EXPERTISE PROFILE (home continents + deep era). They score on works of ANY period — strong in
+// their region/era, weaker elsewhere, with a universal fame bump (the canon is known to all). Scores are
+// computed with the real category structure, deterministic per (persona, work). Clearly marked simulated.
+const MASTERS=[
+  {name:'Leonardo da Vinci', regions:['Europe'], era:1500, deep:250, blurb:'Renaissance Europe'},
+  {name:'Rembrandt van Rijn', regions:['Europe'], era:1650, deep:200, blurb:'Dutch Golden Age'},
+  {name:'Pablo Picasso', regions:['Europe'], era:1930, deep:320, blurb:'Modern Europe'},
+  {name:'Katsushika Hokusai', regions:['Asia'], era:1820, deep:900, blurb:'Edo Japan & Asia'},
+  {name:'Frida Kahlo', regions:['North America','South America'], era:1940, deep:240, blurb:'The Americas'},
+  {name:'El Anatsui', regions:['Africa'], era:1970, deep:1600, blurb:'African art'},
+  {name:'Phidias', regions:['Europe'], era:-440, deep:500, blurb:'Ancient Mediterranean'},
+];
+const MASTER_COLOR='#8a6d3b'; // sepia — visually distinct from real players' bright dabs
+function masterScoreWork(P,w){ const clamp=x=>Math.max(0,Math.min(1,x)), MAX=MAX_CAT, COMMON=new Set(['Oil paint','Tempera','Fresco','Watercolor','Bronze','Marble','Stone','Ink','Woodblock print']);
+  const rm=P.regions.includes(w.region||''); const ra=rm?1:0.25;
+  const ea=w.y==null?0.5:Math.exp(-Math.pow((w.y-P.era)/P.deep,2)); const fn=clamp((w.fame||0)/1500);
+  const e=clamp(0.10+0.45*ra*(0.55+0.45*ea)+0.35*fn);
+  const when=MAX*clamp(0.18+0.72*e), where=MAX*clamp(rm?0.7+0.3*e:0.22+0.45*e+0.2*fn),
+        med=MAX*(COMMON.has(w.medium)?clamp(0.8+0.2*e):clamp(0.4+0.5*e)), mov=MAX*clamp(0.15+0.8*e);
+  const core=when+where+med+mov, art=MAX*(fn>0.8?0.8:(rm&&e>0.8?0.55:0.1*e));
+  return Math.round(core+art); }
+function masterTotals(tier,dateStr){ const works=dailyItems(tier,dateStr); if(!works.length)return [];
+  return MASTERS.map(P=>({name:P.name,blurb:P.blurb,score:works.reduce((a,w)=>a+masterScoreWork(P,w),0)})).sort((a,b)=>b.score-a.score); }
+function mastersBandHTML(tier,dateStr,youScore){ const m=masterTotals(tier,dateStr); if(!m.length)return '';
+  const row=x=>{ const beat=youScore!=null&&youScore>=x.score;
+    return `<div style="display:flex;align-items:center;gap:11px;min-height:40px;padding:6px 8px;border-bottom:1px solid var(--line-card);opacity:.92">
+      ${dabAvatar(x.name,MASTER_COLOR,32)}
+      <span style="flex:1;min-width:0;font:700 14px Archivo;font-style:italic">${esc(x.name)} <span class="mono" style="font-size:10px;font-style:normal;color:var(--muted)">${esc(x.blurb)}</span></span>
+      ${youScore!=null?`<span class="mono" title="${beat?'you beat them':'they beat you'}" style="font-size:13px">${beat?'✅':'🔒'}</span>`:''}
+      <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums;color:${MASTER_COLOR}">${x.score.toLocaleString()}</span></div>`;};
+  return `<div style="margin-top:22px;border-top:1px dashed var(--line-card);padding-top:14px">
+    <div style="font:800 14px Archivo">🎭 The Masters <span class="mono" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">simulated benchmarks</span></div>
+    <div class="mono" style="font-size:11px;color:var(--muted);margin:3px 0 10px">How art-history&rsquo;s greats would score on today&rsquo;s ${esc(tier)} puzzle &mdash; each strongest in their own era &amp; place. Beat them on their home turf.</div>
+    ${m.map(row).join('')}</div>`; }
+
 let lbDate=null; // viewed leaderboard date (null = today)
 async function renderLeaderboard(tierKey,dateStr){
   clearTimers(); lbTier=tierKey||lbTier; const today=todayStr();
@@ -1325,7 +1361,8 @@ async function renderLeaderboard(tierKey,dateStr){
   }
   const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
   const more = data.count>data.rows.length ? `<button class="btn2" id="lbmore" style="width:100%;margin-top:12px">Show more (${data.count-data.rows.length} more)</button>` : '';
-  body.innerHTML=podium+`<div id="lbrows">${rest.map(lbRowHTML).join('')}</div>`+more+selfRow+youLine;
+  const masters=mastersBandHTML(lbTier,date,data.you?data.you.score:null);
+  body.innerHTML=podium+`<div id="lbrows">${rest.map(lbRowHTML).join('')}</div>`+more+selfRow+youLine+masters;
   lbShown=data.rows.length;
   { const mb=document.getElementById('lbmore'); if(mb)mb.onclick=()=>loadMoreLeaderboard(mb); }
 }
