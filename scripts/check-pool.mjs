@@ -72,7 +72,10 @@ for(const p of pool){
 { let teach={}, hot={};
   try{ const t=readFileSync("data/teach-works.js","utf8"); teach=JSON.parse(t.slice(t.indexOf("{",t.indexOf(".work")),t.lastIndexOf("}")+1)); }catch{}
   try{ const h=readFileSync("data/hotspots.js","utf8"); hot=JSON.parse(h.slice(h.indexOf("{"),h.lastIndexOf("}")+1)); }catch{}
-  const STRIPPED=/^(is|are|was|were|does|do|did|has|have|can|could|should|would|will|what'?s|technique|material|context|scene|shows)\b/i;
+  // a migration-stripped head lost its leading (capitalized) word, so it now starts LOWERCASE with an
+  // aux/interrogative/stub word ("does this matter", "is the man", "technique should I notice"). Requiring a
+  // lowercase start makes this precise — it won't false-flag legit capitalized heads ("Why it matters", "Technique to notice").
+  const STRIPPED=/^(is|are|was|were|does|do|did|has|have|can|could|should|would|will|what's|technique|material|context|significance|medium|scene|shows)\b/;
   const STUB=/^(material and technique|context and meaning|significance|medium and technique|the story|who made it|why it matters)$/i;
   const DANGLE=/\b(the|a|an|of|by|and|in|with|to|for)$/i;
   const counts={truncBody:0,choppedHead:0,dangleHead:0,stubHead:0,dupPins:0};
@@ -83,7 +86,7 @@ for(const p of pool){
     for(const n of c.notes){
       const h=(n.head||"").trim(), b=(n.body||"").trim(), ws=h.split(/\s+/).filter(Boolean);
       if(/(\.\.\.|…)$/.test(b)){counts.truncBody++;issues.push("trunc-body");}
-      if(STRIPPED.test(h)&&!h.endsWith("?")&&ws.length<=6&&!/^(the|a|an)\b/i.test(h)){counts.choppedHead++;issues.push("chopped-head:"+h);}
+      if(STRIPPED.test(h)){counts.choppedHead++;issues.push("chopped-head:"+h);}
       else if(ws.length>=2&&DANGLE.test(h)){counts.dangleHead++;issues.push("dangle-head:"+h);}
       else if(STUB.test(h)){counts.stubHead++;issues.push("stub-head:"+h);}
       if(typeof n.x==="number"){const k=Math.round(n.x)+","+Math.round(n.y);if(coords.has(k))dup=true;coords.add(k);}
