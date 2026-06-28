@@ -2344,6 +2344,27 @@ function notesHTML(notes){
     return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
   }).join('')}</div>`;
 }
+// QA deep-link: ?qa=<workId> renders just a work's image + look-closer pins + study notes (the curated
+// content), using the real reveal CSS, so any work can be spot-checked without playing. Not a real round.
+function qaView(id){ const it=POOL.find(p=>p.id===id); const stage=document.getElementById('stage');
+  if(!it){ stage.innerHTML=`<div class="sheet" style="padding:30px">QA: work not found — <code>${esc(id)}</code></div>`; return; }
+  const study=studyFor(it);
+  const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
+  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:'';
+  const fact=(k,v)=>`<div style="display:flex;gap:12px;margin:2px 0"><b style="color:var(--accent);min-width:88px;font-size:12px">${k}</b><span class="mono">${esc(v)}</span></div>`;
+  stage.innerHTML=`<div class="sheet">
+    <div style="padding:10px 24px;background:#fde047;color:#111;font-weight:700;letter-spacing:.04em">QA PREVIEW · ${esc(id)} · not a real round</div>
+    <div class="revealgrid"><div>
+      <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}</div>
+      <div class="worktitle">${esc(it.title)}</div>
+      <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtYear(it.y))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
+    </div>
+    <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
+    </div></div>`;
+  stage.querySelectorAll('.agq').forEach(b=>b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden');
+    stage.querySelectorAll('.aga').forEach(x=>x.setAttribute('hidden','')); stage.querySelectorAll('.agq').forEach(x=>x.setAttribute('aria-expanded','false'));
+    if(open){ a.removeAttribute('hidden'); b.setAttribute('aria-expanded','true'); } });
+}
 function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
 function renderReveal(r,ri){
   if(ri==null)ri=results.indexOf(r); const liveRound=results.length-1; // ri = round being viewed; liveRound = latest submitted
@@ -2715,6 +2736,9 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 applySettings();
 if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
 else{ buildIndexes();
+  const qaId=new URLSearchParams(location.search).get('qa'); // ?qa=<workId> debug deep-link (spot-check curated content)
+  if(qaId){ qaView(decodeURIComponent(qaId)); }
+  else{
   // on a cold deep-link, seed a Home entry beneath so Back returns to the app, not off-site
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
   renderFromPath();
@@ -2722,7 +2746,7 @@ else{ buildIndexes();
   try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{}
   // pick up an existing session (and any OAuth/magic-link redirect) once supabase-js has loaded
   setTimeout(()=>{ try{ refreshAuth(); }catch{} },600);
-  setTimeout(()=>{ try{ backfillScores(); }catch{} },1500); } // push any un-submitted past dailies to the board
+  setTimeout(()=>{ try{ backfillScores(); }catch{} },1500); } } // push any un-submitted past dailies to the board
 </script>
 <!-- Vercel Web Analytics (framework-agnostic; enable Analytics in the Vercel project dashboard) -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
