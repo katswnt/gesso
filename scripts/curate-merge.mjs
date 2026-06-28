@@ -52,7 +52,7 @@ for (const w of out) {
   }
 
   // ---- MEDIUM (bucket-validated) ----
-  if (f.medium && validBucket(f.medium)) { p.medium = f.medium; stat.medium++; }
+  if (f.medium && validBucket(f.medium)) { p.medium = f.medium.charAt(0).toUpperCase() + f.medium.slice(1); stat.medium++; }
 
   // ---- RISKY -> queue ----
   for (const k of ["title", "place", "region", "lat", "lng", "date"]) if (f[k] != null && f[k] !== p[k] && !(k === "date")) queue.push({ id: w.id, title: p.title, type: k, from: p[k], to: f[k] });
