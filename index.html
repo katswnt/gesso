@@ -2454,9 +2454,10 @@ function qaCardHTML(id){ const it=qaResolve(id);
     </div></div>`;
 }
 function qaWireAndDeclutter(stage){
-  stage.querySelectorAll('.agq').forEach(b=>b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden');
-    const sheet=b.closest('.sheet'); sheet.querySelectorAll('.aga').forEach(x=>x.setAttribute('hidden','')); sheet.querySelectorAll('.agq').forEach(x=>x.setAttribute('aria-expanded','false'));
-    if(open){ a.removeAttribute('hidden'); b.setAttribute('aria-expanded','true'); } });
+  // QA view: expand ALL note bodies by default so the whole curated write-up is readable at a glance.
+  stage.querySelectorAll('.aga').forEach(a=>a.removeAttribute('hidden'));
+  stage.querySelectorAll('.agq').forEach(b=>{ b.setAttribute('aria-expanded','true');
+    b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
   declutterPlate(stage);
 }
 function qaView(id){ const stage=document.getElementById('stage'); stage.innerHTML=qaCardHTML(id); qaWireAndDeclutter(stage); }
