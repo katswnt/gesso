@@ -117,6 +117,10 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   return shuffle(out);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
+// Optional uncertain/ranged date: it.yr=[lo,hi]. dateRange() always returns a [lo,hi] pair (=[y,y] if no range),
+// so when-scoring can give full credit anywhere inside the span (e.g. "c. 1st century BCE" accepts −100..−1).
+function dateRange(it){ const r=it&&Array.isArray(it.yr)&&it.yr.length===2?it.yr:null; return r?[Math.min(r[0],r[1]),Math.max(r[0],r[1])]:[it.y,it.y]; }
+function fmtDate(it){ const r=it&&Array.isArray(it.yr)&&it.yr.length===2&&it.yr[0]!==it.yr[1]; if(!r)return fmtYear(it.y); const a=Math.min(it.yr[0],it.yr[1]),b=Math.max(it.yr[0],it.yr[1]); return `c. ${Math.abs(a)}–${fmtYear(b)}`; }
 const motionQuery=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
 let settings=loadSettings();
 function loadSettings(){try{const s=JSON.parse(localStorage.getItem("gesso.settings"))||{};return {reduceMotion:typeof s.reduceMotion==='boolean'?s.reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:!!s.colorblind,units:s.units==='in'?'in':'cm'};}catch{return{reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:false,units:'cm'};}}
@@ -2308,9 +2312,11 @@ function score(){
   const ACT=activeCatsFor(it); const asked=c=>ACT.includes(c);
   // when (leniency scales with difficulty; 🎯 bullseye always = within a real decade)
   if(asked('when')){
-  const dy=Math.abs(guess.year-it.y), ts=timeScore(Math.round(dy/D.timeMult)), bull=!!ts.bull;
-  cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtYear(it.y),
-    note:bull?(dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+  const [lo,hi]=dateRange(it); const ranged=lo!==hi;
+  const dy = guess.year<lo ? lo-guess.year : guess.year>hi ? guess.year-hi : 0; // 0 if inside the range
+  const ts=timeScore(Math.round(dy/D.timeMult)), bull=!!ts.bull;
+  cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtDate(it),
+    note:bull?(dy===0?(ranged?"inside the date range":"right to the decade"):dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   }
   // where (distance falloff is gentler on easy, steeper on hard)
   if(asked('where')){
@@ -2467,7 +2473,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}</div>
       <div class="worktitle">${esc(it.title)}</div>
-      <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtYear(it.y))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
+      <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
     </div></div>`;
@@ -2521,7 +2527,7 @@ function renderReveal(r,ri){
         <div class="worktitle">${esc(it.title)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
-          <div class="metarow"><span class="k">DATE</span><span class="v">${fmtYear(it.y)}</span></div>
+          <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
           ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">${it.artist&&!/^(unknown|anon)/i.test(it.artist)?'None on record':'Anonymous / decorative work'}</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}

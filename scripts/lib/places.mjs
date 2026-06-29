@@ -41,6 +41,10 @@ const CONTINENT = {
   australia:"Oceania","french polynesia":"Oceania","papua new guinea":"Oceania",polynesia:"Oceania",vanuatu:"Oceania","new zealand":"Oceania",
 };
 export function continentOf(place){
-  const base = String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim().toLowerCase();
-  return CONTINENT[base] || "";
+  const raw = String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim();
+  const look = s => CONTINENT[s.trim().toLowerCase()] || "";
+  let c = look(raw); if(c) return c;                      // whole string is a known country
+  const parts = raw.split(",").map(s=>s.trim()).filter(Boolean); // "City, Country" → read the country off the end
+  for(let i=parts.length-1;i>=0;i--){ c=look(parts[i]); if(c) return c; }
+  return "";
 }
