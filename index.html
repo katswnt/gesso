@@ -912,15 +912,22 @@ function tierCount(i){
 }
 // When the freeze ships metadata, use the frozen ID tiers as the source of truth.
 // Older data/daily-order.js files have no meta, so keep the live percentage fallback.
+// A work is only PLAYABLE/showable if at most ONE scoreable value is missing — specifically it must record at
+// least one of {medium, movement} (when/where are effectively always present). Works missing BOTH would show
+// two "not scored" rows, which we don't want a player to ever see. Single source of truth for all selectors.
+function workComplete(p){ if(!p)return false;
+  const hasMed=!!(p.medium&&String(p.medium).trim());
+  const hasMov=!!(p.style&&((typeof MOVEMENTS!=='undefined'&&MOVEMENTS[p.style])||p.styleKind==='culture'||p.styleKind==='movement'));
+  return hasMed||hasMov; }
 function tierItems(i){
   const key=TIERS[i]&&TIERS[i].key;
   const frozen=key&&frozenTierItems(key);
-  if(frozen) return frozen;
+  if(frozen) return frozen.filter(workComplete);
   // fame-sorted pool sliced by percentage so tiers scale with pool size.
   const n=POOL.length;
   // graduated: few famous works, many obscure → tiers widen toward Impossible
   const cuts=[0, Math.round(n*0.10), Math.round(n*0.35), Math.round(n*0.65), n];
-  return POOL.slice(cuts[i], cuts[i+1]);
+  return POOL.slice(cuts[i], cuts[i+1]).filter(workComplete);
 }
 const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"medium",label:"Medium",blurb:"Well-known works"},
   {key:"hard",label:"Hard",blurb:"For art-history buffs"},{key:"impossible",label:"Impossible",blurb:"Deep cuts & obscurities"}];
@@ -1194,17 +1201,17 @@ function dailyItems(key,dateStr){
   // never disturb today or the past — only un-pinned future dates fall through to the rotation below.
   const pinned = ((window.ARTEFACTUM_DAILY||{}).byDate||{})[dateStr];
   if(pinned && Array.isArray(pinned[key]) && pinned[key].length){
-    const got = pinned[key].map(id=>byId[id]).filter(Boolean);
+    const got = pinned[key].map(id=>byId[id]).filter(Boolean).filter(workComplete); // drop any now-incomplete pinned work
     if(got.length>=ROUNDS) return got.slice(0,ROUNDS); // only honor a COMPLETE locked day; else fall back to rotation
   }
   const frozen = (window.ARTEFACTUM_DAILY||{})[key];
   let perm;
   if(frozen && frozen.length>=ROUNDS){
-    perm = frozen.map(id=>byId[id]).filter(Boolean);
+    perm = frozen.map(id=>byId[id]).filter(Boolean).filter(workComplete);
   } else {
     const i=Math.max(0,TIERS.findIndex(t=>t.key===key));
     let arr=tierItems(i);
-    if(arr.length<ROUNDS) arr=[...arr,...seededShuffle(POOL.filter(p=>!arr.includes(p)),`${key}|fill`)];
+    if(arr.length<ROUNDS) arr=[...arr,...seededShuffle(POOL.filter(p=>!arr.includes(p)&&workComplete(p)),`${key}|fill`)];
     perm=seededShuffle(arr,`gesso-rotation-v1|${key}`);
   }
   const len=perm.length; if(!len) return [];

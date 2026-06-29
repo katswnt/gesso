@@ -7,6 +7,11 @@ const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTE
 const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.ARTEFACTUM_FAME=","").replace(/;\s*$/,""));
 const poolFame = Object.fromEntries(pool.map(p=>[p.id, p.fame||0])); // fallback for freshly-promoted works not yet in the overlay — matches buildIndexes
 const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);
+// PLAYABILITY: a work shown to a player must have at most one missing scoreable value — i.e. record at least
+// one of {medium, movement}. Works missing BOTH are excluded from every tier so they never enter a daily.
+const _html=readFileSync("index.html","utf8"); const _a=_html.indexOf("const MOVEMENTS={"),_b=_html.indexOf("const MOV_FAMILY=");
+const _movKeys=new Set([..._html.slice(_a,_b).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1]));
+const workComplete=p=>!!(p&&((p.medium&&String(p.medium).trim())||(p.style&&(_movKeys.has(p.style)||p.styleKind==="culture"||p.styleKind==="movement"))));
 
 // --- daily diversity: no two works by the same NAMED artist in one day's set; soft region/era spread ---
 const byId = Object.fromEntries(pool.map(p=>[p.id,p]));
@@ -33,7 +38,7 @@ function seedHash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Mat
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function seededShuffle(arr,seedStr){const r=mulberry32(seedHash(seedStr));const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-const ranked = pool.slice().sort((a,b)=>fameOf(b.id)-fameOf(a.id));
+const ranked = pool.filter(workComplete).sort((a,b)=>fameOf(b.id)-fameOf(a.id));
 const n = ranked.length;
 const out={};
 

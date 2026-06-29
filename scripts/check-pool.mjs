@@ -134,6 +134,45 @@ for(const p of pool){
   try{ writeFileSync("data/incoming/century-backlog.json",JSON.stringify(centBacklog,null,1)); }catch{}
   globalThis.__century={off:centBacklog.length}; }
 
+// STYLE-FROM-NOTE: a work whose style is a junk placeholder / empty but whose teach note clearly NAMES a
+// mapped movement is leaving MOVEMENT unscored for no reason (the answer is sitting right in the note). Flag
+// these so scripts/recover-style-from-notes.mjs can assign them. High-precision match only: multi-word movement
+// names (substring) + unambiguous single words (case-sensitive proper noun) — never generic words like "realism".
+{ let teachSFN={}; try{ const t=readFileSync("data/teach-works.js","utf8"); teachSFN=JSON.parse(t.slice(t.indexOf("{",t.indexOf(".work")),t.lastIndexOf("}")+1)); }catch{}
+  const teach=teachSFN;
+  const AMBIG=new Set(["Realism","Roman","Classical","Modern","Modernism","Academic","Realist","Classicism","Pop art","Color Field","Gothic"]);
+  const junkRe=/anonymous|decorative work|unknown|^various|^none$|^n\/a$/i;
+  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); const keys=[...movKeys];
+  const sfnBacklog=[];
+  for(const p of pool){
+    const junk=!p.style||junkRe.test(p.style)||(!movKeys.has(p.style)&&p.styleKind!=="culture");
+    if(!junk) continue; const why=teach[p.id]?.why; if(!why) continue;
+    const cand=keys.filter(k=>{ if(AMBIG.has(k))return false; const multi=/[\s-]/.test(k);
+      return multi?new RegExp("\\b"+esc(k)+"\\b","i").test(why):new RegExp("\\b"+esc(k)+"\\b").test(why); })
+      .sort((x,y)=>y.length-x.length);
+    if(cand.length){ sfnBacklog.push({id:p.id,title:p.title,style:p.style||null,suggested:cand[0]});
+      warn.push(`[style-from-note] ${(p.title||p.id).slice(0,34)} · [${p.style||"—"}] → ${cand[0]}`); }
+  }
+  try{ writeFileSync("data/incoming/style-from-note-backlog.json",JSON.stringify(sfnBacklog,null,1)); }catch{}
+  globalThis.__styleFromNote={n:sfnBacklog.length}; }
+
+// THIN WORKS: a work shown to a player must record at least one of {medium, movement} (≤1 missing scoreable
+// value). Works missing BOTH would show two "not scored" rows. WARN + backlog for the whole pool; HARD-fail if
+// one is actually pinned in TODAY or a FUTURE daily (those would reach players — the runtime filter + freeze
+// exclude them, so a hit here means a stale lock that must be scrubbed).
+{ const complete=p=>!!(p&&((p.medium&&String(p.medium).trim())||(p.style&&(movKeys.has(p.style)||p.styleKind==="culture"||p.styleKind==="movement"))));
+  const thinBacklog=pool.filter(p=>!complete(p)).map(p=>({id:p.id,title:p.title,medium:p.medium||null,style:p.style||null}));
+  try{ writeFileSync("data/incoming/thin-backlog.json",JSON.stringify(thinBacklog,null,1)); }catch{}
+  globalThis.__thin={n:thinBacklog.length};
+  let daily={}; try{ const t=readFileSync("data/daily-order.js","utf8"); daily=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)); }catch{}
+  const byId=Object.fromEntries(pool.map(p=>[p.id,p]));
+  const today=new Date(Date.now()).toISOString().slice(0,10);
+  const thinSet=new Set(thinBacklog.map(t=>t.id));
+  for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<today)continue;
+    for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[]))
+      if(thinSet.has(id)) hard.push(`[thin-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} (no medium+no movement)`); }
+}
+
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };
@@ -144,6 +183,8 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
 { const pc=globalThis.__pinCoverage; if(pc) console.log(`pin-coverage: ${pc.missing} figurative works with 0 pins (excl. abstract + ${pc.reviewed} reviewed) → data/incoming/pin-backlog.json`); }
 { const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
+{ const sf=globalThis.__styleFromNote; if(sf) console.log(`style-from-note: ${sf.n} junk-style works whose note names a mapped movement → data/incoming/style-from-note-backlog.json`); }
+{ const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
