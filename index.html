@@ -1332,11 +1332,25 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
+function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='gallery')renderGallery();else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16)||defaultName(),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:defaultName(),color:defaultColor()};}}
+// ---------- My Gallery: saved works (device-keyed Supabase + localStorage mirror) ----------
+let SAVED=new Set(); try{ SAVED=new Set(JSON.parse(localStorage.getItem("gesso.saved")||"[]")); }catch{}
+function persistSaved(){ try{ localStorage.setItem("gesso.saved",JSON.stringify([...SAVED])); }catch{} }
+function isSaved(id){ return SAVED.has(id); }
+let __savedSynced=false;
+async function syncSaved(){ try{ const r=await fetch("/api/saves?me="+encodeURIComponent(deviceId())); if(!r.ok)return; const j=await r.json();
+  if(Array.isArray(j.ids)){ SAVED=new Set(j.ids); persistSaved(); __savedSynced=true; } }catch{} } // server is source of truth (optimistic writes already fired)
+const BOOKMARK_SVG=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+function saveBtnHTML(id){ const s=isSaved(id); return `<button type="button" class="savebtn${s?' saved':''}" data-save="${esc(id)}" aria-pressed="${s}" title="${s?'Remove from My Gallery':'Save to My Gallery'}">${BOOKMARK_SVG}<span class="savelbl">${s?'Filed':'Save'}</span></button>`; }
+function toggleSave(id,btn){ const now=!SAVED.has(id); if(now)SAVED.add(id); else SAVED.delete(id); persistSaved();
+  if(btn){ btn.setAttribute("aria-pressed",now?"true":"false"); btn.classList.toggle("saved",now); btn.title=now?"Remove from My Gallery":"Save to My Gallery"; const lbl=btn.querySelector(".savelbl"); if(lbl)lbl.textContent=now?"Filed":"Save"; if(now){const host=btn.closest(".plate")||btn.parentElement; if(host&&typeof paintBurst==="function")paintBurst(host);} }
+  fetch("/api/saves",{method:now?"POST":"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),workId:id})}).catch(()=>{});
+  return now; }
+document.addEventListener("click",function(e){ const b=e.target&&e.target.closest&&e.target.closest("[data-save]"); if(b){ e.preventDefault(); toggleSave(b.dataset.save,b); } }); // delegated: works for any reveal/gallery rendered later
 function saveIdentity(i){try{localStorage.setItem("gesso.identity",JSON.stringify({name:String(i.name||'').slice(0,16),color:i.color}));}catch{}}
 function initialsOf(name){const w=String(name||'').trim().split(/\s+/).filter(Boolean);return w.length?w.slice(0,2).map(x=>x[0].toUpperCase()).join(''):'YOU';}
 // Backfill past local daily bests to the leaderboard (e.g. days played before an account existed, or before
@@ -1924,6 +1938,7 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
     ${w?`<button class="btn" id="trainweak" style="margin-bottom:24px">Train your weak spot${w.kind!=='axis'?': '+esc(w.key):''} &rarr;</button>`:`<div class="mono" style="font-size:12px;color:var(--faint);margin-bottom:24px">Play more dailies to unlock weak-spot training.</div>`}
     <div class="kick" style="color:var(--accent);margin-bottom:10px">More</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+      <button class="btn2" data-route="gallery" style="text-align:left">My Gallery${SAVED.size?` &middot; ${SAVED.size} filed`:''}</button>
       <button class="btn2" data-route="glossary" style="text-align:left">Glossary</button>
       <button class="btn2" data-route="archive" style="text-align:left">Archive</button>
       <button class="btn2" data-route="collections" style="text-align:left">Collections</button>
@@ -2565,6 +2580,24 @@ function declutterPlate(scope){ const plate=(scope||document).querySelector('.pl
 function qaResolve(id){ let it=POOL.find(p=>p.id===id); if(it)return it;
   const q=(id.match(/Q\d+/)||[])[0]; if(q){ it=POOL.find(p=>(p.id||'').match(/Q\d+/)?.[0]===q); if(it)return it; }
   const tail=id.split(/[\/:]/).pop(); return POOL.find(p=>(p.id||'').split(/[\/:]/).pop()===tail); }
+// My Gallery page — grid of saved works; tap to reopen the study view, × to remove. (To be skinned to design.)
+async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pushNav({v:'gallery'});
+  const stage=document.getElementById('stage');
+  stage.innerHTML=`<div class="sheet" style="padding:18px"><div class="mono" style="color:var(--muted)">Loading your gallery…</div></div>`;
+  await syncSaved();
+  const works=[...SAVED].map(id=>qaResolve(id)).filter(Boolean);
+  const head=`<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font:800 22px Archivo">My Gallery</h2><span class="mono" style="color:var(--muted);font-size:12px">${works.length} work${works.length===1?'':'s'} filed</span></div>`;
+  if(!works.length){ stage.innerHTML=`<div class="sheet" style="padding:24px">${head}<div class="mono" style="color:var(--muted);padding:34px 0;text-align:center;line-height:1.6">Nothing filed yet.<br>Tap the <b>bookmark</b> on any artwork you reveal to keep it here.</div></div>`; return; }
+  const cards=works.map(p=>`<div class="galcard" data-open="${esc(p.id)}">
+      <div class="galthumb" style="background-image:url('${esc(displaySrc(p.img))}')"></div>
+      <div class="galmeta"><div class="galtitle">${esc(p.title)}</div><div class="galartist mono">${esc(p.artist||'Unknown / anonymous')}</div></div>
+      <button type="button" class="galx" title="Remove from My Gallery">&times;</button></div>`).join('');
+  stage.innerHTML=`<div class="sheet" style="padding:18px 18px 28px">${head}<div class="galgrid">${cards}</div></div>`;
+  stage.querySelectorAll('.galcard').forEach(c=>{ const id=c.dataset.open;
+    c.querySelector('.galx').onclick=ev=>{ ev.stopPropagation(); toggleSave(id); c.style.transition='opacity .2s'; c.style.opacity='0'; setTimeout(()=>{c.remove();
+      if(!stage.querySelector('.galcard'))renderGallery(false);},200); };
+    c.onclick=ev=>{ if(ev.target.closest('.galx'))return; qaView(id); }; });
+}
 function qaCardHTML(id){ const it=qaResolve(id);
   if(!it) return `<div class="sheet" style="padding:30px">QA: work not found — <code>${esc(id)}</code></div>`;
   const study=studyFor(it);
@@ -2575,7 +2608,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
     <div style="padding:10px 24px;background:#fde047;color:#111;font-weight:700;letter-spacing:.04em">QA PREVIEW · ${esc(id)} · not a real round</div>
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}</div>
-      <div class="worktitle">${esc(it.title)}</div>
+      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div>${saveBtnHTML(it.id)}</div>
       <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
@@ -2627,7 +2660,7 @@ function renderReveal(r,ri){
     <div class="revealgrid">
       <div>
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
-        <div class="worktitle">${esc(it.title)}</div>
+        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div>${saveBtnHTML(it.id)}</div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>

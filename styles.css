@@ -558,3 +558,19 @@
   body.motion-ok .narr .bar > i{transition:width .35s cubic-bezier(.2,.7,.25,1)}
   .tfocus{border:1px solid var(--line-card);background:transparent;color:var(--ink)}
   .tfocus.on{border-color:var(--accent);background:var(--accent);color:#fff}
+
+/* ---- My Gallery (save the art) ---- */
+.worktitle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.savebtn{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--line-card,#d9d4c7);color:var(--ink,#1b1916);border-radius:999px;padding:6px 12px;font:700 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.savebtn:hover{border-color:var(--accent,#2230b8)}
+.savebtn.saved{background:var(--accent,#2230b8);color:#fff;border-color:var(--accent,#2230b8)}
+.savebtn svg{display:block}
+.galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.galcard{position:relative;background:var(--study-bg,#fff);border:1px solid var(--line-card,#e7e2d6);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .1s}
+.galcard:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}
+.galthumb{width:100%;aspect-ratio:1/1;background:#0c0b0a center/contain no-repeat}
+.galmeta{padding:9px 10px 11px}
+.galtitle{font:700 13px Archivo;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.galartist{font-size:10.5px;color:var(--muted,#8b8475);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.galx{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(17,16,14,.62);color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.galcard:hover .galx,.galx:focus{opacity:1}
