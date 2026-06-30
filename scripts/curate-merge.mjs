@@ -16,6 +16,11 @@ let html = readFileSync("index.html", "utf8");
 const movStart = html.indexOf("const MOVEMENTS={");
 const movEnd = html.indexOf("const MOV_FAMILY=");
 const movKeys = new Set([...html.slice(movStart, movEnd).matchAll(/"([^"]+)":\{dates:/g)].map(m => m[1]));
+// Canonicalize a proposed style to an EXISTING key that differs only by case/diacritics/spacing, so Codex
+// can't re-introduce variants like "Naive Art" / "Naive art" / "Naïve Art" as separate movements.
+const normStyle = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[\s-]+/g," ").trim();
+const normToKey = new Map([...movKeys].map(k => [normStyle(k), k]));
+const canonStyle = s => normToKey.get(normStyle(s)) || s;
 
 let psrc = readFileSync("data/pool.js", "utf8");
 const pi = psrc.indexOf("["), pj = psrc.lastIndexOf("]");
@@ -42,6 +47,7 @@ for (const w of out) {
 
   // ---- STYLE (with MOVEMENTS guard) ----
   if (f.style) {
+    f.style = canonStyle(f.style); // fold case/diacritic variants onto the existing key
     if (movKeys.has(f.style)) { p.style = f.style; if (f.styleKind) p.styleKind = f.styleKind; stat.style++; }
     else if (w.movementMeta && w.movementMeta.dates) {
       const region = w.movementMeta.region || p.region || p.place || "";
