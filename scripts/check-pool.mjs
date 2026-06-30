@@ -173,6 +173,20 @@ for(const p of pool){
       if(thinSet.has(id)) hard.push(`[thin-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} (no medium+no movement)`); }
 }
 
+// MEDIUM-FROM-NOTE: the why sentence describes the artwork's own technique; when it DECLARES a medium that
+// conflicts with the medium field (e.g. note "egg tempera"/"engraving"/"wall painting" but field says Oil
+// paint/Woodblock/Stone), trust the note. High-precision technique phrases only (never "Bronze Age" / depicted
+// content). WARN + backlog so the medium-from-note fix can re-run after each harvest.
+{ let teachM={}; try{ const t=readFileSync("data/teach-works.js","utf8"); teachM=JSON.parse(t.slice(t.indexOf("{",t.indexOf(".work")),t.lastIndexOf("}")+1)); }catch{}
+  const RULES=[[/egg tempera|in tempera\b|tempera (?:on|panel|painting|portrait)/i,"Tempera"],[/wall painting|painted plaster|plaster fragment|\bfresco\b/i,"Fresco"],[/\bengraving\b/i,"Engraving"],[/woodblock print|woodcut\b/i,"Woodblock print"],[/\bin ink\b|ink drawing|drawing in ink|ink and (?:colou?r|wash)/i,"Ink"],[/terracotta|terra-cotta/i,"Ceramic"],[/\bwooden\b (?:sculpture|figure|statue|object|mask|box|panel|relief|carving)|carved (?:from )?wood\b/i,"Wood"]];
+  const whyBucket=why=>{ for(const [re,b] of RULES) if(re.test(why)) return b; return null; };
+  const mcBacklog=[];
+  for(const p of pool){ const why=teachM[p.id]?.why; if(!why||!p.medium)continue;
+    const wb=whyBucket(why); if(!wb)continue; const cur=simplifyMedium(p.medium)||p.medium;
+    if(wb!==cur){ mcBacklog.push({id:p.id,title:p.title,medium:p.medium,suggested:wb}); warn.push(`[medium-from-note] ${(p.title||p.id).slice(0,32)} · [${cur}] → ${wb}`); } }
+  try{ writeFileSync("data/incoming/medium-conflict-backlog.json",JSON.stringify(mcBacklog,null,1)); }catch{}
+  globalThis.__medConflict={n:mcBacklog.length}; }
+
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };
@@ -185,6 +199,7 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
 { const sf=globalThis.__styleFromNote; if(sf) console.log(`style-from-note: ${sf.n} junk-style works whose note names a mapped movement → data/incoming/style-from-note-backlog.json`); }
 { const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
+{ const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
