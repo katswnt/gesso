@@ -1369,7 +1369,7 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='gallery')renderGallery();else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
+function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='gallery')renderGallery();else if(name&&name.startsWith('gallery/'))renderGalleryDetail(name.slice(8));else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
@@ -1381,12 +1381,46 @@ function isSaved(id){ return SAVED.has(id); }
 let __savedSynced=false;
 async function syncSaved(){ try{ const r=await fetch("/api/saves?me="+encodeURIComponent(deviceId())); if(!r.ok)return; const j=await r.json();
   if(Array.isArray(j.ids)){ SAVED=new Set(j.ids); persistSaved(); __savedSynced=true; } }catch{} } // server is source of truth (optimistic writes already fired)
-const BOOKMARK_SVG=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
-function saveBtnHTML(id){ const s=isSaved(id); return `<button type="button" class="savebtn${s?' saved':''}" data-save="${esc(id)}" aria-pressed="${s}" title="${s?'Remove from My Gallery':'Save to My Gallery'}">${BOOKMARK_SVG}<span class="savelbl">${s?'Filed':'Save'}</span></button>`; }
-function toggleSave(id,btn){ const now=!SAVED.has(id); if(now)SAVED.add(id); else SAVED.delete(id); persistSaved();
-  if(btn){ btn.setAttribute("aria-pressed",now?"true":"false"); btn.classList.toggle("saved",now); btn.title=now?"Remove from My Gallery":"Save to My Gallery"; const lbl=btn.querySelector(".savelbl"); if(lbl)lbl.textContent=now?"Filed":"Save"; if(now){const host=btn.closest(".plate")||btn.parentElement; if(host&&typeof paintBurst==="function")paintBurst(host);} }
+const PENNANT_SVG_STROKE=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
+const PENNANT_SVG_FILL=`<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
+const PENNANT_SVG_FILL_ACCENT=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
+const PENNANT_SVG_ACCENT_STROKE=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2230b8" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
+function saveBtnHTML(id){ const s=isSaved(id); return `<button type="button" class="savebtn${s?' saved':''}" data-save="${esc(id)}" aria-label="${s?'Remove from My Gallery':'Save to My Gallery'}" aria-pressed="${s?'true':'false'}">${s?PENNANT_SVG_FILL:PENNANT_SVG_STROKE}<span class="savelbl">${s?'Saved':'Save'}</span></button>`; }
+// galToast: shows a transient dark toast inside the plate (or nearest positioned ancestor)
+function galToast(plate, msg, actionLabel, actionFn, ms){
+  if(!plate) return;
+  const old=plate.querySelector('.gal-toast'); if(old)old.remove();
+  const t=document.createElement('div'); t.className='gal-toast'; t.setAttribute('role','status');
+  t.innerHTML=`${esc(msg)}${actionLabel?`<button class="toast-action">${esc(actionLabel)}</button>`:''}`;
+  if(actionLabel&&actionFn){ t.querySelector('.toast-action').onclick=(e)=>{e.stopPropagation();actionFn();t.remove();}; }
+  plate.appendChild(t);
+  const dismiss=setTimeout(()=>{t.classList.add('fading');setTimeout(()=>t.remove(),350);},ms||4000);
+  t.addEventListener('click',e=>{if(e.target.classList.contains('toast-action'))return;clearTimeout(dismiss);t.remove();},{once:true});
+}
+function toggleSave(id,btn){
+  const now=!SAVED.has(id);
+  if(now) SAVED.add(id); else SAVED.delete(id);
+  persistSaved();
+  // update button visuals
+  if(btn){
+    btn.setAttribute("aria-pressed",now?"true":"false");
+    btn.setAttribute("aria-label",now?"Remove from My Gallery":"Save to My Gallery");
+    btn.classList.toggle("saved",now);
+    btn.innerHTML=(now?PENNANT_SVG_FILL:PENNANT_SVG_STROKE)+`<span class="savelbl">${now?'Saved':'Save'}</span>`;
+    const plate=btn.closest(".plate");
+    if(plate){
+      if(now){
+        if(typeof paintBurst==="function")paintBurst(plate);
+        galToast(plate,"Added to My Gallery","View →",()=>{route('gallery');},4000);
+      } else {
+        const undoId=id;
+        galToast(plate,"Removed from My Gallery","Undo",()=>{toggleSave(undoId,btn);},6000);
+      }
+    }
+  }
   fetch("/api/saves",{method:now?"POST":"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),workId:id})}).catch(()=>{});
-  return now; }
+  return now;
+}
 document.addEventListener("click",function(e){ const b=e.target&&e.target.closest&&e.target.closest("[data-save]"); if(b){ e.preventDefault(); toggleSave(b.dataset.save,b); } }); // delegated: works for any reveal/gallery rendered later
 function saveIdentity(i){try{localStorage.setItem("gesso.identity",JSON.stringify({name:String(i.name||'').slice(0,16),color:i.color}));}catch{}}
 function initialsOf(name){const w=String(name||'').trim().split(/\s+/).filter(Boolean);return w.length?w.slice(0,2).map(x=>x[0].toUpperCase()).join(''):'YOU';}
@@ -1975,7 +2009,10 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
     ${w?`<button class="btn" id="trainweak" style="margin-bottom:24px">Train your weak spot${w.kind!=='axis'?': '+esc(w.key):''} &rarr;</button>`:`<div class="mono" style="font-size:12px;color:var(--faint);margin-bottom:24px">Play more dailies to unlock weak-spot training.</div>`}
     <div class="kick" style="color:var(--accent);margin-bottom:10px">More</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
-      <button class="btn2" data-route="gallery" style="text-align:left">My Gallery${SAVED.size?` &middot; ${SAVED.size} filed`:''}</button>
+      ${(()=>{ const gw=[...SAVED].map(x=>qaResolve(x)).filter(Boolean); const thumbs=gw.slice(0,5);
+        return `<div class="gal-accard"><div class="gal-accard-hd"><span class="gal-accard-left">${PENNANT_SVG_FILL_ACCENT}<span class="gal-accard-label">My gallery</span></span><span class="gal-accard-count">${gw.length}</span></div>
+        ${gw.length?`<div class="gal-accard-thumbs">${thumbs.map(w=>`<span class="gal-accard-thumb"><img src="${esc(displaySrc(w.img))}" alt="" loading="lazy" onerror="imgFail(this)"></span>`).join('')}</div>`:`<div class="mono" style="color:var(--faint);font-size:11px;margin-bottom:12px">No saves yet — tap the pennant on any reveal.</div>`}
+        <button type="button" class="btn2" data-route="gallery" style="width:100%">View all &rarr;</button></div>`; })()}
       <button class="btn2" data-route="glossary" style="text-align:left">Glossary</button>
       <button class="btn2" data-route="archive" style="text-align:left">Archive</button>
       <button class="btn2" data-route="collections" style="text-align:left">Collections</button>
@@ -2618,22 +2655,84 @@ function qaResolve(id){ let it=POOL.find(p=>p.id===id); if(it)return it;
   const q=(id.match(/Q\d+/)||[])[0]; if(q){ it=POOL.find(p=>(p.id||'').match(/Q\d+/)?.[0]===q); if(it)return it; }
   const tail=id.split(/[\/:]/).pop(); return POOL.find(p=>(p.id||'').split(/[\/:]/).pop()===tail); }
 // My Gallery page — grid of saved works; tap to reopen the study view, × to remove. (To be skinned to design.)
+// ---- My Gallery helpers ----
+const BACK_SVG=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`;
+const PENNANT_SVG_BIG=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
+function galEraBucket(y){ if(y==null||isNaN(y))return 'Undated'; if(y<0)return `${Math.ceil(Math.abs(y)/100)*100}s BCE`; return `${Math.floor(y/100)*100}s`; }
+function galEraSort(k){ const m=k.match(/(\d+)s( BCE)?/); if(!m)return 99999; return m[2]?-(+m[1]):(+m[1]); }
+function galSameEra(a,b){ if(a.y==null||b.y==null)return false; return Math.floor(a.y/100)===Math.floor(b.y/100); }
+function galMuseum(it){ const id=String(it.id||''); const map={met:'The Met',cleveland:'Cleveland Museum of Art',aic:'Art Institute of Chicago',vaO:'Victoria & Albert Museum',va:'Victoria & Albert Museum',harvard:'Harvard Art Museums',nga:'National Gallery of Art',loc:'Library of Congress'};
+  for(const k in map){ if(id.startsWith(k))return map[k]; } return ''; }
+function galToastGlobal(msg,actionLabel,actionFn,ms){ document.querySelectorAll('.gal-toast-global').forEach(t=>t.remove());
+  const t=document.createElement('div'); t.className='gal-toast-global'; t.setAttribute('role','status');
+  t.innerHTML=`<span>${esc(msg)}</span>${actionLabel?`<button type="button" class="toast-action">${esc(actionLabel)}</button>`:''}`;
+  document.body.appendChild(t); requestAnimationFrame(()=>t.classList.add('in'));
+  if(actionLabel&&actionFn){ t.querySelector('.toast-action').onclick=()=>{ actionFn(); t.remove(); }; }
+  setTimeout(()=>{ t.classList.remove('in'); setTimeout(()=>t.remove(),300); }, ms||4000);
+}
 async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pushNav({v:'gallery'});
   const stage=document.getElementById('stage');
-  stage.innerHTML=`<div class="sheet" style="padding:18px"><div class="mono" style="color:var(--muted)">Loading your gallery…</div></div>`;
+  stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="padding:24px"><div class="mono" style="color:var(--muted)">Loading your gallery…</div></div>`;
   await syncSaved();
   const works=[...SAVED].map(id=>qaResolve(id)).filter(Boolean);
-  const head=`<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font:800 22px Archivo">My Gallery</h2><span class="mono" style="color:var(--muted);font-size:12px">${works.length} work${works.length===1?'':'s'} filed</span></div>`;
-  if(!works.length){ stage.innerHTML=`<div class="sheet" style="padding:24px">${head}<div class="mono" style="color:var(--muted);padding:34px 0;text-align:center;line-height:1.6">Nothing filed yet.<br>Tap the <b>bookmark</b> on any artwork you reveal to keep it here.</div></div>`; return; }
-  const cards=works.map(p=>`<div class="galcard" data-open="${esc(p.id)}">
-      <div class="galthumb" style="background-image:url('${esc(displaySrc(p.img))}')"></div>
-      <div class="galmeta"><div class="galtitle">${esc(p.title)}</div><div class="galartist mono">${esc(p.artist||'Unknown / anonymous')}</div></div>
-      <button type="button" class="galx" title="Remove from My Gallery">&times;</button></div>`).join('');
-  stage.innerHTML=`<div class="sheet" style="padding:18px 18px 28px">${head}<div class="galgrid">${cards}</div></div>`;
-  stage.querySelectorAll('.galcard').forEach(c=>{ const id=c.dataset.open;
-    c.querySelector('.galx').onclick=ev=>{ ev.stopPropagation(); toggleSave(id); c.style.transition='opacity .2s'; c.style.opacity='0'; setTimeout(()=>{c.remove();
-      if(!stage.querySelector('.galcard'))renderGallery(false);},200); };
-    c.onclick=ev=>{ if(ev.target.closest('.galx'))return; qaView(id); }; });
+  const n=works.length;
+  const movSet=new Set(), plSet=new Set();
+  works.forEach(w=>{ if(w.style)movSet.add(w.style); if(w.place)plSet.add(w.place); });
+  if(!n){ stage.innerHTML=`${header(0,-1,false)}<div class="sheet"><div class="gal-page"><div class="gal-hd"><span class="gal-title">My gallery</span></div>
+    <div class="gal-empty"><div class="gal-empty-icon">${PENNANT_SVG_BIG}</div>
+    <div class="gal-empty-title">Nothing saved yet.</div>
+    <div class="gal-empty-body">Tap the pennant on any reveal to save a work here. Your gallery grows every daily.</div>
+    <button class="btn" data-route="home" style="margin-top:18px">Play today's daily &rarr;</button></div></div></div>`;
+    return; }
+  const state=window.__gal||(window.__gal={sort:'recent'});
+  const card=w=>`<button type="button" class="galcard" data-open="${esc(w.id)}">
+    <div class="galcard-img"><img src="${esc(displaySrc(w.img))}" alt="${esc(w.title)}" loading="lazy" onerror="imgFail(this)">
+      <span class="gal-pennant-chip" data-unsave="${esc(w.id)}" role="button" aria-label="Remove from My Gallery">${PENNANT_SVG_FILL}</span></div>
+    <div class="galcard-meta"><div class="galcard-title">${esc(w.title)}</div><div class="galcard-artist">${esc(w.artist||'Unknown')} &middot; ${esc(fmtYear(w.y))}</div></div></button>`;
+  let body;
+  if(state.sort==='recent'){ body=`<div class="gal-masonry">${works.map(card).join('')}</div>`; }
+  else { const groups={};
+    works.forEach(w=>{ const k=state.sort==='region'?(w.region||'Unknown'):galEraBucket(w.y); (groups[k]=groups[k]||[]).push(w); });
+    const order=Object.keys(groups).sort((a,b)=> state.sort==='era'?galEraSort(a)-galEraSort(b):groups[b].length-groups[a].length);
+    body=order.map(k=>`<div class="gal-section-hd">${esc(k)} &middot; ${groups[k].length}</div><div class="gal-masonry">${groups[k].map(card).join('')}</div>`).join(''); }
+  const seg=(v,l)=>`<button type="button" class="gal-sortbtn${state.sort===v?' on':''}" data-sort="${v}">${l}</button>`;
+  const banner=(!authUser)?`<div class="gal-local-banner"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a7741f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="9" rx="1.5"/><rect x="14" y="9" width="7" height="11" rx="1.5"/></svg><div class="body"><div class="hd">${n} save${n===1?'':'s'} on this device</div><div class="sub">Make an account so your gallery survives a cache clear and follows you across devices.</div></div><button type="button" class="btn" data-login>Back up &rarr;</button></div>`:'';
+  stage.innerHTML=`${header(0,-1,false)}<div class="sheet"><div class="gal-page">
+    <div class="gal-hd"><div style="display:flex;align-items:baseline;gap:12px"><span class="gal-title">My gallery</span><span class="gal-count">${n} saved</span></div><span class="gal-secondary">from ${movSet.size} movement${movSet.size===1?'':'s'} &middot; ${plSet.size} place${plSet.size===1?'':'s'}</span></div>
+    <div class="gal-filterbar"><div class="gal-sort-group"><span class="gal-sortlbl">Sort</span>${seg('recent','Recent')}${seg('region','Region')}${seg('era','Era')}</div></div>
+    ${banner}${body}</div></div>`;
+  stage.querySelectorAll('.gal-sortbtn').forEach(b=>b.onclick=()=>{ state.sort=b.dataset.sort; renderGallery(false); });
+  stage.querySelectorAll('.gal-pennant-chip').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); ev.preventDefault(); const id=b.dataset.unsave; toggleSave(id);
+    galToastGlobal('Removed from My Gallery','Undo',()=>{ toggleSave(id); renderGallery(false); },6000);
+    const c=b.closest('.galcard'); if(c){ c.style.transition='opacity .2s'; c.style.opacity='0'; } setTimeout(()=>renderGallery(false),240); });
+  stage.querySelectorAll('.galcard').forEach(c=>c.onclick=ev=>{ if(ev.target.closest('.gal-pennant-chip'))return; route('gallery/'+c.dataset.open); });
+}
+function renderGalleryDetail(id){ clearTimers&&clearTimers();
+  const it=qaResolve(id), stage=document.getElementById('stage');
+  if(!it){ stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="padding:30px">Work not found. <a data-route="gallery">Back to My Gallery</a></div>`; return; }
+  const study=studyFor(it);
+  const related=[...SAVED].map(x=>qaResolve(x)).filter(Boolean).filter(w=>w.id!==it.id && ((w.style&&w.style===it.style)||galSameEra(w,it))).slice(0,5);
+  const meta=(k,v)=>v?`<div class="gal-metarow"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`:'';
+  const relHTML=related.length>=3?`<div class="gal-related"><div class="gal-related-hd"><span class="gal-related-title">More from your saves</span><span class="gal-related-sub">${esc(it.style||galEraBucket(it.y))}</span></div>
+    <div class="gal-related-row">${related.map(w=>`<button type="button" class="gal-related-card" data-open2="${esc(w.id)}"><img src="${esc(displaySrc(w.img))}" alt="${esc(w.title)}" loading="lazy" onerror="imgFail(this)"><div class="gal-related-card-meta"><div class="gal-related-card-title">${esc(w.title)}</div><div class="gal-related-card-artist">${esc(w.artist||'Unknown')} &middot; ${esc(fmtYear(w.y))}</div></div></button>`).join('')}</div></div>`:'';
+  stage.innerHTML=`${header(0,-1,false)}<div class="sheet gal-detail">
+    <div class="gal-detail-bar"><button type="button" class="gal-back" data-route="gallery">${BACK_SVG} Back to My Gallery</button><span class="gal-saved-label">In your gallery</span></div>
+    <div class="gal-detail-body">
+      <div><div class="gal-detail-plate plate">${saveBtnHTML(it.id)}<img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)"></div>
+        <div class="gal-detail-actions"><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
+      <div>
+        <div class="gal-kicker">${esc([it.style,fmtDate(it)].filter(Boolean).join(' · '))}</div>
+        <div class="gal-detail-title">${esc(it.title)}</div>
+        <div class="gal-detail-artist">${esc(it.artist||'Unknown / anonymous')}${it.place?' · '+esc(it.place):''}</div>
+        <div class="gal-metarows">${meta('MEDIUM',it.medium)}${meta('HELD AT',galMuseum(it))}${meta('ORIGIN',it.place||it.region)}</div>
+        <div class="gal-study-card"><div class="gal-study-title">Study notes</div><div class="gal-study-body">${esc(study.why)}</div>${notesHTML(study.notes)}</div>
+      </div>
+    </div>${relHTML}
+  </div>`;
+  stage.querySelectorAll('.aga').forEach(a=>a.removeAttribute('hidden'));
+  stage.querySelectorAll('.agq').forEach(b=>{ b.setAttribute('aria-expanded','true'); b.onclick=()=>{ const a=b.nextElementSibling,open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
+  stage.querySelectorAll('[data-open2]').forEach(c=>c.onclick=()=>route('gallery/'+c.dataset.open2));
+  window.scrollTo(0,0);
 }
 function qaCardHTML(id){ const it=qaResolve(id);
   if(!it) return `<div class="sheet" style="padding:30px">QA: work not found — <code>${esc(id)}</code></div>`;
@@ -2644,8 +2743,8 @@ function qaCardHTML(id){ const it=qaResolve(id);
   return `<div class="sheet" style="margin-bottom:18px">
     <div style="padding:10px 24px;background:#fde047;color:#111;font-weight:700;letter-spacing:.04em">QA PREVIEW · ${esc(id)} · not a real round</div>
     <div class="revealgrid"><div>
-      <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}</div>
-      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div>${saveBtnHTML(it.id)}</div>
+      <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
+      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>
       <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
@@ -2696,8 +2795,8 @@ function renderReveal(r,ri){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
-        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div>${saveBtnHTML(it.id)}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
+        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>

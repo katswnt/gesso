@@ -56,6 +56,7 @@ const ctx = {
   matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }),
   supabase: { createClient: () => new Proxy({}, { get() { return () => ({ data: null, error: null }); } }) },
   addEventListener() {}, removeEventListener() {}, alert() {}, confirm: () => true, prompt: () => null,
+  scrollTo() {}, scroll() {}, scrollBy() {},
   atob: s => Buffer.from(s, "base64").toString("binary"), btoa: s => Buffer.from(s, "binary").toString("base64"),
   Math, Date, JSON, Object, Array, String, Number, Boolean, RegExp, Map, Set, Promise, parseInt, parseFloat,
   isNaN, isFinite, encodeURIComponent, decodeURIComponent, URL, URLSearchParams, Intl, Error, TypeError,
@@ -90,6 +91,11 @@ const call = (name, ...args) => {
 // HTML builders (return strings) + modal openers (build + attach to stubbed DOM)
 ["header","renderStart","renderTraining","renderLeaderboard","renderAccount","renderGlossary",
  "renderCollections","openIdentityModal","openLogin","openMenu","openSettings","route"].forEach(n => call(n));
+// My Gallery: exercise the detail page (fully sync) + gallery grid sync path with a real pool id
+const _pid = (ctx.ARTEFACTUM_POOL && ctx.ARTEFACTUM_POOL[0] && ctx.ARTEFACTUM_POOL[0].id) || "x";
+if (ctx.SAVED && typeof ctx.SAVED.add === "function") ctx.SAVED.add(_pid);
+call("renderGalleryDetail", _pid);
+call("renderGallery");
 
 console.log("✅ dom-harness PASS — app script loaded and key builders ran without throwing");
 process.exit(0);
