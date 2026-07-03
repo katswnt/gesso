@@ -20,6 +20,16 @@ const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
 
 for(const p of pool){
+  // INVISIBLE-WORK guard: a work with an image but no cats is silently dropped by the game's runtime
+  // POOL filter (x.img && x.cats) — it never appears anywhere. That's a bug UNLESS the work is
+  // intentionally hidden because it's in-copyright. A famous public-domain work going invisible is a
+  // hard fail (this is the class of bug that hid 417 works incl. Vitruvian Man / The Scream).
+  if(p.img && (!Array.isArray(p.cats) || !p.cats.length)){
+    if(!isInCopyright(p.artist)){
+      if(fa(p) >= 300) add(hard,"invisible-famous",p,"no cats — famous public-domain work dropped from the game");
+      else add(warn,"invisible-work",p,"no cats — dropped from the game (fix cats or confirm intentional)");
+    }
+  }
   // MEDIUM: simplified value must be a real bucket (else it leaks as a junk guess-option)
   if(p.medium){ const ms=simplifyMedium(p.medium); if(ms && !BUCKETS.has(ms)){
     if(ms.split(" ").length>2 || /album|scroll|sheet|folio|volume|first of|\bpage\b|untitled|reformatted|fragment/i.test(ms)) add(hard,"medium-junk",p,`"${ms}"`);
@@ -48,7 +58,7 @@ for(const p of pool){
   // COPYRIGHT (local denylist; full check = audit-copyright.mjs)
   // PD_OK: works by a denylisted artist that are themselves verified public-domain by US publication date
   // (e.g. Steichen's 1904 "The Pond—Moonlight", first published 1906 → pre-1929 PD). Per-id, not per-artist.
-  if(isInCopyright(p.artist) && !PD_OK.has(p.id)) add(hard,"in-copyright",p,`"${p.artist}"`);
+  if(isInCopyright(p.artist) && !PD_OK.has(p.id) && Array.isArray(p.cats) && p.cats.length) add(hard,"in-copyright",p,`"${p.artist}"`); // only if VISIBLE — a hidden (no-cats) in-copyright work is correctly excluded
   // SCHEMA integrity
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);

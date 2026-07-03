@@ -89,7 +89,7 @@ export function canonicalizeStyle(style){
   return s;
 }
 // living / died-after-1955 creators that must never enter the pool (museum-API works the SPARQL audit skips).
-export const IC_ARTISTS = /Georgia O.?Keeffe|Marcel Breuer|Berndt Friberg|Walter Gropius|Lyonel Feininger|Edward Steichen|Ravinder Reddy|Pablo Picasso|Salvador Dal[ií]|Andy Warhol|Roy Lichtenstein|Jackson Pollock|Ren[ée] Magritte|Frida Kahlo|Mark Rothko|Edward Hopper|Diego Rivera/i;
+export const IC_ARTISTS = /Georgia O.?Keeffe|Marcel Breuer|Berndt Friberg|Walter Gropius|Lyonel Feininger|Edward Steichen|Edward Weston|Ravinder Reddy|Pablo Picasso|Salvador Dal[ií]|Andy Warhol|Roy Lichtenstein|Jackson Pollock|Ren[ée] Magritte|Frida Kahlo|Mark Rothko|Edward Hopper|Diego Rivera/i;
 export const isInCopyright = artist => IC_ARTISTS.test(String(artist||""));
 
 // Player-facing medium → coarse family (used for "same family" partial credit + distractor selection).
