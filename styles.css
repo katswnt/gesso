@@ -598,6 +598,9 @@
   padding:5px 11px;font:600 11px 'IBM Plex Mono',monospace;cursor:pointer}
 .gal-chip.active{border-color:var(--accent-underline,#b0b5e0);color:var(--accent)}
 .gal-picker{display:flex;flex-wrap:wrap;gap:6px;margin:-12px 0 20px;padding:12px 14px;background:var(--surface-lift,#fdfcf9);border:1px solid var(--line-card);border-radius:var(--r-md);max-height:180px;overflow-y:auto}
+.histtitle{display:flex;gap:7px;align-items:flex-start;margin:7px 0 2px;padding:8px 11px;background:var(--surface-strong,#edeae0);border:1px solid var(--line-card);border-radius:7px;font:400 11.5px/1.5 'Archivo',sans-serif;color:var(--muted)}
+.histtitle b{color:var(--ink-soft,#3a362d);font-weight:600}
+.histtitle svg{color:var(--gold,#b3892f)}
 .gal-mmap{height:300px;border:1px solid var(--line-card);border-radius:var(--r-md);overflow:hidden;margin:0 0 6px}
 .gal-mmap-cap{font-size:11px;color:var(--muted);margin:0 0 18px}
 .gal-picker .gal-chip{cursor:pointer}

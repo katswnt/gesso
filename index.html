@@ -1007,6 +1007,19 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
 const MUSEUMS=window.ARTEFACTUM_MUSEUMS||{}; // {name:{city,lat,lng}} — where each work hangs
 function museumLine(it){ if(!it||!it.museum)return ''; const c=(MUSEUMS[it.museum]||{}).city; return it.museum+(c?' · '+c:''); }
+// Historical/inherited titles that contain dated or harmful language: we keep the museum's catalogue
+// title (it's the object's real name) but show a one-line context on reveal (Digital Benin's approach —
+// contextualise rather than silently reuse). w.titleFlag names the issue; note text keyed here.
+const TITLE_NOTES={
+  gypsy:"“Gypsy” is a dated exonym for Roma (Romani) people — kept only as the work’s historical catalogue title.",
+  negro:"“Negro” is period catalogue language, shown for identification, not as endorsed usage.",
+  oriental:"“Oriental” is a dated, othering term — kept as the museum’s historical title.",
+  squaw:"“Squaw” is a slur for Indigenous women; shown only as the work’s historical catalogue title.",
+  concubine:"An othering historical catalogue title, kept for identification, not endorsement.",
+  cripple:"Dated, ableist language from the work’s historical title."
+};
+const FLAG_SVG=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:2px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
+function histTitleHTML(it){ if(!it||!it.titleFlag)return ''; const t=TITLE_NOTES[it.titleFlag]; if(!t)return ''; return `<div class="histtitle">${FLAG_SVG}<span><b>Historical title.</b> ${esc(t)}</span></div>`; }
 let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
@@ -2756,7 +2769,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
         <div class="gal-detail-actions"><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
       <div>
         <div class="gal-kicker">${esc([it.style,fmtDate(it)].filter(Boolean).join(' · '))}</div>
-        <div class="gal-detail-title">${esc(it.title)}</div>
+        <div class="gal-detail-title">${esc(it.title)}</div>${histTitleHTML(it)}
         <div class="gal-detail-artist">${esc(it.artist||'Unknown / anonymous')}${it.place?' · '+esc(it.place):''}</div>
         <div class="gal-metarows">${meta('MEDIUM',it.medium)}${meta('HELD AT',museumLine(it)||galMuseum(it))}${meta('ORIGIN',it.place||it.region)}</div>
         <div class="gal-study-card"><div class="gal-study-title">Study notes</div><div class="gal-study-body">${esc(study.why)}</div>${notesHTML(study.notes)}</div>
@@ -2778,7 +2791,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
     <div style="padding:10px 24px;background:#fde047;color:#111;font-weight:700;letter-spacing:.04em">QA PREVIEW · ${esc(id)} · not a real round</div>
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
-      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>
+      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
       <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
@@ -2830,7 +2843,7 @@ function renderReveal(r,ri){
     <div class="revealgrid">
       <div>
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
-        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>
+        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>
