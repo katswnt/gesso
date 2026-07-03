@@ -223,14 +223,14 @@ function trainSpanFrom(works){ const ys=works.map(p=>p.y).filter(y=>y!=null); if
   return {lo,hi}; }
 // Region-aware period schemes — the slider tag reflects the work's own culture's periodization
 const SCHEMES={
-  western:[["Antiquity",500],["Medieval",1400],["Renaissance",1600],["Baroque",1750],["Enlightenment",1800],["19th c.",1900],["Modern",1945],["Contemporary",3000]],
-  china:[["Ancient",-221],["Han",220],["Six Dynasties",589],["Sui–Tang",907],["Song",1279],["Yuan",1368],["Ming",1644],["Qing",1912],["Modern",3000]],
+  western:[["Bronze Age",-1200],["Classical Antiquity",-31],["Roman Empire",500],["Early Medieval",1000],["High Medieval",1400],["Renaissance",1600],["Baroque",1750],["Enlightenment",1800],["19th c.",1900],["Modern",1945],["Contemporary",3000]],
+  china:[["Neolithic",-1600],["Shang–Zhou",-221],["Han",220],["Six Dynasties",589],["Sui–Tang",907],["Song",1279],["Yuan",1368],["Ming",1644],["Qing",1912],["Modern",3000]],
   japan:[["Ancient",710],["Nara",794],["Heian",1185],["Kamakura",1333],["Muromachi",1573],["Momoyama",1615],["Edo",1868],["Meiji+",3000]],
   india:[["Ancient",320],["Gupta",606],["Medieval",1206],["Sultanate",1526],["Mughal",1757],["Colonial",1947],["Modern",3000]],
   persia:[["Ancient",651],["Early Islamic",1256],["Ilkhanid–Timurid",1501],["Safavid",1736],["Qajar",1925],["Modern",3000]],
   egypt:[["Early Dynastic",-2686],["Old Kingdom",-2055],["Middle Kingdom",-1550],["New Kingdom",-1069],["Late Period",-332],["Greco-Roman",641],["Islamic",3000]],
   classical:[["Archaic",-480],["Classical Greek",-323],["Hellenistic",-31],["Roman Imperial",476],["Late Antique",3000]],
-  neutral:[["Ancient",500],["Medieval",1400],["Early Modern",1800],["Modern",1945],["Contemporary",3000]],
+  neutral:[["Prehistoric",-1200],["Bronze Age",-500],["Antiquity",500],["Medieval",1400],["Early Modern",1800],["Modern",1945],["Contemporary",3000]],
 };
 function schemeFor(it){
   const t=((it.place||"")+" "+(it.style||"")+" "+(it.region||"")).toLowerCase();
