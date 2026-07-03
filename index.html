@@ -1395,7 +1395,8 @@ function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16)||defaultName(),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:defaultName(),color:defaultColor()};}}
 // ---------- My Gallery: saved works (device-keyed Supabase + localStorage mirror) ----------
 let SAVED=new Set(); try{ SAVED=new Set(JSON.parse(localStorage.getItem("gesso.saved")||"[]")); }catch{}
-function persistSaved(){ try{ localStorage.setItem("gesso.saved",JSON.stringify([...SAVED])); }catch{} }
+let SAVED_AT={}; try{ SAVED_AT=JSON.parse(localStorage.getItem("gesso.savedAt")||"{}")||{}; }catch{}
+function persistSaved(){ try{ localStorage.setItem("gesso.saved",JSON.stringify([...SAVED])); localStorage.setItem("gesso.savedAt",JSON.stringify(SAVED_AT)); }catch{} }
 function isSaved(id){ return SAVED.has(id); }
 let __savedSynced=false;
 async function syncSaved(){ try{ const r=await fetch("/api/saves?me="+encodeURIComponent(deviceId())); if(!r.ok)return; const j=await r.json();
@@ -1418,7 +1419,7 @@ function galToast(plate, msg, actionLabel, actionFn, ms){
 }
 function toggleSave(id,btn){
   const now=!SAVED.has(id);
-  if(now) SAVED.add(id); else SAVED.delete(id);
+  if(now){ SAVED.add(id); SAVED_AT[id]=Date.now(); } else { SAVED.delete(id); delete SAVED_AT[id]; }
   persistSaved();
   // update button visuals
   if(btn){
@@ -2704,23 +2705,38 @@ async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pus
     <button class="btn" data-route="home" style="margin-top:18px">Play today's daily &rarr;</button></div></div></div>`;
     return; }
   const state=window.__gal||(window.__gal={sort:'recent'});
+  if(!state.fMov)state.fMov=new Set(); if(!state.fPl)state.fPl=new Set();
+  const filtered=works.filter(w=>(!state.fMov.size||state.fMov.has(w.style))&&(!state.fPl.size||state.fPl.has(w.place)));
   const card=w=>`<button type="button" class="galcard" data-open="${esc(w.id)}">
     <div class="galcard-img"><img src="${esc(displaySrc(w.img))}" alt="${esc(w.title)}" loading="lazy" onerror="imgFail(this)">
       <span class="gal-pennant-chip" data-unsave="${esc(w.id)}" role="button" aria-label="Remove from My Gallery">${PENNANT_SVG_FILL}</span></div>
     <div class="galcard-meta"><div class="galcard-title">${esc(w.title)}</div><div class="galcard-artist">${esc(w.artist||'Unknown')} &middot; ${esc(fmtYear(w.y))}</div></div></button>`;
   let body;
-  if(state.sort==='recent'){ body=`<div class="gal-masonry">${works.map(card).join('')}</div>`; }
+  if(!filtered.length){ body=`<div class="mono" style="color:var(--muted);padding:34px 4px;text-align:center">No saved works match these filters.<br><button type="button" class="gal-chip" data-clearfilters style="margin-top:10px">Clear filters</button></div>`; }
+  else if(state.sort==='recent'){ body=`<div class="gal-masonry">${filtered.map(card).join('')}</div>`; }
   else { const groups={};
-    works.forEach(w=>{ const k=state.sort==='region'?(w.region||'Unknown'):galEraBucket(w.y); (groups[k]=groups[k]||[]).push(w); });
+    filtered.forEach(w=>{ const k=state.sort==='region'?(w.region||'Unknown'):galEraBucket(w.y); (groups[k]=groups[k]||[]).push(w); });
     const order=Object.keys(groups).sort((a,b)=> state.sort==='era'?galEraSort(a)-galEraSort(b):groups[b].length-groups[a].length);
     body=order.map(k=>`<div class="gal-section-hd">${esc(k)} &middot; ${groups[k].length}</div><div class="gal-masonry">${groups[k].map(card).join('')}</div>`).join(''); }
   const seg=(v,l)=>`<button type="button" class="gal-sortbtn${state.sort===v?' on':''}" data-sort="${v}">${l}</button>`;
+  const chip=(fam,val)=>`<button type="button" class="gal-chip active" data-rmfilter="${fam}" data-val="${esc(val)}">${esc(val)} &times;</button>`;
+  const activeChips=[...state.fMov].map(v=>chip('mov',v)).join('')+[...state.fPl].map(v=>chip('pl',v)).join('');
+  const opener=(fam,l)=>`<button type="button" class="gal-chip${state.picker===fam?' active':''}" data-openpicker="${fam}">+ ${l}</button>`;
+  let pickerRow='';
+  if(state.picker==='mov'||state.picker==='pl'){ const pool_=state.picker==='mov'?movSet:plSet, sel=state.picker==='mov'?state.fMov:state.fPl;
+    const vals=[...pool_].filter(v=>!sel.has(v)).sort();
+    pickerRow=`<div class="gal-picker">${vals.length?vals.map(v=>`<button type="button" class="gal-chip" data-addfilter="${state.picker}" data-val="${esc(v)}">${esc(v)}</button>`).join(''):'<span class="mono" style="color:var(--faint);font-size:11px;padding:4px">none left</span>'}</div>`; }
   const banner=(!authUser)?`<div class="gal-local-banner"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a7741f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="9" rx="1.5"/><rect x="14" y="9" width="7" height="11" rx="1.5"/></svg><div class="body"><div class="hd">${n} save${n===1?'':'s'} on this device</div><div class="sub">Make an account so your gallery survives a cache clear and follows you across devices.</div></div><button type="button" class="btn" data-login>Back up &rarr;</button></div>`:'';
+  const shown=filtered.length!==n?` &middot; ${filtered.length} shown`:'';
   stage.innerHTML=`${header(0,-1,false)}<div class="sheet"><div class="gal-page">
-    <div class="gal-hd"><div style="display:flex;align-items:baseline;gap:12px"><span class="gal-title">My gallery</span><span class="gal-count">${n} saved</span></div><span class="gal-secondary">from ${movSet.size} movement${movSet.size===1?'':'s'} &middot; ${plSet.size} place${plSet.size===1?'':'s'}</span></div>
-    <div class="gal-filterbar"><div class="gal-sort-group"><span class="gal-sortlbl">Sort</span>${seg('recent','Recent')}${seg('region','Region')}${seg('era','Era')}</div></div>
-    ${banner}${body}</div></div>`;
+    <div class="gal-hd"><div style="display:flex;align-items:baseline;gap:12px"><span class="gal-title">My gallery</span><span class="gal-count">${n} saved${shown}</span></div><span class="gal-secondary">from ${movSet.size} movement${movSet.size===1?'':'s'} &middot; ${plSet.size} place${plSet.size===1?'':'s'}</span></div>
+    <div class="gal-filterbar"><div class="gal-sort-group"><span class="gal-sortlbl">Sort</span>${seg('recent','Recent')}${seg('region','Region')}${seg('era','Era')}</div><span class="gal-sep"></span><div class="gal-filter-group"><span class="gal-filterlbl">Filter</span>${activeChips}${opener('mov','movement')}${opener('pl','place')}</div></div>
+    ${pickerRow}${banner}${body}</div></div>`;
   stage.querySelectorAll('.gal-sortbtn').forEach(b=>b.onclick=()=>{ state.sort=b.dataset.sort; renderGallery(false); });
+  stage.querySelectorAll('[data-openpicker]').forEach(b=>b.onclick=()=>{ state.picker=state.picker===b.dataset.openpicker?null:b.dataset.openpicker; renderGallery(false); });
+  stage.querySelectorAll('[data-addfilter]').forEach(b=>b.onclick=()=>{ (b.dataset.addfilter==='mov'?state.fMov:state.fPl).add(b.dataset.val); state.picker=null; renderGallery(false); });
+  stage.querySelectorAll('[data-rmfilter]').forEach(b=>b.onclick=()=>{ (b.dataset.rmfilter==='mov'?state.fMov:state.fPl).delete(b.dataset.val); renderGallery(false); });
+  stage.querySelectorAll('[data-clearfilters]').forEach(b=>b.onclick=()=>{ state.fMov.clear(); state.fPl.clear(); state.picker=null; renderGallery(false); });
   stage.querySelectorAll('.gal-pennant-chip').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); ev.preventDefault(); const id=b.dataset.unsave; toggleSave(id);
     galToastGlobal('Removed from My Gallery','Undo',()=>{ toggleSave(id); renderGallery(false); },6000);
     const c=b.closest('.galcard'); if(c){ c.style.transition='opacity .2s'; c.style.opacity='0'; } setTimeout(()=>renderGallery(false),240); });
@@ -2735,7 +2751,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
   const relHTML=related.length>=3?`<div class="gal-related"><div class="gal-related-hd"><span class="gal-related-title">More from your saves</span><span class="gal-related-sub">${esc(it.style||galEraBucket(it.y))}</span></div>
     <div class="gal-related-row">${related.map(w=>`<button type="button" class="gal-related-card" data-open2="${esc(w.id)}"><img src="${esc(displaySrc(w.img))}" alt="${esc(w.title)}" loading="lazy" onerror="imgFail(this)"><div class="gal-related-card-meta"><div class="gal-related-card-title">${esc(w.title)}</div><div class="gal-related-card-artist">${esc(w.artist||'Unknown')} &middot; ${esc(fmtYear(w.y))}</div></div></button>`).join('')}</div></div>`:'';
   stage.innerHTML=`${header(0,-1,false)}<div class="sheet gal-detail">
-    <div class="gal-detail-bar"><button type="button" class="gal-back" data-route="gallery">${BACK_SVG} Back to My Gallery</button><span class="gal-saved-label">In your gallery</span></div>
+    <div class="gal-detail-bar"><button type="button" class="gal-back" data-route="gallery">${BACK_SVG} Back to My Gallery</button><span class="gal-saved-label">${SAVED_AT[id]?'Saved &middot; '+esc(new Date(SAVED_AT[id]).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})):'In your gallery'}</span></div>
     <div class="gal-detail-body">
       <div><div class="gal-detail-plate plate">${saveBtnHTML(it.id)}<img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)"></div>
         <div class="gal-detail-actions"><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
