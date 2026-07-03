@@ -1005,6 +1005,8 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
+const MUSEUMS=window.ARTEFACTUM_MUSEUMS||{}; // {name:{city,lat,lng}} — where each work hangs
+function museumLine(it){ if(!it||!it.museum)return ''; const c=(MUSEUMS[it.museum]||{}).city; return it.museum+(c?' · '+c:''); }
 let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
@@ -2716,7 +2718,7 @@ async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pus
   if(!filtered.length){ body=`<div class="mono" style="color:var(--muted);padding:34px 4px;text-align:center">No saved works match these filters.<br><button type="button" class="gal-chip" data-clearfilters style="margin-top:10px">Clear filters</button></div>`; }
   else if(state.sort==='recent'){ body=`<div class="gal-masonry">${filtered.map(card).join('')}</div>`; }
   else { const groups={};
-    filtered.forEach(w=>{ const k=state.sort==='region'?(w.region||'Unknown'):galEraBucket(w.y); (groups[k]=groups[k]||[]).push(w); });
+    filtered.forEach(w=>{ const k=state.sort==='region'?(w.region||'Unknown'):state.sort==='museum'?(w.museum||'Unknown collection'):galEraBucket(w.y); (groups[k]=groups[k]||[]).push(w); });
     const order=Object.keys(groups).sort((a,b)=> state.sort==='era'?galEraSort(a)-galEraSort(b):groups[b].length-groups[a].length);
     body=order.map(k=>`<div class="gal-section-hd">${esc(k)} &middot; ${groups[k].length}</div><div class="gal-masonry">${groups[k].map(card).join('')}</div>`).join(''); }
   const seg=(v,l)=>`<button type="button" class="gal-sortbtn${state.sort===v?' on':''}" data-sort="${v}">${l}</button>`;
@@ -2729,10 +2731,23 @@ async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pus
     pickerRow=`<div class="gal-picker">${vals.length?vals.map(v=>`<button type="button" class="gal-chip" data-addfilter="${state.picker}" data-val="${esc(v)}">${esc(v)}</button>`).join(''):'<span class="mono" style="color:var(--faint);font-size:11px;padding:4px">none left</span>'}</div>`; }
   const banner=(!authUser)?`<div class="gal-local-banner"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a7741f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="9" rx="1.5"/><rect x="14" y="9" width="7" height="11" rx="1.5"/></svg><div class="body"><div class="hd">${n} save${n===1?'':'s'} on this device</div><div class="sub">Make an account so your gallery survives a cache clear and follows you across devices.</div></div><button type="button" class="btn" data-login>Back up &rarr;</button></div>`:'';
   const shown=filtered.length!==n?` &middot; ${filtered.length} shown`:'';
+  // museums map (Museum sort): distinct geolocated museums holding the filtered works
+  let museumPins=[];
+  if(state.sort==='museum'){ const mm={}; filtered.forEach(w=>{ const m=w.museum, c=m&&MUSEUMS[m]; if(m&&c&&c.lat!=null){ (mm[m]=mm[m]||{name:m,city:c.city,lat:c.lat,lng:c.lng,n:0}).n++; } }); museumPins=Object.values(mm); }
+  const mapHTML=(state.sort==='museum'&&museumPins.length)?`<div id="galmuseummap" class="gal-mmap"></div><div class="mono gal-mmap-cap">${museumPins.length} museum${museumPins.length===1?'':'s'} hold your saves &middot; tap a pin for details</div>`:'';
   stage.innerHTML=`${header(0,-1,false)}<div class="sheet"><div class="gal-page">
     <div class="gal-hd"><div style="display:flex;align-items:baseline;gap:12px"><span class="gal-title">My gallery</span><span class="gal-count">${n} saved${shown}</span></div><span class="gal-secondary">from ${movSet.size} movement${movSet.size===1?'':'s'} &middot; ${plSet.size} place${plSet.size===1?'':'s'}</span></div>
-    <div class="gal-filterbar"><div class="gal-sort-group"><span class="gal-sortlbl">Sort</span>${seg('recent','Recent')}${seg('region','Region')}${seg('era','Era')}</div><span class="gal-sep"></span><div class="gal-filter-group"><span class="gal-filterlbl">Filter</span>${activeChips}${opener('mov','movement')}${opener('pl','place')}</div></div>
-    ${pickerRow}${banner}${body}</div></div>`;
+    <div class="gal-filterbar"><div class="gal-sort-group"><span class="gal-sortlbl">Sort</span>${seg('recent','Recent')}${seg('region','Region')}${seg('era','Era')}${seg('museum','Museum')}</div><span class="gal-sep"></span><div class="gal-filter-group"><span class="gal-filterlbl">Filter</span>${activeChips}${opener('mov','movement')}${opener('pl','place')}</div></div>
+    ${pickerRow}${banner}${mapHTML}${body}</div></div>`;
+  if(state.sort==='museum'&&museumPins.length&&typeof L!=='undefined'){ try{
+    const mx=Math.max(...museumPins.map(p=>p.n));
+    const gm=L.map('galmuseummap',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,minZoom:1}).setView([30,0],1);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(gm);
+    const pts=[]; museumPins.forEach((p,i)=>{ const sz=14+Math.round(14*p.n/mx);
+      const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+      L.marker([p.lat,p.lng],{icon:ic}).addTo(gm).bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.city||'')} &middot; ${p.n} of your saves`); pts.push([p.lat,p.lng]); });
+    if(pts.length>1)gm.fitBounds(pts,{padding:[30,30],maxZoom:6}); else gm.setView(pts[0],4);
+  }catch(e){} }
   stage.querySelectorAll('.gal-sortbtn').forEach(b=>b.onclick=()=>{ state.sort=b.dataset.sort; renderGallery(false); });
   stage.querySelectorAll('[data-openpicker]').forEach(b=>b.onclick=()=>{ state.picker=state.picker===b.dataset.openpicker?null:b.dataset.openpicker; renderGallery(false); });
   stage.querySelectorAll('[data-addfilter]').forEach(b=>b.onclick=()=>{ (b.dataset.addfilter==='mov'?state.fMov:state.fPl).add(b.dataset.val); state.picker=null; renderGallery(false); });
@@ -2760,7 +2775,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
         <div class="gal-kicker">${esc([it.style,fmtDate(it)].filter(Boolean).join(' · '))}</div>
         <div class="gal-detail-title">${esc(it.title)}</div>
         <div class="gal-detail-artist">${esc(it.artist||'Unknown / anonymous')}${it.place?' · '+esc(it.place):''}</div>
-        <div class="gal-metarows">${meta('MEDIUM',it.medium)}${meta('HELD AT',galMuseum(it))}${meta('ORIGIN',it.place||it.region)}</div>
+        <div class="gal-metarows">${meta('MEDIUM',it.medium)}${meta('HELD AT',museumLine(it)||galMuseum(it))}${meta('ORIGIN',it.place||it.region)}</div>
         <div class="gal-study-card"><div class="gal-study-title">Study notes</div><div class="gal-study-body">${esc(study.why)}</div>${notesHTML(study.notes)}</div>
       </div>
     </div>${relHTML}
@@ -2840,6 +2855,7 @@ function renderReveal(r,ri){
           ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">${it.artist&&!/^(unknown|anon)/i.test(it.artist)?'None on record':'Anonymous / decorative work'}</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
           ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
+          ${it.museum?`<div class="metarow"><span class="k">HELD AT</span><span class="v">${esc(museumLine(it))}</span></div>`:''}
         </div>
         <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record ${ICONS.ext}</a>
       </div>
