@@ -25,7 +25,7 @@ for(const b of rows){ const g=k=>b[k]&&b[k].value; const id=g("item"); if(!id||s
   const y=parseInt(g("yr"),10), img=g("image"); if(!Number.isFinite(y)||!img)continue;
   out.push({ id, title:g("itemLabel")||"Untitled", artist:g("creatorLabel")||"", year:y,
     place:g("countryLabel")||"", culture:g("cultureLabel")||"", movement:"",
-    medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=900", src:"wdculture", fameHint:parseInt(g("sl"),10)||0 });
+    medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=1600", src:"wdculture", fameHint:parseInt(g("sl"),10)||0 });
 }
 writeFileSync("data/incoming/wd-culture.json", JSON.stringify(out));
 const byc={};for(const o of out)byc[o.culture||o.place]=(byc[o.culture||o.place]||0)+1;

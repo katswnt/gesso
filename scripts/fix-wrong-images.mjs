@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 const C="https://commons.wikimedia.org/wiki/Special:FilePath/";
-const img=f=>C+encodeURIComponent(f)+"?width=900";
+const img=f=>C+encodeURIComponent(f)+"?width=1600";
 const raw=readFileSync("data/pool.js","utf8");
 let pool=JSON.parse(raw.slice(raw.indexOf("["),raw.lastIndexOf("]")+1));
 // 1) fix the two title-collision works: correct id + image + facts (migrate notes)

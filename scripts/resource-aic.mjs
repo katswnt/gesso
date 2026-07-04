@@ -32,7 +32,7 @@ for(let i=0;i<ids.length;i+=120){
 
 let swapped=0; const log=[];
 for(const p of aicWorks){ const f=found[aicId(p)]; if(!f) continue;
-  const newImg=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f.file)}?width=900`;
+  const newImg=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f.file)}?width=1600`;
   if(p.img===newImg) continue;
   p.aicImg=p.img;            // keep the AIC original as a record
   p.img=newImg; p.src="aic-commons";

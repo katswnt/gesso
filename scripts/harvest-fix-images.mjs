@@ -16,7 +16,7 @@ async function leadImage(article){
   // src is an upload.wikimedia.org URL; extract the Commons filename → FilePath form with width
   const m=src.match(/\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^\/]+?)(?:\/\d+px-[^\/]+)?$/);
   const file=m?decodeURIComponent(m[1]):null;
-  return file?`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`:null;
+  return file?`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`:null;
 }
 let total=0,fixed=0,kept=0,failed=0; const fails=[];
 for(let i=0;i<8;i++){ const path=`data/incoming/famous-harvest/enriched-${i}.json`; let arr;

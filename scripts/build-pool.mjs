@@ -121,7 +121,7 @@ async function fromWikidata(){
     if(!it){
       it=item({id,title,artist:artist||"",y,lat:la,lng:ln,
         movement:cleanMov(g('movementLabel')||""), medium:mediumClass(g('materialLabel')||""),
-        culture:"", place:cl, fame:parseInt(g('s'),10)||0, img:img.replace(/^http:/,'https:')+"?width=900", src:"wd"});
+        culture:"", place:cl, fame:parseInt(g('s'),10)||0, img:img.replace(/^http:/,'https:')+"?width=1600", src:"wd"});
       byId.set(id,it);
     } else {
       if(!it.movement) it.movement=cleanMov(g('movementLabel')||"");

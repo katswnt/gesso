@@ -29,7 +29,7 @@ for(const p of targets){ const sn=surname(p.artist);
     if(sn&&sn.length>=3&&norm(cName).includes(sn)){ pick={img}; break; }
   }
   if(!pick){ miss.push(p.title); continue; }
-  p.aicImg=p.img; p.img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(decodeURIComponent(pick.img))}?width=900`; p.src="aic-commons";
+  p.aicImg=p.img; p.img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(decodeURIComponent(pick.img))}?width=1600`; p.src="aic-commons";
   swapped++; console.log("  ✓",p.artist.slice(0,18).padEnd(18),p.title.slice(0,38));
 }
 writeFileSync("data/pool.js", raw.slice(0,raw.indexOf("["))+JSON.stringify(pool)+raw.slice(raw.lastIndexOf("]")+1));

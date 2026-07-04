@@ -58,7 +58,7 @@ for(const m of MUSEUMS){
     const y=parseInt(g("yr"),10), img=g("image"); if(!Number.isFinite(y)||!img)continue;
     out.push({ id, title:g("itemLabel")||"Untitled", artist:g("creatorLabel")||"", year:y,
       place:g("countryLabel")||"", culture:"", movement:(g("movementLabel")||"").replace(/\s+(painting|art)$/i,""),
-      medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=900", src:"wdmus", fameHint:parseInt(g("sl"),10)||0 });
+      medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=1600", src:"wdmus", fameHint:parseInt(g("sl"),10)||0 });
     n++; }
   report.push(`  ${m.name.padEnd(42)} ${String(n).padStart(4)}  [${m.region}]`);
 }

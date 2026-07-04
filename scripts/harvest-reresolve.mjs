@@ -28,7 +28,7 @@ for(const o of fix){ await sleep(500);
   const inc=cv(best.e,"P571")[0]; const yr= inc?(()=>{const m=String(inc.time).match(/([+-]\d+)/);return m?parseInt(m[1],10):null;})():null;
   const img=cv(best.e,"P18")[0];
   o.qid=best.id; o.sitelinks=best.sl; o.pageviews=pv; o.en=best.en; o.fame=Math.round((120*ln(pv+1)+8*ln(best.sl+1))*10)/10; o.bucket=bucket(o.fame); o.note="reresolved";
-  o.year=yr; o.image= img? "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(img.replace(/ /g,"_"))+"?width=900":null;
+  o.year=yr; o.image= img? "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(img.replace(/ /g,"_"))+"?width=1600":null;
   o.material=qids(cv(best.e,"P186")); o.movementQ=qids(cv(best.e,"P135")); o.locCreationQ=qids(cv(best.e,"P1071")); o.countryOriginQ=qids(cv(best.e,"P495"));
 }
 writeFileSync("data/incoming/famous-harvest/buckets.json",JSON.stringify(arr,null,1));

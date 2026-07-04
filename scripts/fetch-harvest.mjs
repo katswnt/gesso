@@ -32,7 +32,7 @@ for(const m of novel){ const qid=m.qid; if(!qid)continue;
   const movement=await label(qOf(claim(e,"P135")))||""; await sleep(100);
   out.push({ id:"wikidata:"+qid, title:m.title, artist:creator, y, place, region:place?contOf(place):"Europe",
     medium:material, style:movement, styleKind:movement?"movement":"",
-    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=900`, src:"wd-harvest", harvest:true });
+    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=1600`, src:"wd-harvest", harvest:true });
   console.error(`✓ ${m.title} | ${y||"?"} | ${place||"?"} | ${creator.slice(0,18)}`);
 }
 writeFileSync("data/incoming/harvest-fetched.json", JSON.stringify(out,null,1));

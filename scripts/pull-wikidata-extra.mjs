@@ -153,7 +153,7 @@ function commonsFilePathUrl(value) {
 
   const fileName = decodeURIComponent(value.slice(markerIndex + marker.length));
   const encodedName = encodeURIComponent(fileName).replace(/%20/g, "_");
-  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedName}?width=900`;
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedName}?width=1600`;
 }
 
 function normalizeRow(row) {

@@ -33,7 +33,7 @@ const idx=pool.findIndex(p=>p.id==="wikidata:Q23311");
 if(idx>=0){ const fix=await findLegerCity();
   if(fix && !have.has("wikidata:"+fix.id)){ const co=CO["france"]; const [lat,lng]=centroid(co);
     pool[idx]={...pool[idx], id:"wikidata:"+fix.id, y:fix.y||1919, lat, lng, place:"France",
-      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fix.img)}?width=900`};
+      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fix.img)}?width=1600`};
     console.log("fixed The City →", fix.id, "y="+(fix.y||1919));
   } else { pool.splice(idx,1); console.log("dropped The City (no clean Léger match)"); }
 }

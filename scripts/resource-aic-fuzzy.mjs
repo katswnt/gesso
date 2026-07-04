@@ -47,7 +47,7 @@ for(const p of targets){ checked++;
   }
   if(!pick){ if(checked%50===0)console.error(`  ${checked}/${targets.length} | ${swapped} swapped`); continue; }
   const file=decodeURIComponent(pick.img);
-  p.aicImg=p.img; p.img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`; p.src="aic-commons";
+  p.aicImg=p.img; p.img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`; p.src="aic-commons";
   have.add(pick.id); swapped++; log.push(`${p.id} ${pick.id}  ${p.artist.slice(0,20)} — ${p.title.slice(0,40)}`);
   if(checked%50===0)console.error(`  ${checked}/${targets.length} | ${swapped} swapped`);
 }

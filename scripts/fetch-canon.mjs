@@ -44,7 +44,7 @@ for(const m of pd){ const qid=await search(m.title,m.artist); await sleep(200);
   const movement=await label(qOf(claim(e,"P135")))||""; await sleep(120);
   out.push({ id:"wikidata:"+qid, title:m.title, artist:creator, y:year,
     place, medium:material, style:movement, styleKind: movement?"movement":"",
-    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=900`,
+    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=1600`,
     src:"wd-canon", canon:true });
   console.error(`  ✓ ${m.title} → ${qid} | ${year||"?"} | ${place||"?"} | img:${img.slice(0,30)}`);
 }

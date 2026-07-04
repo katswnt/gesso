@@ -54,7 +54,7 @@ for(const b of j.results.bindings){
   out.push({ id, title, artist:b.creator?normalizeArtist(b.creator.value):"", y:b.year?yr(b.year.value):null,
     place:country, region:country?(CONT[country.toLowerCase()]||"Africa"):"", lat, lng,
     medium:b.material?b.material.value:"", style:culture||movement, styleKind:culture?"culture":(movement?"movement":""),
-    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`, src:SRC,
+    img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`, src:SRC,
     sitelinks:b.sitelinks?parseInt(b.sitelinks.value,10):0 });
 }
 const file=`data/incoming/collection-${SRC}.json`;

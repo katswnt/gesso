@@ -52,7 +52,7 @@ for(const m of targets){
   const medium=await label(qOf(claim(e,"P186")))||""; await sleep(100);
   const movement=await label(qOf(claim(e,"P135")))||""; await sleep(100);
   const rec={id:"wikidata:"+pick.id,title:m.title,artist:creator,y:pick.y,place,region:place?(CONT[place.toLowerCase()]||"Europe"):"Europe",
-    medium,style:movement,styleKind:movement?"movement":"",img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(pick.img)}?width=900`,src:"wd-modern"};
+    medium,style:movement,styleKind:movement?"movement":"",img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(pick.img)}?width=1600`,src:"wd-modern"};
   out.push(rec); have.add(pick.id); added.push(rec);
   console.log(`✓ ${m.title} — ${creator} | ${pick.y||"?"} | d.${dY||"?"} | ${place||"?"} | ${pick.id}`);
 }

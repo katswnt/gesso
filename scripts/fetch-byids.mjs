@@ -40,7 +40,7 @@ async function sparql(qy){
 
 function filePath(image){
   const file = decodeURIComponent(String(image || "").split("/").pop() || "");
-  return file ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900` : "";
+  return file ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600` : "";
 }
 
 function safeCopyright(row){

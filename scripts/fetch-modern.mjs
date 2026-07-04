@@ -41,7 +41,7 @@ for(const m of seed){ const qid=await search(m.title,m.artist); await sleep(150)
   const medium=await label(qOf(claim(e,"P186")))||""; await sleep(100);
   const movement=await label(qOf(claim(e,"P135")))||""; await sleep(100);
   out.push({id:"wikidata:"+qid,title:m.title,artist:creator,y,place,region:place?(CONT[place.toLowerCase()]||"Europe"):"Europe",
-    medium,style:movement,styleKind:movement?"movement":"",img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=900`,src:"wd-modern"});
+    medium,style:movement,styleKind:movement?"movement":"",img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(img)}?width=1600`,src:"wd-modern"});
   console.error(`✓ ${m.title} — ${creator} | ${y||"?"} | d.${dY||"?"} | ${place||"?"}`);
 }
 writeFileSync("data/incoming/modern-fetched.json",JSON.stringify(out,null,1));

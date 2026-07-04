@@ -137,7 +137,7 @@ function normalize(b, gap){
     medium: simplifyMedium(b.material ? b.material.value : ""),
     style,
     styleKind: style ? (culture ? "culture" : "movement") : "",
-    img: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`,
+    img: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`,
     src: "coverage-" + gap,
     gap,
     sitelinks: b.sitelinks ? parseInt(b.sitelinks.value,10) : 0,

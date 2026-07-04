@@ -21,8 +21,8 @@ for(const p of targets){ const sn=surname(p.artist);
   // prefer a file whose name contains the artist surname; else the first image hit
   const file=hits.find(f=>norm(f).includes(sn))||hits[0];
   if(!file){ miss.push(`${p.artist.split(" ").pop()}: ${p.title.slice(0,30)}`); continue; }
-  const img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`;
-  const r=await get(img.replace("?width=900","?width=64")).catch(()=>null); // cheap existence ping (returns null/json on error but FilePath gives image; use HEAD instead)
+  const img=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`;
+  const r=await get(img.replace("?width=1600","?width=64")).catch(()=>null); // cheap existence ping (returns null/json on error but FilePath gives image; use HEAD instead)
   p.aicImg=p.img; p.img=img; p.src="aic-commons"; swapped++;
   console.log(`  ✓ ${p.artist.slice(0,16).padEnd(16)} ${p.title.slice(0,30).padEnd(30)} -> ${file.slice(0,46)}`);
   await sleep(200);

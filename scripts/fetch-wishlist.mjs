@@ -84,7 +84,7 @@ for(const a of ARTISTS){
     out.push({ id:"wikidata:"+qid, artist:a.name, y, place:origin,
       region: origin?(CONT[origin.toLowerCase()]||"Europe"):"Europe",
       medium: b.medL?b.medL.value:"", style: b.movL?b.movL.value:"", styleKind: b.movL?"movement":"",
-      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`,
+      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`,
       src:"wd-wishlist", mode:a.mode, ...(a.mode==="gov"?{govReview:true}:{}), ...(a.mode==="pre1930"?{marginalReview:true}:{}) });
     have.add(qid); added++;
   }

@@ -209,7 +209,7 @@ async function wdHarvest(){
       artist: wdArtist, y,
       place, region:continentOf(place)||"", lat, lng, medium,
       style: movement || "Renaissance", styleKind:"movement",
-      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`,
+      img:`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`,
       src:"wikidata", sitelinks: b.sitelinks ? parseInt(b.sitelinks.value,10) : 0,
     });
   }

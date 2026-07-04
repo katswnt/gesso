@@ -98,7 +98,7 @@ for(const [title,artist] of C){
     resolved.push({ title, artist, qid:best.id, isArtwork:best.score>=2,
       creatorQ:best.creators, material:qids(claimVal(e,"P186")), movementQ:qids(claimVal(e,"P135")),
       locCreationQ:qids(claimVal(e,"P1071")), countryOriginQ:qids(claimVal(e,"P495")),
-      year, image: img ? "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(img.replace(/ /g,"_"))+"?width=900" : null });
+      year, image: img ? "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(img.replace(/ /g,"_"))+"?width=1600" : null });
     if(!img) unresolved.push({title,artist,qid:best.id,reason:"no P18 image"});
   }catch(err){ unresolved.push({title,artist,reason:err.message}); }
   if(resolved.length%15===0) console.error(`  ...${resolved.length} resolved`);
