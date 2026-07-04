@@ -2944,10 +2944,21 @@ function renderReveal(r,ri){
   // silently fails and the map stays at the default world view.
   const fitReveal=()=>{ try{ let b; if(regionLayer){ b=regionLayer.getBounds(); try{b.extend(t);}catch{} } else { b=L.latLngBounds(pts); }
     rm.fitBounds(b,{padding:[22,22],maxZoom:6,animate:!settings.reduceMotion});}catch{} };
-  setTimeout(()=>{rm.invalidateSize(); fitReveal();
-    if(poly&&!settings.reduceMotion){ try{ const path=poly.getElement(); const len=path.getTotalLength();
+  // draw-on the guess→truth line, but ONLY after fitBounds has re-rendered the path at its final
+  // zoom — measuring getTotalLength() before the zoom locks the dash to a stale (shorter) length,
+  // which is why the line used to stop short of the pins. End solid so the resting line is full.
+  let lineDrawn=false;
+  const drawLine=()=>{ if(lineDrawn||!poly||settings.reduceMotion)return; lineDrawn=true;
+    try{ const path=poly.getElement(); if(!path)return; const len=path.getTotalLength();
       path.style.transition='none'; path.style.strokeDasharray=len; path.style.strokeDashoffset=len;
-      requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; }); }catch{} }
+      path.getBoundingClientRect(); // force reflow so the animation has a start frame
+      requestAnimationFrame(()=>{ path.style.transition='stroke-dashoffset .9s ease'; path.style.strokeDashoffset=0; });
+      path.addEventListener('transitionend',()=>{ path.style.strokeDasharray='none'; path.style.transition='none'; },{once:true});
+    }catch{ lineDrawn=false; } };
+  setTimeout(()=>{rm.invalidateSize();
+    rm.once('moveend zoomend',()=>setTimeout(drawLine,30));
+    fitReveal();
+    setTimeout(drawLine,700); // fallback: fitBounds may not fire moveend if the view is unchanged
   },settings.reduceMotion?0:260);
   if(infinite){
     document.getElementById('next').onclick=()=>{ idx++; if(idx>=game.length) game=game.concat(TRAIN?trainingSet(TRAIN):practiceOrder(tier)); renderRound(); };
