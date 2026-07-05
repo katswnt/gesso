@@ -123,21 +123,22 @@ out.meta = {
   const todayNum=Math.floor(Date.now()/86400000);
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
   const artistsOf=ids=>{const s=new Set();for(const id of ids){const a=ak2(byId[id]);if(a)s.add(a);}return s;};
-  const byDate={}; const recA={}; for(const t of TRS){recA[t]=[];} let recW=[]; // recA per-tier; recW GLOBAL (cross-tier work gap)
+  const byDate={}; let recAG=[]; let recW=[]; // recAG + recW both GLOBAL across tiers (artist gap + work gap)
   for(let d=todayNum-3; d<=todayNum+180; d++){ const k=iso(d);
     let rec;
     const preserve = prior[k] && (d<=todayNum || !RESHUFFLE);        // past+today always; future too unless reshuffling
     if(preserve){ rec=prior[k]; }
-    else { rec={}; const dayUsed=new Set();                         // a work used in an earlier tier today is off-limits in later tiers
+    else { rec={}; const dayUsed=new Set(); const dayArtists=new Set(); // work + artist used in an earlier tier today are off-limits in later tiers
       for(const t of TRS){
-        const avoidA=new Set(); for(const e of recA[t]) if(d-e.day<=ARTIST_GAP) for(const a of e.artists) avoidA.add(a);
+        const avoidA=new Set(dayArtists); for(const e of recAG) if(d-e.day<=ARTIST_GAP) for(const a of e.artists) avoidA.add(a); // GLOBAL: every tier in the last ARTIST_GAP days (kills cross-tier back-to-back same artist)
         const avoidW=new Set(dayUsed); for(const e of recW) if(d-e.day<=WORK_GAP) for(const id of e.ids) avoidW.add(id); // GLOBAL: every tier in the last WORK_GAP days
         rec[t]=dayIds(t,d,avoidA,avoidW);
-        for(const id of rec[t]) dayUsed.add(id); } }
+        for(const id of rec[t]){ dayUsed.add(id); const a=ak2(byId[id]); if(a)dayArtists.add(a); } } }
     byDate[k]=rec;
     const allIds=[];
-    for(const t of TRS){ const ids=(rec&&rec[t])||[]; recA[t].push({day:d,artists:artistsOf(ids)}); allIds.push(...ids); }
-    recW.push({day:d,ids:allIds});   // one global window entry per day across all tiers
+    for(const t of TRS){ const ids=(rec&&rec[t])||[]; allIds.push(...ids); }
+    recAG.push({day:d,artists:artistsOf(allIds)}); // one global artist window entry per day across all tiers
+    recW.push({day:d,ids:allIds});   // one global work window entry per day across all tiers
   }
   out.byDate=byDate;
 }
