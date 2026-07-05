@@ -381,8 +381,9 @@ function simplifyMedium(s){const raw=String(s||"").trim(); if(!raw||raw==="—")
   if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
   if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
   if(/lacquer|maki-e/.test(t))return "Lacquer"; if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory"; if(/glass|enamel|cloisonn/.test(t))return "Glass";
-  if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
+  if(/\bgold\b|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver"; // solid gold/silver only — surface gilding handled after base metals
   if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
+  if(/gilt|gild/.test(t))return "Gold"; // gilded object with no structural metal named (e.g. giltwood, gesso+gilding)
   if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
   if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|magnesite|\btuff\b|\bstone\b/.test(t))return "Stone";
   if(/lacquer|wood|panel|\boak\b|\bpine\b|walnut|bamboo|sugi|sycamore|sycomore|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut|living tree/.test(t))return "Wood";
