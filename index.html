@@ -2710,8 +2710,13 @@ function guideHTML(guide){
 // body expands. Replaces the old cues + "Ask the guide" split.
 function notesHTML(notes){
   if(!Array.isArray(notes)||!notes.length) return '';
-  return `<div class="aglist">${notes.map((nt,i)=>{
-    const pinned=nt.x!=null&&nt.y!=null; // one running number 1..N; pinned (first) match the image pins, unpinned are gold
+  // "Look closer" should point at the painting: keep feature-anchored notes (they map to the image pins) and drop
+  // the generic un-anchored thematic filler (palette/surface/mood) — but only when a work has ≥2 real pins, so
+  // sparse works (0–1 pins) still show something. data-note keeps the ORIGINAL index so pin↔row clicks still match.
+  const idx=notes.map((nt,i)=>({nt,i,pinned:nt.x!=null&&nt.y!=null}));
+  const anchored=idx.filter(e=>e.pinned);
+  const show=anchored.length>=2?anchored:idx;
+  return `<div class="aglist">${show.map(({nt,i,pinned})=>{
     const badge=`<span class="agnum ${pinned?'pinnum':'qnum'}">${i+1}</span>`;
     return `<div class="agrow" data-note="${i}"><button type="button" class="agq" data-ag="${i}" aria-expanded="false">${badge}<span class="agqt">${esc(nt.head||'')}</span><span class="agplus">+</span></button><div class="aga" hidden>${esc(nt.body||'')}</div></div>`;
   }).join('')}</div>`;
