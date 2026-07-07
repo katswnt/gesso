@@ -3234,10 +3234,14 @@ function openZoom(src){
   img.addEventListener('pointermove',e=>{ const prev=pts.get(e.pointerId); if(!prev)return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pts.size===2){const a=[...pts.values()];const d=D(a[0],a[1]);if(pinchD){scale=Math.min(MAX,Math.max(1,pinchS*d/pinchD));}const m=M(a[0],a[1]);tx+=m.x-mid.x;ty+=m.y-mid.y;mid=m;moved=true;apply();}
     else{if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>8)moved=true;if(scale>1){tx+=e.clientX-prev.x;ty+=e.clientY-prev.y;apply();}} });
+  // zoom toward a screen point (px,py): keep that point fixed under the cursor as scale goes s0->s1
+  const zoomTo=(px,py,s1)=>{ s1=Math.min(MAX,Math.max(1,s1)); if(s1<=1){scale=1;tx=0;ty=0;return;}
+    const r=img.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; const k=1-s1/scale;
+    tx+=(px-cx)*k; ty+=(py-cy)*k; scale=s1; };
   const endP=e=>{const wasTap=!moved&&pts.size===1;pts.delete(e.pointerId);if(pts.size<2)pinchD=0;
-    if(wasTap){if(scale>1){scale=1;tx=0;ty=0;}else{scale=2.5;}apply();}};
+    if(wasTap){if(scale>1){scale=1;tx=0;ty=0;}else{zoomTo(downX,downY,2.5);}apply();}}; // tap zooms to where you clicked
   img.addEventListener('pointerup',endP); img.addEventListener('pointercancel',e=>pts.delete(e.pointerId));
-  img.addEventListener('wheel',e=>{e.preventDefault();scale=Math.min(MAX,Math.max(1,scale-Math.sign(e.deltaY)*0.3));if(scale<=1){scale=1;tx=0;ty=0;}apply();},{passive:false});
+  img.addEventListener('wheel',e=>{e.preventDefault();zoomTo(e.clientX,e.clientY,scale-Math.sign(e.deltaY)*0.3);apply();},{passive:false});
   const close=()=>{lb.remove();document.removeEventListener('keydown',esc2);};
   const esc2=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',esc2);
   // backdrop closes ONLY on a clean tap (never after a pan); image taps are handled above

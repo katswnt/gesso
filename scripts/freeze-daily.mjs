@@ -95,6 +95,10 @@ out.meta = {
 // --- PER-DATE LOCK: preserve already-served days, (re)generate only future dates from the new order ---
 // so adding works / re-freezing never disturbs today or the past. byDate[YYYY-MM-DD][tier] = [5 ids].
 { let prior={}; try{ const s=readFileSync("data/daily-order.js","utf8"); prior=(JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1)).byDate)||{}; }catch{}
+  // PERSISTENT LEDGER (append-only): the authoritative record of every day ever served. It is NEVER reshuffled
+  // or truncated — served days are copied from it verbatim, and the anti-repeat windows below seed from its full
+  // tail (not just the 3 days daily-order keeps). This is what kills cross-refreeze repeats.
+  let ledger={}; try{ const s=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1)).byDate)||{}; }catch{}
   const RND=5, TRS=["easy","medium","hard","impossible"];
   const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
@@ -122,12 +126,20 @@ out.meta = {
     return o; };
   const todayNum=Math.floor(Date.now()/86400000);
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
+  const dayNumOf=k=>Math.floor(Date.parse(k+"T00:00:00Z")/86400000);
   const artistsOf=ids=>{const s=new Set();for(const id of ids){const a=ak2(byId[id]);if(a)s.add(a);}return s;};
+  // served days come from the LEDGER first (immutable), then any prior daily-order day, then get generated.
+  const served={...prior,...ledger};        // ledger wins — a served day can never be altered by a refreeze
   const byDate={}; let recAG=[]; let recW=[]; // recAG + recW both GLOBAL across tiers (artist gap + work gap)
+  // PRE-SEED the anti-repeat windows from the ledger's tail (days that fall BEFORE the loop's -3 start) so the
+  // 21-day work gap / 5-day artist gap are enforced against real served history, not just the 3 kept days.
+  for(const [k,rec] of Object.entries(ledger)){ const d=dayNumOf(k); if(!(d>=todayNum-WORK_GAP && d<=todayNum-4)) continue;
+    const allIds=[]; for(const t of TRS) allIds.push(...((rec&&rec[t])||[]));
+    recAG.push({day:d,artists:artistsOf(allIds)}); recW.push({day:d,ids:allIds}); }
   for(let d=todayNum-3; d<=todayNum+180; d++){ const k=iso(d);
     let rec;
-    const preserve = prior[k] && (d<=todayNum || !RESHUFFLE);        // past+today always; future too unless reshuffling
-    if(preserve){ rec=prior[k]; }
+    const preserve = served[k] && (d<=todayNum || !RESHUFFLE);       // past+today always (from ledger); future too unless reshuffling
+    if(preserve){ rec=served[k]; }
     else { rec={}; const dayUsed=new Set(); const dayArtists=new Set(); // work + artist used in an earlier tier today are off-limits in later tiers
       for(const t of TRS){
         const avoidA=new Set(dayArtists); for(const e of recAG) if(d-e.day<=ARTIST_GAP) for(const a of e.artists) avoidA.add(a); // GLOBAL: every tier in the last ARTIST_GAP days (kills cross-tier back-to-back same artist)
@@ -141,6 +153,11 @@ out.meta = {
     recW.push({day:d,ids:allIds});   // one global work window entry per day across all tiers
   }
   out.byDate=byDate;
+  // APPEND newly-served days into the ledger (grow-only; an existing entry is NEVER overwritten or dropped).
+  const newLedger={...ledger}; let added=0;
+  for(const [k,rec] of Object.entries(byDate)){ if(dayNumOf(k)<=todayNum && !newLedger[k]){ newLedger[k]=rec; added++; } }
+  writeFileSync("data/daily-history.js","window.ARTEFACTUM_DAILY_HISTORY="+JSON.stringify({byDate:newLedger})+";\n");
+  console.log(`ledger: ${Object.keys(newLedger).length} served days recorded (+${added} new)`);
 }
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
 console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2q.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);

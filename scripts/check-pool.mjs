@@ -181,6 +181,11 @@ for(const p of pool){
   for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<today)continue;
     for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[]))
       if(thinSet.has(id)) hard.push(`[thin-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} (no medium+no movement)`); }
+  // LEDGER IMMUTABILITY: a served day (<= today) in daily-order MUST match the append-only ledger verbatim.
+  // If it differs, a refreeze silently altered a day a player already saw — fail loudly.
+  { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ hard.push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
+      for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } }
 }
 
 // MEDIUM-FROM-NOTE: the why sentence describes the artwork's own technique; when it DECLARES a medium that
