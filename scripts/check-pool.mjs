@@ -195,6 +195,15 @@ for(const p of pool){
     for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<=today||date>horizon) continue;
       for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])) if(!audited.has(id)) gap.add(id); }
     if(gap.size) globalThis.__visgap={n:gap.size,win:VIS_WIN,sample:[...gap].slice(0,6).map(id=>(byId[id]?.title||id).slice(0,34))}; }
+  // MISSING-CATEGORY COVERAGE (schedule-first): upcoming daily works with NO movement or NO medium reach players
+  // with a dead scorecard row. Surface them ahead of time so a curate/vision pass can fill the blank before go-live.
+  { const WIN=14; const horizon=new Date(Date.now()+WIN*86400000).toISOString().slice(0,10);
+    const noMov=new Set(), noMed=new Set();
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<=today||date>horizon) continue;
+      for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])){ const p=byId[id]; if(!p)continue;
+        if(!p.style||!String(p.style).trim()) noMov.add(id); if(!p.medium||!String(p.medium).trim()) noMed.add(id); } }
+    if(noMov.size||noMed.size) globalThis.__catgap={win:WIN,mov:noMov.size,med:noMed.size,
+      sample:[...noMov].slice(0,5).map(id=>(byId[id]?.title||id).slice(0,30))}; }
 }
 
 // MEDIUM-FROM-NOTE: the why sentence describes the artwork's own technique; when it DECLARES a medium that
@@ -225,6 +234,7 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
 { const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
 { const vg=globalThis.__visgap; if(vg) console.log(`vision-audit gap: ${vg.n} works scheduled in the next ${vg.win}d NOT yet image-grounded (${vg.sample.join(", ")}${vg.n>vg.sample.length?", …":""}) — run scripts/vision-next.mjs`); }
+{ const cg=globalThis.__catgap; if(cg) console.log(`category gap (next ${cg.win}d dailies): ${cg.mov} missing MOVEMENT, ${cg.med} missing MEDIUM — dead scorecard rows (${cg.sample.join(", ")}${cg.mov>cg.sample.length?", …":""})`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
