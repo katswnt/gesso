@@ -186,6 +186,15 @@ for(const p of pool){
   { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
     for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ hard.push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
       for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } }
+  // VISION-AUDIT COVERAGE: how many works scheduled in the next VIS_WIN days have NOT had a genuine image-grounded
+  // notes/pins pass (data/vision-audit.json). WARN only — this is the rollout gauge that keeps the audit ahead of
+  // what players see. When it reaches 0, upcoming dailies are fully vision-verified.
+  { const VIS_WIN=14; let audited=new Set(); try{ audited=new Set((JSON.parse(readFileSync("data/vision-audit.json","utf8")).ids)||[]); }catch{}
+    const horizon=new Date(Date.now()+VIS_WIN*86400000).toISOString().slice(0,10);
+    const gap=new Set();
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<=today||date>horizon) continue;
+      for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])) if(!audited.has(id)) gap.add(id); }
+    if(gap.size) globalThis.__visgap={n:gap.size,win:VIS_WIN,sample:[...gap].slice(0,6).map(id=>(byId[id]?.title||id).slice(0,34))}; }
 }
 
 // MEDIUM-FROM-NOTE: the why sentence describes the artwork's own technique; when it DECLARES a medium that
@@ -215,6 +224,7 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const sf=globalThis.__styleFromNote; if(sf) console.log(`style-from-note: ${sf.n} junk-style works whose note names a mapped movement → data/incoming/style-from-note-backlog.json`); }
 { const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
 { const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
+{ const vg=globalThis.__visgap; if(vg) console.log(`vision-audit gap: ${vg.n} works scheduled in the next ${vg.win}d NOT yet image-grounded (${vg.sample.join(", ")}${vg.n>vg.sample.length?", …":""}) — run scripts/vision-next.mjs`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
