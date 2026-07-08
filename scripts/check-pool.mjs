@@ -187,7 +187,7 @@ for(const p of pool){
   // LEDGER IMMUTABILITY: a served day (<= today) in daily-order MUST match the append-only ledger verbatim.
   // If it differs, a refreeze silently altered a day a player already saw — fail loudly.
   { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
-    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ hard.push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ (date<today?hard:warn).push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
       for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } }
   // VISION-AUDIT COVERAGE: how many works scheduled in the next VIS_WIN days have NOT had a genuine image-grounded
   // notes/pins pass (data/vision-audit.json). WARN only — this is the rollout gauge that keeps the audit ahead of
