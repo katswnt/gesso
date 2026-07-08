@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const UA = "GessoCurate/1.0 (kathryn.swint@gmail.com)";
-const DIR = "data/incoming/curate";
+const DIR = process.env.CURATE_DIR || "data/incoming/curate"; // vision pipeline points this at data/incoming/vision
 const works = readdirSync(DIR).filter(f => /^in-[a-z]\.json$/.test(f)).flatMap(f => JSON.parse(readFileSync(join(DIR, f), "utf8")));
 const OUT = join(DIR, "codex-out.json");
 let done = {}; if (existsSync(OUT)) { try { done = Object.fromEntries(JSON.parse(readFileSync(OUT, "utf8")).map(w => [w.id, w])); } catch {} }
