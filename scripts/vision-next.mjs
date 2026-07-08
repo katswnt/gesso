@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const COUNT = parseInt(process.argv[2] || "20", 10);
 const CHUNK = parseInt(process.argv[3] || "10", 10);
+const MODE = (process.argv[4] || "schedule").toLowerCase(); // "easy" = audit the easy tier first, then schedule order
 const OUT = "data/incoming/vision";
 
 const load = (path, varName) => { const g = {}; global.window = g; new Function(readFileSync(path, "utf8"))(); return g[varName]; };
@@ -22,10 +23,20 @@ const today = new Date().toISOString().slice(0, 10);
 const tiers = ["easy", "medium", "hard", "impossible"];
 const dates = Object.keys(byDate).sort().filter(d => d > today); // upcoming only
 
-// Walk upcoming dates in order; collect works not yet audited, de-duped, until we have COUNT.
 const picked = [];
 const seen = new Set();
+// EASY-FIRST: the easy tier is what beginners see most and recurs ~monthly, so verify it to completion first.
+// D.easy is the rotation [4 icons, 1 recognizable, ...] so iterating in order front-loads the most-seen icons.
+if (MODE === "easy") {
+  for (const id of (DAILY.easy || [])) {
+    if (audited.has(id) || seen.has(id)) continue;
+    seen.add(id); picked.push({ id, firstDate: "easy-tier", tier: "easy" });
+    if (picked.length >= COUNT) break;
+  }
+}
+// Fill the remainder (or the whole batch, in schedule mode) by upcoming daily date, de-duped.
 outer: for (const d of dates) {
+  if (picked.length >= COUNT) break;
   for (const t of tiers) for (const id of (byDate[d][t] || [])) {
     if (audited.has(id) || seen.has(id)) continue;
     seen.add(id); picked.push({ id, firstDate: d, tier: t });
