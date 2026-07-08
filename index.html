@@ -2946,7 +2946,7 @@ function renderReveal(r,ri){
     </div>
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
       <div class="why">${why}</div>
-      ${notesV2 ? notesHTML(study.notes) : `${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
+      ${notesV2 ? `${notesHTML(study.notes)}${guideHTML(study.guide)}` : `${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}
       ${guideHTML(study.guide)}`}
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
