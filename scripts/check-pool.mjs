@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
+import { scanLanguage } from "./check-language.mjs";
 
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const html = readFileSync("index.html","utf8");
@@ -224,6 +225,15 @@ for(const p of pool){
   globalThis.__medConflict={n:mcBacklog.length}; }
 
 const group=arr=>{const g={};for(const v of arr){const k=v.match(/^\[([^\]]+)\]/)[1];(g[k]=g[k]||[]).push(v);}return g;};
+// ── harmful / dated language (our voice). Inherited museum TITLES are kept verbatim; but slurs/dated
+// ethnonyms in OUR text (why / note bodies / guide) are flagged for rewording. WARN — see check-language.mjs.
+{ let teachL={}; try{ const t=readFileSync("data/teach-works.js","utf8"); teachL=JSON.parse(t.slice(t.indexOf("{",t.indexOf(".work")),t.lastIndexOf("}")+1)); }catch{}
+  const { ourVoice, needsContext } = scanLanguage(pool, teachL);
+  for(const h of ourVoice) warn.push(`[our-voice-language] "${h.term}" · ${(h.title||h.id).slice(0,40)}`);
+  for(const h of needsContext) warn.push(`[title-needs-context] "${h.term}" · ${(h.title||h.id).slice(0,40)}`);
+  globalThis.__language = { voice: ourVoice.length, ctx: needsContext.length };
+}
+
 const report=(label,arr)=>{ const g=group(arr); console.log(`\n${label} (${arr.length}):`);
   for(const [k,v] of Object.entries(g).sort((a,b)=>b[1].length-a[1].length)){ console.log(`  ${k}: ${v.length}`); v.slice(0,4).forEach(x=>console.log("     "+x.replace(/^\[[^\]]+\] /,""))); } };
 
@@ -238,6 +248,7 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
 { const vg=globalThis.__visgap; if(vg) console.log(`vision-audit gap: ${vg.n} works scheduled in the next ${vg.win}d NOT yet image-grounded (${vg.sample.join(", ")}${vg.n>vg.sample.length?", …":""}) — run scripts/vision-next.mjs`); }
 { const cg=globalThis.__catgap; if(cg) console.log(`category gap (next ${cg.win}d dailies): ${cg.mov} missing MOVEMENT, ${cg.med} missing MEDIUM — dead scorecard rows (${cg.sample.join(", ")}${cg.mov>cg.sample.length?", …":""})`); }
+{ const lg=globalThis.__language; if(lg&&(lg.voice||lg.ctx)) console.log(`harmful-language: ${lg.voice} our-voice hits (reword), ${lg.ctx} harmful titles missing a context note`); }
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
