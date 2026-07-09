@@ -46,3 +46,6 @@ for(const p of need){ const q=qid(p.id);
 writeFileSync("data/fame.json",JSON.stringify(fame,null,2)+"\n");
 console.log("→ rebuilding fame.js"); execSync("node scripts/make-fame-js.mjs",{stdio:"inherit"});
 console.log("→ audits"); execSync("node scripts/audit-all.mjs",{stdio:"inherit"});
+// copyright death-check (network) — auto-run post-harvest so an in-copyright slip (creator died >1955)
+// surfaces immediately instead of only on a manual `npm run audit:copyright`. Non-fatal.
+console.log("→ copyright audit"); try{ execSync("node scripts/audit-copyright.mjs",{stdio:"inherit"}); }catch{ console.error("  (copyright audit errored — run npm run audit:copyright manually)"); }
