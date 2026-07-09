@@ -103,20 +103,27 @@ out.meta = {
   const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
   const sk2=p=>String(p&&p.style||"").trim().toLowerCase();
+  // clusterKey: for ANONYMOUS works only, a normalized (object-noun + region + century) key so near-identical
+  // artifacts (12 fish palettes, 29 "Dish", 23 Nauny shabti) can't flood a window. Named works → "" (unconstrained;
+  // they're already governed by the artist gap). Mirrors the near-dup audit's stem logic.
+  const clk=p=>{ if(!p||ak2(p)) return ""; const s=String(p.title||"").toLowerCase()
+    .replace(/\([^)]*\)/g," ").replace(/[-–][a-z]*\s*\d[\d.\s]*/g," ").replace(/[0-9]+/g," ").replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+    if(!s) return ""; const c=typeof p.y==="number"?Math.round(p.y/100):"?"; return s+"|"+(p.region||p.place||"?")+"|"+c; };
   const STYLE_CAP=2;    // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
   const ARTIST_GAP=5;   // don't repeat a NAMED artist within this many days (prevents back-to-back clustering without over-spreading)
   const WORK_GAP=21;    // don't repeat the SAME work within this many days (kills cross-refreeze near-dupes)
+  const CLUSTER_GAP=14; // don't repeat an anonymous near-dup CLUSTER within this many days (kills palette/shabti/dish monotony)
   // RESHUFFLE_FUTURE=1 regenerates future dates with current rules (use only when diversity rules change).
   // Default: PRESERVE every already-frozen date (past AND future) so re-freezing never drifts the calendar —
   // re-running only extends the horizon. This is what stops the "same work a few days apart" from re-freezes.
   const RESHUFFLE = process.env.RESHUFFLE_FUTURE === '1';
   // `avoidA` = artists in the last ARTIST_GAP days; `avoidW` = work-ids in the last WORK_GAP days. Both soft.
-  const dayIds=(key,day,avoidA,avoidW)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
-    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set(),sc={};
-    // pass 1: dedupe title + named artist within the day, cap per style, avoid recent artists AND recent works
-    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p),s=sk2(p);
-      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP)||(a&&avoidA&&avoidA.has(a))||(avoidW&&avoidW.has(p.id)))continue;
-      seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; o.push(p.id); }
+  const dayIds=(key,day,avoidA,avoidW,avoidCL)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
+    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set(),sc={},dc=new Set();
+    // pass 1: dedupe title + named artist within the day, cap per style, avoid recent artists/works AND recent anon clusters
+    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p),s=sk2(p),cl=clk(p);
+      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP)||(a&&avoidA&&avoidA.has(a))||(avoidW&&avoidW.has(p.id))||(cl&&(dc.has(cl)||(avoidCL&&avoidCL.has(cl)))))continue;
+      seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; if(cl)dc.add(cl); o.push(p.id); }
     // pass 2: backfill if short — keep within-day title/artist dedupe + the WORK gap (never repeat a recent work), relax style cap + artist gap
     for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
       if(seen.has(t)||(a&&sa.has(a))||(avoidW&&avoidW.has(p.id)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
@@ -128,29 +135,32 @@ out.meta = {
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
   const dayNumOf=k=>Math.floor(Date.parse(k+"T00:00:00Z")/86400000);
   const artistsOf=ids=>{const s=new Set();for(const id of ids){const a=ak2(byId[id]);if(a)s.add(a);}return s;};
+  const clustersOf=ids=>{const s=new Set();for(const id of ids){const c=clk(byId[id]);if(c)s.add(c);}return s;};
   // served days come from the LEDGER first (immutable), then any prior daily-order day, then get generated.
   const served={...prior,...ledger};        // ledger wins — a served day can never be altered by a refreeze
-  const byDate={}; let recAG=[]; let recW=[]; // recAG + recW both GLOBAL across tiers (artist gap + work gap)
+  const byDate={}; let recAG=[]; let recW=[]; let recCL=[]; // GLOBAL across tiers: artist gap + work gap + cluster gap
   // PRE-SEED the anti-repeat windows from the ledger's tail (days that fall BEFORE the loop's -3 start) so the
   // 21-day work gap / 5-day artist gap are enforced against real served history, not just the 3 kept days.
   for(const [k,rec] of Object.entries(ledger)){ const d=dayNumOf(k); if(!(d>=todayNum-WORK_GAP && d<=todayNum-4)) continue;
     const allIds=[]; for(const t of TRS) allIds.push(...((rec&&rec[t])||[]));
-    recAG.push({day:d,artists:artistsOf(allIds)}); recW.push({day:d,ids:allIds}); }
+    recAG.push({day:d,artists:artistsOf(allIds)}); recW.push({day:d,ids:allIds}); recCL.push({day:d,keys:clustersOf(allIds)}); }
   for(let d=todayNum-3; d<=todayNum+180; d++){ const k=iso(d);
     let rec;
     const preserve = served[k] && (d<=todayNum || !RESHUFFLE);       // past+today always (from ledger); future too unless reshuffling
     if(preserve){ rec=served[k]; }
-    else { rec={}; const dayUsed=new Set(); const dayArtists=new Set(); // work + artist used in an earlier tier today are off-limits in later tiers
+    else { rec={}; const dayUsed=new Set(); const dayArtists=new Set(); const dayClusters=new Set(); // work + artist + cluster used in an earlier tier today are off-limits in later tiers
       for(const t of TRS){
         const avoidA=new Set(dayArtists); for(const e of recAG) if(d-e.day<=ARTIST_GAP) for(const a of e.artists) avoidA.add(a); // GLOBAL: every tier in the last ARTIST_GAP days (kills cross-tier back-to-back same artist)
         const avoidW=new Set(dayUsed); for(const e of recW) if(d-e.day<=WORK_GAP) for(const id of e.ids) avoidW.add(id); // GLOBAL: every tier in the last WORK_GAP days
-        rec[t]=dayIds(t,d,avoidA,avoidW);
-        for(const id of rec[t]){ dayUsed.add(id); const a=ak2(byId[id]); if(a)dayArtists.add(a); } } }
+        const avoidCL=new Set(dayClusters); for(const e of recCL) if(d-e.day<=CLUSTER_GAP) for(const c of e.keys) avoidCL.add(c); // GLOBAL: anon clusters in the last CLUSTER_GAP days
+        rec[t]=dayIds(t,d,avoidA,avoidW,avoidCL);
+        for(const id of rec[t]){ dayUsed.add(id); const a=ak2(byId[id]); if(a)dayArtists.add(a); const c=clk(byId[id]); if(c)dayClusters.add(c); } } }
     byDate[k]=rec;
     const allIds=[];
     for(const t of TRS){ const ids=(rec&&rec[t])||[]; allIds.push(...ids); }
     recAG.push({day:d,artists:artistsOf(allIds)}); // one global artist window entry per day across all tiers
     recW.push({day:d,ids:allIds});   // one global work window entry per day across all tiers
+    recCL.push({day:d,keys:clustersOf(allIds)}); // one global cluster window entry per day across all tiers
   }
   out.byDate=byDate;
   // APPEND newly-served days into the ledger (grow-only; an existing entry is NEVER overwritten or dropped).

@@ -22,6 +22,26 @@ const ARTISTS=[
   // 🟡 marginal US authors — only works published pre-1930
   {name:"Georgia O'Keeffe", mode:"pre1930"}, {name:"Frank Lloyd Wright", mode:"pre1930"},
   {name:"Henry F. Swift", mode:"pre1930"},
+  // ── Cluster 1 (coverage-gap sequence): Russian Peredvizhniki, PD women, German Impressionism,
+  //    Belgian Symbolism, national icons. All died ≤1955; pre1931 keeps works US-PD. Staged, not promoted.
+  {name:"Ivan Shishkin", mode:"pre1931"}, {name:"Vasily Surikov", mode:"pre1931"},
+  {name:"Isaac Levitan", mode:"pre1931"}, {name:"Alexei Savrasov", mode:"pre1931"},
+  {name:"Valentin Serov", mode:"pre1931"}, {name:"Arkhip Kuindzhi", mode:"pre1931"},
+  {name:"Nikolai Ge", mode:"pre1931"}, {name:"Mikhail Vrubel", mode:"pre1931"},
+  {name:"Ivan Aivazovsky", mode:"pre1931"}, {name:"Viktor Vasnetsov", mode:"pre1931"},
+  {name:"Hilma af Klint", mode:"pre1931"}, {name:"Käthe Kollwitz", mode:"pre1931"},
+  {name:"Suzanne Valadon", mode:"pre1931"}, {name:"Gwen John", mode:"pre1931"},
+  {name:"Clara Peeters", mode:"pre1931"}, {name:"Angelica Kauffman", mode:"pre1931"},
+  {name:"Anna Ancher", mode:"pre1931"}, {name:"Helene Schjerfbeck", mode:"pre1931"},
+  {name:"Lilly Martin Spencer", mode:"pre1931"}, {name:"Marguerite Gérard", mode:"pre1931"},
+  {name:"Max Liebermann", mode:"pre1931"}, {name:"Lovis Corinth", mode:"pre1931"},
+  {name:"Max Slevogt", mode:"pre1931"}, {name:"Franz von Stuck", mode:"pre1931"},
+  {name:"James Ensor", mode:"pre1931"}, {name:"Fernand Khnopff", mode:"pre1931"},
+  {name:"Léon Spilliaert", mode:"pre1931"}, {name:"Théo van Rysselberghe", mode:"pre1931"},
+  {name:"Anders Zorn", mode:"pre1931"}, {name:"Akseli Gallen-Kallela", mode:"pre1931"},
+  {name:"Tom Roberts", mode:"pre1931"}, {name:"Arthur Streeton", mode:"pre1931"},
+  {name:"Tom Thomson", mode:"pre1931"}, {name:"Honoré Daumier", mode:"pre1931"},
+  {name:"Pierre Puvis de Chavannes", mode:"pre1931"}, {name:"Parmigianino", mode:"pre1931"},
 ];
 
 async function wd(u){for(let t=0;t<5;t++){try{const r=await fetch(u,{headers:{"User-Agent":UA}});if(r.status===429||r.status>=500){await sleep(2000*(t+1));continue;}if(!r.ok)return null;return await r.json();}catch(e){await sleep(1200*(t+1));}}return null;}
