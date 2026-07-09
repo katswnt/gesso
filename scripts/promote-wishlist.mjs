@@ -4,6 +4,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { readGlobal, writeAssignment } from "./lib/static-module.mjs"; // robust read + atomic write of data/pool.js
+import { simplifyMedium } from "./lib/domain.mjs";   // raw Wikidata P186 → canonical bucket (kills "oil paint canvas")
+import { continentOf } from "./lib/places.mjs";      // place → region (Australia→Oceania, not the Europe default)
 const UA="GessoWishlistPromote/1.0 (kathryn.swint@gmail.com)";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const FILE=process.argv[2]||"data/incoming/wishlist-fetched.json";
@@ -17,9 +19,15 @@ const have=new Set(pool.map(p=>p.id));
 let added=0,skip=0;
 for(const w of adds){ if(have.has(w.id)){skip++;continue;}
   const co=CO[(w.place||"").toLowerCase()]; const [lat,lng]=co?centroid(co):[null,null];
-  pool.push({ id:w.id, title:w.title, artist:w.artist||"", y:w.y, lat, lng, medium:w.medium||"",
-    place:co?co.n:(w.place||""), fame:120, img:w.img, src:"wd-wishlist", region:w.region||"Europe",
-    style:w.style||"", styleKind:w.styleKind||(w.style?"movement":""),
+  const place=co?co.n:(w.place||"");
+  const medium=simplifyMedium(w.medium||"")||"";        // canonical bucket, not raw P186 concatenation
+  const region=continentOf(place)||w.region||"Europe";  // derive from place (Australia→Oceania); Europe only as last resort
+  const style=w.style||"";
+  // cats = which categories are scorable from the fields we have (mirrors consolidate.mjs)
+  const cats=["when","where"]; if(medium)cats.push("medium"); if(style)cats.push("style"); if(w.artist)cats.push("artist");
+  pool.push({ id:w.id, title:w.title, artist:w.artist||"", y:w.y, lat, lng, medium,
+    place, fame:120, img:w.img, src:"wd-wishlist", region,
+    style, styleKind:w.styleKind||(style?"movement":""), cats,
     ...(w.govReview?{govReview:true}:{}), ...(w.marginalReview?{marginalReview:true}:{}) });
   have.add(w.id); added++;
 }
