@@ -27,6 +27,15 @@ const dates = Object.keys(byDate).sort().filter(d => d > today); // upcoming onl
 
 const picked = [];
 const seen = new Set();
+// PRIORITY: ids listed in data/incoming/vision/priority.json (e.g. image-fixed blockers awaiting a re-audit)
+// are picked FIRST, ahead of easy/schedule order, so a corrected work doesn't wait for its calendar slot.
+try {
+  const pri = JSON.parse(readFileSync("data/incoming/vision/priority.json", "utf8"));
+  for (const id of pri) {
+    if (picked.length >= COUNT) break;
+    if (byId.has(id) && !audited.has(id) && !seen.has(id)) { seen.add(id); picked.push({ id, firstDate: "priority", tier: "priority" }); }
+  }
+} catch {}
 // EASY-FIRST: the easy tier is what beginners see most and recurs ~monthly, so verify it to completion first.
 // D.easy is the rotation [4 icons, 1 recognizable, ...] so iterating in order front-loads the most-seen icons.
 if (MODE === "easy") {
