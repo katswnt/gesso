@@ -1501,6 +1501,8 @@ function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')rend
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
+// analytics sink: fire-and-forget the tracked event to our own Supabase-backed /api/event (see api/event.js).
+window.__sink=function(event,props){ try{ fetch("/api/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),event,props:props||{}})}).catch(()=>{}); }catch{} };
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16)||defaultName(),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:defaultName(),color:defaultColor()};}}
 // ---------- My Gallery: saved works (device-keyed Supabase + localStorage mirror) ----------
 let SAVED=new Set(); try{ SAVED=new Set(JSON.parse(localStorage.getItem("gesso.saved")||"[]")); }catch{}
