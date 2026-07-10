@@ -1715,7 +1715,7 @@ async function renderLeaderboard(tierKey,dateStr){
   const body=document.getElementById('lbbody');
   let data=null; try{ const r=await fetch(`/api/leaderboard?date=${date}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}`); data=r.ok?await r.json():null; }catch{}
   if(!data){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">Couldn&rsquo;t load the board. Play today&rsquo;s ${lbTier} puzzle to join.</div>`; return; }
-  if(!data.rows.length){ body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">No entries yet for ${lbTier} today — be the first.</div>`; return; }
+  if(!data.rows.length){ const masters=mastersBandHTML(lbTier,date,null); body.innerHTML=`<div class="mono" style="color:var(--muted);padding:20px 0">No one&rsquo;s submitted yet &mdash; be the first.</div>${masters}`; return; }
   const METAL=[{plinth:'#ecca6f',pb:'#cda948',pink:'#7a5c14',ph:64,av:66,sub:'#9a7b2e'},{plinth:'#d4d8dc',pb:'#c2c7cd',pink:'#6c7177',ph:42,av:54,sub:'#6c7177'},{plinth:'#dcab7c',pb:'#bd8a5c',pink:'#8a5a2c',ph:32,av:50,sub:'#9a6f3a'}];
   // podium order: 2nd, 1st, 3rd
   const podOrder=[1,0,2];
@@ -2196,7 +2196,7 @@ function confirmDeleteAccount(){
       }catch{ m.textContent='Could not delete — try again.'; } } });
 }
 
-function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }
+function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='final')return `/${s.date||todayStr()}/${s.key}/result`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
 function renderFromPath(){
   const parts=location.pathname.split('/').filter(Boolean);
@@ -2210,7 +2210,12 @@ function renderFromPath(){
   if(/^\d{4}-\d\d-\d\d$/.test(parts[0])){ const date=parts[0];
     if(parts[1]&&TIERS.some(t=>t.key===parts[1])){
       const key=parts[1], rd=date===todayStr()?undefined:date, eff=rd||todayStr();
+      if(parts[2]==='result'){
+        if(!infinite&&game.length&&results.length>=ROUNDS&&tier===key&&runDate===eff) return renderFinal(false);
+        return renderDayView(date,false);
+      }
       if(!infinite && game.length && results.length<ROUNDS && tier===key && runDate===eff) return renderRound();
+      if(!infinite && game.length && results.length>=ROUNDS && tier===key && runDate===eff) return renderReveal(results[results.length-1], results.length-1);
       return startGame(key, rd, false);
     }
     return renderDayView(date,false); }
@@ -3227,8 +3232,9 @@ function renderStats(){
     <div class="study" style="margin-top:14px"><div class="why" style="font-size:15px;margin:0">${note}</div></div>
   </div>${ATTRIB}</div></div>`;
 }
-function renderFinal(){
+function renderFinal(push=true){
   clearTimers();
+  if(push) pushNav({v:'final',key:tier,date:runDate||todayStr()});
   const summary=resultSummary(), {grand,gmax,bonus,share}=summary;
   lastFinal={...summary,results:results.slice(),tier,date:runDate||todayStr()};
   recordDailyScore(runDate||todayStr(),grand,tier); // records per-tier completion (any date); streak credit only for today
