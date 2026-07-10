@@ -3,7 +3,8 @@
 // into a fixed rotation. Re-run only when you deliberately want to reset the rotation.
 // Run: node scripts/freeze-daily.mjs
 import { readFileSync, writeFileSync } from "node:fs";
-const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
+const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""))
+  .filter(p => p.sensitive !== "remains"); // human/ancestral remains are never scheduled into a daily
 const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.ARTEFACTUM_FAME=","").replace(/;\s*$/,""));
 const poolFame = Object.fromEntries(pool.map(p=>[p.id, p.fame||0])); // fallback for freshly-promoted works not yet in the overlay — matches buildIndexes
 const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);
