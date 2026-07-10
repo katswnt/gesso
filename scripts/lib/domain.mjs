@@ -115,31 +115,42 @@ export function simplifyMedium(s){
     const fallback = (cleaned.length > 28 || /[,;]|\band\b|\bon\b/.test(cleaned)) && shortToken ? shortToken : cleaned;
     return fallback ? fallback.charAt(0).toUpperCase() + fallback.slice(1) : "";
   };
+  // Bucket a single material phrase → canonical medium (or "" if nothing matches). Same rule order as before.
+  const bucketOf = chunk => {
+    const t = " " + String(chunk).toLowerCase() + " ";
+    if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
+    if(/water-?colou?r|gouache/.test(t))return "Watercolor";
+    if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock)
+    if(/lithograph/.test(t))return "Lithograph"; // Western planographic print
+    if(/engrav|\betch|drypoint|aquatint|mezzotint|intaglio/.test(t))return "Engraving"; // Western intaglio print (NOT East-Asian woodblock)
+    if(/woodcut|woodblock|screenprint|silkscreen|offset print|offset printing|printed matter|\bprint\b/.test(t))return "Woodblock print";
+    if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing|tracing|cartoon/.test(t))return "Drawing";
+    if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
+    if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
+    if(/lacquer|maki-e/.test(t))return "Lacquer";
+    // ivory the carving material — NOT "ivory black" (a pigment) or "ivory wove/laid paper" (a paper colour).
+    if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory";
+    if(/glass|enamel|cloisonn/.test(t))return "Glass";
+    if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
+    if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
+    if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
+    if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|magnesite|\btuff\b|\bstone\b/.test(t))return "Stone";
+    if(/lacquer|wood|panel|\boak\b|\bpine\b|walnut|bamboo|sugi|sycamore|sycomore|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut|living tree/.test(t))return "Wood";
+    if(/\bpaper\b|parchment|cardboard/.test(t))return "Ink";
+    return "";
+  };
   const t = " " + raw.toLowerCase() + " ";
-  // technique-only strings name a process, not a material — drop them so they're never a guess option or
-  // scored (e.g. "Carving"). A material that happens to mention carving ("carved ivory") still falls
-  // through to its material rule below; this only fires when carving/casting/etc is ALL there is.
+  // technique-only strings name a process, not a material — drop them (e.g. "Carving").
   if(/^\s*(carv(ing|ed)|cast(ing)?|moulded|molded|modell?ed|incised|engraved|sculpted|relief|repouss[ée]|technique)\s*$/.test(t.trim()))return "";
-  if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return "Mixed media";
-  if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
-  if(/water-?colou?r|gouache/.test(t))return "Watercolor";
-  if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock)
-  if(/lithograph/.test(t))return "Lithograph"; // Western planographic print
-  if(/engrav|\betch|drypoint|aquatint|mezzotint|intaglio/.test(t))return "Engraving"; // Western intaglio print (NOT East-Asian woodblock)
-  if(/woodcut|woodblock|screenprint|silkscreen|offset print|offset printing|printed matter|\bprint\b/.test(t))return "Woodblock print";
-  if(/\bink\b/.test(t))return "Ink"; if(/chalk|charcoal|graphite|pencil|pastel|drawing|tracing|cartoon/.test(t))return "Drawing";
-  if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
-  if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
-  if(/lacquer|maki-e/.test(t))return "Lacquer";
-  // ivory the carving material — NOT "ivory black" (a pigment) or "ivory wove/laid paper" (a paper colour);
-  // those are works on paper, handled by the drawing/paper rules above/below.
-  if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory";
-  if(/glass|enamel|cloisonn/.test(t))return "Glass";
-  if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
-  if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
-  if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
-  if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|magnesite|\btuff\b|\bstone\b/.test(t))return "Stone";
-  if(/lacquer|wood|panel|\boak\b|\bpine\b|walnut|bamboo|sugi|sycamore|sycomore|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut|living tree/.test(t))return "Wood";
-  if(/\bpaper\b|parchment|cardboard/.test(t))return "Ink";
-  return tidyFallback(raw);
+  if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return ""; // "mixed media" isn't a fair single-choice answer — don't ask/score it
+  // Bucket by the PRIMARY (first-named) material so "Silver, gold, and enamel" reads Silver, not enamel→Glass.
+  const primary = bucketOf(raw.split(/\s*(?:[,;]|\band\b|\bon\b)\s*/i)[0]) || bucketOf(raw);
+  // Co-equal decorative-arts objects (2+ distinct craft materials, no dominant one) aren't a fair single
+  // medium question either — return "" so the load path drops "medium" from that work's cats.
+  const CRAFT = new Set(["Gold","Silver","Glass","Copper","Bronze","Ceramic","Textile","Wood","Ivory","Jade","Stone","Marble","Lacquer"]);
+  if(primary && CRAFT.has(primary)){
+    const mats = new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).map(x => bucketOf(x)).filter(b => b && CRAFT.has(b)));
+    if(mats.size >= 2) return "";
+  }
+  return primary || tidyFallback(raw);
 }
