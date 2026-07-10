@@ -1068,12 +1068,20 @@ const CUE_ALIASES={
 };
 function catLabel(c,it){
   if(c==='when')return "When made"; if(c==='where')return "Where made"; if(c==='medium')return "Medium";
-  if(c==='artist')return "Artist"; if(c==='style')return it&&it.styleKind==='culture'?"Culture":"Movement"; return c;
+  if(c==='artist')return "Artist"; if(c==='style'){const k=it&&it.styleKind;return k==='culture'?"Culture":k==='period'?"Period":"Movement";} return c;
 }
 function catShort(c,it){
   if(c==='when')return "WHEN"; if(c==='where')return "WHERE"; if(c==='medium')return "MED.";
-  if(c==='artist')return "ARTIST"; if(c==='style')return it&&it.styleKind==='culture'?"CULT.":"MOV."; return c;
+  if(c==='artist')return "ARTIST"; if(c==='style'){const k=it&&it.styleKind;return k==='culture'?"CULT.":k==='period'?"PER.":"MOV.";} return c;
 }
+// Art-historian/curator honesty helpers: attribution spectrum, styleKind label (culture/period/movement),
+// and a VISIBLE context callout (sensitive framing + provenance/context notes). Fields are optional → no-op when absent.
+const ATTRIB_LABEL={attributed:"Attributed to",studio:"Studio of",workshop:"Workshop of",circle:"Circle of",follower:"Follower of",after:"After",manner:"Manner of"};
+function artistDisplay(it){ if(!it||!it.artist) return ""; const pre=it.attribution&&ATTRIB_LABEL[it.attribution]; return pre? pre+" "+it.artist : it.artist; }
+function styleKindLabel(it){ const k=it&&it.styleKind; return k==='culture'?'CULTURE':k==='period'?'PERIOD':k==='school'?'SCHOOL':'MOVEMENT'; }
+const SENSITIVE_FRAME={funerary:"A funerary object — made for the tomb and the afterlife, not for display. Shown here to teach, with respect for its purpose.",sacred:"A sacred or ritual object that carried religious meaning for the people who made it. We present it with that context in mind."};
+function contextHTML(it){ if(!it) return ''; const parts=[]; if(it.sensitive&&SENSITIVE_FRAME[it.sensitive]) parts.push(SENSITIVE_FRAME[it.sensitive]); if(it.provenanceNote) parts.push(it.provenanceNote); if(it.contextNote) parts.push(it.contextNote); if(!parts.length) return '';
+  return `<div style="margin:0 0 16px;padding:11px 14px;border-left:3px solid var(--accent);background:var(--line-card);border-radius:5px;font-size:13px;line-height:1.55;color:var(--ink)"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px">Context</span>${parts.map(esc).join(' ')}</div>`; }
 const ICONS = {
   when:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>`,
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
@@ -1136,7 +1144,7 @@ function buildIndexes(){
   ALL_MED=[...new Set(POOL.map(p=>p.medSimple).filter(Boolean))];
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
-  MOVEMENT_NAMES=[...new Set(POOL.filter(p=>p.styleKind==='movement'||p.styleKind==='culture').map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  MOVEMENT_NAMES=[...new Set(POOL.map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); // every styled work's style is guessable (movement / culture / period / school…)
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra].map(a=>a.normalize("NFC")))].sort();
   artistStyle={}; styleRegion={}; styleCountry={}; artistMeta={};
@@ -1174,7 +1182,7 @@ function tierCount(i){
 // two "not scored" rows, which we don't want a player to ever see. Single source of truth for all selectors.
 function workComplete(p){ if(!p)return false;
   const hasMed=!!(p.medium&&String(p.medium).trim());
-  const hasMov=!!(p.style&&((typeof MOVEMENTS!=='undefined'&&MOVEMENTS[p.style])||p.styleKind==='culture'||p.styleKind==='movement'));
+  const hasMov=!!(p.style&&((typeof MOVEMENTS!=='undefined'&&MOVEMENTS[p.style])||p.styleKind==='culture'||p.styleKind==='movement'||p.styleKind==='period'||p.styleKind==='school'||p.styleKind==='tradition'||p.styleKind==='genre'));
   return hasMed||hasMov; }
 function tierItems(i){
   const key=TIERS[i]&&TIERS[i].key;
@@ -2334,7 +2342,7 @@ function renderInfiniteSummary(){
   // strengths by MOVEMENT and by REGION (round accuracy = coreNet/baseMax), groups with ≥2 works
   const groupAcc=keyFn=>{ const g={}; for(const r of results){ const k=keyFn(r.it); if(!k)continue; const acc=r.baseMax?r.coreNet/r.baseMax:0; (g[k]=g[k]||{s:0,n:0}); g[k].s+=acc; g[k].n++; }
     return Object.entries(g).filter(([,a])=>a.n>=2).map(([k,a])=>({k,pct:Math.round(a.s/a.n*100)})).sort((a,b)=>b.pct-a.pct); };
-  const byMov=groupAcc(it=>(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null);
+  const byMov=groupAcc(it=>(it.style&&it.styleKind&&it.styleKind!=='')?it.style:null);
   const byReg=groupAcc(it=>it.region);
   // session core accuracy (coreNet vs the achievable core max) — replaces the old "best round" emphasis
   const sumCore=results.reduce((a,x)=>a+x.coreNet,0), sumBase=results.reduce((a,x)=>a+(x.baseMax||0),0);
@@ -2691,7 +2699,7 @@ function score(){
 // ---------- REVEAL ----------
 function studyFor(it){
   const w=CUES.work&&CUES.work[it.id]; if(w&&w.why) return w; // per-work note (Codex-generated)
-  return (it.styleKind==='movement'&&CUES.style[it.style]) || (it.styleKind==='culture'&&CUES.culture[it.style])
+  return (it.styleKind==='culture'&&CUES.culture[it.style]) || (it.style&&CUES.style[it.style])
     || CUES.region[it.region] || {why:`Made in ${it.place||it.region}, c. ${fmtYear(it.y)}.`,cues:[]};
 }
 function swatchColor(f){return f>=.75?'var(--full)':f>=.35?'var(--partial)':'var(--miss)';}
@@ -2886,7 +2894,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
       <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
-      <div style="padding:6px 0 4px">${fact("ARTIST",it.artist||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact("MOVEMENT",it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
+      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact(styleKindLabel(it),it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
     </div></div>`;
@@ -2909,7 +2917,7 @@ function renderReveal(r,ri){
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
   const masterpiece = perfect && r.cells.artist && r.cells.artist.pts===MAX_CAT; // perfect + nailed the artist
-  const glossName=(it.style&&(it.styleKind==='movement'||it.styleKind==='culture'))?it.style:null;
+  const glossName=(it.style&&it.styleKind)?it.style:null; // any styled work (movement / culture / period / school…) links to its glossary entry
   if(glossName&&!infinite&&!runArchive)bumpGlossary(glossName);
   const glossMeta=glossName?movementMeta(glossName):null;
   const banner=r.coreCats.map(c=>{const f=r.cells[c].pts/MAX_CAT;
@@ -2939,10 +2947,10 @@ function renderReveal(r,ri){
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
         <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
-          ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(it.artist)}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
+          ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(artistDisplay(it))}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>
           <div class="metarow"><span class="k">ORIGIN</span><span class="v">${esc(it.place||it.region)}</span></div>
-          ${it.style?`<div class="metarow"><span class="k">${it.styleKind==='culture'?'CULTURE':'SCHOOL'}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">${it.artist&&!/^(unknown|anon)/i.test(it.artist)?'None on record':'Anonymous / decorative work'}</span></div>`}
+          ${it.style?`<div class="metarow"><span class="k">${styleKindLabel(it)}</span><span class="v">${esc(it.style)}</span></div>`:`<div class="metarow"><span class="k">MOVEMENT</span><span class="v" style="color:var(--muted)">${it.artist&&!/^(unknown|anon)/i.test(it.artist)?'None on record':'Anonymous / decorative work'}</span></div>`}
           ${it.medium?`<div class="metarow"><span class="k">MEDIUM</span><span class="v">${esc(it.medium)}</span></div>`:`<div class="metarow"><span class="k">MEDIUM</span><span class="v" style="color:var(--muted)">Not recorded</span></div>`}
           ${it.dim?`<div class="metarow"><span class="k">SIZE</span><span class="v">${esc(fmtDim(it.dim))}</span></div>`:''}
           ${it.museum?`<div class="metarow"><span class="k">HELD AT</span><span class="v">${esc(museumLine(it))}</span></div>`:''}
@@ -2963,7 +2971,7 @@ function renderReveal(r,ri){
       </div>
     </div>
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
-      <div class="why">${why}</div>
+      ${contextHTML(it)}<div class="why">${why}</div>
       ${notesV2 ? `${notesHTML(study.notes)}${guideHTML(study.guide)}` : `${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
         <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}
       ${guideHTML(study.guide)}`}
