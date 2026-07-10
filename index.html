@@ -1093,7 +1093,7 @@ function artistDisplay(it){ if(!it||!it.artist) return ""; const pre=it.attribut
 function styleKindLabel(it){ const k=it&&it.styleKind; return k==='culture'?'CULTURE':k==='period'?'PERIOD':k==='school'?'SCHOOL':'MOVEMENT'; }
 const SENSITIVE_FRAME={funerary:"A funerary object — made for the tomb and the afterlife, not for display. Shown here to teach, with respect for its purpose.",sacred:"A sacred or ritual object that carried religious meaning for the people who made it. We present it with that context in mind."};
 function contextHTML(it){ if(!it) return ''; const parts=[]; if(it.sensitive&&SENSITIVE_FRAME[it.sensitive]) parts.push(SENSITIVE_FRAME[it.sensitive]); if(it.provenanceNote) parts.push(it.provenanceNote); if(it.contextNote) parts.push(it.contextNote); if(!parts.length) return '';
-  return `<div style="margin:0 0 16px;padding:11px 14px;border-left:3px solid var(--accent);background:var(--line-card);border-radius:5px;font-size:13px;line-height:1.55;color:var(--ink)"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px">Context</span>${parts.map(esc).join(' ')}</div>`; }
+  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:6px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
 const ICONS = {
   when:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>`,
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
@@ -1493,7 +1493,7 @@ function loadStreak(){try{const s=JSON.parse(localStorage.getItem("artefactum.st
 function saveStreak(s){try{localStorage.setItem("artefactum.streak",JSON.stringify(s))}catch{}}
 function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=loadStreak();
   if(tierKey){s.byDay[dateStr]=s.byDay[dateStr]||{};s.byDay[dateStr][tierKey]=Math.max(+s.byDay[dateStr][tierKey]||0,score);}
-  if(dateStr===today){const hadToday=s.playedDates.includes(today)||s.lastPlayed===today,prev=s.lastPlayed;if(!hadToday){s.current=prev===addDays(today,-1)?s.current+1:1;s.longest=Math.max(s.longest,s.current);s.lastPlayed=today;s.playedDates=[...new Set([...s.playedDates,today])].sort(); track('daily_complete',{score,streak:s.current}); if([7,30,100,365].includes(s.current)) track('streak_milestone',{days:s.current});}s.scores[today]=Math.max(+s.scores[today]||0,score);}
+  if(dateStr===today){const hadToday=s.playedDates.includes(today)||s.lastPlayed===today,prev=s.lastPlayed;if(!hadToday){s.current=prev===addDays(today,-1)?s.current+1:1;s.longest=Math.max(s.longest,s.current);s.lastPlayed=today;s.playedDates=[...new Set([...s.playedDates,today])].sort(); if([7,30,100,365].includes(s.current)) track('streak_milestone',{days:s.current});}s.scores[today]=Math.max(+s.scores[today]||0,score);}
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
@@ -2918,7 +2918,7 @@ function qaWireAndDeclutter(stage){
   // QA view: expand ALL note bodies by default so the whole curated write-up is readable at a glance.
   stage.querySelectorAll('.aga').forEach(a=>a.removeAttribute('hidden'));
   stage.querySelectorAll('.agq').forEach(b=>{ b.setAttribute('aria-expanded','true');
-    b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
+    b.onclick=()=>{ const a=b.nextElementSibling, open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');track('guide_open',{});}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
   declutterPlate(stage);
 }
 function qaView(id){ const stage=document.getElementById('stage'); stage.innerHTML=qaCardHTML(id); qaWireAndDeclutter(stage); }
@@ -3214,6 +3214,7 @@ function renderFinal(){
   const summary=resultSummary(), {grand,gmax,bonus,share}=summary;
   lastFinal={...summary,results:results.slice(),tier,date:runDate||todayStr()};
   recordDailyScore(runDate||todayStr(),grand,tier); // records per-tier completion (any date); streak credit only for today
+  if(tier) track('daily_complete',{tier,score:grand}); // fires every daily finish (not just first-of-day)
   // matrix
   const cols=["when","where","medium","style","artist"];
   const head=cols.map(c=>`<th>${iconHTML(c)}${catShort(c)}</th>`).join('');
