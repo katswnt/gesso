@@ -1712,6 +1712,7 @@ async function renderLeaderboard(tierKey,dateStr){
       <span style="display:inline-flex">${dabAvatar(r.name,r.color,m.av,rank)}</span>
       <div style="margin-top:8px;font:700 ${rank===0?16:14}px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
       <div class="mono" style="font:700 12px 'IBM Plex Mono';color:${m.sub};font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</div>
+      ${r.cold?`<div style="margin-top:3px">${coldBadge(r)}</div>`:''}
       <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px Archivo;color:${m.pink}">${r.rank}</div>
     </div>`;};
   const podium=`<div style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;padding:6px 0 14px">${podOrder.map(podiumCell).join('')}</div>`;
@@ -1734,11 +1735,13 @@ async function renderLeaderboard(tierKey,dateStr){
   lbShown=data.rows.length;
   { const mb=document.getElementById('lbmore'); if(mb)mb.onclick=()=>loadMoreLeaderboard(mb); }
 }
-function lbRowHTML(r){ return `<div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:7px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.07);border-left:3px solid var(--accent)':''}">
+// "cold" = nailed the daily on the FIRST attempt, no replays — a positive skill flag (best-score model unchanged).
+function coldBadge(r){ return r&&r.cold?`<span class="mono" title="Nailed it on the first try — no replays" style="flex:0 0 auto;font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent-underline);border-radius:3px;padding:1px 4px;white-space:nowrap">1ST&nbsp;TRY</span>`:''; }
+function lbRowHTML(r){ return `<div style="display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.07);border-left:3px solid var(--accent)':''}">
     <span class="mono" style="width:34px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
     ${dabAvatar(r.name,r.color,34,r.rank-1)}
     <span style="flex:1;min-width:0;font:600 15px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
-    <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</span></div>`; }
+    ${coldBadge(r)}<span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</span></div>`; }
 let lbShown=0;
 async function loadMoreLeaderboard(btn){ btn.disabled=true; const orig=btn.textContent; btn.textContent='Loading…';
   try{ const r=await fetch(`/api/leaderboard?date=${lbDate||todayStr()}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}&offset=${lbShown}`); const d=r.ok?await r.json():null;

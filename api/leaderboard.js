@@ -36,11 +36,14 @@ export default async function handler(req, res) {
     // Fire the three INDEPENDENT queries together (was sequential → ~3 round-trips of latency): the score page,
     // the exact total count, and (if a caller is given) the caller's own score. Dependent follow-ups parallelize too.
     const [topRes, cntRes, mineRes] = await Promise.all([
-      rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces`),
+      rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces,cold`),
       rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } }),
       me ? rest(`scores?device_id=eq.${encodeURIComponent(me)}&date=eq.${date}&tier=eq.${tier}&select=total`) : Promise.resolve(null),
     ]);
-    const top = await topRes.json();
+    let top = await topRes.json();
+    if (!topRes.ok || !Array.isArray(top)) { // `cold` column may not exist yet — self-heal by re-selecting without it
+      top = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces`)).json();
+    }
     const count = parseInt((cntRes.headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
     const ids = (top || []).map(r => r.device_id);
 
@@ -61,7 +64,7 @@ export default async function handler(req, res) {
     const rows = (top || []).map((r, i) => {
       const p = profByDev[r.device_id] || {};
       return { rank: offset + i + 1, name: p.name || fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
-        score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, isYou: !!me && r.device_id === me };
+        score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, cold: !!r.cold, isYou: !!me && r.device_id === me };
     });
 
     let you = null;

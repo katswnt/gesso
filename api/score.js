@@ -66,8 +66,13 @@ export default async function handler(req, res) {
     const prev = Array.isArray(cur) && cur[0] ? Number(cur[0].total) : null;
     const isBest = prev == null || total > prev;
     if (isBest) {
-      const w = await rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({ device_id: deviceId, date, tier, total, perfects, masterpieces, rounds: body.rounds || null, updated_at: new Date().toISOString() }) });
+      // cold = achieved on the FIRST attempt (prev==null); a later run that BEATS it means retries were used → cold:false.
+      // The `cold` column may not exist yet: try with it, and self-heal by retrying without it so score writes never break.
+      // One-time migration: alter table scores add column if not exists cold boolean not null default false;
+      const payload = { device_id: deviceId, date, tier, total, perfects, masterpieces, cold: prev == null, rounds: body.rounds || null, updated_at: new Date().toISOString() };
+      const put = () => rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(payload) });
+      let w = await put();
+      if (!w.ok) { delete payload.cold; w = await put(); } // graceful fallback until the cold column is added
       if (!w.ok) { const detail = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', status: w.status, detail: detail.slice(0, 200) }); }
     }
 
