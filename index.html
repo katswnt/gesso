@@ -2278,6 +2278,11 @@ function renderStart(dateStr,push=true){
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
+    ${replay?'':`<div style="text-align:center;margin:2px 0 6px">
+      <button type="button" id="ystrday" style="background:none;border:none;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">&larr; Yesterday&rsquo;s puzzle</button>
+      <span style="color:var(--muted);font-size:11px">&middot;</span>
+      <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
+    </div>`}
     ${replay?'':`<div class="zlabel"><b>Practice</b><i>&middot; doesn&rsquo;t affect your streak</i></div>
     <div class="practwo">
       <div class="practice">
@@ -2323,6 +2328,7 @@ function renderStart(dateStr,push=true){
     ${ATTRIB}
   </div>`;
   document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
+  { const yb=document.getElementById('ystrday'); if(yb)yb.onclick=()=>renderStart(addDays(todayStr(),-1)); }
   document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
 }
 function startGame(key,dateStr,push=true){
