@@ -1636,7 +1636,7 @@ function openIdentityModal(after){
       close();if(after)after(); } });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
 }
-let lbTier='medium';
+let lbTier='easy';
 // ---------- benchmark "ghost" users: art-history greats as simulated leaderboard targets ----------
 // Each is an EXPERTISE PROFILE (home continents + deep era). They score on works of ANY period — strong in
 // their region/era, weaker elsewhere, with a universal fame bump (the canon is known to all). Scores are
@@ -2511,7 +2511,7 @@ function renderRound(){
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
-      <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
+      <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
