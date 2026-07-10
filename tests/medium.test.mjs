@@ -6,7 +6,7 @@ import { simplifyMedium as libSimplify } from "../scripts/lib/domain.mjs";
 
 // extract the client's simplifyMedium straight from index.html so we test the shipped code
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?return tidyFallback\(raw\);\s*\}/);
+const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?tidyFallback\(raw\);\s*\}/);
 if(!fnSrc) throw new Error("could not extract client simplifyMedium from index.html");
 const clientSimplify = new Function(fnSrc[0] + "\nreturn simplifyMedium;")();
 
@@ -42,9 +42,11 @@ const CASES = [
   ["Carved ivory", "Ivory"],                  // material still wins when present
   ["", ""],
   ["—", ""],
-  ["mixed media on paper", "Mixed media"],
-  ["mixed-media collage", "Mixed media"],
-  ["assemblage of found plastic and wire", "Mixed media"],
+  ["mixed media on paper", ""],              // "mixed media" isn't a fair single-choice answer → dropped
+  ["mixed-media collage", ""],
+  ["assemblage of found plastic and wire", ""],
+  ["Silver, gold, and enamel", ""],          // co-equal decorative arts (2+ craft materials) → dropped
+  ["Silver, gilt", "Silver"],                // one material (silver + its own gilding) → primary Silver
 ];
 
 let pass=0, fail=0;

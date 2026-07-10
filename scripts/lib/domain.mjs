@@ -131,6 +131,7 @@ export function simplifyMedium(s){
     // ivory the carving material — NOT "ivory black" (a pigment) or "ivory wove/laid paper" (a paper colour).
     if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory";
     if(/glass|enamel|cloisonn/.test(t))return "Glass";
+    if(/vermeil/.test(t))return "Silver"; // vermeil = gilt silver → base material is silver
     if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
     if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
     if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
@@ -149,7 +150,7 @@ export function simplifyMedium(s){
   // medium question either — return "" so the load path drops "medium" from that work's cats.
   const CRAFT = new Set(["Gold","Silver","Glass","Copper","Bronze","Ceramic","Textile","Wood","Ivory","Jade","Stone","Marble","Lacquer"]);
   if(primary && CRAFT.has(primary)){
-    const mats = new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).map(x => bucketOf(x)).filter(b => b && CRAFT.has(b)));
+    const mats = new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).filter(x => !/^\s*(gilt|gilded|gilding)\s*$/i.test(x.trim())).map(x => bucketOf(x)).filter(b => b && CRAFT.has(b)));
     if(mats.size >= 2) return "";
   }
   return primary || tidyFallback(raw);

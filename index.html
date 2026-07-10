@@ -392,6 +392,7 @@ function simplifyMedium(s){const raw=String(s||"").trim(); if(!raw||raw==="—")
     if(/marble/.test(t))return "Marble"; if(/jade|nephrite/.test(t))return "Jade";
     if(/terracotta|porcelain|stoneware|earthenware|eartheneware|faience|fritware|pottery|ceramic|celadon ware|\bclay\b/.test(t))return "Ceramic";
     if(/lacquer|maki-e/.test(t))return "Lacquer"; if((/\bivory\b/.test(t) && !/ivory\s*black|paper/.test(t)) || /\btusk\b|^\s*bone\s*$/.test(t))return "Ivory"; if(/glass|enamel|cloisonn/.test(t))return "Glass";
+    if(/vermeil/.test(t))return "Silver"; // vermeil = gilt silver → base material is silver
     if(/\bgold\b|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver"; // solid gold/silver only — surface gilding handled after base metals
     if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
     if(/gilt|gild/.test(t))return "Gold"; // gilded object with no structural metal named (e.g. giltwood, gesso+gilding)
@@ -409,7 +410,7 @@ function simplifyMedium(s){const raw=String(s||"").trim(); if(!raw||raw==="—")
   // medium question either — return "" so the load path drops "medium" from that work's cats.
   const CRAFT=new Set(["Gold","Silver","Glass","Copper","Bronze","Ceramic","Textile","Wood","Ivory","Jade","Stone","Marble","Lacquer"]);
   if(primary&&CRAFT.has(primary)){
-    const mats=new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).map(x=>bucketOf(x)).filter(b=>b&&CRAFT.has(b)));
+    const mats=new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).filter(x=>!/^\s*(gilt|gilded|gilding)\s*$/i.test(x.trim())).map(x=>bucketOf(x)).filter(b=>b&&CRAFT.has(b)));
     if(mats.size>=2)return "";
   }
   return primary||tidyFallback(raw); }
