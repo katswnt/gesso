@@ -1911,6 +1911,8 @@ function trainMovements(){ return (TRAIN&&TRAIN.facets&&TRAIN.facets.movements)?
 function trainGivenCats(){ const drop=new Set(); if(!TRAIN)return drop;
   const mf=trainMediaFams(); if(mf&&mf.size===1) drop.add('medium');
   const mv=trainMovements(); if(mv&&mv.size===1) drop.add('style');
+  // drilling a single country → the location is a given, not a question (don't make them pin what they picked)
+  const cos=TRAIN.facets&&TRAIN.facets.countries; if(cos&&cos.size===1 && TRAIN.axis!=='where') drop.add('where');
   return drop; }
 // the effective answer categories for a round = the work's cats, minus single-pin "given" cats,
 // then narrowed by the single-axis FOCUS control. Guard: never return zero core questions.
@@ -3040,7 +3042,7 @@ function renderReveal(r,ri){
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
