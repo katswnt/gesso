@@ -7,6 +7,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal, writeAssignment } from "./lib/static-module.mjs";
 
+// load HARVARD_KEY (and any .env vars) so the Harvard adapter can authenticate
+try { for(const line of readFileSync(".env","utf8").split("\n")){ const m=line.match(/^\s*([A-Z_]+)\s*=\s*(.+)\s*$/); if(m) process.env[m[1]] ||= m[2].replace(/^["']|["']$/g,""); } } catch {}
 const APPLY = process.argv.includes("--apply");
 const UA = "GessoQueueMuseum/1.0 (kathryn.swint@gmail.com)";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -26,6 +28,8 @@ async function fetchRec(id){
     return { title: d.title, begin: +d.date_start, end: +d.date_end, place: d.place_of_origin || "" }; }
   if((m = id.match(/^cleveland(\d+)/))){ const j = await jget(`https://openaccess-api.clevelandart.org/api/artworks/${m[1]}`); const d = j?.data; if(!d) return null;
     return { title: d.title, begin: +d.creation_date_earliest, end: +d.creation_date_latest, place: (d.culture && d.culture[0]) || "" }; }
+  if((m = id.match(/^harvard(\d+)/))){ const key = process.env.HARVARD_KEY; if(!key) return null; const j = await jget(`https://api.harvardartmuseums.org/object/${m[1]}?apikey=${key}`); if(!j) return null;
+    return { title: j.title, begin: +j.datebegin, end: +j.dateend, place: j.culture || (j.places && j.places[0] && j.places[0].displayname) || "" }; }
   if((m = id.match(/^va[A-Za-z]?(\w+)/))){ const sn = id.replace(/^va/, ""); const j = await jget(`https://api.vam.ac.uk/v2/museumobject/${sn}`); const r = j?.record; if(!r) return null;
     const pd = (r.productionDates && r.productionDates[0]) || {}; const y = s => { const n = String(s||"").match(/-?\d{3,4}/); return n ? +n[0] : NaN; };
     return { title: (r.titles && r.titles[0] && r.titles[0].title) || r.objectType || "", begin: y(pd.date && pd.date.earliest), end: y(pd.date && pd.date.latest), place: (r.placesOfOrigin && r.placesOfOrigin[0] && r.placesOfOrigin[0].place && r.placesOfOrigin[0].place.text) || "" }; }
@@ -34,7 +38,7 @@ async function fetchRec(id){
 
 const dateRange = v => { const n = String(v).match(/-?\d{3,4}/g); if(!n) return null; const a=+n[0]; let b=n[1]?+n[1]:a; if(b<a && n[1].length<4) b=+(String(a).slice(0,String(a).length-n[1].length)+n[1]); return [a,b]; };
 
-const targets = queue.filter(it => /^(met|aic|cleveland|va)/.test(it.id) && ["date","place","title"].includes(it.type));
+const targets = queue.filter(it => /^(met|aic|cleveland|va|harvard)/.test(it.id) && ["date","place","title"].includes(it.type));
 const recCache = new Map();
 const res = { apply: [], discard: [], review: [] };
 let done = 0;
