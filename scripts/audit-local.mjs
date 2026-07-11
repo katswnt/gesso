@@ -11,7 +11,9 @@ const AUDITS = [
   ["style-text","audit-style-text.mjs"], // assigned style vs style implied by the note text
   ["vocab",    "audit-vocab.mjs"],       // controlled-vocab near-duplicates (medium/style spelling variants)
   ["fame",     "check-fame.mjs"],        // fame outliers / tier-placement sanity
-  ["medium",   "medium-revalidate.mjs"], // medium vs note-declared technique
+  // NOTE: medium-revalidate.mjs was REMOVED from this advisory chain — it WRITES pool.js (overwrote clean
+  // medium with raw Wikidata P186 concatenations like "oil paint walnut panel", tripping the gate's
+  // medium-lowercase check). An advisory audit must never mutate the pool. Run it manually with --apply only.
 ];
 
 console.log("=== local advisory audits (review backlogs — non-blocking) ===");

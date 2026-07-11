@@ -71,10 +71,12 @@ for(let i = 0; i < qids.length; i += BATCH){
     if(!q || !raw) continue;
     for(const p of byQ.get(q) || []){
       const before = p.medium || "";
-      if(raw !== before){
+      // Store the CLEANED medium, NEVER the raw P186 concatenation ("oil paint walnut panel") — raw junk
+      // breaks display and the gate's medium-lowercase check. Only update when it yields a real change.
+      const afterSimple = simplifyMedium(raw);
+      if(afterSimple && afterSimple !== before){
         const beforeSimple = simplifyMedium(before);
-        const afterSimple = simplifyMedium(raw);
-        p.medium = raw;
+        p.medium = afterSimple;
         wdRepulled++;
         totalChanged++;
         if(samples.length < 20 && beforeSimple !== afterSimple) samples.push(`${p.title}: ${beforeSimple || "—"} -> ${afterSimple || "—"}`);
@@ -84,7 +86,12 @@ for(let i = 0; i < qids.length; i += BATCH){
   console.error(`  ${Math.min(i + BATCH, qids.length)}/${qids.length} wikidata ids checked | changed ${totalChanged}`);
 }
 
-writeAssignment("data/pool.js", "ARTEFACTUM_POOL", pool);
+if(process.argv.includes("--apply")){
+  writeAssignment("data/pool.js", "ARTEFACTUM_POOL", pool);
+  console.log("--apply: wrote data/pool.js");
+} else {
+  console.log("DRY RUN (pass --apply to write data/pool.js) — no changes written.");
+}
 
 console.log(`works checked: ${pool.length}`);
 console.log(`wikidata medium re-pulled: ${wdRepulled}`);
