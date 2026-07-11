@@ -143,15 +143,9 @@ export function simplifyMedium(s){
   const t = " " + raw.toLowerCase() + " ";
   // technique-only strings name a process, not a material — drop them (e.g. "Carving").
   if(/^\s*(carv(ing|ed)|cast(ing)?|moulded|molded|modell?ed|incised|engraved|sculpted|relief|repouss[ée]|technique)\s*$/.test(t.trim()))return "";
-  if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return ""; // "mixed media" isn't a fair single-choice answer — don't ask/score it
-  // Bucket by the PRIMARY (first-named) material so "Silver, gold, and enamel" reads Silver, not enamel→Glass.
-  const primary = bucketOf(raw.split(/\s*(?:[,;]|\band\b|\bon\b)\s*/i)[0]) || bucketOf(raw);
-  // Co-equal decorative-arts objects (2+ distinct craft materials, no dominant one) aren't a fair single
-  // medium question either — return "" so the load path drops "medium" from that work's cats.
-  const CRAFT = new Set(["Gold","Silver","Glass","Copper","Bronze","Ceramic","Textile","Wood","Ivory","Jade","Stone","Marble","Lacquer"]);
-  if(primary && CRAFT.has(primary)){
-    const mats = new Set(raw.split(/\s*(?:[,;]|\band\b)\s*/i).filter(x => !/^\s*(gilt|gilded|gilding)\s*$/i.test(x.trim())).map(x => bucketOf(x)).filter(b => b && CRAFT.has(b)));
-    if(mats.size >= 2) return "";
-  }
+  if(/mixed[- ]media|multimedia|assemblage|mixed technique/.test(t))return "Mixed media"; // a valid, guessable answer
+  // Bucket by the PRIMARY (first-named) material so composite works stay GUESSABLE by their dominant material:
+  // "Silver, gold, and enamel" → Silver; "Hammered brass inlaid with gold" → Bronze; "Oil on canvas" → Oil paint.
+  const primary = bucketOf(raw.split(/\s*(?:[,;]|\band\b|\bon\b|\bwith\b|\binlaid\b)\s*/i)[0]) || bucketOf(raw);
   return primary || tidyFallback(raw);
 }

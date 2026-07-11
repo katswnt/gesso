@@ -42,11 +42,12 @@ const CASES = [
   ["Carved ivory", "Ivory"],                  // material still wins when present
   ["", ""],
   ["—", ""],
-  ["mixed media on paper", ""],              // "mixed media" isn't a fair single-choice answer → dropped
-  ["mixed-media collage", ""],
-  ["assemblage of found plastic and wire", ""],
-  ["Silver, gold, and enamel", ""],          // co-equal decorative arts (2+ craft materials) → dropped
-  ["Silver, gilt", "Silver"],                // one material (silver + its own gilding) → primary Silver
+  ["mixed media on paper", "Mixed media"],   // mixed media IS a valid, guessable answer
+  ["mixed-media collage", "Mixed media"],
+  ["assemblage of found plastic and wire", "Mixed media"],
+  ["Silver, gold, and enamel", "Silver"],    // composite → bucket by primary (first-named) material
+  ["Silver, gilt", "Silver"],
+  ["Hammered brass inlaid with gold, silver, and black paste", "Bronze"], // brass basin → primary metal, guessable
 ];
 
 let pass=0, fail=0;
