@@ -2371,7 +2371,9 @@ function renderStart(dateStr,push=true){
   document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
 }
 function startGame(key,dateStr,push=true){
-  if(push)pushNav({v:'play',key,date:dateStr||todayStr()});
+  // Seed the day view beneath the game so Back returns to the puzzle's day, not all the way home
+  // (rounds/reveals don't push their own history entries). pushNav no-ops if we're already on that path.
+  if(push){ const d=dateStr||todayStr(); pushNav({v:'pick',date:d}); pushNav({v:'play',key,date:d}); }
   clearTimers();
   infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
   TRAIN=null; TRAIN_SPAN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
@@ -2576,7 +2578,8 @@ function renderRound(){
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
         ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
-          <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">TAP TO PIN · PINCH / +&minus; TO ZOOM</span></div>
+          <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">SEARCH OR TAP TO PIN</span></div>
+          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'IBM Plex Mono',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
           <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
         </div>`}
       </div>
@@ -2607,6 +2610,19 @@ function renderRound(){
   if(!hideMap){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
+  // Map place-search: geocode via Nominatim, then pan/zoom the map to the result so remote spots (e.g. Tahiti)
+  // are easy to find. It only NAVIGATES the map — the player still taps to drop the pin (no auto-guessing).
+  { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
+    const run=async q=>{ if(!q||!q.trim()){sr.style.display='none';return;}
+      try{ const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
+        const j=await r.json(); if(!Array.isArray(j)||!j.length){sr.innerHTML=`<div class="ac-item" style="color:var(--muted)">No match</div>`;sr.style.display='block';return;}
+        sr.innerHTML=j.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" style="font:11px 'IBM Plex Mono',monospace;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
+        sr.style.display='block';
+        sr.querySelectorAll('.ac-item[data-lat]').forEach(el=>el.onmousedown=ev=>{ev.preventDefault(); map.setView([+el.dataset.lat,+el.dataset.lon],5,{animate:!settings.reduceMotion}); sr.style.display='none';});
+      }catch{ sr.style.display='none'; } };
+    if(si&&sr){ si.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>run(si.value),350);});
+      si.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(t);run(si.value);}});
+      si.addEventListener('focus',()=>si.removeAttribute('readonly')); } }
   // Training PLACE pin: auto-fit the map to the chosen area instead of the world view. Must run after
   // invalidateSize (container has no size at first paint), exactly like the reveal map's fitBounds.
   const placeFit = TRAIN ? trainPlaceFit() : null;
