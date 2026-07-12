@@ -2238,7 +2238,7 @@ function confirmDeleteAccount(){
       }catch{ m.textContent='Could not delete — try again.'; } } });
 }
 
-function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='final')return `/${s.date||todayStr()}/${s.key}/result`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }
+function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='rev')return `/${s.date||todayStr()}/${s.key}/r${s.ri}`; if(s.v==='final')return `/${s.date||todayStr()}/${s.key}/result`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }
 function pushNav(s){ try{ if(location.pathname!==pathFor(s)) history.pushState(s,'',pathFor(s)); }catch{} }
 function renderFromPath(){
   const parts=location.pathname.split('/').filter(Boolean);
@@ -2256,8 +2256,12 @@ function renderFromPath(){
         if(!infinite&&game.length&&results.length>=ROUNDS&&tier===key&&runDate===eff) return renderFinal(false);
         return renderDayView(date,false);
       }
+      const rm=(parts[2]||'').match(/^r(\d+)$/); // /date/tier/rN → a reveal (notes) page for round N
+      if(rm){ const n=+rm[1]; if(!infinite&&results[n]&&tier===key&&runDate===eff) return renderReveal(results[n],n,false);
+        // state lost (refresh/deep-link) — fall back to the day view rather than a broken reveal
+        return renderDayView(date,false); }
       if(!infinite && game.length && results.length<ROUNDS && tier===key && runDate===eff) return renderRound();
-      if(!infinite && game.length && results.length>=ROUNDS && tier===key && runDate===eff) return renderReveal(results[results.length-1], results.length-1);
+      if(!infinite && game.length && results.length>=ROUNDS && tier===key && runDate===eff) return renderReveal(results[results.length-1], results.length-1, false);
       return startGame(key, rd, false);
     }
     return renderDayView(date,false); }
@@ -2374,9 +2378,7 @@ function renderStart(dateStr,push=true){
   document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
 }
 function startGame(key,dateStr,push=true){
-  // Seed the day view beneath the game so Back returns to the puzzle's day, not all the way home
-  // (rounds/reveals don't push their own history entries). pushNav no-ops if we're already on that path.
-  if(push){ const d=dateStr||todayStr(); pushNav({v:'pick',date:d}); pushNav({v:'play',key,date:d}); }
+  if(push)pushNav({v:'play',key,date:dateStr||todayStr()});
   clearTimers();
   infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
   TRAIN=null; TRAIN_SPAN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
@@ -3013,8 +3015,11 @@ function qaViewMany(ids){ const stage=document.getElementById('stage');
   stage.innerHTML=`<div class="mono" style="padding:8px 4px 14px;color:var(--muted);font-size:12px">QA PREVIEW · ${ids.length} works · not real rounds</div>`+ids.map(qaCardHTML).join('');
   qaWireAndDeclutter(stage); }
 function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
-function renderReveal(r,ri){
+function renderReveal(r,ri,push=true){
   if(ri==null)ri=results.indexOf(r); const liveRound=results.length-1; // ri = round being viewed; liveRound = latest submitted
+  // Each reveal (notes page) is its own history entry, so the BROWSER back button pages back through the
+  // notes to re-read them (mirrors the in-app "← Back to review" button). Skipped for daily replays/infinite.
+  if(push&&!infinite)pushNav({v:'rev',key:tier,date:runDate||todayStr(),ri});
   window.scrollTo(0,0);
   const it=r.it;
   const perfect = r.coreCats.length && r.coreCats.every(c=>r.cells[c].pts===MAX_CAT);
