@@ -83,12 +83,15 @@ function fill3(ans,picks,fromAll){const at=lastTok(ans), sib=x=>lastTok(x)===at;
   return shuffle([ans,...p.slice(0,3)]);}
 // Build medium distractors around the simplified medium taxonomy. Easy should feel
 // visually separable; hard/impossible intentionally choose same-family lookalikes.
-function mediumChoices(ans){const look=dcfg().look;
+function mediumChoices(ans,dropMixed){const look=dcfg().look;
   // Training: 2+ media families pinned → restrict the option pool to only those families (the answer
   // is one of them, so distractors should be too). 1 pin is handled upstream by dropping the question.
   const mf=(typeof trainMediaFams==='function')?trainMediaFams():null;
   const restrict=mf&&mf.size>=2;
-  const POOL_MED=restrict?ALL_MED.filter(m=>m===ans||(MED_FAMILY[m]&&mf.has(MED_FAMILY[m]))):ALL_MED;
+  let POOL_MED=restrict?ALL_MED.filter(m=>m===ans||(MED_FAMILY[m]&&mf.has(MED_FAMILY[m]))):ALL_MED;
+  // Composite objects (gold+lapis+glass mask, etc.) bucket to a primary material, but "Mixed media" is a
+  // defensible read of them — so never offer it as a WRONG distractor for such works (it'd be an unfair trap).
+  if(dropMixed&&ans!=='Mixed media')POOL_MED=POOL_MED.filter(m=>m!=='Mixed media');
   const same=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
   const diff=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
   let picks; if(look==='far')picks=pickN(diff,3); else if(look==='near')picks=[...pickN(same,3),...pickN(diff,3)].slice(0,3); else picks=[...pickN(same,1),...pickN(diff,2)];
@@ -2539,7 +2542,7 @@ function renderRound(){
   const naReason=(cat,base)=> drillAxis ? 'Hidden in this drill.' : given.has(cat) ? 'Given for this drill — not asked.' : base;
   if(!show('when')) fields.push(naField('When made','when',naReason('when','Hidden in this drill.')));
   if(show('medium')){
-    const ch=mediumChoices(it.medSimple);
+    const ch=mediumChoices(it.medSimple, /[,;]|\band\b|\bwith\b|\binlaid\b/i.test(it.medium||''));
     fields.push({k:'medium', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('medium')}Medium</span></div>
       <div class="pills" data-pills="medium">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}); n++;
   } else fields.push(naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')));
