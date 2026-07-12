@@ -275,6 +275,11 @@ function schemeFromLatLng(lat,lng){
 }
 // continent of a guessed pin (matches the data pipeline's classification)
 function continentOf(lat,lng){
+  // Pacific islands FIRST (before the Americas boxes) — the old lng>=110 rule missed the whole eastern
+  // Pacific, so Tahiti/Easter Island/Hawaii/Samoa were mislabeled Europe (breaking where-scoring + geo-elim).
+  if(lng>=130&&lat>=-50&&lat<=30)return "Oceania";               // W/Central Pacific: Fiji, Vanuatu, New Caledonia, Micronesia, PNG
+  if(lng>=-176&&lng<=-105&&lat>=-30&&lat<=0)return "Oceania";    // E Polynesia: Tahiti, Easter Island, Cook, Samoa, Tonga
+  if(lng>=-165&&lng<=-150&&lat>=15&&lat<=25)return "Oceania";    // Hawaii
   if(lng>=-82&&lng<=-34&&lat<13&&lat>=-56)return "South America";
   if(lng>=-170&&lng<=-52&&lat>=13)return "North America";
   if(lng>=110&&lat<=-10)return "Oceania";
@@ -2614,7 +2619,8 @@ function renderRound(){
   marker=null; map=null;
   if(!hideMap){
   map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:11,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
+  // Voyager basemap keeps place labels legible when zoomed in (the 'light' basemap thins them out).
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:13,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   // Map place-search: geocode via Nominatim, then pan/zoom the map to the result so remote spots (e.g. Tahiti)
   // are easy to find. It only NAVIGATES the map — the player still taps to drop the pin (no auto-guessing).
   { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
