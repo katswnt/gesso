@@ -22,6 +22,7 @@ const regionOf = id => byId[id]?.region||"";
 const centOf = id => { const y=byId[id]?.y; return y==null?"~":Math.floor(y/100); };
 const styleOf = id => String(byId[id]?.style||"").toLowerCase();          // culture/movement — spreads "5 Chinese textiles"
 const medOf = id => simplifyMedium(byId[id]?.medium||"");                  // bucketed medium — spreads "all textiles"
+const countryOf = id => { const p=String(byId[id]?.place||"").replace(/\([^)]*\)/g,"").trim(); const parts=p.split(","); return (parts[parts.length-1]||"").trim().toLowerCase(); }; // spreads "5 Italian" easy days within Europe
 // Reorder so any window of `win` consecutive avoids a repeated NAMED artist (hard) and spreads
 // culture/medium/region/century (soft) — anonymous works (textiles, ceramics) have no artist to dedupe,
 // so without the culture+medium terms a day could be all one theme (e.g. Chinese textiles).
@@ -30,10 +31,10 @@ function diversify(ids, win){
   while(rem.length){
     const recent=out.slice(-(win-1));
     const ra=recent.map(namedArtist).filter(Boolean), rr=recent.map(regionOf), rc=recent.map(centOf),
-          rs=recent.map(styleOf).filter(Boolean), rm=recent.map(medOf).filter(Boolean);
+          rs=recent.map(styleOf).filter(Boolean), rm=recent.map(medOf).filter(Boolean), rq=recent.map(countryOf).filter(Boolean);
     let bestI=0, best=Infinity;
-    for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id), s=styleOf(id), m=medOf(id);
-      const score=(a&&ra.includes(a)?1000:0)+(s&&rs.includes(s)?8:0)+(m&&rm.includes(m)?4:0)+(rr.includes(regionOf(id))?2:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
+    for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id), s=styleOf(id), m=medOf(id), cq=countryOf(id);
+      const score=(a&&ra.includes(a)?1000:0)+(s&&rs.includes(s)?8:0)+(cq&&rq.includes(cq)?5:0)+(m&&rm.includes(m)?4:0)+(rr.includes(regionOf(id))?1:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
       if(score<best){best=score;bestI=i; if(best<0.5)break;} }
     out.push(rem.splice(bestI,1)[0]);
   }
