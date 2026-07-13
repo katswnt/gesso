@@ -2660,6 +2660,7 @@ function renderRound(){
   { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
     const run=async q=>{ if(!q||!q.trim()){sr.style.display='none';return;}
       try{ const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
+        const j=await r.json();
         let jj=Array.isArray(j)?j:[]; const seen=new Set(); // dedupe near-identical hits (same spot at ~1km / same name)
         jj=jj.filter(x=>{const k=(+x.lat).toFixed(2)+','+(+x.lon).toFixed(2); if(seen.has(k))return false; seen.add(k); return true;}).slice(0,5);
         if(!jj.length){sr.innerHTML=`<div class="ac-item" style="color:var(--muted)">No match</div>`;sr.style.display='block';return;}
