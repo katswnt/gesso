@@ -3,6 +3,7 @@
 // into a fixed rotation. Re-run only when you deliberately want to reset the rotation.
 // Run: node scripts/freeze-daily.mjs
 import { readFileSync, writeFileSync } from "node:fs";
+import { simplifyMedium } from "./lib/domain.mjs";
 const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""))
   .filter(p => p.sensitive !== "remains"); // human/ancestral remains are never scheduled into a daily
 const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.ARTEFACTUM_FAME=","").replace(/;\s*$/,""));
@@ -19,15 +20,20 @@ const byId = Object.fromEntries(pool.map(p=>[p.id,p]));
 const namedArtist = id => { const a=String(byId[id]?.artist||"").trim(); return (a && !/^(unknown|anonymous|unidentified)/i.test(a)) ? a.toLowerCase() : ""; };
 const regionOf = id => byId[id]?.region||"";
 const centOf = id => { const y=byId[id]?.y; return y==null?"~":Math.floor(y/100); };
-// Reorder so any window of `win` consecutive avoids a repeated NAMED artist (hard) and spreads region+century (soft).
+const styleOf = id => String(byId[id]?.style||"").toLowerCase();          // culture/movement — spreads "5 Chinese textiles"
+const medOf = id => simplifyMedium(byId[id]?.medium||"");                  // bucketed medium — spreads "all textiles"
+// Reorder so any window of `win` consecutive avoids a repeated NAMED artist (hard) and spreads
+// culture/medium/region/century (soft) — anonymous works (textiles, ceramics) have no artist to dedupe,
+// so without the culture+medium terms a day could be all one theme (e.g. Chinese textiles).
 function diversify(ids, win){
   const rem=ids.slice(), out=[];
   while(rem.length){
     const recent=out.slice(-(win-1));
-    const ra=recent.map(namedArtist).filter(Boolean), rr=recent.map(regionOf), rc=recent.map(centOf);
+    const ra=recent.map(namedArtist).filter(Boolean), rr=recent.map(regionOf), rc=recent.map(centOf),
+          rs=recent.map(styleOf).filter(Boolean), rm=recent.map(medOf).filter(Boolean);
     let bestI=0, best=Infinity;
-    for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id);
-      const score=(a&&ra.includes(a)?1000:0)+(rr.includes(regionOf(id))?2:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
+    for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id), s=styleOf(id), m=medOf(id);
+      const score=(a&&ra.includes(a)?1000:0)+(s&&rs.includes(s)?8:0)+(m&&rm.includes(m)?4:0)+(rr.includes(regionOf(id))?2:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
       if(score<best){best=score;bestI=i; if(best<0.5)break;} }
     out.push(rem.splice(bestI,1)[0]);
   }
