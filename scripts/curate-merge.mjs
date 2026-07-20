@@ -37,7 +37,7 @@ const out = files.flatMap(f => { try { return JSON.parse(readFileSync(f, "utf8")
 
 const newMovements = []; // {key,dates,region,palette} to insert into MOVEMENTS
 const queue = [];
-const stat = { style: 0, medium: 0, notesPins: 0, movAdded: 0, styleQueued: 0, skipped: 0 };
+const stat = { style: 0, medium: 0, notesPins: 0, movAdded: 0, styleQueued: 0, skipped: 0, unplayable: 0, mediumHidden: 0 };
 const DEFAULT_PALETTE = ["#7a3e24", "#a98244", "#1f6f5b", "#e8ddc3"];
 const validBucket = m => { const s = simplifyMedium(m); return s && s.split(" ").length <= 2 && !/album|scroll|folio|sheet|page|untitled|fragment|reformatted/i.test(s); };
 
@@ -65,6 +65,18 @@ for (const w of out) {
   if (f.date != null && f.date !== p.y) queue.push({ id: w.id, title: p.title, type: "date", from: p.y, to: f.date });
   if (w.image && (w.image.ok === false || (w.image.issue && w.image.issue !== "none")))
     queue.push({ id: w.id, title: p.title, type: "image", issue: w.image.issue, reason: w.image.reason, suggestedUrl: w.image.suggestedUrl || null });
+
+  // ---- PLAYABILITY (vision quality verdicts) ----
+  // playable:false → featureless object with no visual signal to guess from (a plain sphere/sherd). SAFE to
+  // apply: sets p.play=false so freeze-daily + workComplete never SCHEDULE it (stays visible in Collections).
+  if (w.playable === false) { p.play = false; stat.unplayable = (stat.unplayable||0)+1; }
+  else if (w.playable === true && p.play === false) { delete p.play; } // re-audited as playable → un-exclude
+  // poor image quality / bad framing (blurry/dark/cropped/detail-only/lost-in-gallery) → queue a better image
+  if (w.imageQuality === "poor" || (w.framing && w.framing !== "ok"))
+    queue.push({ id: w.id, title: p.title, type: "image", issue: w.framing && w.framing !== "ok" ? w.framing : "low-quality", reason: w.qualityReason || w.image?.reason || "", suggestedUrl: w.image?.suggestedUrl || null });
+  // medium not legibly judgeable from the image (B&W/monochrome/unfinished) → drop 'medium' from scoring so
+  // a player isn't marked wrong on a medium they can't see.
+  if (w.mediumLegible === false && Array.isArray(p.cats) && p.cats.includes("medium")) { p.cats = p.cats.filter(c => c !== "medium"); stat.mediumHidden = (stat.mediumHidden||0)+1; }
 
   // ---- NOTES + PINS (only when the agent saw a trustworthy image) ----
   if (c && w.image && w.image.ok === true && Array.isArray(w.notes) && w.notes.length && w.notes.every(n => n.head && n.body)) {
@@ -97,5 +109,5 @@ let priorQ = []; try { priorQ = JSON.parse(readFileSync("data/incoming/curate/re
 const qseen = new Set(); const mergedQ = [];
 for (const q of [...priorQ, ...queue]) { const k = q.id + "|" + q.type; if (qseen.has(k)) continue; qseen.add(k); mergedQ.push(q); }
 writeFileSync("data/incoming/curate/review-queue.json", JSON.stringify(mergedQ, null, 1));
-console.error(`curate-merge: ${out.length} works | style ${stat.style} (+${stat.movAdded} new movements) | medium ${stat.medium} | notes+pins ${stat.notesPins} | style-queued ${stat.styleQueued} | risky queued ${queue.length}`);
+console.error(`curate-merge: ${out.length} works | style ${stat.style} (+${stat.movAdded} new movements) | medium ${stat.medium} | notes+pins ${stat.notesPins} | style-queued ${stat.styleQueued} | unplayable ${stat.unplayable} | medium-hidden ${stat.mediumHidden} | risky queued ${queue.length}`);
 if (newMovements.length) console.error("  new MOVEMENTS:", newMovements.map(m => m.key).join(", "));

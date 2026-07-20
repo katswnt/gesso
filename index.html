@@ -1287,7 +1287,7 @@ function tierCount(i){
 function workComplete(p){ if(!p)return false;
   const hasMed=!!(p.medium&&String(p.medium).trim());
   const hasMov=!!(p.style&&((typeof MOVEMENTS!=='undefined'&&MOVEMENTS[p.style])||p.styleKind==='culture'||p.styleKind==='movement'||p.styleKind==='period'||p.styleKind==='school'||p.styleKind==='tradition'||p.styleKind==='genre'));
-  return (hasMed||hasMov) && p.sensitive!=='remains'; } // human/ancestral remains are shown in Collections but never gamified
+  return (hasMed||hasMov) && p.sensitive!=='remains' && p.play!==false; } // remains + vision-judged-unplayable (featureless) works show in Collections but are never gamified
 function tierItems(i){
   const key=TIERS[i]&&TIERS[i].key;
   const frozen=key&&frozenTierItems(key);

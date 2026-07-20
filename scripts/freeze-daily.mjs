@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { simplifyMedium } from "./lib/domain.mjs";
 const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""))
-  .filter(p => p.sensitive !== "remains"); // human/ancestral remains are never scheduled into a daily
+  .filter(p => p.sensitive !== "remains" && p.play !== false); // never schedule remains, or works the vision audit judged unplayable (featureless — no visual signal to guess from)
 const overlay = JSON.parse(readFileSync("data/fame.js","utf8").replace("window.ARTEFACTUM_FAME=","").replace(/;\s*$/,""));
 const poolFame = Object.fromEntries(pool.map(p=>[p.id, p.fame||0])); // fallback for freshly-promoted works not yet in the overlay — matches buildIndexes
 const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);

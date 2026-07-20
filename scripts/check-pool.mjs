@@ -188,7 +188,8 @@ for(const p of pool){
   for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<today)continue;
     for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])){
       if(thinSet.has(id)) hard.push(`[thin-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} (no medium+no movement)`);
-      if(byId[id]?.sensitive==='remains') hard.push(`[remains-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} — human/ancestral remains must not be gamified`); } }
+      if(byId[id]?.sensitive==='remains') hard.push(`[remains-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} — human/ancestral remains must not be gamified`);
+      if(byId[id]?.play===false && date>today) hard.push(`[unplayable-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} — vision-judged featureless, must not be scheduled`); } }
   // LEDGER IMMUTABILITY: a served day (<= today) in daily-order MUST match the append-only ledger verbatim.
   // If it differs, a refreeze silently altered a day a player already saw — fail loudly.
   { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
