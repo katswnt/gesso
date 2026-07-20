@@ -76,6 +76,9 @@ for(const p of pool){
 { const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
   const byKey={}; for(const p of pool){ if(p.artist) (byKey[norm(p.artist)]=byKey[norm(p.artist)]||new Set()).add(p.artist); }
   for(const set of Object.values(byKey)) if(set.size>1) warn.push(`[artist-near-dup] ${[...set].join(" | ")}`); }
+  // NOTE: transliteration (Vasily/Wassily) + abbreviation (Hokusai/Katsushika Hokusai) variants aren't caught
+  // here — a generic detector produced too many false positives (Manet/Monet, Zhang Lu/Zhang Hong, Rembrandt/
+  // Rembrandt Peale share signatures but are different people). Fix those by hand when a screenshot surfaces one.
 
 // COPY-INTEGRITY gate: the v1->v2 note migration left broken reveal copy in works not yet curated —
 // note bodies cut off mid-thought ("..."), heads that are stripped Q&A fragments ("does this painting
