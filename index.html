@@ -321,9 +321,16 @@ const PLACE_ALIAS = {"united states":"united states of america","usa":"united st
   // historical Low-Countries regions → Belgium (where most such works were made)
   "flanders":"belgium","southern netherlands":"belgium","spanish netherlands":"belgium","austrian netherlands":"belgium","burgundian netherlands":"belgium","flemish region":"belgium",
   // German historical states → Germany
-  "prussia":"germany","bavaria":"germany","saxony":"germany","holy roman empire":"germany"};
+  "prussia":"germany","bavaria":"germany","saxony":"germany","holy roman empire":"germany",
+  // more historical polities + Italian cities/regions → modern country
+  "russian empire":"russia","austria-hungary":"austria","austria–hungary":"austria","ottoman turkey":"turkey","dutch republic":"netherlands","low countries":"netherlands","roman empire":"italy","roman republic":"italy","venice":"italy","lombardy":"italy","tuscany":"italy","naples":"italy","sicily":"italy","duchy of brabant":"belgium","indus valley":"pakistan","gandhara":"pakistan","asia minor":"turkey"};
 function placeCountry(place){ // resolve a work's place string to a COUNTRIES feature (or null)
-  const raw=String(place||"").replace(/\([^)]*\)/g," ").toLowerCase(); // drop "(London)", "(modern Istanbul, Turkey)"
+  const s=String(place||"");
+  // FIRST honor an explicit "(present-day X)" / "(modern …, X)" hint before discarding parens
+  const pd=s.match(/\((?:present[- ]day|modern|now|today)\s+([^)]+)\)/i);
+  const tryHit=seg=>{ seg=String(seg).trim().replace(/^attributed to\s+/,"").toLowerCase(); const a=PLACE_ALIAS[seg]||seg; return CO_BYNAME[a]||null; };
+  if(pd){ for(const seg of pd[1].split(/[,/]/)){ const h=tryHit(seg); if(h) return h; } }
+  const raw=s.replace(/\([^)]*\)/g," ").toLowerCase(); // drop remaining parens
   // try each comma/slash segment (e.g. "Florence, Italy" → italy; "England" → united kingdom via alias)
   for(let seg of raw.split(/[,/]/)){ seg=seg.trim().replace(/^attributed to\s+/,"");
     if(!seg) continue; const a=PLACE_ALIAS[seg]||seg; if(CO_BYNAME[a]) return CO_BYNAME[a]; }
