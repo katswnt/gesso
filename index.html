@@ -311,11 +311,23 @@ function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))
 const COUNTRIES = (window.ARTEFACTUM_COUNTRIES||[]);
 const CO_BYNAME = {}; for(const c of COUNTRIES) CO_BYNAME[c.n.toLowerCase()] = c;
 // map our place strings → Natural-Earth country names (only the mismatches; most match directly)
-const PLACE_ALIAS = {"united states":"united states of america","usa":"united states of america","u.s.":"united states of america","america":"united states of america","korea":"south korea","dr congo":"democratic republic of the congo","congo":"democratic republic of the congo","côte d'ivoire":"ivory coast","cote d'ivoire":"ivory coast","türkiye":"turkey","ottoman empire":"turkey","czech republic":"czechia","russia (soviet)":"russia","soviet union":"russia","ussr":"russia"};
+const PLACE_ALIAS = {"united states":"united states of america","usa":"united states of america","u.s.":"united states of america","america":"united states of america","korea":"south korea",
+  // Congo / Ivory Coast: map to the names countries.js actually uses ("Dem. Rep. Congo", "Côte d'Ivoire")
+  "dr congo":"dem. rep. congo","democratic republic of the congo":"dem. rep. congo","ivory coast":"côte d'ivoire","cote d'ivoire":"côte d'ivoire",
+  "türkiye":"turkey","ottoman empire":"turkey","byzantine empire":"turkey","constantinople":"turkey",
+  "czech republic":"czechia","bohemia":"czechia","russia (soviet)":"russia","soviet union":"russia","ussr":"russia","persia":"iran",
+  // UK constituent nations resolve to the United Kingdom polygon (so a Paris pin is NOT "right country" for England)
+  "england":"united kingdom","scotland":"united kingdom","wales":"united kingdom","northern ireland":"united kingdom","britain":"united kingdom","great britain":"united kingdom","uk":"united kingdom","u.k.":"united kingdom",
+  // historical Low-Countries regions → Belgium (where most such works were made)
+  "flanders":"belgium","southern netherlands":"belgium","spanish netherlands":"belgium","austrian netherlands":"belgium","burgundian netherlands":"belgium","flemish region":"belgium",
+  // German historical states → Germany
+  "prussia":"germany","bavaria":"germany","saxony":"germany","holy roman empire":"germany"};
 function placeCountry(place){ // resolve a work's place string to a COUNTRIES feature (or null)
-  let c=String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim().toLowerCase(); // strip "(Rome)", take first of "Nepal / Tibet"
-  if(!c) return null; c = PLACE_ALIAS[c]||c;
-  return CO_BYNAME[c]||null;
+  const raw=String(place||"").replace(/\([^)]*\)/g," ").toLowerCase(); // drop "(London)", "(modern Istanbul, Turkey)"
+  // try each comma/slash segment (e.g. "Florence, Italy" → italy; "England" → united kingdom via alias)
+  for(let seg of raw.split(/[,/]/)){ seg=seg.trim().replace(/^attributed to\s+/,"");
+    if(!seg) continue; const a=PLACE_ALIAS[seg]||seg; if(CO_BYNAME[a]) return CO_BYNAME[a]; }
+  return null;
 }
 function ptInRing(x,y,ring){ let inside=false; for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
   if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; }
