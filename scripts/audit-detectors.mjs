@@ -56,6 +56,16 @@ for (const p of pool) {
   const names=[...new Set(pool.map(p=>p.artist).filter(a=>a&&!skip.test(a)))].map(a=>({a,t:toks(a)})).filter(x=>x.t.size>=2); // require 2+ tokens to cut same-surname noise
   for(const A of names)for(const B of names){ if(A.a===B.a)continue; if(A.t.size<B.t.size && [...A.t].every(w=>B.t.has(w))) flag("artist-abbrev", { short:A.a, long:B.a }); } }
 
+// 10. NON-ARTWORK ENTITY tell: a scheduled work whose title is itself a country/place (a Wikidata place or
+//     monument entity that slipped into the artwork pool with an inflated fame score), or whose title exactly
+//     equals its own place field. Such an entity scores every category off something that isn't an artwork.
+{ const countryNames = new Set(Object.keys(CO));
+  for (const p of pool) { if (p.play === false || p.sensitive === "remains") continue;
+    const t = String(p.title || "").trim(), tl = t.toLowerCase();
+    const isCountry = countryNames.has(ALIAS[tl] || tl);
+    const titleIsPlace = t && p.place && tl === String(p.place).trim().toLowerCase();
+    if (isCountry || titleIsPlace) flag("non-artwork-entity", { id: p.id, title: t, place: p.place || "", fame: p.fame || 0 }); } }
+
 // 9 (optional, networked): Commons images under MINPX on the long side → too low-res
 if (process.argv.includes("--images")) {
   const MINPX = 800; const UA = "GessoDetectors/1.0 (kathryn.swint@gmail.com)";
@@ -74,7 +84,7 @@ if (process.argv.includes("--images")) {
 }
 
 // --- dashboard ---
-const order = ["coords-outside-country","place-unresolvable","region-vs-place","style-not-scored","culture-gap","blank-artist-scored","no-date-scored","artist-abbrev","low-res-image"];
+const order = ["coords-outside-country","place-unresolvable","region-vs-place","style-not-scored","culture-gap","blank-artist-scored","no-date-scored","artist-abbrev","non-artwork-entity","low-res-image"];
 console.log("\n===== BUG DETECTOR DASHBOARD =====");
 let total = 0;
 for (const k of order) { const n = (report[k]||[]).length; total += n; console.log(`  ${String(n).padStart(4)}  ${k}`); }
