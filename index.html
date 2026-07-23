@@ -2899,6 +2899,10 @@ function score(){
     if(it.y!=null) bumpMastery(String(centuryOf(it.y)),'byCentury',cells.when.pts>=MAX_CAT*0.75);
   }
   results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
+  // daily_complete fires HERE — at the final guess — not on the summary screen. A player who answers all 5
+  // then closes (or never taps "See final score") is still a real completion. Firing in the submit path also
+  // dedupes naturally: navigating back to the summary re-renders but never re-runs submit.
+  if(!infinite && tier && results.length===ROUNDS) track('daily_complete',{tier,score:resultSummary().grand,archive:runArchive});
   renderReveal(results[results.length-1]);
 }
 
@@ -3409,7 +3413,8 @@ function renderFinal(push=true){
   const summary=resultSummary(), {grand,gmax,bonus,share}=summary;
   lastFinal={...summary,results:results.slice(),tier,date:runDate||todayStr()};
   recordDailyScore(runDate||todayStr(),grand,tier); // records per-tier completion (any date); streak credit only for today
-  if(tier) track('daily_complete',{tier,score:grand}); // fires every daily finish (not just first-of-day)
+  // (daily_complete now fires at the final guess in the submit path — not here — so completions count even
+  //  when the player doesn't reach this summary screen, and revisiting this screen doesn't re-fire it.)
   const _streak=loadStreak().current, _showSupport=!runArchive&&!!tier&&_streak>=7&&supportEligible();
   // matrix
   const cols=["when","where","medium","style","artist"];
