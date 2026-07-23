@@ -2,7 +2,7 @@
 
 **A daily art-history guessing game — and, underneath it, a study in using a frontier LLM as a production QA system for a 5,948-work dataset.**
 
-Live: **[gesso.katswint.com](https://gesso.katswint.com)** · Built by [Kat Swint](https://katswint.com)
+Live: **[gesso.katswint.com](https://gesso.katswint.com)** · Built by [Kat Swint](https://katswint.com) · Product design by [Briana Das](https://brianadas.com/)
 
 Each day, players guess an artwork's **date, place of creation, medium, movement/culture, and artist** from its image, then get taught what to look for. The game is the visible half. The interesting half is the pipeline that keeps ~6,000 public-domain artworks correct, fairly scored, and honestly framed — with a large language model wired in as an auditor, not an author.
 
@@ -10,7 +10,7 @@ Each day, players guess an artwork's **date, place of creation, medium, movement
 
 ---
 
-## Why this is interesting (for an applied-AI / product reviewer)
+## Why this is interesting
 
 The runtime is deliberately tiny; the intelligence lives in the **data pipeline**. The core bet: a frontier model is unreliable as an author but valuable as a *reviewer* — if you box it in with structured prompts, a safe/risky split, deterministic gates, and human sign-off. Gesso is that bet, shipped:
 
@@ -110,13 +110,13 @@ Stated plainly, because knowing the gaps is the point:
 
 ## Human judgment vs. AI assistance
 
-Worth being explicit, since the project uses AI heavily and a reviewer should know exactly where the judgment is.
+Worth being explicit, since the project uses AI heavily — here's exactly where the human judgment lives.
 
 **I designed and own:** the pipeline architecture and its guardrails (the safe/risky split, the fail-closed gate, the detector-first discipline), the scoring and difficulty model, the daily-scheduling and immutability rules, the product and editorial decisions (the honesty framing, the taxonomy, the teaching design), and every threshold in the gate.
 
 **LLMs did, under that scaffolding:** bulk-drafted teaching notes and audited images *inside* a pipeline I built — every output passes through the safe/risky merge and the deterministic gate before it can ship. The notes are AI-drafted and human-audited via the image-grounded pass, not hand-written per work and not blindly committed. Audit coverage is reported honestly above rather than overclaimed.
 
-The skill on display isn't "wrote 6,000 captions" — it's **building the system that lets a model do that safely and provably.**
+The interesting part isn't "wrote 6,000 captions" — it's **building the system that lets a model do that safely and provably.**
 
 ---
 
