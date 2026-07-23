@@ -2474,6 +2474,7 @@ function startGame(key,dateStr,push=true){
   clearTimers();
   infinite=false; tier=key; runDate=dateStr||todayStr(); runArchive=!!dateStr&&dateStr!==todayStr();
   TRAIN=null; TRAIN_SPAN=null; game=dailyItems(tier,runDate); idx=0; results=[]; hintsUsed=0;
+  track('daily_start',{tier:key,archive:runArchive}); // funnel entry — pairs with daily_complete for activation
   renderRound();
 }
 function tierIndex(key){return Math.max(0,TIERS.findIndex(t=>t.key===key));}
@@ -2505,6 +2506,7 @@ function startInfinite(key,push=true){
   if(push)pushNav({v:'inf',key});
   clearTimers(); infinite=true; TRAIN=null; TRAIN_SPAN=null; tier=key; runDate=todayStr(); runArchive=false;
   game=practiceOrder(key); idx=0; results=[]; hintsUsed=0;
+  track('infinite_start',{tier:key});
   renderRound();
 }
 function renderInfiniteSummary(){
