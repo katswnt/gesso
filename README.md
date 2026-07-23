@@ -93,6 +93,7 @@ Images come from museum image services, Wikimedia Commons, and Vercel Blob (for 
 - **`npm test`** — unit tests (scoring, medium bucketing, module loader), a headless **DOM load-harness** (runs the real app script in a `vm` sandbox to catch load-time throws without a browser), the **fail-closed pool gate**, and a design gate. Advisory network audits run separately (`npm run audit`).
 - **CI** (`.github/workflows/ci.yml`) runs the network-free subset (`npm run test:ci`) on every push/PR.
 - **Tests read functions out of the shipped `index.html`** rather than duplicating them — so they exercise exactly the deployed code, not a copy that can drift.
+- **The LLM auditor is measured, not assumed** — a reproducible labeled eval ([`docs/auditor-eval.md`](docs/auditor-eval.md)) scores its wrong-art detection at 100% precision/recall on planted mismatches (see limitations for the near-miss caveat).
 
 ---
 
@@ -101,8 +102,7 @@ Images come from museum image services, Wikimedia Commons, and Vercel Blob (for 
 Stated plainly, because knowing the gaps is the point:
 
 - **Vision-audit coverage is 38%** (2,262 / 5,948), prioritized most-seen-first so the works players actually encounter are verified first. Burn-down continues in batches.
-- **No held-out eval for the LLM auditor yet.** The next artifact is a ~50-item human-labeled set (known-good / known-wrong images) to report **precision/recall on wrong-art detection** — turning "the model checks the images" into a measured claim.
-- **Analytics are instrumented but not yet wired to a funnel**, so engagement/learning outcomes aren't measured live yet. The event layer (`track()`) is provider-agnostic and buffered; connecting a sink is the unlock for the metrics story.
+- **The auditor eval covers *gross* mismatches, not near-misses (yet).** A reproducible 50-item labeled set ([`docs/auditor-eval.md`](docs/auditor-eval.md) · `scripts/eval-auditor.mjs`) scores the vision auditor at **100% precision/recall** on catching planted wrong-art — but those decoys are cross-region obvious mismatches. A *near-miss* decoy set (a different work by the same artist/era) is the harder next iteration.
 - **Harvest isn't frozen.** Wikidata is a living graph; re-running a harvest won't reproduce the pool byte-for-byte. Drift is caught after the fact by the audits, not prevented by a committed snapshot — a snapshot/lock is the fix.
 - **Modularize `index.html`** (see constraints above).
 
