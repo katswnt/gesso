@@ -28,13 +28,25 @@ const STYLED = new Set(["culture","movement","period","school","tradition","genr
 const report = {};
 const flag = (k, o) => (report[k] = report[k] || []).push(o);
 
+// overseas territories that legitimately sit far outside their parent country's mainland polygon
+const TERRITORIES = [
+  { re: /tahiti|french polynesia/i, lat: -17.65, lng: -149.45, km: 500 },
+  { re: /rapa nui|easter island/i, lat: -27.12, lng: -109.35, km: 250 },
+];
+
 for (const p of pool) {
   const playable = p.play !== false && p.sensitive !== "remains";
 
-  // 1. coords sit outside the named country (holding-museum / centroid mislocation — Rapa Nui, Russia-Siberia)
+  // 1. coords sit outside the named country (holding-museum / centroid mislocation). EXCEPT overseas territories,
+  //    which legitimately sit far outside the parent country's mainland polygon (Tahiti→France, Easter Island→Chile) —
+  //    when the place names such a territory and the coords are near its real point, the coords are correct, not a bug.
   if (playable && p.place && typeof p.lat === "number" && typeof p.lng === "number") {
     const c = placeCountry(p.place);
-    if (c && !nearCountry(p.lat, p.lng, c)) flag("coords-outside-country", { id: p.id, title: p.title, place: p.place, lat: p.lat, lng: p.lng, country: c.n });
+    if (c && !nearCountry(p.lat, p.lng, c)) {
+      const cos = Math.cos(p.lat * Math.PI / 180);
+      const inTerritory = TERRITORIES.some(t => t.re.test(p.place) && Math.hypot((p.lng - t.lng) * cos, (p.lat - t.lat)) * 111 <= t.km);
+      if (!inTerritory) flag("coords-outside-country", { id: p.id, title: p.title, place: p.place, lat: p.lat, lng: p.lng, country: c.n });
+    }
   }
   // 2. place can't resolve to a country → loose 360km "right country" scoring (the England/Paris bug)
   if (playable && p.place && !placeCountry(p.place)) flag("place-unresolvable", { id: p.id, title: p.title, place: p.place });

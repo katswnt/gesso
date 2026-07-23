@@ -62,6 +62,9 @@ Because the app is 100% inline JS, a meaningful `script-src` CSP would require e
 **Scoring constants are hand-tuned.**
 Distance radii, the date-difference curve, and movement-similarity weights are game-design values, not learned parameters — appropriate for launch, but not yet validated against a real player score distribution. See roadmap.
 
+**Pipeline writes are non-transactional — by design, and gated.**
+The data scripts are human-run, one at a time, and each mutating step prints "run the gate as its own step" rather than auto-committing. There's no multi-file transaction because the **fail-closed gate is the transaction boundary**: nothing reaches production until `check-pool` passes on the final state, so an interrupted mid-pipeline write can't ship. Atomic temp-write+rename is used for the single-file writes; a cross-file rollback would be over-engineering for a solo, gated, human-driven pipeline.
+
 ---
 
 ## Scoring & difficulty
