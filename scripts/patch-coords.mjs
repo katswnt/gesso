@@ -18,6 +18,14 @@ const FIX = {
   "http://www.wikidata.org/entity/Q1952284":  [52.37,   4.90],  // Low Countries → Amsterdam, Netherlands (was Wisconsin)
   "http://www.wikidata.org/entity/Q7934008":  [52.37,   4.90],  // Low Countries → Amsterdam, Netherlands (was Wisconsin)
   "wikidata:Q15284134":                       [36.69,  27.37],  // Knidos, Asia Minor → Knidos, Turkey (was Aegean Greece)
+  // exposed once the alias map resolved these historical places (coords were at the museum / wrong city):
+  "cleveland144961":                          [29.65,  91.14],  // Central Tibet → Lhasa, China (was Colombia)
+  "cleveland168322":                          [35.34,  25.13],  // Crete → Heraklion, Greece (was Istanbul)
+  "cleveland129799":                          [-8.11, -79.03],  // Central Andes, North Coast, Peru → Trujillo (was Washington DC)
+  "harvard192167":                            [34.01,  71.54],  // Gandhara → Peshawar, Pakistan (was Delhi)
+  "harvard288856":                            [40.42,  16.82],  // South Italy, Lucania → Metaponto, Italy (was Athens)
+  "harvard167822":                            [40.47,  17.24],  // South Italy, Apulia → Taranto, Italy (was Athens)
+  "harvard51225":                             [39.77,  64.42],  // Bukhara → Bukhara, Uzbekistan (was Delhi)
 };
 
 const pool = readGlobal("data/pool.js", "ARTEFACTUM_POOL");

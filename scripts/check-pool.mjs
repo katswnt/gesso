@@ -59,6 +59,10 @@ for(const p of pool){
   // nationality glued to a PERSONAL name (harvest artifact), e.g. "American Daniel Hudson Burnham". Skip anonymous
   // descriptors where the nationality IS the attribution ("Dutch 17th Century", "Florentine sculpture workshop").
   if(p.artist && /^(American|French|Italian|Dutch|German|Spanish|British|English|Flemish|Netherlandish|Belgian|Austrian|Russian|Japanese|Chinese|Korean|Indian|Mexican|Greek|Roman|Egyptian|Persian|Ottoman|Swiss|Swedish|Norwegian|Danish|Polish|Scottish|Irish|Canadian|Venetian|Florentine)\s+[A-Z][a-zA-Z.'-]+\s+[A-Z]/.test(p.artist) && !/(century|workshop|school|dynasty|period|culture|anonymous|unknown|master of|circle of|follower|after )/i.test(p.artist)) add(hard,"artist-nationality-prefix",p,`"${p.artist}"`);
+  // FAIR SCORING: never score a category whose answer field is blank — a player can't be marked right on a
+  // missing answer. (A prior process cleared style/artist without updating cats; this keeps them in sync.)
+  if(Array.isArray(p.cats) && p.cats.includes("artist") && (!p.artist || !String(p.artist).trim())) add(hard,"scores-blank-artist",p);
+  if(Array.isArray(p.cats) && p.cats.includes("style") && (!p.style || !String(p.style).trim())) add(hard,"scores-blank-style",p);
   // COPYRIGHT (local denylist; full check = audit-copyright.mjs)
   // PD_OK: works by a denylisted artist that are themselves verified public-domain by US publication date
   // (e.g. Steichen's 1904 "The Pond—Moonlight", first published 1906 → pre-1929 PD). Per-id, not per-artist.

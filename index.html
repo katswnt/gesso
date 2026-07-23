@@ -345,7 +345,7 @@ function radiusFor(place){for(const[re,r] of PLACE_RADIUS)if(re.test(place||""))
 const COUNTRIES = (window.ARTEFACTUM_COUNTRIES||[]);
 const CO_BYNAME = {}; for(const c of COUNTRIES) CO_BYNAME[c.n.toLowerCase()] = c;
 // map our place strings → Natural-Earth country names (only the mismatches; most match directly)
-const PLACE_ALIAS = {"united states":"united states of america","usa":"united states of america","u.s.":"united states of america","america":"united states of america","korea":"south korea",
+const PLACE_ALIAS = {"united states":"united states of america","usa":"united states of america","u.s.":"united states of america","america":"united states of america","korea":"south korea","bukhara":"uzbekistan","central iran":"iran","southwestern iran":"iran","tibet":"china","central tibet":"china","hejaz":"saudi arabia","crete":"greece","apulia":"italy","lucania":"italy","south italy":"italy","gandhara region":"pakistan",
   // Congo / Ivory Coast: map to the names countries.js actually uses ("Dem. Rep. Congo", "Côte d'Ivoire")
   "dr congo":"dem. rep. congo","democratic republic of the congo":"dem. rep. congo","ivory coast":"côte d'ivoire","cote d'ivoire":"côte d'ivoire",
   "türkiye":"turkey","ottoman empire":"turkey","byzantine empire":"turkey","constantinople":"turkey",
@@ -365,9 +365,11 @@ function placeCountry(place){ // resolve a work's place string to a COUNTRIES fe
   const tryHit=seg=>{ seg=String(seg).trim().replace(/^attributed to\s+/,"").toLowerCase(); const a=PLACE_ALIAS[seg]||seg; return CO_BYNAME[a]||null; };
   if(pd){ for(const seg of pd[1].split(/[,/]/)){ const h=tryHit(seg); if(h) return h; } }
   const raw=s.replace(/\([^)]*\)/g," ").toLowerCase(); // drop remaining parens
-  // try each comma/slash segment (e.g. "Florence, Italy" → italy; "England" → united kingdom via alias)
-  for(let seg of raw.split(/[,/]/)){ seg=seg.trim().replace(/^attributed to\s+/,"");
+  // try each comma/slash/semicolon segment (e.g. "Florence, Italy" → italy; "England" → united kingdom via alias)
+  for(let seg of raw.split(/[,/;]/)){ seg=seg.trim().replace(/^attributed to\s+/,"");
     if(!seg) continue; const a=PLACE_ALIAS[seg]||seg; if(CO_BYNAME[a]) return CO_BYNAME[a]; }
+  // last resort: a bare parenthetical that is itself a country ("Central Andes, North Coast (Peru)")
+  for(const m of s.matchAll(/\(([^)]+)\)/g)){ for(const seg of m[1].split(/[,/;]/)){ const h=tryHit(seg); if(h) return h; } }
   return null;
 }
 function ptInRing(x,y,ring){ let inside=false; for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
