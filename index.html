@@ -6,6 +6,40 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gesso — the daily art-guessing game</title>
+<meta name="description" content="Gesso is the daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught. Built by Kat Swint." />
+<meta name="author" content="Kat Swint" />
+<link rel="canonical" href="https://gesso.katswint.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Gesso" />
+<meta property="og:title" content="Gesso — the daily art-guessing game" />
+<meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then get taught. A daily art game built by Kat Swint." />
+<meta property="og:url" content="https://gesso.katswint.com/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:creator" content="@katswint" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Gesso",
+  "alternateName": "Gesso — the daily art-guessing game",
+  "url": "https://gesso.katswint.com/",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web",
+  "description": "The daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught.",
+  "creator": {
+    "@type": "Person",
+    "name": "Kat Swint",
+    "alternateName": ["Kathryn Swint", "Kat Swint"],
+    "url": "https://katswint.com",
+    "sameAs": ["https://katswint.com", "https://twitter.com/katswint"]
+  },
+  "contributor": {
+    "@type": "Person",
+    "name": "Briana Das",
+    "url": "https://brianadas.com/"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1550,7 +1584,7 @@ function header(filled,cur,withStamp){
   return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
     <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="training">training</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="acctav" type="button" data-route="account" title="Your account" aria-label="Your account" style="flex:0 0 auto;border:0;background:none;cursor:pointer;padding:0;margin-left:2px">${dabAvatar(loadIdentity().name,loadIdentity().color,30)}</button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier||'training'}</span>`:''}</div></div></div>`;
 }
-const ATTRIB=`<div class="attrib">Made by <a href="https://twitter.com/katswint" target="_blank" rel="noopener">Kat Swint</a> and <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a> with a little help from Claude Code and Codex</div>`;
+const ATTRIB=`<div class="attrib">Built by <a href="https://katswint.com" target="_blank" rel="me author noopener">Kat Swint</a> with a little help from Claude Code and Codex &middot; Design by <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a></div>`;
 
 // ---------- retention helpers ----------
 function todayStr(){const d=new Date();return localDateStr(d);}
