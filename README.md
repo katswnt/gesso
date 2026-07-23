@@ -1,102 +1,134 @@
 # Gesso
 
-Daily art-history guessing: GeoGuessr-style place, date, medium, movement, and artist clues for public-domain artworks.
+**A daily art-history guessing game — and, underneath it, a study in using a frontier LLM as a production QA system for a 5,948-work dataset.**
 
-> Screenshot/GIF placeholder: add a current gameplay capture here before sharing the portfolio.
+Live: **[gesso.katswint.com](https://gesso.katswint.com)** · Built by [Kat Swint](https://katswint.com)
 
-Live: [gesso.katswint.com](https://gesso.katswint.com)
+Each day, players guess an artwork's **date, place of creation, medium, movement/culture, and artist** from its image, then get taught what to look for. The game is the visible half. The interesting half is the pipeline that keeps ~6,000 public-domain artworks correct, fairly scored, and honestly framed — with a large language model wired in as an auditor, not an author.
 
-## What It Is
+<!-- TODO before sharing widely: drop a gameplay GIF here (reveal screen with pins + teaching notes is the best single frame). -->
 
-Gesso is a no-login, daily guessing game for art history. Each round shows an artwork and asks the player to identify when it was made, where it originated, its medium, its movement or culture, and optionally the artist. It is interesting technically because the app is intentionally small at runtime while the data pipeline does the heavy lifting: public-domain filtering, museum/Wikidata enrichment, recognizability ranking, daily freezing, image validation, and teaching-note generation.
+---
 
-The project is deliberately a vanilla-JS SPA with no build step. That keeps the deployed artifact inspectable and durable, but it raises the bar for code organization: `index.html` contains the app shell and client logic, `styles.css` contains the design system and components, and `data/*.js` ships precomputed static modules on `window`.
+## Why this is interesting (for an applied-AI / product reviewer)
 
-## Architecture
+The runtime is deliberately tiny; the intelligence lives in the **data pipeline**. The core bet: a frontier model is unreliable as an author but valuable as a *reviewer* — if you box it in with structured prompts, a safe/risky split, deterministic gates, and human sign-off. Gesso is that bet, shipped:
 
-- `index.html`: single-file SPA, routing, gameplay state, scoring, Leaflet maps, image fallback logic, local stats, and share cards.
-- `styles.css`: design tokens, responsive layout, result states, settings, maps, reveal cards, and utility components.
-- `data/pool.js`: artwork corpus loaded as `window.ARTEFACTUM_POOL`.
-- `data/fame.js` / `data/fame.json`: recognizability scores used for difficulty tiers.
-- `data/daily-order.js`: frozen per-tier daily rotation, by artwork ID.
-- `data/countries.js`: compact country polygons for point-in-country scoring.
-- `data/teach-works.js`, `data/hotspots.js`, `data/cues.js`: teaching notes, look-closer markers, and movement/culture cues.
-- `api/report.js`: Vercel serverless endpoint for “report an error” submissions, backed by Upstash/Vercel KV env vars.
-- `scripts/*.mjs`: Node data pipeline for pulling, normalizing, auditing, re-hosting, and freezing the corpus.
+- **LLMs as an image-grounded QA layer.** Vision agents download and *look at* each artwork, then judge 7 dimensions (is the image even the right work? is it playable? legible medium? framing? + teaching notes with pixel-pinned coordinates). Output is structured JSON that flows into a merge step.
+- **Hallucination guardrails by construction.** `curate-merge.mjs` **auto-applies only low-stakes fields** (style, medium, notes/pins) and **queues high-stakes ones** (title, date, coordinates, image swaps) for human review. The model can improve the dataset but can't silently corrupt its spine.
+- **A fail-closed gate the model can't talk its way past.** `check-pool.mjs` runs on every commit and in CI; a hard violation exits non-zero and blocks the ship. Copyright leaks, unmapped movements, coordinate/country mismatches, and "featureless work scheduled as a puzzle" are all *mechanically* impossible to release.
+- **"Turn every bug into a detector."** Each production bug I hit became a permanent, deterministic scan (`audit-detectors.mjs`) that runs on every change — so the class of bug can't recur silently.
+- **Cost-aware layering.** Cheap deterministic checks and *zero-token* Wikipedia text checks run first; the expensive vision pass is reserved for what only vision can catch, and works are audited in most-seen-first order.
 
-No bundler is required. Leaflet and fonts load from CDNs; generated data files are plain script tags.
+By the numbers: **5,948 works**, **2,262 image-audited (38%, most-seen tiers first)**, **126 pipeline scripts**, **11 serverless endpoints**, a **3,537-line no-build SPA**, **681 mapped art movements**.
 
-## Daily, Scoring, And Difficulty
+---
 
-Dailies are deterministic and frozen. `scripts/freeze-daily.mjs` writes `data/daily-order.js`; the client uses that ID order so every player receives the same five works for a given date and tier. If the frozen file is absent, the client falls back to a seeded rotation, but production should use the frozen order.
+## The pipeline
 
-Difficulty is based on recognizability, not intrinsic art-historical difficulty. Fame scores are derived from Wikidata sitelinks and pageviews, then sliced into tiers. Easy is intentionally canon-heavy because it reflects what broad audiences are likely to recognize; harder tiers expose more of the global corpus.
-
-Each core category is worth up to 2,500 points:
-
-- Date uses a tier-scaled year-difference curve with decade-level bullseyes.
-- Place gives full credit for the country where the work was physically made (its place of creation), with distance decay outside that country.
-- Medium uses a simplified artistic-medium taxonomy, not support material.
-- Movement/culture gives exact credit for exact matches and capped partial credit for related movements.
-- Artist is a bonus category with forgiving exact-name matching and conservative pool-derived partial credit.
-
-Hints subtract from core score only. Artist points are bonus points and do not define a Perfect; a Masterpiece is a Perfect plus exact artist credit.
-
-## Data And Licensing Discipline
-
-The corpus is restricted to public-domain or CC0-safe images. The working rule is US-safe public domain: creator died by 1955 and/or the work was published before 1930; FSA and US-government works are public domain regardless. `scripts/audit-copyright.mjs` audits Wikidata-sourced works against creator death years and writes review flags.
-
-Domain conventions are intentional:
-
-- Place/origin means where the work was physically made (its place of creation) — not the holding museum, and not the artist’s nationality.
-- Medium means artistic medium or process, not support.
-- Dailies must remain deterministic and shared by date/tier.
-- Secrets belong only in `.env` / `.env.local` or Vercel env vars; they are gitignored and must never be shipped in client data.
-
-Images come from mixed public-domain sources: museum image services, Wikimedia Commons, and Vercel Blob for sources that gatekeep or fail in normal browsers. `displaySrc()` loads a card-sized image; `hiRes()` fetches a larger source only when the zoom lightbox opens; `imgFail()` retries and then proxies through weserv before showing a graceful fallback.
-
-## Running Locally
-
-```bash
-python3 -m http.server 8000
+```
+harvest (Wikidata SPARQL + museum APIs)
+  → normalize + copyright filter (public-domain only; death-year gate + denylist)
+  → fame ranking (Wikidata sitelinks + pageviews → difficulty tiers)
+  → QA STACK ↓                                    → freeze daily schedule (deterministic, diversity-aware)
+      1. deterministic detectors    (structural bugs, no network)
+      2. zero-token text checks     (assigned style vs. Wikipedia intro)
+      3. image-grounded vision QA   (LLM views each image → structured JSON)
+      4. cross-field consistency    (date-vs-artist, culture-vs-place contradictions)
+  → curate-merge (SAFE fields auto-apply · RISKY fields → human review queue)
+  → check-pool GATE (fail-closed; in npm test + CI + pre-commit)
 ```
 
-Open `http://localhost:8000`. A local server is preferred because the app uses script-loaded data files and clean routes such as `/2026-06-18/easy`.
+Every stage is **resumable** (append-only ledgers track what's been processed) and **advisory-vs-blocking** by design: advisory audits surface backlogs and never block; only the deterministic gate can stop a release.
 
-Useful checks:
+**Key entry points:** `pull-*.mjs` / `build-pool.mjs` (source adapters: Met, AIC, Cleveland, Harvard, Smithsonian, V&A, Wikidata) · `consolidate.mjs` (dedupe + geocode merge) · `fame-score.mjs` (recognizability tiers) · `vision-next.mjs` → `curate-merge.mjs` (the vision QA loop) · `audit-detectors.mjs` (bug-class dashboard) · `check-pool.mjs` (the gate) · `freeze-daily.mjs` (deterministic schedule).
+
+---
+
+## Architecture & deliberate constraints
+
+These are choices, not defaults — here's the reasoning, including where each stops paying off.
+
+**No build step. Vanilla JS. No framework, no TypeScript, no bundler.**
+The deployed artifact is the source: inspectable, dependency-light, and durable (nothing rots when a build tool goes stale). For a static-data game with no server-rendered state, a framework would add supply-chain surface and CI complexity for little gain.
+*Where it stops paying:* `index.html` has grown to 3,537 lines in one inline script. The honest next step is to split it into several `<script src>` modules — which keeps the no-build constraint while restoring module boundaries. That refactor is scoped, not yet done.
+
+**Leaderboard trusts client-submitted scores (today).**
+Raw per-round guesses are stored server-side so scores can be **authoritatively re-computed** later (a documented "Phase 4"). The leaderboard is a social nudge, not a high-stakes ranking, so I shipped the loop first and deferred server-side replay. Known tradeoff, not an oversight — and the data to close it is already being captured.
+
+**No script-src Content-Security-Policy.**
+Because the app is 100% inline JS, a meaningful `script-src` CSP would require either `unsafe-inline` (which defeats the point) or build-time nonces (which conflicts with no-build). I ship the headers that *are* free and honest — `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` — and escape all user-set strings at render. A real CSP is one more reason the modularization above is worth doing.
+
+**Scoring constants are hand-tuned.**
+Distance radii, the date-difference curve, and movement-similarity weights are game-design values, not learned parameters — appropriate for launch, but not yet validated against a real player score distribution. See roadmap.
+
+---
+
+## Scoring & difficulty
+
+Each of five categories is worth up to 2,500 points, tuned to be *fair to a thoughtful guess*:
+- **Date** — tier-scaled year-difference curve with decade-level bullseyes; a non-linear timeline gives recent centuries more track (most works are post-1400) and handles BCE/CE.
+- **Place** — full credit for the country where the work was *made* (point-in-polygon over compact country geometry), with distance decay outside it, and partial credit for the right cultural region.
+- **Medium** — a simplified *artistic-medium* taxonomy (oil, bronze, print…), not raw support material.
+- **Movement/culture** — exact credit for exact matches, capped partial credit for related movements.
+- **Artist** — a bonus, not a gate; hints subtract from core score only.
+
+**Difficulty tracks recognizability, not art-historical obscurity** — and the product says so out loud. The home screen surfaces that "Easy" skews European *because the Western canon decides what's famous*, computed live from the pool. Difficulty is deterministic and **frozen**: every player gets the same five works per date/tier, and served days are immutable (a gate check blocks any silent re-write of the past).
+
+---
+
+## Data & licensing discipline
+
+The corpus is restricted to **public-domain / CC0-safe** images (US-safe rule: creator died by 1955 and/or published pre-1930; FSA and US-government works are PD regardless). `audit-copyright.mjs` checks Wikidata-sourced works against creator death years. Domain conventions are enforced, not assumed:
+- **Place = where the work was made**, not the holding museum and not the artist's nationality.
+- **Medium = artistic medium/process**, not support material.
+- **Secrets** live only in `.env` / Vercel env vars — gitignored, never shipped in client data. (The Supabase key in the client is the *publishable anon* key by design.)
+
+Images come from museum image services, Wikimedia Commons, and Vercel Blob (for hosts that gatekeep browsers); `displaySrc()` serves a card-sized image, `hiRes()` fetches full-res only on zoom, `imgFail()` retries → proxies → graceful fallback.
+
+---
+
+## Quality gates & tests
+
+- **`npm test`** — unit tests (scoring, medium bucketing, module loader), a headless **DOM load-harness** (runs the real app script in a `vm` sandbox to catch load-time throws without a browser), the **fail-closed pool gate**, and a design gate. Advisory network audits run separately (`npm run audit`).
+- **CI** (`.github/workflows/ci.yml`) runs the network-free subset (`npm run test:ci`) on every push/PR.
+- **Tests read functions out of the shipped `index.html`** rather than duplicating them — so they exercise exactly the deployed code, not a copy that can drift.
+
+---
+
+## Known limitations & roadmap
+
+Stated plainly, because knowing the gaps is the point:
+
+- **Vision-audit coverage is 38%** (2,262 / 5,948), prioritized most-seen-first so the works players actually encounter are verified first. Burn-down continues in batches.
+- **No held-out eval for the LLM auditor yet.** The next artifact is a ~50-item human-labeled set (known-good / known-wrong images) to report **precision/recall on wrong-art detection** — turning "the model checks the images" into a measured claim.
+- **Analytics are instrumented but not yet wired to a funnel**, so engagement/learning outcomes aren't measured live yet. The event layer (`track()`) is provider-agnostic and buffered; connecting a sink is the unlock for the metrics story.
+- **Harvest isn't frozen.** Wikidata is a living graph; re-running a harvest won't reproduce the pool byte-for-byte. Drift is caught after the fact by the audits, not prevented by a committed snapshot — a snapshot/lock is the fix.
+- **Modularize `index.html`** (see constraints above).
+
+---
+
+## Human judgment vs. AI assistance
+
+Worth being explicit, since the project uses AI heavily and a reviewer should know exactly where the judgment is.
+
+**I designed and own:** the pipeline architecture and its guardrails (the safe/risky split, the fail-closed gate, the detector-first discipline), the scoring and difficulty model, the daily-scheduling and immutability rules, the product and editorial decisions (the honesty framing, the taxonomy, the teaching design), and every threshold in the gate.
+
+**LLMs did, under that scaffolding:** bulk-drafted teaching notes and audited images *inside* a pipeline I built — every output passes through the safe/risky merge and the deterministic gate before it can ship. The notes are AI-drafted and human-audited via the image-grounded pass, not hand-written per work and not blindly committed. Audit coverage is reported honestly above rather than overclaimed.
+
+The skill on display isn't "wrote 6,000 captions" — it's **building the system that lets a model do that safely and provably.**
+
+---
+
+## Run it locally
 
 ```bash
-node --check scripts/audit-copyright.mjs
-node --check scripts/freeze-daily.mjs
-node scripts/audit-all.mjs
-node scripts/audit-all.mjs --images
+npm install
+npm run serve      # static server on :8000  (or: python3 -m http.server 8000)
+npm test           # full gate + audits
+npm run test:ci    # deterministic, network-free subset (what CI runs)
 ```
 
-## Deployment
+No build step — open the served `index.html`. Data ships as `window.ARTEFACTUM_*` globals in `data/*.js`. Clean routes like `/2026-06-18/easy` need a real server (hence `npm run serve`).
 
-The site deploys to Vercel from `main`. `vercel.json` rewrites clean SPA routes back to `index.html`, and `api/report.js` runs as a Vercel serverless function when configured with KV/Upstash environment variables.
-
-## Data Pipeline
-
-The pipeline is a set of small Node scripts rather than one monolithic ETL job. Important entry points:
-
-- `scripts/build-pool.mjs`: early corpus builder from Wikidata and the Met.
-- `scripts/pull-*.mjs`: source adapters for AIC, Cleveland, Harvard, Smithsonian, V&A, Wikidata subsets, and modern/public-domain slices.
-- `scripts/consolidate.mjs`: merges staged candidates into the pool with dedupe/geocoding checks.
-- `scripts/fame-score.mjs`, `scripts/make-fame-js.mjs`, `scripts/check-fame.mjs`: recognizability scoring and review.
-- `scripts/audit-data.mjs`, `scripts/audit-vocab.mjs`, `scripts/audit-p31.mjs`, `scripts/audit-copyright.mjs`, `scripts/audit-all.mjs`: data, vocabulary, entity, and copyright audits.
-- `scripts/check-images.mjs`: resumable image validation with Commons API batching.
-- `scripts/rehost-aic-blob.mjs`, `scripts/rehost-harvard-blob.mjs`: Vercel Blob re-hosting for fragile image hosts.
-- `scripts/enrich-dimensions.mjs`, `scripts/enrich-wd-medium.mjs`, `scripts/geo-p937.mjs`: enrichment/backfill passes.
-- `scripts/gen-teach*.mjs`, `scripts/merge-notes.mjs`, `scripts/hotspot-*.mjs`: teaching notes and look-closer marker generation.
-- `scripts/freeze-daily.mjs`: writes the frozen deterministic daily order.
-
-Several scripts require API keys (`HARVARD_KEY`, `SI_KEY`, `BLOB_READ_WRITE_TOKEN`) and should be run from a local environment or Vercel configuration, never from committed client code.
-
-## Design Decisions And Tradeoffs
-
-- Static data modules keep runtime simple and hosting cheap, but large generated files make initial load size a real performance constraint.
-- A single-file SPA is easy to deploy and inspect, but it concentrates product logic, rendering, and scoring in one file; comments and section boundaries have to carry more weight.
-- Fame-based difficulty makes the product approachable, but it inherits canon bias. The UI calls that out rather than pretending the bias is neutral.
-- Place scoring targets where the work was physically made (its place of creation) — not the holding museum and not the artist’s nationality — using country containment with border grace as a pragmatic approximation for a game.
-- Image reliability is handled defensively because public-domain image hosts vary widely in CORS, rate limits, file size, and mobile availability.
+**Stack:** vanilla-JS SPA · Leaflet maps · Vercel serverless (`api/*.js`) · Supabase (accounts) · Upstash Redis (share snapshots + rate limits) · Node ESM data pipeline · Wikidata/Wikimedia + open museum APIs (Met, AIC, Cleveland, Harvard, V&A, Smithsonian, and more).

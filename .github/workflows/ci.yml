@@ -1,0 +1,22 @@
+name: CI
+
+# Runs the deterministic, network-free quality gate on every push and PR:
+# the scoring/medium/static-module unit tests, the DOM load harness, the
+# fail-closed pool gate (check-pool), and the design gate. The advisory
+# network audits (audit-fields/place, copyright, images) are intentionally
+# NOT run here — they hit Wikidata/museum APIs and are run post-harvest.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run test:ci
