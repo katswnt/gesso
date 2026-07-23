@@ -40,10 +40,17 @@ Then judge these dimensions and emit one object per work to `vw-out-N.json` (exa
    black-and-white photo, a monochrome/grisaille/unfinished work). false drops MEDIUM from scoring
    so a player isn't marked wrong on a medium they can't see. Default true.
 
-6. **notes** — 5–7 look-closer notes {head, body}. head ≤ ~8 words; body 1–3 warm docent sentences,
-   jargon glossed. Ground ONLY in what you can SEE; never invent details. Pin the most pointable notes
-   with x,y as PERCENTAGES 0–100 (x left→right, y top→bottom). Aim 3–5 pins where supported; abstract/
-   damaged/featureless → "noPins": true. (Notes only apply downstream when image.ok===true.)
+6. **notes + FEATURE-ANCHORED pins** — 5–7 look-closer notes {head, body}. head ≤ ~8 words; body 1–3 warm
+   docent sentences, jargon glossed. Ground ONLY in what you can SEE; never invent details.
+   PIN PLACEMENT IS FEATURE-ANCHORED, not approximate: each pinned note must name ONE locatable thing (an
+   eye, a tool, a building, a hand, a texture, a signature), and its x,y must sit DIRECTLY ON that feature
+   as it actually appears in THIS image — look at where the feature is and measure it, don't estimate from
+   the composition. x,y are PERCENTAGES 0–100 (x left→right, y top→bottom). Sanity-check each pin: if the
+   note is about the smile, x,y is on the mouth — not the forehead, not the center of the canvas. Prefer 3–5
+   precise pins over more vague ones; a note with no single locatable spot (pure technique/mood) stays
+   UNPINNED (omit x,y). abstract/damaged/featureless work → "noPins": true.
+   This pass SUPERSEDES any earlier text-generated notes/pins for the work (many were placed without ever
+   viewing the image) — replace them wholesale with what you see. (Notes only apply downstream when image.ok===true.)
 
 7. **fields** (optional) — correct style/styleKind/medium ONLY when confident:
    `"fields":{"style":"...","styleKind":"culture|movement|period|school|tradition|genre","medium":"..."}`.
