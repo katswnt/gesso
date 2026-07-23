@@ -64,7 +64,10 @@ for (const p of pool) {
     const t = String(p.title || "").trim(), tl = t.toLowerCase();
     const isCountry = countryNames.has(ALIAS[tl] || tl);
     const titleIsPlace = t && p.place && tl === String(p.place).trim().toLowerCase();
-    if (isCountry || titleIsPlace) flag("non-artwork-entity", { id: p.id, title: t, place: p.place || "", fame: p.fame || 0 }); } }
+    // require the OTHER non-artwork tells too — a real artwork can be *titled* after a place (Exter's "Venice"),
+    // so only flag when it's also anonymous AND carries no artistic medium/style (i.e. a bare place entity).
+    const thin = anon(p.artist) && !(p.medium && String(p.medium).trim()) && !(p.style && String(p.style).trim());
+    if ((isCountry || titleIsPlace) && thin) flag("non-artwork-entity", { id: p.id, title: t, place: p.place || "", fame: p.fame || 0 }); } }
 
 // 9 (optional, networked): Commons images under MINPX on the long side → too low-res
 if (process.argv.includes("--images")) {
