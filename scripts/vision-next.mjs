@@ -55,6 +55,15 @@ outer: for (const d of dates) {
   }
 }
 
+// DEEP-POOL fallback: once the scheduled + easy-tier works are exhausted (the high-traffic set is
+// audited), keep the burn-down going by filling from the rest of the playable un-audited pool,
+// most-famous-first. This is what carries coverage past 100% of the calendar toward 100% of the pool.
+if (picked.length < COUNT) {
+  const rest = POOL.filter(p => p && p.play !== false && p.sensitive !== "remains" && !audited.has(p.id) && !seen.has(p.id))
+    .sort((a, b) => (b.fame || 0) - (a.fame || 0));
+  for (const p of rest) { if (picked.length >= COUNT) break; seen.add(p.id); picked.push({ id: p.id, firstDate: "deep-pool", tier: "deep" }); }
+}
+
 // Build the per-work input records the audit agents consume (mirrors the nw-in schema).
 const recs = picked.map(({ id, firstDate }) => {
   const p = byId.get(id) || {}; const c = CUES[id] || {};
