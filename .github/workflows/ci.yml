@@ -18,5 +18,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
+      # No install step: test:ci is pure local Node scripts (no runtime deps), and
+      # package-lock.json is gitignored, so `npm ci` can't run in a fresh checkout.
       - run: npm run test:ci
