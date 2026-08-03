@@ -1367,7 +1367,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   const tabs=TRAIN_FAMS.map(([cat,lbl])=>`<button class="catpick${__trainCat===cat?' on':''}" data-tcat="${cat}" role="tab" aria-selected="${__trainCat===cat}">${lbl}</button>`).join('');
   // ---- stacked drill groups ----
   let drill;
-  if(!groups.length){ drill=`<div class="mono" style="font-size:12px;color:var(--faint);padding:4px 0 4px">Nothing yet — training on all ${POOL.length.toLocaleString()} works.</div>`; }
+  if(!groups.length){ drill=`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);padding:4px 0">No focus selected. Select an era, place, movement, medium, or artist above to start training or start training on all ${POOL.length.toLocaleString()} works straight away.</div>`; }
   else { drill=groups.map((g,i)=>{
       const chips=g.vals.map((v,ii)=>`${ii>0?'<span class="orw">or</span>':''}<span class="gchip">${esc(trainLabel(g.fam,v))} <b class="trm" data-tf="${g.fam}" data-tv="${trainEnc(v)}" role="button" aria-label="remove">${ICONS.x}</b></span>`).join(' ');
       const rail=i>0?`<div class="andrail"><span class="b">AND</span><span class="r"></span></div>`:'';
@@ -1376,37 +1376,35 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   // ---- narrowing funnel (cumulative, real counts) ----
   const rounds=Math.max(1,Math.round(cnt/5));
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 40px;max-width:640px;margin:0 auto">
-    <div class="kick" style="color:var(--accent)">Gesso · Training</div>
-    <div style="font:800 28px Archivo;margin:2px 0 6px">What do you want to practise?</div>
-    <div style="color:var(--muted);font-size:14px;margin-bottom:18px">Search or browse to add filters. The count updates as you go, so you always know what you'll get. Won't affect your streak or stats.</div>
+    <div style="font:400 2rem/1.1 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:10px">training</div>
+    <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-bottom:18px">Search or browse to add filters. The count updates as you go, so you always know what you'll get. Won't affect your streak or stats.</div>
 
     <div style="position:relative;margin-bottom:18px">
-      <div class="tsearchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="tsearch" type="text" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" style="flex:1;border:none;outline:none;background:transparent;font:500 14px Archivo;color:var(--ink)"/></div>
-      <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:9px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
+      <div class="tsearchbox"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="tsearch" type="text" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" style="flex:1;border:none;outline:none;background:transparent;font:400 0.875rem/1 'Manrope',sans-serif;color:var(--ink)"/></div>
+      <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:2px;box-shadow:0 8px 24px rgba(35,32,26,.12);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
     </div>
 
     <div role="tablist" aria-label="Browse by category" style="display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line)">${tabs}</div>
     <div id="tcatopts" style="display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 4px"></div>
     <div id="tcatmore" class="mono" style="font-size:10px;color:var(--faint);padding:0 0 4px"></div>
 
-    <div class="seclbl" style="margin:16px 0 10px">Your drill</div>
+    <div style="font:400 1.25rem/1 'Faculty Glyphic',sans-serif;color:var(--ink);margin:20px 0 10px">your training plan</div>
     <div id="tgroups" style="display:flex;flex-direction:column;margin-bottom:4px">${drill}</div>
 
     <div class="tcount" aria-live="polite" style="margin-top:16px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
-        <span style="display:flex;align-items:baseline;gap:7px"><b class="tab" style="font:800 26px Archivo;color:var(--accent)">${cnt.toLocaleString()}</b><span class="mono" style="font-size:11px;color:var(--muted)">works match</span></span>
-        <button id="tbreaktog" class="mono" style="background:none;border:none;font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--accent-underline)">${__trainBreak?'hide':'show'} breakdown</button>
+        <span style="display:flex;align-items:baseline;gap:7px"><b class="tab" style="font:400 2rem/1 'Faculty Glyphic',sans-serif;color:var(--accent)">${cnt.toLocaleString()}</b><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">works match</span></span>
+        <button id="tbreaktog" style="background:none;border:none;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--accent-underline);padding:0">${__trainBreak?'hide':'show'} breakdown</button>
       </div>
       <div id="tnarrow" style="margin-top:12px;${__trainBreak?'display:flex':'display:none'};flex-direction:column;gap:6px">${trainFunnel(T,cnt)}</div>
-      <div class="mono" style="font-size:11px;margin-top:10px;${cnt<MIN_TRAIN?'color:var(--miss);font-weight:600':'color:var(--muted)'}">${cnt<1?'No works match — loosen a filter.':cnt<MIN_TRAIN?`Only ${cnt} works — loosen a filter for a fuller drill.`:`about ${rounds} rounds before any repeat`}</div>
+      <div style="font:400 0.875rem/1 'Manrope',sans-serif;margin-top:10px;${cnt<MIN_TRAIN?'color:var(--miss)':'color:var(--muted)'}">${cnt<1?'No works match — loosen a filter.':cnt<MIN_TRAIN?`Only ${cnt} works — loosen a filter for a fuller drill.`:`about ${rounds} rounds before any repeat`}</div>
     </div>
 
     <div class="seclbl" style="margin:18px 0 9px">Focus</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:8px;font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
 
     <button class="btn" id="tstart" style="width:100%${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button>
-    <button class="btn2" data-route="home" style="margin-top:12px">← Back to home</button>
   </div></div>`;
   renderTrainCat();
   // ---- wire search ----
@@ -1415,7 +1413,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
     const hits=V.filter(v=>norm(v.label).includes(q)).slice(0,10);
     res.style.display='block';
     res.innerHTML=hits.length?hits.map(v=>{ const on=T.facets[v.fam].has(v.val); const tag=v.tag||(TRAIN_FAMS.find(f=>f[0]===v.famKey)||[])[1]||v.famKey;
-      return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:600 14px Archivo">${esc(v.label)}</span></span><span class="mono" style="font-size:11px;color:${on?'var(--accent)':'var(--faint)'}">${on?'added':v.count}</span></div>`;
+      return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:400 0.875rem/1 'Manrope',sans-serif;color:var(--ink)">${esc(v.label)}</span></span><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:${on?'var(--accent)':'var(--muted)'}">${on?'added':v.count}</span></div>`;
     }).join(''):`<div class="sr" style="cursor:default;color:var(--faint)">No match for "${esc(s.value)}"</div>`;
     res.querySelectorAll('[data-tf]').forEach(r=>r.onclick=()=>{ trainToggle(r.dataset.tf,r.dataset.tv); s.value=''; res.style.display='none'; renderTraining(false); });
   };
@@ -1437,9 +1435,9 @@ function renderTrainCat(){ const el=document.getElementById('tcatopts'), more=do
   const fams=TRAIN_TAB_FAMS[__trainCat]||[]; const all=trainVocab().filter(v=>fams.includes(v.fam));
   const show=all.slice(0,8);
   el.innerHTML=show.map(v=>{ const on=__train.facets[v.fam].has(v.val);
-    return `<button class="opt${on?' on':''}" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}">${esc(v.label)}<span class="ct">${v.count}</span></button>`;
+    return `<button class="pill${on?' sel':''}" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}">${esc(v.label)} <span style="opacity:.55">${v.count}</span></button>`;
   }).join('');
-  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ trainToggle(b.dataset.tf,b.dataset.tv); renderTraining(false); });
+  el.querySelectorAll('.pill[data-tf]').forEach(b=>b.onclick=()=>{ trainToggle(b.dataset.tf,b.dataset.tv); renderTraining(false); });
   more.textContent = all.length>show.length ? `+ ${all.length-show.length} more — type to search above` : 'type to search above for more';
 }
 function trainFunnel(T,finalCnt){ const groups=trainGroups(T);
