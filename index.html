@@ -2427,7 +2427,7 @@ function renderStart(dateStr,push=true){
     <div class="practwo">
       <div class="practice">
         <div class="pinf">${ICONS.infinity}</div>
-        <div class="ptxt"><div class="h">Infinite</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in.</p></div>
+        <div class="ptxt"><div class="h">Endless</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in.</p></div>
         <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
       </div>
       <div class="practice">
@@ -2557,7 +2557,7 @@ function renderInfiniteSummary(){
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Infinite session &middot; '+esc(tierName)}</span>
+        <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Endless session &middot; '+esc(tierName)}</span>
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>
@@ -2672,7 +2672,7 @@ function renderRound(){
         ${(infinite&&(HOTSPOTS[it.id]||[]).length)?`<button type="button" id="hottoggle" class="btn" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;font-size:13px;padding:8px 12px">${LOOK_EYE} Reveal look-closer markers</button>`:''}
         <div class="cap"><span>FIG.&nbsp;${idx+1} — UNIDENTIFIED</span><span>${it.dim&&String(it.dim).trim()?('SIZE &approx; '+esc(fmtDim(it.dim))):esc((it.cats.includes('medium')?'MEDIUM UNKNOWN':(it.medium||'UNKNOWN MEDIUM')).toUpperCase())}</span></div>
         <div class="hintbox">
-          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`&minus;${HINT_COST} each &middot; <span id="hintsleft">&infin;</span> in infinite mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
+          <div class="hinthd"><span class="hinthl">Stuck?</span><span class="hintmeta">${infinite?`&minus;${HINT_COST} each &middot; <span id="hintsleft">&infin;</span> in endless mode`:`&minus;${HINT_COST} each &middot; <span id="hintsleft">${HINT_LIMIT}</span> left`}</span></div>
           <div class="hintchips" id="hintchips"></div>
           <div class="hinttext" id="hintout" style="display:none"></div>
         </div>
