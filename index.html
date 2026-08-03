@@ -2182,7 +2182,7 @@ function renderReveal(r){
     </div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:''}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${(HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map((h,i)=>{const n=h.n>0?h.n:i+1;return `<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${n-1}" title="${esc((study.cues||[])[n-1]||'')}">${n}</button>`;}).join('')}</div>`:''}</div>
         <div class="worktitle">${esc(it.title)}</div>
         ${it.artist?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:6px">${esc(it.artist)}</div>`:''}
         <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--ink);margin-top:12px">${esc(firstSentence)}</div>
