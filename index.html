@@ -18,7 +18,7 @@
 </head>
 <body>
 <!-- LAYOUT-MOCK A/B TOGGLE (staging only): default shows the proposed tweaks; add ?orig to the URL to see Briana's original layout. Remove this block when a direction is chosen. -->
-<script>document.documentElement.classList.add(new URLSearchParams(location.search).has('orig')?'mock-orig':'mock-tweaks');</script>
+<script>(function(){var p=new URLSearchParams(location.search);document.documentElement.classList.add(p.has('orig')?'mock-orig':'mock-tweaks');if(p.has('blue'))document.documentElement.classList.add('mock-blue');})();</script>
 <div class="wrap"><div id="stage"></div></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1618,7 +1618,7 @@ function renderStart(dateStr,push=true){
       </button>`).join('')}
     </div>
     ${replay?'':`<div style="text-align:center;padding:20px 24px 0">
-      <div style="text-align:center;margin-bottom:8px"><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">or play in learning mode</span></div>
+      <div style="text-align:center;margin-bottom:8px"><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)">or play in endless mode</span></div>
       <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px">
         ${TIERS.map((t,i)=>`<button class="navbtn inf" data-inf="${t.key}"><span style="color:${TDCOL[i]};display:inline-flex;align-items:center;vertical-align:middle;margin-right:5px">${DIAMOND_SVG}</span>${t.label.toUpperCase()}</button>`).join('')}
       </div>
@@ -1733,7 +1733,7 @@ function renderInfiniteSummary(){
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Infinite session &middot; '+esc(tierName)}</span>
+        <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Endless session &middot; '+esc(tierName)}</span>
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>

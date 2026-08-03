@@ -118,8 +118,8 @@
   input#yr.nudge::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-9px;background:var(--accent);transform:rotate(45deg);border:none;border-radius:0;cursor:grab}
   input#yr.nudge::-moz-range-track{height:1px;background:var(--ink);border-radius:0}
   input#yr.nudge::-moz-range-thumb{width:18px;height:18px;background:var(--accent);transform:rotate(45deg);border:none;border-radius:0;cursor:grab}
-  body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 1.6s ease-in-out 2}
-  body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 1.6s ease-in-out 2}
+  body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 0.6s ease-in-out 2}
+  body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 0.6s ease-in-out 2}
   .timeline-line-wrap{display:flex;align-items:center;gap:6px;margin:14px 0 0}
   .timeline-end-d{display:inline-flex;flex-shrink:0;color:var(--ink)}
   .timeline-line-mid{flex:1;min-width:0}
@@ -571,8 +571,8 @@
   .dragtag{font:600 11px 'Manrope',monospace;color:var(--accent);margin-left:7px}
   .dragslide{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;font:600 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
   @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}
-  body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 1.6s ease-in-out 2}
-  body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 1.6s ease-in-out 2}
+  body.motion-ok input#yr.nudge::-webkit-slider-thumb{animation:nudge 0.6s ease-in-out 2}
+  body.motion-ok input#yr.nudge::-moz-range-thumb{animation:nudge 0.6s ease-in-out 2}
   @keyframes tapPulse{0%{transform:translate(-50%,-50%) scale(.6);opacity:.85}70%{transform:translate(-50%,-50%) scale(1.6);opacity:0}100%{opacity:0}}
   .maptap{position:absolute;left:50%;top:50%;width:34px;height:34px;border:2px solid var(--accent);border-radius:50%;pointer-events:none;z-index:500;transform:translate(-50%,-50%)}
   body.motion-ok .maptap{animation:tapPulse 1.8s ease-out 3}
@@ -648,3 +648,7 @@
     html.mock-tweaks .study-grid{grid-template-columns:1fr}
     html.mock-tweaks .study-grid>div:last-child{border-left:none;border-top:1px solid var(--line-card)}
   }
+  /* BLUE PRIMARY variant (add ?blue to the URL) — revert the hero "lock in & submit" / "next"
+     CTA from near-black back to the indigo accent, to see the blue energy restored. */
+  html.mock-blue .submit-cta{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+  html.mock-blue .submit-cta:hover{background:#1a2596!important;border-color:#1a2596!important;color:#fff!important}
