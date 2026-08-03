@@ -17,6 +17,8 @@
 <link rel="stylesheet" href="/styles.css?v=4">
 </head>
 <body>
+<!-- LAYOUT-MOCK A/B TOGGLE (staging only): default shows the proposed tweaks; add ?orig to the URL to see Briana's original layout. Remove this block when a direction is chosen. -->
+<script>document.documentElement.classList.add(new URLSearchParams(location.search).has('orig')?'mock-orig':'mock-tweaks');</script>
 <div class="wrap"><div id="stage"></div></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

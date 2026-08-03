@@ -623,3 +623,28 @@
   body.motion-ok .narr .bar > i{transition:width .35s cubic-bezier(.2,.7,.25,1)}
   .tfocus{border:1px solid var(--line-card);background:transparent;color:var(--ink);border-radius:2px!important}
   .tfocus.on{border-color:var(--accent);background:var(--accent);color:#fff}
+
+  /* ============================================================================
+     LAYOUT MOCKS — Kat's instinct rendered against Briana's original.
+     Default page = these tweaks (html.mock-tweaks); add ?orig to the URL to see
+     the original (html.mock-orig, which these rules don't touch). Staging only.
+     ============================================================================ */
+  /* ROUND PAGE — the timeline stays FULL-WIDTH (dragging to a precise year needs the
+     horizontal room — that's almost certainly why Briana made it wide), but we strip the
+     banner weight so it no longer reads as the headline: smaller year readout, lighter
+     label, tighter padding. Width keeps precision; reduced weight fixes "time feels most
+     important." */
+  @media(min-width:961px){
+    html.mock-tweaks .roundtimeline{padding:8px 24px 4px}
+    html.mock-tweaks .roundtimeline .year{font-size:1.4rem}
+    html.mock-tweaks .roundtimeline .roundhd{font-size:1rem}
+  }
+  /* REVEAL PAGE — asymmetric editorial columns: a slimmer study-notes rail + a wider
+     follow-ups column, divided by a rule so the unequal item counts (few notes vs many
+     questions) read as intentional newspaper columns, not a dead bottom-left gap. */
+  html.mock-tweaks .study-grid{grid-template-columns:minmax(0,0.82fr) minmax(0,1.18fr)}
+  html.mock-tweaks .study-grid>div:last-child{border-left:1px solid var(--line-card)}
+  @media(max-width:680px){
+    html.mock-tweaks .study-grid{grid-template-columns:1fr}
+    html.mock-tweaks .study-grid>div:last-child{border-left:none;border-top:1px solid var(--line-card)}
+  }
