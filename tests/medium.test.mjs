@@ -6,7 +6,7 @@ import { simplifyMedium as libSimplify } from "../scripts/lib/domain.mjs";
 
 // extract the client's simplifyMedium straight from index.html so we test the shipped code
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?return tidyFallback\(raw\);\s*\}/);
+const fnSrc = html.match(/function simplifyMedium\(s\)\{[\s\S]*?tidyFallback\(raw\);\s*\}/);
 if(!fnSrc) throw new Error("could not extract client simplifyMedium from index.html");
 const clientSimplify = new Function(fnSrc[0] + "\nreturn simplifyMedium;")();
 
@@ -17,7 +17,7 @@ const CASES = [
   ["Gelatin silver print", "Photograph"],   // process, not the silver
   ["Silver", "Silver"],                       // a genuine silver object
   ["Copper", "Copper"],                       // not Bronze
-  ["Engraving on copperplate", "Woodblock print"], // print signal wins over copper
+  ["Engraving on copperplate", "Engraving"], // intaglio print, distinct from East-Asian woodblock
   ["Bronze", "Bronze"],
   ["Wood", "Wood"],
   ["Carved olive pit", "Wood"],               // fruit-stone carving → Wood, not Mixed media
@@ -37,11 +37,17 @@ const CASES = [
   ["gesso", "Gesso"],
   ["unclassified material, secondary material", "Unclassified material"],
   ["verbose unclassified material record", "Verbose"],
+  ["Carving", ""],                            // technique, not a material → dropped (no guess/score)
+  ["carved", ""],
+  ["Carved ivory", "Ivory"],                  // material still wins when present
   ["", ""],
   ["—", ""],
-  ["mixed media on paper", "Mixed media"],
+  ["mixed media on paper", "Mixed media"],   // mixed media IS a valid, guessable answer
   ["mixed-media collage", "Mixed media"],
   ["assemblage of found plastic and wire", "Mixed media"],
+  ["Silver, gold, and enamel", "Silver"],    // composite → bucket by primary (first-named) material
+  ["Silver, gilt", "Silver"],
+  ["Hammered brass inlaid with gold, silver, and black paste", "Bronze"], // brass basin → primary metal, guessable
 ];
 
 let pass=0, fail=0;
