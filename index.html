@@ -2826,13 +2826,22 @@ function score(){
   const it=game[idx], cells={}, D=dcfg();
   // The categories actually asked this round (work's cats, minus single-pin "given" facets, minus FOCUS).
   const ACT=activeCatsFor(it); const asked=c=>ACT.includes(c);
-  // when (leniency scales with difficulty; 🎯 bullseye always = within a real decade)
+  // WHEN — scored in TIMELINE-POSITION space, not raw years. The when-slider is non-linear
+  // (posToYear/yearToPos): ancient eras are compressed because their dates are only knowable to the
+  // century/period, while recent centuries get most of the track. Scoring the guess's distance ON THE
+  // SLIDER makes the accuracy window self-calibrate to the era — the same "close" is ~a decade in the
+  // 1900s but ~2 centuries in 2500 BCE, which is exactly the tolerance an art historian would call fair:
+  // placing a 2500 BCE work at 2200 BCE is expert-level, and a "circa" catalogue date never had decade
+  // precision to begin with. (In training the same helpers honor TRAIN_SPAN, so the window also tracks
+  // the narrowed drill slider.) timeMult still layers each tier's leniency on top.
   if(asked('when')){
   const [lo,hi]=dateRange(it); const ranged=lo!==hi;
-  const dy = guess.year<lo ? lo-guess.year : guess.year>hi ? guess.year-hi : 0; // 0 if inside the range
-  const ts=timeScore(Math.round(dy/D.timeMult)), bull=!!ts.bull;
+  const dy = guess.year<lo ? lo-guess.year : guess.year>hi ? guess.year-hi : 0; // REAL years outside the range — for the message only
+  const gy = guess.year<lo ? lo : guess.year>hi ? hi : guess.year;              // nearest in-range year
+  const pd = Math.abs(yearToPos(guess.year)-yearToPos(gy));                     // slider-distance to the range (0 if inside)
+  const ts=timeScore(Math.round(pd/D.timeMult)), bull=!!ts.bull;
   cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtDate(it),
-    note:bull?(dy===0?(ranged?"inside the date range":"right to the decade"):dy<=10?"right to the decade":"close enough — bullseye"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+    note:bull?(dy===0?(ranged?"inside the date range":"right to the decade"):dy<=15?"right to the decade":dy<=75?"right generation":"right period"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   }
   // where (distance falloff is gentler on easy, steeper on hard)
   if(asked('where')){
