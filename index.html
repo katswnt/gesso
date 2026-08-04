@@ -14,7 +14,7 @@
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cpath%20fill='%232230b8'%20d='M8%2034C8%2017%2021%206%2037%2010c14%204%2023%2018%2017%2032-5%2013-22%2018-35%2011C11%2049%207%2042%208%2034Z'/%3E%3Ccircle%20cx='25'%20cy='25'%20r='7'%20fill='%23f6f4ee'%20fill-opacity='.82'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css?v=4">
+<link rel="stylesheet" href="/styles.css?v=5">
 </head>
 <body>
 <!-- LAYOUT-MOCK A/B TOGGLE (staging only): default shows the proposed tweaks; add ?orig to the URL to see Briana's original layout. Remove this block when a direction is chosen. -->
@@ -2186,7 +2186,7 @@ function renderRound(){
         <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
       </div>
     </div>
-    <div class="tltick-wrap"><div class="tltick-inner">${(()=>{const lo=TRAIN_SPAN?TRAIN_SPAN.lo:MINY, hi=TRAIN_SPAN?TRAIN_SPAN.hi:MAXY;const start=Math.ceil(lo/500)*500;const tt=[];for(let y=start;y<=2000;y+=500){if(hi-y<100)continue;const yy=y===0?-1:y;const major=y%1000===0;const milestone=y===start||y===0;tt.push({y:yy,major,milestone});}tt.push({y:hi,major:true,milestone:true});return tt.map(({y,major,milestone})=>`<div class="tltick ${major?'major':'minor'}${milestone?' milestone':''}" style="left:${(yearToPos(y)/10).toFixed(2)}%"><span class="tltick-lb">${fmtYear(y)}</span></div>`).join('');})()}</div></div>`}); n++;
+    <div class="tltick-wrap"><div class="tltick-inner">${(()=>{const lo=TRAIN_SPAN?TRAIN_SPAN.lo:MINY, hi=TRAIN_SPAN?TRAIN_SPAN.hi:MAXY;const start=Math.ceil(lo/500)*500;const tt=[];for(let y=start;y<=2000;y+=500){if(hi-y<100)continue;const yy=y===0?-1:y;const major=y%1000===0;const milestone=y===start||y===0;tt.push({y:yy,major,milestone});}tt.push({y:hi,major:true,milestone:true});let lastLab=-99;return tt.map(({y,major,milestone},i)=>{const pos=yearToPos(y)/10;const showLb=i===0||i===tt.length-1||pos-lastLab>=9;if(showLb)lastLab=pos;return `<div class="tltick ${major?'major':'minor'}${milestone?' milestone':''}" style="left:${pos.toFixed(2)}%">${showLb?`<span class="tltick-lb">${fmtYear(y)}</span>`:''}</div>`;}).join('');})()}</div></div>`}); n++;
   const naField=(label,icon,reason)=>({na:true, html:`<div class="roundhd"><span style="color:var(--faint)">—</span>${DIA}<span style="color:var(--muted)">${label}</span></div>
       <div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
   const drillAxis = TRAIN && TRAIN.axis;
@@ -2208,13 +2208,13 @@ function renderRound(){
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   const hideMap = !show('where');
-  const whereN=n; n++;
   let artistHTML='';
   if(show('artist')){
     artistHTML=`<div class="roundhd"><span>${n}</span>${DIA}<span>attributed to</span><span style="font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);margin-left:auto">bonus</span></div>
       <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`; n++;
   } else artistHTML=naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')).html;
+  const whereN=n; n++;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet roundsheet">
     <div class="roundwrap">
       <div class="roundsidebar">
@@ -2245,13 +2245,13 @@ function renderRound(){
           ${fields.filter(f=>f.na&&f.html&&!/timeline<\/span>/.test(f.html)).length?'':''}
           ${(!show('medium'))?`<div>${naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')).html}</div>`:''}
           ${(!show('style'))?`<div>${naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')).html}</div>`:''}
+          <div>${artistHTML}</div>
           ${hideMap?`<div><div class="roundhd"><span style="color:var(--faint)">—</span>${DIA}<span style="color:var(--muted)">place of origin</span></div><div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${naReason('where','Hidden in this drill.')}</div></div>`:`<div>
             <div class="roundhd"><span>${whereN}</span>${DIA}<span>place of origin</span></div>
             <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'IBM Plex Mono',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
-            <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"><span class="maptap" id="maptap"></span></div>
+            <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
             <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:6px">tap to pin · pinch or use +/&minus; to zoom</div>
           </div>`}
-          <div>${artistHTML}</div>
         </div>
       </div>
     </div>
@@ -2748,7 +2748,8 @@ function renderReveal(r,ri,push=true){
       ${mapHTML}
     </div>`;
   };
-  const allCats=[...r.coreCats,...(r.cells.artist?['artist']:[])];
+  // reveal order MATCHES the round-page input order: timeline, medium, movement, artist(bonus), place
+  const allCats=['when','medium','style','artist','where'].filter(c=>c==='artist'?!!r.cells.artist:r.coreCats.includes(c));
   const notScoredRow=(label,detail)=>`<div class="scrow">
     <div class="scrow-hd"><span style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${label}</span><span style="font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted)">not scored</span></div>
     <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${detail}</div>
@@ -2826,12 +2827,12 @@ function renderReveal(r,ri,push=true){
       </div>
     </div>
       <div style="margin-top:8px;padding:0 24px;text-align:center">${studyDisclosureHTML()}</div>
+      <div style="padding:24px"><button class="btn submit-cta" id="next" style="width:100%">${infinite?'next →':(ri<liveRound?'next →':(liveRound<ROUNDS-1?'next masterwork →':'see final score →'))}</button>${(!infinite&&ri>0)?`<button class="btn" id="prev" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;width:100%">← Back to review</button>`:''}${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;width:100%">end session</button>`:''}${ATTRIB}</div>
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
       ${ml?`<div style="margin:32px 24px 0;padding:24px;border:1px solid var(--line-card);border-radius:1px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <span style="font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--ink)">your mastery</span>
         <span style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted)">${ml}</span>
       </div>`:''}
-      <div style="padding:24px"><button class="btn submit-cta" id="next" style="width:100%">${infinite?'next →':(ri<liveRound?'next →':(liveRound<ROUNDS-1?'next masterwork →':'see final score →'))}</button>${(!infinite&&ri>0)?`<button class="btn" id="prev" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;width:100%">← Back to review</button>`:''}${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px;width:100%">end session</button>`:''}${ATTRIB}</div>
       </div>
     </div>
   </div>`;

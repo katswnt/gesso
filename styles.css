@@ -188,7 +188,7 @@
   .scrow .sq{width:20px;height:20px;border-radius:1px;flex:0 0 auto}
   .study{margin:24px;border:1px solid var(--line-card);border-radius:1px;overflow:hidden}
   .study .why{font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--ink);margin:13px 0 20px}
-  .studyfoot{border-top:1px solid var(--study-border);padding-top:11px;margin-top:14px;font:500 10.5px/1.5 'Manrope',monospace;color:var(--muted)}
+  .studyfoot{border-top:1px solid var(--study-border);padding-top:11px;margin-top:14px;font:500 11px/1.5 'Manrope',sans-serif;color:var(--muted)}
   .studyfoot .reportopen{appearance:none;border:0;background:transparent;color:var(--accent);font:600 10.5px 'Manrope',monospace;text-decoration:underline;text-decoration-color:var(--accent-underline);text-underline-offset:3px;padding:0;cursor:pointer}
   .reportform .kick{margin-bottom:11px}
   .reportchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
@@ -297,7 +297,7 @@
   .toggle[aria-pressed="true"]{background:var(--accent)}
   .toggle[aria-pressed="true"]::after{left:21px}
   .soonchip{font:600 9px 'Manrope',monospace;letter-spacing:.1em;color:var(--faint);border:1px solid var(--line-card);border-radius:4px;padding:4px 8px}
-  .settingsfoot{padding:0 22px 20px;font:500 10.5px/1.5 'Manrope',monospace;color:var(--faint)}
+  .settingsfoot{padding:0 22px 20px;font:500 11px/1.5 'Manrope',sans-serif;color:var(--faint)}
   .glosswrap{padding:32px 24px 48px;max-width:860px;margin:0 auto}
   .glosshead{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
   .glossbar{height:8px;border-radius:2px;background:var(--line-card);overflow:hidden;margin-bottom:28px}
@@ -512,7 +512,7 @@
   .guide-agrow:last-child{border-bottom:0}
   .guide-aga{padding-left:0}
   /* studyfoot: no top border, centered */
-  .studyfoot{border-top:0;padding-top:0;margin-top:0;font:500 10.5px/1.5 'Manrope',monospace;color:var(--muted);text-align:center}
+  .studyfoot{border-top:0;padding-top:0;margin-top:0;font:500 11px/1.5 'Manrope',sans-serif;color:var(--muted);text-align:center}
   /* glossary link */
   .glosslink{font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .12s}
   .glosslink:hover{color:var(--ink)}
@@ -642,8 +642,9 @@
   /* REVEAL PAGE — asymmetric editorial columns: a slimmer study-notes rail + a wider
      follow-ups column, divided by a rule so the unequal item counts (few notes vs many
      questions) read as intentional newspaper columns, not a dead bottom-left gap. */
-  html.mock-tweaks .study-grid{grid-template-columns:minmax(0,0.82fr) minmax(0,1.18fr)}
-  html.mock-tweaks .study-grid>div:last-child{border-left:1px solid var(--line-card)}
+  html.mock-tweaks .study-grid{grid-template-columns:1fr 1fr}
+  html.mock-tweaks .study-grid>div:last-child{border-left:1px solid var(--line-card);padding-left:26px}
+  html.mock-tweaks .study-grid>div:first-child{padding-right:26px}
   @media(max-width:680px){
     html.mock-tweaks .study-grid{grid-template-columns:1fr}
     html.mock-tweaks .study-grid>div:last-child{border-left:none;border-top:1px solid var(--line-card)}
