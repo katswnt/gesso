@@ -70,7 +70,7 @@ The data scripts are human-run, one at a time, and each mutating step prints "ru
 ## Scoring & difficulty
 
 Each of five categories is worth up to 2,500 points, tuned to be *fair to a thoughtful guess*:
-- **Date** — tier-scaled year-difference curve with decade-level bullseyes; a non-linear timeline gives recent centuries more track (most works are post-1400) and handles BCE/CE.
+- **Date** — scored in *timeline-position* space rather than raw years. The timeline is non-linear (recent centuries get most of the track, since most works are post-1400), and the date score measures how far off you are *on the slider*, not in absolute years. This makes the accuracy window self-calibrate to the era: a bullseye is ~a decade in the 1900s but ~two centuries in 2500 BCE — which is the tolerance an art historian would call fair, since ancient objects are only datable to the century and a "circa" date never carried decade precision. Placing a 2500 BCE work at 2200 BCE is expert-level, not a miss. One mechanic, era-appropriate everywhere; a per-tier multiplier layers difficulty on top, and BCE/CE is handled throughout.
 - **Place** — full credit for the country where the work was *made* (point-in-polygon over compact country geometry), with distance decay outside it, and partial credit for the right cultural region.
 - **Medium** — a simplified *artistic-medium* taxonomy (oil, bronze, print…), not raw support material.
 - **Movement/culture** — exact credit for exact matches, capped partial credit for related movements.
