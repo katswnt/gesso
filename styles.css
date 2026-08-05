@@ -592,6 +592,25 @@
   .obback,.obnext{border-radius:7px;font:700 12px 'Manrope',monospace;letter-spacing:.07em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
   .obback{background:transparent;border:1px solid var(--line-card);color:var(--muted)}
   .obnext{background:var(--accent);border:0;color:#fff}
+  /* Briana how-to: sliding raster-image carousel */
+  .howtomodal{width:calc(100% - 48px);max-width:580px;background:var(--surface);border-radius:var(--r-md);overflow:hidden;box-shadow:0 14px 40px rgba(41,41,41,.18)}
+  .htohead{display:flex;align-items:center;justify-content:space-between;padding:24px 28px 16px}
+  .htoheadttl{font:800 26px 'Faculty Glyphic',sans-serif;letter-spacing:-.01em;text-transform:lowercase;color:var(--ink)}
+  .htocloseX{background:none;border:0;cursor:pointer;padding:4px;display:inline-flex;align-items:center;color:var(--muted)}
+  .htocloseX:hover{color:var(--ink)}
+  .htocontent{overflow:hidden}
+  .htotrack{display:flex;width:200%}
+  .htopanel{width:50%;flex-shrink:0}
+  .htoimg{width:100%;padding:0 24px;box-sizing:border-box;text-align:center;display:flex;align-items:center;justify-content:center}
+  .htoimg-el{max-width:100%;max-height:320px;display:block;margin:0 auto;object-fit:contain}
+  .htobody{padding:22px 32px 10px;text-align:center}
+  .htotitle{font:700 18px 'Faculty Glyphic',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);margin-bottom:12px}
+  .htotext{font:14px/1.6 'Manrope',monospace;color:var(--muted);max-width:340px;margin:0 auto}
+  .htopips{display:flex;justify-content:center;gap:6px;padding:14px 32px 6px}
+  .htopips .pip{width:22px;height:5px;border-radius:var(--r-xs);background:var(--line-card)}
+  .htopips .pip.done{background:var(--accent)} .htopips .pip.cur{background:var(--ink)}
+  .htofoot{display:flex;align-items:center;justify-content:space-between;padding:12px 24px 24px}
+  body.reduce-motion .htotrack{transition:none!important}
   /* help button in header */
   .helpdab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;font:700 14px 'Faculty Glyphic',sans-serif;cursor:pointer;padding:0}
   .helpdab:hover{background:var(--accent);color:#fff}
