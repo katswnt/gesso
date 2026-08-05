@@ -1581,10 +1581,23 @@ let game=[], idx=0, results=[], guess={}, tier='medium', hintsUsed=0, map, marke
 let runDate=null, runArchive=false, lastFinal=null, countdownTimer=null, archiveMonth=null;
 
 function pipsHTML(filled,cur){let s='';for(let i=0;i<ROUNDS;i++)s+=`<span class="pip ${i<filled?'done':i===cur?'cur':''}"></span>`;return s;}
+// Briana's vertical "accession stamp" rail — tier diamond, vertical tier label, round-progress pips, NO.<accn>.
+// Reuses Kat's pipsHTML + tier/accession values. tierKey null (training) → "training" label + accent diamond.
+function railHTML(filled,cur){
+  const tKey=tier, tLabel=tKey?(TIERS[tierIndex(tKey)]?.label||tKey):'training';
+  const dCol=tKey?(TIERDOT[tKey]||'var(--accent)'):'var(--accent)';
+  const accn=(accession()||'').replace(/^NO\.\s*/,'');
+  return `<div class="roundsidebar">
+    <span class="rsb-diamond" style="color:${dCol}"><svg width="16" height="16" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>
+    <span class="rsb-tier">${esc(tLabel)}</span>
+    <div class="rsb-pips">${pipsHTML(filled,cur)}</div>
+    <span class="rsb-accn">NO.&nbsp;${esc(accn)}</span>
+  </div>`;
+}
 const SETTINGS_ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h16"></path><circle cx="9" cy="7.5" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="8" cy="16.5" r="2.4" fill="currentColor" stroke="none"></circle></svg>`;
 function header(filled,cur,withStamp){
-  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">${accession()}</span></div>
-    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="training">training</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="acctav" type="button" data-route="account" title="Your account" aria-label="Your account" style="flex:0 0 auto;border:0;background:none;cursor:pointer;padding:0;margin-left:2px">${dabAvatar(loadIdentity().name,loadIdentity().color,30)}</button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="pips">${pipsHTML(filled,cur)}</div>${withStamp?`<span class="stamp">${tier||'training'}</span>`:''}</div></div></div>`;
+  return `<div class="hd"><div class="hdinner"><div class="brand"><span class="wordmark">gess<span class="dabo"></span></span></div>
+    <div class="right"><nav class="navbits" aria-label="Retention"><button class="helpdab" type="button" data-howto title="How to play" aria-label="How to play">?</button><button class="navbtn" data-route="register">leaderboard</button><button class="navbtn" data-route="training">training</button><button class="navbtn" data-route="glossary">glossary</button><button class="navbtn" data-route="collections">collections</button><button class="gearbtn" type="button" data-settings title="Settings" aria-label="Settings"><span class="gicon">${SETTINGS_ICON}</span></button><button class="acctav" type="button" data-route="account" title="Your account" aria-label="Your account" style="flex:0 0 auto;border:0;background:none;cursor:pointer;padding:0;margin-left:2px">${dabAvatar(loadIdentity().name,loadIdentity().color,30)}</button><button class="menubtn" type="button" data-menu aria-label="Menu"><span></span><span></span><span></span></button></nav></div></div></div>`;
 }
 const ATTRIB=`<div class="attrib">Built by <a href="https://katswint.com" target="_blank" rel="me author noopener">Kat Swint</a> with a little help from Claude Code and Codex &middot; Design by <a href="https://brianadas.com/" target="_blank" rel="noopener">Briana Das</a></div>`;
 
@@ -2664,7 +2677,7 @@ function renderRound(){
   } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
   const whereN=n;
-  document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
+  document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet"><div class="roundwrap">${railHTML(idx,idx)}<div class="roundbody">
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
       <div style="display:flex;flex-direction:column">
@@ -2688,7 +2701,7 @@ function renderRound(){
     <div style="padding:0 24px 24px">
       <div class="lockinfo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/><path d="M12 8v4M12 16h.01"/></svg><span>Not sure on one? <strong>Don't leave it blank</strong> — even a rough guess earns partial credit.</span></div>
       <button class="btn" id="submit">Lock in &amp; file record &rarr;</button>${ATTRIB}</div>
-  </div>`;
+  </div></div></div>`;
   // wire slider
   const yr=document.getElementById('yr'),yv=document.getElementById('yv'),era=document.getElementById('era');
   let curScheme='neutral', free5050=false;
@@ -3159,7 +3172,7 @@ function renderReveal(r,ri,push=true){
   const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
   const firstSentence=(()=>{ const w=(study.why||'').trim(); if(!w)return ''; const d=w.indexOf('. '); return d>-1?w.slice(0,d+1):w; })(); // teaser sentence for the below-image info panel
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`${header(results.length,ri,true)}<div class="sheet">
+  document.getElementById('stage').innerHTML=`${header(results.length,ri,true)}<div class="sheet"><div class="roundwrap">${railHTML(results.length,ri)}<div class="roundbody">
 
     <div class="banner" id="revbanner" style="position:relative;overflow:hidden"><div>
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${ri+1} of ${ROUNDS}`}</div>
@@ -3206,7 +3219,7 @@ function renderReveal(r,ri,push=true){
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
     <div style="padding:0 24px 24px"><button class="btn" id="next">${infinite?'Next →':(ri<liveRound?'Next →':(liveRound<ROUNDS-1?'Next masterwork →':'See final score →'))}</button>${(!infinite&&ri>0)?`<button class="btn" id="prev" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">← Back to review</button>`:''}${infinite?`<button class="btn" id="endinf" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">End session</button>`:''}${ATTRIB}</div>
-  </div>`;
+  </div></div></div>`;
   countUps();
   setupReportFlow(it,study);
   declutterPlate(document.getElementById('stage')); // keep look-closer markers from stacking
@@ -3436,7 +3449,7 @@ function renderFinal(push=true){
     if(!r.cells[c])return `<td></td>`;
     const f=r.cells[c].pts/MAX_CAT;return `<td>${swatchBox(f,'msq')}</td>`;}).join('')}</tr>`).join('');
   const ml=masteryLine();
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet">
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,true)}<div class="sheet"><div class="roundwrap">${railHTML(ROUNDS,ROUNDS)}<div class="roundbody">
 
     <div class="banner"><div><div class="kick">Game filed &middot; ${ROUNDS} of ${ROUNDS}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
@@ -3459,7 +3472,7 @@ function renderFinal(push=true){
       <button class="btn" id="viewlb" style="margin-top:10px">View today&rsquo;s leaderboard &rarr;</button>`}
       <button class="btn" id="streak" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">${runArchive?'Back to streak':'Come back tomorrow'}</button>
       <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
-  </div>`;
+  </div></div></div>`;
   countUps();
   document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);

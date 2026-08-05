@@ -29,6 +29,31 @@
   .card{background:var(--surface)}
   .sheet{max-width:1080px;margin:0 auto;background:var(--surface);
     border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:calc(100vh - 55px);padding-bottom:40px}
+  /* accession-stamp rail (Briana): vertical left rail on round/reveal/final. Fixed so it never disturbs
+     Kat's inner layout; the .roundwrap just pads its content clear of the rail. */
+  .roundwrap{position:relative}
+  .roundsidebar{position:fixed;left:0;top:55px;bottom:0;width:64px;display:flex;flex-direction:column;
+    align-items:center;padding:28px 0 24px;gap:16px;z-index:120;background:var(--surface-strong);
+    border-right:1px solid var(--line);box-sizing:border-box}
+  .rsb-diamond{display:inline-flex;align-items:center}
+  .rsb-tier{writing-mode:vertical-rl;transform:rotate(180deg);font:600 10px 'Manrope',monospace;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .rsb-pips{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .rsb-pips .pip{width:5px;height:18px;border-radius:var(--r-xs);background:var(--line-card)}
+  .rsb-pips .pip.done{background:var(--accent)} .rsb-pips .pip.cur{background:var(--ink)}
+  .rsb-accn{writing-mode:vertical-rl;transform:rotate(180deg);font:500 10px 'Manrope',monospace;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;margin-top:4px}
+  .roundwrap>.roundbody{padding-left:64px}
+  @media(max-width:680px){
+    .roundsidebar{position:sticky;top:55px;bottom:auto;width:100%;height:auto;flex-direction:row;
+      padding:9px 16px;gap:12px;border-right:none;border-bottom:1px solid var(--line);align-items:center}
+    .rsb-tier{writing-mode:horizontal-tb;transform:none;order:3;margin-left:auto}
+    .rsb-pips{flex-direction:row;order:2}
+    .rsb-pips .pip{width:18px;height:5px}
+    .rsb-accn{writing-mode:horizontal-tb;transform:none;margin-top:0;order:1}
+    .rsb-diamond{order:4}
+    .roundwrap>.roundbody{padding-left:0}
+  }
   /* header */
   .hd{position:sticky;top:0;z-index:600;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
   .hdinner{max-width:1080px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between}
