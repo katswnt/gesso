@@ -2416,6 +2416,9 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
+  const img1=`<div class="heroimg"><img src="/assets/MET picture frame.png" alt="" style="width:10.5rem;height:5rem;object-fit:contain"></div>`;
+  const img2=`<div class="heroimg"><img src="/assets/silver pin.png" alt="" style="width:16rem;height:3rem;object-fit:contain"></div>`;
+  const img3=`<div class="heroimg"><img src="/assets/dagger.png" alt="" style="width:9.047rem;height:4rem;object-fit:contain"></div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
@@ -2425,9 +2428,11 @@ function renderStart(dateStr,push=true){
       <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
       <button type="button" class="newhere" data-howto>New here? How to play &rarr;</button>
     </div>
+    ${img1}
     ${replay?'':`<div class="zlabel"><b>Today&rsquo;s daily</b><i>&middot; pick a difficulty</i></div>`}
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
+        <span class="difdot" style="color:${TIERDOT[t.key]||'var(--accent)'}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>
         <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
         <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
@@ -2436,53 +2441,43 @@ function renderStart(dateStr,push=true){
       <span style="color:var(--muted);font-size:11px">&middot;</span>
       <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
     </div>`}
-    ${replay?'':`<div class="zlabel"><b>Practice</b><i>&middot; doesn&rsquo;t affect your streak</i></div>
-    <div class="practwo">
-      <div class="practice">
-        <div class="pinf">${ICONS.infinity}</div>
-        <div class="ptxt"><div class="h">Endless</div><p>Keep going &mdash; endless works, <strong>unlimited hints</strong>, and you can reveal the look-closer markers before you lock in.</p></div>
-        <div class="pchips">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}">${t.label}</button>`).join('')}</div>
+    ${replay?'':`<div class="practicezone">
+      <div class="pz-block">
+        <div class="pz-kicker">or play in learning mode</div>
+        <div class="pz-chiprow">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}"><span class="chipdot" style="color:${TIERDOT[t.key]||'var(--accent)'}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>${t.label}</button>`).join('')}</div>
+        <p class="pz-note">Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
       </div>
-      <div class="practice">
-        <div class="pinf">${ICONS.target}</div>
-        <div class="ptxt"><div class="h">Training</div><p>Drill exactly what you want — a movement, a place, a century, or your weak spots.</p></div>
-        <div class="pchips">${trainTeaserChips()}<button class="pchip inf setup" data-route="training">Set up training &rarr;</button></div>
+      <div class="pz-block">
+        <div class="pz-kicker">or drill exactly what you want</div>
+        <div class="pz-chiprow">${trainTeaserChips()}<button class="pchip inf setup" data-route="training">Set up training &rarr;</button></div>
+        <p class="pz-note">Training drills a movement, a place, a century, or your weak spots. Also off the record &mdash; no streak or stat impact.</p>
       </div>
     </div>`}
-    <div class="collnote"><div class="h">Notice what "Easy" is</div>
-      <p>Difficulty here tracks what people actually recognize — and <strong>“Easy” is ${easyEuro}% European</strong>. That's not because the world's art is European. It's because the Western canon decides what gets famous, and fame is what makes something easy to recognize. Drop to the harder tiers and the rest of the world appears. The whole pool is ${b.europe}% European, drawn from the open collections of Art Institute of Chicago, The Metropolitan Museum of Art, Cleveland Museum of Art, Harvard Art Museums, Victoria and Albert Museum, Smithsonian Open Access, Los Angeles County Museum of Art, The British Museum, National Gallery of Art, Brooklyn Museum, The Walters Art Museum, Musée du quai Branly&ndash;Jacques Chirac, plus works surfaced via Wikidata/Wikimedia Commons:</p>
-      <div class="bars">${b.segs}</div><div class="barkey">${b.key}</div>
+    ${img2}
+    <div class="homesec">
+      <div class="homesechd">&middot; notice what &ldquo;easy&rdquo; is &middot;</div>
+      <p class="homesecbody">Difficulty here tracks what people actually recognize &mdash; and <strong>&ldquo;Easy&rdquo; is ${easyEuro}% European</strong>. That's not because the world's art is European. It's because the Western canon decides what gets famous, and fame is what makes something easy to recognize. Drop to the harder tiers and the rest of the world appears.</p>
+      <p class="homesecbody">The whole pool is ${b.europe}% European, drawn from the open collections of the Met, the Art Institute of Chicago, the Cleveland Museum of Art, the Victoria &amp; Albert, Harvard Art Museums, the Smithsonian, LACMA, the British Museum, the National Gallery of Art, the Brooklyn Museum, the Walters, the Musée du quai Branly, plus works surfaced via Wikidata/Wikimedia Commons:</p>
+      <div style="max-width:560px;margin:0 auto"><div class="bars">${b.segs}</div><div class="barkey">${b.key}</div></div>
     </div>
-    <details class="faq" style="max-width:520px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding:14px 24px 0;text-align:center">
-      <summary style="cursor:pointer;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;text-align:center">FAQ &amp; credits</summary>
-      <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;text-align:left">
-        <p style="margin:0 0 10px"><strong style="color:var(--ink)">How is difficulty decided?</strong><br>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent (see the note above on why the canon still skews that way).</p>
-        <p style="margin:0 0 6px"><strong style="color:var(--ink)">Where does the art come from?</strong><br>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p>
-        <ul style="margin:0 0 10px 18px;padding:0">
-          <li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li>
-          <li>Cleveland Museum of Art &mdash; Open Access (CC0)</li>
-          <li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li>
-          <li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li>
-          <li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li>
-          <li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li>
-        </ul>
-        <p style="margin:0 0 6px">Via Wikidata/Commons we also draw the most-recognized works from these collections:</p>
-        <ul style="margin:0 0 10px 18px;padding:0">
-          <li>Museo del Prado &middot; Louvre &middot; National Gallery, London &middot; Uffizi &middot; Rijksmuseum</li>
-          <li>National Gallery of Art (DC) &middot; Fine Arts Museums of San Francisco (de Young)</li>
-          <li>National Palace Museum (Taipei) &middot; Tokyo National Museum &middot; National Museum of Korea</li>
-          <li>Topkap&#305; Palace Museum (Istanbul) &middot; Egyptian Museum (Cairo)</li>
-        </ul>
-        <p style="margin:0 0 10px">Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p>
-        <p style="margin:0"><strong style="color:var(--ink)">Are the study notes reliable?</strong><br>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p>
+    ${img3}
+    <div class="homesec">
+      <div class="homesechd">&middot; frequently asked questions &middot;</div>
+      <div class="faqacc">
+        <div class="faqitem"><button class="faqq" aria-expanded="false">how is difficulty decided?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
+        <div class="faqitem"><button class="faqq" aria-expanded="false">where does the art come from?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
+          <div class="faqa"><div class="faqa-inner"><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
+        <div class="faqitem"><button class="faqq" aria-expanded="false">are the study notes reliable?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
+          <div class="faqa"><div class="faqa-inner"><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
       </div>
-    </details>
+    </div>
     ${ATTRIB}
   </div>`;
   document.querySelectorAll('.dif').forEach(el=>el.onclick=()=>startGame(el.dataset.k, dateStr||undefined));
   { const yb=document.getElementById('ystrday'); if(yb)yb.onclick=()=>renderStart(addDays(todayStr(),-1)); }
   document.querySelectorAll('.inf').forEach(el=>el.onclick=()=>startInfinite(el.dataset.inf));
+  document.querySelectorAll('.faqq').forEach(btn=>{btn.onclick=()=>{const a=btn.nextElementSibling,open=a.style.height&&a.style.height!=='0px';document.querySelectorAll('.faqa').forEach(x=>{x.style.height='0px';});document.querySelectorAll('.faqq').forEach(x=>x.setAttribute('aria-expanded','false'));if(!open){a.style.height=a.scrollHeight+'px';btn.setAttribute('aria-expanded','true');}}});
 }
 function startGame(key,dateStr,push=true){
   if(push)pushNav({v:'play',key,date:dateStr||todayStr()});

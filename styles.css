@@ -253,6 +253,40 @@
   .dif .nm{font:700 20px 'Faculty Glyphic',sans-serif;margin:5px 0 4px}
   .dif .bl{font:12px 'Manrope',monospace;color:var(--muted)}
   .dif .ct{font:11px 'Manrope',monospace;color:var(--accent);margin-top:9px}
+  .difdot{display:inline-flex;align-items:center;margin:8px 0 2px}
+  /* Briana home: decorative art-object hero dividers */
+  .heroimg{text-align:center;padding:0 24px;margin:20px 0}
+  .heroimg img{max-height:180px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(0,0,0,.10))}
+  /* Briana home: editorial section rhythm */
+  .homesec{padding:34px 32px;text-align:center}
+  .homesechd{font:700 15px 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--ink);margin-bottom:18px}
+  .homesecbody{font:12px/1.7 'Manrope',monospace;color:var(--muted);max-width:560px;margin:0 auto 12px;text-align:left}
+  .homesecbody strong{color:var(--ink);font-weight:700}
+  /* Briana home: FAQ accordion */
+  .faqacc{text-align:left;max-width:600px;margin:0 auto}
+  .faqitem{border-top:1px solid var(--line-card)}
+  .faqitem:last-child{border-bottom:1px solid var(--line-card)}
+  .faqq{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;padding:14px 0;cursor:pointer;font:700 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-align:left;gap:12px}
+  .faqq:hover{color:var(--accent)}
+  .faqplus{flex:0 0 auto;display:inline-flex;align-items:center;color:var(--accent)}
+  .faqplus .icon-minus{display:none}
+  .faqq[aria-expanded="true"] .faqplus .icon-plus{display:none}
+  .faqq[aria-expanded="true"] .faqplus .icon-minus{display:inline-flex}
+  .faqa{overflow:hidden;height:0;transition:height .28s cubic-bezier(.22,1,.36,1)}
+  body.reduce-motion .faqa{transition:none}
+  .faqa-inner{font:12px/1.7 'Manrope',monospace;color:var(--muted);padding-bottom:14px}
+  .faqa-inner p{margin:0 0 8px}.faqa-inner p:last-child{margin:0}
+  .faqa-inner ul{margin:6px 0 8px 18px;padding:0}
+  /* practice zone: Endless (learning-mode chips) + Training (setup CTA) as siblings */
+  .practicezone{padding:26px 24px 6px}
+  .pz-block{text-align:center;margin-bottom:22px}
+  .pz-kicker{font:600 10px 'Manrope',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .pz-chiprow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 10px}
+  .pz-chiprow .pchip{appearance:none;background:#fff;border:1px solid var(--line-card);border-radius:20px;color:var(--ink);font:600 11px 'Manrope',monospace;letter-spacing:.03em;padding:8px 13px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:5px}
+  .pz-chiprow .pchip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+  .pz-chiprow .pchip.setup{background:var(--study-bg);border-color:var(--study-border);color:var(--accent);font-weight:700}
+  .pz-chiprow .chipdot{display:inline-flex;align-items:center}
+  .pz-note{font:10px/1.5 'Manrope',monospace;color:var(--muted);max-width:400px;margin:10px auto 0}
   .collnote{margin:4px 24px 24px;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px}
   .collnote .h{font:600 10px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   .collnote p{margin:0;font:12px/1.6 'Manrope',monospace;color:var(--ink-soft)}
