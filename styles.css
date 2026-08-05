@@ -8,6 +8,10 @@
   body{margin:0;background:var(--surface);color:var(--ink);font-family:'Faculty Glyphic',sans-serif;
     -webkit-font-smoothing:antialiased;min-height:100vh}
   .leaflet-container{background:#dfe2e8;font-family:inherit}
+  /* the pin dropped when you tap the map (was missing on this branch → invisible marker) */
+  .dabpin{background:none!important;border:none!important}
+  .dabpin span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid #fff;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
+  .dabpin.actual span{background:var(--full)}
   .palabel{background:none!important;border:none!important;font:600 10px 'Manrope',monospace;color:#1b1916;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;white-space:nowrap;width:auto!important;height:auto!important}
   .leaflet-control-attribution{display:none}
   .mono{font-family:'Manrope',monospace}
