@@ -123,7 +123,7 @@
   .hintchip:disabled:not(.used):hover{background:transparent;color:var(--accent)}
   .hintlabel{display:inline-block;font:700 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-right:7px}
   /* reveal */
-  .banner{padding:22px 24px;background:linear-gradient(180deg,#eceffb,#f6f4ee);border-bottom:1px solid var(--line);
+  .banner{padding:22px 24px;background:var(--surface);border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
   .big{font:800 42px 'Faculty Glyphic',sans-serif;letter-spacing:-.02em}
   .swatchrow{display:flex;gap:11px}
@@ -164,7 +164,9 @@
   .reportthanks{display:flex;align-items:center;gap:8px;color:var(--full);font:600 11px 'Manrope',monospace}
   .reportthanks i{width:16px;height:16px;border-radius:50%;background:var(--full);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:10px}
   .cue{display:flex;gap:12px;align-items:flex-start;padding:7px 0}
-  .cue .num{flex:0 0 16px;font:700 13px 'Faculty Glyphic',sans-serif;color:var(--accent)}
+  .cue .num{flex:0 0 16px;font:700 13px 'Faculty Glyphic',sans-serif;color:var(--ink)}
+  /* de-blue the study-note decoration (headers/numbers) — keep blue for actions + look-closer dabs */
+  .study .kick{color:var(--ink)}
   .cue .tx{font:13px/1.55 'Manrope',monospace;color:var(--ink-soft)}
   .mastery{margin-top:20px;padding-top:16px;border-top:1px solid var(--study-border);
     display:flex;align-items:center;gap:13px;flex-wrap:wrap;font:12px 'Manrope',monospace;color:var(--ink)}
@@ -183,7 +185,8 @@
   .zlabel i{font:var(--label-sm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-style:normal}
   .zlabel::after{content:"";flex:1;height:1px;background:var(--line)}
   /* Infinite + Training as a 2-up row aligned with the tier tiles above; lighter than the daily tiles so the daily wins first glance */
-  .practwo{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 12px;align-items:start}
+  .practwo{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 12px;align-items:stretch}
+  .practwo .practice{height:100%}
   .practwo .practice{max-width:none;margin:0;flex-direction:column;align-items:flex-start;gap:12px;background:var(--surface)}
   .practwo .practice .ptxt{flex:0 0 auto}
   .practwo .practice:nth-child(1) .pinf{transform:rotate(-4deg)}
@@ -462,8 +465,8 @@
 
   /* "Ask the guide" accordion (reveal) */
   .askguide{margin-top:18px;border-top:1px solid var(--study-border);padding-top:16px}
-  .agkick{display:flex;align-items:center;gap:8px;font:700 10px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
-  .agkick .agdab{width:18px;height:17px;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .agkick{display:flex;align-items:center;gap:8px;font:700 10px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px}
+  .agkick .agdab{width:18px;height:17px;background:var(--ink);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
   .agcount{color:var(--faint);font-weight:600;letter-spacing:.06em}
   .aglist{display:flex;flex-direction:column;gap:8px}
   .agrow{background:var(--study-bg);border:1px solid var(--study-border);border-radius:9px;overflow:hidden}
@@ -476,12 +479,12 @@
   .aglist .agrow:nth-child(6n+4) .agnum{border-radius:48% 52% 60% 40% / 50% 56% 44% 50%;transform:rotate(6deg)}
   .aglist .agrow:nth-child(6n+5) .agnum{border-radius:70% 30% 52% 48% / 40% 62% 38% 60%;transform:rotate(-2deg)}
   .aglist .agrow:nth-child(6n+6) .agnum{border-radius:38% 62% 63% 37% / 60% 38% 62% 40%;transform:rotate(5deg)}
-  .agnum.pinnum{background:var(--accent);color:#fff} /* pinned note → ultramarine, number matches its image pin */
-  .agnum.qnum{background:#5663d4;color:#fff} /* unpinned note → lighter dab-palette blue, still numbered in the running sequence */
+  .agnum.pinnum{background:var(--ink);color:#fff} /* pinned note → ink; still numbered to match its image pin */
+  .agnum.qnum{background:var(--muted);color:#fff} /* unpinned note → muted, still numbered in the running sequence */
   .agrow.flash{box-shadow:0 0 0 2px var(--accent)}
   .agqt{flex:1}
   .agplus{flex:0 0 auto;font:700 16px/1 'Faculty Glyphic',sans-serif;color:var(--muted);transition:transform .2s,color .2s}
-  .agq[aria-expanded="true"] .agnum{background:var(--accent);color:#fff}
+  .agq[aria-expanded="true"] .agnum{background:var(--ink);color:#fff}
   .agq[aria-expanded="true"] .agplus{transform:rotate(45deg);color:var(--accent)}
   .aga{padding:0 13px 14px 41px;font:400 13px/1.55 'Faculty Glyphic',sans-serif;color:var(--ink)}
   body.reduce-motion .agplus{transition:none}
