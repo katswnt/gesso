@@ -3210,10 +3210,16 @@ function renderReveal(r,ri,push=true){
       </div>
     </div>
     <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
-      ${contextHTML(it)}<div class="why">${why}</div>
-      ${notesV2 ? `${notesHTML(study.notes)}${guideHTML(study.guide)}` : `${study.cues&&study.cues.length?`<div style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">How the eye sees it</div>
-        <div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}
-      ${guideHTML(study.guide)}`}
+      <div class="studygrid">
+        <div class="study-notes">
+          ${contextHTML(it)}<div class="why">${why}</div>
+          <div class="study-notes-label" style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">Study notes</div>
+          ${notesV2 ? `${notesHTML(study.notes)}` : `${study.cues&&study.cues.length?`<div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}`}
+        </div>
+        <div class="study-guide">
+          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">Follow-up questions</div>${guideHTML(study.guide)}`:''}
+        </div>
+      </div>
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
