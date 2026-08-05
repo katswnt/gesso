@@ -3458,8 +3458,11 @@ function renderFinal(push=true){
         <span class="big" data-cu="${grand}">${grand.toLocaleString()}</span>
         <span class="mono" style="font-size:13px;color:var(--muted)">/ ${gmax.toLocaleString()} pts${bonus?` &middot; incl. +${bonus.toLocaleString()} bonus`:''}</span></div></div></div>
     <div class="matrix"><table><thead><tr><th style="text-align:left">Work</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
-    <div style="padding:18px 24px 8px"><div class="kick" style="margin-bottom:8px">Share</div>
-      <div class="sharebox" id="share">${esc(share)}</div></div>
+    <div class="shareactions">
+      <button id="copy" class="shareact"><img src="/assets/copy.svg" width="14" height="14" alt=""> Copy results</button>
+      <button id="imageShare" class="shareact"><img src="/assets/download.svg" width="14" height="14" alt=""> Download image</button>
+      <button id="copylink" class="shareact"><img src="/assets/link.svg" width="14" height="14" alt=""> Share link to puzzle</button>
+    </div>
     ${ml?`<div class="study"><div class="kick">Session mastery</div><div class="why" style="font-size:15px">${ml}</div></div>`:''}
     ${_showSupport?`<div class="study" id="supportcard" style="position:relative;text-align:center">
       <button id="supportdismiss" aria-label="Dismiss" style="position:absolute;top:8px;right:12px;background:none;border:0;color:var(--muted);font-size:19px;line-height:1;cursor:pointer">&times;</button>
@@ -3467,18 +3470,16 @@ function renderFinal(push=true){
       <div class="why" style="font-size:15px;margin:8px 0 14px">Gesso is free and public-domain, forever. If your daily museum has brightened a few mornings, you can chip in or gift a friend &mdash; no pressure, ever.</div>
       <a href="https://ko-fi.com/katswint" target="_blank" rel="noopener" id="supportlink" class="btn" style="display:inline-block;text-decoration:none">Support Gesso on Ko-fi</a>
     </div>`:''}
-    <div style="padding:8px 24px 24px"><button class="btn" id="copy">Copy result to share</button>
-      <button class="btn" id="imageShare" style="margin-top:10px">Share / Download image</button>
-      <button class="btn" id="copylink" style="margin-top:10px">Copy link to this puzzle</button>
+    <div style="padding:8px 24px 24px">
       ${runArchive?'':`<div id="lbrank" class="mono" style="margin-top:12px;color:var(--muted);text-align:center"></div>
       <button class="btn" id="viewlb" style="margin-top:10px">View today&rsquo;s leaderboard &rarr;</button>`}
       <button class="btn" id="streak" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">${runArchive?'Back to streak':'Come back tomorrow'}</button>
       <button class="btn" id="again" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);margin-top:10px">Play again</button>${ATTRIB}</div>
   </div></div></div>`;
   countUps();
-  document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>document.getElementById('copy').textContent='Copied ✓');
+  { const b=document.getElementById('copy'); const html=b.innerHTML; b.onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>{b.innerHTML=`<img src="/assets/copy.svg" width="14" height="14" alt=""> Copied ✓`;setTimeout(()=>{b.innerHTML=html;},1600);}); }
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
-  document.getElementById('copylink').onclick=()=>{const b=document.getElementById('copylink');const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.textContent='Link copied ✓';setTimeout(()=>b.textContent='Copy link to this puzzle',1600);});};
+  { const b=document.getElementById('copylink'); const html=b.innerHTML; b.onclick=()=>{const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.innerHTML=`<img src="/assets/link.svg" width="14" height="14" alt=""> Link copied ✓`;setTimeout(()=>{b.innerHTML=html;},1600);});}; }
   document.getElementById('streak').onclick=renderStreak;
   document.getElementById('again').onclick=()=>renderStart();
   if(_showSupport){ try{localStorage.setItem('gesso.supportSeen',String(Date.now()));}catch{} track('support_shown',{streak:_streak});

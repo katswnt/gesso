@@ -257,6 +257,11 @@
   /* Briana leaderboard laurel-wreath hero */
   .laurel{text-align:center;margin:2px 0 14px}
   .laurel img{height:100px;width:auto;object-fit:contain}
+  /* Briana final: centered borderless icon+text share actions */
+  .shareactions{padding:24px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+  .shareact{display:inline-flex;align-items:center;gap:6px;font:600 11px 'Manrope',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:none;border:none;cursor:pointer;padding:0;transition:color .12s}
+  .shareact:hover{color:var(--accent)}
+  .shareact img{flex:0 0 auto}
   /* Briana home: decorative art-object hero dividers */
   .heroimg{text-align:center;padding:0 24px;margin:20px 0}
   .heroimg img{max-height:180px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(0,0,0,.10))}
