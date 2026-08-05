@@ -134,6 +134,7 @@
   .filed{position:absolute;top:18px;left:18px;font:700 9px 'Manrope',monospace;letter-spacing:.1em;
     color:#fff;background:var(--accent);padding:5px 9px;border-radius:3px;transform:rotate(-4deg)}
   .worktitle{font:700 19px/1.15 'Faculty Glyphic',sans-serif;letter-spacing:-.01em;margin-top:14px}
+  .workblurb{font:400 13px/1.6 'Manrope',sans-serif;color:var(--ink);margin-top:12px}
   .metarow{display:flex;gap:10px}
   .metarow .k{flex:0 0 62px;font:600 10px 'Manrope',monospace;letter-spacing:.08em;color:var(--accent)}
   .metarow .v{font:13px 'Manrope',monospace;color:var(--ink)}

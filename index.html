@@ -3157,6 +3157,7 @@ function renderReveal(r,ri,push=true){
   const notesV2 = Array.isArray(study.notes) && study.notes.length ? study.notes : null;
   const pinNotes = notesV2 ? study.notes.map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null) : null;
   const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
+  const firstSentence=(()=>{ const w=(study.why||'').trim(); if(!w)return ''; const d=w.indexOf('. '); return d>-1?w.slice(0,d+1):w; })(); // teaser sentence for the below-image info panel
   const ml=masteryLine();
   document.getElementById('stage').innerHTML=`${header(results.length,ri,true)}<div class="sheet">
 
@@ -3170,6 +3171,7 @@ function renderReveal(r,ri,push=true){
       <div>
         <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
         <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
+        ${firstSentence?`<div class="workblurb">${esc(firstSentence)}</div>`:''}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(artistDisplay(it))}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
           <div class="metarow"><span class="k">DATE</span><span class="v">${fmtDate(it)}</span></div>
