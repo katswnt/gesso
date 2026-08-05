@@ -1844,7 +1844,8 @@ async function renderLeaderboard(tierKey,dateStr){
   const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
   const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
-    <div class="kick" style="color:var(--accent)">The Register</div>
+    <div class="laurel"><img src="/assets/laurel_wreath.png" alt="" /></div>
+    <div class="kick" style="color:var(--accent);text-align:center">The Register</div>
     <div style="display:flex;align-items:center;gap:10px;margin:2px 0 2px">
       <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:pointer;font:700 16px Archivo;color:var(--accent)">‹</button>
       <div style="font:800 24px Archivo;flex:1">${isToday?'Today&rsquo;s leaderboard':esc(niceDate(date))}</div>

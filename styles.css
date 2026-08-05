@@ -254,6 +254,9 @@
   .dif .bl{font:12px 'Manrope',monospace;color:var(--muted)}
   .dif .ct{font:11px 'Manrope',monospace;color:var(--accent);margin-top:9px}
   .difdot{display:inline-flex;align-items:center;margin:8px 0 2px}
+  /* Briana leaderboard laurel-wreath hero */
+  .laurel{text-align:center;margin:2px 0 14px}
+  .laurel img{height:100px;width:auto;object-fit:contain}
   /* Briana home: decorative art-object hero dividers */
   .heroimg{text-align:center;padding:0 24px;margin:20px 0}
   .heroimg img{max-height:180px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(0,0,0,.10))}
