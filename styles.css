@@ -1,7 +1,7 @@
 :root{
     --bg:oklch(0.9823 0.0069 88.64); --surface:#f6f4ee; --surface-strong:#edeae0; --ink:oklch(0.2809 0.0000 0); --muted:oklch(0.5553 0.0292 285.41);
     --faint:#a39d8c; --ink-soft:#3a362d; --line:oklch(0.8699 0.0000 0); --line-card:#ddd8ca; --accent:#2230b8;
-    --accent-underline:#b0b5e0; --study-bg:#eceffb; --study-border:#d3d8ef;
+    --accent-underline:#b0b5e0; --study-bg:#efece4; --study-border:#e0dccf;
     --full:oklch(0.7772 0.1083 144.81); --partial:oklch(0.8794 0.1352 97.96); --miss:oklch(0.7038 0.1448 21.44); --track:#dcd6c6;
     --silver:#9aa0a6; --silver-ink:#6c7177; --gold:#b3892f; --gold-ink:#9a7b2e;
     --surface-lift:#fdfcf9; /* lighter-than-surface cream for secondary/practice cards */
@@ -42,7 +42,8 @@
   .stamp{font:600 10px 'Manrope',monospace;letter-spacing:.12em;color:var(--accent);
     border:1.5px solid var(--accent);padding:4px 10px;border-radius:3px;transform:rotate(-2deg);display:inline-block;text-transform:uppercase}
   /* generic */
-  .kick{font:var(--label-sm);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+  /* BLUE RULE: section labels/kicks are structural → ink. Blue stays for actions, links, selected/active states, look-closer dabs. */
+  .kick{font:var(--label-sm);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
   .banner .mono{white-space:nowrap}
   .cicon{display:inline-flex;width:16px;height:16px;vertical-align:-3px;margin-right:6px}
   .cicon svg{width:16px;height:16px}
@@ -62,7 +63,7 @@
   .lookmark:nth-of-type(6n+6){border-radius:38% 62% 63% 37% / 60% 38% 62% 40%}
   .cue.flash{background:rgba(34,48,184,.12);border-radius:5px}
   .fieldlabel{display:flex;align-items:center;gap:8px;margin-bottom:11px}
-  .fieldlabel .ix{font:600 10px 'Manrope',monospace;color:var(--accent);letter-spacing:.1em}
+  .fieldlabel .ix{font:600 10px 'Manrope',monospace;color:var(--ink);letter-spacing:.1em}
   .fieldlabel .nm{font:600 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
   .fieldlabel .rule{flex:1;height:1px;background:var(--line)}
   .fieldlabel .hintrule{font:10px 'Manrope',monospace;color:var(--faint)}
@@ -121,7 +122,7 @@
   .hintchip.used::before{content:"\2713";font-weight:700;margin-right:1px}
   .hintchip:disabled:not(.used){opacity:.34;cursor:default}
   .hintchip:disabled:not(.used):hover{background:transparent;color:var(--accent)}
-  .hintlabel{display:inline-block;font:700 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-right:7px}
+  .hintlabel{display:inline-block;font:700 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:7px}
   /* reveal */
   .banner{padding:22px 24px;background:var(--surface);border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -173,7 +174,7 @@
   .weak{color:var(--miss)}
   /* start */
   .hero{padding:38px 24px 14px;text-align:center}
-  .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:600 11px 'Manrope',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+  .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:600 11px 'Manrope',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);margin-bottom:18px}
   .herokick .r{width:26px;height:1px;background:var(--accent);opacity:.4}
   .herobig{font:800 56px 'Faculty Glyphic',sans-serif;letter-spacing:-.025em;line-height:1.06;color:var(--ink)}
   .herobig em{font-style:normal;color:var(--accent)}
@@ -197,7 +198,7 @@
   .practice .ptxt{flex:1 1 200px;min-width:180px}
   .practice .ptxt .h{font:700 14px 'Faculty Glyphic',sans-serif;margin-bottom:2px}
   .practice .ptxt p{margin:0;font:11px/1.5 'Manrope',monospace;color:var(--muted)}
-  .practice .pchips{display:flex;gap:7px;flex-wrap:wrap}
+  .practice .pchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}
   .practice .pchip{appearance:none;background:#fff;border:1px solid var(--line-card);border-radius:20px;color:var(--ink);font:600 11px 'Manrope',monospace;letter-spacing:.03em;padding:8px 13px;cursor:pointer;transition:.12s}
   .practice .pchip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
   /* FAQ disclosure: make it obviously tappable (caret + hover underline) */
