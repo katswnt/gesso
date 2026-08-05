@@ -52,43 +52,43 @@
   .fieldlabel .hintrule{font:10px 'Manrope',monospace;color:var(--faint)}
   /* round page layout */
   .roundwrap{display:block}
-  .roundheading{font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink);line-height:1;padding:32px 24px 40px}
+  .roundheading{font:400 1.375rem 'Faculty Glyphic',sans-serif;color:var(--ink);line-height:1;padding:26px 24px 18px}
   .roundsidebar{position:fixed;left:0;top:55px;bottom:0;width:72px;display:flex;flex-direction:column;align-items:center;padding:32px 0 24px;gap:16px;z-index:100;background:var(--surface);box-sizing:border-box}
   .rsb-tier{writing-mode:vertical-rl;transform:rotate(180deg);font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)}
   .rsb-pips{display:flex;flex-direction:column;align-items:center;gap:6px}
   .rsb-accn{writing-mode:vertical-rl;transform:rotate(180deg);font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);white-space:nowrap;margin-top:4px}
   /* large: grid layout — heading+timeline full-width, image+controls side by side */
+  /* IMAGE-FORWARD round layout: the painting is the puzzle, so its column dominates.
+     Image col ~1.5fr vs controls 1fr; heading spans full width, timeline lives inside
+     the controls column (right of the image), not full-width above it. */
   @media(min-width:961px){
-    .roundmain{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"heading heading" "timeline timeline" "image controls"}
-    .roundheading{grid-area:heading;padding:32px 24px 0}
+    .roundmain{display:grid;grid-template-columns:1.55fr 1fr;grid-template-areas:"heading heading" "image controls";column-gap:36px}
+    .roundheading{grid-area:heading;padding:26px 24px 6px}
     .roundimgcol{grid-area:image}
-    .roundtimeline{grid-area:timeline}
     .roundcontrols{grid-area:controls}
-    .roundsheet{box-sizing:border-box;max-width:1024px;margin:0 auto;padding-left:72px;padding-right:32px}
+    .roundsheet{box-sizing:border-box;max-width:1200px;margin:0 auto;padding-left:72px;padding-right:32px}
   }
   /* medium: single column — heading, image, timeline, controls */
   @media(max-width:960px){
     .roundmain{display:flex;flex-direction:column}
-    .roundheading{font-size:3rem;padding:32px 24px 24px}
+    .roundheading{font-size:1.75rem;padding:26px 24px 16px}
     .roundimgcol{border-right:none}
-    .roundimgcol .plate img{max-width:540px;margin:0 auto}
+    .roundimgcol .plate img{max-width:760px;margin:0 auto}
     .roundsidebar{width:64px}
     .roundsheet{margin-left:72px}
     .tl-year-row{flex-wrap:wrap}
     .tl-drag-text{order:-1;width:100%;margin-left:0;margin-bottom:6px}
-    .tltick.minor{display:none}
-    .tltick.major:not(.milestone){display:none}
     /* medium: larger touch targets for modal nav */
     .obnext,.obback,.obskip{min-height:48px;padding:12px 20px}
   }
-  .roundtimeline{padding:20px 24px 16px}
-  .roundimgcol{display:flex;flex-direction:column;padding:24px;gap:24px}
+  .roundtimeline{padding:0}
+  .roundimgcol{display:flex;flex-direction:column;padding:24px;gap:20px}
   .roundcontrols{display:flex;flex-direction:column;gap:22px;padding:24px}
   .roundhd{display:flex;align-items:center;gap:8px;margin-bottom:14px;font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--ink)}
   .rdhd-drag{margin-left:auto;font:400 0.625rem/1 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   .rdhd-hint{font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);margin-left:auto}
-  .plate{position:relative;background:transparent;border:1px solid var(--line-card);border-radius:1px;padding:16px}
-  .plate img{display:block;width:100%;cursor:zoom-in}
+  .plate{position:relative;background:transparent;border:1px solid var(--line-card);border-radius:1px;padding:14px}
+  .plate img{display:block;width:100%;max-height:74vh;object-fit:contain;cursor:zoom-in}
   .imgfail{display:flex;align-items:center;justify-content:center;min-height:280px;color:var(--muted);font:500 13px 'Manrope',monospace;text-align:center;padding:20px;background:repeating-linear-gradient(45deg,#f3f0e8,#f3f0e8 11px,#ece9e0 11px,#ece9e0 22px)}
   .tierdots{display:flex;gap:3px;justify-content:center;margin-top:3px}
   .td{width:7px;height:7px;border-radius:50%;border:1.5px solid;box-sizing:border-box}
@@ -145,8 +145,8 @@
   input[type=text]:focus{border-color:var(--accent)}
   .ginput{font:400 0.875rem 'Manrope',sans-serif;padding:9px 12px;border:1px solid var(--line-card);border-radius:var(--r-md)} /* account email/password fields */
   .ginput:focus{border-color:var(--accent);outline:none}
-  .ac{position:relative}
-  .ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:1000;background:#fff;
+  .ac{position:relative;z-index:2000}
+  .ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:2000;background:#fff;
     border:1px solid var(--line-card);border-radius:4px;overflow:hidden}
   .ac-item{padding:9px 13px;color:var(--ink);font:12px 'Manrope',monospace;cursor:pointer;border-top:1px solid #eee9dc}
   .ac-item:first-child{border-top:none}

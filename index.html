@@ -2180,13 +2180,9 @@ function renderRound(){
   let n=1; const fields=[];
   if(show('when')) fields.push({k:'when', html:`
     <div class="roundhd"><span>${n}</span>${DIA}<span>timeline</span></div>
-    <div class="tl-year-row" style="display:flex;align-items:center;gap:12px;margin-bottom:9px"><span class="year" id="yv">${fmtYear(startYear)}</span><span class="eratag" id="era">EARLY MODERN</span><span class="tl-drag-text" style="margin-left:auto;font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--muted)">drag to adjust <span style="display:inline-flex;align-items:center;vertical-align:middle;margin:0 3px"><svg width="5" height="5" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span> <span id="schemehint">select a location on the map to reveal that region&rsquo;s general time periods</span></span></div>
-    <div class="timeline-line-wrap">
-      <div class="timeline-line-mid">
-        <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
-      </div>
-    </div>
-    <div class="tltick-wrap"><div class="tltick-inner">${(()=>{const lo=TRAIN_SPAN?TRAIN_SPAN.lo:MINY, hi=TRAIN_SPAN?TRAIN_SPAN.hi:MAXY;const start=Math.ceil(lo/500)*500;const tt=[];for(let y=start;y<=2000;y+=500){if(hi-y<100)continue;const yy=y===0?-1:y;const major=y%1000===0;const milestone=y===start||y===0;tt.push({y:yy,major,milestone});}tt.push({y:hi,major:true,milestone:true});let lastLab=-99;return tt.map(({y,major,milestone},i)=>{const pos=yearToPos(y)/10;const showLb=i===0||i===tt.length-1||pos-lastLab>=9;if(showLb)lastLab=pos;return `<div class="tltick ${major?'major':'minor'}${milestone?' milestone':''}" style="left:${pos.toFixed(2)}%">${showLb?`<span class="tltick-lb">${fmtYear(y)}</span>`:''}</div>`;}).join('');})()}</div></div>`}); n++;
+    <div class="tl-year-row" style="display:flex;align-items:baseline;gap:12px;margin-bottom:9px;flex-wrap:wrap"><span class="year" id="yv">${fmtYear(startYear)}</span><span class="eratag" id="era">EARLY MODERN</span><span class="tl-drag-text" style="margin-left:auto;font:400 0.875rem/1.5 'Manrope',sans-serif;color:var(--muted)">drag to adjust <span style="display:inline-flex;align-items:center;vertical-align:middle;margin:0 3px"><svg width="5" height="5" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span> <span id="schemehint">select a location on the map to reveal that region&rsquo;s general time periods</span></span></div>
+    <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
+    <div class="minmax"><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.lo:MINY)}</span><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.hi:MAXY)}</span></div>`}); n++;
   const naField=(label,icon,reason)=>({na:true, html:`<div class="roundhd"><span style="color:var(--faint)">—</span>${DIA}<span style="color:var(--muted)">${label}</span></div>
       <div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
   const drillAxis = TRAIN && TRAIN.axis;
@@ -2240,15 +2236,14 @@ function renderRound(){
             </div>
           </div>
         </div>
-        <div class="roundtimeline">${fields.find(f=>f.k==='when')?fields.find(f=>f.k==='when').html:fields[0].html}</div>
-        <div class="roundcontrols">${fields.filter(f=>f.k!=='when'&&f.k!=='style'&&f.k!=='medium'?false:true).length?'':''}${fields.filter(f=>['medium','style'].includes(f.k)).map(f=>`<div>${f.html}</div>`).join('')}
-          ${fields.filter(f=>f.na&&f.html&&!/timeline<\/span>/.test(f.html)).length?'':''}
-          ${(!show('medium'))?`<div>${naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')).html}</div>`:''}
-          ${(!show('style'))?`<div>${naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')).html}</div>`:''}
+        <div class="roundcontrols">
+          <div class="roundtimeline">${show('when')?fields.find(f=>f.k==='when').html:naField('When made','when',naReason('when','Hidden in this drill.')).html}</div>
+          <div>${show('medium')?fields.find(f=>f.k==='medium').html:naField('Medium','medium',naReason('medium','Medium not recorded — not part of this round.')).html}</div>
+          <div>${show('style')?fields.find(f=>f.k==='style').html:naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')).html}</div>
           <div>${artistHTML}</div>
-          ${hideMap?`<div><div class="roundhd"><span style="color:var(--faint)">—</span>${DIA}<span style="color:var(--muted)">place of origin</span></div><div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${naReason('where','Hidden in this drill.')}</div></div>`:`<div>
+          ${hideMap?`<div><div class="roundhd"><span style="color:var(--faint)">—</span>${DIA}<span style="color:var(--muted)">place of origin</span></div><div style="font:11px 'Manrope',sans-serif;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${naReason('where','Hidden in this drill.')}</div></div>`:`<div>
             <div class="roundhd"><span>${whereN}</span>${DIA}<span>place of origin</span></div>
-            <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'IBM Plex Mono',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
+            <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',sans-serif;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
             <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
             <div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-top:6px">tap to pin · pinch or use +/&minus; to zoom</div>
           </div>`}
