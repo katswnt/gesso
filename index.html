@@ -48,7 +48,7 @@
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cpath%20fill='%232230b8'%20d='M8%2034C8%2017%2021%206%2037%2010c14%204%2023%2018%2017%2032-5%2013-22%2018-35%2011C11%2049%207%2042%208%2034Z'/%3E%3Ccircle%20cx='25'%20cy='25'%20r='7'%20fill='%23f6f4ee'%20fill-opacity='.82'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css?v=6">
+<link rel="stylesheet" href="/styles.css?v=7">
 </head>
 <body>
 <div class="wrap"><div id="stage"></div></div>
@@ -1258,7 +1258,7 @@ function artistDisplay(it){ if(!it||!it.artist) return ""; const pre=it.attribut
 function styleKindLabel(it){ const k=it&&it.styleKind; return k==='culture'?'CULTURE':k==='period'?'PERIOD':k==='school'?'SCHOOL':'MOVEMENT'; }
 const SENSITIVE_FRAME={funerary:"A funerary object — made for the tomb and the afterlife, not for display. Shown here to teach, with respect for its purpose.",sacred:"A sacred or ritual object that carried religious meaning for the people who made it. We present it with that context in mind."};
 function contextHTML(it){ if(!it) return ''; const parts=[]; if(it.sensitive&&SENSITIVE_FRAME[it.sensitive]) parts.push(SENSITIVE_FRAME[it.sensitive]); if(it.provenanceNote) parts.push(it.provenanceNote); if(it.contextNote) parts.push(it.contextNote); if(!parts.length) return '';
-  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:6px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
+  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:6px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
 const ICONS = {
   when:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>`,
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
@@ -1499,8 +1499,8 @@ function renderCollections(){
   const REGCOL=REGION_COLORS;
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div><div style="font:700 15px Archivo,sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
-      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px Archivo;font-variant-numeric:tabular-nums">${s.count}</span></div>
+      <div><div style="font:700 15px 'Faculty Glyphic',sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
+      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px 'Faculty Glyphic';font-variant-numeric:tabular-nums">${s.count}</span></div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
     <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} ${ICONS.ext}</div></a>`).join('');
   const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
@@ -1519,18 +1519,18 @@ function renderCollections(){
   // live list of the open-access source museums (auto-includes any source we add — no stale prose)
   const srcList=C.sources.filter(s=>s.count>0 && s.name!=='Wikidata & Wikimedia Commons').map(s=>s.name).join(', ');
   const canonCards=C.holdings.slice(0,10).map(c=>`<div class="colcard" style="max-width:300px;flex:1 1 200px">
-    <div style="font:700 13px Archivo,sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}${c.city?' · ':''}${c.count} here</div>
+    <div style="font:700 13px 'Faculty Glyphic',sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}${c.city?' · ':''}${c.count} here</div>
     ${c.work?`<div style="font-size:12px;color:var(--accent);margin-top:6px">e.g. ${esc(c.work)}</div>`:''}</div>`).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div style="padding:26px 24px 40px">
     <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 320px"><div class="kick" style="color:var(--accent)">Collections</div>
-        <h1 style="font:800 32px Archivo,sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
+        <h1 style="font:800 32px 'Faculty Glyphic',sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
         <p style="color:var(--muted);line-height:1.6;font-size:15px">Every work here is shown under an open license — public domain or CC0. That one rule shapes the whole collection: what&rsquo;s here, what isn&rsquo;t, and why.</p>
         <p style="color:var(--muted);line-height:1.6;font-size:14px;margin-top:10px">It&rsquo;s a living, continually-corrected collection — not a canon. Dates and makers carry real uncertainty (you&rsquo;ll see &ldquo;c.&rdquo; ranges and &ldquo;attributed to&rdquo; where scholars aren&rsquo;t sure), premodern and non-Western works are named by <em>culture and period</em> rather than forced into a &ldquo;movement,&rdquo; and objects with contested histories or sacred meaning are shown with that context — not as trophies.</p></div>
       <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:10px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
-        <div><div style="font:800 28px Archivo">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
-        <div><div style="font:800 28px Archivo">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
-        <div><div style="font:800 28px Archivo">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
+        <div><div style="font:800 28px 'Faculty Glyphic'">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
+        <div><div style="font:800 28px 'Faculty Glyphic'">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
+        <div><div style="font:800 28px 'Faculty Glyphic'">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
     </div>
     <div class="kick" style="margin:34px 0 14px">The open collections</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
@@ -1539,20 +1539,20 @@ function renderCollections(){
     <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Smaller pins: famous collections we draw from via Wikidata.</div>
     <div class="kick" style="margin:30px 0 10px">Famous collections, via Wikidata</div>
     <p style="color:var(--muted);line-height:1.55;font-size:14px;margin:0 0 14px">Their most-recognized works reach us through Wikidata &amp; Wikimedia Commons (public-domain images), credited to each holding museum:</p>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${C.holdings.slice(0,24).map(m=>`<div class="colcard" style="flex:0 1 auto;padding:9px 13px"><span style="font:700 13px Archivo,sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}${m.city?' · ':''}${m.count}</span></div>`).join('')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${C.holdings.slice(0,24).map(m=>`<div class="colcard" style="flex:0 1 auto;padding:9px 13px"><span style="font:700 13px 'Faculty Glyphic',sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}${m.city?' · ':''}${m.count}</span></div>`).join('')}</div>
     <div class="kick" style="margin:36px 0 6px">Why the collection looks like this</div>
     <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">${leansLine}</p>
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-${pdYear}, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-${pdYear}, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
     <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
       <div class="mono" style="color:var(--accent);font-weight:700">04</div>
-      <div style="font:700 15px Archivo;margin:4px 0 7px">The African-museum gap</div>
+      <div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">The African-museum gap</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.55">We wanted to source directly from museums across Africa. On Wikidata, the Bardo in Tunis has over 3,000 catalogued objects and almost no open-access images. Iziko in Cape Town, the National Museum in Lagos &mdash; same story. The Egyptian Museum in Cairo is the only major African museum with real image coverage. African heritage is overwhelmingly catalogued under the <em>Western</em> museums that hold it: the Benin Bronzes sit in London and New York, not Lagos. So African art reaches this site mostly through Western holding-museums or by country of origin &mdash; a digital reflection of how that art was physically dispersed.
-      <div style="margin-top:10px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em">Learn more &middot; restitution &amp; the digital record:
+      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Learn more &middot; restitution &amp; the digital record:
         <a href="https://en.wikipedia.org/wiki/Dahomey_(film)" target="_blank" rel="noopener" style="color:var(--accent)">Mati Diop, <em>Dahomey</em> (2024)</a> &middot;
         <a href="https://digitalbenin.org/" target="_blank" rel="noopener" style="color:var(--accent)">Digital Benin</a> &middot;
         <a href="https://restitutionreport2018.com/" target="_blank" rel="noopener" style="color:var(--accent)">the Sarr&ndash;Savoy Report</a> &middot;
@@ -1560,13 +1560,13 @@ function renderCollections(){
         <a href="https://www.plutobooks.com/product/the-brutish-museums/" target="_blank" rel="noopener" style="color:var(--accent)">Dan Hicks, <em>The Brutish Museums</em></a></div></div></div>
     <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
       <div class="mono" style="color:var(--accent);font-weight:700">05</div>
-      <div style="font:700 15px Archivo;margin:4px 0 7px">Why the Americas &amp; Oceania are thin</div>
+      <div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Why the Americas &amp; Oceania are thin</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.55">
         <strong>North America (${regPct('North America')}%)</strong> looks low because the big US museums we draw from are <em>encyclopedic</em> &mdash; most of what they hold (and what Wikipedia documents) is European and Asian. Origin means where a work was made, so a Monet hanging in Chicago counts as European here.<br><br>
         <strong>South America (${regPct('South America')}%)</strong> is squeezed from both sides. Pre-Columbian work has almost no Wikipedia footprint, which means it rarely clears our recognizability threshold. The great 20th-century Latin American canon &mdash; Kahlo, Rivera, Tarsila &mdash; is mostly post-${pdYear} and still under copyright (the 1900 cliff). And few South American museums open-license their images.<br><br>
         <strong>Oceania (${regPct('Oceania')}%)</strong> is the starkest gap. The work is overwhelmingly traditional and often anonymous, held in <em>Western</em> ethnographic museums &mdash; the quai Branly, the British Museum, the Met&rsquo;s Rockefeller Wing &mdash; that don&rsquo;t openly license their photography. Same dispersal story as African art, plus an even thinner Wikipedia trail.<br><br>
         We&rsquo;re working to close these gaps by pulling open-licensed works from Wikimedia Commons. They tend to land in the harder tiers (rarely recognised), but they put the rest of the world on the board.</div>
-      <div style="margin-top:10px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.04em">Learn more &middot; the same patterns, different continents:
+      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Learn more &middot; the same patterns, different continents:
         <a href="https://itvs.org/films/aanikoobijigan/" target="_blank" rel="noopener" style="color:var(--accent)">Khalil &amp; Khalil, <em>Aanikoobijigan</em> (2026)</a> &middot;
         <a href="https://thamesandhudson.com/possessions-indigenous-art-colonial-culture-decolonization-9780500296592" target="_blank" rel="noopener" style="color:var(--accent)">Nicholas Thomas, <em>Possessions</em></a></div></div>
     <div class="kick" style="margin:36px 0 6px">Where the canon hangs</div>
@@ -1807,14 +1807,14 @@ function trainTeaserChips(){const a=TRAIN_TEASERS.slice();for(let i=a.length-1;i
 function dabShape(i){return DABS[((i|0)+1)%DABS.length];}
 function dabIcon(cls){return L.divIcon({className:'dabpin'+(cls?' '+cls:''),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});}
 function dabRot(i){return ((i|0)*37)%13-6;}
-function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px Archivo;">${esc(initialsOf(name))}</span>`;}
+function dabAvatar(name,color,size,i){size=size||40;const shape=i==null?ID_SHAPE:dabShape(i);const rot=i==null?0:dabRot(i);return `<span style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:${shape};transform:rotate(${rot}deg);background:${esc(color)};color:#fff;font:700 ${Math.round(size*0.36)}px 'Faculty Glyphic';">${esc(initialsOf(name))}</span>`;}
 function openIdentityModal(after){
   const id=loadIdentity();let cur={name:id.name,color:id.color};
   const swatches=SWATCHES.map(c=>`<button type="button" class="idsw" data-c="${c}" aria-label="color ${c}" style="width:32px;height:32px;border:0;border-radius:${ID_SHAPE};background:${c};outline:${c===cur.color?'2.5px solid var(--ink)':'none'};outline-offset:2px;cursor:pointer"></button>`).join('');
   const {veil,close,$}=openModal({title:'Your register entry',ariaLabel:'Your name and color',
     body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
-        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
+        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px 'Faculty Glyphic';padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:170px;overflow-y:auto">${swatches}</div>
       <button class="btn" id="idsave">Save</button>
       <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
@@ -1872,16 +1872,16 @@ function mastersBandHTML(tier,dateStr,you){ const m=masterTotals(tier,dateStr); 
   const html=rows.map(x=>{
     if(x.you) return `<div style="display:flex;align-items:center;gap:11px;min-height:42px;padding:7px 8px;border-bottom:1px solid var(--line-card);background:rgba(34,48,184,.07);border-left:3px solid var(--accent)">
       ${dabAvatar(x.name,x.color||'#2230b8',32)}
-      <span style="flex:1;min-width:0;font:800 14px Archivo">${esc(x.name)} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">you</span></span>
+      <span style="flex:1;min-width:0;font:800 14px 'Faculty Glyphic'">${esc(x.name)} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">you</span></span>
       <span class="mono" style="font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)">${x.score.toLocaleString()}</span></div>`;
     return `<div style="display:flex;align-items:center;gap:11px;min-height:42px;padding:7px 8px;border-bottom:1px solid var(--line-card);opacity:.92">
       ${dabAvatar(x.name,MASTER_COLOR,32)}
       <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2">
-        <span style="font:700 14px Archivo;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.name)}</span>
+        <span style="font:700 14px 'Faculty Glyphic';font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.name)}</span>
         <span class="mono" style="font-size:10px;color:var(--muted)">${esc(x.blurb)}</span></span>
       <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums;color:${MASTER_COLOR}">${x.score.toLocaleString()}</span></div>`;}).join('');
   return `<div style="margin-top:22px;border-top:1px dashed var(--line-card);padding-top:14px">
-    <div style="font:800 14px Archivo">🎭 The Masters <span class="mono" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">simulated benchmarks</span></div>
+    <div style="font:800 14px 'Faculty Glyphic'">🎭 The Masters <span class="mono" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">simulated benchmarks</span></div>
     <div class="mono" style="font-size:11px;color:var(--muted);margin:3px 0 10px">How art-history&rsquo;s greats would score on today&rsquo;s ${esc(tier)} puzzle &mdash; each strongest in their own era &amp; place${you?', with your score slotted in':''}. Beat them on their home turf.</div>
     ${html}</div>`; }
 
@@ -1891,16 +1891,16 @@ async function renderLeaderboard(tierKey,dateStr){
   lbDate = dateStr!==undefined ? dateStr : today; // fresh entry → today; tab-switch passes lbDate to stay
   const date=lbDate, isToday=date===today; const id=loadIdentity();
   const prevD=addDays(date,-1), nextD=addDays(date,1), hasNext=date<today;
-  const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
+  const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'Manrope';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
   const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
     <div class="laurel"><img src="/assets/laurel_wreath.png" alt="" /></div>
     <div class="kick" style="color:var(--accent);text-align:center">The Register</div>
     <div style="display:flex;align-items:center;gap:10px;margin:2px 0 2px">
-      <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:pointer;font:700 16px Archivo;color:var(--accent)">‹</button>
-      <div style="font:800 24px Archivo;flex:1">${isToday?'Today&rsquo;s leaderboard':esc(niceDate(date))}</div>
-      <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:${hasNext?'pointer':'default'};font:700 16px Archivo;color:${hasNext?'var(--accent)':'var(--line-card)'}">›</button></div>
-    <div class="mono" style="font:500 11px 'IBM Plex Mono';color:var(--muted);margin-bottom:14px">no. ${esc(accession)}${isToday?` &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span>`:''}</div>
+      <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:pointer;font:700 16px 'Faculty Glyphic';color:var(--accent)">‹</button>
+      <div style="font:800 24px 'Faculty Glyphic';flex:1">${isToday?'Today&rsquo;s leaderboard':esc(niceDate(date))}</div>
+      <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:${hasNext?'pointer':'default'};font:700 16px 'Faculty Glyphic';color:${hasNext?'var(--accent)':'var(--line-card)'}">›</button></div>
+    <div class="mono" style="font:500 11px 'Manrope';color:var(--muted);margin-bottom:14px">no. ${esc(accession)}${isToday?` &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span>`:''}</div>
     <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
     <div id="lbbody" aria-live="polite"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
     <div style="margin-top:18px"><button class="btn2" data-editid>Edit your name &amp; color</button>
@@ -1919,13 +1919,13 @@ async function renderLeaderboard(tierKey,dateStr){
   // podium order: 2nd, 1st, 3rd
   const podOrder=[1,0,2];
   const top=data.rows.slice(0,3);
-  const podiumCell=(rank)=>{const r=top[rank];if(!r)return '<div></div>';const m=METAL[rank];const crown=rank===0?`<div style="font:700 13px Archivo;color:${m.pink};margin-bottom:5px">${ICONS.crown}</div>`:'';
+  const podiumCell=(rank)=>{const r=top[rank];if(!r)return '<div></div>';const m=METAL[rank];const crown=rank===0?`<div style="font:700 13px 'Faculty Glyphic';color:${m.pink};margin-bottom:5px">${ICONS.crown}</div>`:'';
     return `<div style="text-align:center;min-width:0">${crown}
       <span style="display:inline-flex">${dabAvatar(r.name,r.color,m.av,rank)}</span>
-      <div style="margin-top:8px;font:700 ${rank===0?16:14}px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
-      <div class="mono" style="font:700 12px 'IBM Plex Mono';color:${m.sub};font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</div>
+      <div style="margin-top:8px;font:700 ${rank===0?16:14}px 'Faculty Glyphic';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
+      <div class="mono" style="font:700 12px 'Manrope';color:${m.sub};font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</div>
       ${r.cold?`<div style="margin-top:3px">${coldBadge(r)}</div>`:''}
-      <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px Archivo;color:${m.pink}">${r.rank}</div>
+      <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px 'Faculty Glyphic';color:${m.pink}">${r.rank}</div>
     </div>`;};
   const podium=`<div style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;padding:6px 0 14px">${podOrder.map(podiumCell).join('')}</div>`;
   const rest=data.rows.slice(3);
@@ -1937,10 +1937,10 @@ async function renderLeaderboard(tierKey,dateStr){
       <div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 8px">
         <span class="mono" style="width:30px;text-align:right;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums">${data.you.rank}</span>
         ${dabAvatar(id.name,id.color,34)}
-        <span style="flex:1;min-width:0;font:700 14px Archivo">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" data-editid class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'IBM Plex Mono';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
+        <span style="flex:1;min-width:0;font:700 14px 'Faculty Glyphic'">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" data-editid class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'Manrope';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
         <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${data.you.score.toLocaleString()}</span></div></div>`;
   }
-  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px Archivo">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
+  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px 'Faculty Glyphic'">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
   const more = data.count>data.rows.length ? `<button class="btn2" id="lbmore" style="width:100%;margin-top:12px">Show more (${data.count-data.rows.length} more)</button>` : '';
   const masters=mastersBandHTML(lbTier,date,data.you?{score:data.you.score,name:id.name,color:id.color}:null);
   body.innerHTML=podium+`<div id="lbrows">${rest.map(lbRowHTML).join('')}</div>`+more+selfRow+youLine+masters;
@@ -1952,7 +1952,7 @@ function coldBadge(r){ return r&&r.cold?`<span class="mono" title="Nailed it on 
 function lbRowHTML(r){ return `<div style="display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.07);border-left:3px solid var(--accent)':''}">
     <span class="mono" style="width:34px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
     ${dabAvatar(r.name,r.color,34,r.rank-1)}
-    <span style="flex:1;min-width:0;font:600 15px Archivo;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
+    <span style="flex:1;min-width:0;font:600 15px 'Faculty Glyphic';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:10px;font-weight:700;color:var(--accent)">YOU</span>':''}</span>
     ${coldBadge(r)}<span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</span></div>`; }
 let lbShown=0;
 async function loadMoreLeaderboard(btn){ btn.disabled=true; const orig=btn.textContent; btn.textContent='Loading…';
@@ -2015,7 +2015,7 @@ function openLogin(){
   const c=sb();
   const oauthBtns=OAUTH.map(([p,l])=>`<button type="button" class="btn2 oauth" data-oauth="${p}" style="text-align:center">Continue with ${l}</button>`).join('');
   const {veil,close}=openModal({title:'Sign in to Gesso',body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
-      ${authUser?`<div style="font:600 15px Archivo">Signed in as ${esc(authUser.email||'your account')}</div>
+      ${authUser?`<div style="font:600 15px 'Faculty Glyphic'">Signed in as ${esc(authUser.email||'your account')}</div>
       <div class="kick" style="margin-top:2px">Linked sign-in methods</div>
       <div id="linked" style="display:flex;flex-direction:column;gap:8px"><span class="mono" style="font-size:12px;color:var(--muted)">Loading…</span></div>
       <input id="apass2" type="password" placeholder="set or change password" autocomplete="new-password" class="ginput"/>
@@ -2211,12 +2211,12 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
   const rounds=Math.max(1,Math.round(cnt/5));
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 40px;max-width:640px;margin:0 auto">
     <div class="kick" style="color:var(--accent)">Gesso · Training</div>
-    <div style="font:800 28px Archivo;margin:2px 0 6px">What do you want to practise?</div>
+    <div style="font:800 28px 'Faculty Glyphic';margin:2px 0 6px">What do you want to practise?</div>
     <div style="color:var(--muted);font-size:14px;margin-bottom:18px">Search or browse to add filters. The count updates as you go, so you always know what you'll get. Won't affect your streak or stats.</div>
 
     <div style="position:relative;margin-bottom:18px">
       <div class="tsearchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="tsearch" type="text" name="gesso-filter-q" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex:1;border:none;outline:none;background:transparent;font:500 14px Archivo;color:var(--ink)"/></div>
+        <input id="tsearch" type="text" name="gesso-filter-q" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex:1;border:none;outline:none;background:transparent;font:500 14px 'Faculty Glyphic';color:var(--ink)"/></div>
       <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:9px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
     </div>
 
@@ -2229,7 +2229,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
 
     <div class="tcount" aria-live="polite" style="margin-top:16px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
-        <span style="display:flex;align-items:baseline;gap:7px"><b class="tab" style="font:800 26px Archivo;color:var(--accent)">${cnt.toLocaleString()}</b><span class="mono" style="font-size:11px;color:var(--muted)">works match</span></span>
+        <span style="display:flex;align-items:baseline;gap:7px"><b class="tab" style="font:800 26px 'Faculty Glyphic';color:var(--accent)">${cnt.toLocaleString()}</b><span class="mono" style="font-size:11px;color:var(--muted)">works match</span></span>
         <button id="tbreaktog" class="mono" style="background:none;border:none;font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--accent-underline)">${__trainBreak?'hide':'show'} breakdown</button>
       </div>
       <div id="tnarrow" style="margin-top:12px;${__trainBreak?'display:flex':'display:none'};flex-direction:column;gap:6px">${trainFunnel(T,cnt)}</div>
@@ -2237,7 +2237,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
     </div>
 
     <div class="seclbl" style="margin:18px 0 9px">Focus</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:8px;font:700 12px 'IBM Plex Mono';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:8px;font:700 12px 'Manrope';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
 
     <button class="btn" id="tstart" style="width:100%${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button>
     <button class="btn2" data-route="home" style="margin-top:12px">← Back to home</button>
@@ -2249,7 +2249,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
     const hits=__trainCatOpts.filter(v=>norm(v.label).includes(q)).slice(0,10);
     res.style.display='block';
     res.innerHTML=hits.length?hits.map(v=>{ const on=T.facets[v.fam].has(v.val); const tag=v.tag||(TRAIN_FAMS.find(f=>f[0]===v.famKey)||[])[1]||v.famKey;
-      return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:600 14px Archivo">${esc(v.label)}</span></span><span class="mono" style="font-size:11px;color:${on?'var(--accent)':'var(--faint)'}">${on?'added':v.count}</span></div>`;
+      return `<div class="sr" role="option" data-tf="${v.fam}" data-tv="${trainEnc(v.val)}"><span style="display:flex;align-items:center;gap:9px"><span class="srtag">${esc(tag)}</span><span style="font:600 14px 'Faculty Glyphic'">${esc(v.label)}</span></span><span class="mono" style="font-size:11px;color:${on?'var(--accent)':'var(--faint)'}">${on?'added':v.count}</span></div>`;
     }).join(''):`<div class="sr" style="cursor:default;color:var(--faint)">No match for "${esc(s.value)}"</div>`;
     res.querySelectorAll('[data-tf]').forEach(r=>r.onclick=()=>{ trainToggle(r.dataset.tf,r.dataset.tv); s.value=''; res.style.display='none'; renderTraining(false); });
   };
@@ -2336,15 +2336,15 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   const metCount=MOVEMENT_NAMES.filter(n=>g.met&&g.met[n]).length, glossTot=glossaryTotal();
   const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
   const catRow=(k,lbl)=>{ const st=(m.byCategory||{})[k]; const p=st&&st.total?Math.round(st.correct/st.total*100):null;
-    return `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font:600 13px Archivo;margin-bottom:4px"><span>${lbl}</span><span class="mono" style="color:${p==null?'var(--faint)':bandCol(p)};font-variant-numeric:tabular-nums">${p==null?'—':p+'%'}</span></div><div style="height:7px;background:var(--line-card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p||0}%;background:${p==null?'var(--line-card)':bandCol(p)}"></div></div></div>`; };
+    return `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font:600 13px 'Faculty Glyphic';margin-bottom:4px"><span>${lbl}</span><span class="mono" style="color:${p==null?'var(--faint)':bandCol(p)};font-variant-numeric:tabular-nums">${p==null?'—':p+'%'}</span></div><div style="height:7px;background:var(--line-card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p||0}%;background:${p==null?'var(--line-card)':bandCol(p)}"></div></div></div>`; };
   const w=weakestSlice();
   const sliceList=(map,n)=>Object.entries(map||{}).filter(([,s])=>s.total>=3).map(([k,s])=>({k,p:Math.round(s.correct/s.total*100)})).sort((a,b)=>b.p-a.p);
   const movAcc=sliceList(m.byStyle), nail=movAcc.slice(0,3), whiff=movAcc.slice(-3).reverse().filter(x=>!nail.includes(x));
-  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:10px;padding:13px"><div style="font:800 24px Archivo">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
+  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:10px;padding:13px"><div style="font:800 24px 'Faculty Glyphic'">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:760px;margin:0 auto">
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap">
       ${dabAvatar(id.name,id.color,64)}
-      <div style="flex:1 1 180px;min-width:0"><div style="font:800 26px Archivo;overflow-wrap:anywhere">${esc(id.name||'You')}</div>
+      <div style="flex:1 1 180px;min-width:0"><div style="font:800 26px 'Faculty Glyphic';overflow-wrap:anywhere">${esc(id.name||'You')}</div>
         <div class="mono" style="font-size:12px;color:var(--muted);overflow-wrap:anywhere">${authUser?esc(authUser.email||'signed in'):'playing on this device'}${daysPlayed?` &middot; ${daysPlayed} day${daysPlayed===1?'':'s'} played`:''}</div></div>
       <button class="btn2" data-editid style="flex:0 0 auto">Edit profile</button></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
@@ -2483,15 +2483,16 @@ function renderStart(dateStr,push=true){
     ${img1}
     ${replay?'':`<div class="zlabel"><b>Today&rsquo;s daily</b><i>&middot; pick a difficulty</i></div>`}
     <div class="difs">
-      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}"><div class="tier">TIER 0${i+1}</div>
+      ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
+        <div class="nm">${t.label}</div>
         <span class="difdot" style="color:${TIERDOT[t.key]||'var(--accent)'}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>
-        <div class="nm">${t.label}</div><div class="bl">${t.blurb}</div>
+        <div class="bl">${t.blurb}</div>
         <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
     ${replay?'':`<div style="text-align:center;margin:2px 0 6px">
-      <button type="button" id="ystrday" style="background:none;border:none;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">&larr; Yesterday&rsquo;s puzzle</button>
+      <button type="button" id="ystrday" style="background:none;border:none;font:700 11px 'Manrope',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">&larr; Yesterday&rsquo;s puzzle</button>
       <span style="color:var(--muted);font-size:11px">&middot;</span>
-      <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
+      <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'Manrope',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
     </div>`}
     ${replay?'':`<div class="practicezone">
       <div class="pz-block">
@@ -2613,15 +2614,15 @@ function renderInfiniteSummary(){
       medium:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="currentColor"/>`,
       artist:`<path ${s} d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"/><path ${s} d="M3.6 18h13.8"/>` };
     return `<svg viewBox="0 0 24 24" width="16" height="16" style="color:var(--ink-soft)">${m[key]||''}</svg>`; };
-  const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px 'Archivo',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'IBM Plex Mono',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
+  const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px ''Faculty Glyphic'',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'Manrope',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Endless session &middot; '+esc(tierName)}</span>
-        <span style="display:flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
+        <span style="display:flex;align-items:center;gap:6px;font:600 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>
-      ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:9px;font:600 15px Archivo;color:var(--ink)">${deltaLine}</div>`:''}</div></div>
+      ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:9px;font:600 15px 'Faculty Glyphic';color:var(--ink)">${deltaLine}</div>`:''}</div></div>
     <div class="statgrid">
       <div><div class="sv">${rounds}</div><div class="kick" style="color:var(--muted);margin-top:3px">Rounds</div></div>
       <div><div class="sv" data-cu="${total}">${total.toLocaleString()}</div><div class="kick" style="color:var(--muted);margin-top:3px">Total pts</div></div>
@@ -2634,8 +2635,8 @@ function renderInfiniteSummary(){
     </div></div>
     ${catPct.length?`<div style="padding:2px 24px 6px">
       <div class="sech"><span class="t">Your strengths this session</span><span class="r"></span></div>
-      <div style="display:flex;flex-direction:column;gap:11px">${catPct.map((x,i)=>{const col=bandCol(x.pct);return `<div style="display:flex;align-items:center;gap:11px"><span class="ico">${catIcon(x.c)}</span><span style="flex:0 0 74px;font:600 12px 'Archivo',sans-serif;color:var(--ink-soft)">${CATLBL[x.c]||x.c}</span><span class="rbar"><i style="width:${x.pct}%;background:${col};animation-delay:${(i*0.09).toFixed(2)}s"></i></span><span class="tab mono" style="flex:0 0 auto;min-width:34px;text-align:right;font:600 12px 'IBM Plex Mono',monospace;color:${col}">${x.pct}%</span></div>`;}).join('')}</div>
-      ${strong?`<div style="margin:14px 0 4px;font:400 13px/1.5 'Archivo',sans-serif;color:var(--ink-soft);display:flex;gap:18px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:11px">${catPct.map((x,i)=>{const col=bandCol(x.pct);return `<div style="display:flex;align-items:center;gap:11px"><span class="ico">${catIcon(x.c)}</span><span style="flex:0 0 74px;font:600 12px ''Faculty Glyphic'',sans-serif;color:var(--ink-soft)">${CATLBL[x.c]||x.c}</span><span class="rbar"><i style="width:${x.pct}%;background:${col};animation-delay:${(i*0.09).toFixed(2)}s"></i></span><span class="tab mono" style="flex:0 0 auto;min-width:34px;text-align:right;font:600 12px 'Manrope',monospace;color:${col}">${x.pct}%</span></div>`;}).join('')}</div>
+      ${strong?`<div style="margin:14px 0 4px;font:400 13px/1.5 ''Faculty Glyphic'',sans-serif;color:var(--ink-soft);display:flex;gap:18px;flex-wrap:wrap">
         <span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--full)"></span>Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong></span>
         ${weak&&weak.c!==strong.c?`<span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--miss)"></span>Most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong></span>`:''}</div>`:''}
     </div>`:''}
@@ -2645,11 +2646,11 @@ function renderInfiniteSummary(){
         ${byMov.length?`<div><div class="kick" style="color:var(--faint);margin-bottom:9px">Movements</div>${colCell(byMov)}</div>`:'<div></div>'}
         ${byReg.length?`<div><div class="kick" style="color:var(--faint);margin-bottom:9px">Regions</div>${colCell(byReg)}</div>`:'<div></div>'}
       </div>
-      <div style="margin-top:11px;font:italic 12px 'Archivo',sans-serif;color:var(--faint)">Based on this session — play more to sharpen the picture.</div>
+      <div style="margin-top:11px;font:italic 12px ''Faculty Glyphic'',sans-serif;color:var(--faint)">Based on this session — play more to sharpen the picture.</div>
     </div>`:''}
     ${nailed.length?`<div style="padding:0 24px 6px">
-      <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
-      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?ICONS.spark:ICONS.star;const row=`<span style="flex:0 0 auto;color:${col};font:700 13px 'Archivo',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px 'Archivo',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'IBM Plex Mono',monospace">${ICONS.ext}</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
+      <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'Manrope',monospace;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
+      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?ICONS.spark:ICONS.star;const row=`<span style="flex:0 0 auto;color:${col};font:700 13px ''Faculty Glyphic'',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px ''Faculty Glyphic'',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'Manrope',monospace">${ICONS.ext}</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
         return w.url?`<a class="wlink" href="${esc(w.url)}" target="_blank" rel="noopener">${row}</a>`:`<div class="wlink" style="cursor:default">${row}</div>`;}).join('')}</div>
     </div>`:''}
     <div style="padding:18px 24px 22px;display:flex;gap:11px;flex-wrap:wrap">
@@ -2690,10 +2691,10 @@ function renderRound(){
     <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
     <div class="minmax"><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.lo:MINY)}</span><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.hi:MAXY)}</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
-    <div id="schemehint" style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
+    <div id="schemehint" style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
   const naField=(label,icon,reason)=>({na:true, html:`<div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML(icon)}${label}</span></div>
-      <div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
+      <div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
   // explain a category that's been hidden/given/dropped this round (instead of silently omitting it)
   const drillAxis = TRAIN && TRAIN.axis;
   const given = TRAIN ? trainGivenCats() : new Set();
@@ -2714,8 +2715,8 @@ function renderRound(){
     const elimKind = (typeof CULTS!=='undefined' && CULTS.includes(it.style)) ? 'cultures' : 'movements';
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
-      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--faint)">↳ Place a pin on the map — matching the region rules out ${elimKind} that don&rsquo;t belong there, free</div>`:''}
-      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
+      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'Manrope',monospace;color:var(--faint)">↳ Place a pin on the map — matching the region rules out ${elimKind} that don&rsquo;t belong there, free</div>`:''}
+      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
@@ -2738,9 +2739,9 @@ function renderRound(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
-        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'IBM Plex Mono',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
+        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
           <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">SEARCH OR TAP TO PIN</span></div>
-          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'IBM Plex Mono',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
+          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
           <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
         </div>`}
       </div>
@@ -2781,7 +2782,7 @@ function renderRound(){
         let jj=Array.isArray(j)?j:[]; const seen=new Set(); // dedupe near-identical hits (same spot at ~1km / same name)
         jj=jj.filter(x=>{const k=(x.display_name||'')+'|'+(+x.lat).toFixed(1)+','+(+x.lon).toFixed(1); if(seen.has(k))return false; seen.add(k); return true;}).slice(0,5);
         if(!jj.length){sr.innerHTML=`<div class="ac-item" style="color:var(--muted)">No match</div>`;sr.style.display='block';return;}
-        sr.innerHTML=jj.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" data-bb="${(x.boundingbox||[]).join(',')}" style="font:11px 'IBM Plex Mono',monospace;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
+        sr.innerHTML=jj.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" data-bb="${(x.boundingbox||[]).join(',')}" style="font:11px 'Manrope',monospace;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
         sr.style.display='block';
         sr.querySelectorAll('.ac-item[data-lat]').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();
           const bb=(el.dataset.bb||'').split(',').map(Number); // [minlat,maxlat,minlon,maxlon]
@@ -3250,11 +3251,11 @@ function renderReveal(r,ri,push=true){
         ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)">
+          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
-          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'IBM Plex Mono',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
+          ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
         </div>
       </div>
     </div>
@@ -3262,14 +3263,14 @@ function renderReveal(r,ri,push=true){
       <div class="studygrid">
         <div class="study-notes">
           ${contextHTML(it)}
-          <div class="study-notes-label" style="font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Study notes</div>
+          <div class="study-notes-label" style="font:700 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Study notes</div>
           ${notesV2 ? `${notesHTML(study.notes)}` : `${study.cues&&study.cues.length?`<div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}`}
         </div>
         <div class="study-guide">
-          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Follow-up questions &middot; ${study.guide.length}</div>${guideHTML(study.guide)}`:''}
+          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Follow-up questions &middot; ${study.guide.length}</div>${guideHTML(study.guide)}`:''}
         </div>
       </div>
-      ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
+      ${ml?`<div class="mastery"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
@@ -3291,6 +3292,11 @@ function renderReveal(r,ri,push=true){
   document.querySelectorAll('.study .agq').forEach(b=>b.onclick=()=>{
     const open=b.getAttribute('aria-expanded')==='true';
     b.setAttribute('aria-expanded',open?'false':'true'); b.nextElementSibling.hidden=open;});
+  // DESKTOP: open the first ~5 study notes by default (the lesson is the reveal's payoff — no click needed);
+  // follow-up questions stay collapsed (13 open would be a wall). Mobile stays fully collapsed to avoid a long scroll.
+  if(window.matchMedia&&window.matchMedia('(min-width:961px)').matches){
+    document.querySelectorAll('.study-notes .agq').forEach((b,i)=>{ if(i<5){ b.setAttribute('aria-expanded','true'); if(b.nextElementSibling)b.nextElementSibling.hidden=false; } });
+  }
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
@@ -3363,15 +3369,15 @@ async function renderShareCard(data){
   const rs=data||lastFinal||{...resultSummary(),results:results.slice(),date:runDate||todayStr(),tier}, cardDate=rs.date||runDate||todayStr(), canvas=document.createElement('canvas'), ctx=canvas.getContext('2d'), cols=["when","where","medium","style","artist"];
   canvas.width=1080;canvas.height=1350;
   ctx.fillStyle=cssVar('--surface');ctx.fillRect(0,0,1080,1350);
-  ctx.fillStyle=cssVar('--accent');ctx.font='800 82px Archivo, sans-serif';ctx.fillText('gess',82,120);
+  ctx.fillStyle=cssVar('--accent');ctx.font="800 82px 'Faculty Glyphic', sans-serif";ctx.fillText('gess',82,120);
   const wordW=ctx.measureText('gess').width,dabR=(ctx.measureText('x').actualBoundingBoxAscent||41)/2,dabX=82+wordW+7+dabR,dabY=120-dabR;
   ctx.beginPath();ctx.arc(dabX,dabY,dabR,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=cssVar('--surface');ctx.beginPath();ctx.arc(dabX-dabR*.32,dabY-dabR*.32,dabR*.16,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillText('THE DAILY ART GAME · '+String(rs.tier||tier||'').toUpperCase(),84,166);
-  ctx.textAlign='right';ctx.font='500 25px IBM Plex Mono, monospace';ctx.fillText(accessionFor(cardDate),996,106);ctx.fillText(niceDate(cardDate),996,144);ctx.textAlign='left';
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px Manrope, monospace';ctx.fillText('THE DAILY ART GAME · '+String(rs.tier||tier||'').toUpperCase(),84,166);
+  ctx.textAlign='right';ctx.font='500 25px Manrope, monospace';ctx.fillText(accessionFor(cardDate),996,106);ctx.fillText(niceDate(cardDate),996,144);ctx.textAlign='left';
   const icons=await Promise.all(cols.map(iconImage)), x0=84,y0=250,labelW=44,gap=18,cell=(1080-x0*2-labelW-gap*5)/5,rowH=128;
   icons.forEach((img,i)=>{if(img)ctx.drawImage(img,x0+labelW+gap+i*(cell+gap)+cell/2-24,y0-58,48,48);});
-  ctx.font='600 24px IBM Plex Mono, monospace';ctx.fillStyle=cssVar('--faint');ctx.textAlign='center';
+  ctx.font='600 24px Manrope, monospace';ctx.fillStyle=cssVar('--faint');ctx.textAlign='center';
   rs.results.forEach((r,ri)=>{
     const y=y0+ri*rowH;ctx.fillStyle=cssVar('--faint');ctx.fillText(String(ri+1),x0+18,y+74);
     cols.forEach((c,ci)=>{
@@ -3379,15 +3385,15 @@ async function renderShareCard(data){
       const cellData=r.cells[c], x=x0+labelW+gap+ci*(cell+gap);
       ctx.fillStyle=cellColor(cellData.pts);roundRect(ctx,x,y,cell,rowH-26,16);ctx.fill();
       const mark=c==='artist'&&cellData.pts===MAX_CAT?'⭐':cellData.pts===MAX_CAT?'🎯':'';
-      if(settings.colorblind){ctx.font='800 48px Archivo, sans-serif';ctx.fillStyle='#fff';ctx.fillText(cellGlyph(cellData.pts),x+cell/2,y+62);}
+      if(settings.colorblind){ctx.font="800 48px 'Faculty Glyphic', sans-serif";ctx.fillStyle='#fff';ctx.fillText(cellGlyph(cellData.pts),x+cell/2,y+62);}
       else if(mark){ctx.font='46px Arial, sans-serif';ctx.fillStyle='#fff';ctx.fillText(mark,x+cell/2,y+62);}
     });
   });
   ctx.strokeStyle=cssVar('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(84,1130);ctx.lineTo(996,1130);ctx.stroke();
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px IBM Plex Mono, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
-  ctx.fillStyle=cssVar('--ink');ctx.font='800 78px Archivo, sans-serif';ctx.fillText(rs.grand.toLocaleString(),84,1260);
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px IBM Plex Mono, monospace';ctx.fillText(' / 50k',390,1255);
-  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px IBM Plex Mono, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 24px Manrope, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
+  ctx.fillStyle=cssVar('--ink');ctx.font="800 78px 'Faculty Glyphic', sans-serif";ctx.fillText(rs.grand.toLocaleString(),84,1260);
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px Manrope, monospace';ctx.fillText(' / 50k',390,1255);
+  ctx.fillStyle=cssVar('--accent');ctx.font='700 25px Manrope, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
   return canvas.toDataURL('image/png');
 }
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
@@ -3419,7 +3425,7 @@ function renderStreak(){
     <div class="retcap"><span class="wordmark">gess<span class="dabo"></span></span><span class="accn">DAILY ${accessionFor(today)}</span></div>
     <div class="streakbody">${missed?`
       <div class="streakdab reset"><span>0</span></div><div class="streaklabel" style="color:var(--muted)">Streak reset</div>
-      <div style="margin:10px auto 0;max-width:360px;font:400 14px/1.5 'Archivo',sans-serif;color:var(--muted)">Missed yesterday. Play today to start a new one — your best was <strong style="color:var(--ink)">${s.longest}</strong>.</div>
+      <div style="margin:10px auto 0;max-width:360px;font:400 14px/1.5 ''Faculty Glyphic'',sans-serif;color:var(--muted)">Missed yesterday. Play today to start a new one — your best was <strong style="color:var(--ink)">${s.longest}</strong>.</div>
       <div class="retactions" style="max-width:260px;margin-left:auto;margin-right:auto"><button class="btn" id="playtoday">Play today</button></div>`:`
       <div class="filedline">${playedToday?'✓ Filed for today · '+score.toLocaleString()+' pts':'Not filed today yet'}</div>
       <div class="streakdab"><span>${playedToday?s.current:Math.max(0,s.current)}</span></div><div class="streaklabel">Day streak</div>
@@ -3438,12 +3444,12 @@ function renderDayView(ds,push=true){
   const s=loadStreak(), today=todayStr(), bd=s.byDay[ds]||{}, done=TIERS.filter(t=>bd[t.key]!=null).length, canNext=ds<today;
   const rows=TIERS.map(t=>{const sc=bd[t.key], isDone=sc!=null;
     return `<div class="dayrow"><i class="td" style="width:13px;height:13px;background:${TIERDOT[t.key]};border-color:${TIERDOT[t.key]}"></i>
-      <div style="flex:1;min-width:0"><div style="font:700 14px Archivo,sans-serif">${t.label}</div><div class="mono" style="font-size:11px;color:var(--muted)">${esc(t.blurb)}</div></div>
+      <div style="flex:1;min-width:0"><div style="font:700 14px 'Faculty Glyphic',sans-serif">${t.label}</div><div class="mono" style="font-size:11px;color:var(--muted)">${esc(t.blurb)}</div></div>
       ${isDone?`<span class="mono" style="color:var(--full);font-size:12px;white-space:nowrap">&check; ${sc.toLocaleString()}</span><button class="btn2 dayplay" data-k="${t.key}" style="padding:6px 12px">Replay</button>`:`<button class="btn dayplay" data-k="${t.key}" style="width:auto;padding:8px 18px">Play</button>`}</div>`;}).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="retwrap"><div class="retcard">
     <div class="retcap"><button class="moveback" id="bkarch">&lsaquo; Archive</button>
       <div class="daypager"><button class="btn2" id="pday" data-ds="${ds}" aria-label="Previous day" style="padding:5px 11px">&lsaquo;</button><span class="mono" style="font-weight:600;letter-spacing:.04em">${niceDate(ds)}</span><button class="btn2" id="nday" aria-label="Next day" ${canNext?'':'disabled'} style="padding:5px 11px">&rsaquo;</button></div></div>
-    <div style="padding:16px 16px 2px"><div style="font:800 22px Archivo,sans-serif">${niceDate(ds)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:3px">${accessionFor(ds)} &middot; ${done} / 4 tiers filed</div></div>
+    <div style="padding:16px 16px 2px"><div style="font:800 22px 'Faculty Glyphic',sans-serif">${niceDate(ds)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:3px">${accessionFor(ds)} &middot; ${done} / 4 tiers filed</div></div>
     <div class="daygrid">${rows}</div>
     <div style="padding:0 16px 16px"><button class="btn2" id="dvlb" style="width:100%">View this day&rsquo;s leaderboard &rarr;</button></div>
   </div>${ATTRIB}</div></div>`;
