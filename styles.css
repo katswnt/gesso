@@ -112,8 +112,10 @@
   .attrib a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-underline)}
   .year{font:var(--num);letter-spacing:-.01em}
   .eratag{font:500 12px 'Manrope',monospace;color:var(--muted);white-space:nowrap}
-  input[type=range]{width:100%;accent-color:var(--accent);background:var(--track);cursor:pointer;
-    -webkit-appearance:none;appearance:none;height:4px;border-radius:3px;outline:none}
+  input[type=range]{width:100%;accent-color:var(--accent);background:transparent;cursor:pointer;
+    -webkit-appearance:none;appearance:none;height:22px;outline:none}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--track);border-radius:3px}
+  input[type=range]::-moz-range-track{height:4px;background:var(--track);border-radius:3px}
   .minmax{display:flex;justify-content:space-between;margin-top:6px;font:10px 'Manrope',monospace;color:var(--faint);white-space:nowrap}
   .pills{display:flex;flex-wrap:wrap;gap:7px}
   .pill{background:#fff;color:var(--ink);border:1px solid var(--line-card);padding:8px 13px;border-radius:var(--r-sm);
@@ -201,11 +203,13 @@
   .reportactions .btn2{border-color:#cdd2e8;color:var(--muted);padding:10px 14px}
   .reportthanks{display:flex;align-items:center;gap:8px;color:var(--full);font:600 11px 'Manrope',monospace}
   .reportthanks i{width:16px;height:16px;border-radius:50%;background:var(--full);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:10px}
-  .cue{display:flex;gap:12px;align-items:flex-start;padding:7px 0}
-  .cue .num{flex:0 0 16px;font:700 13px 'Faculty Glyphic',sans-serif;color:var(--ink)}
+  /* v1 "why breakdown" notes: card style matching the v2 look-closer note rows (.agrow), so the study-notes
+     column looks the same whether a work has v2 pins or only v1 cues */
+  .cue{display:flex;gap:11px;align-items:flex-start;padding:13px 15px;background:var(--study-bg);border:1px solid var(--study-border);border-radius:9px;margin-bottom:8px}
+  .cue .num{flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:700 10px 'Faculty Glyphic',sans-serif;display:flex;align-items:center;justify-content:center}
   /* de-blue the study-note decoration (headers/numbers) — keep blue for actions + look-closer dabs */
   .study .kick{color:var(--ink)}
-  .cue .tx{font:13px/1.55 'Manrope',monospace;color:var(--ink-soft)}
+  .cue .tx{font:400 0.9375rem/1.5 'Manrope',sans-serif;color:var(--ink)}
   .mastery{margin-top:20px;padding-top:16px;border-top:1px solid var(--study-border);
     display:flex;align-items:center;gap:13px;flex-wrap:wrap;font:12px 'Manrope',monospace;color:var(--ink)}
   .weak{color:var(--miss)}
@@ -472,7 +476,7 @@
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.035;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .big,.year,.bigscore,.scrow .pts .n,[data-cu]{font-variant-numeric:tabular-nums}
   .pip{width:11px;height:10px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:23px;height:21px;margin-top:-9px;border:none;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:grab}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:23px;height:21px;margin-top:-8.5px;border:none;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:grab}
   input[type=range]::-moz-range-thumb{width:23px;height:21px;border:none;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;cursor:grab}
   body.motion-ok input[type=range]::-webkit-slider-thumb{animation:dabWobble 5s ease-in-out infinite}
   .accn{position:relative;padding-left:14px}
