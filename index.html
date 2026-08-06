@@ -2736,7 +2736,7 @@ function renderRound(){
   // map
   marker=null; map=null;
   if(!hideMap){
-  map=L.map('map',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
+  map=L.map('map',{keyboard:false,worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   // Voyager basemap keeps place labels legible when zoomed in (the 'light' basemap thins them out).
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:13,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   // Map place-search: geocode via Nominatim, then pan/zoom the map to the result so remote spots (e.g. Tahiti)
