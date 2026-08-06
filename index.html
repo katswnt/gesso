@@ -766,6 +766,21 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 
 // ---------- data / indexes ----------
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
+// STAGING-ONLY demo flag: add ?demo to the URL to populate empty surfaces (e.g. the leaderboard) with
+// fake players so the layout can be reviewed. Never fetches or writes real data. Persists via this global.
+window.__DEMO = new URLSearchParams(location.search).has('demo');
+function demoBoard(tier,date){
+  const NAMES=['Vermeerish','ClaudeM','brushstroke','ArtNerd88','chiaroscuro','Isadora','wanderlust','pigment_pam','vanGoghGirl','Tenebrist','SfumatoSam','oldMasters','impasto_ian','Quattrocento','fresco_head','ukiyoe_ellie','terracotta','gilded_gwen','tempera_tom','Rococo_Rae','baroquen','plein_air','Cubist_Cara','minimal_max','encaustic','vellum_vic','sgraffito','Fauvist_Fay'];
+  const COLS=['#c14b3a','#2f8f5b','#cf9f3a','#5663d4','#8a5cd0','#3aa0a0','#d0733a','#b3892f','#7a8c3a','#c0507a'];
+  let seed=[...(date+'|'+tier)].reduce((a,c)=>a+c.charCodeAt(0),7)|1;
+  const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  const n=24, rows=[]; let s=57000+Math.floor(rnd()*4500);
+  for(let i=0;i<n;i++){ rows.push({name:NAMES[(i*3+ (seed>>3))%NAMES.length], color:COLS[(i+ (seed>>5))%COLS.length], score:s, rank:i+1, isYou:false, cold:rnd()<0.18}); s-=Math.floor(500+rnd()*2300); }
+  const yr=8, id=(typeof loadIdentity==='function'?loadIdentity():{name:'you',color:'#2230b8'});
+  rows[yr]={name:id.name||'you', color:id.color||'#2230b8', score:rows[yr].score, rank:yr+1, isYou:true, cold:false};
+  const count=n+19;
+  return {rows, count, you:{rank:yr+1, score:rows[yr].score, count, percentile:Math.round((yr+1)/count*100)}};
+}
 const MUSEUMS=window.ARTEFACTUM_MUSEUMS||{}; // {name:{city,lat,lng}} — where each work hangs
 function museumLine(it){ if(!it||!it.museum)return ''; const c=(MUSEUMS[it.museum]||{}).city; return it.museum+(c?' · '+c:''); }
 // Historical/inherited titles that contain dated or harmful language: we keep the museum's catalogue
@@ -1397,6 +1412,7 @@ async function renderLeaderboard(tierKey,dateStr){
   const cd=document.getElementById('lbcd');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
   const body=document.getElementById('lbbody');
   let data=null; try{ const r=await fetch(`/api/leaderboard?date=${date}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}`); data=r.ok?await r.json():null; }catch{}
+  if(window.__DEMO) data=demoBoard(lbTier,date); // staging: fake players so the board isn't empty
   if(!data){ body.innerHTML=`<div style="font:400 0.875rem 'Manrope',sans-serif;color:var(--muted);padding:20px 0;text-align:center">Couldn&rsquo;t load the board. Play today&rsquo;s ${lbTier} puzzle to join.</div>`; return; }
   if(!data.rows.length){ const masters=mastersBandHTML(lbTier,date,null); body.innerHTML=`<div style="font:400 0.875rem 'Manrope',sans-serif;color:var(--muted);padding:20px 0;text-align:center">No one&rsquo;s submitted yet &mdash; be the first.</div>${masters}`; return; }
   const METAL=[{plinth:'#ecca6f',pb:'#cda948',pink:'#7a5c14',ph:64,av:66,sub:'#9a7b2e'},{plinth:'#d4d8dc',pb:'#c2c7cd',pink:'#6c7177',ph:42,av:54,sub:'#6c7177'},{plinth:'#dcab7c',pb:'#bd8a5c',pink:'#8a5a2c',ph:32,av:50,sub:'#9a6f3a'}];
