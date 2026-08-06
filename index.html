@@ -2725,17 +2725,11 @@ function renderRound(){
         sr.style.display='block';
         sr.querySelectorAll('.ac-item[data-lat]').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();
           const bb=(el.dataset.bb||'').split(',').map(Number); // [minlat,maxlat,minlon,maxlon]
-          const lat=+el.dataset.lat, lon=+el.dataset.lon;
-          // Center on the geocoder's REPRESENTATIVE point (the main place, e.g. Papeete for French
-          // Polynesia) rather than fitBounds'ing the whole bounding box — a big, sparse territory's box
-          // spans open ocean and would zoom out to a blank sea. Derive a zoom from the box but CLAMP it to
-          // a usable 6–9 so you always land on land at a workable scale, then fine-tune by tapping.
-          let z=8;
-          if(bb.length===4&&bb.every(isFinite)){
-            try{ z=map.getBoundsZoom(L.latLngBounds([[bb[0],bb[2]],[bb[1],bb[3]]]),true); }catch{}
-          }
-          // clamp 5–9: giant sparse territories (French Polynesia) get zoom 5 so the island cluster shows, not one corner
-          map.setView([lat,lon],Math.max(5,Math.min(9,z)),{animate:!settings.reduceMotion});
+          // fitBounds frames the whole result (Russia → whole country, a city → tight); maxZoom caps zoom-IN.
+          // A scattered ocean territory (French Polynesia) is inherently mostly water at any zoom — for those,
+          // search the specific island. Point-only results fall back to a sensible mid zoom.
+          if(bb.length===4&&bb.every(isFinite)) map.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]],{padding:[30,30],maxZoom:9,animate:!settings.reduceMotion});
+          else map.setView([+el.dataset.lat,+el.dataset.lon],7,{animate:!settings.reduceMotion});
           sr.style.display='none';});
       }catch{ sr.style.display='none'; } };
     if(si&&sr){ si.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>run(si.value),350);});
