@@ -1891,18 +1891,19 @@ async function renderLeaderboard(tierKey,dateStr){
   lbDate = dateStr!==undefined ? dateStr : today; // fresh entry → today; tab-switch passes lbDate to stay
   const date=lbDate, isToday=date===today; const id=loadIdentity();
   const prevD=addDays(date,-1), nextD=addDays(date,1), hasNext=date<today;
-  const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="flex:1;padding:8px;border:1px solid var(--line-card);background:${t.key===lbTier?'var(--accent)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:700 12px 'Manrope';text-transform:uppercase;cursor:pointer">${t.label}</button>`).join('');
+  const DIA_LB=`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg>`;
+  const tabs=TIERS.map(t=>`<button class="lbtab${t.key===lbTier?' on':''}" data-lbt="${t.key}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1px solid ${t.key===lbTier?'var(--ink)':'var(--line-card)'};background:${t.key===lbTier?'var(--ink)':'transparent'};color:${t.key===lbTier?'#fff':'var(--ink)'};font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer;border-radius:2px"><span style="color:${t.key===lbTier?'#fff':(TIERDOT[t.key]||'var(--accent)')};display:inline-flex;align-items:center">${DIA_LB}</span>${t.label}</button>`).join('');
   const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
-  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 32px">
-    <div class="laurel"><img src="/assets/laurel_wreath.png" alt="" /></div>
-    <div class="kick" style="color:var(--accent);text-align:center">The Register</div>
-    <div style="display:flex;align-items:center;gap:10px;margin:2px 0 2px">
-      <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:pointer;font:700 16px 'Faculty Glyphic';color:var(--accent)">‹</button>
-      <div style="font:800 24px 'Faculty Glyphic';flex:1">${isToday?'Today&rsquo;s leaderboard':esc(niceDate(date))}</div>
-      <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:1px solid var(--line-card);border-radius:6px;width:30px;height:30px;cursor:${hasNext?'pointer':'default'};font:700 16px 'Faculty Glyphic';color:${hasNext?'var(--accent)':'var(--line-card)'}">›</button></div>
-    <div class="mono" style="font:500 11px 'Manrope';color:var(--muted);margin-bottom:14px">no. ${esc(accession)}${isToday?` &middot; closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span>`:''}</div>
-    <div style="display:flex;gap:6px;margin-bottom:16px">${tabs}</div>
-    <div id="lbbody" aria-live="polite"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
+  document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:32px 24px 48px;text-align:center">
+    <div style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:16px">leaderboard</div>
+    <img src="/assets/laurel_wreath.png" alt="" style="height:100px;width:auto;margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:0;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)"><img src="/assets/arrow-left.svg" alt="" width="16" height="16"> Previous day</button>
+      <div style="font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">NO. ${esc(accession)}</div>
+      <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:0;cursor:${hasNext?'pointer':'default'};display:flex;align-items:center;gap:6px;padding:4px;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:${hasNext?'var(--ink)':'var(--line-card)'}">Next day <img src="/assets/arrow-right.svg" alt="" width="16" height="16"></button></div>
+    ${isToday?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-bottom:6px">closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span></div>`:''}
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0 24px">${tabs}</div>
+    <div id="lbbody" aria-live="polite" style="text-align:left"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
     <div style="margin-top:18px"><button class="btn2" data-editid>Edit your name &amp; color</button>
       <button class="btn2" data-route="home" style="margin-top:10px">&larr; Back to home</button></div>
   </div></div>`;
