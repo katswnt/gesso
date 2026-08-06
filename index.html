@@ -3439,7 +3439,7 @@ function renderStreak(){
   const sh=document.getElementById('shareimg');if(sh)sh.onclick=()=>lastFinal?downloadShareImage(sh,lastFinal):navigator.clipboard.writeText(`Gesso · ${score.toLocaleString()} pts · ${s.current} day streak`).then(()=>sh.textContent='Copied ✓');
   const cd=document.getElementById('countdown');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
 }
-const TIERDOT={easy:'#aeb6e3',medium:'#7480d4',hard:'#3f4cbe',impossible:'#232c84'};
+const TIERDOT={easy:'#e87a7a',medium:'#d4a43a',hard:'#4a9e5c',impossible:'#9b6fd4'};
 function renderDayView(ds,push=true){
   clearTimers(); if(push)pushNav({v:'pick',date:ds});
   const s=loadStreak(), today=todayStr(), bd=s.byDay[ds]||{}, done=TIERS.filter(t=>bd[t.key]!=null).length, canNext=ds<today;
