@@ -48,7 +48,7 @@
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cpath%20fill='%232230b8'%20d='M8%2034C8%2017%2021%206%2037%2010c14%204%2023%2018%2017%2032-5%2013-22%2018-35%2011C11%2049%207%2042%208%2034Z'/%3E%3Ccircle%20cx='25'%20cy='25'%20r='7'%20fill='%23f6f4ee'%20fill-opacity='.82'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css?v=5">
+<link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
 <div class="wrap"><div id="stage"></div></div>
@@ -2986,8 +2986,7 @@ function paintBurst(host){
 // "Ask the guide" accordion — renders the per-work guide[] Q&A (collapse-by-default, one open at a time)
 function guideHTML(guide){
   if(!Array.isArray(guide)||!guide.length) return '';
-  const bubble=`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.5 7.5L4 20l1.2-4.2A8.5 8.5 0 1121 11.5z"/></svg>`;
-  return `<div class="askguide"><div class="agkick"><span class="agdab">${bubble}</span>Ask the guide <span class="agcount">${guide.length} question${guide.length>1?'s':''}</span></div>
+  return `<div class="askguide">
     <div class="aglist">${guide.map((g,i)=>`<div class="agrow">
       <button type="button" class="agq" data-ag="${i}" aria-expanded="false"><span class="agnum">${i+1}</span><span class="agqt">${esc(g.q)}</span><span class="agplus">+</span></button>
       <div class="aga" hidden>${esc(g.a)}</div></div>`).join('')}</div></div>`;
@@ -3228,15 +3227,15 @@ function renderReveal(r,ri,push=true){
         </div>
       </div>
     </div>
-    <div class="study"><div class="kick" style="letter-spacing:.16em">Study note &middot; teach me</div>
+    <div class="study">
       <div class="studygrid">
         <div class="study-notes">
-          ${contextHTML(it)}<div class="why">${why}</div>
-          <div class="study-notes-label" style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">Study notes</div>
+          ${contextHTML(it)}
+          <div class="study-notes-label" style="font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Study notes</div>
           ${notesV2 ? `${notesHTML(study.notes)}` : `${study.cues&&study.cues.length?`<div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}`}
         </div>
         <div class="study-guide">
-          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px">Follow-up questions</div>${guideHTML(study.guide)}`:''}
+          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Follow-up questions &middot; ${study.guide.length}</div>${guideHTML(study.guide)}`:''}
         </div>
       </div>
       ${ml?`<div class="mastery"><span style="font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
