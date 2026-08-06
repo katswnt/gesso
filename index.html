@@ -2734,7 +2734,8 @@ function renderRound(){
           if(bb.length===4&&bb.every(isFinite)){
             try{ z=map.getBoundsZoom(L.latLngBounds([[bb[0],bb[2]],[bb[1],bb[3]]]),true); }catch{}
           }
-          map.setView([lat,lon],Math.max(6,Math.min(9,z)),{animate:!settings.reduceMotion});
+          // clamp 5–9: giant sparse territories (French Polynesia) get zoom 5 so the island cluster shows, not one corner
+          map.setView([lat,lon],Math.max(5,Math.min(9,z)),{animate:!settings.reduceMotion});
           sr.style.display='none';});
       }catch{ sr.style.display='none'; } };
     if(si&&sr){ si.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>run(si.value),350);});
