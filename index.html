@@ -1539,7 +1539,7 @@ function renderCollections(){
     <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Smaller pins: famous collections we draw from via Wikidata.</div>
     <div class="kick" style="margin:30px 0 10px">Famous collections, via Wikidata</div>
     <p style="color:var(--muted);line-height:1.55;font-size:14px;margin:0 0 14px">Their most-recognized works reach us through Wikidata &amp; Wikimedia Commons (public-domain images), credited to each holding museum:</p>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${C.holdings.slice(0,24).map(m=>`<div class="colcard" style="flex:0 1 auto;padding:9px 13px"><span style="font:700 13px 'Faculty Glyphic',sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}${m.city?' · ':''}${m.count}</span></div>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${C.holdings.slice(0,24).map(m=>`<div class="colcard" style="max-width:none;padding:11px 14px"><span style="font:700 13px 'Faculty Glyphic',sans-serif">${esc(m.name)}</span> <span class="mono" style="font-size:10px;color:var(--muted)">${esc(m.city)}${m.city?' · ':''}${m.count}</span></div>`).join('')}</div>
     <div class="kick" style="margin:36px 0 6px">Why the collection looks like this</div>
     <p style="color:var(--muted);line-height:1.6;font-size:15px;margin:0 0 16px">${leansLine}</p>
     <div style="margin-bottom:22px">${regBars}</div>
