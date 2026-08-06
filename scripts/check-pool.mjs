@@ -7,6 +7,7 @@ import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
 import { scanLanguage } from "./check-language.mjs";
 
+const CONTINENTS = new Set(["Europe","Asia","Africa","North America","South America","Oceania"]);
 const pool = readGlobal("data/pool.js","ARTEFACTUM_POOL");
 const html = readFileSync("index.html","utf8");
 const movKeys = new Set([...html.slice(html.indexOf("const MOVEMENTS={"),html.indexOf("const MOV_FAMILY=")).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1]));
@@ -72,6 +73,8 @@ for(const p of pool){
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);
   if(p.place && !isPlaceCanonical(p.place)) add(hard,"place-noncanon",p,`"${p.place}" → "${canonicalizePlace(p.place)}"`);
   if(p.place){ const c=continentOf(p.place); if(!c) add(warn,"place-unmapped-continent",p,`"${p.place}"`); else if(p.region!==c) add(hard,"region-mismatch",p,`${p.place} → region "${p.region}" should be "${c}"`); }
+  // region must be a real continent — never a sub-region bucket like "Middle East" (folds into Asia)
+  if(p.region && !CONTINENTS.has(p.region)) add(hard,"region-not-continent",p,`"${p.region}" is not one of ${[...CONTINENTS].join(", ")}`);
 }
 
 // ARTIST DEDUP gate: two distinct spellings that collapse to the same key (diacritic-strip + lowercase +
