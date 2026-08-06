@@ -35,6 +35,8 @@ const CONTINENT = {
   brazil:"South America",bolivia:"South America",chile:"South America",colombia:"South America",ecuador:"South America",peru:"South America",argentina:"South America",venezuela:"South America",uruguay:"South America",
   // Asia (incl. Near East / Mesopotamia / Anatolia)
   afghanistan:"Asia",cambodia:"Asia",china:"Asia",india:"Asia",indonesia:"Asia",iran:"Asia",iraq:"Asia",japan:"Asia",korea:"Asia","south korea":"Asia",nepal:"Asia",pakistan:"Asia","saudi arabia":"Asia","sri lanka":"Asia",sumer:"Asia",syria:"Asia",thailand:"Asia",vietnam:"Asia",turkey:"Asia",philippines:"Asia",myanmar:"Asia",burma:"Asia",laos:"Asia",bangladesh:"Asia",tibet:"Asia",mongolia:"Asia",taiwan:"Asia",
+  // West Asia / historical polities whose place strings carry descriptors (folded into Asia — "Middle East" is not a continent)
+  "southwestern iran":"Asia","ottoman turkey":"Asia","ottoman empire":"Asia",hejaz:"Asia","asia minor":"Asia","syria or egypt":"Asia",levant:"Asia",anatolia:"Asia",mesopotamia:"Asia",
   // Africa
   angola:"Africa",cameroon:"Africa","central africa":"Africa","dr congo":"Africa","democratic republic of the congo":"Africa","east africa":"Africa",egypt:"Africa",ethiopia:"Africa",gabon:"Africa",ghana:"Africa",guinea:"Africa","ivory coast":"Africa",kenya:"Africa",mali:"Africa",morocco:"Africa",nigeria:"Africa","sierra leone":"Africa","south africa":"Africa",sudan:"Africa",tanzania:"Africa",tunisia:"Africa",uganda:"Africa",
   // Oceania
