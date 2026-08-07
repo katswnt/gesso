@@ -1518,9 +1518,6 @@ function renderCollections(){
   const pdYear=new Date().getFullYear()-95; // rolling US public-domain cutoff (works before this are PD); auto-advances each Jan 1 — never hardcode
   // live list of the open-access source museums (auto-includes any source we add — no stale prose)
   const srcList=C.sources.filter(s=>s.count>0 && s.name!=='Wikidata & Wikimedia Commons').map(s=>s.name).join(', ');
-  const canonCards=C.holdings.slice(0,10).map(c=>`<div class="colcard" style="max-width:300px;flex:1 1 200px">
-    <div style="font:700 13px 'Faculty Glyphic',sans-serif">${esc(c.name)}</div><div class="mono" style="font-size:10px;color:var(--muted)">${esc(c.city)}${c.city?' · ':''}${c.count} here</div>
-    ${c.work?`<div style="font-size:12px;color:var(--accent);margin-top:6px">e.g. ${esc(c.work)}</div>`:''}</div>`).join('');
   document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div style="padding:26px 24px 40px">
     <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 320px"><div class="kick" style="color:var(--accent)">Collections</div>
@@ -1569,9 +1566,6 @@ function renderCollections(){
       <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Learn more &middot; the same patterns, different continents:
         <a href="https://itvs.org/films/aanikoobijigan/" target="_blank" rel="noopener" style="color:var(--accent)">Khalil &amp; Khalil, <em>Aanikoobijigan</em> (2026)</a> &middot;
         <a href="https://thamesandhudson.com/possessions-indigenous-art-colonial-culture-decolonization-9780500296592" target="_blank" rel="noopener" style="color:var(--accent)">Nicholas Thomas, <em>Possessions</em></a></div></div>
-    <div class="kick" style="margin:36px 0 6px">Where the canon hangs</div>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 14px">A single signature work names each museum below — but these collections hold thousands more (we just show one you'd know).</p>
-    <div style="display:flex;flex-wrap:wrap;gap:11px;justify-content:center">${canonCards}</div>
     ${ATTRIB}
   </div></div>`;
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
