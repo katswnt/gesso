@@ -1258,7 +1258,7 @@ function artistDisplay(it){ if(!it||!it.artist) return ""; const pre=it.attribut
 function styleKindLabel(it){ const k=it&&it.styleKind; return k==='culture'?'CULTURE':k==='period'?'PERIOD':k==='school'?'SCHOOL':'MOVEMENT'; }
 const SENSITIVE_FRAME={funerary:"A funerary object — made for the tomb and the afterlife, not for display. Shown here to teach, with respect for its purpose.",sacred:"A sacred or ritual object that carried religious meaning for the people who made it. We present it with that context in mind."};
 function contextHTML(it){ if(!it) return ''; const parts=[]; if(it.sensitive&&SENSITIVE_FRAME[it.sensitive]) parts.push(SENSITIVE_FRAME[it.sensitive]); if(it.provenanceNote) parts.push(it.provenanceNote); if(it.contextNote) parts.push(it.contextNote); if(!parts.length) return '';
-  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:6px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
+  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:2px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
 const ICONS = {
   when:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>`,
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
@@ -1500,7 +1500,7 @@ function renderCollections(){
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <div><div style="font:700 15px 'Faculty Glyphic',sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
-      <span style="flex:0 0 auto;background:${s.lat===null?'#7480d4':'var(--accent)'};color:#fff;border-radius:6px;padding:4px 9px;font:700 13px 'Faculty Glyphic';font-variant-numeric:tabular-nums">${s.count}</span></div>
+      <span style="flex:0 0 auto;background:var(--surface-strong);color:var(--ink-soft);border-radius:2px;padding:4px 9px;font:700 13px 'Faculty Glyphic';font-variant-numeric:tabular-nums">${s.count}</span></div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
     <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} ${ICONS.ext}</div></a>`).join('');
   const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
@@ -1524,7 +1524,7 @@ function renderCollections(){
         <h1 style="font:800 32px 'Faculty Glyphic',sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
         <p style="color:var(--muted);line-height:1.6;font-size:15px">Every work here is shown under an open license — public domain or CC0. That one rule shapes the whole collection: what&rsquo;s here, what isn&rsquo;t, and why.</p>
         <p style="color:var(--muted);line-height:1.6;font-size:14px;margin-top:10px">It&rsquo;s a living, continually-corrected collection — not a canon. Dates and makers carry real uncertainty (you&rsquo;ll see &ldquo;c.&rdquo; ranges and &ldquo;attributed to&rdquo; where scholars aren&rsquo;t sure), premodern and non-Western works are named by <em>culture and period</em> rather than forced into a &ldquo;movement,&rdquo; and objects with contested histories or sacred meaning are shown with that context — not as trophies.</p></div>
-      <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:10px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
+      <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:2px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
         <div><div style="font:800 28px 'Faculty Glyphic'">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
         <div><div style="font:800 28px 'Faculty Glyphic'">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
         <div><div style="font:800 28px 'Faculty Glyphic'">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
@@ -1532,7 +1532,7 @@ function renderCollections(){
     <div class="kick" style="margin:34px 0 14px">The open collections</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
     <div class="kick" style="margin:34px 0 14px">The collections, mapped</div>
-    <div id="colmap" style="height:340px;border:1px solid var(--line-card);border-radius:8px;overflow:hidden"></div>
+    <div id="colmap" style="height:340px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
     <div class="mono" style="font-size:10px;color:var(--faint);margin-top:6px">Smaller pins: famous collections we draw from via Wikidata.</div>
     <div class="kick" style="margin:30px 0 10px">Famous collections, via Wikidata</div>
     <p style="color:var(--muted);line-height:1.55;font-size:14px;margin:0 0 14px">Their most-recognized works reach us through Wikidata &amp; Wikimedia Commons (public-domain images), credited to each holding museum:</p>
@@ -1808,7 +1808,7 @@ function openIdentityModal(after){
   const {veil,close,$}=openModal({title:'Your register entry',ariaLabel:'Your name and color',
     body:`<div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px"><span id="idprev">${dabAvatar(cur.name,cur.color,52)}</span>
-        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px 'Faculty Glyphic';padding:9px 12px;border:1px solid var(--line-card);border-radius:8px"/></div>
+        <input id="idname" type="text" maxlength="16" placeholder="your name" value="${esc(cur.name)}" style="flex:1;font:600 16px 'Faculty Glyphic';padding:9px 12px;border:1px solid var(--line-card);border-radius:2px"/></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:170px;overflow-y:auto">${swatches}</div>
       <button class="btn" id="idsave">Save</button>
       <div id="idmsg" class="mono" style="font-size:12px;color:var(--accent);min-height:15px"></div>
@@ -1920,7 +1920,7 @@ async function renderLeaderboard(tierKey,dateStr){
       <div style="margin-top:8px;font:700 ${rank===0?16:14}px 'Faculty Glyphic';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'(anon)')}${r.isYou?' <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent)">YOU</span>':''}</div>
       <div class="mono" style="font:700 12px 'Manrope';color:${m.sub};font-variant-numeric:tabular-nums">${r.score.toLocaleString()}</div>
       ${r.cold?`<div style="margin-top:3px">${coldBadge(r)}</div>`:''}
-      <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px 'Faculty Glyphic';color:${m.pink}">${r.rank}</div>
+      <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:2px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px 'Faculty Glyphic';color:${m.pink}">${r.rank}</div>
     </div>`;};
   const podium=`<div style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;padding:6px 0 14px">${podOrder.map(podiumCell).join('')}</div>`;
   const rest=data.rows.slice(3);
@@ -1935,7 +1935,7 @@ async function renderLeaderboard(tierKey,dateStr){
         <span style="flex:1;min-width:0;font:700 14px 'Faculty Glyphic'">${esc(id.name||'you')} <span class="mono" style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase">your rank</span> <button type="button" data-editid class="mono" style="background:none;border:none;border-bottom:1px solid var(--line-card);font:600 9px 'Manrope';text-transform:uppercase;color:var(--muted);cursor:pointer;padding:0">edit</button></span>
         <span class="mono" style="font-weight:700;font-variant-numeric:tabular-nums">${data.you.score.toLocaleString()}</span></div></div>`;
   }
-  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:8px;font:600 14px 'Faculty Glyphic'">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
+  const youLine=data.you?`<div style="margin-top:14px;padding:11px;border:1px solid var(--accent);border-radius:2px;font:600 14px 'Faculty Glyphic'">You ranked <span style="color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums">#${data.you.rank}</span> of ${data.you.count}${data.you.percentile!=null?` &middot; top ${data.you.percentile}%`:''}</div>`:`<div class="mono" style="margin-top:14px;color:var(--muted)">Play today&rsquo;s ${lbTier} puzzle to claim a spot.</div>`;
   const more = data.count>data.rows.length ? `<button class="btn2" id="lbmore" style="width:100%;margin-top:12px">Show more (${data.count-data.rows.length} more)</button>` : '';
   const masters=mastersBandHTML(lbTier,date,data.you?{score:data.you.score,name:id.name,color:id.color}:null);
   body.innerHTML=podium+`<div id="lbrows">${rest.map(lbRowHTML).join('')}</div>`+more+selfRow+youLine+masters;
@@ -1943,7 +1943,7 @@ async function renderLeaderboard(tierKey,dateStr){
   { const mb=document.getElementById('lbmore'); if(mb)mb.onclick=()=>loadMoreLeaderboard(mb); }
 }
 // "cold" = nailed the daily on the FIRST attempt, no replays — a positive skill flag (best-score model unchanged).
-function coldBadge(r){ return r&&r.cold?`<span class="mono" title="Nailed it on the first try — no replays" style="flex:0 0 auto;font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent-underline);border-radius:3px;padding:1px 4px;white-space:nowrap">1ST&nbsp;TRY</span>`:''; }
+function coldBadge(r){ return r&&r.cold?`<span class="mono" title="Nailed it on the first try — no replays" style="flex:0 0 auto;font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent-underline);border-radius:2px;padding:1px 4px;white-space:nowrap">1ST&nbsp;TRY</span>`:''; }
 function lbRowHTML(r){ return `<div style="display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 8px;border-bottom:1px solid var(--line-card);${r.isYou?'background:rgba(34,48,184,.07);border-left:3px solid var(--accent)':''}">
     <span class="mono" style="width:34px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums">${r.rank}</span>
     ${dabAvatar(r.name,r.color,34,r.rank-1)}
@@ -2212,7 +2212,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
     <div style="position:relative;margin-bottom:18px">
       <div class="tsearchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input id="tsearch" type="text" name="gesso-filter-q" placeholder="Search eras, places, movements, mediums, artists…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex:1;border:none;outline:none;background:transparent;font:500 14px 'Faculty Glyphic';color:var(--ink)"/></div>
-      <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:9px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
+      <div id="tresults" role="listbox" style="position:absolute;left:0;right:0;top:54px;z-index:5;background:#fff;border:1px solid var(--line-card);border-radius:2px;box-shadow:0 16px 34px rgba(35,32,26,.16);overflow:hidden;display:none;max-height:280px;overflow-y:auto"></div>
     </div>
 
     <div role="tablist" aria-label="Browse by category" style="display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line)">${tabs}</div>
@@ -2232,7 +2232,7 @@ function renderTraining(push=true){ clearTimers(); if(push)pushNav({v:'train'});
     </div>
 
     <div class="seclbl" style="margin:18px 0 9px">Focus</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:8px;font:700 12px 'Manrope';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">${focus.map(([a,l])=>`<button class="tfocus${(T.axis||'')===a?' on':''}" data-ax="${a}" style="flex:1;min-width:120px;padding:9px;border-radius:2px;font:700 12px 'Manrope';text-transform:uppercase;cursor:pointer">${l}</button>`).join('')}</div>
 
     <button class="btn" id="tstart" style="width:100%${cnt<1?';opacity:.4;pointer-events:none':''}">Start training →</button>
     <button class="btn2" data-route="home" style="margin-top:12px">← Back to home</button>
@@ -2335,7 +2335,7 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   const w=weakestSlice();
   const sliceList=(map,n)=>Object.entries(map||{}).filter(([,s])=>s.total>=3).map(([k,s])=>({k,p:Math.round(s.correct/s.total*100)})).sort((a,b)=>b.p-a.p);
   const movAcc=sliceList(m.byStyle), nail=movAcc.slice(0,3), whiff=movAcc.slice(-3).reverse().filter(x=>!nail.includes(x));
-  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:10px;padding:13px"><div style="font:800 24px 'Faculty Glyphic'">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
+  const tile=(big,lbl,sub)=>`<div style="flex:1 1 130px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:13px"><div style="font:800 24px 'Faculty Glyphic'">${big}</div><div class="kick" style="color:var(--muted);margin-top:2px">${lbl}</div>${sub?`<div class="mono" style="font-size:11px;color:var(--faint);margin-top:3px">${sub}</div>`:''}</div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:22px 24px 36px;max-width:760px;margin:0 auto">
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap">
       ${dabAvatar(id.name,id.color,64)}
@@ -2617,7 +2617,7 @@ function renderInfiniteSummary(){
         <span style="display:flex;align-items:center;gap:6px;font:600 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>
-      ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:9px;font:600 15px 'Faculty Glyphic';color:var(--ink)">${deltaLine}</div>`:''}</div></div>
+      ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:2px;font:600 15px 'Faculty Glyphic';color:var(--ink)">${deltaLine}</div>`:''}</div></div>
     <div class="statgrid">
       <div><div class="sv">${rounds}</div><div class="kick" style="color:var(--muted);margin-top:3px">Rounds</div></div>
       <div><div class="sv" data-cu="${total}">${total.toLocaleString()}</div><div class="kick" style="color:var(--muted);margin-top:3px">Total pts</div></div>
@@ -2689,7 +2689,7 @@ function renderRound(){
     <div id="schemehint" style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
   const naField=(label,icon,reason)=>({na:true, html:`<div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML(icon)}${label}</span></div>
-      <div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">${reason}</div>`});
+      <div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">${reason}</div>`});
   // explain a category that's been hidden/given/dropped this round (instead of silently omitting it)
   const drillAxis = TRAIN && TRAIN.axis;
   const given = TRAIN ? trainGivenCats() : new Set();
@@ -2734,10 +2734,10 @@ function renderRound(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
-        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
+        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
           <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">SEARCH OR TAP TO PIN</span></div>
-          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:6px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:6px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
-          <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:2px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:2px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
+          <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
         </div>`}
       </div>
     </div>
@@ -3245,7 +3245,7 @@ function renderReveal(r,ri,push=true){
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
         ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
-          <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:5px;overflow:hidden"></div>
+          <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
