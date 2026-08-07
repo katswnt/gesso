@@ -470,9 +470,6 @@
   .dabo{display:inline-block;width:11px;height:10px;background:var(--accent);vertical-align:baseline;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
   /* ---- design touches (handoff 04) ---- */
   ::selection{background:var(--accent);color:#fff}
-  ::-webkit-scrollbar{width:11px;height:11px}
-  ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
-  ::-webkit-scrollbar-track{background:var(--line-card)}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.035;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .big,.year,.bigscore,.scrow .pts .n,[data-cu]{font-variant-numeric:tabular-nums}
   .pip{width:11px;height:10px;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%}

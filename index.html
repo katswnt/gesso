@@ -1500,7 +1500,7 @@ function renderCollections(){
   const srcCards=C.sources.map(s=>`<a class="srccard" href="${s.url}" target="_blank" rel="noopener">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <div><div style="font:700 15px 'Faculty Glyphic',sans-serif">${esc(s.name)}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${esc(s.city)}</div></div>
-      <span style="flex:0 0 auto;background:var(--surface-strong);color:var(--ink-soft);border-radius:2px;padding:4px 9px;font:700 13px 'Faculty Glyphic';font-variant-numeric:tabular-nums">${s.count}</span></div>
+      <span style="flex:0 0 auto;background:var(--surface-strong);color:var(--ink-soft);border-radius:2px;padding:4px 9px;font:700 13px 'Faculty Glyphic';font-variant-numeric:tabular-nums">${s.count} <span style="font-weight:400;font-size:11px;letter-spacing:.01em">works</span></span></div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 0">${s.blurb}</div>
     <div class="mono" style="font-size:11px;color:var(--accent)">Visit ${esc(dom(s.url))} ${ICONS.ext}</div></a>`).join('');
   const regBars=C.region.map(([name,c])=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
