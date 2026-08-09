@@ -2916,12 +2916,14 @@ function score(){
     // (~6000 km). Cap the region bonus to ~3000 km; farther pins fall back to the plain distance falloff.
     inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region && dist<=3000;
     const off=Math.max(0,dist-rad);
-    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // normal falloff OUTSIDE the range
-    // INSIDE the range/country: full near the true origin, but a gentler (not zero) penalty as you get far —
-    // so pinning the actual spot beats pinning the far edge of a huge empire (Byzantine Spain for a Cairo work).
-    const inPts =Math.round(MAX_CAT*Math.exp(-off/(D.distK*2.5)));
-    sp = inC ? inPts : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
-  cells.where={pts:sp, dist, you:guess.ll?"your pin":"no pin", actual:it.place,
+    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // normal falloff when the pin is in the WRONG country/region
+    // Right modern country OR right cultural region = FULL credit, no intra-country distance penalty. 90% of the pool
+    // has a bare-country place, so its stored coord is a country CENTROID (Italy → Rome), not the real city. Docking
+    // distance-to-centroid would punish a player who correctly pins Venice for a Venetian work stored at Rome — too
+    // harsh and backwards. We only know most works to country granularity, so right-country is always full; specificity
+    // is rewarded via movement / medium / artist instead.
+    sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
+  cells.where={pts:sp, dist, inC, you:guess.ll?"your pin":"no pin", actual:it.place,
     note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
   }
   // medium: exact beats same-family, and same-family is intentionally a fixed 50%.
@@ -3248,7 +3250,7 @@ function renderReveal(r,ri,push=true){
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
-            ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">&asymp; ${Math.round(r.cells.where.dist)} km off</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
+            ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">${r.cells.where.inC?'right country':`&asymp; ${Math.round(r.cells.where.dist)} km off`}</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
           ${(window.ARTEFACTUM_REGIONS||{})[it.style]?`<div style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${esc(it.style)} range &middot; <span style="color:var(--faint)">historical-basemaps</span></div>`:''}
         </div>
