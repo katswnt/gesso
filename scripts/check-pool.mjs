@@ -45,6 +45,9 @@ for(const p of pool){
   // not Iran). This fires even if the country was added to MOVEMENTS — that loophole let ~45 slip before.
   if(p.style && p.styleKind==="culture" && COUNTRY_NAMES.has(p.style)) add(hard,"culture-is-country",p,`"${p.style}" → use the demonym/tradition`);
   if(p.style && /[,;]/.test(p.style) && !movKeys.has(p.style)) add(hard,"style-comma",p,`"${p.style}"`); // descriptive/listy style string (keep only curated comma-cultures)
+  // a culture/movement is a NAME, never a descriptive sentence — "Roman sculpture with Baroque restoration",
+  // "…funerary art", etc. read as junk quiz answers. No MOVEMENTS exemption: these must be renamed, not whitelisted.
+  if(p.style && (/ with | restoration\b/i.test(p.style) || p.style.split(/\s+/).length>4)) add(hard,"style-verbose",p,`"${p.style}" — use a concise culture/movement name`);
   if(p.style && p.styleKind && !movKeys.has(p.style)) add(warn,"style-no-metadata",p,`"${p.style}"`);
   // COVERAGE GATE: a famous work whose style has no MOVEMENTS entry would ship "c. unknown" + generic emblem to
   // production with no human review — HARD-fail so it can't happen. Lower-fame gaps stay a warning.
