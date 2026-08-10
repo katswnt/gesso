@@ -2855,13 +2855,19 @@ function score(){
     // whole continent ("Asia"), so without a distance gate, pinning Cambodia scored "right region" for Iran
     // (~6000 km). Cap the region bonus to ~3000 km; farther pins fall back to the plain distance falloff.
     inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region && dist<=3000;
-    const off=Math.max(0,dist-rad);
-    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // normal falloff when the pin is in the WRONG country/region
-    // Right modern country OR right cultural region = FULL credit, no intra-country distance penalty. 90% of the pool
-    // has a bare-country place, so its stored coord is a country CENTROID (Italy → Rome), not the real city. Docking
-    // distance-to-centroid would punish a player who correctly pins Venice for a Venetian work stored at Rome — too
-    // harsh and backwards. We only know most works to country granularity, so right-country is always full; specificity
-    // is rewarded via movement / medium / artist instead.
+    // WHERE-SCORING PHILOSOPHY — the modern nation-state is the wrong primary unit for a mostly pre-national
+    // corpus. Borders are a recent, shifting technology (most drawn 19th–20th c.); "made in Belgium" is an
+    // anachronism for a 1562 Bruegel (Netherlandish), and "Nigeria" a colonial fiction for a Benin bronze.
+    // So the "correct area" is: the work's historical CULTURAL REGION if one applies (~17% of the pool — Han
+    // China, Ottoman, Ancient Egypt, Ukiyo-e Japan…), ELSE its modern country. Either one = FULL credit. This
+    // must apply with PARITY: the same generous historical geography for the West (Low Countries, the Italian
+    // peninsula, the Russian/Soviet sphere) that we already give non-Western/ancient art — not fluid regions for
+    // "the exotic" and rigid nation-states for Europe. Roadmap: extend the region polygons to the European/
+    // pre-national gaps + pick the region by PERIOD (Ottoman core for 1600 Anatolia, Turkey for 1980).
+    // Outside the correct area, credit DECAYS from the true point (off = dist) — no flat full-credit disc that
+    // would leak across a border (a Netherlands pin is NOT "in Belgium"; it should land ~2,400, not a flat 2,500).
+    const off=dist;
+    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // gentle falloff when the pin is OUTSIDE the right country/region
     sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
   cells.where={pts:sp, dist, inC, you:guess.ll?"your pin":"no pin", actual:it.place,
     note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
