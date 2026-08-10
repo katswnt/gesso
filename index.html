@@ -3164,8 +3164,9 @@ function renderReveal(r,ri,push=true){
     return `<div class="swatch">${swatchBox(f)}<div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
     + (r.cells.artist?`<div class="swatch">${swatchBox(r.cells.artist.pts/MAX_CAT)}<div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
   const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
+    const blank=!cell.you||cell.you==='—'; // left this category empty — nudge, don't punish (the answer+note below is the tell)
     return `<div class="scrow">${swatchBox(f)}
-      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · optional':''}</div>
+      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · optional':''}${blank?` <span style="color:var(--faint);font-weight:400">· skipped, no penalty — here&rsquo;s the tell</span>`:''}</div>
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
