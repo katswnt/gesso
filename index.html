@@ -214,7 +214,7 @@ const HOWTO_STEPS=[
   {key:'welcome',title:'Guess what you can',body:"Five works a day. You don't need to know everything — a thoughtful guess beats a blank, and close still counts."},
   {key:'when',title:'When was it made?',body:"Drag the dot along the timeline to your best year. It updates as you slide, showing something like “1700 CE.”"},
   {key:'where',title:'Where in the world?',body:"Tap the map to drop a pin. Pinch or use the +/− buttons to zoom — scrolling moves the page, not the map."},
-  {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — that one's a bonus."},
+  {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — it's optional and never counts against you."},
   {key:'lock',title:'Lock in & learn',body:"Hit Lock in to reveal the answer and a short story about the work. Even a rough guess beats a blank — partial credit always counts. Stuck? A hint costs 500."},
 ];
 // learning-mode look-closer toggle glyphs (retire 👁 / 🙈) — loupe-with-dot / eye-struck-through
@@ -1506,7 +1506,7 @@ function renderCollections(){
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px Archivo;margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-${pdYear}, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px Archivo;margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks documentation density — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but it measures the archive as much as the art: Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px Archivo;margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
     <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
@@ -2448,7 +2448,7 @@ function renderStart(dateStr,push=true){
     <details class="faq" style="max-width:520px;margin:18px auto 0;border-top:1px solid rgba(0,0,0,.12);padding:14px 24px 0;text-align:center">
       <summary style="cursor:pointer;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;text-align:center">FAQ &amp; credits</summary>
       <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:12px;text-align:left">
-        <p style="margin:0 0 10px"><strong style="color:var(--ink)">How is difficulty decided?</strong><br>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent (see the note above on why the canon still skews that way).</p>
+        <p style="margin:0 0 10px"><strong style="color:var(--ink)">How is difficulty decided?</strong><br>Each work gets a documentation-density score &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible. That measures how thoroughly the archive documents a work, not how important it is &mdash; and because the archive over-documents the Western canon, &ldquo;Easy&rdquo; still skews that way (see the note above).</p>
         <p style="margin:0 0 6px"><strong style="color:var(--ink)">Where does the art come from?</strong><br>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p>
         <ul style="margin:0 0 10px 18px;padding:0">
           <li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li>
@@ -2663,10 +2663,10 @@ function renderRound(){
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'IBM Plex Mono',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
-    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
+    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · optional</span></div>
       <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
-  } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
+  } else fields.push(naField('Attributed to · optional','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
   const whereN=n;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet">
@@ -3165,7 +3165,7 @@ function renderReveal(r,ri,push=true){
     + (r.cells.artist?`<div class="swatch">${swatchBox(r.cells.artist.pts/MAX_CAT)}<div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
   const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
     return `<div class="scrow">${swatchBox(f)}
-      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · bonus':''}</div>
+      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · optional':''}</div>
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
@@ -3180,7 +3180,7 @@ function renderReveal(r,ri,push=true){
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${ri+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
         <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
+        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist (optional)`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
