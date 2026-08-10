@@ -2732,7 +2732,7 @@ function renderRound(){
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
         ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
           <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">SEARCH OR TAP TO PIN</span></div>
-          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to jump the map (e.g. Tahiti)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:2px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:2px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
+          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to drop your pin (e.g. Amsterdam)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:2px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:2px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
           <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
         </div>`}
       </div>
@@ -2764,8 +2764,21 @@ function renderRound(){
   map=L.map('map',{keyboard:false,worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   // Voyager basemap keeps place labels legible when zoomed in (the 'light' basemap thins them out).
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:13,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
-  // Map place-search: geocode via Nominatim, then pan/zoom the map to the result so remote spots (e.g. Tahiti)
-  // are easy to find. It only NAVIGATES the map — the player still taps to drop the pin (no auto-guessing).
+  // Drop (or move) the guess pin at a spot — shared by map-click AND the place-search select (so searching
+  // "Amsterdam" auto-pins its centre; the pin stays draggable/tappable, so it's still adjustable).
+  const dropPin=(lat,lng)=>{ const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
+    else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
+    curScheme=schemeFromLatLng(lat,lng); updEra();
+    const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
+    const leave=leaveFor;
+    const wcR=placeCountry(it.place);
+    const rightRegion=(continentOf(lat,lng)===it.region && km(lat,lng,it.lat,it.lng)<=3000) || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
+    if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
+      const k=geoElim(it,leave); free5050=true;
+      const gh=document.getElementById('geohint'); if(gh)gh.style.display='none';
+      const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}} };
+  // Map place-search: geocode via Nominatim, frame the result, and auto-drop the guess pin at its centre
+  // (searching "Amsterdam" pins Amsterdam). The pin stays tappable, so the player can still reposition it.
   { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
     const run=async q=>{ if(!q||!q.trim()){sr.style.display='none';return;}
       try{ const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
@@ -2782,7 +2795,8 @@ function renderRound(){
           // search the specific island. Point-only results fall back to a sensible mid zoom.
           if(bb.length===4&&bb.every(isFinite)) map.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]],{padding:[30,30],maxZoom:9,animate:!settings.reduceMotion});
           else map.setView([+el.dataset.lat,+el.dataset.lon],7,{animate:!settings.reduceMotion});
-          sr.style.display='none';});
+          dropPin(+el.dataset.lat, +el.dataset.lon);   // auto-place the pin at the searched location (still tappable to adjust)
+          si.value=el.textContent.split(',')[0].trim(); sr.style.display='none';});
       }catch{ sr.style.display='none'; } };
     if(si&&sr){ si.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>run(si.value),350);});
       si.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(t);run(si.value);}});
@@ -2790,19 +2804,7 @@ function renderRound(){
   // Training PLACE pin: auto-fit the map to the chosen area instead of the world view. Must run after
   // invalidateSize (container has no size at first paint), exactly like the reveal map's fitBounds.
   const placeFit = TRAIN ? trainPlaceFit() : null;
-  map.on('click',e=>{const lat=e.latlng.lat, lng=((e.latlng.lng+180)%360+360)%360-180; const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
-    else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
-    curScheme=schemeFromLatLng(lat,lng); updEra();
-    const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
-    // correct-geo reward: pin the right continent → free 50/50 on the school (daily tiers + training, via leaveFor)
-    const leave=leaveFor;
-    const wcR=placeCountry(it.place);
-    // same 3000 km gate as the where-scoring: a whole-continent match alone isn't "right region" (Cambodia ≠ Iran)
-    const rightRegion=(continentOf(lat,lng)===it.region && km(lat,lng,it.lat,it.lng)<=3000) || (wcR?nearCountry(lat,lng,wcR):km(lat,lng,it.lat,it.lng)<=radiusFor(it.place));
-    if(leave!=null&&it.cats.includes('style')&&!free5050&&rightRegion){
-      const k=geoElim(it,leave); free5050=true;
-      const gh=document.getElementById('geohint'); if(gh)gh.style.display='none';
-      const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}}});
+  map.on('click',e=>dropPin(e.latlng.lat, ((e.latlng.lng+180)%360+360)%360-180));
   setTimeout(()=>{ if(!map)return; map.invalidateSize();
     if(placeFit){ try{ map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} } },settings.reduceMotion?0:250);
   }
