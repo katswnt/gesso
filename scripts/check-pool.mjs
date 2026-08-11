@@ -18,6 +18,16 @@ const fa = p => fame[p.id]!=null?fame[p.id]:(p.fame||0);
 const BUCKETS = new Set(["Oil paint","Tempera","Fresco","Watercolor","Ink","Drawing","Woodblock print","Bronze","Copper","Marble","Stone","Wood","Ivory","Jade","Ceramic","Glass","Textile","Gold","Silver","Lacquer","Photograph","Mixed media","Leather","Wax","Beadwork","Engraving","Lithograph"]);
 
 const PD_OK = new Set(["wd:Q1960268"]); // Steichen, The Pond—Moonlight (1904, US-PD by publication)
+// STRUCTURAL copyright guard: isInCopyright (below) is a hand-maintained artist DENYLIST — incomplete by design,
+// so any in-copyright artist not on it slips through (that's how living artists + URAA-restored works entered).
+// A visible, NAMED-artist work published after the rolling 95-year US-PD cutoff is a copyright risk (URAA restored
+// most foreign post-1928 works; a museum "open access" license covers the PHOTO, not the underlying artwork).
+// Fail closed. Ids in data/uraa-pending.json are grandfathered pending adjudication (docs/uraa-review.md) — prune
+// as works are removed/verified. To keep a genuinely-PD post-cutoff work, add its id to PD_OK with a basis comment.
+const PD_CUTOFF = new Date().getUTCFullYear() - 96; // 2026 -> 1930: published this year or earlier = US-PD (95yr term)
+let PD_PENDING = new Set(); try{ PD_PENDING = new Set(JSON.parse(readFileSync("data/uraa-pending.json","utf8"))); }catch{}
+const isNamedArtist = a => a && !/(century|workshop|school|dynasty|period|culture|anonymous|unknown|master of|circle of|follower|after |artist$|people$|maker$|tribe)/i.test(a);
+if(PD_PENDING.size) console.error(`  ⓘ post-pd-cutoff guard active; ${PD_PENDING.size} works grandfathered pending URAA adjudication (docs/uraa-review.md)`);
 const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
 
@@ -71,6 +81,9 @@ for(const p of pool){
   // PD_OK: works by a denylisted artist that are themselves verified public-domain by US publication date
   // (e.g. Steichen's 1904 "The Pond—Moonlight", first published 1906 → pre-1929 PD). Per-id, not per-artist.
   if(isInCopyright(p.artist) && !PD_OK.has(p.id) && Array.isArray(p.cats) && p.cats.length) add(hard,"in-copyright",p,`"${p.artist}"`); // only if VISIBLE — a hidden (no-cats) in-copyright work is correctly excluded
+  // STRUCTURAL guard (catches what the denylist misses): named artist + published after the PD cutoff + no PD basis
+  if(p.y!=null && p.y>PD_CUTOFF && isNamedArtist(p.artist) && !PD_OK.has(p.id) && !PD_PENDING.has(p.id) && Array.isArray(p.cats) && p.cats.length)
+    add(hard,"post-pd-cutoff",p,`${p.y} > ${PD_CUTOFF} — named artist, no PD basis (museum open-access covers the image, not the artwork)`);
   // SCHEMA integrity
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);
