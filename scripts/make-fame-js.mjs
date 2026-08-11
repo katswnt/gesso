@@ -31,7 +31,7 @@ for(const p of pool){
   // structural collision guard: anonymous work + implausibly high fame + a short bare-noun title
   // (no digits/proper-noun markers) almost always matched the *concept* article, not the object
   // (e.g. "Strigil" 820, "Garden Carpet" 782, "Opium Pipe" 729). Cap it out of Easy/Medium.
-  else if(f>300 && !p.artist && (p.title||"").trim().split(/\s+/).length<=2
+  else if(f>300 && !p.canon && !p.artist && (p.title||"").trim().split(/\s+/).length<=2
           && !/[0-9]|—|:|\bof\b|\bthe\b/i.test(p.title||"")){ f=0; zeroed++; }
   o[p.id]=Math.round(f*10)/10;
 }
