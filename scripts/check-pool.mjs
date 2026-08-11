@@ -81,9 +81,11 @@ for(const p of pool){
   // PD_OK: works by a denylisted artist that are themselves verified public-domain by US publication date
   // (e.g. Steichen's 1904 "The Pond—Moonlight", first published 1906 → pre-1929 PD). Per-id, not per-artist.
   if(isInCopyright(p.artist) && !PD_OK.has(p.id) && Array.isArray(p.cats) && p.cats.length) add(hard,"in-copyright",p,`"${p.artist}"`); // only if VISIBLE — a hidden (no-cats) in-copyright work is correctly excluded
-  // STRUCTURAL guard (catches what the denylist misses): named artist + published after the PD cutoff + no PD basis
-  if(p.y!=null && p.y>PD_CUTOFF && isNamedArtist(p.artist) && !PD_OK.has(p.id) && !PD_PENDING.has(p.id) && Array.isArray(p.cats) && p.cats.length)
-    add(hard,"post-pd-cutoff",p,`${p.y} > ${PD_CUTOFF} — named artist, no PD basis (museum open-access covers the image, not the artwork)`);
+  // STRUCTURAL guard: a FOREIGN named-artist work published after the PD cutoff is a URAA copyright risk
+  // (museum open-access covers the image, not the artwork). US works have no URAA; their PD turns on US
+  // formalities that the source museums/LOC actually verify (FSA/gov photography = PD), so US place is exempt.
+  if(p.y!=null && p.y>PD_CUTOFF && isNamedArtist(p.artist) && !/United States|\bUSA\b/i.test(p.place||"") && !PD_OK.has(p.id) && !PD_PENDING.has(p.id) && Array.isArray(p.cats) && p.cats.length)
+    add(hard,"post-pd-cutoff",p,`${p.y} > ${PD_CUTOFF} foreign, named artist — likely URAA-restored (museum CC0 covers image, not artwork)`);
   // SCHEMA integrity
   if(!p.img) add(hard,"no-image",p);
   if(p.place && (p.lat==null||p.lng==null)) add(warn,"place-no-coords",p,p.place);
