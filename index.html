@@ -6,13 +6,13 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gesso — the daily art-guessing game</title>
-<meta name="description" content="Gesso is the daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught. Built by Kat Swint." />
+<meta name="description" content="Gesso is the daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then find out what you were looking at. Built by Kat Swint." />
 <meta name="author" content="Kat Swint" />
 <link rel="canonical" href="https://gesso.katswint.com/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Gesso" />
 <meta property="og:title" content="Gesso — the daily art-guessing game" />
-<meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then get taught. A daily art game built by Kat Swint." />
+<meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then find out what you were looking at. A daily art game built by Kat Swint." />
 <meta property="og:url" content="https://gesso.katswint.com/" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:creator" content="@katswint" />
@@ -25,7 +25,7 @@
   "url": "https://gesso.katswint.com/",
   "applicationCategory": "GameApplication",
   "operatingSystem": "Web",
-  "description": "The daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught.",
+  "description": "The daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then find out what you were looking at.",
   "creator": {
     "@type": "Person",
     "name": "Kat Swint",
@@ -1274,10 +1274,10 @@ function museumLine(it){ if(!it||!it.museum)return ''; const c=(MUSEUMS[it.museu
 const TITLE_NOTES={
   gypsy:"“Gypsy” is a dated exonym for Roma (Romani) people — kept only as the work’s historical catalogue title.",
   negro:"“Negro” is period catalogue language, shown for identification, not as endorsed usage.",
-  oriental:"“Oriental” is a dated, othering term — kept as the museum’s historical title.",
+  oriental:"“Oriental” is a dated term that lumps many cultures into one exotic ‘East’, kept as the museum’s historical title.",
   squaw:"“Squaw” is a slur for Indigenous women; shown only as the work’s historical catalogue title.",
-  concubine:"An othering historical catalogue title, kept for identification, not endorsement.",
-  cripple:"Dated, ableist language from the work’s historical title."
+  concubine:"An outdated catalogue title that treats its subject as exotic or lesser. Kept for identification, not endorsement.",
+  cripple:"Outdated language that demeans disability, from the work’s original title."
 };
 const FLAG_SVG=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:2px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 function histTitleHTML(it){ if(!it||!it.titleFlag)return ''; const t=TITLE_NOTES[it.titleFlag]; if(!t)return ''; return `<div class="histtitle">${FLAG_SVG}<span><b>Historical title.</b> ${esc(t)}</span></div>`; }
