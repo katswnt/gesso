@@ -3350,7 +3350,11 @@ function renderReveal(r,ri,push=true){
   // DESKTOP: open the first ~5 study notes by default (the lesson is the reveal's payoff — no click needed);
   // follow-up questions stay collapsed (13 open would be a wall). Mobile stays fully collapsed to avoid a long scroll.
   if(window.matchMedia&&window.matchMedia('(min-width:961px)').matches){
-    document.querySelectorAll('.study-notes .agq').forEach((b,i)=>{ if(i<5){ b.setAttribute('aria-expanded','true'); if(b.nextElementSibling)b.nextElementSibling.hidden=false; } });
+    // Open the pin-anchored blocks by default (they map to the image markers). Fallback to the first 3
+    // for works with no pins, so the reveal never opens completely empty.
+    { const notes=[...document.querySelectorAll('.study-notes .agq')];
+      const anchored=notes.filter(b=>b.querySelector('.pinnum'));
+      (anchored.length?anchored:notes.slice(0,3)).forEach(b=>{ b.setAttribute('aria-expanded','true'); if(b.nextElementSibling)b.nextElementSibling.hidden=false; }); }
   }
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
