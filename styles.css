@@ -243,13 +243,6 @@
   .practice .pchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}
   .practice .pchip{appearance:none;background:#fff;border:1px solid var(--line-card);border-radius:20px;color:var(--ink);font:600 11px 'Manrope',sans-serif;letter-spacing:.03em;padding:8px 13px;cursor:pointer;transition:.12s}
   .practice .pchip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-  /* FAQ disclosure: make it obviously tappable (caret + hover underline) */
-  .faq summary{list-style:none}
-  .faq summary::-webkit-details-marker{display:none}
-  .faq summary::after{content:"▾";display:inline-block;margin-left:7px;font-size:9px;vertical-align:1px;transition:transform .2s}
-  .faq[open] summary::after{transform:rotate(180deg)}
-  .faq summary:hover{text-decoration:underline;text-decoration-color:var(--accent-underline);text-underline-offset:4px}
-  body.reduce-motion .faq summary::after{transition:none}
   .herometa{font:600 10px 'Manrope',sans-serif;color:var(--muted);margin-top:8px;letter-spacing:.16em;text-transform:uppercase}
   .difs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 20px}
   .dif{text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:1px;padding:28px 18px;cursor:pointer;transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s cubic-bezier(.22,1,.36,1),border-color .28s;font-family:inherit}
@@ -280,13 +273,13 @@
   .faqitem:last-child{border-bottom:1px solid var(--line-card)}
   .faqq{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;padding:14px 0;cursor:pointer;font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-align:left;gap:12px}
   .faqq:hover{color:var(--accent)}
-  .faqplus{flex:0 0 auto;display:inline-flex;align-items:center;color:var(--accent)}
+  .faqplus{flex:0 0 auto;display:inline-flex;align-items:center;color:var(--ink)}
   .faqplus .icon-minus{display:none}
   .faqq[aria-expanded="true"] .faqplus .icon-plus{display:none}
   .faqq[aria-expanded="true"] .faqplus .icon-minus{display:inline-flex}
   .faqa{overflow:hidden;height:0;transition:height .28s cubic-bezier(.22,1,.36,1)}
   body.reduce-motion .faqa{transition:none}
-  .faqa-inner{font:12px/1.7 'Manrope',sans-serif;color:var(--muted);padding-bottom:14px}
+  .faqa-inner{font:14px/1.7 'Manrope',sans-serif;color:var(--muted);padding-bottom:14px}
   .faqa-inner p{margin:0 0 8px}.faqa-inner p:last-child{margin:0}
   .faqa-inner ul{margin:6px 0 8px 18px;padding:0}
   /* practice zone: Endless (learning-mode chips) + Training (setup CTA) as siblings */
