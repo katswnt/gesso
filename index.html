@@ -231,6 +231,9 @@ const HOWTO_IMAGES={
 };
 function openHowTo(){
   let i=0;
+  // Preload all step images on open so sliding Next/Back is instant (they are ~2MB PNGs each;
+  // draw() swaps a single <img> src, so without this each slide fetches+decodes on demand = lag).
+  try{ Object.values(HOWTO_IMAGES).forEach(src=>{ const im=new Image(); im.decoding='async'; im.src=src; }); }catch{}
   const veil=document.createElement('div');veil.className='settingsveil';
   veil.innerHTML=`<div class="howtomodal" role="dialog" aria-modal="true" aria-label="How to play">
     <div class="htohead"><span class="htoheadttl">how to play</span><button type="button" class="htocloseX" aria-label="Close"><img src="/assets/x.svg" alt="" width="20" height="20"></button></div>
