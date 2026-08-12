@@ -200,14 +200,15 @@ function openModal({title,ariaLabel,body,onClose,onKey}){
   return {veil,close,$:s=>veil.querySelector(s)};
 }
 function openSettings(){
+  const seg=on=>`padding:8px 16px;font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;border:1px solid var(--accent);cursor:pointer;background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--accent)'}`;
   const {veil,close}=openModal({title:'Settings',body:`<div class="settingsbody">
-      <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Auto-follows your system &middot; override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
-      <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds ✓ ◐ ✕ to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
-      <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in cm or inches</div></div><button type="button" class="unitseg" data-units aria-label="Toggle units">${settings.units==='in'?'inches':'cm'}</button></div>
-      <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="obnext" data-replaytut style="padding:8px 14px">Replay</button></div>
-    </div><div class="settingsfoot">Preferences save to this browser.</div>`});
+      <div class="setrow"><div><div class="name">Reduce motion</div><div class="hint">Automatically follows your system, but you can override here</div></div><button type="button" class="toggle" data-set="reduceMotion" aria-pressed="${settings.reduceMotion?'true':'false'}" aria-label="Reduce motion"></button></div>
+      <div class="setrow"><div><div class="name">Colorblind mode</div><div class="hint">Adds an icon to result swatches</div></div><button type="button" class="toggle" data-set="colorblind" aria-pressed="${settings.colorblind?'true':'false'}" aria-label="Colorblind mode"></button></div>
+      <div class="setrow"><div><div class="name">Dimension units</div><div class="hint">Show artwork sizes in centimeters or inches</div></div><div style="display:flex;gap:0"><button type="button" class="unitseg-btn" data-unitval="cm" style="${seg(settings.units!=='in')};border-right:none">CM</button><button type="button" class="unitseg-btn" data-unitval="in" style="${seg(settings.units==='in')}">IN</button></div></div>
+      <div class="setrow"><div><div class="name">Replay the tutorial</div><div class="hint">See the "How to play" walkthrough again</div></div><button type="button" class="navbtn" data-replaytut>Replay</button></div>
+    </div><div class="settingsfoot" style="text-align:center">Preferences saved to this browser.</div>`});
   veil.addEventListener('click',e=>{if(e.target.closest('[data-replaytut]')){close();openHowTo();return;}const t=e.target.closest('[data-set]');if(t){settings[t.dataset.set]=!settings[t.dataset.set];t.setAttribute('aria-pressed',settings[t.dataset.set]?'true':'false');saveSettings();applySettings();}
-    const u=e.target.closest('[data-units]');if(u){settings.units=settings.units==='in'?'cm':'in';u.textContent=settings.units==='in'?'inches':'cm';saveSettings();}});
+    const u=e.target.closest('[data-unitval]');if(u){settings.units=u.dataset.unitval;saveSettings();veil.querySelectorAll('[data-unitval]').forEach(b=>{const on=b.dataset.unitval===settings.units;b.style.background=on?'var(--accent)':'transparent';b.style.color=on?'#fff':'var(--accent)';});}});
 }
 // ---------- "How to play" onboarding ----------
 const HOWTO_STEPS=[
