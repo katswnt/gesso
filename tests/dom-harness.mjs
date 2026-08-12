@@ -96,6 +96,7 @@ const _pid = (ctx.ARTEFACTUM_POOL && ctx.ARTEFACTUM_POOL[0] && ctx.ARTEFACTUM_PO
 if (ctx.SAVED && typeof ctx.SAVED.add === "function") ctx.SAVED.add(_pid);
 call("renderGalleryDetail", _pid);
 call("renderGallery");
+call("renderWorkPage", _pid); // public per-work share page (?w=<id>)
 
 console.log("✅ dom-harness PASS — app script loaded and key builders ran without throwing");
 process.exit(0);
