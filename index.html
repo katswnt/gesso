@@ -1333,12 +1333,7 @@ function frozenTierItems(key){
   for(const id of ids){ if(seen.has(id)) continue; const p=byId[id]; if(!p) continue; seen.add(id); out.push(p); }
   return out.length ? out : null;
 }
-function tierCount(i){
-  const key=TIERS[i]&&TIERS[i].key;
-  const meta=(window.ARTEFACTUM_DAILY||{}).meta;
-  const count=key&&meta&&meta.tiers&&meta.tiers[key]&&meta.tiers[key].distinctCount;
-  return Number.isFinite(count) ? count : tierItems(i).length;
-}
+function tierCount(i){ return tierItems(i).length; } // LIVE distinct-playable count of the (stably-ordered) tier — never a frozen snapshot
 // When the freeze ships metadata, use the frozen ID tiers as the source of truth.
 // Older data/daily-order.js files have no meta, so keep the live percentage fallback.
 // A work is only PLAYABLE/showable if at most ONE scoreable value is missing — specifically it must record at
