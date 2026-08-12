@@ -538,8 +538,13 @@
   .mblob-wd span{width:13px;height:12px;opacity:.5}
   /* gameplay map pins as gesso dabs (play guess + reveal), matching the museums-map dab */
   .dabpin{background:none!important;border:none!important}
-  .dabpin span{display:block;width:22px;height:20px;background:var(--accent);border:2px solid #fff;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
+  .dabpin span{display:block;position:relative;width:22px;height:20px;background:var(--accent);border:2px solid #fff;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;box-shadow:0 2px 6px rgba(35,32,26,.35)}
   .dabpin.actual span{background:var(--full)}
+  /* Pin-placed feedback: a quick drop-settle + one-shot pulse ring so it's obvious the pin landed (e.g. after a city search). Motion-gated. */
+  @keyframes pindrop{0%{transform:translateY(-16px) scale(.5);opacity:0}55%{transform:translateY(3px) scale(1.14)}100%{transform:translateY(0) scale(1);opacity:1}}
+  @keyframes pinpulse{0%{transform:translate(-50%,-50%) scale(.5);opacity:.5}100%{transform:translate(-50%,-50%) scale(3.2);opacity:0}}
+  body.motion-ok .dabpin.dropping span{animation:pindrop .42s cubic-bezier(.22,1,.36,1)}
+  body.motion-ok .dabpin.dropping span::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;border-radius:50%;background:var(--accent);z-index:-1;animation:pinpulse .6s ease-out forwards}
   /* vary the blob per pin so the mapped collections look hand-dabbed, not cloned */
   .mblob.v1 span{border-radius:58% 42% 52% 48% / 58% 52% 48% 42%}
   .mblob.v2 span{border-radius:42% 58% 47% 53% / 62% 44% 56% 38%}

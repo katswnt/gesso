@@ -2791,6 +2791,7 @@ function renderRound(){
   // "Amsterdam" auto-pins its centre; the pin stays draggable/tappable, so it's still adjustable).
   const dropPin=(lat,lng)=>{ const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
     else marker=L.marker(ll,{icon:dabIcon()}).addTo(map);
+    { const el=marker.getElement&&marker.getElement(); if(el){el.classList.remove('dropping');void el.offsetWidth;el.classList.add('dropping');} } // retrigger the drop+pulse each placement
     curScheme=schemeFromLatLng(lat,lng); updEra();
     const sh=document.getElementById('schemehint'); if(sh)sh.textContent=`↳ showing ${curScheme==='neutral'?'general':curScheme} periods for your pin`;
     const leave=leaveFor;
