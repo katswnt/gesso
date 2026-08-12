@@ -491,8 +491,9 @@
   body.motion-ok .perfectstamp{animation:inkStamp .5s cubic-bezier(.2,1.4,.5,1) both}
   .dabo::after{content:"";position:absolute;top:2px;left:3px;width:3px;height:3px;border-radius:50%;background:rgba(246,244,238,.8)}
   .dabo-float{display:inline-block;vertical-align:baseline;animation:dabFloat 3.4s ease-in-out infinite}
-  .dabo-lg{width:30px;height:29px}
-  .dabo-lg::after{top:6px;left:8px;width:7px;height:7px}
+  .dabo-lg{width:34px;height:29px;background:none}
+  .dabo-lg::after{content:none}
+  .dabo-lg svg{width:100%;height:100%;display:block}
   .imgloader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--surface);z-index:2;border-radius:var(--r-xs)}
   .imgloader i{width:16px;height:16px;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabBreathe 1.3s ease-in-out infinite}
   .imgloader i:nth-child(2){animation-delay:.18s}

@@ -31,7 +31,7 @@ const movStart = html.slice(0, html.indexOf("const MOVEMENTS={")).split("\n").le
 const movEnd = html.slice(0, html.indexOf("const MOV_FAMILY=")).split("\n").length;
 const isDataLine = (ln, i) =>
   (i + 1 >= movStart && i + 1 <= movEnd) ||
-  /\bSWATCHES\b|palette\s*:\s*\[|GLOSSARY_EMBLEM|LOCKED_PALETTE|\bDABS\b|swatchGlyph/.test(ln);
+  /\bSWATCHES\b|palette\s*:\s*\[|GLOSSARY_EMBLEM|LOCKED_PALETTE|\bDABS\b|swatchGlyph|PALETTE_SVG/.test(ln);
 
 const hard = [], warn = [];
 const at = i => `index.html:${i + 1}`;
