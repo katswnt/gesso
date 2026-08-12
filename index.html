@@ -6,13 +6,13 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gesso — the daily art-guessing game</title>
-<meta name="description" content="Gesso is the daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then find out what you were looking at. Built by Kat Swint." />
+<meta name="description" content="Gesso is the daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught. Built by Kat Swint." />
 <meta name="author" content="Kat Swint" />
 <link rel="canonical" href="https://gesso.katswint.com/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Gesso" />
 <meta property="og:title" content="Gesso — the daily art-guessing game" />
-<meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then find out what you were looking at. A daily art game built by Kat Swint." />
+<meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then get taught. A daily art game built by Kat Swint." />
 <meta property="og:url" content="https://gesso.katswint.com/" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:creator" content="@katswint" />
@@ -25,7 +25,7 @@
   "url": "https://gesso.katswint.com/",
   "applicationCategory": "GameApplication",
   "operatingSystem": "Web",
-  "description": "The daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then find out what you were looking at.",
+  "description": "The daily art-guessing game: name a masterwork's date, place, movement, medium, and artist from its image, then get taught.",
   "creator": {
     "@type": "Person",
     "name": "Kat Swint",
@@ -214,8 +214,8 @@ const HOWTO_STEPS=[
   {key:'welcome',title:'Guess what you can',body:"Five works a day. You don't need to know everything — a thoughtful guess beats a blank, and close still counts."},
   {key:'when',title:'When was it made?',body:"Drag the dot along the timeline to your best year. It updates as you slide, showing something like “1700 CE.”"},
   {key:'where',title:'Where in the world?',body:"Tap the map to drop a pin. Pinch or use the +/− buttons to zoom — scrolling moves the page, not the map."},
-  {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — it's optional and never counts against you."},
-  {key:'lock',title:'Lock in & learn',body:"Hit Lock in to reveal the answer and a short story about the work. Partial credit always counts. Stuck? A hint costs 500."},
+  {key:'choose',title:'Pick what fits',body:"Tap the medium and movement you think match. Know the artist? Start typing to search — that one's a bonus."},
+  {key:'lock',title:'Lock in & learn',body:"Hit Lock in to reveal the answer and a short story about the work. Even a rough guess beats a blank — partial credit always counts. Stuck? A hint costs 500."},
 ];
 // learning-mode look-closer toggle glyphs (retire 👁 / 🙈) — loupe-with-dot / eye-struck-through
 const LOOK_EYE='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.3"/><path d="M15.3 15.3L21 21"/><circle cx="10.5" cy="10.5" r="1.7" fill="currentColor" stroke="none"/></svg>';
@@ -1318,10 +1318,10 @@ function museumLine(it){ if(!it||!it.museum)return ''; const c=(MUSEUMS[it.museu
 const TITLE_NOTES={
   gypsy:"“Gypsy” is a dated exonym for Roma (Romani) people — kept only as the work’s historical catalogue title.",
   negro:"“Negro” is period catalogue language, shown for identification, not as endorsed usage.",
-  oriental:"“Oriental” is a dated term that lumps many cultures into one exotic ‘East’, kept as the museum’s historical title.",
+  oriental:"“Oriental” is a dated, othering term — kept as the museum’s historical title.",
   squaw:"“Squaw” is a slur for Indigenous women; shown only as the work’s historical catalogue title.",
-  concubine:"An outdated catalogue title that treats its subject as exotic or lesser. Kept for identification, not endorsement.",
-  cripple:"Outdated language that demeans disability, from the work’s original title."
+  concubine:"An othering historical catalogue title, kept for identification, not endorsement.",
+  cripple:"Dated, ableist language from the work’s historical title."
 };
 const FLAG_SVG=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:2px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 function histTitleHTML(it){ if(!it||!it.titleFlag)return ''; const t=TITLE_NOTES[it.titleFlag]; if(!t)return ''; return `<div class="histtitle">${FLAG_SVG}<span><b>Historical title.</b> ${esc(t)}</span></div>`; }
@@ -1547,7 +1547,7 @@ function renderCollections(){
     <div style="margin-bottom:22px">${regBars}</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px">
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">01</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">The 1900 cliff</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Open-license images means mostly public-domain work — roughly pre-${pdYear}, and the line moves forward each year. Most modern &amp; contemporary art is still under copyright, so MoMA, the Whitney and the Tate share data but not images. That&rsquo;s the gap after 1900.</div></div>
-      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks documentation density — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but it measures the archive as much as the art: Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
+      <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">02</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Fame = Wikipedia</div><div style="font-size:13px;color:var(--muted);line-height:1.55">Difficulty tracks global recognizability — how many language Wikipedias cover a work and how often those articles are read. It&rsquo;s the best cross-cultural signal we found, but Wikipedia over-documents the Western canon, so &ldquo;Easy&rdquo; still skews European.</div></div>
       <div class="colcard" style="flex:1 1 240px;max-width:none"><div class="mono" style="color:var(--accent);font-weight:700">03</div><div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">We pull the famous</div><div style="font-size:13px;color:var(--muted);line-height:1.55">No collection is ingested whole — we take each source&rsquo;s most-recognized works so the game stays playable. You&rsquo;re seeing canon hits, not a representative survey.</div></div>
     </div>
     <div class="colcard" style="max-width:none;margin-top:14px">
@@ -1574,14 +1574,6 @@ function renderCollections(){
     <div class="kick" style="margin:36px 0 10px">How we score where it&rsquo;s from</div>
     <div class="colcard" style="max-width:none">
       <div style="font-size:13px;color:var(--muted);line-height:1.65">A border is a recent invention &mdash; most were drawn in the last two centuries, often by empires rather than the people living inside them. So we don&rsquo;t grade your map pin against the modern nation-state: &ldquo;Belgium&rdquo; is an anachronism for a 1562 Bruegel (his world was the <em>Netherlandish</em> Low Countries), and &ldquo;Nigeria&rdquo; a colonial fiction for a Benin bronze. We score against the work&rsquo;s <strong style="color:var(--ink)">historical cultural region</strong> where one applies &mdash; Han China, the Ottoman core, Ancient Egypt, Ukiyo-e Japan &mdash; and its modern country otherwise; either earns full credit, and credit fades with distance beyond it. The rule we hold ourselves to is <strong style="color:var(--ink)">parity</strong>: the same generous, era-aware geography for the West &mdash; the Low Countries, the pre-1861 Italian peninsula, the Russian sphere &mdash; that we already extend to ancient and non-Western art. Not fluid regions for &ldquo;the exotic&rdquo; and hard borders for Europe.</div></div>
-    <div class="colcard" style="max-width:none;margin-top:14px;background:var(--study-bg);border-color:var(--study-border)">
-      <div class="mono" style="color:var(--accent);font-weight:700">06</div>
-      <div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Why some labels read the way they do</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.55">A few labels here are deliberate. A Benin Kingdom work is tagged <em>Benin Kingdom</em>, not <em>Nigeria</em>; the border is from 1914, the bronze isn&rsquo;t (Sarr-Savoy; Dan Hicks, <em>The Brutish Museums</em>). Premodern and non-Western work isn&rsquo;t forced into a Western &ldquo;movement&rdquo; it never belonged to. It&rsquo;s named by culture and period instead (Walter Mignolo). No human remains are in the pool, and a few object types are kept out for related reasons (Local Contexts&rsquo; Traditional Knowledge labels). The public-domain line near 1900 keeps out most 20th-century art. That&rsquo;s a copyright limit, not a taste. None of it is solved here; it&rsquo;s just accounted for.</div>
-      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Sources:
-        <a href="https://en.wikipedia.org/wiki/Walter_Mignolo" target="_blank" rel="noopener" style="color:var(--accent)">Mignolo</a> &middot;
-        <a href="https://localcontexts.org/" target="_blank" rel="noopener" style="color:var(--accent)">Local Contexts &middot; TK Labels</a> &middot;
-        <a href="https://en.wikipedia.org/wiki/Why_Have_There_Been_No_Great_Women_Artists%3F" target="_blank" rel="noopener" style="color:var(--accent)">Nochlin (1971)</a></div></div>
     ${ATTRIB}
   </div></div>`;
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
@@ -2529,9 +2521,9 @@ function renderStart(dateStr,push=true){
       <div class="homesechd">&middot; frequently asked questions &middot;</div>
       <div class="faqacc">
         <div class="faqitem"><button class="faqq" aria-expanded="false">how is difficulty decided?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
-          <div class="faqa"><div class="faqa-inner"><p>Each work gets a documentation-density score &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible. That measures how thoroughly the archive documents a work, not how important it is &mdash; and because the archive over-documents the Western canon, &ldquo;Easy&rdquo; still skews that way.</p></div></div></div>
+          <div class="faqa"><div class="faqa-inner"><p>Each work gets a &ldquo;how well known&rdquo; score based on its global recognizability &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
         <div class="faqitem"><button class="faqq" aria-expanded="false">where does the art come from?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
-          <div class="faqa"><div class="faqa-inner"><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Via Wikidata/Commons we also draw the most-recognized works from these collections:</p><ul><li>Museo del Prado &middot; Louvre &middot; National Gallery, London &middot; Uffizi &middot; Rijksmuseum</li><li>National Gallery of Art (DC) &middot; Fine Arts Museums of San Francisco (de Young)</li><li>National Palace Museum (Taipei) &middot; Tokyo National Museum &middot; National Museum of Korea</li><li>Topkap&#305; Palace Museum (Istanbul) &middot; Egyptian Museum (Cairo)</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
+          <div class="faqa"><div class="faqa-inner"><p>Open-access museum collections, used under each institution&rsquo;s terms &mdash; public-domain or CC0 images wherever possible:</p><ul><li>The Metropolitan Museum of Art &mdash; Open Access (CC0)</li><li>Art Institute of Chicago &mdash; public-domain images, CC0 data</li><li>Cleveland Museum of Art &mdash; Open Access (CC0)</li><li>Victoria and Albert Museum, London &mdash; &copy; V&amp;A, via its open API</li><li>Harvard Art Museums &mdash; via the Harvard Art Museums API</li><li>Smithsonian (National Museums of African &amp; Asian Art) &mdash; Open Access (CC0)</li><li>Wikidata &amp; Wikimedia Commons &mdash; CC0 data; images under their respective free licenses</li></ul><p>Represent one of these institutions and want a credit adjusted or a work removed? Use the report link and we&rsquo;ll fix it promptly.</p></div></div></div>
         <div class="faqitem"><button class="faqq" aria-expanded="false">are the study notes reliable?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
           <div class="faqa"><div class="faqa-inner"><p>The &ldquo;teach me&rdquo; notes are AI-generated and fact-checked against each work&rsquo;s catalogue data. Spot something off? Hit &ldquo;Report an error&rdquo; on any reveal.</p></div></div></div>
       </div>
@@ -2730,10 +2722,10 @@ function renderRound(){
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
-    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · optional</span></div>
+    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · bonus</span></div>
       <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
-  } else fields.push(naField('Attributed to · optional','artist',naReason('artist','Anonymous — no artist on record for this work.')));
+  } else fields.push(naField('Attributed to · bonus','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
   const whereN=n;
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet"><div class="roundwrap">${railHTML(idx,idx)}<div class="roundbody">
@@ -3173,7 +3165,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
     <div class="gal-detail-bar"><button type="button" class="gal-back" data-route="gallery">${BACK_SVG} Back to My Gallery</button><span class="gal-saved-label">${SAVED_AT[id]?'Saved &middot; '+esc(new Date(SAVED_AT[id]).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})):'In your gallery'}</span></div>
     <div class="gal-detail-body">
       <div><div class="gal-detail-plate plate">${saveBtnHTML(it.id)}<img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)"></div>
-        <div class="gal-detail-actions"><button type="button" class="btn2" id="galshare">Share this work</button><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
+        <div class="gal-detail-actions"><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
       <div>
         <div class="gal-kicker">${esc([it.style,fmtDate(it)].filter(Boolean).join(' · '))}</div>
         <div class="gal-detail-title">${esc(it.title)}</div>${histTitleHTML(it)}
@@ -3186,7 +3178,6 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
   stage.querySelectorAll('.aga').forEach(a=>a.removeAttribute('hidden'));
   stage.querySelectorAll('.agq').forEach(b=>{ b.setAttribute('aria-expanded','true'); b.onclick=()=>{ const a=b.nextElementSibling,open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');track('guide_open',{});}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
   stage.querySelectorAll('[data-open2]').forEach(c=>c.onclick=()=>route('gallery/'+c.dataset.open2));
-  { const gs=document.getElementById('galshare'); if(gs) gs.onclick=()=>shareWork(it,'galshare'); }
   window.scrollTo(0,0);
 }
 function qaCardHTML(id){ const it=qaResolve(id);
@@ -3216,35 +3207,6 @@ function qaView(id){ const stage=document.getElementById('stage'); stage.innerHT
 function qaViewMany(ids){ const stage=document.getElementById('stage');
   stage.innerHTML=`<div class="mono" style="padding:8px 4px 14px;color:var(--muted);font-size:12px">QA PREVIEW · ${ids.length} works · not real rounds</div>`+ids.map(qaCardHTML).join('');
   qaWireAndDeclutter(stage); }
-// ---------- shareable per-work page (public reveal for ANY work; ?w=<id>) ----------
-function shareWorkURL(id){ return `${location.origin}/?w=${encodeURIComponent(id)}`; }
-function shareWork(it, btnId){ const url=shareWorkURL(it.id); const text=`${it.title}${it.artist?' — '+it.artist:''} · on Gesso`;
-  const flash=()=>{ const b=btnId&&document.getElementById(btnId); if(b){ const t=b.textContent; b.textContent='Link copied ✓'; setTimeout(()=>b.textContent=t,1700); } };
-  if(navigator.share){ navigator.share({title:'Gesso',text,url}).catch(()=>{}); }
-  else { try{ navigator.clipboard.writeText(url).then(flash); }catch{ flash(); } }
-  try{ track('work_share',{id:it.id}); }catch{} }
-function renderWorkPage(id){ clearTimers&&clearTimers(); const it=qaResolve(id), stage=document.getElementById('stage');
-  if(!it){ stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="padding:30px 24px">That work is not in the collection. <a class="btn2" href="/">Play today&rsquo;s Gesso &rarr;</a></div>`; return; }
-  const study=studyFor(it);
-  const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
-  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:'';
-  const fact=(k,v)=>v?`<div style="display:flex;gap:12px;margin:2px 0"><b style="color:var(--accent);min-width:88px;font-size:12px">${k}</b><span class="mono">${esc(v)}</span></div>`:'';
-  stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="margin-bottom:18px">
-    <div class="revealgrid"><div>
-      <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
-      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
-      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||it.region)}${fact(styleKindLabel(it),it.style)}${fact("MEDIUM",it.medium)}${fact("HELD AT",museumLine(it))}</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"><button type="button" id="sharework" class="btn2">Share this work</button><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div>
-    </div>
-    <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}${guideHTML(study.guide)}
-      <div style="margin-top:22px"><a class="btn" href="/" style="text-decoration:none">Play today&rsquo;s Gesso &rarr;</a></div>
-    </div>
-  </div></div>`;
-  qaWireAndDeclutter(stage);
-  const sb=document.getElementById('sharework'); if(sb) sb.onclick=()=>shareWork(it,'sharework');
-  try{ document.title=`${it.title} · Gesso`; }catch{}
-  window.scrollTo(0,0);
-}
 function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
 function renderReveal(r,ri,push=true){
   if(ri==null)ri=results.indexOf(r); const liveRound=results.length-1; // ri = round being viewed; liveRound = latest submitted
@@ -3262,9 +3224,8 @@ function renderReveal(r,ri,push=true){
     return `<div class="swatch">${swatchBox(f)}<div class="lb">${iconHTML(c)}${catShort(c,it)}</div></div>`;}).join('')
     + (r.cells.artist?`<div class="swatch">${swatchBox(r.cells.artist.pts/MAX_CAT)}<div class="lb">${iconHTML('artist')}ARTIST</div></div>`:'');
   const scoreRow=(c)=>{const cell=r.cells[c],f=cell.pts/MAX_CAT;
-    const blank=!cell.you||cell.you==='—'; // left this category empty — nudge, don't punish (the answer+note below is the tell)
     return `<div class="scrow">${swatchBox(f)}
-      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · optional':''}${blank?` <span style="color:var(--faint);font-weight:400">· skipped, no penalty — here&rsquo;s the tell</span>`:''}</div>
+      <div class="mid"><div class="t1">${iconHTML(c)}${catLabel(c,it)}${cell.bonus?' · bonus':''}</div>
       <div class="t2">${esc(cell.you)} · ${esc(cell.actual||'')} — ${esc(cell.note)}</div></div>
       <div class="pts"><span class="n" data-cu="${cell.pts}">${cell.pts.toLocaleString()}</span><div class="d">/ 2,500</div></div></div>`;};
   const study=studyFor(it);
@@ -3280,7 +3241,7 @@ function renderReveal(r,ri,push=true){
       <div class="kick">${infinite?`Round ${results.length} &middot; avg ${(results.length?Math.round(results.reduce((a,x)=>a+x.coreNet+x.bonus,0)/results.length):0).toLocaleString()} pts/round`:`Record filed &middot; Piece ${ri+1} of ${ROUNDS}`}</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px;flex-wrap:wrap">
         <span style="position:relative;display:inline-block"><span class="big${perfect?' gold':''}" data-cu="${r.coreNet+r.bonus}" data-prefix="+">+${(r.coreNet+r.bonus).toLocaleString()}</span>${masterpiece?`<span class="perfectstamp">${ICONS.spark} MASTERPIECE</span>`:perfect?`<span class="perfectstamp">${ICONS.star} PERFECT</span>`:''}</span>
-        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist (optional)`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
+        <span class="mono" style="font-size:13px;color:var(--muted)">base ${r.coreNet.toLocaleString()}/${r.baseMax.toLocaleString()}${r.bonus?` &middot; +${r.bonus.toLocaleString()} artist bonus`:''}${r.hintPen?` &middot; −${r.hintPen} hints`:''}</span></div>
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
@@ -3665,9 +3626,8 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 applySettings();
 if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
 else{ buildIndexes();
-  const _sp=new URLSearchParams(location.search); const wId=_sp.get('w'); const qaId=_sp.get('qa'); // ?w=<id> public share page · ?qa=<id>[,..] internal curated deep-link
-  if(wId){ renderWorkPage(decodeURIComponent(wId)); }
-  else if(qaId){ const ids=decodeURIComponent(qaId).split(',').map(s=>s.trim()).filter(Boolean); ids.length>1?qaViewMany(ids):qaView(ids[0]); }
+  const qaId=new URLSearchParams(location.search).get('qa'); // ?qa=<id>[,<id>...] deep-link (spot-check curated content; comma-separates multiple)
+  if(qaId){ const ids=decodeURIComponent(qaId).split(',').map(s=>s.trim()).filter(Boolean); ids.length>1?qaViewMany(ids):qaView(ids[0]); }
   else{
   // on a cold deep-link, seed a Home entry beneath so Back returns to the app, not off-site
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
