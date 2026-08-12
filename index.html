@@ -3113,7 +3113,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
     <div class="gal-detail-bar"><button type="button" class="gal-back" data-route="gallery">${BACK_SVG} Back to My Gallery</button><span class="gal-saved-label">${SAVED_AT[id]?'Saved &middot; '+esc(new Date(SAVED_AT[id]).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})):'In your gallery'}</span></div>
     <div class="gal-detail-body">
       <div><div class="gal-detail-plate plate">${saveBtnHTML(it.id)}<img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)"></div>
-        <div class="gal-detail-actions"><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
+        <div class="gal-detail-actions"><button type="button" class="btn2" id="galshare">Share this work</button><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div></div>
       <div>
         <div class="gal-kicker">${esc([it.style,fmtDate(it)].filter(Boolean).join(' · '))}</div>
         <div class="gal-detail-title">${esc(it.title)}</div>${histTitleHTML(it)}
@@ -3126,6 +3126,7 @@ function renderGalleryDetail(id){ clearTimers&&clearTimers();
   stage.querySelectorAll('.aga').forEach(a=>a.removeAttribute('hidden'));
   stage.querySelectorAll('.agq').forEach(b=>{ b.setAttribute('aria-expanded','true'); b.onclick=()=>{ const a=b.nextElementSibling,open=a.hasAttribute('hidden'); if(open){a.removeAttribute('hidden');b.setAttribute('aria-expanded','true');track('guide_open',{});}else{a.setAttribute('hidden','');b.setAttribute('aria-expanded','false');} }; });
   stage.querySelectorAll('[data-open2]').forEach(c=>c.onclick=()=>route('gallery/'+c.dataset.open2));
+  { const gs=document.getElementById('galshare'); if(gs) gs.onclick=()=>shareWork(it,'galshare'); }
   window.scrollTo(0,0);
 }
 function qaCardHTML(id){ const it=qaResolve(id);
@@ -3155,6 +3156,35 @@ function qaView(id){ const stage=document.getElementById('stage'); stage.innerHT
 function qaViewMany(ids){ const stage=document.getElementById('stage');
   stage.innerHTML=`<div class="mono" style="padding:8px 4px 14px;color:var(--muted);font-size:12px">QA PREVIEW · ${ids.length} works · not real rounds</div>`+ids.map(qaCardHTML).join('');
   qaWireAndDeclutter(stage); }
+// ---------- shareable per-work page (public reveal for ANY work; ?w=<id>) ----------
+function shareWorkURL(id){ return `${location.origin}/?w=${encodeURIComponent(id)}`; }
+function shareWork(it, btnId){ const url=shareWorkURL(it.id); const text=`${it.title}${it.artist?' — '+it.artist:''} · on Gesso`;
+  const flash=()=>{ const b=btnId&&document.getElementById(btnId); if(b){ const t=b.textContent; b.textContent='Link copied ✓'; setTimeout(()=>b.textContent=t,1700); } };
+  if(navigator.share){ navigator.share({title:'Gesso',text,url}).catch(()=>{}); }
+  else { try{ navigator.clipboard.writeText(url).then(flash); }catch{ flash(); } }
+  try{ track('work_share',{id:it.id}); }catch{} }
+function renderWorkPage(id){ clearTimers&&clearTimers(); const it=qaResolve(id), stage=document.getElementById('stage');
+  if(!it){ stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="padding:30px 24px">That work is not in the collection. <a class="btn2" href="/">Play today&rsquo;s Gesso &rarr;</a></div>`; return; }
+  const study=studyFor(it);
+  const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
+  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:'';
+  const fact=(k,v)=>v?`<div style="display:flex;gap:12px;margin:2px 0"><b style="color:var(--accent);min-width:88px;font-size:12px">${k}</b><span class="mono">${esc(v)}</span></div>`:'';
+  stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="margin-bottom:18px">
+    <div class="revealgrid"><div>
+      <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
+      <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
+      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||it.region)}${fact(styleKindLabel(it),it.style)}${fact("MEDIUM",it.medium)}${fact("HELD AT",museumLine(it))}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"><button type="button" id="sharework" class="btn2">Share this work</button><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div>
+    </div>
+    <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}${guideHTML(study.guide)}
+      <div style="margin-top:22px"><a class="btn" href="/" style="text-decoration:none">Play today&rsquo;s Gesso &rarr;</a></div>
+    </div>
+  </div></div>`;
+  qaWireAndDeclutter(stage);
+  const sb=document.getElementById('sharework'); if(sb) sb.onclick=()=>shareWork(it,'sharework');
+  try{ document.title=`${it.title} · Gesso`; }catch{}
+  window.scrollTo(0,0);
+}
 function showReveal(i){ renderReveal(results[i], i); } // review-only nav to an already-submitted round
 function renderReveal(r,ri,push=true){
   if(ri==null)ri=results.indexOf(r); const liveRound=results.length-1; // ri = round being viewed; liveRound = latest submitted
@@ -3561,8 +3591,9 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 applySettings();
 if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
 else{ buildIndexes();
-  const qaId=new URLSearchParams(location.search).get('qa'); // ?qa=<id>[,<id>...] deep-link (spot-check curated content; comma-separates multiple)
-  if(qaId){ const ids=decodeURIComponent(qaId).split(',').map(s=>s.trim()).filter(Boolean); ids.length>1?qaViewMany(ids):qaView(ids[0]); }
+  const _sp=new URLSearchParams(location.search); const wId=_sp.get('w'); const qaId=_sp.get('qa'); // ?w=<id> public share page · ?qa=<id>[,..] internal curated deep-link
+  if(wId){ renderWorkPage(decodeURIComponent(wId)); }
+  else if(qaId){ const ids=decodeURIComponent(qaId).split(',').map(s=>s.trim()).filter(Boolean); ids.length>1?qaViewMany(ids):qaView(ids[0]); }
   else{
   // on a cold deep-link, seed a Home entry beneath so Back returns to the app, not off-site
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
