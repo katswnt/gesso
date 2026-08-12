@@ -1910,7 +1910,7 @@ async function renderLeaderboard(tierKey,dateStr){
   const accession=date.replace(/-(\d\d)-(\d\d)$/,'·$1$2').replace(/^(\d{4})·/,'$1·');
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet"><div style="padding:32px 24px 48px;text-align:center">
     <div style="font:400 2rem 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:16px">leaderboard</div>
-    <img src="/assets/laurel_wreath.png" alt="" style="height:100px;width:auto;margin-bottom:20px">
+    <img src="/assets/laurel_wreath.webp" alt="" style="height:100px;width:auto;margin-bottom:20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <button class="lbday" data-lbd="${prevD}" aria-label="previous day" style="background:none;border:0;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink)"><img src="/assets/arrow-left.svg" alt="" width="16" height="16"> Previous day</button>
       <div style="font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">NO. ${esc(accession)}</div>
@@ -2484,9 +2484,9 @@ function renderStart(dateStr,push=true){
   const replay = dateStr && dateStr!==todayStr();
   const b=regionBars();
   const easy=tierItems(0); const easyEuro=Math.round(easy.filter(p=>p.region==='Europe').length/(easy.length||1)*100);
-  const img1=`<div class="heroimg"><img src="/assets/MET picture frame.png" alt="" style="width:10.5rem;height:5rem;object-fit:contain"></div>`;
-  const img2=`<div class="heroimg"><img src="/assets/silver pin.png" alt="" style="width:16rem;height:3rem;object-fit:contain"></div>`;
-  const img3=`<div class="heroimg"><img src="/assets/dagger.png" alt="" style="width:9.047rem;height:4rem;object-fit:contain"></div>`;
+  const img1=`<div class="heroimg"><img src="/assets/MET picture frame.webp" alt="" style="width:10.5rem;height:5rem;object-fit:contain"></div>`;
+  const img2=`<div class="heroimg"><img src="/assets/silver pin.webp" alt="" style="width:16rem;height:3rem;object-fit:contain"></div>`;
+  const img3=`<div class="heroimg"><img src="/assets/dagger.webp" alt="" style="width:9.047rem;height:4rem;object-fit:contain"></div>`;
   document.getElementById('stage').innerHTML=`${header(0,-1,false)}<div class="sheet">
 
     <div class="hero">
