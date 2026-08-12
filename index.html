@@ -1267,7 +1267,7 @@ function artistDisplay(it){ if(!it||!it.artist) return ""; const pre=it.attribut
 function styleKindLabel(it){ const k=it&&it.styleKind; return k==='culture'?'CULTURE':k==='period'?'PERIOD':k==='school'?'SCHOOL':'MOVEMENT'; }
 const SENSITIVE_FRAME={funerary:"A funerary object — made for the tomb and the afterlife, not for display. Shown here to teach, with respect for its purpose.",sacred:"A sacred or ritual object that carried religious meaning for the people who made it. We present it with that context in mind."};
 function contextHTML(it){ if(!it) return ''; const parts=[]; if(it.sensitive&&SENSITIVE_FRAME[it.sensitive]) parts.push(SENSITIVE_FRAME[it.sensitive]); if(it.provenanceNote) parts.push(it.provenanceNote); if(it.contextNote) parts.push(it.contextNote); if(!parts.length) return '';
-  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:2px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
+  return `<div style="margin:16px 0 18px;padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface-lift);border-radius:2px;font-size:13px;line-height:1.55;color:var(--ink-soft)"><span style="font:700 10px 'Manrope',sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px">Context</span>${parts.map(esc).join(' ')}</div>`; }
 const ICONS = {
   when:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>`,
   where:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6M12 3.7v16.6"></path><ellipse cx="12" cy="12" rx="3.9" ry="8.3"></ellipse></svg>`,
@@ -1558,7 +1558,7 @@ function renderCollections(){
       <div class="mono" style="color:var(--accent);font-weight:700">04</div>
       <div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">The African-museum gap</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.55">We wanted to source directly from museums across Africa. On Wikidata, the Bardo in Tunis has over 3,000 catalogued objects and almost no open-access images. Iziko in Cape Town, the National Museum in Lagos &mdash; same story. The Egyptian Museum in Cairo is the only major African museum with real image coverage. African heritage is overwhelmingly catalogued under the <em>Western</em> museums that hold it: the Benin Bronzes sit in London and New York, not Lagos. So African art reaches this site mostly through Western holding-museums or by country of origin &mdash; a digital reflection of how that art was physically dispersed.
-      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Learn more &middot; restitution &amp; the digital record:
+      <div style="margin-top:10px;font:600 11px 'Manrope',sans-serif;letter-spacing:.04em">Learn more &middot; restitution &amp; the digital record:
         <a href="https://en.wikipedia.org/wiki/Dahomey_(film)" target="_blank" rel="noopener" style="color:var(--accent)">Mati Diop, <em>Dahomey</em> (2024)</a> &middot;
         <a href="https://digitalbenin.org/" target="_blank" rel="noopener" style="color:var(--accent)">Digital Benin</a> &middot;
         <a href="https://restitutionreport2018.com/" target="_blank" rel="noopener" style="color:var(--accent)">the Sarr&ndash;Savoy Report</a> &middot;
@@ -1572,14 +1572,14 @@ function renderCollections(){
         <strong>South America (${regPct('South America')}%)</strong> is squeezed from both sides. Pre-Columbian work has almost no Wikipedia footprint, which means it rarely clears our recognizability threshold. The great 20th-century Latin American canon &mdash; Kahlo, Rivera, Tarsila &mdash; is mostly post-${pdYear} and still under copyright (the 1900 cliff). And few South American museums open-license their images.<br><br>
         <strong>Oceania (${regPct('Oceania')}%)</strong> is the starkest gap. The work is overwhelmingly traditional and often anonymous, held in <em>Western</em> ethnographic museums &mdash; the quai Branly, the British Museum, the Met&rsquo;s Rockefeller Wing &mdash; that don&rsquo;t openly license their photography. Same dispersal story as African art, plus an even thinner Wikipedia trail.<br><br>
         We&rsquo;re working to close these gaps by pulling open-licensed works from Wikimedia Commons. They tend to land in the harder tiers (rarely recognised), but they put the rest of the world on the board.</div>
-      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Learn more &middot; the same patterns, different continents:
+      <div style="margin-top:10px;font:600 11px 'Manrope',sans-serif;letter-spacing:.04em">Learn more &middot; the same patterns, different continents:
         <a href="https://itvs.org/films/aanikoobijigan/" target="_blank" rel="noopener" style="color:var(--accent)">Khalil &amp; Khalil, <em>Aanikoobijigan</em> (2026)</a> &middot;
         <a href="https://thamesandhudson.com/possessions-indigenous-art-colonial-culture-decolonization-9780500296592" target="_blank" rel="noopener" style="color:var(--accent)">Nicholas Thomas, <em>Possessions</em></a></div></div>
     <div class="colcard" style="max-width:none;margin-top:14px">
       <div class="mono" style="color:var(--accent);font-weight:700">06</div>
       <div style="font:700 15px 'Faculty Glyphic';margin:4px 0 7px">Why some labels read the way they do</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.55">A few labels here are deliberate. A Benin Kingdom work is tagged <em>Benin Kingdom</em>, not <em>Nigeria</em>; the border is from 1914, the bronze isn&rsquo;t (Sarr-Savoy; Dan Hicks, <em>The Brutish Museums</em>). Premodern and non-Western work isn&rsquo;t forced into a Western &ldquo;movement&rdquo; it never belonged to. It&rsquo;s named by culture and period instead (Walter Mignolo). No human remains are in the pool, and a few object types are kept out for related reasons (Local Contexts&rsquo; Traditional Knowledge labels). The public-domain line near 1900 keeps out most 20th-century art. That&rsquo;s a copyright limit, not a taste. None of it is solved here; it&rsquo;s just accounted for.</div>
-      <div style="margin-top:10px;font:600 11px 'Manrope',monospace;letter-spacing:.04em">Sources:
+      <div style="margin-top:10px;font:600 11px 'Manrope',sans-serif;letter-spacing:.04em">Sources:
         <a href="https://en.wikipedia.org/wiki/Walter_Mignolo" target="_blank" rel="noopener" style="color:var(--accent)">Mignolo</a> &middot;
         <a href="https://localcontexts.org/" target="_blank" rel="noopener" style="color:var(--accent)">Local Contexts &middot; TK Labels</a> &middot;
         <a href="https://en.wikipedia.org/wiki/Why_Have_There_Been_No_Great_Women_Artists%3F" target="_blank" rel="noopener" style="color:var(--accent)">Nochlin (1971)</a></div></div>
@@ -2504,9 +2504,9 @@ function renderStart(dateStr,push=true){
         <div class="ct">${tierCount(i)} works available</div></button>`).join('')}
     </div>
     ${replay?'':`<div style="text-align:center;margin:2px 0 6px">
-      <button type="button" id="ystrday" style="background:none;border:none;font:700 11px 'Manrope',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">&larr; Yesterday&rsquo;s puzzle</button>
+      <button type="button" id="ystrday" style="background:none;border:none;font:700 11px 'Manrope',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">&larr; Yesterday&rsquo;s puzzle</button>
       <span style="color:var(--muted);font-size:11px">&middot;</span>
-      <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'Manrope',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
+      <button type="button" data-route="archive" style="background:none;border:none;font:700 11px 'Manrope',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:6px 8px">Browse archive &rarr;</button>
     </div>`}
     ${replay?'':`<div class="practicezone">
       <div class="pz-block">
@@ -2628,12 +2628,12 @@ function renderInfiniteSummary(){
       medium:`<rect ${s} x="4.7" y="4.7" width="14.6" height="14.6" rx="3.4"/><path d="M5.4 19 H12 L5.4 12.4 Z" fill="currentColor"/>`,
       artist:`<path ${s} d="M3.6 14.6c1.5-2.9 2.6-4.4 3.5-4 .9.4-.1 3.9 1.1 4.2 1.2.3 2.3-4.2 3.8-4.2 1.1 0 .6 3.5 1.9 3.6 1 .1 1.5-1.8 2.8-1.8"/><path ${s} d="M3.6 18h13.8"/>` };
     return `<svg viewBox="0 0 24 24" width="16" height="16" style="color:var(--ink-soft)">${m[key]||''}</svg>`; };
-  const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px ''Faculty Glyphic'',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'Manrope',monospace;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
+  const colCell=(arr)=>arr.slice(0,2).map((x,i)=>`<div style="display:flex;align-items:center;justify-content:space-between${i===0?';margin-bottom:7px':''}"><span style="font:600 14px ''Faculty Glyphic'',sans-serif">${esc(x.k)}</span><span class="tab mono" style="font:600 12px 'Manrope',sans-serif;color:${bandCol(x.pct)}">${x.pct}%</span></div>`).join('');
   document.getElementById('stage').innerHTML=`${header(0,-1,true)}<div class="sheet">
     <div class="banner" style="background:linear-gradient(180deg,var(--study-bg),var(--surface))"><div style="width:100%">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="kick">${isTrain?'Training &middot; '+esc(TRAIN.label||'custom'):'Endless session &middot; '+esc(tierName)}</span>
-        <span style="display:flex;align-items:center;gap:6px;font:600 10px 'Manrope',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
+        <span style="display:flex;align-items:center;gap:6px;font:600 10px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span class="blob" style="width:11px;height:10px;background:var(--accent)"></span>doesn&rsquo;t affect your streak</span></div>
       <div style="display:flex;align-items:flex-end;gap:13px;margin-top:9px;flex-wrap:wrap"><span class="big tab" data-cu="${avg}">${avg.toLocaleString()}</span>
       <span class="mono" style="font-size:13px;color:var(--muted);padding-bottom:6px">avg pts / round &middot; <span style="color:var(--ink)">${rounds}</span> round${rounds===1?'':'s'}</span></div>
       ${deltaLine?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface);border:1px solid var(--accent);border-radius:2px;font:600 15px 'Faculty Glyphic';color:var(--ink)">${deltaLine}</div>`:''}</div></div>
@@ -2649,7 +2649,7 @@ function renderInfiniteSummary(){
     </div></div>
     ${catPct.length?`<div style="padding:2px 24px 6px">
       <div class="sech"><span class="t">Your strengths this session</span><span class="r"></span></div>
-      <div style="display:flex;flex-direction:column;gap:11px">${catPct.map((x,i)=>{const col=bandCol(x.pct);return `<div style="display:flex;align-items:center;gap:11px"><span class="ico">${catIcon(x.c)}</span><span style="flex:0 0 74px;font:600 12px ''Faculty Glyphic'',sans-serif;color:var(--ink-soft)">${CATLBL[x.c]||x.c}</span><span class="rbar"><i style="width:${x.pct}%;background:${col};animation-delay:${(i*0.09).toFixed(2)}s"></i></span><span class="tab mono" style="flex:0 0 auto;min-width:34px;text-align:right;font:600 12px 'Manrope',monospace;color:${col}">${x.pct}%</span></div>`;}).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:11px">${catPct.map((x,i)=>{const col=bandCol(x.pct);return `<div style="display:flex;align-items:center;gap:11px"><span class="ico">${catIcon(x.c)}</span><span style="flex:0 0 74px;font:600 12px ''Faculty Glyphic'',sans-serif;color:var(--ink-soft)">${CATLBL[x.c]||x.c}</span><span class="rbar"><i style="width:${x.pct}%;background:${col};animation-delay:${(i*0.09).toFixed(2)}s"></i></span><span class="tab mono" style="flex:0 0 auto;min-width:34px;text-align:right;font:600 12px 'Manrope',sans-serif;color:${col}">${x.pct}%</span></div>`;}).join('')}</div>
       ${strong?`<div style="margin:14px 0 4px;font:400 13px/1.5 ''Faculty Glyphic'',sans-serif;color:var(--ink-soft);display:flex;gap:18px;flex-wrap:wrap">
         <span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--full)"></span>Sharpest on <strong style="color:var(--ink)">${CATLBL[strong.c]||strong.c}</strong></span>
         ${weak&&weak.c!==strong.c?`<span style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:2px;background:var(--miss)"></span>Most room to grow on <strong style="color:var(--ink)">${CATLBL[weak.c]||weak.c}</strong></span>`:''}</div>`:''}
@@ -2663,8 +2663,8 @@ function renderInfiniteSummary(){
       <div style="margin-top:11px;font:italic 12px ''Faculty Glyphic'',sans-serif;color:var(--faint)">Based on this session — play more to sharpen the picture.</div>
     </div>`:''}
     ${nailed.length?`<div style="padding:0 24px 6px">
-      <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'Manrope',monospace;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
-      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?ICONS.spark:ICONS.star;const row=`<span style="flex:0 0 auto;color:${col};font:700 13px ''Faculty Glyphic'',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px ''Faculty Glyphic'',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'Manrope',monospace">${ICONS.ext}</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
+      <div class="sech"><span class="t">Works you nailed</span><span class="mono" style="font:500 10px 'Manrope',sans-serif;color:var(--faint)">${nailed.length} of ${rounds}</span><span class="r"></span></div>
+      <div id="worksgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:7px 16px">${nailed.map(w=>{const gold=w.master;const col=gold?'var(--gold-ink)':'var(--silver-ink)';const mark=gold?ICONS.spark:ICONS.star;const row=`<span style="flex:0 0 auto;color:${col};font:700 13px ''Faculty Glyphic'',sans-serif">${mark}</span><span class="wt" style="flex:1;font:500 14px ''Faculty Glyphic'',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.title)}</span><span class="warr" style="flex:0 0 auto;color:var(--accent);font:700 11px 'Manrope',sans-serif">${ICONS.ext}</span><span class="tchip${gold?' gold':''}">${gold?'Masterpiece':'Perfect'}</span>`;
         return w.url?`<a class="wlink" href="${esc(w.url)}" target="_blank" rel="noopener">${row}</a>`:`<div class="wlink" style="cursor:default">${row}</div>`;}).join('')}</div>
     </div>`:''}
     <div style="padding:18px 24px 22px;display:flex;gap:11px;flex-wrap:wrap">
@@ -2705,10 +2705,10 @@ function renderRound(){
     <input type="range" id="yr" class="nudge" min="0" max="1000" value="${yearToPos(startYear)}" step="1" />
     <div class="minmax"><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.lo:MINY)}</span><span>${fmtYear(TRAIN_SPAN?TRAIN_SPAN.hi:MAXY)}</span></div>
     <div class="dragslide">↔ grab the dot and slide</div>
-    <div id="schemehint" style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
+    <div id="schemehint" style="margin-top:7px;font:10px 'Manrope',sans-serif;color:var(--faint)">↳ drop a map pin to reveal that region's periods</div>`}); n++;
   // a non-scoring "not available" placeholder so absent categories are EXPLAINED, not silently dropped
   const naField=(label,icon,reason)=>({na:true, html:`<div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML(icon)}${label}</span></div>
-      <div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">${reason}</div>`});
+      <div style="font:11px 'Manrope',sans-serif;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">${reason}</div>`});
   // explain a category that's been hidden/given/dropped this round (instead of silently omitting it)
   const drillAxis = TRAIN && TRAIN.axis;
   const given = TRAIN ? trainGivenCats() : new Set();
@@ -2729,8 +2729,8 @@ function renderRound(){
     const elimKind = (typeof CULTS!=='undefined' && CULTS.includes(it.style)) ? 'cultures' : 'movements';
     fields.push({k:'style', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('style')}${catLabel('style',it)}</span></div>
       <div class="pills" data-pills="style">${ch.map(m=>`<button class="pill" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
-      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'Manrope',monospace;color:var(--faint)">↳ Place a pin on the map — matching the region rules out ${elimKind} that don&rsquo;t belong there, free</div>`:''}
-      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',monospace;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
+      ${styleElim?`<div id="geohint" style="margin-top:8px;font:10px 'Manrope',sans-serif;color:var(--faint)">↳ Place a pin on the map — matching the region rules out ${elimKind} that don&rsquo;t belong there, free</div>`:''}
+      <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',sans-serif;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · optional</span></div>
@@ -2753,9 +2753,9 @@ function renderRound(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:22px">${fields.map(f=>`<div>${f.html}</div>`).join('')}
-        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',monospace;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
+        ${hideMap?`<div><div class="fieldlabel"><span class="ix" style="color:var(--faint)">—</span><span class="nm" style="color:var(--muted)">${iconHTML('where')}Place of origin</span></div><div style="font:11px 'Manrope',sans-serif;color:var(--faint);padding:7px 10px;border:1px dashed var(--line);border-radius:2px;background:rgba(0,0,0,.015)">Hidden in this drill.</div></div>`:`<div>
           <div class="fieldlabel"><span class="ix">0${whereN}</span><span class="nm">${iconHTML('where')}Place of origin</span><span class="rule"></span><span class="hintrule">SEARCH OR TAP TO PIN</span></div>
-          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to drop your pin (e.g. Amsterdam)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',monospace;padding:8px 11px;border:1px solid var(--line-card);border-radius:2px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:2px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
+          <div style="position:relative;margin:0 0 6px;z-index:1200"><input type="text" id="mapsearch" placeholder="Search a place to drop your pin (e.g. Amsterdam)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:12px 'Manrope',sans-serif;padding:8px 11px;border:1px solid var(--line-card);border-radius:2px;background:#fff"/><div id="mapsearchres" class="ac-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-card);border-radius:2px;overflow:hidden;max-height:180px;overflow-y:auto"></div></div>
           <div id="map" style="position:relative;height:240px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
         </div>`}
       </div>
@@ -2810,7 +2810,7 @@ function renderRound(){
         let jj=Array.isArray(j)?j:[]; const seen=new Set(); // dedupe near-identical hits (same spot at ~1km / same name)
         jj=jj.filter(x=>{const k=(x.display_name||'')+'|'+(+x.lat).toFixed(1)+','+(+x.lon).toFixed(1); if(seen.has(k))return false; seen.add(k); return true;}).slice(0,5);
         if(!jj.length){sr.innerHTML=`<div class="ac-item" style="color:var(--muted)">No match</div>`;sr.style.display='block';return;}
-        sr.innerHTML=jj.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" data-bb="${(x.boundingbox||[]).join(',')}" style="font:11px 'Manrope',monospace;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
+        sr.innerHTML=jj.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" data-bb="${(x.boundingbox||[]).join(',')}" style="font:11px 'Manrope',sans-serif;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
         sr.style.display='block';
         sr.querySelectorAll('.ac-item[data-lat]').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();
           const bb=(el.dataset.bb||'').split(',').map(Number); // [minlat,maxlat,minlon,maxlon]
@@ -3306,11 +3306,11 @@ function renderReveal(r,ri,push=true){
         ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',monospace;color:var(--muted)">
+          <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',sans-serif;color:var(--muted)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--full)"></span>${esc(it.place||it.region)} — made here</span>
             ${r.guess.ll&&r.cells.where?`<span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--accent)"></span>Your pin</span><span style="margin-left:auto;color:var(--ink);font-weight:600">${r.cells.where.inC?'right country':`&asymp; ${Math.round(r.cells.where.dist)} km off`}</span>`:`<span style="margin-left:auto;color:var(--muted)">no pin dropped</span>`}
           </div>
-          ${(()=>{const rg=regionFor(it); if(!rg)return''; const isSuper=!!rg.name; const label=esc(rg.name||it.style); return `<div style="margin-top:7px;font:10px 'Manrope',monospace;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${label} &middot; <span style="color:var(--faint)">${isSuper?'credited as one historical region, not today&rsquo;s borders':'historical range'}</span></div>`;})()}
+          ${(()=>{const rg=regionFor(it); if(!rg)return''; const isSuper=!!rg.name; const label=esc(rg.name||it.style); return `<div style="margin-top:7px;font:10px 'Manrope',sans-serif;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${label} &middot; <span style="color:var(--faint)">${isSuper?'credited as one historical region, not today&rsquo;s borders':'historical range'}</span></div>`;})()}
         </div>
       </div>
     </div>
@@ -3318,14 +3318,14 @@ function renderReveal(r,ri,push=true){
       <div class="studygrid">
         <div class="study-notes">
           ${contextHTML(it)}
-          <div class="study-notes-label" style="font:700 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Study notes</div>
+          <div class="study-notes-label" style="font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Study notes</div>
           ${notesV2 ? `${notesHTML(study.notes)}` : `${study.cues&&study.cues.length?`<div>${study.cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join('')}</div>`:''}`}
         </div>
         <div class="study-guide">
-          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 11px 'Manrope',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Follow-up questions &middot; ${study.guide.length}</div>${guideHTML(study.guide)}`:''}
+          ${(Array.isArray(study.guide)&&study.guide.length)?`<div class="study-guide-label" style="font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:14px">Follow-up questions &middot; ${study.guide.length}</div>${guideHTML(study.guide)}`:''}
         </div>
       </div>
-      ${ml?`<div class="mastery"><span style="font:700 10px 'Manrope',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
+      ${ml?`<div class="mastery"><span style="font:700 10px 'Manrope',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">Your mastery</span><span>${ml}</span></div>`:''}
       ${studyDisclosureHTML()}
       ${glossName?`<div class="glossadded"><span class="ok">${emblemHTML(glossMeta.palette,9,false)}<span>${(!infinite&&!runArchive)?'+ Added to glossary':'In glossary'}</span></span><button type="button" data-movement="${esc(glossName)}">View movement &rarr;</button></div>`:''}
     </div>
