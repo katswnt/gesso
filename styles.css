@@ -487,6 +487,24 @@
   .dabo-lg{width:34px;height:29px;background:none}
   .dabo-lg::after{content:none}
   .dabo-lg svg{width:100%;height:100%;display:block}
+  /* Living palette: Briana's paint-palette (charcoal body, 4 dabs, thumb hole) fused with the shape-shifting
+     dab. Body morphs via dabWobble; thumb hole is a real mask cutout that rides the morph; each dab floats on
+     its own timing. All knobs (size, dab positions, hole, timing) are meant to be tuned. Motion-gated. */
+  .artpalette{position:relative;display:inline-block;vertical-align:-6px;width:38px;height:32px;background:#292929;
+    border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;
+    -webkit-mask:radial-gradient(circle 4.6px at 62% 26%, transparent 3.6px, #000 4.4px);
+    mask:radial-gradient(circle 4.6px at 62% 26%, transparent 3.6px, #000 4.4px)}
+  .apd{position:absolute;border-radius:50%;width:19%;height:22%}
+  .apd1{background:#EC7777;left:15%;top:23%}
+  .apd2{background:#EFD867;left:7%;top:45%}
+  .apd3{background:#8AC98B;left:16%;top:64%}
+  .apd4{background:#D99AF2;left:33%;top:75%}
+  @keyframes apFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.4px) scale(1.16)}}
+  body.motion-ok .artpalette{animation:dabWobble 5.6s ease-in-out infinite}
+  body.motion-ok .apd1{animation:apFloat 3.0s ease-in-out infinite}
+  body.motion-ok .apd2{animation:apFloat 3.6s ease-in-out infinite .15s}
+  body.motion-ok .apd3{animation:apFloat 3.3s ease-in-out infinite .3s}
+  body.motion-ok .apd4{animation:apFloat 3.9s ease-in-out infinite .1s}
   .imgloader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--surface);z-index:2;border-radius:var(--r-xs)}
   .imgloader i{width:16px;height:16px;background:var(--accent);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabBreathe 1.3s ease-in-out infinite}
   .imgloader i:nth-child(2){animation-delay:.18s}
