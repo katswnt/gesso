@@ -499,7 +499,7 @@
   .apd2{background:#EFD867;left:7%;top:45%}
   .apd3{background:#8AC98B;left:16%;top:64%}
   .apd4{background:#D99AF2;left:33%;top:75%}
-  @keyframes apFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-0.8px) scale(1.08)}}
+  @keyframes apFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-0.8px) scale(1.03)}}
   body.motion-ok .artpalette{animation:dabWobble 5.6s ease-in-out infinite}
   body.motion-ok .apd1{animation:apFloat 3.0s ease-in-out infinite}
   body.motion-ok .apd2{animation:apFloat 3.6s ease-in-out infinite .15s}
