@@ -374,10 +374,12 @@
   @keyframes glossflip{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
   body.motion-ok .glosscard.unlock{animation:glossflip .7s ease forwards;transform-style:preserve-3d}
   .moveback{appearance:none;border:0;background:transparent;color:var(--ink);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;padding:0}
-  .movehero{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--line)}
-  .movename{font:400 26px/1.05 'Faculty Glyphic',sans-serif;letter-spacing:-.01em}
+  .movehead{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
+  .moverule{border-top:1px solid var(--line-card);margin:26px 0}
+  .movehero{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+  .movename{font:400 2rem/1 'Faculty Glyphic',sans-serif;letter-spacing:-.01em}
   .movesub{margin-top:6px;font:500 12px/1.35 'Manrope',sans-serif;color:var(--muted)}
-  .moveartist{font:600 12px Manrope,sans-serif;color:var(--ink);background:var(--surface-lift);border:1px solid var(--line-card);border-radius:2px;padding:6px 11px}
+  .moveartist{background:var(--surface-lift);border:1px solid var(--line-card);border-radius:2px;color:var(--ink);font:400 13px 'Faculty Glyphic',sans-serif;padding:8px 13px;display:inline-flex;align-items:center}
   .moveunseen{margin-top:8px;padding:22px 24px 4px;border-top:1px solid var(--line)}
   .moveunseen-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
   .moveunseen-card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
@@ -386,7 +388,7 @@
   .moveunseen-t{font:11px/1.3 Manrope,sans-serif;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   @media(max-width:680px){.moveunseen-grid{grid-template-columns:repeat(3,1fr)}}
   /* Briana movement detail: canonical artwork LEFT, eye cues RIGHT */
-  .movegrid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;padding:22px 24px 24px}
+  .movegrid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;padding:0}
   .movegrid-art{grid-column:1}
   .movegrid-cues{grid-column:2}
   @media(max-width:680px){.movegrid{grid-template-columns:1fr;gap:20px}.movegrid-art,.movegrid-cues{grid-column:1}}

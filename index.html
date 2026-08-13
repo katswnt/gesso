@@ -1620,17 +1620,18 @@ function movementSeen(name){ return POOL.filter(p=>p.style===name && p.img && Ar
 function movementExtrasHTML(name){ const arts=movementArtists(name), wiki=movementWikiURL(name);
   const a=arts.length?`<div style="margin-top:24px"><div class="kick" style="margin-bottom:11px">Notable artists</div><div style="display:flex;flex-wrap:wrap;gap:7px">${arts.map(x=>`<span class="moveartist">${esc(x)}</span>`).join('')}</div></div>`:'';
   const w=wiki?`<div style="margin-top:20px"><a class="telllink" href="${esc(wiki)}" target="_blank" rel="noopener">Read more on Wikipedia &rarr;</a></div>`:''; return a+w; }
-function movementSeenHTML(name){ const s=movementSeen(name); if(!s.length)return ''; const show=s.slice(0,24);
-  return `<div class="moveunseen"><div class="kick" style="margin-bottom:13px">Works you&rsquo;ve seen in this movement &middot; ${s.length}</div><div class="gal-masonry">${show.map(p=>`<a class="galcard" href="/?w=${encodeURIComponent(p.id)}"><div class="galcard-img"><img src="${esc(displaySrc(p.img))}" alt="${esc(p.title)}" loading="lazy" onerror="imgFail(this)"></div><div class="galcard-meta"><div class="galcard-title">${esc(p.title)}</div><div class="galcard-artist">${esc(p.artist||'Unknown')} &middot; ${esc(fmtYear(p.y))}</div></div></a>`).join('')}</div></div>`; }
+function movementSeenHTML(name){ const seen=movementSeen(name); const all=POOL.filter(p=>p.style===name && p.img && Array.isArray(p.cats)&&p.cats.length); const list=seen.length?seen:all; if(!list.length)return ''; const show=list.slice(0,24);
+  return `<div class="moveunseen"><div class="kick" style="margin-bottom:13px">${seen.length?('Works you&rsquo;ve seen &middot; '+seen.length):('Explore this movement &middot; '+all.length)}</div><div class="gal-masonry">${show.map(p=>`<a class="galcard" href="/?w=${encodeURIComponent(p.id)}"><div class="galcard-img"><img src="${esc(displaySrc(p.img))}" alt="${esc(p.title)}" loading="lazy" onerror="imgFail(this)"></div><div class="galcard-meta"><div class="galcard-title">${esc(p.title)}</div><div class="galcard-artist">${esc(p.artist||'Unknown')} &middot; ${esc(fmtYear(p.y))}</div></div></a>`).join('')}</div></div>`; }
 function renderMovement(name){
   clearTimers();
   const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
   const count=met?+met.count||0:0, metLine=met&&met.firstSeen?` &middot; <span style="color:var(--full)">met ${esc(met.firstSeen)}</span>`:'';
   const cueHTML=cues.length?cues.map((c,i)=>`<div class="cue"><span class="num">${i+1}</span><span class="tx">${esc(c)}</span></div>`).join(''):`<div class="mono" style="font-size:12px;color:var(--muted)">No eye cues available yet.</div>`;
   const cap=work?`${work.artist||'Unknown'} · ${work.title} · ${fmtYear(work.y)}`:'No canonical work available';
-  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap"><div class="retcard">
-    <div class="retcap"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">${(typeof CULTS!=='undefined'&&CULTS.includes(name))?'Culture':'Movement'}</span></div>
+  document.getElementById('stage').innerHTML=`${header(ROUNDS,-1,false)}<div class="sheet"><div class="glosswrap">
+    <div class="movehead"><button class="moveback" data-route="glossary">&lsaquo; Glossary</button><span class="accn">${(typeof CULTS!=='undefined'&&CULTS.includes(name))?'Culture':'Movement'}</span></div>
     <div class="movehero">${emblemHTML(meta.palette,30,false)}<div><div class="movename">${esc(name)}</div><div class="movesub">${esc(meta.dates)} &middot; ${esc(meta.region)}${metLine}</div></div></div>
+    <div class="moverule"></div>
     <div class="movegrid">
       <div class="movegrid-art">
         <div class="kick" style="color:var(--muted);margin-bottom:11px">Canonical example</div>
@@ -1642,7 +1643,7 @@ function renderMovement(name){
       </div>
     </div>
   ${movementSeenHTML(name)}
-  </div>${ATTRIB}</div></div>`;
+  ${ATTRIB}</div></div>`;
   { const ss=document.getElementById('seeschool'); if(ss)ss.onclick=()=>startTraining({facets:{centuries:new Set(),countries:new Set(),regions:new Set(),movements:new Set([name]),mediaFamilies:new Set(),artists:new Set()},axis:null,label:name}); }
 }
 
