@@ -378,7 +378,7 @@
   .movegrid-cues{grid-column:2}
   @media(max-width:680px){.movegrid{grid-template-columns:1fr;gap:20px}.movegrid-art,.movegrid-cues{grid-column:1}}
   .canonical{margin-top:14px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;overflow:hidden}
-  .canonical img{display:block;width:100%;max-height:280px;object-fit:contain;background:#efece4}
+  .canonical img{display:block;width:100%;height:auto}
   .canonical .cap{padding:11px 13px;margin:0;font:500 11px 'Manrope',sans-serif;color:var(--muted)}
   .glossadded{margin-top:16px;padding-top:13px;border-top:1px solid var(--study-border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .glossadded .ok{display:flex;align-items:center;gap:8px;font:600 11px 'Manrope',sans-serif;color:var(--full)}
