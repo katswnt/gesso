@@ -3,7 +3,7 @@
 // and writes a manifest + chunk lists. Then the operator spawns subagents per chunk (see docs/vision-pass-v2.md
 // runbook), and scripts/vision-v2-merge.mjs folds the results back in. Uses Max-plan subagents, not the API.
 //   node scripts/vision-v2-prep.mjs [chunkSize=12]
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 
 const CHUNK = parseInt(process.argv[2] || "12", 10);
 const BROWSER = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
@@ -20,12 +20,14 @@ const teach = (() => { try { const t = readFileSync("data/teach-works.js", "utf8
 const ord = {}; new Function("window", readFileSync("data/daily-order.js", "utf8"))(ord);
 const B = (ord.ARTEFACTUM_DAILY || {}).byDate || {};
 const led = (() => { const h = {}; new Function("window", readFileSync("data/daily-history.js", "utf8"))(h); return (h.ARTEFACTUM_DAILY_HISTORY || {}).byDate || {}; })();
-const today = new Date().toISOString().slice(0, 10), hz = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+const today = new Date().toISOString().slice(0, 10), hz = new Date(Date.now() + 6 * 864e5).toISOString().slice(0, 10); // next 7 days incl today
 const ids = new Set();
 for (const [d, day] of Object.entries(B)) { if (d < today || d > hz) continue; for (const t of ["easy", "medium", "hard", "impossible"]) for (const id of (day[t] || [])) ids.add(id); }
-for (const d of ["2026-07-11", "2026-07-25", "2026-08-05"]) for (const t of ["easy", "medium", "hard", "impossible"]) for (const id of ((led[d] || {})[t] || [])) ids.add(id);
+// only the specific study dailies actually sent to friends (easy + one harder per date)
+const STUDY = { "2026-07-11": ["easy", "medium"], "2026-07-25": ["easy", "hard"], "2026-08-05": ["easy", "medium"] };
+for (const [d, tiers] of Object.entries(STUDY)) for (const t of tiers) for (const id of ((led[d] || {})[t] || [])) ids.add(id);
 const works = [...ids].map(res).filter(Boolean).filter((p, i, a) => a.findIndex(q => q.id === p.id) === i);
-console.log(`targets: ${works.length} distinct works (next 7 daily-days + 3 study dates)`);
+console.log(`targets: ${works.length} distinct works (next 7 daily-days + the 6 study dailies sent to friends)`);
 
 const safe = id => String(id).replace(/[^a-z0-9]/gi, "_");
 async function grab(url, file, t = 0) {
@@ -41,8 +43,8 @@ async function grab(url, file, t = 0) {
 const manifest = [];
 for (let i = 0; i < works.length; i++) {
   const p = works[i], file = `${IMGS}/${safe(p.id)}.jpg`;
-  const st = await grab(p.img, file);
-  manifest.push({ id: p.id, imgFile: st === "ok" ? file : null, imgStatus: st,
+  const st = (existsSync(file) && statSync(file).size > 2000) ? "cached" : await grab(p.img, file);
+  manifest.push({ id: p.id, imgFile: (st === "ok" || st === "cached") ? file : null, imgStatus: st,
     meta: { title: p.title, artist: p.artist || "", y: p.y, place: p.place, region: p.region, medium: p.medSimple || p.medium || "", style: p.style || "" },
     existingNote: teach[p.id]?.why || null });
   if ((i + 1) % 20 === 0) console.log(`  downloaded ${i + 1}/${works.length}`);
