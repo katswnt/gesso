@@ -10,7 +10,9 @@
 //
 // Run:  ANTHROPIC_API_KEY=sk-ant-... node scripts/vision-guess.mjs
 //   MODEL=claude-haiku-4-5-20251001 node scripts/vision-guess.mjs   # the weaker-model arm of the A/B
-// Default model is the blinded capable arm (claude-sonnet-4-6). Output: data/incoming/vision-guessability.json.
+// Adaptive: per work it climbs a transform ladder (full → flip → +rotate → +crop) and stops at the LEAST
+// composition-destroying rung that defeats recognition, then reads guessability there. Output:
+// data/incoming/vision-guessability-<model>-adaptive.json.
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -18,12 +20,22 @@ import { tmpdir } from "node:os";
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) { console.error("Missing ANTHROPIC_API_KEY. Get one at console.anthropic.com, then:\n  ANTHROPIC_API_KEY=sk-ant-... node scripts/vision-guess.mjs"); process.exit(1); }
 const MODEL = process.env.MODEL || "claude-sonnet-4-6";
-// anti-recognition transforms (macOS `sips`): crop to an off-centre DETAIL patch and/or mirror left-right. Style,
-// medium, palette, brushwork all survive these; the recognizable overall composition/orientation does not. This is
-// how we force INFERENCE over recall on famous works — and by A/B-ing the transforms we can MEASURE the effect.
-const CROP = parseFloat(process.env.CROP || "0") || 0;   // 0 = full image; e.g. CROP=0.5 → a half-size detail patch
-const FLIP = process.env.FLIP === "1";                    // mirror left-to-right
-const XF = [CROP ? `crop${Math.round(CROP * 100)}` : "", FLIP ? "flip" : ""].filter(Boolean).join("-"); // label + filename suffix
+// ADAPTIVE ESCALATION: apply the LEAST composition-destroying transform that still defeats recognition, per work.
+// Rungs are ordered by how much guessability signal they cost. flip + rotate leave the whole composition intact
+// (they only scramble the "I've seen this exact image" recall); crop is the only lever that sacrifices composition,
+// so it sits last and is reached only for works the model stubbornly recognizes. The rung where recognition finally
+// breaks is itself a signal (how hard the work is to un-recognize ≈ fame); the read AT that rung is guessability.
+const LADDER = [
+  { label: "full" },                                                 // 0: composition intact — baseline
+  { label: "flip", flip: true },                                     // 1: mirror — composition intact
+  { label: "flip+rot", flip: true, rotate: 90 },                     // 2: + rotate — composition intact, orientation scrambled
+  { label: "flip+rot+crop60", flip: true, rotate: 90, crop: 0.6 },   // 3: loose detail crop — last resort
+  { label: "flip+rot+crop45", flip: true, rotate: 90, crop: 0.45 },  // 4: tight detail crop
+];
+const MAXR = LADDER.length - 1;
+const noteFor = xf => (xf.flip || xf.rotate || xf.crop)
+  ? `Note: this image has been ${[xf.flip && "mirrored left-to-right", xf.rotate && "rotated", xf.crop && "cropped to a partial detail"].filter(Boolean).join(", ")}. Infer from the visible brushwork, materials, colour, and forms; don't worry about orientation or missing composition.`
+  : "";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // the study works = the exact dailies friends are playing, so vision vs human is apples-to-apples
@@ -38,7 +50,7 @@ const led = (L.ARTEFACTUM_DAILY_HISTORY || {}).byDate || {};
 const ids = new Set();
 for (const [d, t] of STUDY) for (const id of ((led[d] || {})[t] || [])) ids.add(id);
 const works = [...ids].map(res).filter(Boolean);
-console.log(`vision PoC · model=${MODEL} · ${works.length} study works (blinded, no tools)${XF ? " · transform=" + XF : ""}\n`);
+console.log(`vision PoC · model=${MODEL} · ${works.length} study works (blinded, no tools) · adaptive escalation [${LADDER.map(x => x.label).join(" → ")}]\n`);
 
 const PROMPT = `You are shown ONLY an image of an artwork — no title, caption, artist, date, or any metadata. Role-play a museum-goer with general art-history literacy but NO memorized knowledge of THIS specific work. Reason only from what is visually present: style, technique, materials, palette, subject, iconography, condition, framing. Do not try to recall this work's catalog facts; infer as a person standing in front of it would.
 
@@ -50,39 +62,42 @@ Respond with ONLY this JSON, no prose:
  "where":  {"country": "<modern country or region>", "confidence": <0-1>, "cues": "<short>"},
  "medium": {"guess": "<e.g. Oil paint, Marble, Woodblock print, Bronze>", "confidence": <0-1>, "cues": "<short>"},
  "style":  {"guess": "<movement or culture, e.g. Impressionism, Edo ukiyo-e, Chola bronze>", "confidence": <0-1>, "cues": "<short>"},
- "artist": {"guess": "<name, or 'unknown'>", "confidence": <0-1>, "cues": "<short>"}}` + ((CROP || FLIP) ? `\n\nNote: you may be seeing only a cropped detail of the work${FLIP ? ", mirrored left-to-right" : ""}. Infer from the visible brushwork, materials, colour, and forms; don't worry about the missing overall composition.` : "");
+ "artist": {"guess": "<name, or 'unknown'>", "confidence": <0-1>, "cues": "<short>"}}`;
 
-// fetch the image (script fetches; the MODEL never does). Optionally mirror and/or crop to an off-centre detail
-// patch via `sips` before sending, to defeat recognition while preserving every style/medium/era cue.
-async function grab(url, i) {
+// fetch the image ONCE (script fetches; the MODEL never does), to a temp file we re-render per rung.
+async function download(url, i) {
   let u = url;
   if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=1200";
   const r = await fetch(u, { headers: { "User-Agent": "GessoVisionPoC/1.0 (kathryn.swint@gmail.com)" } });
   if (!r.ok) throw new Error("img " + r.status);
-  let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
-  if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(media)) media = "image/jpeg";
-  let b = Buffer.from(await r.arrayBuffer());
-  if (CROP || FLIP) {
-    const tmp = `${tmpdir()}/gesso-vis-${i}.jpg`, cut = `${tmpdir()}/gesso-vis-${i}-x.jpg`;
-    writeFileSync(tmp, b);
-    if (FLIP) execFileSync("sips", ["-f", "horizontal", tmp, "--out", tmp], { stdio: "ignore" });
-    if (CROP) {
-      const g = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", tmp]).toString();
-      const W = +(g.match(/pixelWidth:\s*(\d+)/)?.[1] || 0), H = +(g.match(/pixelHeight:\s*(\d+)/)?.[1] || 0);
-      if (W && H) { const cw = Math.round(W * CROP), ch = Math.round(H * CROP), q = i % 4;
-        // per-work quadrant so patches sample different regions, not always the recognizable centre
-        const ox = Math.round((q === 1 || q === 3 ? 0.85 : 0.15) * (W - cw)), oy = Math.round((q >= 2 ? 0.85 : 0.15) * (H - ch));
-        execFileSync("sips", ["-c", String(ch), String(cw), "--cropOffset", String(oy), String(ox), tmp, "--out", cut], { stdio: "ignore" });
-        b = readFileSync(cut); unlinkSync(cut);
-      } else b = readFileSync(tmp);
-    } else b = readFileSync(tmp);
-    unlinkSync(tmp); media = "image/jpeg";
-  }
-  if (b.length > 4.8 * 1024 * 1024) throw new Error("img too large " + b.length);
-  return { media, data: b.toString("base64") };
+  const b = Buffer.from(await r.arrayBuffer());
+  const path = `${tmpdir()}/gesso-vis-${i}-orig`;
+  writeFileSync(path, b);
+  return path;
 }
 
-async function ask(img) {
+// render one rung's image via `sips` (always emit jpeg). flip/rotate preserve all content; crop takes an off-centre
+// per-work detail patch. Returns base64 for the API.
+function render(orig, i, xf) {
+  const f = `${tmpdir()}/gesso-vis-${i}-r.jpg`;
+  execFileSync("sips", ["-s", "format", "jpeg", orig, "--out", f], { stdio: "ignore" });
+  if (xf.flip) execFileSync("sips", ["-f", "horizontal", f, "--out", f], { stdio: "ignore" });
+  if (xf.rotate) execFileSync("sips", ["-r", String(xf.rotate), f, "--out", f], { stdio: "ignore" });
+  if (xf.crop) {
+    const g = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", f]).toString();
+    const W = +(g.match(/pixelWidth:\s*(\d+)/)?.[1] || 0), H = +(g.match(/pixelHeight:\s*(\d+)/)?.[1] || 0);
+    if (W && H) { const cw = Math.round(W * xf.crop), ch = Math.round(H * xf.crop), q = i % 4;
+      // per-work quadrant so patches sample different regions, not always the recognizable centre
+      const ox = Math.round((q === 1 || q === 3 ? 0.85 : 0.15) * (W - cw)), oy = Math.round((q >= 2 ? 0.85 : 0.15) * (H - ch));
+      execFileSync("sips", ["-c", String(ch), String(cw), "--cropOffset", String(oy), String(ox), f, "--out", f], { stdio: "ignore" });
+    }
+  }
+  const b = readFileSync(f); unlinkSync(f);
+  if (b.length > 4.8 * 1024 * 1024) throw new Error("img too large " + b.length);
+  return { media: "image/jpeg", data: b.toString("base64") };
+}
+
+async function ask(img, note) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -91,7 +106,7 @@ async function ask(img) {
       // NOTE: no `tools` key — the model has NO way to browse, search, or fetch. Image bytes + text only.
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: img.media, data: img.data } },
-        { type: "text", text: PROMPT }] }]
+        { type: "text", text: PROMPT + (note ? `\n\n${note}` : "") }] }]
     })
   });
   if (!r.ok) throw new Error("api " + r.status + " " + (await r.text()).slice(0, 160));
@@ -105,24 +120,35 @@ const out = [];
 for (let i = 0; i < works.length; i++) {
   const p = works[i];
   try {
-    const img = await grab(p.img, i);
-    const v = await ask(img);
-    out.push({ id: p.id, title: p.title,
+    const orig = await download(p.img, i);
+    let picked = null; const trace = [];
+    // climb the ladder until recognition breaks (or we exhaust it), then keep THAT rung's read
+    for (let rung = 0; rung < LADDER.length; rung++) {
+      const xf = LADDER[rung];
+      const v = await ask(render(orig, i, xf), noteFor(xf));
+      trace.push({ rung, label: xf.label, recognized: !!v.recognized });
+      await sleep(300);
+      if (!v.recognized || rung === MAXR) { picked = { rung, label: xf.label, v }; break; }
+    }
+    unlinkSync(orig);
+    const v = picked.v, dy = (v.when && v.when.year != null && p.y != null) ? Math.abs(v.when.year - p.y) : "?";
+    out.push({ id: p.id, title: p.title, stopRung: picked.rung, stopLabel: picked.label, recognizedTrace: trace,
       truth: { y: p.y, place: p.place, region: p.region, medium: p.medSimple || p.medium, style: p.style, artist: p.artist },
       vision: v });
-    const dy = (v.when && v.when.year != null && p.y != null) ? Math.abs(v.when.year - p.y) : "?";
-    console.log(`${String(i + 1).padStart(2)}/${works.length} ${p.title.slice(0, 26).padEnd(26)} ${v.recognized ? "[recognized] " : ""}Δyr=${dy}  where→${v.where?.country || "?"} (true ${p.place})  style→${v.style?.guess || "?"} (true ${p.style || "—"})`);
+    console.log(`${String(i + 1).padStart(2)}/${works.length} ${p.title.slice(0, 24).padEnd(24)} broke@${picked.label.padEnd(15)} ${v.recognized ? "[STILL rec] " : "           "}Δyr=${dy}  where→${(v.where?.country || "?").slice(0, 14)}(${p.place.slice(0, 12)})  style→${(v.style?.guess || "?").slice(0, 22)}(${p.style || "—"})`);
   } catch (e) {
-    console.log(`${String(i + 1).padStart(2)}/${works.length} ${p.title.slice(0, 26).padEnd(26)} SKIP (${e.message})`);
+    console.log(`${String(i + 1).padStart(2)}/${works.length} ${p.title.slice(0, 24).padEnd(24)} SKIP (${e.message})`);
     out.push({ id: p.id, title: p.title, error: String(e.message) });
   }
-  await sleep(400);
 }
 
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}
-const slug = MODEL.replace(/[^a-z0-9]+/gi, "-"); // per-model + per-transform file so arms don't clobber each other
-const outPath = `data/incoming/vision-guessability-${slug}${XF ? "-" + XF : ""}.json`;
-writeFileSync(outPath, JSON.stringify({ model: MODEL, works: out }, null, 1));
-const ok = out.filter(x => x.vision).length, rec = out.filter(x => x.vision?.recognized).length;
-console.log(`\nwrote ${outPath} · ${ok}/${works.length} scored · ${rec} the model recognized (leakage — flagged, analyzed separately).`);
-console.log("next: a compare step joins this with data/incoming/study-human-difficulty.json to test the correlation.");
+const slug = MODEL.replace(/[^a-z0-9]+/gi, "-");
+const outPath = `data/incoming/vision-guessability-${slug}-adaptive.json`;
+writeFileSync(outPath, JSON.stringify({ model: MODEL, ladder: LADDER.map(x => x.label), works: out }, null, 1));
+const ok = out.filter(x => x.vision);
+const stubborn = ok.filter(x => x.vision.recognized).length;    // still recognized even at the tightest crop
+const rungHist = LADDER.map((x, r) => `${x.label}:${ok.filter(w => w.stopRung === r).length}`).join("  ");
+console.log(`\nwrote ${outPath} · ${ok.length}/${works.length} scored`);
+console.log(`recognition broke at rung →  ${rungHist}   (still-recognized-at-max: ${stubborn})`);
+console.log("reads are taken at the LEAST-destructive rung that defeated recognition. next: compare vs data/incoming/study-human-difficulty.json.");
