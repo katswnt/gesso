@@ -30,6 +30,7 @@ if (SCOPE === "dailies" || SCOPE === "both") {
   for (const [d, day] of Object.entries(B)) { if (d < today || d > hz) continue; for (const t of ["easy", "medium", "hard", "impossible"]) for (const id of (day[t] || [])) { const p = res(id); if (p) works.push(p); } }
 }
 if (SCOPE === "all") works = pool.filter(p => p.img && (p.cats || []).length);
+if (SCOPE === "flagged") { try { const j = JSON.parse(readFileSync("data/incoming/image-mismatch.json", "utf8")); for (const m of (j.mismatches || [])) { const p = res(m.id); if (p) works.push(p); } } catch {} } // re-check a prior run's flags (e.g. Sonnet-confirm a Haiku screen)
 works = [...new Map(works.map(p => [p.id, p])).values()];
 console.log(`image-consistency check · model=${MODEL} · scope=${SCOPE} · ${works.length} works (real pixels, no tools)\n`);
 
@@ -87,6 +88,7 @@ for (let i = 0; i < works.length; i++) {
 
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}
 const mism = out.filter(x => x.consistent === false).sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
-writeFileSync("data/incoming/image-mismatch.json", JSON.stringify({ model: MODEL, scope: SCOPE, checked: out.length, mismatches: mism, all: out }, null, 1));
-console.log(`\nchecked ${out.filter(x => x.consistent != null).length} · ${mism.length} flagged as image-metadata MISMATCH → data/incoming/image-mismatch.json`);
+const outPath = SCOPE === "flagged" ? "data/incoming/image-mismatch-flagged.json" : "data/incoming/image-mismatch.json";
+writeFileSync(outPath, JSON.stringify({ model: MODEL, scope: SCOPE, checked: out.length, mismatches: mism, all: out }, null, 1));
+console.log(`\nchecked ${out.filter(x => x.consistent != null).length} · ${mism.length} flagged as image-metadata MISMATCH → ${outPath}`);
 console.log(mism.length ? "review each: restore prevImg, re-resolve via source API, or drop the work." : "no mismatches found in this scope.");
