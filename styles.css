@@ -161,7 +161,7 @@
   .big{font:400 2rem 'Faculty Glyphic',sans-serif}
   .swatchrow{display:flex;gap:11px}
   .swatch{text-align:center}
-  .swatch .sq{width:36px;height:36px;border-radius:var(--r-md)}
+  .swatch .sq{width:36px;height:20px;border-radius:1px}
   .swatch .lb{font:600 8px 'Manrope',sans-serif;letter-spacing:.05em;color:var(--faint);margin-top:5px}
   .revealgrid{padding:24px;display:grid;grid-template-columns:.92fr 1.08fr;gap:26px;border-bottom:1px solid var(--line)}
   .filed{position:absolute;top:18px;left:18px;font:700 9px 'Manrope',sans-serif;letter-spacing:.1em;
@@ -339,15 +339,15 @@
   .menulist button:last-child{border-bottom:0}
   .menulist button:active{background:var(--study-bg)}
   html.modalopen{overflow:hidden} html.modalopen body{overflow:hidden}
-  .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px;overscroll-behavior:contain}
+  .settingsveil{position:fixed;inset:0;z-index:4500;background:rgba(27,25,22,.32);display:flex;align-items:center;justify-content:center;padding:18px;overscroll-behavior:contain}
   .settingspanel{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-lg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;box-shadow:0 14px 36px rgba(35,32,26,.16)}
-  .settingshead{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1.5px solid var(--ink);background:var(--surface-strong)}
-  .settingshead .ttl{font:700 16px 'Faculty Glyphic',sans-serif}
-  .settingsclose{appearance:none;border:0;background:transparent;color:var(--muted);font:700 22px/1 'Faculty Glyphic',sans-serif;cursor:pointer}
-  .settingsbody{padding:8px 22px}
-  .setrow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .settingshead{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1px solid var(--line);background:none}
+  .settingshead .ttl{font:400 2rem 'Faculty Glyphic',sans-serif}
+  .settingsclose{appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;padding:4px;display:inline-flex;align-items:center;justify-content:center}
+  .settingsbody{padding:8px 24px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0;border-bottom:1px solid var(--line-card)}
   .setrow:last-child{border-bottom:0}
-  .setrow .name{font:600 14px 'Faculty Glyphic',sans-serif}.setrow .hint{font:500 11px 'Manrope',sans-serif;color:var(--muted);margin-top:2px}
+  .setrow .name{font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink)}.setrow .hint{font:400 0.875rem/1.4 'Manrope',sans-serif;color:var(--muted);margin-top:5px}
   .setrow.disabled .name,.setrow.disabled .hint{color:var(--faint)}
   .toggle{appearance:none;border:0;width:42px;height:24px;border-radius:13px;background:#cfc8b8;position:relative;cursor:pointer;flex:0 0 auto;padding:0}
   .toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
@@ -418,7 +418,7 @@
   .weekd.today span:last-child{color:var(--accent);font-weight:700}
   .streakmeta{margin-top:18px;font:500 12px 'Manrope',sans-serif;color:var(--muted)}
   .streakmeta strong{color:var(--ink)}
-  .countpanel{margin:22px auto 0;max-width:340px;background:var(--surface-strong);border:1px solid var(--line-card);border-radius:2px;padding:13px}
+  .countpanel{margin:22px auto 0;max-width:340px;background:transparent;border:1px solid var(--line-card);border-radius:2px;padding:13px}
   .countpanel .lbl{font:600 9px 'Manrope',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .countpanel .time{font:700 26px 'Faculty Glyphic',sans-serif;letter-spacing:.02em;margin-top:3px}
   .retactions{display:flex;gap:11px;margin-top:22px}
@@ -692,7 +692,7 @@
   .opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .opt .ct{font:400 0.75rem 'Faculty Glyphic',sans-serif;opacity:.55}.opt.on .ct{opacity:.8}
   .grp{background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:12px 14px}
-  .grpL{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+  .grpL{font:600 9px 'Manrope',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
   .gchip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;color:var(--accent);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;text-transform:uppercase;padding:5px 10px}
   .gchip b{cursor:pointer;display:inline-flex;align-items:center}
   .andrail{display:flex;align-items:center;gap:10px;padding:7px 0 7px 13px}
@@ -766,7 +766,7 @@
 
 /* Gallery card */
 .galcard{break-inside:avoid;margin-bottom:16px;border:1px solid var(--line-card);border-radius:2px;
-  overflow:hidden;background:#fff;cursor:pointer;display:block;width:100%;text-align:left;
+  overflow:hidden;background:var(--surface);cursor:pointer;display:block;width:100%;text-align:left;
   font-family:inherit;transition:box-shadow .15s,transform .1s;border:0;padding:0}
 .galcard:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px)}
 .galcard-img{position:relative;width:100%;overflow:hidden;background:#0c0b0a}
@@ -825,7 +825,7 @@
 .gal-related-sub{font:500 11px 'Manrope',sans-serif;color:var(--muted)}
 .gal-related-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:700px){.gal-related-row{grid-template-columns:repeat(3,1fr)}}
-.gal-related-card{border:1px solid var(--line-card);border-radius:2px;overflow:hidden;background:#fff;cursor:pointer;display:block;width:100%;text-align:left;font-family:inherit;border:none;padding:0}
+.gal-related-card{border:1px solid var(--line-card);border-radius:2px;overflow:hidden;background:var(--surface);cursor:pointer;display:block;width:100%;text-align:left;font-family:inherit;border:none;padding:0}
 .gal-related-card img{display:block;width:100%;height:auto;background:#0c0b0a}
 .gal-related-card-meta{padding:8px 10px 10px;border:1px solid var(--line-card);border-top:none;border-radius:0 0 6px 6px}
 .gal-related-card-title{font:700 11px 'Faculty Glyphic',sans-serif;color:var(--ink);line-height:1.3}
