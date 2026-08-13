@@ -88,7 +88,7 @@
   .lookmark:nth-of-type(6n+6){border-radius:38% 62% 63% 37% / 60% 38% 62% 40%}
   .cue.flash{background:rgba(34,48,184,.12);border-radius:2px}
   .fieldlabel{display:flex;align-items:center;gap:8px;margin-bottom:11px}
-  .fieldlabel .ix{font:600 10px 'Manrope',sans-serif;color:var(--ink);letter-spacing:.1em}
+  .fieldlabel .ix{font:600 10px 'Manrope',sans-serif;color:var(--accent);letter-spacing:.1em}
   .fieldlabel .nm{font:600 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
   .fieldlabel .rule{flex:1;height:1px;background:var(--line)}
   .fieldlabel .hintrule{font:10px 'Manrope',sans-serif;color:var(--faint)}
@@ -224,7 +224,7 @@
   .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:600 11px 'Manrope',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);margin-bottom:18px}
   .herokick .r{width:26px;height:1px;background:var(--accent);opacity:.4}
   .herobig{font:400 4rem 'Faculty Glyphic',sans-serif;line-height:1.0;color:var(--ink)}
-  .herobig em{font-style:normal;color:var(--accent)}
+  .herobig em{font-style:normal;color:var(--ink)}
   .heroglos{font:500 12px/1.7 'Manrope',sans-serif;color:var(--faint);letter-spacing:.01em;max-width:560px;margin:15px auto 0;text-wrap:balance}
   .practice{max-width:620px;margin:0 auto 8px;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-md);padding:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   /* labeled zone headers (Today's daily / Practice) — shared treatment */
@@ -468,7 +468,8 @@
   @keyframes dabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   @keyframes heroBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}} /* hero palette 'o' bob, gentler than the shared dab float */
   @keyframes spinGear{to{transform:rotate(360deg)}}
-  .dabo{display:inline-block;width:11px;height:10px;background:var(--accent);vertical-align:baseline;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
+  .dabo{display:inline-flex;align-items:center;width:16px;height:14px;vertical-align:middle;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
+  .dabo svg{width:100%;height:100%;display:block}
   /* ---- design touches (handoff 04) ---- */
   ::selection{background:var(--accent);color:#fff}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.035;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -489,9 +490,10 @@
   .big.gold{color:#9a7b2e}
   .perfectstamp{position:absolute;top:62%;left:58%;transform:translate(-50%,-50%) rotate(6deg);font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;color:#9a7b2e;border:2.5px solid #b3892f;border-radius:2px;padding:4px 9px;background:var(--surface,#f6f4ee);box-shadow:0 2px 5px rgba(122,92,28,.28);white-space:nowrap;pointer-events:none}
   body.motion-ok .perfectstamp{animation:inkStamp .5s cubic-bezier(.2,1.4,.5,1) both}
-  .dabo::after{content:"";position:absolute;top:2px;left:3px;width:3px;height:3px;border-radius:50%;background:rgba(246,244,238,.8)}
+  .dabo::after{content:none}
   .dabo-float{display:inline-block;vertical-align:baseline;animation:heroBob 3.4s ease-in-out infinite}
   .dabo-lg{width:34px;height:29px;background:none}
+  body.motion-ok .acctav>span{animation:dabWobble 6s ease-in-out infinite .4s}
   .dabo-lg::after{content:none}
   .dabo-lg svg{width:100%;height:100%;display:block}
   /* Living palette: Briana's paint-palette (charcoal body, 4 dabs, thumb hole) fused with the shape-shifting
@@ -575,7 +577,7 @@
 
   /* "Ask the guide" accordion (reveal) */
   .askguide{margin-top:18px;border-top:1px solid var(--study-border);padding-top:16px}
-  .agkick{display:flex;align-items:center;gap:8px;font:700 10px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:12px}
+  .agkick{display:flex;align-items:center;gap:8px;font:700 10px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
   .agkick .agdab{width:18px;height:17px;background:var(--ink);border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
   .agcount{color:var(--faint);font-weight:600;letter-spacing:.06em}
   .aglist{display:flex;flex-direction:column;gap:8px}
@@ -637,7 +639,7 @@
   .htofoot{display:flex;align-items:center;justify-content:space-between;padding:12px 24px 24px}
   body.reduce-motion .htotrack{transition:none!important}
   /* help button in header */
-  .helpdab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;font:700 14px 'Faculty Glyphic',sans-serif;cursor:pointer;padding:0}
+  .helpdab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:1.5px solid var(--ink);color:var(--ink);background:transparent;border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;font:700 14px 'Faculty Glyphic',sans-serif;cursor:pointer;padding:0}
   .helpdab:hover{background:var(--accent);color:#fff}
   body.motion-ok .helpdab{animation:dabWobble 6s ease-in-out infinite}
   /* inline play-screen cues */
