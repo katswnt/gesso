@@ -368,7 +368,7 @@
   /* motion #3 — glossary unlock flip (content swaps edge-on at 50%); honors reduce-motion */
   @keyframes glossflip{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
   body.motion-ok .glosscard.unlock{animation:glossflip .7s ease forwards;transform-style:preserve-3d}
-  .moveback{appearance:none;border:0;background:transparent;color:var(--ink);font:600 11px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:0}
+  .moveback{appearance:none;border:0;background:transparent;color:var(--ink);font:400 0.75rem/1 'Faculty Glyphic',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;padding:0}
   .movehero{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--line)}
   .movename{font:400 26px/1.05 'Faculty Glyphic',sans-serif;letter-spacing:-.01em}
   .movesub{margin-top:6px;font:500 12px/1.35 'Manrope',sans-serif;color:var(--muted)}
