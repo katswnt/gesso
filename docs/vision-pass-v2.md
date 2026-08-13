@@ -14,20 +14,34 @@ One look at each work's real image produces everything below in a single structu
    (This pass already caught, by eye: Jean Renoir Sewing "Watercolor/Botanical illustration" → Oil/Impressionism;
    Teotihuacan sculpture "Aztec/Basalt" → Teotihuacan/Ceramic; La Belle Jardinière dated 1650 → 1507.)
 3. **Playability judgment** — mark works that can't be a fair puzzle as `play:false`: group photos (Box),
-   architecture, featureless fragments, human/ancestral remains, blank supports.
-4. **Image-grounded teaching notes** — `why` / `cues` / `guide`, describing what is actually visible (not the
-   catalog blurb). This is the whole reason for image-grounding.
-5. **Feature-anchored pins** — look-closer hotspots placed on real visual features in the image (the "v2" pins).
-6. **Per-field guessability** — how inferable each of the 5 fields is from the image alone (the predict-human /
-   difficulty read), so difficulty/tiering can key off guessability, not fame.
-7. **Canonical movement suggestion** — propose the canonical style label to collapse the fragmented Renaissance
+   architecture, featureless fragments, human/ancestral remains, blank supports, AND **low-information objects**
+   (a plain knob, an undiagnostic shard) — encoded as the **guessability floor**: if job 6 finds all five fields
+   near-unguessable, that IS the unplayable signal.
+4. **Image-grounded teaching notes, with a QUALITY GATE** — before writing, read the existing note and classify:
+   GOOD (leave it alone), TEMPLATE (the five bland one-liners → rewrite), FABRICATED (describes things not in the
+   image, e.g. Bodhidharma's "monk on a reed" → rewrite), or MISSING (write). Never overwrite a good custom note.
+   New notes = `why` / `cues` / `guide` from what is actually visible.
+5. **Validate existing notes against the pixels** — the fabrication check run across the WHOLE notes corpus, not
+   just new works; any note inconsistent with its image is flagged + rewritten. Retro-cleans known fabrication.
+6. **Feature-anchored pins** — look-closer hotspots placed on real visual features (the "v2" pins).
+7. **Per-field guessability + `recognized` flag** — how inferable each of the 5 fields is from the image alone
+   (predict-human / difficulty read), AND whether the model recognizes the specific work (fame/recognizability
+   proxy). Feeds difficulty/tiering off guessability, not fame.
+8. **Canonical movement suggestion** — propose the canonical style label to collapse the fragmented Renaissance
    family (Renaissance vs Italian Renaissance vs Early/High, etc.) toward the curated vocabulary.
-8. **Frame handling** — detect a picture frame if present and return the artwork's bounding box, so the frame
-   (a where/medium/era confound) can be cropped out.
+9. **Image-quality / not-the-artwork flags** — the image is a line-drawing/diagram of the work, a modern
+   reproduction/print, a detail-only crop, the reverse/back, or a B&W scan of a colour piece → flag for a better image.
+10. **Answer-leaks in the image** — a museum wall-label, caption card, accession sticker, or watermark visible in
+    the photo hands the player the answer → flag for re-crop/re-resolve. (Artist signatures are fine.)
+11. **Subject / motif tags** — what the work DEPICTS (bathers, odalisque, crucifixion, vanitas, equestrian). Enables
+    themed runs ("odalisques across artists") and is another guessability signal.
+12. **Frame / mount crop** — detect a picture frame OR a modern museum mount/pedestal/stand/holder and return the
+    artwork's bounding box, so the confound can be cropped out.
 
 ## Cross-work (separate step, not per-image)
 
-9. **Duplicate detection** — same work present twice (La Belle Jardinière ×2). Flag for merge/removal.
+13. **Duplicate WORK detection** — same work present twice (La Belle Jardinière ×2). Flag for merge/removal.
+14. **Duplicate IMAGE detection** — the same photo mapped to two DIFFERENT works (a harvest error). Flag.
 
 ## Outputs
 
