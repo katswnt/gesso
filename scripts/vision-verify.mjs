@@ -33,16 +33,20 @@ if (SCOPE === "all") works = pool.filter(p => p.img && (p.cats || []).length);
 works = [...new Map(works.map(p => [p.id, p])).values()];
 console.log(`image-consistency check · model=${MODEL} · scope=${SCOPE} · ${works.length} works (real pixels, no tools)\n`);
 
-async function grab(url) {
+const BROWSER = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
+async function grab(url, t = 0) {
   // 640px is plenty to spot a gross wrong-image (modern photo vs ceramic); keeps image tokens (and cost) ~4x lower
   let u = url; if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=640";
-  const r = await fetch(u, { headers: { "User-Agent": "GessoVisionVerify/1.0 (kathryn.swint@gmail.com)" } });
-  if (!r.ok) return { err: "img " + r.status };
-  let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
-  if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(media)) media = "image/jpeg";
-  const b = Buffer.from(await r.arrayBuffer());
-  if (b.length > 4.8 * 1024 * 1024) return { err: "too big" };
-  return { media, data: b.toString("base64") };
+  try {
+    const r = await fetch(u, { headers: { "User-Agent": BROWSER } });
+    if ([403, 429, 500, 502, 503, 504].includes(r.status) && t < 3) { r.body?.cancel?.(); await sleep(3500 * (t + 1)); return grab(url, t + 1); }
+    if (!r.ok) return { err: "img " + r.status };
+    let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
+    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(media)) media = "image/jpeg";
+    const b = Buffer.from(await r.arrayBuffer());
+    if (b.length > 4.8 * 1024 * 1024) return { err: "too big" };
+    return { media, data: b.toString("base64") };
+  } catch (e) { if (t < 3) { await sleep(2500); return grab(url, t + 1); } return { err: "fetch " + String(e.message || "").slice(0, 20) }; }
 }
 async function ask(img, facts) {
   const prompt = `You are shown an image and the catalog facts a museum database holds for it. Judge ONLY whether the IMAGE is plausibly consistent with those facts — you are checking for a wrong/mismatched image, not grading a guess.
@@ -78,7 +82,7 @@ for (let i = 0; i < works.length; i++) {
     if (!v.consistent) console.log(`${String(i + 1).padStart(3)}/${works.length} ⚠ MISMATCH  ${p.title.slice(0, 28).padEnd(28)} — seen: ${String(v.seen).slice(0, 44)}`);
     else if ((i + 1) % 25 === 0) console.log(`${String(i + 1).padStart(3)}/${works.length} …ok so far`);
   } catch (e) { out.push({ id: p.id, title: p.title, error: String(e.message) }); console.log(`${String(i + 1).padStart(3)}/${works.length} ${p.title.slice(0, 30).padEnd(30)} SKIP (${e.message})`); }
-  await sleep(350);
+  await sleep(1100);
 }
 
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}

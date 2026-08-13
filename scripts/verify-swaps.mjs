@@ -6,12 +6,18 @@
 //   node scripts/verify-swaps.mjs        → data/pool.js (restores only) + data/incoming/swap-suspects.json
 import { readFileSync, writeFileSync } from "node:fs";
 
-const UA = { "User-Agent": "GessoSwapVerify/1.0 (kathryn.swint@gmail.com)" };
+const UA = { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15" };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function live(url, t = 0) {
-  try { const r = await fetch(url + (url.includes("?") ? "&" : "?") + "width=800", { headers: UA, redirect: "follow" });
-    r.body?.cancel?.(); if (r.status === 429 && t < 3) { await sleep(4000 * (t + 1)); return live(url, t + 1); } return r.status; }
-  catch { if (t < 2) { await sleep(1500); return live(url, t + 1); } return 0; }
+// classify: "live" (200), "dead" (definitive not-found), or "unknown" (transient 403/429/timeout — never act on it)
+async function status(url, t = 0) {
+  try {
+    const r = await fetch(url + (url.includes("?") ? "&" : "?") + "width=800", { headers: UA, redirect: "follow" });
+    r.body?.cancel?.();
+    if ([403, 429, 500, 502, 503, 504].includes(r.status) && t < 3) { await sleep(3500 * (t + 1)); return status(url, t + 1); } // transient → retry
+    if (r.status === 200) return "live";
+    if ([404, 400, 410].includes(r.status)) return "dead"; // definitive not-found
+    return "unknown"; // persistent 403/429/etc — could be a bot block, do NOT treat as dead
+  } catch { if (t < 3) { await sleep(2500); return status(url, t + 1); } return "unknown"; }
 }
 const toks = s => new Set(String(s || "").toLowerCase().match(/[a-z]{4,}/g) || []);
 const fileToks = u => { const m = decodeURIComponent(String(u || "")).match(/([^/]+)\.(jpg|jpeg|png)/i); return toks(m ? m[1].replace(/[_%\-]/g, " ") : ""); };
@@ -24,10 +30,10 @@ console.log(`works with a saved pre-swap image: ${swapped.length}\n`);
 const restores = [], suspects = [];
 for (let i = 0; i < swapped.length; i++) {
   const p = swapped[i];
-  const cur = await live(p.img); await sleep(900);
-  if (cur !== 200) {                              // current is dead — is the original alive?
-    const prev = await live(p.prevImg); await sleep(900);
-    if (prev === 200) { restores.push({ id: p.id, title: p.title, from: p.img, to: p.prevImg }); console.log(`RESTORE  ${p.title.slice(0, 34).padEnd(34)} (current ${cur} dead, original live)`); continue; }
+  const cur = await status(p.img); await sleep(1800);
+  if (cur === "dead") {                            // ONLY a definitive 404/400/410 — is the original alive?
+    const prev = await status(p.prevImg); await sleep(1800);
+    if (prev === "live") { restores.push({ id: p.id, title: p.title, from: p.img, to: p.prevImg }); console.log(`RESTORE  ${p.title.slice(0, 34).padEnd(34)} (current definitively dead, original live)`); continue; }
   }
   // heuristic: did the original filename match the work better than the current one?
   const want = toks((p.title || "") + " " + (p.artist || ""));
