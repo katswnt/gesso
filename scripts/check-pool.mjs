@@ -34,9 +34,12 @@ const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} —
 for(const p of pool){
   // INVISIBLE-WORK guard: a work with an image but no cats is silently dropped by the game's runtime
   // POOL filter (x.img && x.cats) — it never appears anywhere. That's a bug UNLESS the work is
-  // intentionally hidden because it's in-copyright. A famous public-domain work going invisible is a
-  // hard fail (this is the class of bug that hid 417 works incl. Vitruvian Man / The Scream).
-  if(p.img && (!Array.isArray(p.cats) || !p.cats.length)){
+  // intentionally excluded: in-copyright (isInCopyright), or vision-judged-unplayable (play===false, the
+  // canonical "never gamified" marker that playable() and the daily-schedule gate already honor — e.g. a
+  // church building or featureless work whose all-language fame overshoots but which is not a real artwork).
+  // A famous public-domain work going invisible for NO such reason is a hard fail (the class of bug that
+  // hid 417 works incl. Vitruvian Man / The Scream).
+  if(p.img && p.play!==false && (!Array.isArray(p.cats) || !p.cats.length)){
     if(!isInCopyright(p.artist)){
       if(fa(p) >= 300) add(hard,"invisible-famous",p,"no cats — famous public-domain work dropped from the game");
       else add(warn,"invisible-work",p,"no cats — dropped from the game (fix cats or confirm intentional)");
@@ -238,6 +241,17 @@ for(const p of pool){
         if(!p.style||!String(p.style).trim()) noMov.add(id); if(!p.medium||!String(p.medium).trim()) noMed.add(id); } }
     if(noMov.size||noMed.size) globalThis.__catgap={win:WIN,mov:noMov.size,med:noMed.size,
       sample:[...noMov].slice(0,5).map(id=>(byId[id]?.title||id).slice(0,30))}; }
+  // FIELD-COVERAGE FLOORS (schedule-first backstop): freeze-daily's repairCoverage prevents dead scorecard rows;
+  // assert it. A future EASY or MEDIUM day where ZERO of its 5 works can score a core category (style/artist/medium)
+  // plays as a fully dead row on a tier where players expect every skill → HARD. hard/impossible legitimately carry
+  // anonymous/unmapped works, so a dead row there is only a WARN. Uses cats (the true scoreability), id-form-robust.
+  { const FWIN=30; const fhz=new Date(Date.now()+FWIN*86400000).toISOString().slice(0,10);
+    const resolve=id=>{ if(byId[id])return byId[id]; const m=String(id).match(/Q\d+/); return m?byId["wikidata:"+m[0]]:null; };
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<=today||date>fhz) continue;
+      for(const k of ["easy","medium","hard","impossible"]){ const works=(day[k]||[]).map(resolve).filter(Boolean); if(!works.length) continue;
+        for(const c of ["style","artist","medium"]){ if(works.some(p=>(p.cats||[]).includes(c))) continue;
+          const msg=`[dead-row] ${date}/${k}: 0 of ${works.length} works score ${c}`;
+          (k==="easy"||k==="medium") ? hard.push(msg) : warn.push(msg); } } } }
 }
 
 // MEDIUM-FROM-NOTE: the why sentence describes the artwork's own technique; when it DECLARES a medium that

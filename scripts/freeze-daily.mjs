@@ -51,7 +51,7 @@ const n = ranked.length;
 const out={};
 
 // --- EASY = two bands so every daily is 4 instantly-recognizable icons + 1 very-recognizable work ---
-const T1_SIZE=110, T2_SIZE=300; // T1 icons (canon + top pageviews), T2 recognizable
+const T1_SIZE=140, T2_SIZE=270; // T1 icons (canon + top pageviews), T2 recognizable. T1=140 → icons recur ~35d (>30d no-repeat); Easy stays ~410.
 const T1ids = ranked.slice(0, T1_SIZE).map(p=>p.id);
 const T2ids = ranked.slice(T1_SIZE, T1_SIZE+T2_SIZE).map(p=>p.id);
 // Easy keeps the 4-icons + 1-recognizable structure (recognizability rule untouched); diversity only REORDERS
@@ -69,6 +69,7 @@ for(let b=0;b<nBlocks;b++){
   t2i++; easy.push(...four, t2);
 }
 out.easy=easy; // length nBlocks*5; dailyItems windows by 5 → 4 T1 + 1 T2 per day
+const T2SET=new Set(T2ids); // the "recognizable" band — capped at 1/easy-day so icon-starved days repeat an icon, not harden
 
 // --- MEDIUM / HARD / IMPOSSIBLE = the remaining works by recognizability, split in thirds ---
 // Split the rest by FAME THRESHOLDS, not equal rank-thirds. The fame curve is a cliff, so equal thirds
@@ -76,8 +77,19 @@ out.easy=easy; // length nBlocks*5; dailyItems windows by 5 → 4 T1 + 1 T2 per 
 // fame-69 village object. Thresholds keep medium recognizable: medium = fame>=300, hard = 30-300, impossible = <30.
 const restP=ranked.slice(T1_SIZE+T2_SIZE); const rest=restP.map(p=>p.id); const r=rest.length;
 const idxBelow=thr=>{ const i=restP.findIndex(p=>fameOf(p.id)<thr); return i<0?r:i; };
-const mc=[0, idxBelow(300), idxBelow(30), r];
+const mc=[0, idxBelow(500), idxBelow(120), r]; // recalibrated for all-language fame (~2x): medium fame>=500, hard 120-500, impossible <120 (the cliff)
 ["medium","hard","impossible"].forEach((k,i)=>{ out[k]=diversify(seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`),5); });
+
+// PERCENTILE-MIX pools: each medium/hard/impossible daily draws one work from each fame-quintile of its band,
+// so no day is all-faint or all-famous (graduated difficulty). Diversity rules still WIN over this (see dayIds).
+// Easy is exempt — it already has the deliberate 4-icons + 1-recognizable spread.
+const QUINT={};
+for(const key of ["medium","hard","impossible"]){
+  const ids=(out[key]||[]).slice().sort((a,b)=>fameOf(b)-fameOf(a));                 // fame, most → least famous
+  const per=Math.max(1,Math.ceil(ids.length/5)); const q=[[],[],[],[],[]];
+  ids.forEach((id,i)=>q[Math.min(4,Math.floor(i/per))].push(id));                    // Q0 = top fame … Q4 = faintest
+  QUINT[key]=q.map((arr,qi)=>diversify(seededShuffle(arr,`gesso-quint-${key}-${qi}`),5)); // spread within each quintile
+}
 
 const easyDistinctCount = new Set([...T1ids, ...T2ids]).size;
 out.meta = {
@@ -119,26 +131,64 @@ out.meta = {
     if(!s) return ""; const c=typeof p.y==="number"?Math.round(p.y/100):"?"; return s+"|"+(p.region||p.place||"?")+"|"+c; };
   const STYLE_CAP=2;    // at most 2 works of the same movement/style per day (kills "3 Dutch Golden Age" clustering)
   const ARTIST_GAP=5;   // don't repeat a NAMED artist within this many days (prevents back-to-back clustering without over-spreading)
-  const WORK_GAP=21;    // don't repeat the SAME work within this many days (kills cross-refreeze near-dupes)
+  const WORK_GAP=30;    // don't repeat the SAME work within this many days (kills cross-refreeze near-dupes + the "same icon twice in a month" bug)
   const CLUSTER_GAP=14; // don't repeat an anonymous near-dup CLUSTER within this many days (kills palette/shabti/dish monotony)
   // RESHUFFLE_FUTURE=1 regenerates future dates with current rules (use only when diversity rules change).
   // Default: PRESERVE every already-frozen date (past AND future) so re-freezing never drifts the calendar —
   // re-running only extends the horizon. This is what stops the "same work a few days apart" from re-freezes.
   const RESHUFFLE = process.env.RESHUFFLE_FUTURE === '1';
   // `avoidA` = artists in the last ARTIST_GAP days; `avoidW` = work-ids in the last WORK_GAP days. Both soft.
-  const dayIds=(key,day,avoidA,avoidW,avoidCL)=>{ const perm=(out[key]||[]).map(id=>byId[id]).filter(Boolean); const len=perm.length; if(!len)return [];
-    const start=((day*RND)%len+len)%len; const o=[],seen=new Set(),sa=new Set(),sc={},dc=new Set();
-    // pass 1: dedupe title + named artist within the day, cap per style, avoid recent artists/works AND recent anon clusters
-    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p),s=sk2(p),cl=clk(p);
-      if(seen.has(t)||(a&&sa.has(a))||(s&&(sc[s]||0)>=STYLE_CAP)||(a&&avoidA&&avoidA.has(a))||(avoidW&&avoidW.has(p.id))||(cl&&(dc.has(cl)||(avoidCL&&avoidCL.has(cl)))))continue;
-      seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; if(cl)dc.add(cl); o.push(p.id); }
-    // pass 2: backfill if short — keep within-day title/artist dedupe + the WORK gap (never repeat a recent work), relax style cap + artist gap
-    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
-      if(seen.has(t)||(a&&sa.has(a))||(avoidW&&avoidW.has(p.id)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
-    // pass 3: last-resort fill if still short (only the WORK gap relaxed) — guarantees 5
-    for(let k=0;k<len&&o.length<RND;k++){ const p=perm[(start+k)%len]; if(!p)continue; const t=tk2(p),a=ak2(p);
-      if(seen.has(t)||(a&&sa.has(a)))continue; seen.add(t); if(a)sa.add(a); o.push(p.id); }
+  // Per-day acceptance test (mutates o/seen/sa/sc/dc). DIVERSITY RULES ALWAYS WIN; the percentile preference bends first.
+  //   relax 0 = all rules; relax 1 = drop style-cap + artist-gap + cluster-gap; relax 2 = also drop work-gap (last resort).
+  //   within-day title + named-artist dedupe is NEVER relaxed (no two same-artist works in a day).
+  const dayIds=(key,day,avoidA,avoidW,avoidCL)=>{
+    const o=[],seen=new Set(),sa=new Set(),sc={},dc=new Set();
+    const take=(id,relax)=>{ const p=byId[id]; if(!p)return false; const t=tk2(p),a=ak2(p),s=sk2(p),cl=clk(p);
+      if(seen.has(t)||(a&&sa.has(a)))return false;                                                   // within-day dedupe: always
+      if(relax<2 && avoidW && avoidW.has(id))return false;                                           // work gap: until last resort
+      if(relax<1 && ((s&&(sc[s]||0)>=STYLE_CAP)||(a&&avoidA&&avoidA.has(a))||(cl&&(dc.has(cl)||(avoidCL&&avoidCL.has(cl))))))return false; // style/artist/cluster gaps
+      seen.add(t); if(a)sa.add(a); if(s)sc[s]=(sc[s]||0)+1; if(cl)dc.add(cl); o.push(id); return true; };
+    const pickOne=(list,relax,off)=>{ const len=list.length; if(!len)return false; const start=((day*7+off)%len+len)%len; for(let k=0;k<len;k++){ if(take(list[(start+k)%len],relax))return true; } return false; };
+    const sweep=(list,relax,off)=>{ const len=list.length; if(!len)return; const start=((day*RND+off)%len+len)%len; for(let k=0;k<len&&o.length<RND;k++) take(list[(start+k)%len],relax); };
+    if(QUINT[key]){ const qs=QUINT[key];                                    // MEDIUM/HARD/IMPOSSIBLE: one work per fame-quintile (graduated spread)
+      for(let qi=0;qi<RND && o.length<RND;qi++){ if(!pickOne(qs[qi],0,qi*13)) pickOne(qs[qi],1,qi*13); } // diversity-first, then relaxed, per quintile
+      const all=qs.flat(); for(let relax=0;relax<3 && o.length<RND;relax++) sweep(all,relax,0);          // backfill any blocked slot (percentile bends, diversity holds)
+      return dayShuffle(repairCoverage(o.slice(0,RND),all,avoidW),key,day);
+    }
+    // EASY: 4 icons + 1 recognizable. Cap the recognizable (non-icon T2) band at 1/day — when fresh icons run
+    // short (30-day gap), REPEAT an icon rather than pull a 2nd non-icon, so easy days never drift harder than 4+1.
+    const ids=(out[key]||[]).map(p2=>byId[p2]).filter(Boolean).map(p2=>p2.id);
+    let t2n=0;
+    const takeE=(id,relax,capOff)=>{ if(T2SET.has(id)&&t2n>=1&&!capOff)return false; if(take(id,relax)){ if(T2SET.has(id))t2n++; return true;} return false; };
+    const sweepE=(relax,capOff)=>{ const len=ids.length; if(!len)return; const start=((day*RND)%len+len)%len; for(let k=0;k<len&&o.length<RND;k++) takeE(ids[(start+k)%len],relax,capOff); };
+    for(let relax=0;relax<3 && o.length<RND;relax++) sweepE(relax,false); // prefer icon-repeat (relax=2) over a 2nd non-icon
+    if(o.length<RND) sweepE(2,true);                                       // last resort only: allow a 2nd recognizable work
+    return dayShuffle(repairCoverage(o.slice(0,RND),ids,avoidW),key,day); };
+  // FIELD-COVERAGE FLOORS: a scorecard row (style/artist/medium) with too few scoreable works that day plays as a
+  // dead row. Repair AFTER assembly (never during — diversity/anti-repeat come first): if a field is below floor, swap
+  // a work that LACKS it for a pool candidate that HAS it, but only when the swap keeps within-day title+artist dedupe,
+  // respects the work-gap, and drops no already-met floor. Fails OPEN (leaves the day as-is) — the gate is the backstop.
+  // artist floor is deliberately low (≥1): forcing named artists re-Westernizes the tier (anon works skew non-Western).
+  const repairCoverage=(o,poolIds,avoidW)=>{ const FLOOR={style:2,artist:1,medium:2};
+    const catsOf=id=>byId[id]?.cats||[], liveOf=(arr,c)=>arr.reduce((n,id)=>n+(catsOf(id).includes(c)?1:0),0);
+    for(const [field,floor] of Object.entries(FLOOR)){ let guard=0;
+      while(liveOf(o,field)<floor && guard++<12){ let swapped=false;
+        for(let vi=0; vi<o.length && !swapped; vi++){ if(catsOf(o[vi]).includes(field)) continue; // victim must lack the field
+          const without=o.filter((_,i)=>i!==vi);
+          let breaks=false; for(const [f2,fl2] of Object.entries(FLOOR)) if(f2!==field && liveOf(o,f2)>=fl2 && liveOf(without,f2)<fl2){breaks=true;break;}
+          if(breaks) continue;                                                                          // don't rob another met floor
+          const titles=new Set(without.map(id=>tk2(byId[id]))), arts=new Set(without.map(id=>ak2(byId[id])).filter(Boolean));
+          const cand=poolIds.find(id=> !o.includes(id) && catsOf(id).includes(field)
+            && !titles.has(tk2(byId[id])) && !(ak2(byId[id])&&arts.has(ak2(byId[id]))) && !(avoidW&&avoidW.has(id)));
+          if(cand){ o[vi]=cand; swapped=true; } }
+        if(!swapped) break; } }
     return o; };
+  // PRESENTATION ORDER: the picks above are assembled famous→faint (quintile walk); freezing that order would make
+  // slot 1 ALWAYS the day's most recognizable work — a difficulty telegraph + it spends the "oh, I know this!" delight
+  // on first load. Shuffle the final N with a per-day/tier seed so the famous work lands in a random-but-fixed slot.
+  // Deterministic → identical for every player (leaderboard-fair), stable, reproducible. Which works are chosen (the
+  // quintile variety guarantee) is untouched; only presentation order changes.
+  const dayShuffle=(arr,key,day)=>seededShuffle(arr,`gesso-dayorder-${key}-${day}`);
   const todayNum=Math.floor(Date.now()/86400000);
   const iso=d=>new Date(d*86400000).toISOString().slice(0,10);
   const dayNumOf=k=>Math.floor(Date.parse(k+"T00:00:00Z")/86400000);
