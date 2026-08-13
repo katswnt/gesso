@@ -28,13 +28,12 @@
   html,body{overflow-x:hidden;max-width:100%}
   .card{background:var(--surface)}
   .sheet{max-width:1080px;margin:0 auto;background:var(--surface);
-    border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:calc(100vh - 55px);padding-bottom:40px}
+    min-height:calc(100vh - 55px);padding-bottom:40px}
   /* accession-stamp rail (Briana): vertical left rail on round/reveal/final. Fixed so it never disturbs
      Kat's inner layout; the .roundwrap just pads its content clear of the rail. */
   .roundwrap{position:relative}
   .roundsidebar{position:fixed;left:0;top:55px;bottom:0;width:64px;display:flex;flex-direction:column;
-    align-items:center;padding:28px 0 24px;gap:16px;z-index:120;background:var(--surface-strong);
-    border-right:1px solid var(--line);box-sizing:border-box}
+    align-items:center;padding:28px 0 24px;gap:16px;z-index:120;background:var(--surface);box-sizing:border-box}
   .rsb-diamond{display:inline-flex;align-items:center}
   .rsb-tier{writing-mode:vertical-rl;transform:rotate(180deg);font:600 10px 'Manrope',sans-serif;
     letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
@@ -143,10 +142,10 @@
   .hinttext div{padding:2px 0}
   .hintbox{margin-top:16px;border:1px solid var(--line-card);border-radius:var(--r-md);padding:13px 14px;background:#fdfcf9}
   .hinthd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;flex-wrap:wrap}
-  .hinthl{font:600 11px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .hinthl{font:600 11px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
   .hintmeta{font:500 10px 'Manrope',sans-serif;letter-spacing:.04em;color:var(--faint);white-space:nowrap}
   .hintchips{display:flex;flex-wrap:wrap;gap:7px}
-  .hintchip{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);font:600 11px 'Manrope',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:7px 11px;border-radius:var(--r-sm);cursor:pointer}
+  .hintchip{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1.5px solid var(--line-card);color:var(--ink);font:600 11px 'Manrope',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:7px 11px;border-radius:var(--r-sm);cursor:pointer}
   .hintchip .cost{font:500 10px 'Manrope',sans-serif;letter-spacing:0;opacity:.6}
   .hintchip:hover{background:var(--accent);color:#fff}
   .hintchip.used{border-color:var(--line-card);color:var(--faint);background:#f1eee7;cursor:default}
@@ -468,7 +467,8 @@
   @keyframes dabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   @keyframes heroBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}} /* hero palette 'o' bob, gentler than the shared dab float */
   @keyframes spinGear{to{transform:rotate(360deg)}}
-  .dabo{display:inline-flex;align-items:center;width:16px;height:14px;vertical-align:middle;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
+  @keyframes gessoWobble{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+  .dabo{display:inline-flex;align-items:center;width:16px;height:14px;vertical-align:middle;animation:gessoWobble 4.5s ease-in-out infinite;transform-origin:50% 60%;position:relative}
   .dabo svg{width:100%;height:100%;display:block}
   /* ---- design touches (handoff 04) ---- */
   ::selection{background:var(--accent);color:#fff}
@@ -540,7 +540,7 @@
   }
   @media (prefers-reduced-motion: reduce){
     .dabo,.dabo-float,.imgloader i,.streakdab{animation:none}
-    body.motion-ok .dabo{animation:dabWobble 5.5s ease-in-out infinite}
+    body.motion-ok .dabo{animation:gessoWobble 4.5s ease-in-out infinite}
     body.motion-ok .dabo-float{animation:heroBob 3.4s ease-in-out infinite}
     body.motion-ok .imgloader i{animation:dabBreathe 1.3s ease-in-out infinite}
     body.motion-ok .imgloader i:nth-child(2){animation-delay:.18s}

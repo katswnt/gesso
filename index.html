@@ -2737,7 +2737,7 @@ function renderRound(){
       <div id="geobonus" style="display:none;margin-top:8px;font:10px 'Manrope',sans-serif;color:var(--full)">✓ Region matched — two unlikely schools ruled out, free</div>`}); n++;
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
-    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · optional</span></div>
+    fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to</span><span class="rule"></span><span class="hintrule">OPTIONAL</span></div>
       <div class="ac"><div id="artist" class="acedit" contenteditable="true" role="combobox" aria-autocomplete="list" aria-expanded="false" data-ph="surname, given name…" spellcheck="false" autocorrect="off" autocapitalize="off"></div>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · optional','artist',naReason('artist','Anonymous — no artist on record for this work.')));
