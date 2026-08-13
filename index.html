@@ -55,6 +55,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
+<script src="data/cues-ext.js"></script>
 <!-- teach-works.js is ~9MB of per-work study notes, needed only at reveal (not first paint), so it's
      deferred. It MERGES window.ARTEFACTUM_CUES.work into the object cues.js created (same reference the
      app captured), so notes hydrate live once it loads; until then studyFor() falls back to the
@@ -161,10 +162,13 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   const famKey=s=> isCult ? root(s) : movFam(s);
   const dedup = isCult ? (look==='far') : true; // movements always family-dedup; cultures only in far
   const out=[ans], used=new Set([famKey(ans)]);
-  for(const s of ordered){ if(out.length>=4)break; if(out.includes(s))continue;
+  // never co-show an eye-indistinguishable sibling (same period + region + tradition twin, e.g. "Song dynasty
+  // painting" vs "Song dynasty Buddhist art"): movementSim>=0.85 only fires for such twins, not fair lookalikes.
+  const sib=s=>out.some(o=>movementSim(o,s)>=0.85);
+  for(const s of ordered){ if(out.length>=4)break; if(out.includes(s))continue; if(sib(s))continue;
     const k=famKey(s); if(dedup && k && used.has(k))continue; used.add(k);
     out.push(s);}
-  if(out.length<4) for(const s of shuffle(others)){ if(out.length>=4)break; if(!out.includes(s)){const k=famKey(s); if(dedup&&k&&used.has(k))continue; used.add(k); out.push(s);} }
+  if(out.length<4) for(const s of shuffle(others)){ if(out.length>=4)break; if(!out.includes(s)&&!sib(s)){const k=famKey(s); if(dedup&&k&&used.has(k))continue; used.add(k); out.push(s);} }
   return shuffle(out);}
 function km(a,b,c,d){const R=6371,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,h=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
