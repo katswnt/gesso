@@ -34,7 +34,8 @@ works = [...new Map(works.map(p => [p.id, p])).values()];
 console.log(`image-consistency check · model=${MODEL} · scope=${SCOPE} · ${works.length} works (real pixels, no tools)\n`);
 
 async function grab(url) {
-  let u = url; if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=1024";
+  // 640px is plenty to spot a gross wrong-image (modern photo vs ceramic); keeps image tokens (and cost) ~4x lower
+  let u = url; if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=640";
   const r = await fetch(u, { headers: { "User-Agent": "GessoVisionVerify/1.0 (kathryn.swint@gmail.com)" } });
   if (!r.ok) return { err: "img " + r.status };
   let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
