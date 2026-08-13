@@ -95,7 +95,9 @@ for (let i = 0; i < works.length; i++) {
 }
 
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}
-writeFileSync("data/incoming/vision-guessability.json", JSON.stringify({ model: MODEL, works: out }, null, 1));
+const slug = MODEL.replace(/[^a-z0-9]+/gi, "-"); // per-model file so the two A/B arms don't clobber each other
+const outPath = `data/incoming/vision-guessability-${slug}.json`;
+writeFileSync(outPath, JSON.stringify({ model: MODEL, works: out }, null, 1));
 const ok = out.filter(x => x.vision).length, rec = out.filter(x => x.vision?.recognized).length;
-console.log(`\nwrote data/incoming/vision-guessability.json · ${ok}/${works.length} scored · ${rec} the model recognized (leakage — flagged, analyzed separately).`);
+console.log(`\nwrote ${outPath} · ${ok}/${works.length} scored · ${rec} the model recognized (leakage — flagged, analyzed separately).`);
 console.log("next: a compare step joins this with data/incoming/study-human-difficulty.json to test the correlation.");
