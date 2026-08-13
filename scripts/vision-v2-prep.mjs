@@ -43,7 +43,8 @@ async function grab(url, file, t = 0) {
 const manifest = [];
 for (let i = 0; i < works.length; i++) {
   const p = works[i], file = `${IMGS}/${safe(p.id)}.jpg`;
-  const st = (existsSync(file) && statSync(file).size > 2000) ? "cached" : await grab(p.img, file);
+  const cached = existsSync(file) && statSync(file).size > 2000;
+  const st = cached ? "cached" : (process.env.NODL ? "missing" : await grab(p.img, file)); // NODL=1 → only use already-downloaded
   manifest.push({ id: p.id, imgFile: (st === "ok" || st === "cached") ? file : null, imgStatus: st,
     meta: { title: p.title, artist: p.artist || "", y: p.y, place: p.place, region: p.region, medium: p.medSimple || p.medium || "", style: p.style || "" },
     existingNote: teach[p.id]?.why || null });
