@@ -96,7 +96,10 @@
 - [ ] Two-pool architecture: curated Daily pool vs. a vast "Explore/Infinite" pool (template-generated teaching) to chase scale (anthropeum has ~500k via bulk ingest + zero curation).
 - [ ] Per-region quotas within difficulty tiers so every tier feels globally representative.
 - [ ] Non-English sitelink weighting to further de-bias the fame signal.
-- [ ] Themed dailies ("Women artists", "The year 1600 around the world").
+- [ ] **Themed runs** — curated sets around a shared thread, played as a special run (own tier/entry, not the regular daily). Two axes:
+  - **Facet themes** from existing pool metadata (cheap): a year/era, a region, a movement, "the year 1600 around the world," "women artists" (needs an artist-gender field).
+  - **Motif / subject themes across artists** (the fun one): "odalisques across artists," self-portraits, Annunciations, still lifes, Venus, vanitas, Last Suppers — compare how different hands + eras treat ONE subject. Pedagogically rich. Needs a subject tag we don't fully have yet: harvest Wikidata **depicts (P180)** / **genre (P136)**, or hand-curate seed lists per theme.
+  - Content note: some motifs (odalisque, Venus, bathers) are nudes → gate the mature ones out of any public/daily surface. Builds directly on the "Drill me on ___" custom-filter engine (a themed run = a saved/curated filter over the pool).
 
 ## Contemporary / modern art (the copyright gap) — plan
 Full findings: tasks/contemporary-art-research.md. TL;DR prioritized:
