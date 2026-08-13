@@ -15,7 +15,10 @@ console.log(`subagent outputs: ${outs.length} works\n`);
 
 const inBox = b => Array.isArray(b) && b.length === 4 && b.every(n => typeof n === "number" && n >= 0 && n <= 1.001);
 let badBox = 0;
-const vision = {}, flags = [];
+// ADDITIVE: start from the existing vision.js so re-runs accumulate (rolling enrichment), not overwrite.
+const vision = (() => { try { const e = {}; new Function("window", readFileSync("data/vision.js", "utf8"))(e); return { ...(e.ARTEFACTUM_VISION || {}) }; } catch { return {}; } })();
+const preexisting = Object.keys(vision).length;
+const flags = [];
 for (const o of outs) {
   const id = o.id; if (!id) continue; const p = pool(id) || {};
   // validate/clean bboxes on evidence, pins, delights
@@ -34,7 +37,7 @@ for (const o of outs) {
 mkdirSync("data/incoming", { recursive: true });
 writeFileSync("data/vision.js", "window.ARTEFACTUM_VISION=" + JSON.stringify(vision) + ";\n");
 writeFileSync("data/incoming/vision-v2-flags.json", JSON.stringify(flags, null, 1));
-console.log(`wrote data/vision.js (${Object.keys(vision).length} works) · flags backlog ${flags.length} · dropped ${badBox} out-of-range bboxes\n`);
+console.log(`wrote data/vision.js (${Object.keys(vision).length} works; +${Object.keys(vision).length - preexisting} new this run) · flags backlog ${flags.length} · dropped ${badBox} out-of-range bboxes\n`);
 
 // CROSS-CHECK: vision movement vs the text-pass style already in the pool
 const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
