@@ -1741,7 +1741,7 @@ async function submitScore(date,tierKey,summary){ // fire-and-forget; never bloc
       deviceId:deviceId(),name:id.name,color:id.color,date,tier:tierKey,total:summary.grand,
       perfects:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)).length,
       masterpieces:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length,
-      rounds:results.map(x=>({id:x.it.id,cells:Object.fromEntries(Object.entries(x.cells).map(([k,v])=>[k,v.pts])),guess:{year:x.guess.year,ll:x.guess.ll,medium:x.guess.medium,style:x.guess.style,artist:x.guess.artist}}))
+      rounds:results.map(x=>({id:x.it.id,cells:Object.fromEntries(Object.entries(x.cells).map(([k,v])=>[k,v.pts])),guess:{year:x.guess.year,ll:x.guess.ll,medium:x.guess.medium,style:x.guess.style,artist:x.guess.artist},hints:[...(x.guess.hints||[])]}))
     })}); return r.ok?await r.json():null; }catch{ return null; }
 }
 // 48-color dab palette (handoff 19: 8 families × 6 steps) — white initial stays legible on each; harmonizes on cream.

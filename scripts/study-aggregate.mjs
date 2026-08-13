@@ -45,14 +45,17 @@ for (const row of rows) { devices.add(row.device_id);
     wk.plays++;
     const pts = rd.cells || {}, g = rd.guess || {};
     const gv = { when: g.year, where: g.ll ? `${(+g.ll[0]).toFixed(1)},${(+g.ll[1]).toFixed(1)}` : null, medium: g.medium, style: g.style, artist: g.artist };
-    for (const f of FIELDS) { if (pts[f] == null) continue; const b = wk.byField[f] || (wk.byField[f] = { pts: [], guesses: [] }); b.pts.push(pts[f]); if (gv[f] != null && gv[f] !== "") b.guesses.push(gv[f]); }
+    // hints (labels) map to the field they help — a field people repeatedly hint on is a difficulty tell
+    const hintField = l => /century/i.test(l) ? "when" : /continent/i.test(l) ? "where" : /rule out|movement|cultur/i.test(l) ? "style" : /initial/i.test(l) ? "artist" : null;
+    const hinted = new Set((rd.hints || []).map(hintField).filter(Boolean));
+    for (const f of FIELDS) { if (pts[f] == null) continue; const b = wk.byField[f] || (wk.byField[f] = { pts: [], guesses: [], hints: 0 }); b.pts.push(pts[f]); if (gv[f] != null && gv[f] !== "") b.guesses.push(gv[f]); if (hinted.has(f)) b.hints++; }
   } }
 
 const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
 const works = Object.entries(work).map(([id, wk]) => {
   const p = res(id); const byField = {};
   for (const f of FIELDS) { const b = wk.byField[f]; if (!b || !b.pts.length) continue;
-    byField[f] = { meanPts: Math.round(mean(b.pts)), pct: Math.round(mean(b.pts) / MAX_CAT * 100), n: b.pts.length, guesses: b.guesses }; }
+    byField[f] = { meanPts: Math.round(mean(b.pts)), pct: Math.round(mean(b.pts) / MAX_CAT * 100), n: b.pts.length, hintRate: Math.round((b.hints || 0) / b.pts.length * 100), guesses: b.guesses }; }
   const fieldPcts = Object.values(byField).map(x => x.pct);
   return { id, title: p?.title || "?", artist: p?.artist || "", tier: wk.tier, plays: wk.plays, overallPct: Math.round(mean(fieldPcts)), byField };
 }).sort((a, b) => a.overallPct - b.overallPct); // hardest (lowest human %) first
@@ -60,7 +63,7 @@ const works = Object.entries(work).map(([id, wk]) => {
 // overall per-field means across all works
 console.log(`participants (distinct devices): ${devices.size} · distinct works: ${works.length}\n`);
 console.log("overall human accuracy per field (higher = easier for humans):");
-for (const f of FIELDS) { const all = works.flatMap(wk => wk.byField[f] ? [wk.byField[f].pct] : []); if (all.length) console.log(`  ${f.padEnd(7)} ${Math.round(mean(all))}%  (${all.length} works)`); }
+for (const f of FIELDS) { const all = works.flatMap(wk => wk.byField[f] ? [wk.byField[f].pct] : []); const hr = works.flatMap(wk => wk.byField[f] ? [wk.byField[f].hintRate] : []); if (all.length) console.log(`  ${f.padEnd(7)} ${Math.round(mean(all))}% accuracy · ${Math.round(mean(hr))}% hint-lean  (${all.length} works)`); }
 
 console.log("\nhardest works for humans (lowest overall %, min 2 plays):");
 for (const wk of works.filter(x => x.plays >= 2).slice(0, 20)) {
