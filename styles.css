@@ -319,7 +319,7 @@
     border-radius:2px;padding:14px;white-space:pre;line-height:1.5;font-size:14px;overflow-x:auto}
   /* retention */
   .navbits{display:flex;align-items:center;gap:8px;font:600 11px 'Manrope',sans-serif;color:var(--muted)}
-  .navbtn{appearance:none;border:0;background:transparent;color:var(--ink);font:700 11px 'Manrope',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:5px 3px;cursor:pointer}
+  .navbtn{appearance:none;border:0;background:transparent;color:var(--ink);font:400 12px 'Faculty Glyphic',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:5px 3px;cursor:pointer}
   .navbtn:hover{color:var(--muted)}
   .emblem{display:grid;gap:2px;grid-template-columns:repeat(2,var(--em));grid-template-rows:repeat(2,var(--em));flex:0 0 auto}
   .emblem i{display:block;border-radius:var(--r-xs)}
@@ -468,8 +468,7 @@
   @keyframes dabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   @keyframes heroBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}} /* hero palette 'o' bob, gentler than the shared dab float */
   @keyframes spinGear{to{transform:rotate(360deg)}}
-  .dabo{display:inline-flex;align-items:center;width:18px;height:15px;vertical-align:middle;position:relative}
-  .dabo .artpalette{width:100%;height:100%;vertical-align:baseline}
+  .dabo{display:inline-flex;align-items:center;width:16px;height:14px;vertical-align:middle;animation:dabWobble 5.5s ease-in-out infinite;position:relative}
   .dabo svg{width:100%;height:100%;display:block}
   /* ---- design touches (handoff 04) ---- */
   ::selection{background:var(--accent);color:#fff}
@@ -541,6 +540,7 @@
   }
   @media (prefers-reduced-motion: reduce){
     .dabo,.dabo-float,.imgloader i,.streakdab{animation:none}
+    body.motion-ok .dabo{animation:dabWobble 5.5s ease-in-out infinite}
     body.motion-ok .dabo-float{animation:heroBob 3.4s ease-in-out infinite}
     body.motion-ok .imgloader i{animation:dabBreathe 1.3s ease-in-out infinite}
     body.motion-ok .imgloader i:nth-child(2){animation-delay:.18s}
@@ -672,7 +672,7 @@
   .srtag{font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:3px 6px}
   .catpick{appearance:none;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font:400 0.75rem 'Faculty Glyphic',sans-serif;padding:7px 2px;cursor:pointer;text-transform:uppercase}
   .catpick.on{color:var(--ink);border-bottom-color:var(--accent)}
-  .opt{appearance:none;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;color:var(--ink);font:400 0.75rem 'Faculty Glyphic',sans-serif;padding:8px 13px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px;min-height:36px}
+  .opt{appearance:none;background:var(--surface-lift);border:1px solid var(--line-card);border-radius:2px;color:var(--ink);font:400 13px 'Faculty Glyphic',sans-serif;padding:8px 13px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px;min-height:36px}
   .opt:hover{border-color:var(--accent);color:var(--accent)}
   .opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .opt .ct{font:400 0.75rem 'Faculty Glyphic',sans-serif;opacity:.55}.opt.on .ct{opacity:.8}
