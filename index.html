@@ -55,6 +55,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
+<script src="data/cues-ext.js"></script>
 <!-- teach-works.js is ~9MB of per-work study notes, needed only at reveal (not first paint), so it's
      deferred. It MERGES window.ARTEFACTUM_CUES.work into the object cues.js created (same reference the
      app captured), so notes hydrate live once it loads; until then studyFor() falls back to the
@@ -71,6 +72,7 @@
 <script src="data/countries.js"></script>
 <script src="data/museums.js"></script>
 <script src="data/movement-wiki.js"></script>
+<script src="data/movement-artists.js"></script>
 <script>
 "use strict";
 /*
@@ -1617,7 +1619,12 @@ function renderGlossary(){
     const g2=loadGlossary(); g2.pending=[]; saveGlossary(g2);
   }
 }
-function movementArtists(name){ const by={}; for(const p of POOL){ if(p.style===name && isNamedArtist(p.artist)){ const f=(window.ARTEFACTUM_FAME&&window.ARTEFACTUM_FAME[p.id])||p.fame||0; if(by[p.artist]==null||f>by[p.artist])by[p.artist]=f; } } return Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]); }
+function movementArtists(name){ const by={}; for(const p of POOL){ if(p.style===name && isNamedArtist(p.artist)){ const f=(window.ARTEFACTUM_FAME&&window.ARTEFACTUM_FAME[p.id])||p.fame||0; if(by[p.artist]==null||f>by[p.artist])by[p.artist]=f; } }
+  const pool=Object.entries(by).sort((a,b)=>b[1]-a[1]).map(x=>x[0]); // on-site artists, most famous first
+  const wiki=(window.ARTEFACTUM_MOVEMENT_ARTISTS&&window.ARTEFACTUM_MOVEMENT_ARTISTS[name])||[]; // notable artists from Wikidata, incl. ones not on the site
+  const seen=new Set(pool.map(n=>n.toLowerCase())), out=pool.slice(0,8);
+  for(const n of wiki){ if(out.length>=10)break; const k=n.toLowerCase(); if(!seen.has(k)){ out.push(n); seen.add(k); } }
+  return out; }
 function movementWikiURL(name){ return (window.ARTEFACTUM_MOVEMENT_WIKI&&window.ARTEFACTUM_MOVEMENT_WIKI[name])||null; }
 function movementSeen(name){ return POOL.filter(p=>p.style===name && p.img && Array.isArray(p.cats)&&p.cats.length && SEEN.has(p.id)); }
 function movementExtrasHTML(name){ const arts=movementArtists(name), wiki=movementWikiURL(name);
