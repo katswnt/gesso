@@ -3068,6 +3068,7 @@ function paintBurst(host){
 let __VISMAP=null;
 function VIS(id){ if(__VISMAP===null)__VISMAP=(typeof window!=='undefined'&&window.ARTEFACTUM_VISION)||{}; if(__VISMAP[id])return __VISMAP[id]; const m=String(id).match(/Q\d+/); if(m){ if(__VISMAP['wikidata:'+m[0]])return __VISMAP['wikidata:'+m[0]]; if(__VISMAP['http://www.wikidata.org/entity/'+m[0]])return __VISMAP['http://www.wikidata.org/entity/'+m[0]]; } return null; }
 function evidenceHTML(it){ const v=VIS(it.id); if(!v||!v.evidence)return ''; const F=[['when','When'],['where','Where'],['medium','Medium'],['style','Movement'],['artist','Artist']]; const rows=F.map(([k,lbl])=>{ const a=v.evidence[k]||[]; const feat=a[0]&&a[0].feature; return feat?`<div class="evrow"><span class="evk">${lbl}</span><span class="evv">${esc(feat)}</span></div>`:''; }).filter(Boolean).join(''); if(!rows)return ''; return `<div class="evbox"><div class="study-notes-label" style="font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin:20px 0 12px">How to read it</div>${rows}</div>`; }
+function visionMarks(it){ const v=VIS(it.id); if(v&&v.pins&&v.pins.length) return `<div class="lookmarks">${v.pins.map((p,i)=>`<button class="lookmark" style="top:${(p.y*100).toFixed(1)}%;left:${(p.x*100).toFixed(1)}%" title="${esc(p.label||'')}">${i+1}</button>`).join('')}</div>`; const hs=(typeof HOTSPOTS!=='undefined'&&HOTSPOTS[it.id])||[]; if(hs.length) return `<div class="lookmarks">${hs.map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%">${h.n||1}</button>`).join('')}</div>`; return ''; }
 function guideHTML(guide){
   if(!Array.isArray(guide)||!guide.length) return '';
   return `<div class="askguide">
@@ -3224,7 +3225,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
   if(!it) return `<div class="sheet" style="padding:30px">QA: work not found — <code>${esc(id)}</code></div>`;
   const study=studyFor(it);
   const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
-  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:'';
+  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:visionMarks(it);
   const fact=(k,v)=>`<div style="display:flex;gap:12px;margin:2px 0"><b style="color:var(--accent);min-width:88px;font-size:12px">${k}</b><span class="mono">${esc(v)}</span></div>`;
   return `<div class="sheet" style="margin-bottom:18px">
     <div style="padding:10px 24px;background:#fde047;color:#111;font-weight:700;letter-spacing:.04em">QA PREVIEW · ${esc(id)} · not a real round</div>
@@ -3258,7 +3259,7 @@ function renderWorkPage(id){ clearTimers&&clearTimers(); const it=qaResolve(id),
   if(!it){ stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="padding:30px 24px">That work is not in the collection. <a class="btn2" href="/">Play today&rsquo;s Gesso &rarr;</a></div>`; return; }
   const study=studyFor(it);
   const pinNotes=(Array.isArray(study.notes)?study.notes:[]).map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null);
-  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:'';
+  const marks=pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:visionMarks(it);
   const fact=(k,v)=>v?`<div style="display:flex;gap:12px;margin:2px 0"><b style="color:var(--accent);min-width:88px;font-size:12px">${k}</b><span class="mono">${esc(v)}</span></div>`:'';
   stage.innerHTML=`${header(0,-1,false)}<div class="sheet" style="margin-bottom:18px">
     <div class="revealgrid"><div>
@@ -3314,7 +3315,7 @@ function renderReveal(r,ri,push=true){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:''):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:visionMarks(it)):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
         <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
         ${firstSentence?`<div class="workblurb">${esc(firstSentence)}</div>`:''}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
