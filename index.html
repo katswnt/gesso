@@ -66,6 +66,7 @@
 <script src="data/fame.js"></script>
 <script src="data/regions.js"></script>
 <script src="data/daily-order.js"></script>
+<script src="data/daily-history.js" defer></script>
 <script src="data/countries.js"></script>
 <script src="data/museums.js"></script>
 <script>
@@ -1619,6 +1620,14 @@ function dailyItems(key,dateStr){
   if(pinned && Array.isArray(pinned[key]) && pinned[key].length){
     const got = pinned[key].map(id=>byId[id]).filter(Boolean).filter(workComplete); // drop any now-incomplete pinned work
     if(got.length>=ROUNDS) return got.slice(0,ROUNDS); // only honor a COMPLETE locked day; else fall back to rotation
+  }
+  // LEDGER FALLBACK: served days roll out of daily-order's short window but live forever in the append-only ledger
+  // (data/daily-history.js). Read it so ANY past daily replays with its TRUE served works — faithful, shareable
+  // archive links for every date — instead of the rotation approximation below.
+  const led = ((window.ARTEFACTUM_DAILY_HISTORY||{}).byDate||{})[dateStr];
+  if(led && Array.isArray(led[key]) && led[key].length){
+    const got = led[key].map(id=>byId[id]).filter(Boolean).filter(workComplete);
+    if(got.length>=ROUNDS) return got.slice(0,ROUNDS);
   }
   const frozen = (window.ARTEFACTUM_DAILY||{})[key];
   let perm;
@@ -3524,11 +3533,14 @@ function renderFinal(push=true){
   if(_showSupport){ try{localStorage.setItem('gesso.supportSeen',String(Date.now()));}catch{} track('support_shown',{streak:_streak});
     const sl=document.getElementById('supportlink'); if(sl)sl.addEventListener('click',()=>track('support_click',{}));
     const sd=document.getElementById('supportdismiss'); if(sd)sd.onclick=()=>{const c=document.getElementById('supportcard'); if(c)c.remove();}; }
-  // leaderboard: submit this daily run + surface "#N today" (today only, not archive replays)
+  // leaderboard: submit EVERY finished daily run — INCLUDING archive replays of past dates — so each round's
+  // per-field guesses get logged (the server stores raw guesses for re-scoring/analysis). Streak/points/glossary
+  // stay today-only (gated on runArchive elsewhere); only the leaderboard row + the "#N today" rank UI differ.
+  // The rank line element only exists for today's run, so the archive .then() is a harmless no-op.
   const vlb=document.getElementById('viewlb');
-  if(vlb && !runArchive){ vlb.onclick=()=>{ lbTier=tier; route('register'); };
-    submitScore(runDate||todayStr(),tier,summary).then(r=>{ const el=document.getElementById('lbrank');
-      if(el&&r&&r.rank)el.innerHTML=`You ranked <span style="color:var(--accent);font-weight:700">#${r.rank}</span> of ${r.count} today`; }); }
+  if(vlb && !runArchive) vlb.onclick=()=>{ lbTier=tier; route('register'); };
+  if(!infinite && tier) submitScore(runDate||todayStr(),tier,summary).then(r=>{ const el=document.getElementById('lbrank');
+    if(el&&r&&r.rank)el.innerHTML=`You ranked <span style="color:var(--accent);font-weight:700">#${r.rank}</span> of ${r.count} today`; });
 }
 
 // ---------- zoom lightbox ----------
