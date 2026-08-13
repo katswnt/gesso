@@ -2667,7 +2667,7 @@ function renderRound(){
   } else fields.push(naField('Movement','style',naReason('style','No movement or school recorded — not part of this round.')));
   if(show('artist')){
     fields.push({k:'artist', html:`<div class="fieldlabel"><span class="ix">0${n}</span><span class="nm">${iconHTML('artist')}Attributed to · optional</span></div>
-      <div class="ac"><input type="text" id="artist" name="gx${Math.floor(Math.random()*1e9)}" placeholder="surname, given name…" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore data-form-type="other"/>
+      <div class="ac"><div id="artist" class="acedit" contenteditable="true" role="combobox" aria-autocomplete="list" aria-expanded="false" data-ph="surname, given name…" spellcheck="false" autocorrect="off" autocapitalize="off"></div>
       <div class="ac-list" id="aclist" style="display:none"></div></div>`}); n++;
   } else fields.push(naField('Attributed to · optional','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
@@ -2770,8 +2770,11 @@ function renderRound(){
 
 function setupAutocomplete(){
   const inp=document.getElementById('artist'),list=document.getElementById('aclist');let active=-1,items=[];
-  if(inp){ const drop=()=>inp.removeAttribute('readonly'); inp.addEventListener('focus',drop); inp.addEventListener('pointerdown',drop); } // readonly-until-focus defeats native/Contacts autofill
-  const close=()=>{list.style.display='none';active=-1;};
+  // #artist is a contenteditable div, NOT an <input> — browsers never offer Contacts/autofill on contenteditable,
+  // which is the only reliable way to kill iOS/Safari contact suggestions on a name-shaped field.
+  const val=()=>inp?inp.textContent:'';
+  const caretEnd=()=>{ if(!inp)return; inp.focus(); try{ const r=document.createRange(); r.selectNodeContents(inp); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }catch{} };
+  const close=()=>{list.style.display='none';active=-1;if(inp)inp.setAttribute('aria-expanded','false');};
   const render=q=>{const ql=deaccent(q).trim();
     if(!ql){items=[];close();return;}
     // rank matches so typing a name's letter surfaces names that START with it (surname or given), not
@@ -2784,16 +2787,20 @@ function setupAutocomplete(){
     items=scored.slice(0,8).map(s=>s.a);
     if(!items.length){close();return;}
     list.innerHTML=items.map((a,i)=>`<div class="ac-item${i===active?' active':''}" data-i="${i}">${esc(a)}</div>`).join('');
-    list.style.display='block';
+    list.style.display='block'; if(inp)inp.setAttribute('aria-expanded','true');
     list.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=ev=>{ev.preventDefault();pick(+el.dataset.i);});};
-  const pick=i=>{inp.value=items[i];guess.artist=items[i];close();inp.focus();};
-  inp.oninput=()=>{guess.artist=inp.value;active=-1;render(inp.value);};
-  inp.onkeydown=e=>{if(list.style.display==='none')return;
-    if(e.key==='ArrowDown'){active=Math.min(active+1,items.length-1);render(inp.value);e.preventDefault();}
-    else if(e.key==='ArrowUp'){active=Math.max(active-1,0);render(inp.value);e.preventDefault();}
-    else if(e.key==='Enter'&&active>=0){pick(active);e.preventDefault();}
-    else if(e.key==='Escape')close();};
-  inp.onblur=()=>setTimeout(close,120);
+  const pick=i=>{inp.textContent=items[i];guess.artist=items[i];close();caretEnd();};
+  if(inp){
+    inp.oninput=()=>{guess.artist=val().trim();active=-1;render(val());};
+    inp.onkeydown=e=>{
+      if(e.key==='Enter'){ e.preventDefault(); if(list.style.display!=='none'&&active>=0)pick(active); else inp.blur(); return; } // never insert a newline
+      if(list.style.display==='none')return;
+      if(e.key==='ArrowDown'){active=Math.min(active+1,items.length-1);render(val());e.preventDefault();}
+      else if(e.key==='ArrowUp'){active=Math.max(active-1,0);render(val());e.preventDefault();}
+      else if(e.key==='Escape')close();};
+    inp.addEventListener('paste',e=>{ e.preventDefault(); const t=(((e.clipboardData||window.clipboardData)||{}).getData?((e.clipboardData||window.clipboardData).getData('text')):'')||''; document.execCommand('insertText',false,t.replace(/\s+/g,' ').trim()); });
+    inp.onblur=()=>setTimeout(close,120);
+  }
 }
 
 function wireHints(it){

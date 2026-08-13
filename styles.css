@@ -102,6 +102,10 @@
   .ginput{font:600 15px Archivo;padding:9px 12px;border:1px solid var(--line-card);border-radius:var(--r-md)} /* account email/password fields */
   .ginput:focus{border-color:var(--accent);outline:none}
   .ac{position:relative;z-index:2000}
+  /* contenteditable artist field (no <input> = no Contacts/autofill). Styled to read as a single-line text box. */
+  .acedit{display:block;width:100%;box-sizing:border-box;min-height:38px;font:600 15px Archivo;line-height:1.35;padding:9px 12px;border:1px solid var(--line-card);border-radius:var(--r-md);background:#fff;color:var(--ink);white-space:nowrap;overflow-x:auto;outline:none;cursor:text}
+  .acedit:focus{border-color:var(--accent)}
+  .acedit:empty:before{content:attr(data-ph);color:var(--muted);pointer-events:none}
   .ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:2000;background:#fff;
     border:1px solid var(--line-card);border-radius:var(--r-sm);overflow:hidden}
   .ac-item{padding:9px 13px;color:var(--ink);font:12px 'IBM Plex Mono',monospace;cursor:pointer;border-top:1px solid #eee9dc}
