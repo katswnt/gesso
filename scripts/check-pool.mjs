@@ -45,6 +45,10 @@ for(const p of pool){
       else add(warn,"invisible-work",p,"no cats — dropped from the game (fix cats or confirm intentional)");
     }
   }
+  // FRAGILE-IMAGE guard: a hardcoded Commons thumbnail URL (upload.wikimedia.org/.../thumb/<file>/<size>px-…) breaks
+  // the instant Commons renames/deletes the file — it hid Battersea Shield on a live daily. The Special:FilePath
+  // redirect follows renames. scripts/normalize-images.mjs converts them; fail closed here so the class can't return.
+  if(p.img && /upload\.wikimedia\.org\/wikipedia\/commons\/thumb/.test(p.img)) add(hard,"fragile-thumb-url",p,"hardcoded Commons thumbnail — run scripts/normalize-images.mjs (→ Special:FilePath)");
   // MEDIUM: simplified value must be a real bucket (else it leaks as a junk guess-option)
   if(p.medium){ const ms=simplifyMedium(p.medium); if(ms && !BUCKETS.has(ms)){
     if(ms.split(" ").length>2 || /album|scroll|sheet|folio|volume|first of|\bpage\b|untitled|reformatted|fragment/i.test(ms)) add(hard,"medium-junk",p,`"${ms}"`);
