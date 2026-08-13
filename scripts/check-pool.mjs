@@ -45,6 +45,10 @@ for(const p of pool){
       else add(warn,"invisible-work",p,"no cats — dropped from the game (fix cats or confirm intentional)");
     }
   }
+  // FRAGILE-IMAGE guard: a hardcoded Commons thumbnail URL (upload.wikimedia.org/.../thumb/<file>/<size>px-…) breaks
+  // the instant Commons renames/deletes the file — it hid Battersea Shield on a live daily. The Special:FilePath
+  // redirect follows renames. scripts/normalize-images.mjs converts them; fail closed here so the class can't return.
+  if(p.img && /upload\.wikimedia\.org\/wikipedia\/commons\/thumb/.test(p.img)) add(hard,"fragile-thumb-url",p,"hardcoded Commons thumbnail — run scripts/normalize-images.mjs (→ Special:FilePath)");
   // MEDIUM: simplified value must be a real bucket (else it leaks as a junk guess-option)
   if(p.medium){ const ms=simplifyMedium(p.medium); if(ms && !BUCKETS.has(ms)){
     if(ms.split(" ").length>2 || /album|scroll|sheet|folio|volume|first of|\bpage\b|untitled|reformatted|fragment/i.test(ms)) add(hard,"medium-junk",p,`"${ms}"`);
@@ -104,6 +108,12 @@ for(const p of pool){
 { const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
   const byKey={}; for(const p of pool){ if(p.artist) (byKey[norm(p.artist)]=byKey[norm(p.artist)]||new Set()).add(p.artist); }
   for(const set of Object.values(byKey)) if(set.size>1) warn.push(`[artist-near-dup] ${[...set].join(" | ")}`); }
+
+// DUPLICATE-QID gate: the SAME artwork imported twice under different id prefixes (wd:Qx vs wikidata:Qx vs
+// the full entity URL) is one work in two pool slots — it can get scheduled on two days and splits its
+// notes/pins. HARD-fail so it can't recur; run scripts/dedup-qid.mjs to collapse to the ledger-referenced id.
+{ const byQid={}; for(const p of pool){ const m=String(p.id).match(/Q\d+/); if(m) (byQid[m[0]]=byQid[m[0]]||[]).push(p.id); }
+  for(const [q,ids] of Object.entries(byQid)) if(ids.length>1) hard.push(`[duplicate-qid] ${q} → ${ids.length} entries: ${ids.join(" , ")} — run scripts/dedup-qid.mjs`); }
   // NOTE: transliteration (Vasily/Wassily) + abbreviation (Hokusai/Katsushika Hokusai) variants aren't caught
   // here — a generic detector produced too many false positives (Manet/Monet, Zhang Lu/Zhang Hong, Rembrandt/
   // Rembrandt Peale share signatures but are different people). Fix those by hand when a screenshot surfaces one.
