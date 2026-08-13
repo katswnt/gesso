@@ -350,20 +350,20 @@
   .toggle[aria-pressed="true"]::after{left:21px}
   .soonchip{font:600 9px 'Manrope',sans-serif;letter-spacing:.1em;color:var(--faint);border:1px solid var(--line-card);border-radius:var(--r-sm);padding:4px 8px}
   .settingsfoot{padding:0 22px 20px;font:500 10.5px/1.5 'Manrope',sans-serif;color:var(--faint)}
-  .glosswrap{padding:24px}
-  .glosshead{background:var(--surface-strong);border-bottom:1.5px solid var(--ink);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
-  .glosstitle{display:flex;align-items:center;gap:10px;font:700 16px 'Faculty Glyphic',sans-serif}
+  .glosswrap{padding:32px 24px 48px;max-width:860px;margin:0 auto}
+  .glosshead{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+  .glosstitle{display:flex;align-items:center;gap:10px;font:400 20px 'Faculty Glyphic',sans-serif}
   .glossmeta{font:600 11px 'Manrope',sans-serif;color:var(--muted);white-space:nowrap}
-  .glossbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-  .glossbar span{display:block;height:100%;background:var(--accent)}
-  .glossgrid{padding:16px 22px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .glosscard{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:15px;font-family:inherit;min-height:112px}
+  .glossbar{height:8px;border-radius:2px;background:var(--line-card);overflow:hidden;margin-bottom:28px}
+  .glossbar span{display:block;height:100%;background:var(--accent);border-radius:2px}
+  .glossgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .glosscard{text-align:left;background:var(--surface);border:1px solid var(--line-card);border-radius:2px;padding:16px;font-family:inherit;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s,border-color .12s}
   button.glosscard{cursor:pointer}
-  button.glosscard:hover{border-color:var(--accent);transform:translateY(-1px)}
-  .glosscard.locked{background:#efece4;border:1px dashed #c7c0ae;opacity:.88}
-  .glosscard .nm{font:400 1rem/1.375 'Faculty Glyphic',sans-serif;margin-top:11px;color:var(--ink)}
+  button.glosscard:hover,.glosscard:not(.locked):hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(41,41,41,.03),0 8px 16px rgba(41,41,41,.07),0 18px 36px rgba(41,41,41,.07)}
+  .glosscard.locked{opacity:.7}
+  .glosscard .nm{font:400 1rem/1.375 'Faculty Glyphic',sans-serif;color:var(--ink)}
   .glosscard.locked .nm{color:#b3ac9a}
-  .glosscard .sub{font:500 10px/1.35 'Manrope',sans-serif;color:var(--muted);margin-top:4px}
+  .glosscard .sub{font:400 0.625rem/1.2 'Manrope',sans-serif;color:var(--muted)}
   .glosscard.locked .sub{color:#bcb4a2}
   /* motion #3 — glossary unlock flip (content swaps edge-on at 50%); honors reduce-motion */
   @keyframes glossflip{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
