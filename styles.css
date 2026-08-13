@@ -377,6 +377,14 @@
   .movehero{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--line)}
   .movename{font:400 26px/1.05 'Faculty Glyphic',sans-serif;letter-spacing:-.01em}
   .movesub{margin-top:6px;font:500 12px/1.35 'Manrope',sans-serif;color:var(--muted)}
+  .moveartist{font:600 12px Manrope,sans-serif;color:var(--ink);background:var(--surface-lift);border:1px solid var(--line-card);border-radius:2px;padding:6px 11px}
+  .moveunseen{margin-top:8px;padding:22px 24px 4px;border-top:1px solid var(--line)}
+  .moveunseen-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  .moveunseen-card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
+  .moveunseen-card img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line-card);border-radius:2px}
+  .moveunseen-card:hover img{border-color:var(--accent)}
+  .moveunseen-t{font:11px/1.3 Manrope,sans-serif;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  @media(max-width:680px){.moveunseen-grid{grid-template-columns:repeat(3,1fr)}}
   /* Briana movement detail: canonical artwork LEFT, eye cues RIGHT */
   .movegrid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;padding:22px 24px 24px}
   .movegrid-art{grid-column:1}
