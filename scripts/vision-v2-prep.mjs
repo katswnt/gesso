@@ -32,7 +32,7 @@ console.log(`targets: ${works.length} distinct works (next 7 daily-days + the 6 
 const safe = id => String(id).replace(/[^a-z0-9]/gi, "_");
 async function grab(url, file, t = 0) {
   let u = url; if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=1024";
-  try { const r = await fetch(u, { headers: { "User-Agent": BROWSER } });
+  try { const r = await fetch(u, { headers: { "User-Agent": BROWSER }, signal: AbortSignal.timeout(20000) });
     if ([403, 429, 500, 502, 503, 504].includes(r.status) && t < 3) { r.body?.cancel?.(); await sleep(3500 * (t + 1)); return grab(url, file, t + 1); }
     if (!r.ok) return "http " + r.status;
     const b = Buffer.from(await r.arrayBuffer()); if (b.length < 2000) return "tiny";
