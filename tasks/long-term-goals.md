@@ -91,11 +91,18 @@
 3. Friends boards + "#N today" surfacing.
 4. Persistent mastery profile → feeds **Training mode** (above).
 
+## Coverage engine: reverse-property fame match + Wikidata P276 give-back (2026-08)
+**The cheap way to score a whole museum collection** (never hand-match each object to Wikidata): museums have a Wikidata object-ID property — Met = **P3634**, 71,663 items carry it. ONE SPARQL query returns every object that has a Wikidata item + its sitelink fame; join to the museum API's CC0+imaged list by that ID. No per-object lookup. Filter to the belonging bar (`sitelinks>=6`) → the "worth adding" set. Other museums have their own ID property or match by accession.
+
+**Sobering finding:** run this on the Met (65K non-Western objects in its API) → only **227 works** (all regions) clear `sitelinks>=6`, and just **12** are non-Western. The documentation bias is *deep* — famous non-Western works are genuinely scarce (they lack cross-lingual Wikipedia coverage), not merely hard to find. So the museum API does NOT unlock thousands of famous non-Western works; the famous ones are few and mostly already Wikidata-linked. Getting MORE non-Western means: (a) aggregate by **country-of-origin across ALL museums** (a famous work counts wherever held); (b) **non-Western-by-default sources** (NPM Taipei ~410K CC0, Smithsonian NMAfA via `unit_code`, ColBase Japan, NM Korea); (c) lower the belonging bar for gap regions (tradeoff: harder tiers, less recognizable — conflicts with the easy/medium priority).
+
+- [ ] **Give-back: contribute P276 to Wikidata.** Our harvest yields the museum-object ↔ Wikidata-item mapping for free (the object-ID join). Emit the "has a Wikidata item but missing the P276 collection statement" list and batch-add via **QuickStatements**. Only ~6 of the Met's *famous* works lack it, but the obscure long tail has thousands. Genuine civic fix for the systemic non-Western linkage gap. Cheap (one query + a batch upload, no heavy compute). Honest caveat: helps the commons, NOT Gesso's coverage (the works it would link are too obscure to add). A separate Claude/Codex instance could run this end-to-end.
+- [ ] **All-language pageview fame (de-bias)** — the fame formula's pageview term is English-only (`en.wikipedia`), so tiers are English-traffic-ranked. Summing all-language pageviews re-ranks works by true global fame → floats non-Western works out of Impossible into Hard/Medium. Region-neutral (a fairer metric, not a diversity weighting; Western works keep their ranks). Being measured 2026-08. Note the belonging bar itself (`sitelinks>=6`) is *already* cross-lingual, so this changes tier PLACEMENT, not which works qualify.
+
 ## Other long-term ideas
 - [ ] Spin-off editions once Gesso is polished: a **fashion** edition and an **architecture/buildings** edition (different pools, same engine).
 - [ ] Two-pool architecture: curated Daily pool vs. a vast "Explore/Infinite" pool (template-generated teaching) to chase scale (anthropeum has ~500k via bulk ingest + zero curation).
-- [ ] Per-region quotas within difficulty tiers so every tier feels globally representative.
-- [ ] Non-English sitelink weighting to further de-bias the fame signal.
+- [ ] ~~Per-region quotas within difficulty tiers~~ **SUPERSEDED**: coverage is by belonging / real fame, region-blind — never quotas. Add whatever clears `sitelinks>=6`, wherever it's from (more Western works fine if they belong).
 - [ ] Themed dailies ("Women artists", "The year 1600 around the world").
 
 ## Contemporary / modern art (the copyright gap) — plan
