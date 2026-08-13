@@ -495,7 +495,7 @@
   /* Living palette: Briana's paint-palette (charcoal body, 4 dabs, thumb hole) fused with the shape-shifting
      dab. Body morphs via dabWobble; thumb hole is a real mask cutout that rides the morph; each dab floats on
      its own timing. All knobs (size, dab positions, hole, timing) are meant to be tuned. Motion-gated. */
-  .artpalette{position:relative;display:inline-block;vertical-align:-6px;width:38px;height:32px;background:#292929;
+  .artpalette{position:relative;display:inline-block;vertical-align:-1px;width:38px;height:32px;background:#292929;
     border-radius:63% 37% 56% 44% / 55% 48% 52% 45%;
     -webkit-mask:radial-gradient(circle 4.6px at 62% 26%, transparent 3.6px, #000 4.4px);
     mask:radial-gradient(circle 4.6px at 62% 26%, transparent 3.6px, #000 4.4px)}
