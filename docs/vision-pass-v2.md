@@ -80,10 +80,47 @@ One look at each work's real image produces everything below in a single structu
 25. **Pin hygiene** — mark redundant/uninformative existing pins for pruning (well-defined now that pins are
     evidence-anchored).
 
+## Expert-panel additions (product / AI-cost / art-historian / studio-prof / curator / conservator)
+
+Unifying thesis: laypeople read the SUBJECT; experts read the SURFACE. The pass exists to hand players the
+"you didn't know you could tell that from looking" tells. High-yield captures the panel surfaced:
+
+28. **Pigment date-floor** — earliest-possible date implied by visible pigments (Prussian blue ≥~1710, cobalt
+    ≥~1802, mauve/synthetics ≥~1856, cadmiums/titanium ≥1800s). A color can prove "can't predate X".
+29. **Craquelure reading** — grid vs garland vs alligator/drying cracks; panel(straight-with-grain) vs
+    canvas(scalloped) → age + support + medium. (Cracks that stop/skip a passage = overpaint.)
+30. **Support / ground** — canvas weave vs wood panel vs copper vs paper tooth (what it's painted ON).
+31. **Light-rig + perspective system** — tenebrist raking light ≥1600 Baroque; converging one-point ≥1420 Italy;
+    stacked/reverse/flat = medieval/Byzantine/non-Western/modernist. Datable systems, not "good/bad drawing".
+32. **Iconographic attributes / heraldry / textiles / donor portraits** — saints' objects (wheel=Catherine),
+    coats of arms (name the patron/marriage/year), luxury textiles (pomegranate brocade, Anatolian carpets),
+    small kneeling contemporary-dress figures = donors (date the work).
+33. **Depicted technology as terminus-post-quem** — clocks, firearms, ships, gaslight, trains, tobacco pipes.
+34. **Gold ground / halo geometry / gilding** — flat punched gold + incised halos = pre-1425 devotional.
+35. **Morellian marks** — ears, hands, nostrils, drapery cadence: the artist's unconscious fingerprint
+    (feeds the artist-field evidence + attribution).
+36. **Print technique** — plate mark (intaglio), registration offset (multi-block), burin-taper vs etched line
+    vs tonal lithograph → medium sub-classification.
+37. **Gaze network + gesture** — where figures look (routes the eye / focal point), rhetorical hands.
+38. **CONDITION CAPS CONFIDENCE (methodological)** — heavy yellowed varnish, glare/reflection (gallery snapshot),
+    overpaint, or a bad reproduction should LOWER the date/attribution confidence AND the guessability weight.
+    Distinguish real varnish/discolouration (pools in texture, has a cleaning window) from a lighting colour-cast
+    (even across the frame + wall) from JPEG/scan/glass artifacts.
+
+## AI-cost findings (locked)
+
+- Full ~6,000-work pass ≈ **$175 on Sonnet** with **Batches API (−50%) + prompt caching**; ~$67 on Haiku.
+  ~$0.03/work. The ~160-work pilot batch ≈ ~$2.50. Output JSON is ~78% of the bill; the image is ~4%.
+- **Splitting into 2-3 calls is ~12-24% MORE expensive** (image re-uploads each call) — bundle everything.
+- Quality: **structured outputs (JSON schema)** guarantees valid JSON; order evidence→inference; adaptive
+  thinking before JSON; generous max_tokens; **fail-closed gate rejects out-of-range/hallucinated bboxes**.
+  Optional Haiku-screen→Sonnet-deep tiering ≈ $155; start single-Sonnet-batched, pilot 100, tier only if needed.
+- Watch: Haiku prompt-cache minimum is 4,096 tokens (pad the instruction or it silently won't cache).
+
 ## Cross-work (separate step, not per-image)
 
-26. **Duplicate WORK detection** — same work present twice (La Belle Jardinière ×2). Flag for merge/removal.
-27. **Duplicate IMAGE detection** — the same photo mapped to two DIFFERENT works (a harvest error). Flag.
+39. **Duplicate WORK detection** — same work present twice (La Belle Jardinière ×2). Flag for merge/removal.
+40. **Duplicate IMAGE detection** — the same photo mapped to two DIFFERENT works (a harvest error). Flag.
 
 ## Outputs
 

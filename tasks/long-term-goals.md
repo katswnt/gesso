@@ -190,3 +190,14 @@ Keep When/Where untouched. All changes are isolated to `score()` + small data ta
 - Tier 2: glossary-unlock toast, mastery/stats card, perfect/masterpiece banner, share-card footer.
 - Tier 3 ambient: signed-out header avatar pill, archive hint, settings sync line, return-visit banner.
 - Custom line icons (NO emoji): flame F3-Chunky, glossary pennant B5, eye, sync, ×. Paths in the handoff + Gesso Icon Variants.dc.html.
+
+## How-to-look-at-art tips page (medium-term)
+The expert panel's thesis — laypeople read the SUBJECT, experts read the SURFACE — should become a
+"how to look at art / improve your score" guide: costume as a date-clock, pigment date-floors, light-rig +
+perspective systems, craquelure, gold ground, signatures/monograms, iconographic attributes, Morellian marks.
+The vision-pass v2 per-work EVIDENCE captures populate it with real worked examples. See docs/vision-pass-v2.md.
+
+## Movement/culture classification is a CHEAP non-vision pass
+Only ~270 works lack a movement; ~230 have a named artist → derivable from artist+date+region with no image.
+Plus a normalization sweep for the fragmented/low-quality ones (Renaissance splintering, wrong styles). Do this
+as a text-only subagent (or rules) pass on subscription tokens — do NOT spend the vision pass on it.
