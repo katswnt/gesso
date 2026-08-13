@@ -2743,6 +2743,10 @@ function renderRound(){
   } else fields.push(naField('Attributed to · optional','artist',naReason('artist','Anonymous — no artist on record for this work.')));
   const hideMap = !show('where');
   const whereN=n;
+  // Reset scroll BEFORE the innerHTML swap. In endless mode we arrive from a long reveal page scrolled deep;
+  // swapping #stage while scrolled deep is what leaves the new round un-hit-tested until a manual scroll on
+  // mobile. Resetting here (old tall content still present) means the new content composites at the top.
+  try{ window.scrollTo(0,0); }catch{}
   document.getElementById('stage').innerHTML=`${header(idx,idx,true)}<div class="sheet"><div class="roundwrap">${railHTML(idx,idx)}<div class="roundbody">
 
     <div class="playgrid" style="padding:26px 24px;display:grid;grid-template-columns:1fr 1fr;gap:26px">
@@ -2837,9 +2841,10 @@ function renderRound(){
     if(placeFit){ try{ map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} } },settings.reduceMotion?0:250);
   }
   document.getElementById('submit').onclick=score;
-  // reset scroll AFTER the new round paints + force a reflow — fixes the blank-until-you-scroll glitch
-  // when advancing via "Next" (innerHTML swap left the viewport unpainted on mobile)
-  requestAnimationFrame(()=>{ window.scrollTo(0,0); void document.body.offsetHeight; });
+  // Belt-and-suspenders for the blank/untappable-until-you-scroll glitch (worst in endless: reveal→round→reveal).
+  // A single rAF can run BEFORE the swap composites on mobile, so the round paints but stays un-hit-tested.
+  // Double-rAF lands the nudge after the NEXT composited frame; the forced reflow + invalidateSize seal it.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.scrollTo(0,0); void document.body.offsetHeight; if(map)map.invalidateSize(); }));
 }
 
 function setupAutocomplete(){
