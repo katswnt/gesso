@@ -2737,10 +2737,16 @@ function renderRound(){
   // are easy to find. It only NAVIGATES the map — the player still taps to drop the pin (no auto-guessing).
   { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
     const run=async q=>{ if(!q||!q.trim()){sr.style.display='none';return;}
-      try{ const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
+      try{ const r=await fetch(`https://photon.komoot.io/api/?limit=8&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
         const j=await r.json();
-        let jj=Array.isArray(j)?j:[]; const seen=new Set(); // dedupe near-identical hits (same spot at ~1km / same name)
-        jj=jj.filter(x=>{const k=(x.display_name||'')+'|'+(+x.lat).toFixed(1)+','+(+x.lon).toFixed(1); if(seen.has(k))return false; seen.add(k); return true;}).slice(0,5);
+        // Photon = OSM autocomplete geocoder (type-ahead): "amster" → Amsterdam, which Nominatim's exact-token
+        // search never surfaces. Normalize its GeoJSON features into {lat,lon,display_name,boundingbox} so the
+        // result render + pin handler below stay unchanged. Photon extent = [minLon, maxLat, maxLon, minLat].
+        let jj=((j&&j.features)||[]).map(f=>{ const c=(f.geometry||{}).coordinates||[], p=f.properties||{}, e=p.extent;
+          return { lat:c[1], lon:c[0], display_name:[p.name,p.city,p.state,p.country].filter(Boolean).join(", "),
+            boundingbox: (e&&e.length===4)?[e[3],e[1],e[0],e[2]]:[] }; }).filter(x=>x.lat!=null&&x.display_name);
+        const seen=new Set(); // dedupe near-identical hits (same spot at ~1km / same name)
+        jj=jj.filter(x=>{const k=(x.display_name||'')+'|'+(+x.lat).toFixed(1)+','+(+x.lon).toFixed(1); if(seen.has(k))return false; seen.add(k); return true;}).slice(0,6);
         if(!jj.length){sr.innerHTML=`<div class="ac-item" style="color:var(--muted)">No match</div>`;sr.style.display='block';return;}
         sr.innerHTML=jj.map(x=>`<div class="ac-item" data-lat="${x.lat}" data-lon="${x.lon}" data-bb="${(x.boundingbox||[]).join(',')}" style="font:11px 'IBM Plex Mono',monospace;padding:8px 11px;cursor:pointer;border-top:1px solid #eee9dc">${esc(x.display_name)}</div>`).join('');
         sr.style.display='block';
