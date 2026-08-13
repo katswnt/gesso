@@ -1,6 +1,6 @@
 # Gesso
 
-**A daily art-history guessing game — and, underneath it, a study in using a frontier LLM as a production QA system for a 5,948-work dataset.**
+**A daily art-history guessing game — and, underneath it, a study in using a frontier LLM as a production QA system for a ~5,900-work dataset.**
 
 Live: **[gesso.katswint.com](https://gesso.katswint.com)** · Built by [Kat Swint](https://katswint.com) · Product design by [Briana Das](https://brianadas.com/)
 
@@ -20,7 +20,7 @@ The runtime is deliberately tiny; the intelligence lives in the **data pipeline*
 - **"Turn every bug into a detector."** Each production bug I hit became a permanent, deterministic scan (`audit-detectors.mjs`) that runs on every change — so the class of bug can't recur silently.
 - **Cost-aware layering.** Cheap deterministic checks and *zero-token* Wikipedia text checks run first; the expensive vision pass is reserved for what only vision can catch, and works are audited in most-seen-first order.
 
-By the numbers: **5,948 works**, **2,262 image-audited (38%, most-seen tiers first)**, **126 pipeline scripts**, **11 serverless endpoints**, a **3,537-line no-build SPA**, **681 mapped art movements**.
+By the numbers: **5,918 works**, a **full image-audit pass over the pool** — now being hardened by a **v2 pixel-grounded re-audit** that provably *looks at* each image (and so catches the failure the first pass couldn't: an image that's wrong, or a note written from the label rather than the pixels), **143 pipeline scripts**, **11 serverless endpoints**, a **3,626-line no-build SPA**, **679 mapped art movements**.
 
 ---
 
@@ -51,7 +51,7 @@ These are choices, not defaults — here's the reasoning, including where each s
 
 **No build step. Vanilla JS. No framework, no TypeScript, no bundler.**
 The deployed artifact is the source: inspectable, dependency-light, and durable (nothing rots when a build tool goes stale). For a static-data game with no server-rendered state, a framework would add supply-chain surface and CI complexity for little gain.
-*Where it stops paying:* `index.html` has grown to 3,537 lines in one inline script. The honest next step is to split it into several `<script src>` modules — which keeps the no-build constraint while restoring module boundaries. That refactor is scoped, not yet done.
+*Where it stops paying:* `index.html` has grown to 3,626 lines in one inline script. The honest next step is to split it into several `<script src>` modules — which keeps the no-build constraint while restoring module boundaries. That refactor is scoped, not yet done.
 
 **Leaderboard trusts client-submitted scores (today).**
 Raw per-round guesses are stored server-side so scores can be **authoritatively re-computed** later (a documented "Phase 4"). The leaderboard is a social nudge, not a high-stakes ranking, so I shipped the loop first and deferred server-side replay. Known tradeoff, not an oversight — and the data to close it is already being captured.
@@ -80,6 +80,20 @@ Each of five categories is worth up to 2,500 points, tuned to be *fair to a thou
 
 ---
 
+## How the daily is built
+
+The schedule isn't random draws — it's a deterministic freeze (`freeze-daily.mjs`) that has to satisfy several product constraints at once: everyone sees the same puzzle, the past never changes, difficulty is graduated *within* a tier, no work repeats too soon, and every scorecard row is actually playable. How it does that:
+
+- **Fame-threshold tiers, on an all-language signal.** Works are ranked by a fame score (`120·ln(pageviews+1) + 8·ln(sitelinks+1)`) computed over *all* Wikipedia languages, so a work that's famous in Japanese or Arabic but obscure in English isn't buried. **Easy** is the top ~410 (140 canon "icons" + 270 recognizable); **Medium** is fame ≥ 500, **Hard** 120–500, **Impossible** below the ~120 cliff.
+- **Graduated difficulty via a quintile percentile-mix.** A single tier shouldn't be five works of identical hardness. Each of Medium/Hard/Impossible draws **one work per fame-quintile**, so a day ramps from its more-recognizable end to its most-obscure — difficulty *within* the round, not just between tiers.
+- **Within-day seeded shuffle.** The five works are shuffled by a date-seeded RNG (`gesso-dayorder-…`) so the most-famous work isn't always slot 1 — killing a telegraph where players learned "position 1 = the easy one."
+- **Anti-repeat ledger.** An append-only ledger of what's already been served enforces a **30-day no-repeat** on the exact work (globally across tiers), plus an artist-gap, so you don't get the same piece — or two Bosches back-to-back — inside a month.
+- **Field-coverage floors.** A day is unfair if, say, four of its five works are anonymous (nothing to guess in the Artist row) or share one medium. A repair pass enforces per-day floors (`style ≥ 2`, `artist ≥ 1`, `medium ≥ 2` scoreable works) and swaps works in to fill a starved row — but only when the swap doesn't starve another row. It fails *open*, never blocking the freeze.
+- **Easy-tier icon cap + diversity spread.** Easy days are capped to keep icons recurring no sooner than the no-repeat window, and a diversity pass spreads artists/regions so the "easy" tier isn't five European oils in a row.
+- **Immutability, enforced by the gate.** Once a date is served it's frozen; `check-pool` blocks any silent rewrite of a past or current day, and a re-freeze only ever touches *future* dates.
+
+---
+
 ## Data & licensing discipline
 
 The corpus is restricted to **public-domain / CC0-safe** images (US-safe rule: creator died by 1955 and/or published pre-1930; FSA and US-government works are PD regardless). `audit-copyright.mjs` checks Wikidata-sourced works against creator death years. Domain conventions are enforced, not assumed:
@@ -104,7 +118,7 @@ Images come from museum image services, Wikimedia Commons, and Vercel Blob (for 
 
 Stated plainly, because knowing the gaps is the point:
 
-- **Vision-audit coverage is 38%** (2,262 / 5,948), prioritized most-seen-first so the works players actually encounter are verified first. Burn-down continues in batches.
+- **The v2 pixel-grounded re-audit is still burning down.** The pool has had a full image-audit pass; the harder v2 pass — which provably *looks at* each image, so it can catch a wrong image or a note written from the label rather than the pixels — is being rolled out most-seen-first (dailies and study works first). The v2 record lives in `data/vision.js`; coverage grows in batches.
 - **The auditor eval covers *gross* mismatches, not near-misses (yet).** A reproducible 50-item labeled set ([`docs/auditor-eval.md`](docs/auditor-eval.md) · `scripts/eval-auditor.mjs`) scores the vision auditor at **100% precision/recall** on catching planted wrong-art — but those decoys are cross-region obvious mismatches. A *near-miss* decoy set (a different work by the same artist/era) is the harder next iteration.
 - **Harvest isn't frozen.** Wikidata is a living graph; re-running a harvest won't reproduce the pool byte-for-byte. Drift is caught after the fact by the audits, not prevented by a committed snapshot — a snapshot/lock is the fix.
 - **Modularize `index.html`** (see constraints above).
