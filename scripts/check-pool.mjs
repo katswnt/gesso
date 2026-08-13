@@ -108,6 +108,12 @@ for(const p of pool){
 { const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
   const byKey={}; for(const p of pool){ if(p.artist) (byKey[norm(p.artist)]=byKey[norm(p.artist)]||new Set()).add(p.artist); }
   for(const set of Object.values(byKey)) if(set.size>1) warn.push(`[artist-near-dup] ${[...set].join(" | ")}`); }
+
+// DUPLICATE-QID gate: the SAME artwork imported twice under different id prefixes (wd:Qx vs wikidata:Qx vs
+// the full entity URL) is one work in two pool slots — it can get scheduled on two days and splits its
+// notes/pins. HARD-fail so it can't recur; run scripts/dedup-qid.mjs to collapse to the ledger-referenced id.
+{ const byQid={}; for(const p of pool){ const m=String(p.id).match(/Q\d+/); if(m) (byQid[m[0]]=byQid[m[0]]||[]).push(p.id); }
+  for(const [q,ids] of Object.entries(byQid)) if(ids.length>1) hard.push(`[duplicate-qid] ${q} → ${ids.length} entries: ${ids.join(" , ")} — run scripts/dedup-qid.mjs`); }
   // NOTE: transliteration (Vasily/Wassily) + abbreviation (Hokusai/Katsushika Hokusai) variants aren't caught
   // here — a generic detector produced too many false positives (Manet/Monet, Zhang Lu/Zhang Hong, Rembrandt/
   // Rembrandt Peale share signatures but are different people). Fix those by hand when a screenshot surfaces one.
