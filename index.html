@@ -1616,12 +1616,12 @@ function renderGlossary(){
 }
 function movementArtists(name){ const by={}; for(const p of POOL){ if(p.style===name && isNamedArtist(p.artist)){ const f=(window.ARTEFACTUM_FAME&&window.ARTEFACTUM_FAME[p.id])||p.fame||0; if(by[p.artist]==null||f>by[p.artist])by[p.artist]=f; } } return Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]); }
 function movementWikiURL(name){ return (window.ARTEFACTUM_MOVEMENT_WIKI&&window.ARTEFACTUM_MOVEMENT_WIKI[name])||null; }
-function movementUnseen(name){ return POOL.filter(p=>p.style===name && p.img && Array.isArray(p.cats)&&p.cats.length && !SEEN.has(p.id)); }
+function movementSeen(name){ return POOL.filter(p=>p.style===name && p.img && Array.isArray(p.cats)&&p.cats.length && SEEN.has(p.id)); }
 function movementExtrasHTML(name){ const arts=movementArtists(name), wiki=movementWikiURL(name);
   const a=arts.length?`<div style="margin-top:24px"><div class="kick" style="margin-bottom:11px">Notable artists</div><div style="display:flex;flex-wrap:wrap;gap:7px">${arts.map(x=>`<span class="moveartist">${esc(x)}</span>`).join('')}</div></div>`:'';
   const w=wiki?`<div style="margin-top:20px"><a class="telllink" href="${esc(wiki)}" target="_blank" rel="noopener">Read more on Wikipedia &rarr;</a></div>`:''; return a+w; }
-function movementUnseenHTML(name){ const u=movementUnseen(name); if(!u.length)return ''; const show=u.slice(0,12);
-  return `<div class="moveunseen"><div class="kick" style="margin-bottom:13px">Works you haven&rsquo;t seen &middot; ${u.length}</div><div class="moveunseen-grid">${show.map(p=>`<a class="moveunseen-card" href="/?w=${encodeURIComponent(p.id)}"><img src="${esc(displaySrc(p.img))}" alt="${esc(p.title)}" loading="lazy" onerror="imgFail(this)"><span class="moveunseen-t">${esc(p.title)}</span></a>`).join('')}</div></div>`; }
+function movementSeenHTML(name){ const s=movementSeen(name); if(!s.length)return ''; const show=s.slice(0,24);
+  return `<div class="moveunseen"><div class="kick" style="margin-bottom:13px">Works you&rsquo;ve seen in this movement &middot; ${s.length}</div><div class="gal-masonry">${show.map(p=>`<a class="galcard" href="/?w=${encodeURIComponent(p.id)}"><div class="galcard-img"><img src="${esc(displaySrc(p.img))}" alt="${esc(p.title)}" loading="lazy" onerror="imgFail(this)"></div><div class="galcard-meta"><div class="galcard-title">${esc(p.title)}</div><div class="galcard-artist">${esc(p.artist||'Unknown')} &middot; ${esc(fmtYear(p.y))}</div></div></a>`).join('')}</div></div>`; }
 function renderMovement(name){
   clearTimers();
   const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
@@ -1641,7 +1641,7 @@ function renderMovement(name){
         <div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}${movementExtrasHTML(name)}
       </div>
     </div>
-  ${movementUnseenHTML(name)}
+  ${movementSeenHTML(name)}
   </div>${ATTRIB}</div></div>`;
   { const ss=document.getElementById('seeschool'); if(ss)ss.onclick=()=>startTraining({facets:{centuries:new Set(),countries:new Set(),regions:new Set(),movements:new Set([name]),mediaFamilies:new Set(),artists:new Set()},axis:null,label:name}); }
 }
