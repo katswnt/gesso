@@ -1506,7 +1506,7 @@ function computeCollections(){
   return { total:POOL.length, region:by(p=>p.region), origins:by(p=>p.place).slice(0,20), sources, holdings };
 }
 function renderCollections(){
-  clearTimers();
+  clearTimers(); track('collections_view',{}); // reach to the honesty page
   const C=computeCollections();
   const dom=u=>u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
   const pinnable=C.sources.filter(s=>s.lat!=null).length+C.holdings.filter(s=>s.lat!=null).length;
