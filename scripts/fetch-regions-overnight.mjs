@@ -200,7 +200,9 @@ async function tepapa(){
     const r=await fetch(B,{method:"POST",headers:{"User-Agent":UA,"Content-Type":"application/json","x-api-key":KEY},
       body:JSON.stringify({query:t,size:100,from,filters:[{field:"type",keyword:"Object"}]})});
     const j=await r.json(); const results=j.results||[]; if(!results.length)break;
+    const ART=new Set(["TaongaMāori","PacificCultures","Art"]); // art/taonga only — exclude photos, archives, rare books, philatelic, history docs
     for(const o of results){
+      if(!ART.has(o.collection)) continue;
       const rep=(o.hasRepresentation||[]).find(x=>(x.contentUrl||x.previewUrl)); if(!rep)continue;
       if(rep.width && rep.width<900) continue;                 // no blurry masters
       const img=rep.contentUrl||rep.previewUrl; if(!img)continue;
