@@ -1587,7 +1587,7 @@ function renderCollections(){
       <div style="font-size:13px;color:var(--muted);line-height:1.65">A border is a recent invention &mdash; most were drawn in the last two centuries, often by empires rather than the people living inside them. So we don&rsquo;t grade your map pin against the modern nation-state: &ldquo;Belgium&rdquo; is an anachronism for a 1562 Bruegel (his world was the <em>Netherlandish</em> Low Countries), and &ldquo;Nigeria&rdquo; a colonial fiction for a Benin bronze. We score against the work&rsquo;s <strong style="color:var(--ink)">historical cultural region</strong> where one applies &mdash; Han China, the Ottoman core, Ancient Egypt, Ukiyo-e Japan &mdash; and its modern country otherwise; either earns full credit, and credit fades with distance beyond it. The rule we hold ourselves to is <strong style="color:var(--ink)">parity</strong>: the same generous, era-aware geography for the West &mdash; the Low Countries, the pre-1861 Italian peninsula, the Russian sphere &mdash; that we already extend to ancient and non-Western art. Not fluid regions for &ldquo;the exotic&rdquo; and hard borders for Europe.</div></div>
     ${ATTRIB}
   </div></div>`;
-  try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:2,attributionControl:false}).setView([30,0],2);
+  try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:1,attributionControl:false}).setView([25,10],1);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
     const pts=[];C.sources.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
     C.holdings.filter(s=>s.lat!=null).slice(0,40).forEach((s,i)=>{const ic=L.divIcon({className:'mblob mblob-wd v'+((i+3)%6+1),html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works · via Wikidata`);pts.push([s.lat,s.lng]);});
@@ -2553,7 +2553,7 @@ function renderStart(dateStr,push=true){
     </div>
     ${img3}
     <div class="homesec">
-      <div class="homesechd">&middot; frequently asked questions &middot;</div>
+      <div class="homesechd">FAQ</div>
       <div class="faqacc">
         <div class="faqitem"><button class="faqq" aria-expanded="false">how is difficulty decided?<span class="faqplus"><img src="/assets/plus.svg" class="icon-plus" width="16" height="16" alt=""><img src="/assets/minus.svg" class="icon-minus" width="16" height="16" alt=""></span></button>
           <div class="faqa"><div class="faqa-inner"><p>Each work gets a &ldquo;how well known&rdquo; score based on its documentation density &mdash; chiefly the number of Wikipedia language editions that cover it (via Wikidata), plus how often those articles are read. Works are ranked by that score into Easy &rarr; Impossible, so &ldquo;Easy&rdquo; means widely recognized worldwide &mdash; not necessarily Western or recent.</p></div></div></div>
