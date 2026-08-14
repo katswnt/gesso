@@ -22,7 +22,7 @@
   .leaflet-control-attribution{display:none}
   .mono{font-family:'Manrope',sans-serif}
   .wrap{width:100%;overflow-x:hidden}
-  html,body{overflow-x:hidden;max-width:100%}
+  html,body{overflow-x:clip;max-width:100%}
   .card{background:var(--surface)}
   .sheet{max-width:1080px;margin:0 auto;background:var(--surface);
     min-height:calc(100vh - 55px);padding-bottom:40px}
