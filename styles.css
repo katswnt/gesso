@@ -187,11 +187,6 @@
   .studygrid::before{content:"";grid-column:2;align-self:stretch;background:var(--study-border);width:1px}
   .studygrid>.study-guide{grid-column:3}
   .study-notes-label,.study-guide-label{padding-bottom:8px;border-bottom:1px solid var(--study-border)}
-  .evbox{margin-top:4px}
-  .evrow{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-card)}
-  .evrow:last-child{border-bottom:none}
-  .evk{flex:0 0 62px;font:600 10px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding-top:2px}
-  .evv{font:13px/1.45 'Manrope',sans-serif;color:var(--ink-soft)}
   .study-guide .askguide{margin-top:0;border-top:none;padding-top:0}
   @media(max-width:680px){
     .studygrid{grid-template-columns:1fr;gap:20px}

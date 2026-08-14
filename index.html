@@ -1418,14 +1418,20 @@ const TIERS=[{key:"easy",label:"Easy",blurb:"World-famous masterpieces"},{key:"m
 // ---------- mastery ----------
 function loadMastery(){if(window.__DEMO)return demoMastery();try{const m=JSON.parse(localStorage.getItem("artefactum.mastery"))||{};return{byStyle:m.byStyle||{},byRegion:m.byRegion||{},byCategory:m.byCategory||{},byCentury:m.byCentury||{}}}catch{return{byStyle:{},byRegion:{},byCategory:{},byCentury:{}}}}
 function saveMastery(m){try{localStorage.setItem("artefactum.mastery",JSON.stringify(m))}catch{}}
-function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]||(m[bucket]={}); b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m); if(correct) track('mastery_up',{bucket});}
+// SESSION mastery: an in-memory tally that starts empty each page load, so the reveal's "Session mastery"
+// line actually reflects THIS sitting and evolves as you play — instead of freezing forever on the sticky
+// lifetime extremes (a 21/21 style at ratio 1.0 vs a 0/2 at ratio 0.0 that pure-ratio sort pins in place).
+// Lifetime mastery still persists to localStorage for Your Eye; only this line reads the session tally.
+let __SESS={byStyle:{},byRegion:{}};
+function bumpMastery(key,bucket,correct){const m=loadMastery();const b=m[bucket]||(m[bucket]={}); b[key]=b[key]||{correct:0,total:0}; b[key].total++; if(correct)b[key].correct++; saveMastery(m);
+  if(__SESS[bucket]&&key){ const e=__SESS[bucket][key]||(__SESS[bucket][key]={correct:0,total:0}); e.total++; if(correct)e.correct++; }
+  if(correct) track('mastery_up',{bucket});}
 function masteryLine(){
-  const m=loadMastery();
+  const m=window.__DEMO?demoMastery():__SESS; // demo/share pages keep the rich sample; real play is session-scoped
   // combine styles AND regions; tie-break by volume so the line evolves as you play more
-  // (was style-only + total>=2, which froze on an early 2/2 entry while new styles sat at total=1)
   const merge={}; for(const b of [m.byStyle,m.byRegion]) for(const[k,v] of Object.entries(b||{})){ if(!k)continue; const e=merge[k]||(merge[k]={correct:0,total:0}); e.correct+=v.correct; e.total+=v.total; }
   let entries=Object.entries(merge).filter(([,v])=>v.total>=2);
-  if(!entries.length) entries=Object.entries(merge).filter(([,v])=>v.total>=1); // early game: show something
+  if(!entries.length) entries=Object.entries(merge).filter(([,v])=>v.total>=1); // early in the session: show something
   if(!entries.length) return "";
   const ratio=v=>v.correct/v.total;
   entries.sort((a,b)=> ratio(b[1])-ratio(a[1]) || b[1].total-a[1].total);
@@ -3091,10 +3097,9 @@ function paintBurst(host){
     setTimeout(()=>d.remove(),760); }
 }
 // "Ask the guide" accordion — renders the per-work guide[] Q&A (collapse-by-default, one open at a time)
-// vision v2 record accessor (data/vision.js) + "How to read it" evidence render (per-scorecard-field clue)
+// vision v2 record accessor (data/vision.js) — used by visionMarks() for the look-closer pins
 let __VISMAP=null;
 function VIS(id){ if(__VISMAP===null)__VISMAP=(typeof window!=='undefined'&&window.ARTEFACTUM_VISION)||{}; if(__VISMAP[id])return __VISMAP[id]; const m=String(id).match(/Q\d+/); if(m){ if(__VISMAP['wikidata:'+m[0]])return __VISMAP['wikidata:'+m[0]]; if(__VISMAP['http://www.wikidata.org/entity/'+m[0]])return __VISMAP['http://www.wikidata.org/entity/'+m[0]]; } return null; }
-function evidenceHTML(it){ const v=VIS(it.id); if(!v||!v.evidence)return ''; const F=[['when','When'],['where','Where'],['medium','Medium'],['style','Movement'],['artist','Artist']]; const rows=F.map(([k,lbl])=>{ const a=v.evidence[k]||[]; const feat=a[0]&&a[0].feature; return feat?`<div class="evrow"><span class="evk">${lbl}</span><span class="evv">${esc(feat)}</span></div>`:''; }).filter(Boolean).join(''); if(!rows)return ''; return `<div class="evbox"><div class="kick" style="margin:2px 0 12px">How to read it</div>${rows}</div>`; }
 function visionMarks(it){ const v=VIS(it.id); if(v&&v.pins&&v.pins.length) return `<div class="lookmarks">${v.pins.map((p,i)=>`<button class="lookmark" style="top:${(p.y*100).toFixed(1)}%;left:${(p.x*100).toFixed(1)}%" title="${esc(p.label||'')}">${i+1}</button>`).join('')}</div>`; const hs=(typeof HOTSPOTS!=='undefined'&&HOTSPOTS[it.id])||[]; if(hs.length) return `<div class="lookmarks">${hs.map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%">${h.n||1}</button>`).join('')}</div>`; return ''; }
 function guideHTML(guide){
   if(!Array.isArray(guide)||!guide.length) return '';
@@ -3367,7 +3372,6 @@ function renderReveal(r,ri,push=true){
           </div>
           ${(()=>{const rg=regionFor(it); if(!rg)return''; const isSuper=!!rg.name; const label=esc(rg.name||it.style); return `<div style="margin-top:7px;font:10px 'Manrope',sans-serif;color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--full);opacity:.5;margin-right:6px;vertical-align:middle"></span>shaded = ${label} &middot; <span style="color:var(--faint)">${isSuper?'credited as one historical region, not today&rsquo;s borders':'historical range'}</span></div>`;})()}
         </div>
-        <div style="margin-top:22px">${evidenceHTML(it)}</div>
       </div>
     </div>
     <div class="study">
