@@ -3,7 +3,7 @@
   "private": true,
   "description": "Daily art-history guessing game — no-build static-data SPA.",
   "scripts": {
-    "test": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs && node scripts/audit-local.mjs",
+    "test": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs && node scripts/audit-local.mjs && node scripts/audit-labels.mjs",
     "test:ci": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs",
     "check:pool": "node scripts/check-pool.mjs",
     "check:syntax": "node --check tests/scoring.test.mjs && for f in scripts/*.mjs api/*.js; do node --check \"$f\" || exit 1; done",
@@ -12,7 +12,9 @@
     "audit:images": "node scripts/audit-all.mjs --images",
     "audit:copyright": "node scripts/audit-copyright.mjs",
     "audit:harvest": "node scripts/audit-copyright.mjs && node scripts/audit-p31.mjs && node scripts/audit-all.mjs --images",
-    "freeze": "node scripts/freeze-daily.mjs",
+    "audit:labels": "node scripts/audit-labels.mjs",
+    "audit:dailies": "node scripts/audit-dailies.mjs",
+    "freeze": "node scripts/freeze-daily.mjs && node scripts/audit-dailies.mjs",
     "serve": "python3 -m http.server 8000"
   },
   "dependencies": {
