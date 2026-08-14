@@ -47,7 +47,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cpath%20fill='%232230b8'%20d='M8%2034C8%2017%2021%206%2037%2010c14%204%2023%2018%2017%2032-5%2013-22%2018-35%2011C11%2049%207%2042%208%2034Z'/%3E%3Ccircle%20cx='25'%20cy='25'%20r='7'%20fill='%23f6f4ee'%20fill-opacity='.82'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cg%20transform%3D%22translate(0.5%204)%22%3E%3Cpath%20d%3D%22M26.6045%200C37.4654%200.000215233%2046.4443%208.61997%2046.4443%2019.4697C46.4443%2030.5186%2037.6647%2039.6599%2026.6045%2039.6602C13.5568%2039.6602%200.000109138%2032.5039%200%2019.4697C0%206.60382%2013.7253%200%2026.6045%200ZM21.917%205.74023C19.3233%205.7403%2017.2209%207.84288%2017.2207%2010.4365C17.2207%2013.0304%2019.3232%2015.1337%2021.917%2015.1338C24.5109%2015.1338%2026.6133%2013.0304%2026.6133%2010.4365C26.6131%207.84284%2024.5107%205.74023%2021.917%205.74023Z%22%20fill%3D%22%23292929%22%2F%3E%3Ccircle%20cx%3D%2210.6973%22%20cy%3D%2212.2637%22%20r%3D%221.82646%22%20fill%3D%22%23EC7777%22%2F%3E%3Ccircle%20cx%3D%227.56669%22%20cy%3D%2219.5694%22%20r%3D%221.82646%22%20fill%3D%22%23EFD867%22%2F%3E%3Ccircle%20cx%3D%2210.6973%22%20cy%3D%2226.875%22%20r%3D%221.82646%22%20fill%3D%22%238AC98B%22%2F%3E%3Ccircle%20cx%3D%2218.0032%22%20cy%3D%2231.0494%22%20r%3D%221.82646%22%20fill%3D%22%23D99AF2%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link rel="stylesheet" href="/styles.css?v=8">
 </head>
 <body>
@@ -161,7 +161,7 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   else                   ordered=[...related.slice(0,1), ...sameReg.slice(0,1), ...diffReg, ...sameReg, ...shuffle(others)];
   // never show two options from the SAME movement family at different granularity (Renaissance / High
   // Renaissance / Italian Renaissance / renaissance). For cultures, spread by country only in 'far'.
-  const movFam=s=>s.toLowerCase().replace(/\b(high|early|late|proto|northern|southern|italian|french|german|dutch|flemish|spanish|english|british|american|venetian|florentine|sienese|early\s)\b/g,"").replace(/\b(school|movement|art|painting|style|era|period)\b/g,"").replace(/[^a-z]/g,"");
+  const movFam=s=>s.toLowerCase().replace(/\b(high|early|late|proto|post|neo|pre|northern|southern|italian|french|german|dutch|flemish|spanish|english|british|american|venetian|florentine|sienese|early\s)\b/g,"").replace(/\b(school|movement|art|painting|style|era|period)\b/g,"").replace(/[^a-z]/g,"");
   const famKey=s=> isCult ? root(s) : movFam(s);
   const dedup = isCult ? (look==='far') : true; // movements always family-dedup; cultures only in far
   const out=[ans], used=new Set([famKey(ans)]);
