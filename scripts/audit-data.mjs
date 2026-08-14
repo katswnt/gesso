@@ -20,10 +20,18 @@ const ARTIST_COUNTRY={ "el greco":"Spain","theotokop":"Spain","goya":"Spain","ve
 
 const flag={artistOrigin:[],fameCollision:[],entities:[],dupTitleArtist:[],sharedImage:[],badImageName:[],missing:[]};
 
-// 1. artist-origin mismatch
+// 1. artist-origin mismatch. place = where the work was MADE, which for artists who worked abroad is
+// often NOT their home country (van Gogh->France, Sargent/Whistler->Europe, Gauguin->Tahiti, Holbein->England,
+// Kandinsky->Germany...). So each artist maps to ALL countries they plausibly worked in; flag only when place
+// matches NONE. Also guard substring name-collisions (Rembrandt Peale != Rembrandt; Gerard David != J-L David).
+const UKN=["United Kingdom","England","Scotland","Wales"], LOW=["Belgium","Flanders","Netherlands","Holland"];
+const ALSO_WORKED={ "van gogh":["France","Belgium"], "klee":["Switzerland","Tunisia"], "rubens":["Italy","Spain","France",...UKN,...LOW], "sargent":["France",...UKN,"Italy","Canada","Egypt","Spain","United States"], "kandinsky":["Germany","France","Switzerland"], "whistler":[...UKN,"France"], "holbein":[...UKN,"Switzerland",...LOW], "gauguin":["French Polynesia","Tahiti","Peru","Panama","Martinique","Denmark","Oceania"], "cassatt":["France","Spain","Italy"], "modigliani":["France"], "brueghel":["Italy",...LOW], "van dyck":["Italy",...UKN,...LOW], "van eyck":[...LOW,"Italy"], "ingres":["Italy"], "titian":["Germany","Spain"], "goya":["France"], "david":["Italy",...LOW], "velazquez":["Italy"], "velázquez":["Italy"], "el greco":["Italy","Greece"], "poussin":["Italy"], "degas":["Italy","United States"], "copley":[...UKN], "matisse":["Morocco","France"], "caravaggio":["Malta","Italy"], "mondrian":["France","United States"], "bruegel":[...LOW], "rubens ":["Italy",...LOW], "courbet":["Switzerland"], "bierstadt":["United States","Italy","Germany"], "rossetti":UKN, "renoir":["France"], "cezanne":["France"], "cézanne":["France"] };
+const NAME_COLLIDE={ "rembrandt":["peale"], "david":["gerard","dalhoff","neal","johnson"], "wood":["wood-","wood ","carving","woodwork"], "cole":["nicol","ercole"], "blake":["blakelock"] };
 for(const p of pool){ const a=(p.artist||"").toLowerCase(); if(!a||!p.place)continue;
-  for(const k in ARTIST_COUNTRY){ if(a.includes(k)){ const want=ARTIST_COUNTRY[k];
-    if(!p.place.includes(want)){ flag.artistOrigin.push({id:p.id,title:p.title,artist:p.artist,place:p.place,expect:want}); } break; } } }
+  for(const k in ARTIST_COUNTRY){ if(a.includes(k)){
+    if((NAME_COLLIDE[k]||[]).some(c=>a.includes(c)))break; // wrong-artist substring match
+    const wants=[ARTIST_COUNTRY[k], ...(ALSO_WORKED[k]||[])];
+    if(!wants.some(c=>p.place.includes(c))){ flag.artistOrigin.push({id:p.id,title:p.title,artist:p.artist,place:p.place,expect:wants.join("/")}); } break; } } }
 // 2. fame collisions: anon + short generic-ish title + high fame
 for(const p of pool){ if(!p.artist && fameOf(p.id)>300 && (p.title||"").split(/\s+/).length<=2 && !/[0-9]/.test(p.title)) flag.fameCollision.push({id:p.id,title:p.title,fame:fameOf(p.id)}); }
 // 3. non-artwork entities (title is a bare country/region)
