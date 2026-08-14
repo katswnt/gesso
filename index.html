@@ -2483,7 +2483,8 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-menu]');if(b){e.preventDefault();openMenu();}});
 // mobile nav menu (the header nav collapses into this hamburger ≤680px)
 function openMenu(){
-  const items=[['How to play','howto'],['Account','account'],['Leaderboard','register'],['Training','training'],['Glossary','glossary'],['Collections','collections'],['Streak','streak'],['Archive','archive'],['Stats','stats'],['Settings','settings']];
+  // hamburger menu is mobile-only (.menubtn shows only <=680px); streak/archive/stats intentionally dropped here per Kat (declutter mobile nav; archive still reachable from the home "Browse archive" link)
+  const items=[['How to play','howto'],['Account','account'],['Leaderboard','register'],['Training','training'],['Glossary','glossary'],['Collections','collections'],['Settings','settings']];
   const {veil,close}=openModal({title:'Menu',body:`<div class="menulist">${items.map(([l,k])=>`<button type="button" data-mk="${k}">${l}</button>`).join('')}</div>`});
   veil.addEventListener('click',e=>{
     const b=e.target.closest('[data-mk]'); if(!b)return; const k=b.dataset.mk; close();
@@ -3663,6 +3664,8 @@ function renderFinal(push=true){
   if(vlb && !runArchive) vlb.onclick=()=>{ lbTier=tier; route('register'); };
   if(!infinite && tier) submitScore(runDate||todayStr(),tier,summary).then(r=>{ const el=document.getElementById('lbrank');
     if(el&&r&&r.rank)el.innerHTML=`You ranked <span style="color:var(--accent);font-weight:700">#${r.rank}</span> of ${r.count} today`; });
+  // land at the top: coming from a scrolled-down reveal, the final page kept the old scroll (started at the bottom)
+  try{window.scrollTo(0,0);}catch{} requestAnimationFrame(()=>{try{window.scrollTo(0,0);}catch{}});
 }
 
 // ---------- zoom lightbox ----------
