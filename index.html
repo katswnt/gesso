@@ -1593,7 +1593,7 @@ function renderCollections(){
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:1,attributionControl:false}).setView([25,10],1);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
     const pts=[];C.sources.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
-    C.holdings.filter(s=>s.lat!=null).slice(0,40).forEach((s,i)=>{const ic=L.divIcon({className:'mblob mblob-wd v'+((i+3)%6+1),html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works · via Wikidata`);pts.push([s.lat,s.lng]);});
+    C.holdings.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob mblob-wd v'+((i+3)%6+1),html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works · via Wikidata`);pts.push([s.lat,s.lng]);});
     setTimeout(()=>{m.invalidateSize(); if(pts.length)m.fitBounds(pts,{padding:[40,40],maxZoom:5});},200);
   }catch(e){}
 }
