@@ -49,3 +49,4 @@ if (restores.length) { let txt = readFileSync("data/pool.js", "utf8");
 writeFileSync("data/incoming/swap-suspects.json", JSON.stringify({ restored: restores, suspects }, null, 1));
 console.log(`\nsummary: ${restores.length} auto-restored (dead→live) · ${suspects.length} filename-heuristic suspects → data/incoming/swap-suspects.json`);
 console.log("note: live-but-WRONG swaps (e.g. Bodhidharma) can't be caught by filename/liveness — that's what the vision detector (#2) is for.");
+

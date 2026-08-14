@@ -73,3 +73,4 @@ for (const wk of works.filter(x => x.plays >= 2).slice(0, 20)) {
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}
 writeFileSync("data/incoming/study-human-difficulty.json", JSON.stringify({ dates: dates.length ? dates : "all", coldOnly, participants: devices.size, works }, null, 1));
 console.log(`\nwrote data/incoming/study-human-difficulty.json (${works.length} works) — the vision PoC validates against this.`);
+

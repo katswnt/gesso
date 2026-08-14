@@ -152,3 +152,4 @@ const rungHist = LADDER.map((x, r) => `${x.label}:${ok.filter(w => w.stopRung ==
 console.log(`\nwrote ${outPath} · ${ok.length}/${works.length} scored`);
 console.log(`recognition broke at rung →  ${rungHist}   (still-recognized-at-max: ${stubborn})`);
 console.log("reads are taken at the LEAST-destructive rung that defeated recognition. next: compare vs data/incoming/study-human-difficulty.json.");
+

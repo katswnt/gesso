@@ -92,3 +92,4 @@ const outPath = SCOPE === "flagged" ? "data/incoming/image-mismatch-flagged.json
 writeFileSync(outPath, JSON.stringify({ model: MODEL, scope: SCOPE, checked: out.length, mismatches: mism, all: out }, null, 1));
 console.log(`\nchecked ${out.filter(x => x.consistent != null).length} · ${mism.length} flagged as image-metadata MISMATCH → ${outPath}`);
 console.log(mism.length ? "review each: restore prevImg, re-resolve via source API, or drop the work." : "no mismatches found in this scope.");
+

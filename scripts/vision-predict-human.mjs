@@ -109,3 +109,4 @@ console.log(`\nwrote ${outPath} · ${ok.length}/${works.length} predicted`);
 console.log("predicted non-expert score per field (mean, 0-100):");
 for (const f of FIELDS) console.log(`  ${f.padEnd(7)} ${mean(ok.map(x => x.predict[f]?.exply).filter(n => typeof n === "number"))}%`);
 console.log("compare vs friends' actual (study-aggregate) + blinded reads (vision-guess) on the same works.");
+

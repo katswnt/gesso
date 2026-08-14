@@ -45,3 +45,4 @@ for (const r of R) { const rs = results.filter(x => x.region === r); if (!rs.len
   console.log(`  ${r.padEnd(13)}${String(rs.length).padStart(2)}   ${String(fs).padStart(6)}   ${(fs / euroSum).toFixed(2)}x   ${String(fm).padStart(6)}   ${(fm / euroMax).toFixed(2)}x`); }
 console.log("\nREAD: if the non-Europe 'vsEu' ratios RISE from the SUM column to the MAX column, max-aggregation");
 console.log("narrows the Western skew (Kat's clumping intuition works). If they stay flat, sum vs max makes no difference.");
+

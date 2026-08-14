@@ -9,6 +9,9 @@
 //   W1 entity glyph used as UI (&times; &starf; …) → suggest ICONS map
 //   W2 raw pictographic/UI emoji glyph             → suggest ICONS map
 //   W3 chrome #rrggbb with NO matching token (outside DATA) → GENUINE CHOICE: add a token?
+//   W4 tier-1 case: an inline 'Faculty Glyphic' DISPLAY TITLE rendered all-lowercase → combo rule is
+//      Sentence case for display titles (Kat's override of Briana's lowercase). Uppercase micro-chrome
+//      (text-transform:uppercase) is fine and skipped. See docs/combo-design-language.md.
 import { readFileSync } from "node:fs";
 
 const css = readFileSync("styles.css", "utf8");
@@ -28,7 +31,7 @@ const movStart = html.slice(0, html.indexOf("const MOVEMENTS={")).split("\n").le
 const movEnd = html.slice(0, html.indexOf("const MOV_FAMILY=")).split("\n").length;
 const isDataLine = (ln, i) =>
   (i + 1 >= movStart && i + 1 <= movEnd) ||
-  /\bSWATCHES\b|palette\s*:\s*\[|GLOSSARY_EMBLEM|LOCKED_PALETTE|\bDABS\b|swatchGlyph/.test(ln);
+  /\bSWATCHES\b|palette\s*:\s*\[|GLOSSARY_EMBLEM|LOCKED_PALETTE|\bDABS\b|swatchGlyph|PALETTE_SVG/.test(ln);
 
 const hard = [], warn = [];
 const at = i => `index.html:${i + 1}`;
@@ -67,6 +70,16 @@ for (let i = 0; i < lines.length; i++) {
   const stripped = ln.replace(/\/\/.*$/, ""); // skip line comments
   for (const m of stripped.matchAll(UI_ENTITY)) warn.push(`[W1 entity-glyph] ${at(i)} &${m[1]}; → use ICONS map`);
   for (const m of stripped.matchAll(UI_RAW)) warn.push(`[W2 emoji-glyph] ${at(i)} "${m[0]}" → use ICONS map`);
+
+  // W4 — tier-1 case: inline 'Faculty Glyphic' display title rendered all-lowercase (combo: Sentence case)
+  for (const m of ln.matchAll(/<([a-z0-9]+)([^>]*'Faculty Glyphic'[^>]*)>([^<]{2,60})</gi)) {
+    const attrs = m[2], text = m[3];
+    if (/text-transform\s*:\s*(uppercase|capitalize)/i.test(attrs)) continue; // renders non-lowercase = tier-3 chrome, fine
+    if (text.includes("${")) continue; // dynamic/interpolated content — can't judge case
+    const letters = text.replace(/[^A-Za-z]/g, "");
+    if (letters.length >= 2 && !/[A-Z]/.test(letters) && !text.includes("."))
+      warn.push(`[W4 tier1-case] ${at(i)} "${text.trim()}" — Faculty Glyphic display title should be Sentence case (combo rule)`);
+  }
 }
 
 const group = arr => { const g = {}; for (const v of arr) { const k = v.match(/^\[([^\]]+)\]/)[1].split(" ")[0]; (g[k] = g[k] || []).push(v); } return g; };

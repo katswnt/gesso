@@ -63,3 +63,4 @@ if (fixes.length) {
 writeFileSync("data/incoming/dead-images.json", JSON.stringify(dead, null, 1));
 console.log(`normalized ${fixes.length} · unresolved ${dead.length} → data/incoming/dead-images.json`);
 if (dead.length) console.log("unresolved need a manual image (or removal); everything else is now Special:FilePath.");
+

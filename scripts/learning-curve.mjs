@@ -56,3 +56,4 @@ console.log(`\n=== hardest works for you, learning-adjusted (residual < 0 = hard
 for (const wk of works.sort((a, b) => a.resid - b.resid).slice(0, 15))
   console.log(`  resid ${String(wk.resid).padStart(4)}  (raw ${String(wk.pct).padStart(3)}%)  ${wk.title.slice(0, 40).padEnd(40)} played run#${wk.first + 1}/${n}`);
 console.log("\nresidual removes your learning trend, so an early low score on an easy work won't read as 'hard'. compare to the vision predictions on the same works.");
+
