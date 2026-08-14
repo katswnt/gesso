@@ -23,20 +23,29 @@ function sizeFromBytes(buf) {
   if (buf[0] === 0xFF && buf[1] === 0xD8) { let o = 2; while (o < buf.length) { if (buf[o] !== 0xFF) { o++; continue; } const m = buf[o + 1]; if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return { h: buf.readUInt16BE(o + 5), w: buf.readUInt16BE(o + 7) }; o += 2 + buf.readUInt16BE(o + 2); } }
   return null;
 }
+// canonical Commons filename: underscores→spaces, first char uppercased (matches how the API normalizes titles)
+const canon = s => { const t = decodeURIComponent(String(s)).replace(/_/g, " ").trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
 async function commonsSizes(files) {
   const out = {};
   for (let i = 0; i < files.length; i += 40) {
     const batch = files.slice(i, i + 40);
-    const u = "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=size&titles=" + encodeURIComponent(batch.map(f => "File:" + f).join("|"));
+    const u = "https://commons.wikimedia.org/w/api.php?action=query&format=json&redirects=1&prop=imageinfo&iiprop=size&titles=" + encodeURIComponent(batch.map(f => "File:" + f).join("|"));
     try { const r = await fetch(u, { headers: UA }); const j = await r.json(); const pages = j.query?.pages || {};
-      for (const k in pages) { const t = (pages[k].title || "").replace(/^File:/, ""); const ii = pages[k].imageinfo?.[0]; out[t] = ii ? { w: ii.width, h: ii.height } : null; }
+      for (const k in pages) { const t = canon((pages[k].title || "").replace(/^File:/, "")); const ii = pages[k].imageinfo?.[0]; out[t] = ii ? { w: ii.width, h: ii.height } : null; }
     } catch {}
     if (i % 400 === 0) process.stderr.write(`  commons ${i}/${files.length}\n`);
     await sleep(60);
   }
   return out;
 }
-async function fetchSize(url) { try { const r = await fetch(url, { headers: UA }); if (!r.ok) return { err: r.status }; return sizeFromBytes(Buffer.from(await r.arrayBuffer())) || { err: "unparsed" }; } catch (e) { return { err: e.message }; } }
+// Range-only fetch: read the first 64KB and parse the JPEG/PNG header — avoids downloading whole images.
+async function fetchSize(url) {
+  try { const r = await fetch(url, { headers: { ...UA, Range: "bytes=0-65535" } });
+    if (!r.ok && r.status !== 206) return { err: r.status };
+    const s = sizeFromBytes(Buffer.from(await r.arrayBuffer()));
+    return s ? { w: s.w, h: s.h } : { unknown: true }; // couldn't parse (deep header) — treat as unknown, don't flag
+  } catch (e) { return { err: e.message }; }
+}
 
 const commonsFiles = [...new Set(POOL.map(p => commonsFile(p.img)).filter(Boolean))];
 process.stderr.write(`pool ${POOL.length} · commons files ${commonsFiles.length} · fetching…\n`);
@@ -45,11 +54,12 @@ const cSizes = await commonsSizes(commonsFiles);
 const findings = [];
 let n = 0;
 for (const p of POOL) {
-  n++; const cf = commonsFile(p.img); let native = null, err = null;
-  if (cf) { const s = cSizes[cf]; if (s) native = s; else err = "commons-missing"; }
-  else { const s = await fetchSize(p.img); if (s.w) native = s; else err = s.err; await sleep(25); }
+  n++; const cf = commonsFile(p.img); let native = null, err = null, unknown = false;
+  if (cf) { const s = cSizes[canon(cf)]; if (s) native = s; else err = "commons-missing"; }
+  else { const s = await fetchSize(p.img); if (s.w) native = s; else if (s.unknown) unknown = true; else err = s.err; await sleep(20); }
   let status = "ok";
-  if (err) status = "unreachable";
+  if (unknown) status = "ok";                          // size unparseable — don't false-flag
+  else if (err) status = "unreachable";
   else if (native.w < LOW) status = "LOW";
   else if (native.w < BORDERLINE) status = "borderline";
   if (status !== "ok") findings.push({ id: p.id, title: p.title, artist: p.artist, tier: tierOf[p.id] || "(not in any tier)", fame: p.fame || 0, nativeW: native?.w || null, reqW: reqWidth(p.img), status, err, img: p.img });
