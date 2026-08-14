@@ -1337,7 +1337,7 @@ const TITLE_NOTES={
 };
 const FLAG_SVG=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:2px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 function histTitleHTML(it){ if(!it||!it.titleFlag)return ''; const t=TITLE_NOTES[it.titleFlag]; if(!t)return ''; return `<div class="histtitle">${FLAG_SVG}<span><b>Historical title.</b> ${esc(t)}</span></div>`; }
-let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
+let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], GLOSSARY_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
   "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
@@ -1365,6 +1365,8 @@ function buildIndexes(){
   MOVS=[...new Set(POOL.filter(p=>p.styleKind==='movement').map(p=>p.style))];
   CULTS=[...new Set(POOL.filter(p=>p.styleKind==='culture').map(p=>p.style))];
   MOVEMENT_NAMES=[...new Set(POOL.map(p=>p.style).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); // every styled work's style is guessable (movement / culture / period / school…)
+  { const _sc={}; for(const p of POOL) if(p.style) _sc[p.style]=(_sc[p.style]||0)+1;
+    GLOSSARY_NAMES=MOVEMENT_NAMES.filter(n=>(_sc[n]||0)>=3); } // small-N floor: 1-2 work buckets stay guessable + reachable via the related-tradition strip, but don't clutter the glossary grid
   const extra=["Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Paul Cézanne","Paul Gauguin","Henri Matisse","Pablo Picasso","Salvador Dalí","Caravaggio","Raphael","Titian","Albrecht Dürer","Francisco Goya","Édouard Manet","Camille Pissarro","Gustav Klimt","Edvard Munch","Katsushika Hokusai","Utagawa Hiroshige","Diego Velázquez","El Greco","Peter Paul Rubens","Sandro Botticelli"];
   ARTIST_POOL=[...new Set([...POOL.map(p=>p.artist).filter(Boolean),...extra].map(a=>a.normalize("NFC")))].sort();
   artistStyle={}; styleRegion={}; styleCountry={}; artistMeta={};
@@ -1467,7 +1469,7 @@ function unlockCard(card,revealedInner){
   setTimeout(()=>{card.innerHTML=revealedInner;},350);
   setTimeout(()=>card.classList.remove('unlock'),700);
 }
-function glossaryTotal(){return MOVEMENT_NAMES.length;}
+function glossaryTotal(){return GLOSSARY_NAMES.length;}
 // Collections stats computed LIVE from the pool (never goes stale; auto-reflects new works)
 const COLL_BUCKET={aic:"aic",modern:"aic","aic-commons":"aic","aic-blob":"aic",met:"met","met-extra":"met",cleveland:"cleveland",harvard:"harvard","harvard-blob":"harvard",va:"va",smithsonian:"smithsonian","loc-fsa":"loc",britishmuseum:"britishmuseum",lacma:"lacma",walters:"walters",brooklyn:"brooklyn",quaibranly:"quaibranly",nga:"nga",wd:"wiki",wikidata:"wiki",wdmus:"wiki",wdafrica:"wiki",wdculture:"wiki","wd-canon":"wiki","wd-harvest":"wiki","wd-modern":"wiki","wd-wishlist":"wiki"};
 const COLL_META={
@@ -1596,9 +1598,9 @@ function renderCollections(){
 }
 function renderGlossary(){
   clearTimers();
-  const g=loadGlossary(), total=glossaryTotal(), metCount=MOVEMENT_NAMES.filter(n=>g.met[n]).length, pct=total?metCount/total*100:0;
+  const g=loadGlossary(), total=glossaryTotal(), metCount=GLOSSARY_NAMES.filter(n=>g.met[n]).length, pct=total?metCount/total*100:0;
   const pending=new Set(g.pending||[]); // newly-met this session → render locked, then flip-unlock on mount
-  const cards=MOVEMENT_NAMES.map(name=>{
+  const cards=GLOSSARY_NAMES.map(name=>{
     const unlocked=!!g.met[name], flip=unlocked&&pending.has(name);
     if(flip) return `<button type="button" class="glosscard pending-unlock" data-movement="${esc(name)}">${glossCardInnerLocked(name)}</button>`;
     return unlocked?`<button type="button" class="glosscard" data-movement="${esc(name)}">${glossCardInner(name)}</button>`:`<div class="glosscard locked" aria-label="Locked glossary card">${glossCardInnerLocked(name)}</div>`;
@@ -1627,7 +1629,12 @@ function movementExtrasHTML(name){ const arts=movementArtists(name), wiki=moveme
   const w=wiki?`<div style="margin-top:20px"><a class="telllink" href="${esc(wiki)}" target="_blank" rel="noopener">Read more on Wikipedia &rarr;</a></div>`:''; return a+w; }
 function movementSeenHTML(name){ const cw=canonicalWork(name), cid=cw&&cw.id; const seen=movementSeen(name).filter(p=>p.id!==cid); const all=POOL.filter(p=>p.style===name && p.img && Array.isArray(p.cats)&&p.cats.length && p.id!==cid); const list=seen.length?seen:all; if(!list.length)return ''; const show=list.slice(0,24);
   return `<div class="moveunseen"><div class="kick" style="margin-bottom:13px">${seen.length?('Works you&rsquo;ve seen &middot; '+seen.length):('Explore this movement &middot; '+all.length)}</div><div class="gal-masonry">${show.map(p=>`<a class="galcard" href="/?w=${encodeURIComponent(p.id)}"><div class="galcard-img"><img src="${esc(displaySrc(p.img))}" alt="${esc(p.title)}" loading="lazy" onerror="imgFail(this)"></div><div class="galcard-meta"><div class="galcard-title">${esc(p.title)}</div><div class="galcard-artist">${esc(p.artist||'Unknown')} &middot; ${esc(fmtYear(p.y))}</div></div></a>`).join('')}</div></div>`; }
+function movementRelatedHTML(name){ const fam=MOV_FAM_OF[name]; if(!fam)return "";
+  const sibs=(MOV_FAMILY[fam]||[]).filter(m=>m!==name && MOVEMENT_NAMES.includes(m)).slice(0,8);
+  if(!sibs.length)return "";
+  return `<div style="margin-top:24px"><div class="kick" style="margin-bottom:11px">Related in this tradition</div><div style="display:flex;flex-wrap:wrap;gap:7px">${sibs.map(m=>`<button type="button" class="moveartist" data-movement="${esc(m)}" style="cursor:pointer">${esc(m)}</button>`).join("")}</div></div>`; }
 function renderMovement(name){
+  try{window.scrollTo(0,0);}catch{}
   clearTimers();
   const meta=movementMeta(name), g=loadGlossary(), met=g.met[name], work=canonicalWork(name), cues=movementCues(name);
   const count=met?+met.count||0:0, metLine=met&&met.firstSeen?` &middot; <span style="color:var(--full)">met ${esc(met.firstSeen)}</span>`:'';
@@ -1644,7 +1651,7 @@ function renderMovement(name){
         <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="mono" style="font-size:11px;color:var(--muted)">You've met <strong style="color:var(--ink)">${count}</strong> works in this school</span><button type="button" id="seeschool" class="mono" style="font-size:11px;color:var(--accent);font-weight:600;background:none;border:0;cursor:pointer;padding:0">Practise this school &rarr;</button></div>
       </div>
       <div class="movegrid-cues">
-        <div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}${movementExtrasHTML(name)}
+        <div class="kick" style="margin-bottom:13px">How the eye sees it</div>${cueHTML}${movementExtrasHTML(name)}${movementRelatedHTML(name)}
       </div>
     </div>
   ${movementSeenHTML(name)}
@@ -1743,7 +1750,7 @@ function recordDailyScore(dateStr,score,tierKey){const today=todayStr();const s=
   saveStreak(s);return s;}
 function avgScore(s){const vals=Object.values(s.scores||{}).map(Number).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
 function shortScore(n){return n>=1000?`${(n/1000).toFixed(n>=10000?0:1)}k`:`${n||0}`;}
-function route(name,push=true){if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='gallery')renderGallery();else if(name&&name.startsWith('gallery/'))renderGalleryDetail(name.slice(8));else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
+function route(name,push=true){try{window.scrollTo(0,0);}catch{}if(push)pushNav({v:name});if(name==='streak')renderStreak();else if(name==='archive')renderArchive();else if(name==='stats')renderStats();else if(name==='glossary')renderGlossary();else if(name==='collections')renderCollections();else if(name==='gallery')renderGallery();else if(name&&name.startsWith('gallery/'))renderGalleryDetail(name.slice(8));else if(name==='register')renderLeaderboard();else if(name==='account')renderAccount();else if(name==='training')renderTraining();else renderStart(undefined,false);}
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
@@ -2371,7 +2378,7 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   const id=loadIdentity(), s=loadStreak(), m=loadMastery(), g=loadGlossary();
   const pts=Object.values(s.scores||{}).reduce((a,b)=>a+(+b||0),0);
   const daysPlayed=(s.playedDates||[]).length;
-  const metCount=MOVEMENT_NAMES.filter(n=>g.met&&g.met[n]).length, glossTot=glossaryTotal();
+  const metCount=GLOSSARY_NAMES.filter(n=>g.met&&g.met[n]).length, glossTot=glossaryTotal();
   const bandCol=p=>p>=85?'var(--full)':p>=55?'var(--partial)':'var(--miss)';
   const catRow=(k,lbl)=>{ const st=(m.byCategory||{})[k]; const p=st&&st.total?Math.round(st.correct/st.total*100):null;
     return `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font:600 13px 'Faculty Glyphic';margin-bottom:4px"><span>${lbl}</span><span class="mono" style="color:${p==null?'var(--faint)':bandCol(p)};font-variant-numeric:tabular-nums">${p==null?'—':p+'%'}</span></div><div style="height:7px;background:var(--line-card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p||0}%;background:${p==null?'var(--line-card)':bandCol(p)}"></div></div></div>`; };
@@ -2472,7 +2479,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   route(b.dataset.route);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-login]');if(b){e.preventDefault();openLogin();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-editid]');if(b){e.preventDefault();openIdentityModal(()=>renderLeaderboard());}});
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;pushNav({v:'movement',slug:nm});renderMovement(nm);}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-movement]');if(b){e.preventDefault();const nm=b.dataset.movement;try{window.scrollTo(0,0);}catch{}pushNav({v:'movement',slug:nm});renderMovement(nm);}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-settings]');if(b){e.preventDefault();openSettings();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-howto]');if(b){e.preventDefault();openHowTo();}});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-menu]');if(b){e.preventDefault();openMenu();}});
@@ -2502,7 +2509,7 @@ function regionBars(){
   return {segs,key,europe:Math.round((dist.Europe||0)/total*100)};
 }
 const PALETTE_SVG=`<svg width="47" height="40" viewBox="0 0 47 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.6045 0C37.4654 0.000215233 46.4443 8.61997 46.4443 19.4697C46.4443 30.5186 37.6647 39.6599 26.6045 39.6602C13.5568 39.6602 0.000109138 32.5039 0 19.4697C0 6.60382 13.7253 0 26.6045 0ZM21.917 5.74023C19.3233 5.7403 17.2209 7.84288 17.2207 10.4365C17.2207 13.0304 19.3232 15.1337 21.917 15.1338C24.5109 15.1338 26.6133 13.0304 26.6133 10.4365C26.6131 7.84284 24.5107 5.74023 21.917 5.74023Z" fill="#292929"/><circle cx="10.6973" cy="12.2637" r="1.82646" fill="#EC7777"/><circle cx="7.56669" cy="19.5694" r="1.82646" fill="#EFD867"/><circle cx="10.6973" cy="26.875" r="1.82646" fill="#8AC98B"/><circle cx="18.0032" cy="31.0494" r="1.82646" fill="#D99AF2"/></svg>`;
-function renderStart(dateStr,push=true){
+function renderStart(dateStr,push=true){try{window.scrollTo(0,0);}catch{}
   clearTimers(); TRAIN_SPAN=null;
   if(push)pushNav(dateStr&&dateStr!==todayStr()?{v:'pick',date:dateStr}:{v:'home'});
   const replay = dateStr && dateStr!==todayStr();
