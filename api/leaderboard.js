@@ -35,41 +35,42 @@ export default async function handler(req, res) {
   try {
     // Fire the three INDEPENDENT queries together (was sequential → ~3 round-trips of latency): the score page,
     // the exact total count, and (if a caller is given) the caller's own score. Dependent follow-ups parallelize too.
-    const [topRes, cntRes, mineRes] = await Promise.all([
-      rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces,cold`),
-      rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } }),
-      me ? rest(`scores?device_id=eq.${encodeURIComponent(me)}&date=eq.${date}&tier=eq.${tier}&select=total`) : Promise.resolve(null),
-    ]);
-    let top = await topRes.json();
-    if (!topRes.ok || !Array.isArray(top)) { // `cold` column may not exist yet — self-heal by re-selecting without it
-      top = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&offset=${offset}&limit=${TOP_N}&select=device_id,total,perfects,masterpieces`)).json();
+    // Fetch ALL of the day+tier's scores, then collapse by ACCOUNT so one signed-in player on several
+    // devices occupies ONE rank (their best score) instead of several. Anonymous devices (no user_id)
+    // stay per-device. Small at current scale; a Postgres RPC/view is the answer if this ever gets large.
+    let all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&limit=5000&select=device_id,total,perfects,masterpieces,cold`)).json();
+    if (!Array.isArray(all)) { // `cold` column may not exist yet — self-heal by re-selecting without it
+      all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&limit=5000&select=device_id,total,perfects,masterpieces`)).json();
     }
-    const count = parseInt((cntRes.headers.get('content-range') || '*/0').split('/')[1], 10) || 0;
-    const ids = (top || []).map(r => r.device_id);
+    all = Array.isArray(all) ? all : [];
+    const devIds = [...new Set(all.map(r => r.device_id))];
 
-    // profiles for the page + the caller's "higher than me" count run together (both depend on the queries above)
-    const profsP = ids.length
-      ? rest(`profiles?device_id=in.(${ids.map(encodeURIComponent).join(',')})&select=device_id,name,color`).then(r => r.json())
-      : Promise.resolve([]);
-    let myTotal = null;
-    if (mineRes) { const mine = await mineRes.json(); if (Array.isArray(mine) && mine[0]) myTotal = Number(mine[0].total); }
-    const higherP = myTotal != null
-      ? rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${myTotal}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } })
-          .then(hr => parseInt((hr.headers.get('content-range') || '*/0').split('/')[1], 10) || 0)
-      : Promise.resolve(null);
-    const [profs, higher] = await Promise.all([profsP, higherP]);
-
+    // profiles carry the account link (user_id) + display name/color; batch to keep URLs short
     const profByDev = {};
-    for (const p of (profs || [])) profByDev[p.device_id] = p;
-    const rows = (top || []).map((r, i) => {
+    for (let i = 0; i < devIds.length; i += 100) {
+      const chunk = devIds.slice(i, i + 100);
+      const ps = await (await rest(`profiles?device_id=in.(${chunk.map(encodeURIComponent).join(',')})&select=device_id,user_id,name,color`)).json();
+      for (const p of (ps || [])) profByDev[p.device_id] = p;
+    }
+    // group key = account when signed in, else the device. Keep each group's best score.
+    const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
+    const groups = new Map();
+    for (const r of all) { const key = keyOf(r.device_id); const prev = groups.get(key);
+      if (!prev || r.total > prev.total) groups.set(key, { ...r, _key: key }); }
+    const ranked = [...groups.values()].sort((a, b) => b.total - a.total);
+    const count = ranked.length;
+    const page = ranked.slice(offset, offset + TOP_N);
+    const meKey = me ? keyOf(me) : null;
+
+    const rows = page.map((r, i) => {
       const p = profByDev[r.device_id] || {};
       return { rank: offset + i + 1, name: p.name || fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
-        score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, cold: !!r.cold, isYou: !!me && r.device_id === me };
+        score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, cold: !!r.cold, isYou: !!meKey && r._key === meKey };
     });
 
     let you = null;
-    if (myTotal != null) { const rank = (higher || 0) + 1;
-      you = { rank, score: myTotal, count, percentile: count ? Math.round(((count - rank + 1) / count) * 100) : null }; }
+    if (meKey) { const idx = ranked.findIndex(r => r._key === meKey);
+      if (idx >= 0) { const rank = idx + 1; you = { rank, score: ranked[idx].total, count, percentile: count ? Math.round(((count - rank + 1) / count) * 100) : null }; } }
     return res.status(200).json({ date, tier, count, offset, rows, you });
   } catch (e) {
     return res.status(500).json({ error: 'read failed' });
