@@ -504,6 +504,7 @@
     /* mobile: collapse the retention nav into a hamburger menu so the header never overflows */
     .hd .navbits .navbtn,.hd .navbits .gearbtn,.hd .navbits .helpdab{display:none}
     .menubtn{display:flex}
+    .artpalette{width:22px;height:19px}
     .glosswrap{padding:16px}.glosshead{padding:13px 16px}.glossgrid{grid-template-columns:1fr 1fr;padding:12px 14px 16px;gap:9px}.glosscard{padding:12px;min-height:104px}.glosscard .nm{font-size:12px}.movehero{padding:18px 16px;gap:14px}.movename{font-size:20px}.canonical img{max-height:220px}
     .retwrap{padding:16px}.retcap{padding:13px 16px}.streakbody{padding:22px 18px}.streakdab{width:96px;height:96px}.streakdab span{font-size:42px}.retactions{flex-direction:column}
     .statsgrid{grid-template-columns:1fr 1fr;padding:14px}.mastergrid{grid-template-columns:1fr;padding:2px 14px 14px}.archivegrid{gap:5px;padding:0 14px 14px}.dowgrid{gap:5px;padding:14px 14px 6px}.daycell{height:38px}.legend{padding:12px 14px 16px}
