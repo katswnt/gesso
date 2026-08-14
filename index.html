@@ -158,7 +158,7 @@ function styleChoices(it){const look=dcfg().look, ans=it.style, aKey=cultureKey(
   else                   ordered=[...related.slice(0,1), ...sameReg.slice(0,1), ...diffReg, ...sameReg, ...shuffle(others)];
   // never show two options from the SAME movement family at different granularity (Renaissance / High
   // Renaissance / Italian Renaissance / renaissance). For cultures, spread by country only in 'far'.
-  const movFam=s=>s.toLowerCase().replace(/\b(high|early|late|proto|northern|southern|italian|french|german|dutch|flemish|spanish|english|british|american|venetian|florentine|sienese|early\s)\b/g,"").replace(/\b(school|movement|art|painting|style|era|period)\b/g,"").replace(/[^a-z]/g,"");
+  const movFam=s=>s.toLowerCase().replace(/\b(high|early|late|proto|post|neo|pre|northern|southern|italian|french|german|dutch|flemish|spanish|english|british|american|venetian|florentine|sienese|early\s)\b/g,"").replace(/\b(school|movement|art|painting|style|era|period)\b/g,"").replace(/[^a-z]/g,"");
   const famKey=s=> isCult ? root(s) : movFam(s);
   const dedup = isCult ? (look==='far') : true; // movements always family-dedup; cultures only in far
   const out=[ans], used=new Set([famKey(ans)]);
