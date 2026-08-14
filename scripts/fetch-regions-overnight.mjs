@@ -13,14 +13,15 @@ const POOL = w.ARTEFACTUM_POOL || [];
 const haveId = new Set(POOL.map(p => p.id)), haveImg = new Set(POOL.map(p => p.img));
 const staged = new Set();
 // preload already-staged candidates so a re-run (e.g. to add Harvard+Smithsonian) APPENDS instead of duplicating
-for(const cat of ["middle-east","south-america","early-medieval-europe","euro-sculpture-1400-1700","canonical-prints"]){
+for(const cat of ["middle-east","south-america","early-medieval-europe","euro-sculpture-1400-1700","canonical-prints","oceania"]){
   try{ for(const r of JSON.parse(readFileSync(`data/incoming/${cat}/candidates.json`,"utf8"))){ if(r.id)staged.add(r.id); if(r.img)haveImg.add(r.img); } }catch{}
 }
 console.log(`preloaded ${staged.size} already-staged candidates (dedup guard)`);
 
 const COORD = { iran:[32,53],iraq:[33,44],syria:[35,38],turkey:[39,35],egypt:[26,30],"saudi arabia":[24,45],yemen:[15,48],lebanon:[34,36],jordan:[31,36],israel:[31,35],afghanistan:[34,66],uzbekistan:[41,64],persia:[32,53],anatolia:[39,35],mesopotamia:[33,44],
   peru:[-10,-76],bolivia:[-17,-65],chile:[-30,-71],colombia:[4,-73],ecuador:[-1,-78],argentina:[-34,-64],
-  france:[46.6,2.2],germany:[51,10.4],italy:[42.8,12.5],spain:[40,-4],"united kingdom":[54,-2],england:[52.5,-1.5],ireland:[53,-8],greece:[39,22],byzantine:[41,29],norway:[62,10],sweden:[62,15],denmark:[56,10],austria:[47.5,14],switzerland:[47,8],belgium:[50.5,4.5],netherlands:[52,5.5],"holy roman empire":[50,10] };
+  france:[46.6,2.2],germany:[51,10.4],italy:[42.8,12.5],spain:[40,-4],"united kingdom":[54,-2],england:[52.5,-1.5],ireland:[53,-8],greece:[39,22],byzantine:[41,29],norway:[62,10],sweden:[62,15],denmark:[56,10],austria:[47.5,14],switzerland:[47,8],belgium:[50.5,4.5],netherlands:[52,5.5],"holy roman empire":[50,10],
+  "new zealand":[-41,174],aotearoa:[-41,174],maori:[-41,174],"māori":[-41,174],fiji:[-17,178],samoa:[-14,-172],tonga:[-21,-175],hawaii:[20,-157],hawaiian:[20,-157],"papua new guinea":[-6,147],"new guinea":[-5,141],vanuatu:[-16,168],"solomon islands":[-9,160],"french polynesia":[-17,-149],tahiti:[-17,-149],"new caledonia":[-21,165],"cook islands":[-21,-159],"easter island":[-27,-109],"rapa nui":[-27,-109],australia:[-25,133],polynesia:[-15,-140],melanesia:[-8,160],micronesia:[7,150],marquesas:[-9,-139],sepik:[-4,143] };
 const coord = c => { const s=(c||"").toLowerCase(); for (const k in COORD) if (s.includes(k)) return { lat:COORD[k][0], lng:COORD[k][1], place:k }; return null; };
 const MED = { oil:"Oil paint",tempera:"Tempera",fresco:"Fresco",watercolor:"Watercolor",ink:"Ink",gold:"Gold",silver:"Silver",bronze:"Bronze",copper:"Copper",brass:"Bronze",ivory:"Ivory",wood:"Wood",stone:"Stone",marble:"Marble",limestone:"Stone",ceramic:"Ceramic",earthenware:"Ceramic",stoneware:"Ceramic",clay:"Ceramic",terracotta:"Ceramic",porcelain:"Ceramic",glass:"Glass",silk:"Textile",wool:"Textile",cotton:"Textile",textile:"Textile",tapestry:"Textile",parchment:"Ink",vellum:"Ink",enamel:"Glass",jade:"Jade",turquoise:"Stone",gilt:"Gold",etching:"Engraving",engraving:"Engraving",woodcut:"Woodblock print",lithograph:"Lithograph",drypoint:"Engraving",mezzotint:"Engraving",aquatint:"Engraving" };
 const medBucket = m => { const s=(m||"").toLowerCase(); for (const k in MED) if (s.includes(k)) return MED[k]; return "Stone"; };
@@ -29,11 +30,13 @@ const ME=["iran","iraq","syria","turkey","egypt","saudi arabia","yemen","lebanon
 const SA=["peru","bolivia","chile","colombia","ecuador","andes","andean","moche","nazca","inca","chavin","tiwanaku","paracas","wari","chimu"];
 const EUR=["france","germany","italy","spain","united kingdom","england","ireland","greece","byzantine","norway","sweden","denmark","austria","switzerland","belgium","netherlands","frankish","carolingian","ottonian","merovingian","insular","anglo-saxon","lombard","visigothic","viking"];
 const PRINTMAKERS=["dürer","durer","rembrandt","goya","piranesi","hokusai","hiroshige","whistler","canaletto","callot","schongauer","mantegna","van dyck","blake","daumier","toulouse-lautrec","cassatt","utamaro","kuniyoshi"];
+const OC=["new zealand","aotearoa","maori","māori","fiji","samoa","tonga","hawaii","hawaiian","papua new guinea","new guinea","vanuatu","solomon islands","french polynesia","polynesia","melanesia","micronesia","new caledonia","cook islands","tahiti","tahitian","easter island","rapa nui","marquesas","niue","kiribati","pacific","oceania","austral","sepik","asmat","taonga"];
 
 // classify a normalized obj -> first matching category, or null
 const hay = o => [o.country,o.culture,o.type,o.title].filter(Boolean).join(" | ").toLowerCase();
 function classify(o){
   const h = hay(o), art = (o.artist||"").toLowerCase(), isPrint=/print|etching|engraving|woodcut|woodblock|drypoint|mezzotint|aquatint|lithograph/.test(h);
+  if (OC.some(t=>h.includes(t))) return { cat:"oceania", region:"Oceania" };
   if (SA.some(t=>h.includes(t))) return { cat:"south-america", region:"South America" };
   if (ME.some(t=>h.includes(t))) return { cat:"middle-east", region:/egypt/.test(h)?"Africa":"Asia" };
   if (EUR.some(t=>h.includes(t)) && o.y!=null && o.y>=300 && o.y<=1080) return { cat:"early-medieval-europe", region:"Europe" };
@@ -186,14 +189,65 @@ async function smithsonian(){
   console.log(`[smithsonian] done: +${n}`);
 }
 
+// ---------- Te Papa (needs TEPAPA_KEY) — the real Oceania source: Māori taonga + Pacific. Gated on the
+// representation's own width so nothing blurry is staged. contentUrl "/full" is the high-res master. ----------
+async function tepapa(){
+  const KEY=process.env.TEPAPA_KEY; if(!KEY){ console.log("[tepapa] no TEPAPA_KEY — skip"); return; }
+  const B="https://data.tepapa.govt.nz/collection/search";
+  const terms=["cloak","carving","pounamu","hei-tiki","weapon","god figure","mask","canoe","figure","ornament","tapa","club","adze","pendant","bowl","feather","staff","drum","comb","headdress"];
+  let n=0;
+  for(const t of terms){ for(let from=0;from<300;from+=100){ try{
+    const r=await fetch(B,{method:"POST",headers:{"User-Agent":UA,"Content-Type":"application/json","x-api-key":KEY},
+      body:JSON.stringify({query:t,size:100,from,filters:[{field:"type",keyword:"Object"}]})});
+    const j=await r.json(); const results=j.results||[]; if(!results.length)break;
+    for(const o of results){
+      const rep=(o.hasRepresentation||[]).find(x=>(x.contentUrl||x.previewUrl)); if(!rep)continue;
+      if(rep.width && rep.width<900) continue;                 // no blurry masters
+      const img=rep.contentUrl||rep.previewUrl; if(!img)continue;
+      const prod=(o.production||[])[0]||{};
+      const y=prod.facetCreatedDate?.year?parseInt(prod.facetCreatedDate.year,10):null;
+      const place=prod.spatial?.title||"New Zealand";
+      const art=prod.contributor?.title; const artist=(art&&!/unknown|unidentified/i.test(art))?art:"";
+      const mat=(o.isMadeOf||[]).map(m=>m.title||m).filter(Boolean).join(" ");
+      const c=accept({ id:"tepapa"+o.id, title:o.title||o.additionalType?.[0]||"Untitled", artist, y,
+        country:place, culture:o.collection||place, type:(o.additionalType||[]).join(" "), medium:mat, img, src:"tepapa", museum:"Museum of New Zealand Te Papa Tongarewa" });
+      if(c)n++; }
+  }catch{} await sleep(150); } }
+  console.log(`[tepapa] done: +${n} (license re-verified at promote)`);
+}
+// ---------- Europeana (needs EUROPEANA_KEY) — deep European + Islamic + Byzantine; open-licensed only ----------
+async function europeana(){
+  const KEY=process.env.EUROPEANA_KEY; if(!KEY){ console.log("[europeana] no EUROPEANA_KEY — skip"); return; }
+  const B="https://api.europeana.eu/record/v2/search.json";
+  const terms=["Safavid","Ottoman","Mamluk","Qajar Persian","Byzantine icon","Coptic","Carolingian","Merovingian","Viking art","Anglo-Saxon","Ottonian","Renaissance bronze","Baroque sculpture","Dürer engraving","Rembrandt etching","Goya Caprichos","Piranesi","Andean textile","Nazca","Moche"];
+  let n=0;
+  for(const t of terms){ for(let start=1;start<=200;start+=100){ try{
+    const u=`${B}?wskey=${KEY}&query=${encodeURIComponent(t)}&rows=100&start=${start}&profile=rich&media=true&reusability=open&qf=TYPE:IMAGE`;
+    const r=await fetch(u,{headers:{"User-Agent":UA}}); const j=await r.json(); const items=j.items||[]; if(!items.length)break;
+    for(const it of items){
+      const rights=(it.rights||[])[0]||""; if(!/creativecommons|publicdomain\/mark|\/pdm|\/cc0|zero\/1\.0|NoC-/i.test(rights))continue; // PD/CC0/CC-BY only
+      const img=(it.edmIsShownBy||[])[0]||(it.edmObject||[])[0]; if(!img)continue;
+      const yr=(it.year||[])[0]; const y=yr?(parseInt(String(yr).match(/-?\d{1,4}/)?.[0],10)||null):null;
+      const country=(it.country||[])[0]||"";
+      const creator=((it.dcCreator||[]).find(c=>!/^https?:/.test(c))||"").replace(/\s*\(.*$/,"").trim();
+      const c=accept({ id:"europeana:"+encodeURIComponent(it.id), title:(it.title||[])[0]||"Untitled", artist:creator, y,
+        country, culture:country, type:(it.dcType||[])[0]||"", medium:(it.dcType||[])[0]||"", img, src:"europeana", museum:(it.dataProvider||[])[0]||"" });
+      if(c)n++; }
+  }catch{} await sleep(200); } }
+  console.log(`[europeana] done: +${n} (license re-verified at promote)`);
+}
+// NOTE: DPLA intentionally NOT wired as an image source — its API returns ~150px thumbnails with mixed/unknown
+// rights (much of it in-copyright), which would reintroduce exactly the low-res problem. Useful only as a
+// discovery index; revisit separately if we want it for coverage leads (not images).
+
 // SOURCES=harvard,smithsonian runs a subset (e.g. to append new sources without re-fetching what's already staged)
 const ONLY=(process.env.SOURCES||"").split(",").map(s=>s.trim()).filter(Boolean);
-const ALL=[["met",met],["cleveland",cleveland],["aic",aic],["va",vam],["harvard",harvard],["smithsonian",smithsonian],["wikidata",wikidata]];
+const ALL=[["met",met],["cleveland",cleveland],["aic",aic],["va",vam],["harvard",harvard],["smithsonian",smithsonian],["tepapa",tepapa],["europeana",europeana],["wikidata",wikidata]];
 for(const [name,fn] of (ONLY.length?ALL.filter(([n])=>ONLY.includes(n)):ALL)){
   try{ console.log(`\n=== SOURCE: ${name} ===`); await fn(); }catch(e){ console.log(`[${name}] FAILED: ${e.message}`); }
 }
 console.log("\n=== OVERNIGHT HARVEST COMPLETE (staged to data/incoming/<category>/candidates.json, no pool changes) ===");
-for(const cat of ["middle-east","south-america","early-medieval-europe","euro-sculpture-1400-1700","canonical-prints"]){
+for(const cat of ["middle-east","south-america","early-medieval-europe","euro-sculpture-1400-1700","canonical-prints","oceania"]){
   const f=`data/incoming/${cat}/candidates.json`; let n=0; try{ n=JSON.parse(readFileSync(f,"utf8")).length; }catch{}
   console.log(`  ${cat}: ${n} candidates`);
 }
