@@ -99,13 +99,13 @@
   @media(max-width:680px){.td{width:6px;height:6px}.daygrid{grid-template-columns:1fr}}
   .cap{display:flex;justify-content:space-between;margin-top:10px;font:500 11px 'Manrope',sans-serif;color:var(--muted)}
   .btn{width:100%;padding:15px;border:none;border-radius:2px;background:var(--accent);color:#fff;
-    font:700 12px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+    font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;cursor:pointer}
   .btn:hover{filter:brightness(1.08)}
   .btn2{background:transparent;border:1px solid var(--line-card);color:var(--ink);
     font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;padding:9px 15px;border-radius:2px;cursor:pointer}
   .btn2:hover{border-color:var(--ink)}
   .btn2:disabled{opacity:.4;cursor:default}
-  .attrib{text-align:center;margin-top:15px;padding:0 20px;font:11px 'Manrope',sans-serif;color:var(--faint)}
+  .attrib{text-align:center;margin-top:15px;padding:0 20px;font:400 0.875rem 'Manrope',sans-serif;color:var(--faint)}
   .attrib a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-underline)}
   .year{font:var(--num);letter-spacing:-.01em}
   .eratag{font:500 12px 'Manrope',sans-serif;color:var(--muted);white-space:nowrap}
@@ -222,11 +222,11 @@
   .weak{color:var(--miss)}
   /* start */
   .hero{padding:38px 24px 14px;text-align:center}
-  .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:600 11px 'Manrope',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);margin-bottom:18px}
+  .herokick{display:flex;align-items:center;justify-content:center;gap:12px;font:400 12px 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
   .herokick .r{width:26px;height:1px;background:var(--accent);opacity:.4}
   .herobig{font:400 4rem 'Faculty Glyphic',sans-serif;line-height:1.0;color:var(--ink)}
   .herobig em{font-style:normal;color:var(--ink)}
-  .heroglos{font:500 12px/1.7 'Manrope',sans-serif;color:var(--faint);letter-spacing:.01em;max-width:560px;margin:15px auto 0;text-wrap:balance}
+  .heroglos{font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);max-width:560px;margin:15px auto 0;text-wrap:balance}
   .practice{max-width:620px;margin:0 auto 8px;background:var(--surface);border:1px solid var(--line-card);border-radius:var(--r-md);padding:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   @media(max-width:680px){}
   .practice .pchip{appearance:none;background:#fff;border:1px solid var(--line-card);border-radius:20px;color:var(--ink);font:600 11px 'Manrope',sans-serif;letter-spacing:.03em;padding:8px 13px;cursor:pointer;transition:.12s}
@@ -252,14 +252,14 @@
   .heroimg img{max-height:180px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(0,0,0,.10))}
   /* Briana home: editorial section rhythm */
   .homesec{padding:34px 32px;text-align:center}
-  .homesechd{font:700 15px 'Faculty Glyphic',sans-serif;letter-spacing:.02em;text-transform:uppercase;color:var(--ink);margin-bottom:18px}
+  .homesechd{font:400 1.25rem 'Faculty Glyphic',sans-serif;color:var(--ink);margin-bottom:20px}
   .homesecbody{font:14px/1.7 'Manrope',sans-serif;color:var(--muted);max-width:560px;margin:0 auto 12px;text-align:left}
-  .homesecbody strong{color:var(--ink);font-weight:700}
+  .homesecbody strong{color:var(--ink);font-weight:600}
   /* Briana home: FAQ accordion */
   .faqacc{text-align:left;max-width:600px;margin:0 auto}
   .faqitem{border-top:1px solid var(--line-card)}
   .faqitem:last-child{border-bottom:1px solid var(--line-card)}
-  .faqq{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;padding:14px 0;cursor:pointer;font:700 11px 'Manrope',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-align:left;gap:12px}
+  .faqq{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;padding:14px 0;cursor:pointer;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:var(--ink);text-align:left;gap:12px}
   .faqq:hover{color:var(--accent)}
   .faqplus{flex:0 0 auto;display:inline-flex;align-items:center;color:var(--ink)}
   .faqplus .icon-minus{display:none}

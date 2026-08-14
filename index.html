@@ -1536,10 +1536,6 @@ function renderCollections(){
         <h1 style="font:800 32px 'Faculty Glyphic',sans-serif;margin:8px 0 10px;line-height:1.1">Where the art comes from</h1>
         <p style="color:var(--muted);line-height:1.6;font-size:15px">Every work here is shown under an open license — public domain or CC0. That one rule shapes the whole collection: what&rsquo;s here, what isn&rsquo;t, and why.</p>
         <p style="color:var(--muted);line-height:1.6;font-size:14px;margin-top:10px">It&rsquo;s a living, continually-corrected collection — not a canon. Dates and makers carry real uncertainty (you&rsquo;ll see &ldquo;c.&rdquo; ranges and &ldquo;attributed to&rdquo; where scholars aren&rsquo;t sure), premodern and non-Western works are named by <em>culture and period</em> rather than forced into a &ldquo;movement,&rdquo; and objects with contested histories or sacred meaning are shown with that context — not as trophies.</p></div>
-      <div style="flex:0 0 auto;border:1px solid var(--line-card);border-radius:2px;padding:16px 22px;display:flex;gap:26px;background:var(--surface)">
-        <div><div style="font:800 28px 'Faculty Glyphic'">${C.total.toLocaleString()}</div><div class="mono" style="font-size:10px;color:var(--muted)">WORKS</div></div>
-        <div><div style="font:800 28px 'Faculty Glyphic'">${C.sources.length}</div><div class="mono" style="font-size:10px;color:var(--muted)">SOURCES</div></div>
-        <div><div style="font:800 28px 'Faculty Glyphic'">${pinnable}</div><div class="mono" style="font-size:10px;color:var(--muted)">TO VISIT</div></div></div>
     </div>
     <div class="kick" style="margin:34px 0 14px">The open collections</div>
     <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${srcCards}</div>
@@ -2521,10 +2517,10 @@ function renderStart(dateStr,push=true){
     <div class="hero">
       <div class="herokick"><span class="r"></span>${replay?'Archive replay':'The daily art-guessing game'}<span class="r"></span></div>
       <div class="herobig">${replay?'Pick a difficulty.':'Take a <em>gess<span class="dabo-float"><span class="artpalette" aria-hidden="true"><i class="apd apd1"></i><i class="apd apd2"></i><i class="apd apd3"></i><i class="apd apd4"></i></span></span></em><span style="margin-left:-5px">.</span>'}</div>
-      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:700;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand</span>'}</div>
-      <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
+      <div class="heroglos">${replay?`Replaying ${niceDate(dateStr)} — choose a tier for this date's works`:'<strong style="font-weight:600;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">1</sup> &middot; <span style="color:var(--muted)">noun</span> &middot; the white primer brushed onto a canvas before the first brushstroke<br><span style="display:inline-block;margin-top:7px"><strong style="font-weight:600;color:var(--ink)">ges&middot;so</strong><sup style="color:var(--accent)">2</sup> &middot; <span style="color:var(--muted)">verb, informal</span> &middot; to take an educated guess at a work of art, its date, place, school, &amp; hand</span>'}</div>
     </div>
     ${img1}
+    <div class="herometa">${replay?accessionFor(dateStr):accession()} &middot; today&rsquo;s five of <span style="color:var(--accent);font-weight:700">${POOL.length}</span> works</div>
     <div class="difs">
       ${TIERS.map((t,i)=>`<button class="dif" data-k="${t.key}">
         <div class="nm">${t.label}</div>
