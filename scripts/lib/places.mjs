@@ -41,6 +41,11 @@ const CONTINENT = {
   angola:"Africa",cameroon:"Africa","central africa":"Africa","dr congo":"Africa","democratic republic of the congo":"Africa","east africa":"Africa",egypt:"Africa",ethiopia:"Africa",gabon:"Africa",ghana:"Africa",guinea:"Africa","ivory coast":"Africa",kenya:"Africa",mali:"Africa",morocco:"Africa",nigeria:"Africa","sierra leone":"Africa","south africa":"Africa",sudan:"Africa",tanzania:"Africa",tunisia:"Africa",uganda:"Africa",
   // Oceania
   australia:"Oceania","french polynesia":"Oceania","papua new guinea":"Oceania",polynesia:"Oceania",vanuatu:"Oceania","new zealand":"Oceania",
+  oceania:"Oceania",melanesia:"Oceania",micronesia:"Oceania","new guinea":"Oceania",fiji:"Oceania",hawaii:"Oceania","hawaiian islands":"Oceania",
+  samoa:"Oceania",tonga:"Oceania","solomon islands":"Oceania","new caledonia":"Oceania","new ireland":"Oceania","new britain":"Oceania",
+  marquesas:"Oceania","marquesas islands":"Oceania",tahiti:"Oceania","easter island":"Oceania","rapa nui":"Oceania","cook islands":"Oceania",
+  kiribati:"Oceania",palau:"Oceania","marshall islands":"Oceania","caroline islands":"Oceania","society islands":"Oceania","austral islands":"Oceania",
+  "torres strait":"Oceania","admiralty islands":"Oceania","bismarck archipelago":"Oceania",nauru:"Oceania",tuvalu:"Oceania","wallis and futuna":"Oceania",
 };
 export function continentOf(place){
   const raw = String(place||"").replace(/\s*\(.*$/,"").split("/")[0].trim();
