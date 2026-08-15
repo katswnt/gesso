@@ -3,8 +3,7 @@
 // building/concept. Flags everything whose P31 has NO artwork type → data/incoming/p31-flags.json.
 // Run: node scripts/audit-p31.mjs
 import { readFileSync, writeFileSync } from "node:fs";
-const UA="GessoP31/1.0 (kathryn.swint@gmail.com)";
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+import { loadWdEntities } from "./lib/wd-cache.mjs";
 const pool=JSON.parse(readFileSync("data/pool.js","utf8").match(/\[[\s\S]*\]/)[0]);
 const qid=id=>{const m=String(id).match(/Q\d+/);return m?m[0]:null;};
 const wd=pool.filter(p=>qid(p.id));
@@ -13,18 +12,9 @@ const ARTWORK=new Set(["Q3305213","Q860861","Q11060274","Q93184","Q18761202","Q1
 // names treated as artwork (fallback by label keyword)
 const ARTWORK_RE=/\b(painting|sculpture|drawing|print|etching|engraving|lithograph|woodcut|fresco|altarpiece|triptych|portrait|still life|watercolo|artwork|work of art|statue|bust|relief|tapestry|manuscript|miniature|icon|mural|mosaic|ceramic|vase|pottery|figurine|stele|stela|sarcophagus|mask|jewellery|jewelry|vessel|installation|drawing|collage|photograph)\b/i;
 
-async function batch(qids){
-  const q=`SELECT ?w ?wLabel ?t ?tLabel WHERE { VALUES ?w { ${qids.map(x=>"wd:"+x).join(" ")} } OPTIONAL { ?w wdt:P31 ?t } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }`;
-  for(let t=0;t<4;t++){ try{ const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(q),{headers:{"User-Agent":UA,"Accept":"application/sparql-results+json"}});
-    if(r.status===429||r.status>=500){await sleep(2000*(t+1));continue;} if(!r.ok)return null; return (await r.json()).results.bindings; }catch(e){await sleep(1500*(t+1));} } return null;
-}
-const inst={}; const B=80;
-for(let i=0;i<wd.length;i+=B){ const ids=wd.slice(i,i+B).map(p=>qid(p.id));
-  const rows=await batch(ids);
-  if(rows) for(const b of rows){ const w=b.w.value.split("/").pop(); const tQ=b.t?b.t.value.split("/").pop():null; const tL=b.tLabel?b.tLabel.value:"";
-    (inst[w]=inst[w]||[]).push({q:tQ,l:tL}); }
-  if(i%800===0) console.error(`  ${i}/${wd.length}`); await sleep(250);
-}
+// P31 now comes from the shared Wikidata cache (data/incoming/wd-entities.json) — no separate sweep.
+const ents=await loadWdEntities(wd.map(p=>qid(p.id)), { onProgress:(d,t)=>{ if(d%800<100) console.error(`  ${d}/${t} fetched`); } });
+const inst={}; for(const p of wd){ const q=qid(p.id); inst[q]=(ents.get(q)?.p31)||[]; }
 writeFileSync("data/incoming/p31-raw.json", JSON.stringify(inst));
 // BLOCKLIST: instance-of types that an actual artwork can NEVER be → genuine collision / non-artwork
 const NONART_RE=/\b(city|town|municipality|human settlement|capital|village|commune|taxon|genus|species|family of plants|monotypic|breed|given name|family name|surname|male given name|female given name|building|church building|mosque|cathedral|temple|basilica|palace|tower|country|sovereign state|nation|battle|military conflict|war|treaty|event|holiday|religion|religious concept|prayer|ritual|river|mountain|lake|island|peninsula|geographic|unit of|profession|occupation|wikimedia|disambiguation)\b/i;

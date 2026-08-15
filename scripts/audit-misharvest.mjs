@@ -5,9 +5,8 @@
 //   node scripts/audit-misharvest.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
+import { loadWdEntities } from "./lib/wd-cache.mjs";
 
-const UA = "GessoMisharvestAudit/1.0 (kathryn.swint@gmail.com)";
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 const qid = id => { const m = String(id||"").match(/Q\d+/); return m ? m[0] : null; };
 // words in a P31 label that indicate a real physical artwork/object
 const ARTWORK = /\b(painting|drawing|sculpture|statue|bust|relief|print|engraving|etching|lithograph|woodcut|woodblock|photograph|photo|fresco|mural|altarpiece|triptych|diptych|polyptych|manuscript|codex|folio|miniature|illumination|icon|panel|tapestry|textile|carpet|rug|embroidery|vase|vessel|bowl|dish|jar|ewer|cup|plate|amphora|krater|jug|bottle|flask|mask|figure|figurine|statuette|idol|pendant|brooch|ring|necklace|jewel|jewellery|jewelry|crown|coin|medal|seal|scroll|screen|fan|netsuke|inro|lacquer|ceramic|porcelain|earthenware|stoneware|faience|bronze|jade|ivory|carving|stele|stela|sarcophagus|tomb|monument|fountain|tapiss|artefact|artifact|artwork|work of art|art object|cultural (heritage|property)|object|furniture|chair|table|cabinet|clock|instrument|armour|armor|helmet|sword|dagger|shield|banner|flag|book|atlas|map|poster|tile|plaque|medallion|reliquary|monstrance|chalice|censer|thangka|byobu|ukiyo|drawing|watercolo|collage|assemblage|installation|tapestry)\b/i;
@@ -17,31 +16,11 @@ const wd = pool.filter(p => qid(p.id));
 const qids = [...new Set(wd.map(p => qid(p.id)))];
 console.error(`checking P31 for ${qids.length} Wikidata works...`);
 
-async function sparql(qy){
-  const u = "https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(qy);
-  for(let t=0;t<5;t++){ try{ const r = await fetch(u,{headers:{"User-Agent":UA,Accept:"application/sparql-results+json"}});
-    if(r.status===429||r.status>=500){ await sleep(3000*(t+1)); continue; } if(!r.ok) return null; return await r.json();
-  }catch{ await sleep(1500*(t+1)); } } return null;
-}
-
+// P31 + creator now come from the shared Wikidata cache (data/incoming/wd-entities.json) — no separate sweep.
+const ents = await loadWdEntities(qids, { onProgress:(d,t)=>{ if(d%700<100) console.error(`  ${d}/${t} fetched`); } });
 const info = new Map(); // qid -> {p31:Set<label>, hasCreator:bool}
-for(let i=0;i<qids.length;i+=140){
-  const values = qids.slice(i,i+140).map(q=>"wd:"+q).join(" ");
-  const j = await sparql(`SELECT ?w ?p31Label ?creator WHERE {
-    VALUES ?w { ${values} }
-    OPTIONAL { ?w wdt:P31 ?p31. }
-    OPTIONAL { ?w wdt:P170 ?creator. }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }`);
-  await sleep(400);
-  for(const b of (j?.results?.bindings||[])){
-    const q = qid(b.w?.value); if(!q) continue;
-    if(!info.has(q)) info.set(q, { p31:new Set(), hasCreator:false });
-    const e = info.get(q);
-    if(b.p31Label?.value && !/^Q\d+$/.test(b.p31Label.value)) e.p31.add(b.p31Label.value);
-    if(b.creator?.value) e.hasCreator = true;
-  }
-  if((i+140)%700<140) console.error(`  ${Math.min(i+140,qids.length)}/${qids.length}`);
-}
+for(const q of qids){ const e = ents.get(q) || { p31:[], creators:[] };
+  info.set(q, { p31: new Set(e.p31.map(x=>x.l).filter(Boolean)), hasCreator: e.creators.length>0 }); }
 
 const byQ = new Map(); for(const p of wd){ const q=qid(p.id); if(!byQ.has(q)) byQ.set(q,p); }
 const flags = [];
