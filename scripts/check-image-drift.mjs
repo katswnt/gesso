@@ -21,25 +21,32 @@ function sizeFromBytes(buf) {
   if (buf[0] === 0xFF && buf[1] === 0xD8) { let o = 2; while (o < buf.length) { if (buf[o] !== 0xFF) { o++; continue; } const m = buf[o + 1]; if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return { h: buf.readUInt16BE(o + 5), w: buf.readUInt16BE(o + 7) }; o += 2 + buf.readUInt16BE(o + 2); } }
   return null;
 }
+// Returns per-file: {w,h,sha1} resolved · {missing:true} imageinfo says the file is GONE · {qfail} the query
+// itself failed (rate-limit/network) — a transient state that must NOT be read as "gone". Distinguishing the
+// two is what stops a rate-limited batch (whole 40 files) from being falsely reported gone under CI load.
 async function commonsNow(files) {
   const out = {};
   for (let i = 0; i < files.length; i += 40) {
     const batch = files.slice(i, i + 40);
     const u = "https://commons.wikimedia.org/w/api.php?action=query&format=json&redirects=1&prop=imageinfo&iiprop=size|sha1&titles=" + encodeURIComponent(batch.map(f => "File:" + f).join("|"));
-    try { const r = await fetch(u, { headers: UA }); const j = await r.json(); const pages = j.query?.pages || {};
-      for (const k in pages) { const t = canon((pages[k].title || "").replace(/^File:/, "")); const ii = pages[k].imageinfo?.[0]; out[t] = ii ? { w: ii.width, h: ii.height, sha1: ii.sha1 } : null; }
-    } catch {}
+    try { const r = await fetch(u, { headers: UA }); if (!r.ok) throw new Error("http " + r.status);
+      const pages = (await r.json()).query?.pages || {};
+      for (const k in pages) { const t = canon((pages[k].title || "").replace(/^File:/, "")); const ii = pages[k].imageinfo?.[0];
+        out[t] = ii ? { w: ii.width, h: ii.height, sha1: ii.sha1 } : (pages[k].missing !== undefined ? { missing: true } : { qfail: true }); }
+      for (const f of batch) { const c = canon(f); if (!(c in out)) out[c] = { qfail: true }; }
+    } catch { for (const f of batch) out[canon(f)] = { qfail: true }; } // whole batch failed → transient, not gone
     await sleep(60);
   }
   return out;
 }
 async function museumNow(url) {
   try { const r = await fetch(url, { headers: { ...UA, Range: "bytes=0-65535" } });
-    if (!r.ok && r.status !== 206) return { gone: r.status };
+    if (r.status === 404 || r.status === 410) return { missing: true };     // genuinely gone
+    if (!r.ok && r.status !== 206) return { qfail: r.status };              // 403/429/5xx = bot-block/transient, NOT gone
     const s = sizeFromBytes(Buffer.from(await r.arrayBuffer()));
     const cr = r.headers.get("content-range"); const bytes = cr ? parseInt(cr.split("/")[1], 10) : (parseInt(r.headers.get("content-length"), 10) || null);
     return s ? { w: s.w, h: s.h, bytes } : { bytes };
-  } catch (e) { return { gone: e.message }; }
+  } catch (e) { return { qfail: String(e.message) }; }
 }
 
 const cNow = await commonsNow([...new Set(POOL.map(p => commonsFile(p.img)).filter(Boolean))]);
@@ -52,8 +59,9 @@ for (const p of POOL) {
   if (b.url && b.url !== p.img) { drift.push({ id: p.id, title: p.title, kind: "url-changed", was: b.url, now: p.img }); continue; }
   const cf = commonsFile(p.img); let now = null;
   if (cf) now = cNow[canon(cf)]; else { now = await museumNow(p.img); await sleep(20); }
+  if (!now || now.qfail) continue;  // couldn't query (rate-limit/bot-block/network) — UNKNOWN, never "gone"
   checked++;
-  if (!now || now.gone) { drift.push({ id: p.id, title: p.title, kind: "gone", detail: now?.gone || "no-data", img: p.img }); continue; }
+  if (now.missing) { drift.push({ id: p.id, title: p.title, kind: "gone", detail: "missing", img: p.img }); continue; }
   if (b.src === "commons" && b.sha1 && now.sha1) {
     if (now.sha1 !== b.sha1) drift.push({ id: p.id, title: p.title, kind: "content-changed", wasW: b.w, nowW: now.w, wasSha1: b.sha1?.slice(0, 10), nowSha1: now.sha1?.slice(0, 10), img: p.img });
   } else { // museum: dims or bytes changed
@@ -62,15 +70,21 @@ for (const p of POOL) {
   }
   if (n % 800 === 0) process.stderr.write(`  ${n}/${POOL.length} · ${drift.length} drift\n`);
 }
-// CONFIRM "gone" before trusting it — a single transient fetch failure (429/timeout) must not trigger a
-// re-audit. Re-fetch each gone candidate once with a delay; drop the ones that come back.
+// CONFIRM "gone" before trusting it — a transient failure (429/timeout/rate-limit) must not trigger a
+// re-audit. Re-fetch each candidate up to 2 more times with growing backoff; it stays "gone" ONLY if every
+// retry still reports the file genuinely missing. Anything else (recovered, or a query failure) → drop it.
 const goneIdx = drift.map((d, i) => d.kind === "gone" ? i : -1).filter(i => i >= 0);
 if (goneIdx.length) { process.stderr.write(`  re-verifying ${goneIdx.length} 'gone' candidates…\n`);
-  const stillGone = [];
-  for (const i of goneIdx) { const d = drift[i]; const p = byId[d.id]; await sleep(400);
-    const cf = commonsFile(p.img); let now;
-    if (cf) { const r = await commonsNow([cf]); now = r[canon(cf)]; } else now = await museumNow(p.img);
-    if (now && !now.gone) drift[i] = null; else stillGone.push(d.id); }         // recovered → not drift
+  for (const i of goneIdx) { const d = drift[i]; const p = byId[d.id]; const cf = commonsFile(p.img);
+    let stillMissing = false;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await sleep(600 * (attempt + 1));
+      const now = cf ? (await commonsNow([cf]))[canon(cf)] : await museumNow(p.img);
+      if (!now || now.qfail || !now.missing) { stillMissing = false; break; } // recovered or couldn't confirm → not gone
+      stillMissing = true;                                                     // still explicitly missing
+    }
+    if (!stillMissing) drift[i] = null;
+  }
 }
 const confirmed = drift.filter(Boolean);
 drift.length = 0; drift.push(...confirmed);
