@@ -5,6 +5,7 @@
 // DEAD (fetch error / gone). Writes data/incoming/easy-image-audit.json.
 //   node scripts/audit-easy-images.mjs
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { classifyRes } from "./lib/img-dimensions.mjs";
 const LOW = 700, SOFT = 1000;
 const UA = { "User-Agent": "GessoEasyImgAudit/1.0 (kathryn.swint@gmail.com)" };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -51,11 +52,10 @@ for (const p of works) {
   if (cf) { const s = cSizes[canon(cf)]; if (s) native = s; else err = "commons-missing"; }
   else { const s = await fetchSize(p.img); if (s.w) native = s; else if (s.unknown) unknown = true; else err = s.err; await sleep(20); }
   let status = "ok";
-  const nw = native ? Math.min(native.w, native.h) : null; // shortest side = what limits reveal sharpness
+  const nw = native ? Math.min(native.w, native.h) : null; // shortest side (kept for the report display only)
   if (err != null) status = "dead";
   else if (unknown) status = "unknown";
-  else if (nw < LOW) status = "low";
-  else if (nw < SOFT) status = "soft";
+  else { const c = classifyRes(native, { low: LOW, borderline: SOFT }); status = c === "LOW" ? "low" : c === "borderline" ? "soft" : "ok"; }
   if (status !== "ok") findings.push({ id: p.id, title: p.title, region: p.region || "", native: native ? `${native.w}x${native.h}` : null, short: nw, status, err, img: p.img });
 }
 

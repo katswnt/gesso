@@ -6,9 +6,11 @@
 //   node scripts/audit-dailies.mjs [days]      # default 28 days (4 weeks)
 //   node scripts/audit-dailies.mjs 28 --json
 import { readFileSync } from "node:fs";
+import { baselineDim, classifyRes } from "./lib/img-dimensions.mjs";
 
 const DAYS = parseInt(process.argv.find(a => /^\d+$/.test(a)) || "28", 10);
 const JSON_OUT = process.argv.includes("--json");
+const useCache = !process.argv.includes("--refresh"); // --refresh = re-fetch every image, ignore the fingerprint baseline
 const ROUNDS = 5;                 // works per day per tier (matches index.html)
 const LOW = 700;                  // native width below this = blurry on the reveal
 const BORDERLINE = 1000;          // 700..1000 = warn
@@ -113,20 +115,24 @@ async function fetchSize(url) {
 }
 
 const works = [...scheduled.values()];
-const commonsFiles = [...new Set(works.map(e => commonsFile(e.work.img)).filter(Boolean))];
+// resolve native dims from the fingerprint baseline first (same master, no fetch); only cache-misses hit the network
+const baseHit = new Map();
+for (const e of works) { const d = baselineDim(e.work, { useCache }); if (d) baseHit.set(e.work.id, d); }
+const misses = works.filter(e => !baseHit.has(e.work.id));
+const commonsFiles = [...new Set(misses.map(e => commonsFile(e.work.img)).filter(Boolean))];
 const cSizes = await commonsSizes(commonsFiles);
 
 const findings = [];
 for (const e of works) {
-  const p = e.work, cf = commonsFile(p.img); let native = null, err = null;
-  if (cf) { const s = cSizes[canon(cf)]; if (s) native = s; else err = "commons-missing"; }
-  else { const s = await fetchSize(p.img); if (s.w) native = s; else err = s.err; await sleep(40); }
+  const p = e.work; let native = baseHit.get(p.id) || null, err = null;
+  if (!native) { const cf = commonsFile(p.img);
+    if (cf) { const s = cSizes[canon(cf)]; if (s) native = s; else err = "commons-missing"; }
+    else { const s = await fetchSize(p.img); if (s.w) native = s; else err = s.err; await sleep(40); } }
   const rw = reqWidth(p.img);
   // native >= BORDERLINE renders crisp even on a retina reveal, regardless of the requested width, so it's ok.
   let status = "ok";
   if (err) status = "unreachable";
-  else if (native.w < LOW) status = "LOW";
-  else if (native.w < BORDERLINE) status = "borderline";
+  else status = classifyRes(native, { low: LOW, borderline: BORDERLINE }); // aspect-aware: a wide handscroll isn't "blurry"
   if (status !== "ok") findings.push({ id: p.id, title: p.title, tier: e.hits[0].tier, dates: [...new Set(e.hits.map(h => h.date))], nativeW: native?.w || null, reqW: rw, status, err, img: p.img });
 }
 

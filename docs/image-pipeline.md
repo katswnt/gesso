@@ -78,7 +78,7 @@ Everything else. Two reasons a check can't be in Tier 1:
 
 ### 6. Promote + gate — `promote-*.mjs` → `check-pool.mjs`
 - Append via `writeAssignment` (keep the spaced `window.X = [...]` form — legacy parsers depend on it). Dedup defensively; scrub culture-name/genid artists; normalize style (stage 2); new works get fame=0 → deepest impossible.
-- Promote scripts vary: `promote-canon/harvest/modern/wishlist` auto-invoke `audit-all` after appending; **`promote-coverage` does not** — run `npm run audit` yourself after it, or rely on the CI gate.
+- All promoters (`promote-canon/harvest/modern/wishlist/coverage`) auto-invoke `audit-all` after appending (the advisory network suite). The fail-closed gate is still a separate step (below).
 - **Gate as its OWN step.** Read `✅ PASS` visibly, THEN commit separately. Never `gate && commit`.
 - Field-scope-diff the pool before commit (only intended fields changed — see the diff snippet in `consolidate-styles.mjs`'s workflow).
 

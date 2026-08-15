@@ -4,6 +4,7 @@
 //   node scripts/audit-images-pool.mjs            # human report
 //   node scripts/audit-images-pool.mjs --json     # -> data/incoming/pool-image-audit.json
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { classifyRes } from "./lib/img-dimensions.mjs";
 const LOW = 700, BORDERLINE = 1000;
 const UA = { "User-Agent": "GessoPoolImgAudit/1.0 (kathryn.swint@gmail.com)" };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -60,8 +61,7 @@ for (const p of POOL) {
   let status = "ok";
   if (unknown) status = "ok";                          // size unparseable — don't false-flag
   else if (err) status = "unreachable";
-  else if (native.w < LOW) status = "LOW";
-  else if (native.w < BORDERLINE) status = "borderline";
+  else status = classifyRes(native, { low: LOW, borderline: BORDERLINE }); // aspect-aware long-side metric (shared)
   if (status !== "ok") findings.push({ id: p.id, title: p.title, artist: p.artist, tier: tierOf[p.id] || "(not in any tier)", fame: p.fame || 0, nativeW: native?.w || null, reqW: reqWidth(p.img), status, err, img: p.img });
   if (n % 500 === 0) process.stderr.write(`  scanned ${n}/${POOL.length} · ${findings.length} flagged\n`);
 }

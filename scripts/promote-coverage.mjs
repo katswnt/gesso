@@ -25,4 +25,6 @@ for (const r of ready) {
 }
 writeAssignment("data/pool.js", "ARTEFACTUM_POOL", pool);
 console.log(`promoted ${added} coverage works (skipped ${dup} dup) — pool size now ${pool.length}`);
+// auto-run the advisory audit suite, matching the other promoters (promote-canon/harvest/modern/wishlist)
+(await import("node:child_process")).execSync("node scripts/audit-all.mjs", { stdio: "inherit" });
 console.log("NEXT: run  node scripts/check-pool.mjs  as its own step; commit only if it prints ✅ PASS.");
