@@ -1,0 +1,43 @@
+name: Weekly image audit
+
+# Phase 2 of the quality-enforcement plan. The fail-closed image audits (drift, dailies)
+# need the network, so they can't run in the push-CI gate (ci.yml). This runs them weekly
+# and, when something genuinely needs a human, opens/updates ONE issue (labelled
+# image-audit) so it never spams. Also runnable on demand from the Actions tab.
+# No install step: the audits are pure local Node + fetch (no runtime deps, no secrets).
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Mondays 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run scheduled network audits
+        id: audit
+        run: node scripts/scheduled-audit.mjs
+      - name: Open or update issue on findings
+        if: failure() && steps.audit.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = 'Audit failed but wrote no report.';
+            try { body = fs.readFileSync('data/incoming/scheduled-audit-report.md', 'utf8'); } catch {}
+            body += `\n\n_[workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`;
+            const { owner, repo } = context.repo;
+            const open = await github.rest.issues.listForRepo({ owner, repo, state: 'open', labels: 'image-audit' });
+            if (open.data.length) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: open.data[0].number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title: 'Weekly image audit: attention needed', body, labels: ['image-audit'] });
+            }
