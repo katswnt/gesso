@@ -80,12 +80,26 @@ export const STYLE_MERGE = {
 };
 // style strings that are really a nationality / country / region, not a movement-or-culture → dropped.
 export const BAD_STYLE = /^(americans?|koreans?|chinese|austrian|turkey|ethiopia|colombia|arab world|africa(,.*)?|democratic republic.*|sierra leone|holy roman empire|netherlandish|contemporary art|french|italians?|indian|persian|iranian|turkish|japanese|nepalese|syrian|colombian|peruvian|thai|buddhists|muslims|middle easterners|southeast asians|brass|polychrome|monochrome \(asia\)|kingdom of prussia|kingdom of portugal|czech republic|wales|free imperial city of strasbourg)$/i;
+// Order- and case-independent signature of a style label (diacritics stripped, split on space/slash/comma/
+// hyphen, sorted) — two labels with the same signature are the same vocabulary item written differently
+// ("Academic realism"≡"Academic Realism", "Archaic Greek"≡"Greek Archaic"). Used to fold a new label onto
+// an existing canonical one and to gate near-dups. Deliberately does NOT strip generic descriptors, so
+// "Ming dynasty" and "Ming dynasty painting" get DIFFERENT signatures (that near-dup class is a judgement
+// call surfaced as a warning, not silently merged).
+export const styleSignature = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"")
+  .toLowerCase().split(/[\s/,-]+/).filter(Boolean).sort().join(" ");
+// Build a signature→canonical-label map from an iterable of authoritative labels (the MOVEMENTS keys).
+// First spelling wins. Pass the result to canonicalizeStyle so entry paths fold to the curated casing.
+export const buildStyleCanon = labels => { const m=new Map(); for(const k of labels){ const sig=styleSignature(k); if(!m.has(sig)) m.set(sig,k); } return m; };
 // canonical style; returns "" when the label is really a place (so movement just isn't quizzed).
-export function canonicalizeStyle(style){
+// canonMap (optional, from buildStyleCanon): folds case/word-order variants onto the curated MOVEMENTS
+// spelling so a harvest can't fork "Academic realism" from "Academic Realism".
+export function canonicalizeStyle(style, canonMap){
   let s = String(style||"").trim(); if(!s) return "";
   s = STYLE_MERGE[s] || s;
   if(BAD_STYLE.test(s)) return "";
   if(/^[a-z]/.test(s)) s = s.charAt(0).toUpperCase()+s.slice(1); // sentence-case lowercase movement labels
+  if(canonMap){ const hit = canonMap.get(styleSignature(s)); if(hit) return hit; } // fold onto the curated spelling
   return s;
 }
 // living / died-after-1955 creators that must never enter the pool (museum-API works the SPARQL audit skips).

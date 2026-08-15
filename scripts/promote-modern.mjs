@@ -3,6 +3,9 @@
 // Then injects fame.json entries for the new ids and runs make-fame-js + audits.
 import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { canonicalizeStyle, buildStyleCanon } from "./lib/domain.mjs";
+const _html=readFileSync("index.html","utf8");
+const STYLE_CANON=buildStyleCanon([..._html.slice(_html.indexOf("const MOVEMENTS={"),_html.indexOf("const MOV_FAMILY=")).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1])); // fold style casing/word-order onto curated MOVEMENTS spelling
 const adds=JSON.parse(readFileSync("data/incoming/modern-fetched.json","utf8"));
 // household-name icons → canon (guaranteed Easy). The rest rank by real pageviews.
 const CANON=new Set([
@@ -22,7 +25,7 @@ for(const w of adds){ if(have.has(w.id)){ skipped++; continue; }
   const canon=CANON.has(w.title);
   pool.push({ id:w.id, title:w.title, artist:w.artist||"", y:w.y, lat, lng, medium:w.medium||"",
     place:co?co.n:(w.place||""), fame:canon?200:120, img:w.img, src:"wd-modern",
-    region:w.region||"Europe", style:w.style||"", styleKind:w.styleKind||(w.style?"movement":""),
+    region:w.region||"Europe", style:canonicalizeStyle(w.style||"", STYLE_CANON), styleKind:w.styleKind||(w.style?"movement":""),
     ...(canon?{canon:true}:{}) });
   have.add(w.id); added++;
 }

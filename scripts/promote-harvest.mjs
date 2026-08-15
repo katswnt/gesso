@@ -1,4 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { canonicalizeStyle, buildStyleCanon } from "./lib/domain.mjs";
+const _html=readFileSync("index.html","utf8");
+const CANON=buildStyleCanon([..._html.slice(_html.indexOf("const MOVEMENTS={"),_html.indexOf("const MOV_FAMILY=")).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1])); // fold style casing/word-order onto curated MOVEMENTS spelling
 const base = Object.fromEntries(JSON.parse(readFileSync("data/incoming/harvest-fetched.json","utf8")).map(p=>[p.id,p]));
 let recs=[]; for(let i=0;i<7;i++){ try{ recs=recs.concat(JSON.parse(readFileSync("/tmp/hv-out-"+i+".json","utf8"))); }catch(e){} }
 global.window={}; new Function(readFileSync("data/countries.js","utf8"))();
@@ -16,7 +19,7 @@ for(const r of recs){ const b=base[r.id]; if(!b||have.has(r.id)) continue;
   const [lat,lng]= co?centroid(co):[null,null];
   pool.push({ id:r.id, title:b.title, artist:r.artist||b.artist||"", y:(r.y!=null?r.y:b.y), lat, lng,
     medium:r.medium||b.medium||"", place:co?co.n:pl, fame:120, img:b.img, src:"wd-harvest",
-    region:CONT[(co?co.n:pl).toLowerCase()]||"Europe", style:r.style||"", styleKind:r.styleKind||(r.style?"movement":""), harvest:true });
+    region:CONT[(co?co.n:pl).toLowerCase()]||"Europe", style:canonicalizeStyle(r.style||"", CANON), styleKind:r.styleKind||(r.style?"movement":""), harvest:true });
   if(r.why) notes[r.id]={why:r.why,cues:r.cues,guide:r.guide};
   have.add(r.id); added++;
 }

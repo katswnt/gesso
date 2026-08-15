@@ -3,7 +3,7 @@
 // LOCAL only (no network); the creator-death copyright check is scripts/audit-copyright.mjs (Wikidata).
 import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
-import { simplifyMedium, BAD_STYLE, isInCopyright } from "./lib/domain.mjs";
+import { simplifyMedium, BAD_STYLE, isInCopyright, styleSignature } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
 import { scanLanguage } from "./check-language.mjs";
 
@@ -77,6 +77,7 @@ for(const p of pool){
   // ARTIST
   if(p.artist && /[぀-ヿ㐀-䶿一-鿿]/.test(p.artist)) add(hard,"artist-CJK",p,`"${p.artist}"`);
   if(p.artist && /^Q\d+$/.test(p.artist)) add(hard,"artist-qid",p,`"${p.artist}"`);
+  if(p.artist && /genid|^https?:\/\/|\.well-known/i.test(p.artist)) add(hard,"artist-genid-url",p,`"${p.artist}"`); // blank-node/URL leaked as a creator name
   // nationality glued to a PERSONAL name (harvest artifact), e.g. "American Daniel Hudson Burnham". Skip anonymous
   // descriptors where the nationality IS the attribution ("Dutch 17th Century", "Florentine sculpture workshop").
   if(p.artist && /^(American|French|Italian|Dutch|German|Spanish|British|English|Flemish|Netherlandish|Belgian|Austrian|Russian|Japanese|Chinese|Korean|Indian|Mexican|Greek|Roman|Egyptian|Persian|Ottoman|Swiss|Swedish|Norwegian|Danish|Polish|Scottish|Irish|Canadian|Venetian|Florentine)\s+[A-Z][a-zA-Z.'-]+\s+[A-Z]/.test(p.artist) && !/(century|workshop|school|dynasty|period|culture|anonymous|unknown|master of|circle of|follower|after )/i.test(p.artist)) add(hard,"artist-nationality-prefix",p,`"${p.artist}"`);
@@ -117,6 +118,19 @@ for(const p of pool){
   // NOTE: transliteration (Vasily/Wassily) + abbreviation (Hokusai/Katsushika Hokusai) variants aren't caught
   // here — a generic detector produced too many false positives (Manet/Monet, Zhang Lu/Zhang Hong, Rembrandt/
   // Rembrandt Peale share signatures but are different people). Fix those by hand when a screenshot surfaces one.
+
+// STYLE-VOCAB gate: a label written two ways forks the vocabulary and poisons multiple-choice distractors
+// (the "Academic realism" vs "Academic Realism" bug). HARD when two labels differ ONLY by case — an
+// unambiguous fork the normalizer (canonicalizeStyle) should have folded; run it on the pool to fix.
+// WARN when they differ by WORD ORDER ("Late Period Egyptian" vs "Egyptian Late Period") — usually a dup
+// too, but consolidating picks a winner (a judgement call), so surface it for a consolidation pass instead
+// of blocking. Descriptor near-dups ("Ming dynasty" vs "Ming dynasty painting") are caught by audit-labels.
+{ const fold=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  const styles=[...new Set(pool.map(p=>p.style).filter(Boolean))];
+  const byFold={}, bySig={};
+  for(const s of styles){ (byFold[fold(s)]=byFold[fold(s)]||[]).push(s); const sg=styleSignature(s); (bySig[sg]=bySig[sg]||[]).push(s); }
+  for(const g of Object.values(byFold)) if(g.length>1) hard.push(`[style-casing-dup] ${g.map(l=>`"${l}"`).join(" ≡ ")} — same label, different case; pick one spelling (run canonicalizeStyle)`);
+  for(const g of Object.values(bySig)) if(g.length>1 && new Set(g.map(fold)).size>1) warn.push(`[style-wordorder-dup] ${g.map(l=>`"${l}"`).join(" ≈ ")} — same words, different order; consolidate to one`); }
 
 // COPY-INTEGRITY gate: the v1->v2 note migration left broken reveal copy in works not yet curated —
 // note bodies cut off mid-thought ("..."), heads that are stripped Q&A fragments ("does this painting

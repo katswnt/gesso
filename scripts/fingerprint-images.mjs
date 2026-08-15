@@ -36,11 +36,15 @@ async function commonsFp(files) {
 }
 // museum CDN: Range GET → dims from header bytes + total byte size from Content-Range
 async function museumFp(url) {
-  try { const r = await fetch(url, { headers: { ...UA, Range: "bytes=0-65535" } });
+  try { let r = await fetch(url, { headers: { ...UA, Range: "bytes=0-65535" } });
+    // Some museum CDNs (e.g. Te Papa /full masters) 500 on Range requests. Fall back to a full GET so those
+    // works still get a fingerprint baseline instead of a silent null (which would leave them undrift-watched).
+    if (!r.ok && r.status !== 206) r = await fetch(url, { headers: UA });
     if (!r.ok && r.status !== 206) return null;
     const buf = Buffer.from(await r.arrayBuffer());
     const s = sizeFromBytes(buf);
-    const cr = r.headers.get("content-range"); const bytes = cr ? parseInt(cr.split("/")[1], 10) : (parseInt(r.headers.get("content-length"), 10) || null);
+    const cr = r.headers.get("content-range");
+    const bytes = cr ? parseInt(cr.split("/")[1], 10) : (parseInt(r.headers.get("content-length"), 10) || buf.length || null);
     return s ? { w: s.w, h: s.h, bytes } : (bytes ? { bytes } : null);
   } catch { return null; }
 }

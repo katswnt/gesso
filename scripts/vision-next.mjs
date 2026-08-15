@@ -3,19 +3,17 @@
 // plus a manifest of the selected ids. This is what keeps the audit AHEAD of what players actually see.
 //   node scripts/vision-next.mjs [count=20] [chunkSize=10]
 // Output: data/incoming/vision/vw-in-<k>.json (chunks) + data/incoming/vision/vw-manifest.json (selected ids).
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const COUNT = parseInt(process.argv[2] || "20", 10);
 const CHUNK = parseInt(process.argv[3] || "10", 10);
 const MODE = (process.argv[4] || "schedule").toLowerCase(); // "easy" = audit the easy tier first, then schedule order
-const FMT = (process.argv[5] || "sonnet").toLowerCase();     // "codex" = also emit curate-codex input (in-*.json) + reset its codex-out
 const OUT = "data/incoming/vision";
 
 const load = (path, varName) => { const g = {}; global.window = g; new Function(readFileSync(path, "utf8"))(); return g[varName]; };
 const DAILY = load("data/daily-order.js", "ARTEFACTUM_DAILY");
 const POOL = load("data/pool.js", "ARTEFACTUM_POOL");
 const CUES = load("data/teach-works.js", "ARTEFACTUM_CUES").work || {};
-const HOT = (() => { const t = readFileSync("data/hotspots.js", "utf8"); return JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1)); })();
 const byId = new Map(POOL.map(p => [p.id, p]));
 const ledger = JSON.parse(readFileSync("data/vision-audit.json", "utf8"));
 const audited = new Set(ledger.ids || []);
@@ -80,18 +78,6 @@ mkdirSync(OUT, { recursive: true });
 const nChunks = Math.ceil(recs.length / CHUNK);
 for (let k = 0; k < nChunks; k++) writeFileSync(`${OUT}/vw-in-${k + 1}.json`, JSON.stringify(recs.slice(k * CHUNK, (k + 1) * CHUNK), null, 1));
 writeFileSync(`${OUT}/vw-manifest.json`, JSON.stringify({ selected: recs.map(r => r.id), count: recs.length, chunks: nChunks }, null, 1));
-
-// CODEX FORMAT: emit curate-codex input (in-<letter>.json) for the SAME selection + reset the vision codex-out so
-// nothing is skipped (curate-codex skips ids already in its codex-out; a fresh [] forces a re-audit of every pick).
-if (FMT === "codex") {
-  const ctx = id => { const p = byId.get(id) || {}, c = CUES[id] || {}; return { id, title: p.title, artist: p.artist || "anonymous", date: p.y, place: p.place, region: p.region, medium: p.medium || null, style: p.style || null, styleKind: p.styleKind || null, dim: p.dim || null, img: p.img, why: c.why, notes: (c.notes || []).map(n => { const o = { head: n.head, body: n.body }; if (typeof n.x === "number") { o.x = n.x; o.y = n.y; } return o; }), hotspotCount: (HOT[id] || []).length }; };
-  const L = "abcdefghijklmnopqrstuvwxyz";
-  // clear any stale in-*.json first
-  for (const f of readdirSync(OUT)) if (/^in-[a-z]\.json$/.test(f)) unlinkSync(`${OUT}/${f}`);
-  for (let k = 0; k < nChunks; k++) writeFileSync(`${OUT}/in-${L[k]}.json`, JSON.stringify(recs.slice(k * CHUNK, (k + 1) * CHUNK).map(r => ctx(r.id)), null, 1));
-  writeFileSync(`${OUT}/codex-out.json`, "[]");
-  console.log(`vision-next: also wrote ${nChunks} curate-codex chunk(s) + reset ${OUT}/codex-out.json`);
-}
 
 const span = recs.length ? `${recs[0].firstDate} .. ${recs[recs.length - 1].firstDate}` : "(none)";
 console.log(`vision-next: selected ${recs.length} unaudited works (schedule order ${span}) into ${nChunks} chunk(s)`);

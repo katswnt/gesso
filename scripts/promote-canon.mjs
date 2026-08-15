@@ -1,6 +1,9 @@
 // Promote the 52 enriched canon icons into the live pool + merge their notes into teach-works.js.
 // Tags each with canon:true (Easy T1). Run: node scripts/promote-canon.mjs
 import { readFileSync, writeFileSync } from "node:fs";
+import { canonicalizeStyle, buildStyleCanon } from "./lib/domain.mjs";
+const _html=readFileSync("index.html","utf8");
+const CANON=buildStyleCanon([..._html.slice(_html.indexOf("const MOVEMENTS={"),_html.indexOf("const MOV_FAMILY=")).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1])); // fold style casing/word-order onto curated MOVEMENTS spelling
 const adds=JSON.parse(readFileSync("data/incoming/canon-additions.json","utf8"));
 const notes=JSON.parse(readFileSync("/tmp/canon-notes-all.json","utf8"));
 const noteById=Object.fromEntries(notes.map(n=>[n.id,n]));
@@ -23,7 +26,7 @@ for(const w of adds){ const n=noteById[w.id]; if(!n){ skipped++; continue; } if(
   const region=CONT[placeName.toLowerCase()]||"Europe";
   pool.push({ id:w.id, title:w.title, artist:w.artist||"", y:(n.y!=null?n.y:w.y),
     lat, lng, medium:n.medium||w.medium||"", place:placeName, fame:200, // fame placeholder; Easy uses canon flag + pageviews
-    img:w.img, src:"wd-canon", region, style:n.style||w.style||"", styleKind:n.styleKind||w.styleKind||"", canon:true });
+    img:w.img, src:"wd-canon", region, style:canonicalizeStyle(n.style||w.style||"", CANON), styleKind:n.styleKind||w.styleKind||"", canon:true });
   added++;
 }
 writeFileSync("data/pool.js", raw.slice(0,raw.indexOf("["))+JSON.stringify(pool)+raw.slice(raw.lastIndexOf("]")+1));
