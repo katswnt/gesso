@@ -27,7 +27,7 @@ const isPlaceName = s => placeNames.has(String(s || "").toLowerCase().replace(/\
 const validStyle = s => s && (movKeys.has(s) || poolStyles.has(s)) && !isPlaceName(s);
 
 // per-category promotion targets (balanced, belonging-weighted)
-const TARGET = { oceania: 80, "middle-east": 80, "canonical-prints": 60, "early-medieval-europe": 50, "euro-sculpture-1400-1700": 40, "south-america": 40 };
+const TARGET = { oceania: 200, "middle-east": 130, "canonical-prints": 160, "early-medieval-europe": 110, "euro-sculpture-1400-1700": 90, "south-america": 90 };
 
 // Oceania: assign a guessable culture style from the place
 function oceaniaStyle(place) {
@@ -47,6 +47,14 @@ const junk = t => /\d{2,}[.\-]\d|[-_]\d{3,}|inv\.?|\bMS\b|\d{5,}/i.test(t || "")
 // returned no real person — showing the raw URL as an artist is a bug)
 const isAnon = a => { const s = String(a || "").trim(); return !s || /^https?:|genid|\.well-known/i.test(s) || /^(unknown|anonymous|unidentified|attributed|circle of|workshop|follower|after )/i.test(s); };
 const tidyMedium = m => { m = String(m || "").trim(); return m ? m.charAt(0).toUpperCase() + m.slice(1) : ""; };
+// the harvest stored PREVIEW-size image URLs (AIC 843px, V&A 843px, Cleveland _web ~600px) that fail the
+// ≥1000px resolution gate — upgrade them to the full-res master so they aren't silently dropped.
+const upscaleImg = u => { u = String(u || "");
+  if (/artic\.edu\/iiif/.test(u)) return u.replace(/\/full\/\d+,\//, "/full/1686,/");
+  if (/framemark\.vam\.ac\.uk/.test(u)) return u.replace(/\/full\/\d+,\//, "/full/1400,/");
+  if (/clevelandart\.org/.test(u)) return u.replace(/_web\.jpg(\?|$)/, "_print.jpg$1");
+  return u;
+};
 
 const CATS = ["middle-east", "south-america", "early-medieval-europe", "euro-sculpture-1400-1700", "canonical-prints", "oceania"];
 const seenImg = new Set(), seenId = new Set();
@@ -78,7 +86,7 @@ for (const cat of CATS) {
     if (artist) cats.push("artist");
     const rec = { id: c.id, title: c.title, artist, y: c.y, lat: c.lat, lng: c.lng,
       place: canonicalizePlace(c.place), region: continentOf(c.place) || c.region, medium, style,
-      styleKind: cat === "oceania" ? "culture" : (c.styleKind || (style ? "movement" : "")), fame: 0, img: c.img, src: c.src, cats };
+      styleKind: cat === "oceania" ? "culture" : (c.styleKind || (style ? "movement" : "")), fame: 0, img: upscaleImg(c.img), src: c.src, cats };
     if (q) rec.wikidataid = "Q" + q.slice(1) === q ? q : q;
     seenImg.add(c.img); seenId.add(String(c.id)); out.push(rec); s.kept++;
   }

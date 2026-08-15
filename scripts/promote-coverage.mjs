@@ -11,8 +11,9 @@ const poolIds = new Set(pool.map(p => String(p.id)));
 const poolQs = new Set(pool.map(p => (String(p.id).match(/Q\d+/) || [])[0]).filter(Boolean));
 const poolImgs = new Set(pool.map(p => p.img));
 
-// a culture/people name is not an artist
-const CULTURE_ARTIST = /^(franks|frankish|byzantine|coptic|sasanian|roman|greek|nazca|moche|inca|maya|aztec|viking|anglo-saxon|merovingian)$/i;
+// a culture/people/provenance descriptor is not an artist. Matches a bare culture name OR a museum provenance
+// string like "Byzantine; Eastern Mediterranean" / "Coptic; Egypt" (culture prefix, then ; or place).
+const CULTURE_ARTIST = /^(franks|frankish|byzantine|coptic|sasanian|sassanian|roman|greek|hellenistic|nazca|moche|chimu|wari|inca|maya|aztec|olmec|viking|anglo-saxon|merovingian|carolingian|ottonian|langobard|lombard|visigothic|egyptian|persian|islamic|ottoman|safavid|mamluk|dogon|luba|benin|yoruba)\b/i;
 
 let added = 0, dup = 0;
 for (const r of ready) {
