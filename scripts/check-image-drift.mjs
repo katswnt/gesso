@@ -62,6 +62,18 @@ for (const p of POOL) {
   }
   if (n % 800 === 0) process.stderr.write(`  ${n}/${POOL.length} · ${drift.length} drift\n`);
 }
+// CONFIRM "gone" before trusting it — a single transient fetch failure (429/timeout) must not trigger a
+// re-audit. Re-fetch each gone candidate once with a delay; drop the ones that come back.
+const goneIdx = drift.map((d, i) => d.kind === "gone" ? i : -1).filter(i => i >= 0);
+if (goneIdx.length) { process.stderr.write(`  re-verifying ${goneIdx.length} 'gone' candidates…\n`);
+  const stillGone = [];
+  for (const i of goneIdx) { const d = drift[i]; const p = byId[d.id]; await sleep(400);
+    const cf = commonsFile(p.img); let now;
+    if (cf) { const r = await commonsNow([cf]); now = r[canon(cf)]; } else now = await museumNow(p.img);
+    if (now && !now.gone) drift[i] = null; else stillGone.push(d.id); }         // recovered → not drift
+}
+const confirmed = drift.filter(Boolean);
+drift.length = 0; drift.push(...confirmed);
 // works that DROPPED in resolution are the urgent ones (now blurry); content-changed also needs a visual re-check
 const queue = drift.filter(d => d.kind !== "size-changed" || (d.nowW && d.wasW && d.nowW < d.wasW)).map(d => d.id);
 mkdirSync("data/incoming", { recursive: true });
