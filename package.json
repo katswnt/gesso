@@ -14,6 +14,9 @@
     "audit:harvest": "node scripts/audit-copyright.mjs && node scripts/audit-p31.mjs && node scripts/audit-all.mjs --images",
     "audit:labels": "node scripts/audit-labels.mjs",
     "audit:dailies": "node scripts/audit-dailies.mjs",
+    "audit:resolution": "node scripts/audit-images-pool.mjs",
+    "fingerprint": "node scripts/fingerprint-images.mjs",
+    "check:drift": "node scripts/check-image-drift.mjs",
     "freeze": "node scripts/freeze-daily.mjs && node scripts/audit-dailies.mjs",
     "serve": "python3 -m http.server 8000"
   },
