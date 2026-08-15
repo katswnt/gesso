@@ -119,18 +119,24 @@ for(const p of pool){
   // here — a generic detector produced too many false positives (Manet/Monet, Zhang Lu/Zhang Hong, Rembrandt/
   // Rembrandt Peale share signatures but are different people). Fix those by hand when a screenshot surfaces one.
 
-// STYLE-VOCAB gate: a label written two ways forks the vocabulary and poisons multiple-choice distractors
-// (the "Academic realism" vs "Academic Realism" bug). HARD when two labels differ ONLY by case — an
-// unambiguous fork the normalizer (canonicalizeStyle) should have folded; run it on the pool to fix.
-// WARN when they differ by WORD ORDER ("Late Period Egyptian" vs "Egyptian Late Period") — usually a dup
-// too, but consolidating picks a winner (a judgement call), so surface it for a consolidation pass instead
-// of blocking. Descriptor near-dups ("Ming dynasty" vs "Ming dynasty painting") are caught by audit-labels.
+// STYLE-VOCAB gate: a label written two ways forks the vocabulary and poisons multiple-choice distractors.
+// All three classes are HARD (the pool was consolidated 2026-08-15; a new harvest that reintroduces one must
+// map it before it can ship). Each group is reported at its MOST-SPECIFIC class:
+//   style-casing-dup     — differ ONLY by case ("Academic realism" ≡ "Academic Realism"); canonicalizeStyle folds these
+//   style-wordorder-dup  — same words, different order ("Late Period Egyptian" ≈ "Egyptian Late Period")
+//   style-descriptor-dup — differ by a generic descriptor ("Ming dynasty" ≈ "Ming dynasty painting")
+// To resolve: add the loser→winner pair to scripts/consolidate-styles.mjs (winner MUST be a MOVEMENTS key) and re-run it.
 { const fold=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  const GENERIC=new Set(["art","painting","paintings","pottery","sculpture","ware","period","style","school","culture","figure","vessel","vase","ceramic","ceramics","design"]);
+  const PART=new Set(["of","the","and","in","on","de","del","la","le","van","der","du","des","a","an"]);
+  const dsig=l=>l.toLowerCase().split(/[\s/,-]+/).filter(t=>t&&!GENERIC.has(t)&&!PART.has(t)).slice().sort().join(" ");
   const styles=[...new Set(pool.map(p=>p.style).filter(Boolean))];
-  const byFold={}, bySig={};
-  for(const s of styles){ (byFold[fold(s)]=byFold[fold(s)]||[]).push(s); const sg=styleSignature(s); (bySig[sg]=bySig[sg]||[]).push(s); }
-  for(const g of Object.values(byFold)) if(g.length>1) hard.push(`[style-casing-dup] ${g.map(l=>`"${l}"`).join(" ≡ ")} — same label, different case; pick one spelling (run canonicalizeStyle)`);
-  for(const g of Object.values(bySig)) if(g.length>1 && new Set(g.map(fold)).size>1) warn.push(`[style-wordorder-dup] ${g.map(l=>`"${l}"`).join(" ≈ ")} — same words, different order; consolidate to one`); }
+  const byDsig={}; for(const s of styles){ const k=dsig(s); (byDsig[k]=byDsig[k]||[]).push(s); }
+  for(const g of Object.values(byDsig)){ if(g.length<2) continue;
+    const cls = new Set(g.map(fold)).size===1 ? "style-casing-dup"
+              : new Set(g.map(styleSignature)).size===1 ? "style-wordorder-dup"
+              : "style-descriptor-dup";
+    hard.push(`[${cls}] ${g.map(l=>`"${l}"`).join(" ≈ ")} — one vocabulary item written ${g.length} ways; consolidate to one`); } }
 
 // COPY-INTEGRITY gate: the v1->v2 note migration left broken reveal copy in works not yet curated —
 // note bodies cut off mid-thought ("..."), heads that are stripped Q&A fragments ("does this painting
