@@ -46,9 +46,11 @@ const res = id => idx[id] || (String(id).match(/Q\d+/) && idx["wikidata:" + Stri
 const L = {}; new Function("window", readFileSync("data/daily-history.js", "utf8"))(L);
 const led = (L.ARTEFACTUM_DAILY_HISTORY || {}).byDate || {};
 
-// collect the distinct works across the study dailies
+// collect the distinct works: either an explicit id-list file (WORKS_FILE=…, e.g. a week's dailies whose
+// future dates aren't in the ledger yet) or, by default, the study dailies from the ledger.
 const ids = new Set();
-for (const [d, t] of STUDY) for (const id of ((led[d] || {})[t] || [])) ids.add(id);
+if (process.env.WORKS_FILE) { for (const id of JSON.parse(readFileSync(process.env.WORKS_FILE, "utf8"))) ids.add(id); }
+else for (const [d, t] of STUDY) for (const id of ((led[d] || {})[t] || [])) ids.add(id);
 const works = [...ids].map(res).filter(Boolean);
 console.log(`vision PoC · model=${MODEL} · ${works.length} study works (blinded, no tools) · adaptive escalation [${LADDER.map(x => x.label).join(" → ")}]\n`);
 
