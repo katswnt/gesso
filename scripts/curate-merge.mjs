@@ -79,14 +79,16 @@ for (const w of out) {
   if (w.mediumLegible === false && Array.isArray(p.cats) && p.cats.includes("medium")) { p.cats = p.cats.filter(c => c !== "medium"); stat.mediumHidden = (stat.mediumHidden||0)+1; }
 
   // ---- NOTES + PINS (only when the agent saw a trustworthy image) ----
-  if (c && w.image && w.image.ok === true && Array.isArray(w.notes) && w.notes.length && w.notes.every(n => n.head && n.body)) {
-    if (w.noPins) { c.notes = w.notes.map(n => ({ head: n.head, body: n.body })); delete hot[w.id]; if (!reviewedNoPins.includes(w.id)) reviewedNoPins.push(w.id); }
+  // seed a teach entry if the work is newly audited (had none) — vision-auditing a new work should create it
+  if (w.image && w.image.ok === true && Array.isArray(w.notes) && w.notes.length && w.notes.every(n => n.head && n.body)) {
+    const tc = c || (teach[w.id] = {});
+    if (w.noPins) { tc.notes = w.notes.map(n => ({ head: n.head, body: n.body })); delete hot[w.id]; if (!reviewedNoPins.includes(w.id)) reviewedNoPins.push(w.id); }
     else {
       // Pins render as CSS percentages (top:${y}%). Agents often emit 0–1 fractions; normalize ×100 so a
       // 0.62 doesn't become 0.62% (top-left cluster). Values >1 are already percentages, left as-is.
       const pc = v => (typeof v === "number" && v <= 1) ? Math.round(v * 1000) / 10 : v;
       const pinned = w.notes.filter(n => typeof n.x === "number"), unp = w.notes.filter(n => typeof n.x !== "number");
-      c.notes = [...pinned, ...unp].map(n => { const o = { head: n.head, body: n.body }; if (typeof n.x === "number") { o.x = pc(n.x); o.y = pc(n.y); } return o; });
+      tc.notes = [...pinned, ...unp].map(n => { const o = { head: n.head, body: n.body }; if (typeof n.x === "number") { o.x = pc(n.x); o.y = pc(n.y); } return o; });
       hot[w.id] = pinned.map((n, i) => ({ n: i + 1, x: pc(n.x), y: pc(n.y) }));
     }
     stat.notesPins++;
