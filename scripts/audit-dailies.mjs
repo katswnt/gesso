@@ -74,6 +74,9 @@ for (let d = 0; d < DAYS; d++) {
 // --- resolution resolvers ---
 const reqWidth = url => { const m = String(url).match(/[?&]width=(\d+)/); return m ? +m[1] : null; };
 const commonsFile = url => { const m = String(url).match(/Special:FilePath\/([^?]+)/); return m ? decodeURIComponent(m[1]) : null; };
+// canonical Commons filename (underscores→spaces, first char uppercased) so the URL-derived name and the
+// API-normalized title join — without this, famous works fell through as false "commons-missing".
+const canon = s => { const t = decodeURIComponent(String(s)).replace(/_/g, " ").trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
 
 // parse width/height from JPEG/PNG bytes (for non-Commons museum CDNs)
 function sizeFromBytes(buf) {
@@ -95,10 +98,10 @@ async function commonsSizes(files) {
   const out = {};
   for (let i = 0; i < files.length; i += 40) {
     const batch = files.slice(i, i + 40);
-    const u = "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=size&titles=" +
+    const u = "https://commons.wikimedia.org/w/api.php?action=query&format=json&redirects=1&prop=imageinfo&iiprop=size&titles=" +
       encodeURIComponent(batch.map(f => "File:" + f).join("|"));
     try { const r = await fetch(u, { headers: UA }); const j = await r.json(); const pages = j.query?.pages || {};
-      for (const k in pages) { const t = (pages[k].title || "").replace(/^File:/, ""); const ii = pages[k].imageinfo?.[0]; if (ii) out[t] = { w: ii.width, h: ii.height }; else out[t] = null; }
+      for (const k in pages) { const t = canon((pages[k].title || "").replace(/^File:/, "")); const ii = pages[k].imageinfo?.[0]; if (ii) out[t] = { w: ii.width, h: ii.height }; else out[t] = null; }
     } catch {}
     await sleep(120);
   }
@@ -116,7 +119,7 @@ const cSizes = await commonsSizes(commonsFiles);
 const findings = [];
 for (const e of works) {
   const p = e.work, cf = commonsFile(p.img); let native = null, err = null;
-  if (cf) { const s = cSizes[cf]; if (s) native = s; else err = "commons-missing"; }
+  if (cf) { const s = cSizes[canon(cf)]; if (s) native = s; else err = "commons-missing"; }
   else { const s = await fetchSize(p.img); if (s.w) native = s; else err = s.err; await sleep(40); }
   const rw = reqWidth(p.img);
   // native >= BORDERLINE renders crisp even on a retina reveal, regardless of the requested width, so it's ok.
