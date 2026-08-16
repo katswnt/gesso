@@ -7,6 +7,7 @@
 // Usage: node scripts/audit-style-text.mjs
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
+import { loadWdEntities } from "./lib/wd-cache.mjs";
 
 const DIR = "data/incoming/style-text"; mkdirSync(DIR, { recursive: true });
 const pool = readGlobal("data/pool.js", "ARTEFACTUM_POOL");
@@ -20,26 +21,10 @@ const byQid = {}; for (const w of works) (byQid[w.qid] = byQid[w.qid] || []).pus
 const qids = Object.keys(byQid);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ---- step 1: enwiki titles ----
-let titles = {}; try { titles = JSON.parse(readFileSync(`${DIR}/titles.json`, "utf8")); } catch {}
-const needT = qids.filter(q => !(q in titles));
-console.error(`works(styled,wd)=${works.length} QIDs=${qids.length} need-titles=${needT.length}`);
-for (let i = 0; i < needT.length; i += 100) {
-  const slice = needT.slice(i, i + 100);
-  const q = `SELECT ?item ?article WHERE { VALUES ?item { ${slice.map(x => "wd:" + x).join(" ")} }
-    OPTIONAL { ?article schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. } }`;
-  let tries = 0;
-  while (true) { try {
-    const r = await fetch("https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(q), { headers: { "User-Agent": "gesso-style-text/1.0 (kathryn.swint@gmail.com)" } });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json();
-    for (const x of slice) titles[x] = null;
-    for (const b of j.results.bindings) { const id = b.item.value.match(/Q\d+/)[0]; if (b.article) titles[id] = decodeURIComponent(b.article.value.split("/wiki/")[1]).replace(/_/g, " "); }
-    break;
-  } catch (e) { if (++tries >= 3) { console.error(`titles batch ${i} failed: ${e.message}`); break; } await sleep(2000 * tries); } }
-  writeFileSync(`${DIR}/titles.json`, JSON.stringify(titles));
-  await sleep(250);
-}
+// ---- step 1: enwiki titles (from the shared Wikidata cache — no separate sweep) ----
+const ents = await loadWdEntities(qids, { onProgress: (d, t) => { if (d % 600 < 100) console.error(`  ${d}/${t} fetched`); } });
+const titles = {}; for (const q of qids) titles[q] = ents.get(q)?.enwiki || null;
+console.error(`works(styled,wd)=${works.length} QIDs=${qids.length}`);
 const withArticle = qids.filter(q => titles[q]);
 console.error(`have enwiki article: ${withArticle.length}/${qids.length}`);
 

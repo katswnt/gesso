@@ -5,53 +5,20 @@
 // Usage: node scripts/audit-fields.mjs        (gather + analyze; cache resumable)
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
+import { loadWdEntities } from "./lib/wd-cache.mjs";
 
 const DIR = "data/incoming/field-audit";
 mkdirSync(DIR, { recursive: true });
-const CACHE = `${DIR}/wd.json`;
 
 const pool = readGlobal("data/pool.js", "ARTEFACTUM_POOL");
 const qidOf = p => { const m = String(p.id).match(/Q\d+/); return (m && /^(wikidata:|http:\/\/www\.wikidata)/.test(p.id)) ? m[0] : null; };
 const works = pool.map(p => ({ p, qid: qidOf(p) })).filter(x => x.qid);
 
-let cache = {}; try { cache = JSON.parse(readFileSync(CACHE, "utf8")); } catch {}
-const need = [...new Set(works.map(w => w.qid))].filter(q => !cache[q]);
-console.error(`works=${works.length} to-fetch=${need.length}`);
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function fetchBatch(qids) {
-  const q = `SELECT ?item ?creatorLabel ?title ?materialLabel ?movementLabel WHERE {
-    VALUES ?item { ${qids.map(i => "wd:" + i).join(" ")} }
-    OPTIONAL { ?item wdt:P170 ?cr. ?cr rdfs:label ?creatorLabel. FILTER(LANG(?creatorLabel)="en") }
-    OPTIONAL { ?item wdt:P1476 ?title. FILTER(LANG(?title)="en") }
-    OPTIONAL { ?item wdt:P186 ?mat. ?mat rdfs:label ?materialLabel. FILTER(LANG(?materialLabel)="en") }
-    OPTIONAL { ?item wdt:P135 ?mv. ?mv rdfs:label ?movementLabel. FILTER(LANG(?movementLabel)="en") } }`;
-  const r = await fetch("https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(q),
-    { headers: { "User-Agent": "gesso-field-audit/1.0 (kathryn.swint@gmail.com)" } });
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  const j = await r.json();
-  const out = {};
-  for (const b of j.results.bindings) {
-    const id = b.item.value.match(/Q\d+/)[0];
-    const o = out[id] = out[id] || { creator: new Set(), title: new Set(), material: new Set(), movement: new Set() };
-    if (b.creatorLabel) o.creator.add(b.creatorLabel.value);
-    if (b.title) o.title.add(b.title.value);
-    if (b.materialLabel) o.material.add(b.materialLabel.value);
-    if (b.movementLabel) o.movement.add(b.movementLabel.value);
-  }
-  for (const id of qids) { const o = out[id] || { creator: new Set(), title: new Set(), material: new Set(), movement: new Set() };
-    cache[id] = { creator: [...o.creator], title: [...o.title], material: [...o.material], movement: [...o.movement] }; }
-}
-
-const BATCH = 60;
-for (let i = 0; i < need.length; i += BATCH) {
-  const slice = need.slice(i, i + BATCH);
-  let tries = 0;
-  while (true) { try { await fetchBatch(slice); break; } catch (e) { if (++tries >= 3) { console.error(`batch ${i} failed: ${e.message}`); break; } await sleep(2000 * tries); } }
-  writeFileSync(CACHE, JSON.stringify(cache));
-  if (i % 600 === 0) console.error(`  ${Math.min(i + BATCH, need.length)}/${need.length}`);
-  await sleep(300);
-}
+// creator / title / material / movement now come from the shared Wikidata cache — no separate sweep.
+const ents = await loadWdEntities(works.map(w => w.qid), { onProgress: (d, t) => { if (d % 600 < 100) console.error(`  ${d}/${t} fetched`); } });
+const cache = {};
+for (const w of works) { const e = ents.get(w.qid);
+  cache[w.qid] = { creator: e.creators.map(c => c.l).filter(Boolean), title: e.title ? [e.title] : [], material: e.materials, movement: e.movements }; }
 
 // ---- analyze ----
 const strip = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

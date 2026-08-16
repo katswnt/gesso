@@ -11,10 +11,10 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
 import { canonicalizePlace, isPlaceCanonical, continentOf } from "./lib/places.mjs";
+import { loadWdEntities } from "./lib/wd-cache.mjs";
 
 const DIR = "data/incoming/place-audit";
 mkdirSync(DIR, { recursive: true });
-const CACHE = `${DIR}/wd.json`;
 const apply = process.argv.includes("--apply");
 
 const pool = readGlobal("data/pool.js", "ARTEFACTUM_POOL");
@@ -22,45 +22,12 @@ const qidOf = p => { const m = String(p.id).match(/Q\d+/); return (m && /^(wikid
 const works = pool.map(p => ({ p, qid: qidOf(p) })).filter(x => x.qid && x.p.place);
 const byQid = {}; for (const w of works) (byQid[w.qid] = byQid[w.qid] || []).push(w.p);
 
-let cache = {}; try { cache = JSON.parse(readFileSync(CACHE, "utf8")); } catch {}
-const need = [...new Set(works.map(w => w.qid))].filter(q => !cache[q]);
-console.error(`works=${works.length} distinct QIDs=${Object.keys(byQid).length} cached=${Object.keys(cache).length} to-fetch=${need.length}`);
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function fetchBatch(qids) {
-  const q = `SELECT ?item ?birthC ?birthCLabel ?locC ?locCLabel ?origC ?origCLabel ?inception WHERE {
-    VALUES ?item { ${qids.map(i => "wd:" + i).join(" ")} }
-    OPTIONAL { ?item wdt:P170 ?cr. ?cr wdt:P19 ?bp. ?bp wdt:P17 ?birthC. }
-    OPTIONAL { ?item wdt:P1071 ?loc. ?loc wdt:P17 ?locC. }
-    OPTIONAL { ?item wdt:P495 ?origC. }
-    OPTIONAL { ?item wdt:P571 ?inception. }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }`;
-  const r = await fetch("https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(q),
-    { headers: { "User-Agent": "gesso-place-audit/1.0 (kathryn.swint@gmail.com)" } });
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  const j = await r.json();
-  const out = {};
-  for (const b of j.results.bindings) {
-    const id = b.item.value.match(/Q\d+/)[0];
-    const o = out[id] = out[id] || { birth: new Set(), loc: new Set(), orig: new Set(), inc: new Set() };
-    if (b.birthCLabel) o.birth.add(b.birthCLabel.value);
-    if (b.locCLabel) o.loc.add(b.locCLabel.value);
-    if (b.origCLabel) o.orig.add(b.origCLabel.value);
-    if (b.inception) { const m = String(b.inception.value).match(/^(-?)0*(\d+)/); if (m) { const y = (m[1] ? -1 : 1) * parseInt(m[2], 10); if (y) o.inc.add(y); } }
-  }
-  for (const id of qids) { const o = out[id] || { birth: new Set(), loc: new Set(), orig: new Set(), inc: new Set() };
-    cache[id] = { birth: [...o.birth], loc: [...o.loc], orig: [...o.orig], inc: [...o.inc] }; }
-}
-
-const BATCH = 60;
-for (let i = 0; i < need.length; i += BATCH) {
-  const slice = need.slice(i, i + BATCH);
-  let tries = 0;
-  while (true) { try { await fetchBatch(slice); break; } catch (e) { if (++tries >= 3) { console.error(`batch ${i} failed: ${e.message}`); break; } await sleep(2000 * tries); } }
-  writeFileSync(CACHE, JSON.stringify(cache));
-  console.error(`  fetched ${Math.min(i + BATCH, need.length)}/${need.length}`);
-  await sleep(300);
-}
+// birthplace-country / location / origin / inception now come from the shared Wikidata cache — no sweep.
+const yearOf = v => { const m = String(v || "").match(/^(-?)0*(\d+)/); if (m) { const y = (m[1] ? -1 : 1) * parseInt(m[2], 10); return y || null; } return null; };
+const ents = await loadWdEntities(works.map(w => w.qid), { onProgress: (d, t) => { if (d % 600 < 100) console.error(`  ${d}/${t} fetched`); } });
+const cache = {};
+for (const q of Object.keys(byQid)) { const e = ents.get(q); const inc = yearOf(e.inception);
+  cache[q] = { birth: [...new Set(e.creators.map(c => c.birthCountry).filter(Boolean))], loc: e.locCountry, orig: e.origCountry, inc: inc ? [inc] : [] }; }
 
 // ---- analyze ----
 // Wikidata returns HISTORICAL state names for location/origin (Republic of Venice, Dutch Republic, Safavid
