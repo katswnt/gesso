@@ -56,10 +56,16 @@ const ranked = pool.filter(workComplete).sort((a,b)=>fameOf(b.id)-fameOf(a.id));
 const n = ranked.length;
 const out={};
 
+// EASY EXCLUSIONS: works the blinded guessability probe shows are recognizable-but-not-gettable — an
+// expert-level DATE facet (|Δyr|>500y: Moai, Venus of Willendorf, antiquities). Kept OUT of the easy tier
+// (a bad "easy" experience even though famous) and demoted to medium/hard by fame. See data/easy-exclude.json.
+const EASY_EXCLUDE = new Set((() => { try { return JSON.parse(readFileSync("data/easy-exclude.json", "utf8")).ids || []; } catch { return []; } })());
+const rankedEasy = ranked.filter(p => !EASY_EXCLUDE.has(p.id));
+
 // --- EASY = two bands so every daily is 4 instantly-recognizable icons + 1 very-recognizable work ---
 const T1_SIZE=140, T2_SIZE=270; // T1 icons (canon + top pageviews), T2 recognizable. T1=140 → icons recur ~35d (>30d no-repeat); Easy stays ~410.
-const T1ids = ranked.slice(0, T1_SIZE).map(p=>p.id);
-const T2ids = ranked.slice(T1_SIZE, T1_SIZE+T2_SIZE).map(p=>p.id);
+const T1ids = rankedEasy.slice(0, T1_SIZE).map(p=>p.id);
+const T2ids = rankedEasy.slice(T1_SIZE, T1_SIZE+T2_SIZE).map(p=>p.id);
 // Easy keeps the 4-icons + 1-recognizable structure (recognizability rule untouched); diversity only REORDERS
 // within the bands — never swaps an icon out. T1 diversified so each day's 4 icons have distinct artists +
 // region/era spread; T2 picked to not repeat a named artist already in that day's icons. Region stays soft
@@ -81,7 +87,9 @@ const T2SET=new Set(T2ids); // the "recognizable" band — capped at 1/easy-day 
 // Split the rest by FAME THRESHOLDS, not equal rank-thirds. The fame curve is a cliff, so equal thirds
 // dumped a huge range into medium (fame 1195 down to ~60) — a "medium" day could pair a famous work with a
 // fame-69 village object. Thresholds keep medium recognizable: medium = fame>=300, hard = 30-300, impossible = <30.
-const restP=ranked.slice(T1_SIZE+T2_SIZE); const rest=restP.map(p=>p.id); const r=rest.length;
+// medium+ = every ranked work NOT in the easy bands (fame-sorted) — this naturally includes the EASY_EXCLUDE
+// works demoted from easy, placing them in medium/hard by their fame rather than dropping them entirely.
+const easySet=new Set([...T1ids,...T2ids]); const restP=ranked.filter(p=>!easySet.has(p.id)); const rest=restP.map(p=>p.id); const r=rest.length;
 const idxBelow=thr=>{ const i=restP.findIndex(p=>fameOf(p.id)<thr); return i<0?r:i; };
 const mc=[0, idxBelow(500), idxBelow(120), r]; // recalibrated for all-language fame (~2x): medium fame>=500, hard 120-500, impossible <120 (the cliff)
 ["medium","hard","impossible"].forEach((k,i)=>{ out[k]=diversify(seededShuffle(rest.slice(mc[i],mc[i+1]),`gesso-daily-freeze-v2|${k}`),5); });

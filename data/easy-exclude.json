@@ -1,0 +1,80 @@
+{
+ "note": "Works excluded from the EASY tier because the blinded guessability probe shows an expert-level DATE facet (|Δyr|>500y) — recognizable but not gettable (Moai, antiquities). They still appear in medium/hard. Regenerate: see the probe at data/incoming/vision-guessability-*.json.",
+ "threshold": 500,
+ "ids": [
+  "wd:Q131397",
+  "wikidata:Q28792214",
+  "wikidata:Q606662",
+  "wikidata:Q133732",
+  "http://www.wikidata.org/entity/Q378034",
+  "http://www.wikidata.org/entity/Q3203231",
+  "http://www.wikidata.org/entity/Q216402",
+  "harvard312306",
+  "http://www.wikidata.org/entity/Q774967",
+  "wikidata:Q279559",
+  "http://www.wikidata.org/entity/Q695039",
+  "http://www.wikidata.org/entity/Q736832"
+ ],
+ "works": [
+  {
+   "id": "wd:Q131397",
+   "title": "Venus of Willendorf",
+   "dyr": 27000
+  },
+  {
+   "id": "wikidata:Q28792214",
+   "title": "Moai",
+   "dyr": 6250
+  },
+  {
+   "id": "wikidata:Q606662",
+   "title": "Elgin Marbles",
+   "dyr": 2410
+  },
+  {
+   "id": "wikidata:Q133732",
+   "title": "Discobolus",
+   "dyr": 2250
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q378034",
+   "title": "The Seated Scribe",
+   "dyr": 2100
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3203231",
+   "title": "Rebellious Slave",
+   "dyr": 1943
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q216402",
+   "title": "Winged Victory of Samothrace",
+   "dyr": 1925
+  },
+  {
+   "id": "harvard312306",
+   "title": "Alexander the Great",
+   "dyr": 1723
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q774967",
+   "title": "Venus de' Medici",
+   "dyr": 1650
+  },
+  {
+   "id": "wikidata:Q279559",
+   "title": "Babylonian Map of the World",
+   "dyr": 950
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q695039",
+   "title": "Gebel el-Arak Knife",
+   "dyr": 799
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q736832",
+   "title": "Chōjū-jinbutsu-giga",
+   "dyr": 630
+  }
+ ]
+}
