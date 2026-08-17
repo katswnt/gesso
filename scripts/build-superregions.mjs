@@ -33,9 +33,15 @@ new Function("window", readFileSync(join(ROOT, "data", "countries.js"), "utf8"))
 const COUNTRIES = win.ARTEFACTUM_COUNTRIES || [];
 const RINGS = {}; for (const c of COUNTRIES) RINGS[c.n] = c.r; // country name → array of [lng,lat] rings
 
-// NON-EUROPEAN super-regions (A3). members = the modern countries whose art of that era belongs to the polity;
+// Super-regions REBUILT from country outlines (dropped-then-reappended by name; the other hand-authored European
+// entries pass through untouched). members = the modern countries whose art of that era belongs to the polity;
 // geometry = the union of those countries' outlines. Names read naturally in the reveal nudge "…this is <name>".
 const NEW = [
+  // Correction (2026-08-17): the original "Russian/Soviet sphere" polygon spanned the WHOLE former USSR, so a pin
+  // in Kyiv or Tashkent scored full credit for a Moscow-placed work (~2,800 km off) and quietly absorbed the other
+  // republics under Russia. Shrink it to modern Russia proper — still enormous (any in-Russia pin = full), but a
+  // pin in Ukraine / the Caucasus / Central Asia no longer counts as "in region".
+  { name: "Russian/Soviet sphere",members: ["Russia"],                                  from: 1700,  to: 1991 },
   { name: "Imperial China",       members: ["China"],                                   from: -2000, to: 1912 },
   { name: "Greater Persia",       members: ["Iran"],                                    from: -3000, to: 1925 },
   { name: "the Nile Valley",      members: ["Egypt"],                                   from: -3100, to: 1800 },
@@ -76,5 +82,5 @@ lines[srLineIdx] = `window.ARTEFACTUM_SUPERREGIONS=${JSON.stringify(out)};`;
 writeAtomic(path, lines.join("\n"));
 
 const kb = (Buffer.byteLength(lines[srLineIdx]) / 1024).toFixed(1);
-console.log(`wrote data/regions.js — SUPERREGIONS now ${out.length} (${existing.length} kept + ${built.length} non-European), line = ${kb} KB`);
-console.log("  added: " + built.map((s) => `${s.name} [${s.members.join("+")}] ${s.from}..${s.to}`).join("\n         "));
+console.log(`wrote data/regions.js — SUPERREGIONS now ${out.length} (${existing.length} untouched + ${built.length} rebuilt from country outlines), line = ${kb} KB`);
+console.log("  rebuilt: " + built.map((s) => `${s.name} [${s.members.join("+")}] ${s.from}..${s.to}`).join("\n           "));
