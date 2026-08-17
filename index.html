@@ -3071,7 +3071,13 @@ function score(){
   // daily_complete fires HERE — at the final guess — not on the summary screen. A player who answers all 5
   // then closes (or never taps "See final score") is still a real completion. Firing in the submit path also
   // dedupes naturally: navigating back to the summary re-renders but never re-runs submit.
-  if(!infinite && tier && results.length===ROUNDS) track('daily_complete',{tier,score:resultSummary().grand,archive:runArchive});
+  // Submit the leaderboard score HERE — at the final guess — not only on the summary screen. Previously
+  // submitScore ran only in renderFinal(), so a player who answered all 5 and closed at the last reveal
+  // (never tapping "See final score") never posted a score. That silently dropped most players from the
+  // board. submitScore upserts best-score, so the redundant call in renderFinal is a harmless no-op.
+  if(!infinite && tier && results.length===ROUNDS){ const _sum=resultSummary();
+    track('daily_complete',{tier,score:_sum.grand,archive:runArchive});
+    submitScore(runDate||todayStr(),tier,_sum); }
   renderReveal(results[results.length-1]);
 }
 
