@@ -3133,12 +3133,11 @@ function score(){
   // Your Eye (persisted mastery) reflects daily AND infinite play; training (TRAIN set) is self-chosen so it
   // stays ephemeral, and archive replays don't count. Streak/points/leaderboard remain daily-only (handled elsewhere).
   if(!TRAIN&&!runArchive){
-    if(it.cats.includes('style')) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
-    bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75);
-    bumpMastery('when','byCategory',cells.when.pts>=MAX_CAT*0.75);
-    bumpMastery('where','byCategory',cells.where.pts>=MAX_CAT*0.75);
-    if(it.cats.includes('style')) bumpMastery('style','byCategory',cells.style.pts===MAX_CAT);
-    if(it.y!=null) bumpMastery(String(centuryOf(it.y)),'byCentury',cells.when.pts>=MAX_CAT*0.75);
+    // guard on the CELL existing: a facet can be absent (place-NA drops 'where'; deep-prehistory opts out of 'when')
+    if(cells.style) bumpMastery(it.style,'byStyle',cells.style.pts===MAX_CAT);
+    if(cells.where){ bumpMastery(it.region,'byRegion',cells.where.pts>=MAX_CAT*0.75); bumpMastery('where','byCategory',cells.where.pts>=MAX_CAT*0.75); }
+    if(cells.when){ bumpMastery('when','byCategory',cells.when.pts>=MAX_CAT*0.75); if(it.y!=null) bumpMastery(String(centuryOf(it.y)),'byCentury',cells.when.pts>=MAX_CAT*0.75); }
+    if(cells.style) bumpMastery('style','byCategory',cells.style.pts===MAX_CAT);
   }
   results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
   track('guess_submit',{mode:TRAIN?'training':(infinite?'infinite':'daily'), round:results.length, of:ROUNDS, tier:tier||null}); // each "submit" click, for the funnel
