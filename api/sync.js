@@ -36,6 +36,16 @@ function mergeMastery(a, b){
   }
   return out;
 }
+// glossary = {met:{name->first-met date}, pending:[names]} — keep the EARLIEST first-met per name, union pending.
+function mergeGlossary(a, b){
+  a=a&&typeof a==='object'?a:{}; b=b&&typeof b==='object'?b:{};
+  const met={...(a.met||{})};
+  for(const [name,date] of Object.entries(b.met||{})){ const cur=met[name]; met[name] = (cur && cur<=date) ? cur : date; }
+  const pending=[...new Set([...(Array.isArray(a.pending)?a.pending:[]), ...(Array.isArray(b.pending)?b.pending:[])])];
+  return { met, pending };
+}
+// seen = array of work ids — union.
+function mergeSeen(a, b){ return [...new Set([...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])])]; }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -85,7 +95,18 @@ export default async function handler(req, res) {
       await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, mastery: mergedMastery, updated_at: new Date().toISOString() }) });
     } catch { mergedMastery = body.mastery || null; }
 
-    return res.status(200).json({ ok: true, name, color, streak: merged, mastery: mergedMastery });
+    // GLOSSARY + SEEN — same up-merge-down, in their OWN try/catch (columns added by
+    // db/user_state-glossary-seen.sql) so they no-op until that migration runs, without touching mastery.
+    let mergedGlossary = body.glossary || null, mergedSeen = Array.isArray(body.seen) ? body.seen : null;
+    try {
+      const gs = await (await rest(`user_state?user_id=eq.${uid}&select=glossary,seen`)).json();
+      const row = Array.isArray(gs) && gs[0] ? gs[0] : {};
+      mergedGlossary = mergeGlossary(row.glossary, body.glossary);
+      mergedSeen = mergeSeen(row.seen, body.seen);
+      await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, glossary: mergedGlossary, seen: mergedSeen, updated_at: new Date().toISOString() }) });
+    } catch { mergedGlossary = body.glossary || null; mergedSeen = Array.isArray(body.seen) ? body.seen : null; }
+
+    return res.status(200).json({ ok: true, name, color, streak: merged, mastery: mergedMastery, glossary: mergedGlossary, seen: mergedSeen });
   } catch (e) {
     return res.status(500).json({ error: 'sync failed' });
   }
