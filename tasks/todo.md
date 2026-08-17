@@ -15,7 +15,7 @@ _Rebuilt 2026-08-13 by auditing every planning doc against the live code. Most o
 - [ ] **~35 pin-backlog works** have no look-closer pins (non-Met/non-Wikidata sources).
 
 ## 🟡 Scoring & features (tier2-plan Batch B — parked, not shipped)
-- [ ] **B3 tiered place credit** — right *modern country* currently = full credit; make it ~0.8 with a reveal line ("you said Nigeria; this is the Benin Kingdom"). The educational payoff of the whole geography model.
+- [x] **B3 tiered place credit** — DONE (2026-08-17, `5a8c83d`). `whereCredit()` (pure/tested): historical region = full, right modern country *alone* (when a deeper region exists) = 0.8 with a "right country · this is <RegionName>" nudge, no-region works = full (unchanged). ≤200km bullseye guard protects against simplified polygons. Public methodology copy updated for honesty.
 - [ ] **B1 `placeNA`** (works with no meaningful "where") + **B2 object-datability tolerance** (wider accepted date range for hard-to-date objects).
 - [ ] **A3 super-regions** — only 8, all European. Add Ottoman core, Han/Imperial China; split the Soviet bloc into Ukrainian/Georgian/Armenian.
 - [ ] **1c artist-alias matching** — "Leonardo" → "Leonardo da Vinci", surname-only, typo tolerance (deaccent already ships).
