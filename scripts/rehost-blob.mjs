@@ -40,7 +40,8 @@ for (const { p, spec } of targets) {
   try {
     let buf = null;
     for (const u of spec.urls) {
-      try { const r = await fetch(u, { headers: { "User-Agent": UA, Accept: "image/*" } }); if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); if (b.length >= 1000) { buf = b; break; } } } catch {}
+      try { const h = { "User-Agent": UA, Accept: "image/*" }; if (/artic\.edu/.test(u)) h.Referer = "https://www.artic.edu/"; // AIC's Cloudflare wants a same-site referer
+        const r = await fetch(u, { headers: h }); if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); if (b.length >= 1000) { buf = b; break; } } } catch {}
     }
     if (!buf) throw new Error("all source urls failed/broken");
     const { url } = await put(`${spec.prefix}/${p.id}.jpg`, buf, { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "image/jpeg", token: TOKEN });
