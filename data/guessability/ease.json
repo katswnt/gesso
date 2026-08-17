@@ -1,0 +1,5315 @@
+{
+ "tier": "easy",
+ "params": {
+  "REC": {
+   "when": 0.7,
+   "where": 1,
+   "medium": 1,
+   "style": 1
+  },
+  "R_fame": {
+   "p50": 0.9,
+   "steep": 0.05
+  },
+  "R_vis": {
+   "floor": 0.4,
+   "span": 0.6
+  },
+  "maxRung": 4,
+  "humanMinPlays": 3
+ },
+ "note": "Ease_f = R*REC_f + (1-R)*g_f; R from human recognizedRate where available (>=3 plays) else fame-percentile logistic. Placeholders — recalibrate from friend play.",
+ "works": {
+  "http://www.wikidata.org/entity/Q12418": {
+   "title": "Mona Lisa",
+   "R": 0.88,
+   "Rsrc": "fame×vis",
+   "gG": 0.745,
+   "ease": 0.903,
+   "easeFacets": {
+    "when": 0.65,
+    "where": 1,
+    "medium": 1,
+    "style": 0.964
+   }
+  },
+  "wikidata:Q128910": {
+   "title": "The Last Supper",
+   "R": 0.88,
+   "Rsrc": "fame×vis",
+   "gG": 0.739,
+   "ease": 0.903,
+   "easeFacets": {
+    "when": 0.736,
+    "where": 1,
+    "medium": 0.94,
+    "style": 0.935
+   }
+  },
+  "http://www.wikidata.org/entity/Q45585": {
+   "title": "The Starry Night",
+   "R": 0.88,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.736,
+    "where": 0.94,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q48584": {
+   "title": "Rosetta Stone",
+   "R": 0.879,
+   "Rsrc": "fame×vis",
+   "gG": 0.869,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.736,
+    "where": 1,
+    "medium": 1,
+    "style": 0.937
+   }
+  },
+  "http://www.wikidata.org/entity/Q1150997": {
+   "title": "Saturn Devouring His Son",
+   "R": 0.879,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.852,
+   "easeFacets": {
+    "when": 0.649,
+    "where": 0.879,
+    "medium": 1,
+    "style": 0.879
+   }
+  },
+  "wikidata:Q185372": {
+   "title": "Girl with a Pearl Earring",
+   "R": 0.879,
+   "Rsrc": "fame×vis",
+   "gG": 0.925,
+   "ease": 0.925,
+   "easeFacets": {
+    "when": 0.736,
+    "where": 1,
+    "medium": 1,
+    "style": 0.964
+   }
+  },
+  "http://www.wikidata.org/entity/Q208758": {
+   "title": "Las Meninas",
+   "R": 0.878,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.846,
+   "easeFacets": {
+    "when": 0.627,
+    "where": 0.878,
+    "medium": 1,
+    "style": 0.878
+   }
+  },
+  "http://www.wikidata.org/entity/Q252485": {
+   "title": "The Great Wave off Kanagawa",
+   "R": 0.878,
+   "Rsrc": "fame×vis",
+   "gG": 0.981,
+   "ease": 0.932,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 0.991,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q215486": {
+   "title": "Vitruvian Man",
+   "R": 0.878,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 0.939
+   }
+  },
+  "wikidata:Q500242": {
+   "title": "The Creation of Adam",
+   "R": 0.877,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q321303": {
+   "title": "The Garden of Earthly Delights",
+   "R": 0.877,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q698487": {
+   "title": "The Kiss",
+   "R": 0.877,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q151047": {
+   "title": "The Birth of Venus",
+   "R": 0.876,
+   "Rsrc": "fame×vis",
+   "gG": 0.805,
+   "ease": 0.91,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 0.904
+   }
+  },
+  "http://www.wikidata.org/entity/Q212616": {
+   "title": "The Raft of the Medusa",
+   "R": 0.745,
+   "Rsrc": "fame×vis",
+   "gG": 0.52,
+   "ease": 0.822,
+   "easeFacets": {
+    "when": 0.593,
+    "where": 0.948,
+    "medium": 1,
+    "style": 0.745
+   }
+  },
+  "wikidata:Q186953": {
+   "title": "The School of Athens",
+   "R": 0.876,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q18003128": {
+   "title": "The Thinker",
+   "R": 0.744,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.912,
+   "easeFacets": {
+    "when": 0.777,
+    "where": 0.87,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q216402": {
+   "title": "Winged Victory of Samothrace",
+   "R": 0.875,
+   "Rsrc": "fame×vis",
+   "gG": 0.125,
+   "ease": 0.825,
+   "easeFacets": {
+    "when": 0.613,
+    "where": 0.875,
+    "medium": 0.938,
+    "style": 0.875
+   }
+  },
+  "http://www.wikidata.org/entity/Q219831": {
+   "title": "The Night Watch",
+   "R": 0.875,
+   "Rsrc": "fame×vis",
+   "gG": 0.925,
+   "ease": 0.925,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 1,
+    "medium": 1,
+    "style": 0.962
+   }
+  },
+  "wikidata:Q152072": {
+   "title": "Manneken Pis",
+   "R": 0.743,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.758,
+   "easeFacets": {
+    "when": 0.546,
+    "where": 0.743,
+    "medium": 1,
+    "style": 0.743
+   }
+  },
+  "http://www.wikidata.org/entity/Q29530": {
+   "title": "Liberty Leading the People",
+   "R": 0.874,
+   "Rsrc": "fame×vis",
+   "gG": 0.625,
+   "ease": 0.887,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 0.937,
+    "medium": 1,
+    "style": 0.874
+   }
+  },
+  "http://www.wikidata.org/entity/Q464782": {
+   "title": "American Gothic",
+   "R": 0.874,
+   "Rsrc": "fame×vis",
+   "gG": 0.747,
+   "ease": 0.903,
+   "easeFacets": {
+    "when": 0.708,
+    "where": 1,
+    "medium": 1,
+    "style": 0.902
+   }
+  },
+  "wikidata:Q474338": {
+   "title": "Lady with an Ermine",
+   "R": 0.873,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q311243": {
+   "title": "Wanderer above the Sea of Fog",
+   "R": 0.873,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.871,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 0.873,
+    "medium": 1,
+    "style": 0.873
+   }
+  },
+  "http://www.wikidata.org/entity/Q220859": {
+   "title": "Arnolfini Portrait",
+   "R": 0.873,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q636537": {
+   "title": "The Death of Marat",
+   "R": 0.872,
+   "Rsrc": "fame×vis",
+   "gG": 0.754,
+   "ease": 0.903,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 0.935,
+    "medium": 1,
+    "style": 0.939
+   }
+  },
+  "http://www.wikidata.org/entity/Q1065493": {
+   "title": "Ophelia",
+   "R": 0.872,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.902,
+   "easeFacets": {
+    "when": 0.738,
+    "where": 1,
+    "medium": 1,
+    "style": 0.872
+   }
+  },
+  "wikidata:Q734834": {
+   "title": "Ghent Altarpiece",
+   "R": 0.872,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.935,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q152509": {
+   "title": "Luncheon on the Grass",
+   "R": 0.871,
+   "Rsrc": "fame×vis",
+   "gG": 0.762,
+   "ease": 0.904,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 0.936,
+    "medium": 1,
+    "style": 0.942
+   }
+  },
+  "wikidata:Q328523": {
+   "title": "Impression, Sunrise",
+   "R": 0.74,
+   "Rsrc": "fame×vis",
+   "gG": 0.848,
+   "ease": 0.905,
+   "easeFacets": {
+    "when": 0.752,
+    "where": 0.868,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q354396": {
+   "title": "Portrait of Adele Bloch-Bauer I",
+   "R": 0.871,
+   "Rsrc": "fame×vis",
+   "gG": 0.872,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 1,
+    "medium": 1,
+    "style": 0.934
+   }
+  },
+  "http://www.wikidata.org/entity/Q549847": {
+   "title": "Primavera",
+   "R": 0.87,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.935,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q737062": {
+   "title": "Olympia",
+   "R": 0.87,
+   "Rsrc": "fame×vis",
+   "gG": 0.798,
+   "ease": 0.908,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 0.934,
+    "medium": 1,
+    "style": 0.961
+   }
+  },
+  "http://www.wikidata.org/entity/Q465762": {
+   "title": "Laocoön Group",
+   "R": 0.869,
+   "Rsrc": "fame×vis",
+   "gG": 0.699,
+   "ease": 0.895,
+   "easeFacets": {
+    "when": 0.739,
+    "where": 0.973,
+    "medium": 1,
+    "style": 0.869
+   }
+  },
+  "wikidata:Q1025704": {
+   "title": "Café Terrace at Night",
+   "R": 0.869,
+   "Rsrc": "fame×vis",
+   "gG": 0.773,
+   "ease": 0.905,
+   "easeFacets": {
+    "when": 0.726,
+    "where": 0.933,
+    "medium": 1,
+    "style": 0.961
+   }
+  },
+  "wikidata:Q2246489": {
+   "title": "The Storm on the Sea of Galilee",
+   "R": 0.868,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.845,
+   "easeFacets": {
+    "when": 0.645,
+    "where": 0.868,
+    "medium": 1,
+    "style": 0.868
+   }
+  },
+  "http://www.wikidata.org/entity/Q1091086": {
+   "title": "The Third of May 1808",
+   "R": 0.868,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.845,
+   "easeFacets": {
+    "when": 0.645,
+    "where": 0.868,
+    "medium": 1,
+    "style": 0.868
+   }
+  },
+  "http://www.wikidata.org/entity/Q167605": {
+   "title": "The Milkmaid",
+   "R": 0.868,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.935,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q9048095": {
+   "title": "Mask of Tutankhamun",
+   "R": 0.867,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 1,
+    "medium": 1,
+    "style": 0.933
+   }
+  },
+  "wikidata:Q582172": {
+   "title": "Bust of Queen Nefertiti",
+   "R": 0.867,
+   "Rsrc": "fame×vis",
+   "gG": 0.501,
+   "ease": 0.869,
+   "easeFacets": {
+    "when": 0.727,
+    "where": 1,
+    "medium": 0.867,
+    "style": 0.881
+   }
+  },
+  "http://www.wikidata.org/entity/Q1212937": {
+   "title": "The Ambassadors",
+   "R": 0.867,
+   "Rsrc": "fame×vis",
+   "gG": 0.962,
+   "ease": 0.93,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 0.98,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q59201": {
+   "title": "Napoleon Crossing the Alps",
+   "R": 0.866,
+   "Rsrc": "fame×vis",
+   "gG": 0.754,
+   "ease": 0.902,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 0.932,
+    "medium": 1,
+    "style": 0.937
+   }
+  },
+  "wikidata:Q408623": {
+   "title": "Capitoline Wolf",
+   "R": 0.736,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.831,
+   "easeFacets": {
+    "when": 0.589,
+    "where": 1,
+    "medium": 1,
+    "style": 0.736
+   }
+  },
+  "http://www.wikidata.org/entity/Q1170315": {
+   "title": "Black Square",
+   "R": 0.865,
+   "Rsrc": "fame×vis",
+   "gG": 0.902,
+   "ease": 0.922,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 0.947,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q328079": {
+   "title": "Sistine Madonna",
+   "R": 0.865,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.935,
+   "easeFacets": {
+    "when": 0.74,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q2629559": {
+   "title": "The Swing",
+   "R": 0.865,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 0.931,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q661378": {
+   "title": "The Anatomy Lesson of Dr Nicolaes Tulp",
+   "R": 0.864,
+   "Rsrc": "fame×vis",
+   "gG": 0.925,
+   "ease": 0.925,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 1,
+    "medium": 1,
+    "style": 0.959
+   }
+  },
+  "http://www.wikidata.org/entity/Q687182": {
+   "title": "Arrangement in Grey and Black No. 1",
+   "R": 0.864,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.901,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 1,
+    "medium": 1,
+    "style": 0.864
+   }
+  },
+  "wikidata:Q1245354": {
+   "title": "A Bar at the Folies-Bergère",
+   "R": 0.864,
+   "Rsrc": "fame×vis",
+   "gG": 0.798,
+   "ease": 0.908,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 0.931,
+    "medium": 1,
+    "style": 0.959
+   }
+  },
+  "wikidata:Q1752990": {
+   "title": "The Death of Socrates",
+   "R": 0.863,
+   "Rsrc": "fame×vis",
+   "gG": 0.523,
+   "ease": 0.87,
+   "easeFacets": {
+    "when": 0.643,
+    "where": 0.974,
+    "medium": 1,
+    "style": 0.863
+   }
+  },
+  "http://www.wikidata.org/entity/Q154469": {
+   "title": "The Potato Eaters",
+   "R": 0.863,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.901,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 0.863,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q509806": {
+   "title": "Washington Crossing the Delaware",
+   "R": 0.863,
+   "Rsrc": "fame×vis",
+   "gG": 0.879,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 1,
+    "medium": 1,
+    "style": 0.933
+   }
+  },
+  "wikidata:Q2963501": {
+   "title": "A Friend in Need",
+   "R": 0.862,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.901,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 1,
+    "medium": 1,
+    "style": 0.862
+   }
+  },
+  "http://www.wikidata.org/entity/Q2664039": {
+   "title": "Madame X (Virginie Amélie Avegno Gautreau)",
+   "R": 0.862,
+   "Rsrc": "fame×vis",
+   "gG": 0.775,
+   "ease": 0.904,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 0.929,
+    "medium": 1,
+    "style": 0.947
+   }
+  },
+  "wikidata:Q14515330": {
+   "title": "Proserpine",
+   "R": 0.861,
+   "Rsrc": "fame×vis",
+   "gG": 0.444,
+   "ease": 0.858,
+   "easeFacets": {
+    "when": 0.617,
+    "where": 0.955,
+    "medium": 1,
+    "style": 0.861
+   }
+  },
+  "wikidata:Q634122": {
+   "title": "Wheatfield with Crows",
+   "R": 0.861,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.929,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1368055": {
+   "title": "The Gleaners",
+   "R": 0.732,
+   "Rsrc": "fame×vis",
+   "gG": 0.76,
+   "ease": 0.881,
+   "easeFacets": {
+    "when": 0.781,
+    "where": 0.866,
+    "medium": 1,
+    "style": 0.877
+   }
+  },
+  "wikidata:Q890678": {
+   "title": "Where Do We Come From? What Are We? Where Are We Going?",
+   "R": 0.86,
+   "Rsrc": "fame×vis",
+   "gG": 0.685,
+   "ease": 0.891,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.866,
+    "medium": 1,
+    "style": 0.958
+   }
+  },
+  "http://www.wikidata.org/entity/Q2395218": {
+   "title": "Woman with a Parasol – Madame Monet and Her Son",
+   "R": 0.86,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.928,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q683274": {
+   "title": "Bal du moulin de la Galette",
+   "R": 0.86,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.93,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q133732": {
+   "title": "Discobolus",
+   "R": 0.859,
+   "Rsrc": "fame×vis",
+   "gG": 0.25,
+   "ease": 0.83,
+   "easeFacets": {
+    "when": 0.601,
+    "where": 0.859,
+    "medium": 1,
+    "style": 0.859
+   }
+  },
+  "wikidata:Q969377": {
+   "title": "The Calling of Saint Matthew",
+   "R": 0.859,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 1,
+    "medium": 1,
+    "style": 0.936
+   }
+  },
+  "wikidata:Q2282256": {
+   "title": "Irises",
+   "R": 0.858,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 0.928,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q1167907": {
+   "title": "Luncheon of the Boating Party",
+   "R": 0.858,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 0.928,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1283024": {
+   "title": "The Birth of Venus",
+   "R": 0.858,
+   "Rsrc": "fame×vis",
+   "gG": 0.779,
+   "ease": 0.905,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 0.929,
+    "medium": 1,
+    "style": 0.946
+   }
+  },
+  "wikidata:Q533619": {
+   "title": "Netherlandish Proverbs",
+   "R": 0.857,
+   "Rsrc": "fame×vis",
+   "gG": 0.862,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 1,
+    "medium": 1,
+    "style": 0.921
+   }
+  },
+  "http://www.wikidata.org/entity/Q1978815": {
+   "title": "Grande Odalisque",
+   "R": 0.856,
+   "Rsrc": "fame×vis",
+   "gG": 0.756,
+   "ease": 0.901,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 0.928,
+    "medium": 1,
+    "style": 0.932
+   }
+  },
+  "http://www.wikidata.org/entity/Q257580": {
+   "title": "The Fighting Temeraire",
+   "R": 0.856,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.847,
+   "easeFacets": {
+    "when": 0.674,
+    "where": 0.856,
+    "medium": 1,
+    "style": 0.856
+   }
+  },
+  "http://www.wikidata.org/entity/Q2293905": {
+   "title": "Medusa",
+   "R": 0.856,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 1,
+    "medium": 1,
+    "style": 0.935
+   }
+  },
+  "wikidata:Q2247406": {
+   "title": "Judith Slaying Holofernes",
+   "R": 0.856,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.936,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q846213": {
+   "title": "Flaming June",
+   "R": 0.855,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.863,
+   "easeFacets": {
+    "when": 0.743,
+    "where": 0.855,
+    "medium": 1,
+    "style": 0.855
+   }
+  },
+  "wd:Q786806": {
+   "title": "Aztec sun stone",
+   "R": 0.855,
+   "Rsrc": "fame×vis",
+   "gG": 0.867,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.729,
+    "where": 1,
+    "medium": 1,
+    "style": 0.937
+   }
+  },
+  "http://www.wikidata.org/entity/Q2445726": {
+   "title": "The Lady of Shalott",
+   "R": 0.854,
+   "Rsrc": "fame×vis",
+   "gG": 0.697,
+   "ease": 0.892,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 0.969,
+    "medium": 1,
+    "style": 0.854
+   }
+  },
+  "http://www.wikidata.org/entity/Q2366825": {
+   "title": "The Hay Wain",
+   "R": 0.854,
+   "Rsrc": "fame×vis",
+   "gG": 0.794,
+   "ease": 0.906,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 1,
+    "medium": 1,
+    "style": 0.88
+   }
+  },
+  "http://www.wikidata.org/entity/Q2027662": {
+   "title": "The Turkish Bath",
+   "R": 0.854,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.9,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 0.925,
+    "medium": 1,
+    "style": 0.931
+   }
+  },
+  "wikidata:Q604761": {
+   "title": "The Blue Boy",
+   "R": 0.853,
+   "Rsrc": "fame×vis",
+   "gG": 0.877,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 1,
+    "medium": 1,
+    "style": 0.928
+   }
+  },
+  "wikidata:Q1240092": {
+   "title": "Portrait of Pope Innocent X",
+   "R": 0.853,
+   "Rsrc": "fame×vis",
+   "gG": 0.69,
+   "ease": 0.89,
+   "easeFacets": {
+    "when": 0.709,
+    "where": 0.853,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q1437492": {
+   "title": "Woman with a Hat",
+   "R": 0.853,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 0.925,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q644856": {
+   "title": "The Triumph of Death",
+   "R": 0.852,
+   "Rsrc": "fame×vis",
+   "gG": 0.862,
+   "ease": 0.915,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 1,
+    "medium": 1,
+    "style": 0.918
+   }
+  },
+  "wikidata:Q1219263": {
+   "title": "The Sleeping Gypsy",
+   "R": 0.724,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.758,
+   "easeFacets": {
+    "when": 0.584,
+    "where": 0.724,
+    "medium": 1,
+    "style": 0.724
+   }
+  },
+  "http://www.wikidata.org/entity/Q2011510": {
+   "title": "Bacchus",
+   "R": 0.851,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.745,
+    "where": 1,
+    "medium": 1,
+    "style": 0.933
+   }
+  },
+  "wikidata:Q2538580": {
+   "title": "The Joy of Life",
+   "R": 0.851,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.745,
+    "where": 0.924,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q2267579": {
+   "title": "The Sick Child",
+   "R": 0.851,
+   "Rsrc": "fame×vis",
+   "gG": 0.65,
+   "ease": 0.884,
+   "easeFacets": {
+    "when": 0.73,
+    "where": 0.851,
+    "medium": 1,
+    "style": 0.955
+   }
+  },
+  "wikidata:Q579455": {
+   "title": "White on White",
+   "R": 0.723,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.791,
+   "easeFacets": {
+    "when": 0.717,
+    "where": 0.723,
+    "medium": 1,
+    "style": 0.723
+   }
+  },
+  "wikidata:Q933665": {
+   "title": "Unique Forms of Continuity in Space",
+   "R": 0.595,
+   "Rsrc": "fame×vis",
+   "gG": 0.45,
+   "ease": 0.733,
+   "easeFacets": {
+    "when": 0.822,
+    "where": 0.775,
+    "medium": 0.595,
+    "style": 0.739
+   }
+  },
+  "http://www.wikidata.org/entity/Q568847": {
+   "title": "The Descent from the Cross",
+   "R": 0.849,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.936,
+   "easeFacets": {
+    "when": 0.745,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3494409": {
+   "title": "Mont Sainte-Victoire",
+   "R": 0.849,
+   "Rsrc": "fame×vis",
+   "gG": 0.798,
+   "ease": 0.906,
+   "easeFacets": {
+    "when": 0.745,
+    "where": 0.923,
+    "medium": 1,
+    "style": 0.955
+   }
+  },
+  "http://www.wikidata.org/entity/Q2378567": {
+   "title": "Annunciation",
+   "R": 0.849,
+   "Rsrc": "fame×vis",
+   "gG": 0.804,
+   "ease": 0.907,
+   "easeFacets": {
+    "when": 0.745,
+    "where": 1,
+    "medium": 1,
+    "style": 0.881
+   }
+  },
+  "wikidata:Q3821820": {
+   "title": "The Ballet Class",
+   "R": 0.848,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 0.923,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q930535": {
+   "title": "Tahitian Women on the Beach",
+   "R": 0.848,
+   "Rsrc": "fame×vis",
+   "gG": 0.685,
+   "ease": 0.889,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 0.854,
+    "medium": 1,
+    "style": 0.954
+   }
+  },
+  "http://www.wikidata.org/entity/Q1213936": {
+   "title": "The Gross Clinic",
+   "R": 0.847,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.86,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 0.847,
+    "medium": 1,
+    "style": 0.847
+   }
+  },
+  "wikidata:Q2990634": {
+   "title": "Composition VII",
+   "R": 0.847,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.898,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 1,
+    "medium": 1,
+    "style": 0.847
+   }
+  },
+  "wikidata:Q2438357": {
+   "title": "Death and the Maiden",
+   "R": 0.846,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.936,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q500951": {
+   "title": "The Yellow Christ",
+   "R": 0.719,
+   "Rsrc": "fame×vis",
+   "gG": 0.771,
+   "ease": 0.882,
+   "easeFacets": {
+    "when": 0.756,
+    "where": 0.855,
+    "medium": 1,
+    "style": 0.916
+   }
+  },
+  "wikidata:Q19609193": {
+   "title": "Composition II in Red, Blue, and Yellow",
+   "R": 0.846,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 0.986,
+    "medium": 1,
+    "style": 0.935
+   }
+  },
+  "wikidata:Q15461864": {
+   "title": "The Large Blue Horses",
+   "R": 0.845,
+   "Rsrc": "fame×vis",
+   "gG": 0.618,
+   "ease": 0.877,
+   "easeFacets": {
+    "when": 0.746,
+    "where": 0.845,
+    "medium": 1,
+    "style": 0.918
+   }
+  },
+  "wikidata:Q259012": {
+   "title": "Et in Arcadia ego",
+   "R": 0.591,
+   "Rsrc": "fame×vis",
+   "gG": 0.94,
+   "ease": 0.931,
+   "easeFacets": {
+    "when": 0.725,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q60497141": {
+   "title": "Senecio",
+   "R": 0.844,
+   "Rsrc": "fame×vis",
+   "gG": 0.392,
+   "ease": 0.842,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.844,
+    "medium": 0.844,
+    "style": 0.933
+   }
+  },
+  "wikidata:Q3210239": {
+   "title": "Twittering Machine",
+   "R": 0.844,
+   "Rsrc": "fame×vis",
+   "gG": 0.392,
+   "ease": 0.842,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.844,
+    "medium": 0.844,
+    "style": 0.933
+   }
+  },
+  "wikidata:Q3607521": {
+   "title": "At the Moulin Rouge",
+   "R": 0.844,
+   "Rsrc": "fame×vis",
+   "gG": 0.685,
+   "ease": 0.887,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.92,
+    "medium": 1,
+    "style": 0.882
+   }
+  },
+  "wikidata:Q15293656": {
+   "title": "The Tower of Babel",
+   "R": 0.843,
+   "Rsrc": "fame×vis",
+   "gG": 0.862,
+   "ease": 0.915,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 1,
+    "medium": 1,
+    "style": 0.913
+   }
+  },
+  "wikidata:Q12366269": {
+   "title": "Great Buddha of Kamakura",
+   "R": 0.843,
+   "Rsrc": "fame×vis",
+   "gG": 0.731,
+   "ease": 0.894,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.988,
+    "medium": 1,
+    "style": 0.843
+   }
+  },
+  "wikidata:Q19917658": {
+   "title": "Reclining Nude",
+   "R": 0.842,
+   "Rsrc": "fame×vis",
+   "gG": 0.701,
+   "ease": 0.89,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.919,
+    "medium": 1,
+    "style": 0.893
+   }
+  },
+  "aic80607": {
+   "title": "Self-Portrait",
+   "R": 0.842,
+   "Rsrc": "fame×vis",
+   "gG": 0.801,
+   "ease": 0.905,
+   "easeFacets": {
+    "when": 0.747,
+    "where": 0.922,
+    "medium": 1,
+    "style": 0.953
+   }
+  },
+  "cleveland136510": {
+   "title": "Water Lilies (Agapanthus)",
+   "R": 0.842,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 0.918,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "aic27992": {
+   "title": "A Sunday on La Grande Jatte — 1884",
+   "R": 0.841,
+   "Rsrc": "fame×vis",
+   "gG": 0.717,
+   "ease": 0.892,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 0.918,
+    "medium": 1,
+    "style": 0.902
+   }
+  },
+  "wikidata:Q18891156": {
+   "title": "The Scream",
+   "R": 0.841,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.897,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 0.968,
+    "medium": 0.92,
+    "style": 0.952
+   }
+  },
+  "wikidata:Q18890421": {
+   "title": "Madonna",
+   "R": 0.84,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 0.968,
+    "medium": 1,
+    "style": 0.952
+   }
+  },
+  "wikidata:Q28792214": {
+   "title": "Moai",
+   "R": 0.714,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.739,
+   "easeFacets": {
+    "when": 0.528,
+    "where": 0.714,
+    "medium": 1,
+    "style": 0.714
+   }
+  },
+  "aic66333": {
+   "title": "Ma",
+   "R": 0.336,
+   "Rsrc": "fame×vis",
+   "gG": 0.475,
+   "ease": 0.626,
+   "easeFacets": {
+    "when": 0.833,
+    "where": 0.336,
+    "medium": 1,
+    "style": 0.336
+   }
+  },
+  "wikidata:Q9202": {
+   "title": "Statue of Liberty",
+   "R": 0.839,
+   "Rsrc": "fame×vis",
+   "gG": 0.672,
+   "ease": 0.884,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 0.865,
+    "medium": 1,
+    "style": 0.924
+   }
+  },
+  "wd:Q93304": {
+   "title": "Code of Hammurabi",
+   "R": 0.839,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.897,
+   "easeFacets": {
+    "when": 0.748,
+    "where": 1,
+    "medium": 1,
+    "style": 0.839
+   }
+  },
+  "http://www.wikidata.org/entity/Q130958": {
+   "title": "Great Sphinx of Giza",
+   "R": 0.838,
+   "Rsrc": "fame×vis",
+   "gG": 0.874,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 1,
+    "medium": 1,
+    "style": 0.918
+   }
+  },
+  "wikidata:Q107486133": {
+   "title": "Fallen Angel",
+   "R": 0.712,
+   "Rsrc": "fame×vis",
+   "gG": 0.427,
+   "ease": 0.781,
+   "easeFacets": {
+    "when": 0.648,
+    "where": 0.712,
+    "medium": 1,
+    "style": 0.766
+   }
+  },
+  "wd:Q157541": {
+   "title": "Sunflowers",
+   "R": 0.837,
+   "Rsrc": "fame×vis",
+   "gG": 0.876,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 0.919,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q1126741": {
+   "title": "Mask of Agamemnon",
+   "R": 0.837,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.937,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q21585351": {
+   "title": "Complaint tablet to Ea-nāṣir",
+   "R": 0.335,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.809,
+   "easeFacets": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0.335
+   }
+  },
+  "wikidata:Q2717022": {
+   "title": "The Dream of the Fisherman's Wife",
+   "R": 0.836,
+   "Rsrc": "fame×vis",
+   "gG": 0.983,
+   "ease": 0.934,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 0.989,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q567861": {
+   "title": "The Last Judgment",
+   "R": 0.836,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.937,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q151952": {
+   "title": "Venus de Milo",
+   "R": 0.835,
+   "Rsrc": "fame×vis",
+   "gG": 0.699,
+   "ease": 0.887,
+   "easeFacets": {
+    "when": 0.749,
+    "where": 0.966,
+    "medium": 1,
+    "style": 0.835
+   }
+  },
+  "wd:Q351055": {
+   "title": "The Dream",
+   "R": 0.835,
+   "Rsrc": "fame×vis",
+   "gG": 0.621,
+   "ease": 0.875,
+   "easeFacets": {
+    "when": 0.75,
+    "where": 0.915,
+    "medium": 1,
+    "style": 0.835
+   }
+  },
+  "wikidata:Q2302517": {
+   "title": "Ecce Homo",
+   "R": 0.584,
+   "Rsrc": "fame×vis",
+   "gG": 0.315,
+   "ease": 0.671,
+   "easeFacets": {
+    "when": 0.725,
+    "where": 0.584,
+    "medium": 0.792,
+    "style": 0.584
+   }
+  },
+  "http://www.wikidata.org/entity/Q1128599": {
+   "title": "Piri Reis map",
+   "R": 0.834,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.938,
+   "easeFacets": {
+    "when": 0.75,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q1333433": {
+   "title": "Ecstasy of Saint Teresa",
+   "R": 0.833,
+   "Rsrc": "fame×vis",
+   "gG": 0.552,
+   "ease": 0.863,
+   "easeFacets": {
+    "when": 0.71,
+    "where": 0.908,
+    "medium": 0.833,
+    "style": 1
+   }
+  },
+  "wikidata:Q6609268": {
+   "title": "Stańczyk",
+   "R": 0.583,
+   "Rsrc": "fame×vis",
+   "gG": 0.593,
+   "ease": 0.786,
+   "easeFacets": {
+    "when": 0.825,
+    "where": 0.737,
+    "medium": 1,
+    "style": 0.583
+   }
+  },
+  "http://www.wikidata.org/entity/Q17510059": {
+   "title": "After the Bath, Woman drying herself",
+   "R": 0.833,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.75,
+    "where": 0.914,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q152867": {
+   "title": "La maja desnuda",
+   "R": 0.707,
+   "Rsrc": "fame×vis",
+   "gG": 0.704,
+   "ease": 0.86,
+   "easeFacets": {
+    "when": 0.647,
+    "where": 0.882,
+    "medium": 1,
+    "style": 0.912
+   }
+  },
+  "wikidata:Q478271": {
+   "title": "Reply of the Zaporozhian Cossacks",
+   "R": 0.832,
+   "Rsrc": "fame×vis",
+   "gG": 0.902,
+   "ease": 0.921,
+   "easeFacets": {
+    "when": 0.751,
+    "where": 0.934,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q606662": {
+   "title": "Elgin Marbles",
+   "R": 0.831,
+   "Rsrc": "fame×vis",
+   "gG": 0,
+   "ease": 0.769,
+   "easeFacets": {
+    "when": 0.582,
+    "where": 0.831,
+    "medium": 0.831,
+    "style": 0.831
+   }
+  },
+  "wikidata:Q154987": {
+   "title": "Siegessäule",
+   "R": 0.831,
+   "Rsrc": "fame×vis",
+   "gG": 0.545,
+   "ease": 0.861,
+   "easeFacets": {
+    "when": 0.751,
+    "where": 0.831,
+    "medium": 1,
+    "style": 0.862
+   }
+  },
+  "http://www.wikidata.org/entity/Q727875": {
+   "title": "Venus of Urbino",
+   "R": 0.706,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.734,
+   "easeFacets": {
+    "when": 0.523,
+    "where": 0.706,
+    "medium": 1,
+    "style": 0.706
+   }
+  },
+  "wd:Q616159": {
+   "title": "View from the Window at Le Gras",
+   "R": 0.332,
+   "Rsrc": "fame×vis",
+   "gG": 0.225,
+   "ease": 0.458,
+   "easeFacets": {
+    "when": 0.834,
+    "where": 0.332,
+    "medium": 0.332,
+    "style": 0.332
+   }
+  },
+  "wd:Q131397": {
+   "title": "Venus of Willendorf",
+   "R": 0.705,
+   "Rsrc": "fame×vis",
+   "gG": 0.102,
+   "ease": 0.682,
+   "easeFacets": {
+    "when": 0.493,
+    "where": 0.825,
+    "medium": 0.705,
+    "style": 0.705
+   }
+  },
+  "http://www.wikidata.org/entity/Q1231009": {
+   "title": "The Coronation of Napoleon",
+   "R": 0.829,
+   "Rsrc": "fame×vis",
+   "gG": 0.35,
+   "ease": 0.826,
+   "easeFacets": {
+    "when": 0.597,
+    "where": 0.965,
+    "medium": 0.914,
+    "style": 0.829
+   }
+  },
+  "cleveland167459": {
+   "title": "Julius Caesar",
+   "R": 0.331,
+   "Rsrc": "fame×vis",
+   "gG": 0.975,
+   "ease": 0.959,
+   "easeFacets": {
+    "when": 0.834,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "sinmafa_74-20-1": {
+   "title": "Tusk",
+   "R": 0.331,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.641,
+   "easeFacets": {
+    "when": 0.901,
+    "where": 0.331,
+    "medium": 1,
+    "style": 0.331
+   }
+  },
+  "wd:Q724377": {
+   "title": "Bedroom in Arles",
+   "R": 0.828,
+   "Rsrc": "fame×vis",
+   "gG": 0.876,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.752,
+    "where": 0.914,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q2110451": {
+   "title": "The Course of Empire",
+   "R": 0.827,
+   "Rsrc": "fame×vis",
+   "gG": 0.591,
+   "ease": 0.867,
+   "easeFacets": {
+    "when": 0.752,
+    "where": 0.827,
+    "medium": 1,
+    "style": 0.89
+   }
+  },
+  "http://www.wikidata.org/entity/Q11180645": {
+   "title": "Tibetan Dragon Sutra",
+   "R": 0.331,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.56,
+   "easeFacets": {
+    "when": 0.579,
+    "where": 1,
+    "medium": 0.331,
+    "style": 0.331
+   }
+  },
+  "http://www.wikidata.org/entity/Q476458": {
+   "title": "The Oath of the Horatii",
+   "R": 0.826,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.863,
+   "easeFacets": {
+    "when": 0.627,
+    "where": 1,
+    "medium": 1,
+    "style": 0.826
+   }
+  },
+  "http://www.wikidata.org/entity/Q3173195": {
+   "title": "Declaration of Independence",
+   "R": 0.826,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.83,
+   "easeFacets": {
+    "when": 0.669,
+    "where": 0.826,
+    "medium": 1,
+    "style": 0.826
+   }
+  },
+  "wikidata:Q1362177": {
+   "title": "Melencolia I",
+   "R": 0.825,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.938,
+   "easeFacets": {
+    "when": 0.752,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q567833": {
+   "title": "Madonna of Bruges",
+   "R": 0.701,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.744,
+   "easeFacets": {
+    "when": 0.574,
+    "where": 0.701,
+    "medium": 1,
+    "style": 0.701
+   }
+  },
+  "http://www.wikidata.org/entity/Q1213453": {
+   "title": "The Execution of Lady Jane Grey",
+   "R": 0.824,
+   "Rsrc": "fame×vis",
+   "gG": 0.843,
+   "ease": 0.91,
+   "easeFacets": {
+    "when": 0.753,
+    "where": 0.974,
+    "medium": 1,
+    "style": 0.915
+   }
+  },
+  "wd:Q667124": {
+   "title": "Augustus of Prima Porta",
+   "R": 0.824,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.894,
+   "easeFacets": {
+    "when": 0.753,
+    "where": 1,
+    "medium": 1,
+    "style": 0.824
+   }
+  },
+  "http://www.wikidata.org/entity/Q512755": {
+   "title": "The Return of the Prodigal Son",
+   "R": 0.7,
+   "Rsrc": "fame×vis",
+   "gG": 0.9,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.91
+   }
+  },
+  "http://www.wikidata.org/entity/Q500554": {
+   "title": "At Eternity's Gate",
+   "R": 0.823,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.753,
+    "where": 0.91,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q164517": {
+   "title": "Dance",
+   "R": 0.823,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.753,
+    "where": 0.91,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q3062269": {
+   "title": "Olmec colossal heads",
+   "R": 0.699,
+   "Rsrc": "fame×vis",
+   "gG": 0.516,
+   "ease": 0.802,
+   "easeFacets": {
+    "when": 0.79,
+    "where": 0.718,
+    "medium": 1,
+    "style": 0.699
+   }
+  },
+  "http://www.wikidata.org/entity/Q185255": {
+   "title": "The Wedding at Cana",
+   "R": 0.822,
+   "Rsrc": "fame×vis",
+   "gG": 0.869,
+   "ease": 0.915,
+   "easeFacets": {
+    "when": 0.753,
+    "where": 1,
+    "medium": 1,
+    "style": 0.907
+   }
+  },
+  "http://www.wikidata.org/entity/Q517408": {
+   "title": "Psyche Revived by Cupid's Kiss",
+   "R": 0.821,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.849,
+   "easeFacets": {
+    "when": 0.754,
+    "where": 0.821,
+    "medium": 1,
+    "style": 0.821
+   }
+  },
+  "wd:Q945850": {
+   "title": "Apollo and Daphne",
+   "R": 0.821,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.939,
+   "easeFacets": {
+    "when": 0.754,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q735085": {
+   "title": "David",
+   "R": 0.574,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.774,
+   "easeFacets": {
+    "when": 0.521,
+    "where": 1,
+    "medium": 1,
+    "style": 0.574
+   }
+  },
+  "http://www.wikidata.org/entity/Q275349": {
+   "title": "Rokeby Venus",
+   "R": 0.82,
+   "Rsrc": "fame×vis",
+   "gG": 0.599,
+   "ease": 0.867,
+   "easeFacets": {
+    "when": 0.592,
+    "where": 0.928,
+    "medium": 1,
+    "style": 0.946
+   }
+  },
+  "wikidata:Q671237": {
+   "title": "The Sleep of Reason Produces Monsters",
+   "R": 0.819,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.893,
+   "easeFacets": {
+    "when": 0.754,
+    "where": 1,
+    "medium": 1,
+    "style": 0.819
+   }
+  },
+  "http://www.wikidata.org/entity/Q500936": {
+   "title": "The Dog",
+   "R": 0.696,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.777,
+   "easeFacets": {
+    "when": 0.718,
+    "where": 0.696,
+    "medium": 1,
+    "style": 0.696
+   }
+  },
+  "wikidata:Q537640": {
+   "title": "Angelus Novus",
+   "R": 0.818,
+   "Rsrc": "fame×vis",
+   "gG": 0.767,
+   "ease": 0.896,
+   "easeFacets": {
+    "when": 0.754,
+    "where": 1,
+    "medium": 0.909,
+    "style": 0.922
+   }
+  },
+  "http://www.wikidata.org/entity/Q1133420": {
+   "title": "The Surrender of Brea",
+   "R": 0.818,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.893,
+   "easeFacets": {
+    "when": 0.755,
+    "where": 1,
+    "medium": 1,
+    "style": 0.818
+   }
+  },
+  "wd:Q2289754": {
+   "title": "The Lady and the Unicorn",
+   "R": 0.818,
+   "Rsrc": "fame×vis",
+   "gG": 0.614,
+   "ease": 0.869,
+   "easeFacets": {
+    "when": 0.755,
+    "where": 0.901,
+    "medium": 1,
+    "style": 0.818
+   }
+  },
+  "http://www.wikidata.org/entity/Q2571560": {
+   "title": "The Angelus",
+   "R": 0.694,
+   "Rsrc": "fame×vis",
+   "gG": 0.61,
+   "ease": 0.829,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 0.694,
+    "medium": 1,
+    "style": 0.859
+   }
+  },
+  "http://www.wikidata.org/entity/Q945250": {
+   "title": "Portrait of Francesco delle Opere",
+   "R": 0.817,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.806,
+   "easeFacets": {
+    "when": 0.59,
+    "where": 0.817,
+    "medium": 1,
+    "style": 0.817
+   }
+  },
+  "wd:Q2626769": {
+   "title": "The Hunt of the Unicorn",
+   "R": 0.816,
+   "Rsrc": "fame×vis",
+   "gG": 0.492,
+   "ease": 0.845,
+   "easeFacets": {
+    "when": 0.59,
+    "where": 0.976,
+    "medium": 1,
+    "style": 0.816
+   }
+  },
+  "wd:Q3595955": {
+   "title": "Lion Capital of Ashoka",
+   "R": 0.693,
+   "Rsrc": "fame×vis",
+   "gG": 0.725,
+   "ease": 0.864,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 1,
+    "medium": 1,
+    "style": 0.693
+   }
+  },
+  "wd:Q500812": {
+   "title": "Sleeping Venus",
+   "R": 0.815,
+   "Rsrc": "fame×vis",
+   "gG": 0.854,
+   "ease": 0.912,
+   "easeFacets": {
+    "when": 0.755,
+    "where": 1,
+    "medium": 1,
+    "style": 0.892
+   }
+  },
+  "http://www.wikidata.org/entity/Q7749405": {
+   "title": "The Magic Circle",
+   "R": 0.815,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.846,
+   "easeFacets": {
+    "when": 0.756,
+    "where": 0.815,
+    "medium": 1,
+    "style": 0.815
+   }
+  },
+  "wikidata:Q599034": {
+   "title": "Perseus with the Head of Medus",
+   "R": 0.814,
+   "Rsrc": "fame×vis",
+   "gG": 0.888,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.756,
+    "where": 1,
+    "medium": 1,
+    "style": 0.917
+   }
+  },
+  "http://www.wikidata.org/entity/Q3769169": {
+   "title": "Judith Beheading Holofernes",
+   "R": 0.814,
+   "Rsrc": "fame×vis",
+   "gG": 0.861,
+   "ease": 0.913,
+   "easeFacets": {
+    "when": 0.737,
+    "where": 1,
+    "medium": 1,
+    "style": 0.915
+   }
+  },
+  "wd:Q523974": {
+   "title": "View of Delft",
+   "R": 0.813,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.803,
+   "easeFacets": {
+    "when": 0.588,
+    "where": 0.813,
+    "medium": 1,
+    "style": 0.813
+   }
+  },
+  "wikidata:Q3332083": {
+   "title": "Migrant Mother, Nipomo, California",
+   "R": 0.691,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.871,
+   "easeFacets": {
+    "when": 0.793,
+    "where": 1,
+    "medium": 1,
+    "style": 0.691
+   }
+  },
+  "http://www.wikidata.org/entity/Q1217213": {
+   "title": "Annunciation",
+   "R": 0.812,
+   "Rsrc": "fame×vis",
+   "gG": 0.891,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.756,
+    "where": 1,
+    "medium": 1,
+    "style": 0.918
+   }
+  },
+  "aic18901": {
+   "title": "Arabesque",
+   "R": 0.568,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.69,
+   "easeFacets": {
+    "when": 0.622,
+    "where": 0.568,
+    "medium": 1,
+    "style": 0.568
+   }
+  },
+  "http://www.wikidata.org/entity/Q4945054": {
+   "title": "Sleeping Hermaphroditus",
+   "R": 0.568,
+   "Rsrc": "fame×vis",
+   "gG": 0.794,
+   "ease": 0.869,
+   "easeFacets": {
+    "when": 0.83,
+    "where": 1,
+    "medium": 1,
+    "style": 0.645
+   }
+  },
+  "wikidata:Q265384": {
+   "title": "Column of Marcus Aurelius",
+   "R": 0.811,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.939,
+   "easeFacets": {
+    "when": 0.757,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q736832": {
+   "title": "Chōjū-jinbutsu-giga",
+   "R": 0.689,
+   "Rsrc": "fame×vis",
+   "gG": 0.636,
+   "ease": 0.835,
+   "easeFacets": {
+    "when": 0.513,
+    "where": 0.977,
+    "medium": 1,
+    "style": 0.85
+   }
+  },
+  "http://www.wikidata.org/entity/Q563727": {
+   "title": "The Virgin and Child with Saint Anne",
+   "R": 0.81,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.939,
+   "easeFacets": {
+    "when": 0.757,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1044742": {
+   "title": "A Sunday Afternoon on the Island of La Grande Jatte",
+   "R": 0.809,
+   "Rsrc": "fame×vis",
+   "gG": 0.721,
+   "ease": 0.886,
+   "easeFacets": {
+    "when": 0.757,
+    "where": 0.905,
+    "medium": 1,
+    "style": 0.882
+   }
+  },
+  "http://www.wikidata.org/entity/Q2126369": {
+   "title": "Mona Lisa",
+   "R": 0.688,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.909,
+   "easeFacets": {
+    "when": 0.794,
+    "where": 1,
+    "medium": 1,
+    "style": 0.844
+   }
+  },
+  "http://www.wikidata.org/entity/Q783215": {
+   "title": "Saint John the Baptist",
+   "R": 0.808,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.939,
+   "easeFacets": {
+    "when": 0.757,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2734209": {
+   "title": "Little Dancer of Fourteen Years",
+   "R": 0.808,
+   "Rsrc": "fame×vis",
+   "gG": 0.07,
+   "ease": 0.761,
+   "easeFacets": {
+    "when": 0.619,
+    "where": 0.808,
+    "medium": 0.808,
+    "style": 0.808
+   }
+  },
+  "wd:Q540488": {
+   "title": "A Burial at Ornans",
+   "R": 0.807,
+   "Rsrc": "fame×vis",
+   "gG": 0.754,
+   "ease": 0.892,
+   "easeFacets": {
+    "when": 0.758,
+    "where": 0.898,
+    "medium": 1,
+    "style": 0.913
+   }
+  },
+  "http://www.wikidata.org/entity/Q1267893": {
+   "title": "Ginevra de' Benci",
+   "R": 0.807,
+   "Rsrc": "fame×vis",
+   "gG": 0.815,
+   "ease": 0.904,
+   "easeFacets": {
+    "when": 0.712,
+    "where": 1,
+    "medium": 1,
+    "style": 0.903
+   }
+  },
+  "wikidata:Q1398760": {
+   "title": "Boxer at Rest",
+   "R": 0.806,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.891,
+   "easeFacets": {
+    "when": 0.758,
+    "where": 1,
+    "medium": 1,
+    "style": 0.806
+   }
+  },
+  "http://www.wikidata.org/entity/Q1755464": {
+   "title": "Knight, Death, and the Devil",
+   "R": 0.806,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.94,
+   "easeFacets": {
+    "when": 0.758,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q6122115": {
+   "title": "Saturn",
+   "R": 0.805,
+   "Rsrc": "fame×vis",
+   "gG": 0.508,
+   "ease": 0.844,
+   "easeFacets": {
+    "when": 0.665,
+    "where": 0.805,
+    "medium": 1,
+    "style": 0.905
+   }
+  },
+  "wikidata:Q3793426": {
+   "title": "The Cyclops",
+   "R": 0.805,
+   "Rsrc": "fame×vis",
+   "gG": 0.623,
+   "ease": 0.866,
+   "easeFacets": {
+    "when": 0.759,
+    "where": 0.901,
+    "medium": 1,
+    "style": 0.805
+   }
+  },
+  "http://www.wikidata.org/entity/Q2665048": {
+   "title": "Dante and Virgil in Hell",
+   "R": 0.804,
+   "Rsrc": "fame×vis",
+   "gG": 0.554,
+   "ease": 0.852,
+   "easeFacets": {
+    "when": 0.712,
+    "where": 0.804,
+    "medium": 1,
+    "style": 0.893
+   }
+  },
+  "http://www.wikidata.org/entity/Q2354251": {
+   "title": "The Barque of Dante",
+   "R": 0.804,
+   "Rsrc": "fame×vis",
+   "gG": 0.504,
+   "ease": 0.843,
+   "easeFacets": {
+    "when": 0.582,
+    "where": 0.984,
+    "medium": 1,
+    "style": 0.804
+   }
+  },
+  "http://www.wikidata.org/entity/Q2528477": {
+   "title": "Witches' Sabbath",
+   "R": 0.562,
+   "Rsrc": "fame×vis",
+   "gG": 0.529,
+   "ease": 0.752,
+   "easeFacets": {
+    "when": 0.621,
+    "where": 0.824,
+    "medium": 1,
+    "style": 0.562
+   }
+  },
+  "aic86780": {
+   "title": "Mother and Child",
+   "R": 0.321,
+   "Rsrc": "fame×vis",
+   "gG": 0.542,
+   "ease": 0.665,
+   "easeFacets": {
+    "when": 0.836,
+    "where": 0.321,
+    "medium": 1,
+    "style": 0.503
+   }
+  },
+  "aic77581": {
+   "title": "Mother and Child",
+   "R": 0.321,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.806,
+   "easeFacets": {
+    "when": 0.904,
+    "where": 0.321,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q17277950": {
+   "title": "The Card Players",
+   "R": 0.802,
+   "Rsrc": "fame×vis",
+   "gG": 0.656,
+   "ease": 0.872,
+   "easeFacets": {
+    "when": 0.759,
+    "where": 0.899,
+    "medium": 1,
+    "style": 0.829
+   }
+  },
+  "http://www.wikidata.org/entity/Q2627056": {
+   "title": "David with the Head of Goliath",
+   "R": 0.802,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.91
+   }
+  },
+  "wd:Q2344437": {
+   "title": "The Transfiguration",
+   "R": 0.801,
+   "Rsrc": "fame×vis",
+   "gG": 0.744,
+   "ease": 0.889,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 0.901,
+    "style": 0.896
+   }
+  },
+  "wikidata:Q748518": {
+   "title": "The Rhinoceros",
+   "R": 0.801,
+   "Rsrc": "fame×vis",
+   "gG": 0.878,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.903
+   }
+  },
+  "aic77629": {
+   "title": "Butterflies",
+   "R": 0.32,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.891,
+   "easeFacets": {
+    "when": 0.904,
+    "where": 1,
+    "medium": 0.66,
+    "style": 1
+   }
+  },
+  "wd:Q588695": {
+   "title": "The Art of Painting",
+   "R": 0.799,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.94,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q7678417": {
+   "title": "Takiyasha the Witch and the Skeleton Specter",
+   "R": 0.799,
+   "Rsrc": "fame×vis",
+   "gG": 0.983,
+   "ease": 0.936,
+   "easeFacets": {
+    "when": 0.76,
+    "where": 0.986,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1638622": {
+   "title": "Adoration of the Magi",
+   "R": 0.559,
+   "Rsrc": "fame×vis",
+   "gG": 0.555,
+   "ease": 0.762,
+   "easeFacets": {
+    "when": 0.621,
+    "where": 1,
+    "medium": 0.559,
+    "style": 0.868
+   }
+  },
+  "http://www.wikidata.org/entity/Q2290433": {
+   "title": "The Massacre at Chios",
+   "R": 0.798,
+   "Rsrc": "fame×vis",
+   "gG": 0.621,
+   "ease": 0.864,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 0.896,
+    "medium": 1,
+    "style": 0.798
+   }
+  },
+  "aic66405": {
+   "title": "Rainbow",
+   "R": 0.319,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.806,
+   "easeFacets": {
+    "when": 0.904,
+    "where": 1,
+    "medium": 1,
+    "style": 0.319
+   }
+  },
+  "http://www.wikidata.org/entity/Q2293953": {
+   "title": "Venus and Mars",
+   "R": 0.797,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.94,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q7536969": {
+   "title": "Skull of a Skeleton with Burning Cigarette",
+   "R": 0.796,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.838,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 0.796,
+    "medium": 1,
+    "style": 0.796
+   }
+  },
+  "wikidata:Q2636368": {
+   "title": "Battle of Grunwald",
+   "R": 0.796,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.853,
+   "easeFacets": {
+    "when": 0.614,
+    "where": 1,
+    "medium": 1,
+    "style": 0.796
+   }
+  },
+  "http://www.wikidata.org/entity/Q597114": {
+   "title": "Death of the Virgin",
+   "R": 0.795,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.917,
+   "easeFacets": {
+    "when": 0.761,
+    "where": 1,
+    "medium": 1,
+    "style": 0.907
+   }
+  },
+  "wd:Q674846": {
+   "title": "The Night Café",
+   "R": 0.795,
+   "Rsrc": "fame×vis",
+   "gG": 0.876,
+   "ease": 0.915,
+   "easeFacets": {
+    "when": 0.762,
+    "where": 0.898,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q23915": {
+   "title": "An Old Man and his Grandson",
+   "R": 0.794,
+   "Rsrc": "fame×vis",
+   "gG": 0.891,
+   "ease": 0.918,
+   "easeFacets": {
+    "when": 0.762,
+    "where": 1,
+    "medium": 1,
+    "style": 0.91
+   }
+  },
+  "http://www.wikidata.org/entity/Q5220868": {
+   "title": "Marriage A-la-Mode: 1. The Marriage Settlement",
+   "R": 0.793,
+   "Rsrc": "fame×vis",
+   "gG": 0.577,
+   "ease": 0.853,
+   "easeFacets": {
+    "when": 0.741,
+    "where": 0.793,
+    "medium": 1,
+    "style": 0.877
+   }
+  },
+  "http://www.wikidata.org/entity/Q1473546": {
+   "title": "Doni Tondo",
+   "R": 0.793,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.914,
+   "easeFacets": {
+    "when": 0.762,
+    "where": 1,
+    "medium": 0.896,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1059211": {
+   "title": "The Baptism of Christ",
+   "R": 0.792,
+   "Rsrc": "fame×vis",
+   "gG": 0.804,
+   "ease": 0.9,
+   "easeFacets": {
+    "when": 0.762,
+    "where": 1,
+    "medium": 1,
+    "style": 0.837
+   }
+  },
+  "wikidata:Q279559": {
+   "title": "Babylonian Map of the World",
+   "R": 0.792,
+   "Rsrc": "fame×vis",
+   "gG": 0.205,
+   "ease": 0.775,
+   "easeFacets": {
+    "when": 0.663,
+    "where": 0.854,
+    "medium": 0.792,
+    "style": 0.792
+   }
+  },
+  "http://www.wikidata.org/entity/Q1212861": {
+   "title": "The Birth of Venus",
+   "R": 0.791,
+   "Rsrc": "fame×vis",
+   "gG": 0.6,
+   "ease": 0.857,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.896,
+    "medium": 1,
+    "style": 0.791
+   }
+  },
+  "wd:Q3565037": {
+   "title": "Fine Wind, Clear Morning",
+   "R": 0.791,
+   "Rsrc": "fame×vis",
+   "gG": 0.981,
+   "ease": 0.937,
+   "easeFacets": {
+    "when": 0.763,
+    "where": 0.984,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q693746": {
+   "title": "The Monk by the Sea",
+   "R": 0.672,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.727,
+   "easeFacets": {
+    "when": 0.562,
+    "where": 0.672,
+    "medium": 1,
+    "style": 0.672
+   }
+  },
+  "wikidata:Q524447": {
+   "title": "Standard of Ur",
+   "R": 0.79,
+   "Rsrc": "fame×vis",
+   "gG": 0.625,
+   "ease": 0.862,
+   "easeFacets": {
+    "when": 0.763,
+    "where": 1,
+    "medium": 0.895,
+    "style": 0.79
+   }
+  },
+  "http://www.wikidata.org/entity/Q920030": {
+   "title": "Charles IV of Spain and His Family",
+   "R": 0.789,
+   "Rsrc": "fame×vis",
+   "gG": 0.815,
+   "ease": 0.902,
+   "easeFacets": {
+    "when": 0.763,
+    "where": 1,
+    "medium": 1,
+    "style": 0.844
+   }
+  },
+  "http://www.wikidata.org/entity/Q1516449": {
+   "title": "Madonna of Chancellor Rolin",
+   "R": 0.789,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.941,
+   "easeFacets": {
+    "when": 0.763,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2339059": {
+   "title": "Rain, Steam and Speed – The Great Western Railway",
+   "R": 0.788,
+   "Rsrc": "fame×vis",
+   "gG": 0.559,
+   "ease": 0.847,
+   "easeFacets": {
+    "when": 0.713,
+    "where": 0.889,
+    "medium": 1,
+    "style": 0.788
+   }
+  },
+  "wikidata:Q4156438": {
+   "title": "Girl with peaches",
+   "R": 0.551,
+   "Rsrc": "fame×vis",
+   "gG": 0.475,
+   "ease": 0.723,
+   "easeFacets": {
+    "when": 0.79,
+    "where": 0.551,
+    "medium": 1,
+    "style": 0.551
+   }
+  },
+  "http://www.wikidata.org/entity/Q2213811": {
+   "title": "The Haywain Triptych",
+   "R": 0.787,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.941,
+   "easeFacets": {
+    "when": 0.764,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q405814": {
+   "title": "Ship of Fools",
+   "R": 0.787,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.941,
+   "easeFacets": {
+    "when": 0.764,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1560719": {
+   "title": "Carnation, Lily, Lily and Rose",
+   "R": 0.786,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.887,
+   "easeFacets": {
+    "when": 0.764,
+    "where": 0.786,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1167796": {
+   "title": "An Experiment on a Bird in the Air Pump",
+   "R": 0.786,
+   "Rsrc": "fame×vis",
+   "gG": 0.495,
+   "ease": 0.833,
+   "easeFacets": {
+    "when": 0.61,
+    "where": 0.786,
+    "medium": 1,
+    "style": 0.936
+   }
+  },
+  "http://www.wikidata.org/entity/Q656434": {
+   "title": "La Belle Ferronnière",
+   "R": 0.785,
+   "Rsrc": "fame×vis",
+   "gG": 0.614,
+   "ease": 0.858,
+   "easeFacets": {
+    "when": 0.765,
+    "where": 0.785,
+    "medium": 1,
+    "style": 0.883
+   }
+  },
+  "wd:Q500985": {
+   "title": "The Hunters in the Snow",
+   "R": 0.784,
+   "Rsrc": "fame×vis",
+   "gG": 0.862,
+   "ease": 0.911,
+   "easeFacets": {
+    "when": 0.765,
+    "where": 1,
+    "medium": 1,
+    "style": 0.881
+   }
+  },
+  "http://www.wikidata.org/entity/Q766782": {
+   "title": "The Jewish Bride",
+   "R": 0.784,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.941,
+   "easeFacets": {
+    "when": 0.765,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1899740": {
+   "title": "Assumption of the Virgin",
+   "R": 0.783,
+   "Rsrc": "fame×vis",
+   "gG": 0.794,
+   "ease": 0.897,
+   "easeFacets": {
+    "when": 0.713,
+    "where": 1,
+    "medium": 1,
+    "style": 0.874
+   }
+  },
+  "http://www.wikidata.org/entity/Q2706250": {
+   "title": "An Old Woman ('The Ugly Duchess')",
+   "R": 0.783,
+   "Rsrc": "fame×vis",
+   "gG": 0.754,
+   "ease": 0.888,
+   "easeFacets": {
+    "when": 0.661,
+    "where": 1,
+    "medium": 1,
+    "style": 0.891
+   }
+  },
+  "http://www.wikidata.org/entity/Q18939074": {
+   "title": "Pandemonium",
+   "R": 0.782,
+   "Rsrc": "fame×vis",
+   "gG": 0.604,
+   "ease": 0.855,
+   "easeFacets": {
+    "when": 0.744,
+    "where": 0.782,
+    "medium": 1,
+    "style": 0.895
+   }
+  },
+  "http://www.wikidata.org/entity/Q17275221": {
+   "title": "Truth Coming Out of Her Well",
+   "R": 0.547,
+   "Rsrc": "fame×vis",
+   "gG": 0.754,
+   "ease": 0.848,
+   "easeFacets": {
+    "when": 0.791,
+    "where": 0.774,
+    "medium": 1,
+    "style": 0.827
+   }
+  },
+  "http://www.wikidata.org/entity/Q2304870": {
+   "title": "The Seven Deadly Sins and the Four Last Things",
+   "R": 0.781,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.942,
+   "easeFacets": {
+    "when": 0.766,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q318947": {
+   "title": "Supper at Emmaus",
+   "R": 0.781,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.766,
+    "where": 1,
+    "medium": 1,
+    "style": 0.9
+   }
+  },
+  "http://www.wikidata.org/entity/Q2983399": {
+   "title": "The Second of May 1808",
+   "R": 0.663,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.866,
+   "easeFacets": {
+    "when": 0.801,
+    "where": 0.663,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3277782": {
+   "title": "The Voyage of Life",
+   "R": 0.663,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.95,
+   "easeFacets": {
+    "when": 0.801,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q531329": {
+   "title": "The Embarkation for Cythera",
+   "R": 0.779,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.913,
+   "easeFacets": {
+    "when": 0.766,
+    "where": 0.886,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q6251405": {
+   "title": "Pink and Blue",
+   "R": 0.778,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.913,
+   "easeFacets": {
+    "when": 0.767,
+    "where": 0.885,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1133821": {
+   "title": "Death of Sardanapalus",
+   "R": 0.545,
+   "Rsrc": "fame×vis",
+   "gG": 0.707,
+   "ease": 0.826,
+   "easeFacets": {
+    "when": 0.727,
+    "where": 0.768,
+    "medium": 1,
+    "style": 0.808
+   }
+  },
+  "wikidata:Q3978274": {
+   "title": "Susanna and the Elders",
+   "R": 0.777,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.767,
+    "where": 1,
+    "medium": 1,
+    "style": 0.899
+   }
+  },
+  "wd:Q930137": {
+   "title": "The Tempest",
+   "R": 0.544,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.959,
+   "easeFacets": {
+    "when": 0.837,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q4157667": {
+   "title": "The Demon Seated",
+   "R": 0.543,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.649,
+   "easeFacets": {
+    "when": 0.508,
+    "where": 0.543,
+    "medium": 1,
+    "style": 0.543
+   }
+  },
+  "http://www.wikidata.org/entity/Q794077": {
+   "title": "Sacred and Profane Love",
+   "R": 0.776,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.79,
+   "easeFacets": {
+    "when": 0.606,
+    "where": 0.776,
+    "medium": 1,
+    "style": 0.776
+   }
+  },
+  "http://www.wikidata.org/entity/Q2354080": {
+   "title": "Christ in the Wilderness",
+   "R": 0.775,
+   "Rsrc": "fame×vis",
+   "gG": 0.902,
+   "ease": 0.92,
+   "easeFacets": {
+    "when": 0.768,
+    "where": 0.912,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1206860": {
+   "title": "Bacchus and Ariadne",
+   "R": 0.775,
+   "Rsrc": "fame×vis",
+   "gG": 0.794,
+   "ease": 0.895,
+   "easeFacets": {
+    "when": 0.714,
+    "where": 1,
+    "medium": 1,
+    "style": 0.868
+   }
+  },
+  "vaO11148": {
+   "title": "Daisy",
+   "R": 0.31,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.507,
+   "easeFacets": {
+    "when": 0.41,
+    "where": 0.31,
+    "medium": 1,
+    "style": 0.31
+   }
+  },
+  "wd:Q557000": {
+   "title": "Haystacks",
+   "R": 0.542,
+   "Rsrc": "fame×vis",
+   "gG": 0.847,
+   "ease": 0.889,
+   "easeFacets": {
+    "when": 0.792,
+    "where": 0.765,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q219344": {
+   "title": "The Slave Ship",
+   "R": 0.773,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.885,
+   "easeFacets": {
+    "when": 0.768,
+    "where": 1,
+    "medium": 1,
+    "style": 0.773
+   }
+  },
+  "wd:Q699552": {
+   "title": "Praying Hands",
+   "R": 0.773,
+   "Rsrc": "fame×vis",
+   "gG": 0.567,
+   "ease": 0.844,
+   "easeFacets": {
+    "when": 0.768,
+    "where": 0.961,
+    "medium": 0.773,
+    "style": 0.873
+   }
+  },
+  "wikidata:Q22953800": {
+   "title": "Lucifer",
+   "R": 0.54,
+   "Rsrc": "fame×vis",
+   "gG": 0.975,
+   "ease": 0.948,
+   "easeFacets": {
+    "when": 0.792,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3686086": {
+   "title": "Pastoral Concert",
+   "R": 0.54,
+   "Rsrc": "fame×vis",
+   "gG": 0.802,
+   "ease": 0.868,
+   "easeFacets": {
+    "when": 0.728,
+    "where": 1,
+    "medium": 1,
+    "style": 0.746
+   }
+  },
+  "http://www.wikidata.org/entity/Q3399440": {
+   "title": "Portrait of Louis XIV",
+   "R": 0.771,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.913,
+   "easeFacets": {
+    "when": 0.769,
+    "where": 0.882,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3205872": {
+   "title": "Moonlit Night on the Dnieper",
+   "R": 0.539,
+   "Rsrc": "fame×vis",
+   "gG": 0.438,
+   "ease": 0.701,
+   "easeFacets": {
+    "when": 0.506,
+    "where": 0.539,
+    "medium": 1,
+    "style": 0.757
+   }
+  },
+  "http://www.wikidata.org/entity/Q2413468": {
+   "title": "The Colossus",
+   "R": 0.539,
+   "Rsrc": "fame×vis",
+   "gG": 0.54,
+   "ease": 0.748,
+   "easeFacets": {
+    "when": 0.617,
+    "where": 0.835,
+    "medium": 1,
+    "style": 0.539
+   }
+  },
+  "http://www.wikidata.org/entity/Q2909916": {
+   "title": "Bonaparte Visiting the Plague Victims of Jaffa",
+   "R": 0.538,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.9,
+   "easeFacets": {
+    "when": 0.838,
+    "where": 0.762,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q697208": {
+   "title": "Cellini Salt Cellar",
+   "R": 0.769,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.912,
+   "easeFacets": {
+    "when": 0.769,
+    "where": 0.881,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q544315": {
+   "title": "The Astronomer",
+   "R": 0.768,
+   "Rsrc": "fame×vis",
+   "gG": 0.925,
+   "ease": 0.925,
+   "easeFacets": {
+    "when": 0.77,
+    "where": 1,
+    "medium": 1,
+    "style": 0.93
+   }
+  },
+  "http://www.wikidata.org/entity/Q83862": {
+   "title": "Dying Slave",
+   "R": 0.537,
+   "Rsrc": "fame×vis",
+   "gG": 0.275,
+   "ease": 0.624,
+   "easeFacets": {
+    "when": 0.422,
+    "where": 0.537,
+    "medium": 1,
+    "style": 0.537
+   }
+  },
+  "wd:Q18344787": {
+   "title": "Lady Agnew of Lochnaw",
+   "R": 0.767,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.784,
+   "easeFacets": {
+    "when": 0.602,
+    "where": 0.767,
+    "medium": 1,
+    "style": 0.767
+   }
+  },
+  "http://www.wikidata.org/entity/Q17319663": {
+   "title": "The Corpses of the De Witt Brothers",
+   "R": 0.307,
+   "Rsrc": "fame×vis",
+   "gG": 0.675,
+   "ease": 0.752,
+   "easeFacets": {
+    "when": 0.908,
+    "where": 0.307,
+    "medium": 1,
+    "style": 0.792
+   }
+  },
+  "wikidata:Q2324643": {
+   "title": "Judith and the Head of Holofernes",
+   "R": 0.766,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.943,
+   "easeFacets": {
+    "when": 0.77,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2268524": {
+   "title": "The Three Graces",
+   "R": 0.765,
+   "Rsrc": "fame×vis",
+   "gG": 0.878,
+   "ease": 0.914,
+   "easeFacets": {
+    "when": 0.77,
+    "where": 1,
+    "medium": 1,
+    "style": 0.886
+   }
+  },
+  "http://www.wikidata.org/entity/Q774967": {
+   "title": "Venus de' Medici",
+   "R": 0.765,
+   "Rsrc": "fame×vis",
+   "gG": 0.349,
+   "ease": 0.79,
+   "easeFacets": {
+    "when": 0.559,
+    "where": 0.952,
+    "medium": 0.882,
+    "style": 0.765
+   }
+  },
+  "http://www.wikidata.org/entity/Q3693952": {
+   "title": "Crown of Empress Eugénie",
+   "R": 0.65,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.734,
+   "easeFacets": {
+    "when": 0.637,
+    "where": 0.65,
+    "medium": 1,
+    "style": 0.65
+   }
+  },
+  "http://www.wikidata.org/entity/Q984058": {
+   "title": "Las Hilanderas",
+   "R": 0.649,
+   "Rsrc": "fame×vis",
+   "gG": 0.45,
+   "ease": 0.758,
+   "easeFacets": {
+    "when": 0.489,
+    "where": 0.649,
+    "medium": 1,
+    "style": 0.895
+   }
+  },
+  "wd:Q2324840": {
+   "title": "The Ancient of Days",
+   "R": 0.763,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.824,
+   "easeFacets": {
+    "when": 0.771,
+    "where": 1,
+    "medium": 0.763,
+    "style": 0.763
+   }
+  },
+  "http://www.wikidata.org/entity/Q646337": {
+   "title": "Nocturne in Black and Gold – The Falling Rocket",
+   "R": 0.762,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.883,
+   "easeFacets": {
+    "when": 0.771,
+    "where": 0.762,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1215604": {
+   "title": "The Source",
+   "R": 0.533,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.845,
+   "easeFacets": {
+    "when": 0.84,
+    "where": 0.759,
+    "medium": 1,
+    "style": 0.779
+   }
+  },
+  "http://www.wikidata.org/entity/Q2735507": {
+   "title": "The Clothed Maja",
+   "R": 0.761,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.795,
+   "easeFacets": {
+    "when": 0.657,
+    "where": 0.761,
+    "medium": 1,
+    "style": 0.761
+   }
+  },
+  "http://www.wikidata.org/entity/Q2528741": {
+   "title": "Christ Crucified",
+   "R": 0.761,
+   "Rsrc": "fame×vis",
+   "gG": 0.45,
+   "ease": 0.811,
+   "easeFacets": {
+    "when": 0.556,
+    "where": 0.761,
+    "medium": 1,
+    "style": 0.928
+   }
+  },
+  "http://www.wikidata.org/entity/Q644106": {
+   "title": "The Daughters of Edward Darley Boit",
+   "R": 0.76,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.883,
+   "easeFacets": {
+    "when": 0.772,
+    "where": 0.76,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q15874516": {
+   "title": "The Sin",
+   "R": 0.418,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.823,
+   "easeFacets": {
+    "when": 0.875,
+    "where": 0.418,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2629423": {
+   "title": "A Young Girl Reading",
+   "R": 0.645,
+   "Rsrc": "fame×vis",
+   "gG": 0.445,
+   "ease": 0.755,
+   "easeFacets": {
+    "when": 0.551,
+    "where": 0.823,
+    "medium": 1,
+    "style": 0.645
+   }
+  },
+  "http://www.wikidata.org/entity/Q15728649": {
+   "title": "Witches' Flight",
+   "R": 0.758,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.883,
+   "easeFacets": {
+    "when": 0.772,
+    "where": 1,
+    "medium": 1,
+    "style": 0.758
+   }
+  },
+  "http://www.wikidata.org/entity/Q1088425": {
+   "title": "Stele of the Vultures",
+   "R": 0.303,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.977,
+   "easeFacets": {
+    "when": 0.909,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3202169": {
+   "title": "The Apotheosis of Homer",
+   "R": 0.644,
+   "Rsrc": "fame×vis",
+   "gG": 0.692,
+   "ease": 0.842,
+   "easeFacets": {
+    "when": 0.721,
+    "where": 0.816,
+    "medium": 1,
+    "style": 0.831
+   }
+  },
+  "http://www.wikidata.org/entity/Q960157": {
+   "title": "Christ in the House of His Parents",
+   "R": 0.757,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.943,
+   "easeFacets": {
+    "when": 0.773,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "aic20684": {
+   "title": "Paris Street; Rainy Day",
+   "R": 0.756,
+   "Rsrc": "fame×vis",
+   "gG": 0.685,
+   "ease": 0.867,
+   "easeFacets": {
+    "when": 0.773,
+    "where": 0.874,
+    "medium": 1,
+    "style": 0.819
+   }
+  },
+  "http://www.wikidata.org/entity/Q4003071": {
+   "title": "Ulysses deriding Polyphemus",
+   "R": 0.756,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.792,
+   "easeFacets": {
+    "when": 0.656,
+    "where": 0.756,
+    "medium": 1,
+    "style": 0.756
+   }
+  },
+  "wd:Q637414": {
+   "title": "Rouen Cathedral Series",
+   "R": 0.755,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.821,
+   "easeFacets": {
+    "when": 0.774,
+    "where": 0.755,
+    "medium": 1,
+    "style": 0.755
+   }
+  },
+  "http://www.wikidata.org/entity/Q16950902": {
+   "title": "Beauty Revealed",
+   "R": 0.302,
+   "Rsrc": "fame×vis",
+   "gG": 0.519,
+   "ease": 0.642,
+   "easeFacets": {
+    "when": 0.742,
+    "where": 0.522,
+    "medium": 1,
+    "style": 0.302
+   }
+  },
+  "wikidata:Q883994": {
+   "title": "View of Toledo",
+   "R": 0.641,
+   "Rsrc": "fame×vis",
+   "gG": 0.287,
+   "ease": 0.696,
+   "easeFacets": {
+    "when": 0.448,
+    "where": 0.695,
+    "medium": 1,
+    "style": 0.641
+   }
+  },
+  "wd:Q1230882": {
+   "title": "Charioteer of Delphi",
+   "R": 0.753,
+   "Rsrc": "fame×vis",
+   "gG": 0.375,
+   "ease": 0.789,
+   "easeFacets": {
+    "when": 0.774,
+    "where": 0.753,
+    "medium": 0.877,
+    "style": 0.753
+   }
+  },
+  "wikidata:Q867403": {
+   "title": "Madonna with the Long Neck",
+   "R": 0.64,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.751,
+   "easeFacets": {
+    "when": 0.722,
+    "where": 0.64,
+    "medium": 1,
+    "style": 0.64
+   }
+  },
+  "http://www.wikidata.org/entity/Q1170480": {
+   "title": "Syndics of the Drapers' Guild",
+   "R": 0.752,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.944,
+   "easeFacets": {
+    "when": 0.774,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3543882": {
+   "title": "Atropos",
+   "R": 0.639,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.707,
+   "easeFacets": {
+    "when": 0.548,
+    "where": 0.639,
+    "medium": 1,
+    "style": 0.639
+   }
+  },
+  "http://www.wikidata.org/entity/Q6644913": {
+   "title": "A Nude Woman Doing Her Hair Before a Mirror",
+   "R": 0.751,
+   "Rsrc": "fame×vis",
+   "gG": 0.451,
+   "ease": 0.807,
+   "easeFacets": {
+    "when": 0.551,
+    "where": 0.926,
+    "medium": 1,
+    "style": 0.751
+   }
+  },
+  "http://www.wikidata.org/entity/Q1787460": {
+   "title": "Watson and the Shark",
+   "R": 0.638,
+   "Rsrc": "fame×vis",
+   "gG": 0.759,
+   "ease": 0.865,
+   "easeFacets": {
+    "when": 0.772,
+    "where": 1,
+    "medium": 1,
+    "style": 0.687
+   }
+  },
+  "http://www.wikidata.org/entity/Q1395699": {
+   "title": "The Four Seasons",
+   "R": 0.637,
+   "Rsrc": "fame×vis",
+   "gG": 0.679,
+   "ease": 0.836,
+   "easeFacets": {
+    "when": 0.773,
+    "where": 0.934,
+    "medium": 1,
+    "style": 0.637
+   }
+  },
+  "http://www.wikidata.org/entity/Q1216387": {
+   "title": "The Lacemaker",
+   "R": 0.749,
+   "Rsrc": "fame×vis",
+   "gG": 0.507,
+   "ease": 0.82,
+   "easeFacets": {
+    "when": 0.595,
+    "where": 0.937,
+    "medium": 1,
+    "style": 0.749
+   }
+  },
+  "http://www.wikidata.org/entity/Q1212920": {
+   "title": "Flagellation of Christ",
+   "R": 0.748,
+   "Rsrc": "fame×vis",
+   "gG": 0.631,
+   "ease": 0.851,
+   "easeFacets": {
+    "when": 0.775,
+    "where": 0.748,
+    "medium": 1,
+    "style": 0.88
+   }
+  },
+  "http://www.wikidata.org/entity/Q5526647": {
+   "title": "Gassed",
+   "R": 0.524,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.961,
+   "easeFacets": {
+    "when": 0.843,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1313605": {
+   "title": "The Emperor Napoleon in His Study at the Tuileries",
+   "R": 0.747,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.881,
+   "easeFacets": {
+    "when": 0.776,
+    "where": 0.87,
+    "medium": 1,
+    "style": 0.88
+   }
+  },
+  "http://www.wikidata.org/entity/Q586035": {
+   "title": "The Little Street",
+   "R": 0.747,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.944,
+   "easeFacets": {
+    "when": 0.776,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q10866080": {
+   "title": "Mikazuki Munechika",
+   "R": 0.298,
+   "Rsrc": "fame×vis",
+   "gG": 0.731,
+   "ease": 0.789,
+   "easeFacets": {
+    "when": 0.91,
+    "where": 0.947,
+    "medium": 1,
+    "style": 0.298
+   }
+  },
+  "http://www.wikidata.org/entity/Q5930190": {
+   "title": "Road with Cypress and Star",
+   "R": 0.745,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.911,
+   "easeFacets": {
+    "when": 0.776,
+    "where": 0.87,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2584518": {
+   "title": "Diana of Versailles",
+   "R": 0.633,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.953,
+   "easeFacets": {
+    "when": 0.81,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q136433749": {
+   "title": "Portrait of Elisabeth Lederer",
+   "R": 0.744,
+   "Rsrc": "fame×vis",
+   "gG": 0.925,
+   "ease": 0.925,
+   "easeFacets": {
+    "when": 0.777,
+    "where": 1,
+    "medium": 1,
+    "style": 0.923
+   }
+  },
+  "http://www.wikidata.org/entity/Q2343778": {
+   "title": "La Belle Jardinière",
+   "R": 0.744,
+   "Rsrc": "fame×vis",
+   "gG": 0.975,
+   "ease": 0.938,
+   "easeFacets": {
+    "when": 0.751,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3228069": {
+   "title": "The Lock",
+   "R": 0.52,
+   "Rsrc": "fame×vis",
+   "gG": 0.602,
+   "ease": 0.77,
+   "easeFacets": {
+    "when": 0.844,
+    "where": 0.52,
+    "medium": 1,
+    "style": 0.715
+   }
+  },
+  "wikidata:Q4279895": {
+   "title": "Beat the Whites with the Red Wedge",
+   "R": 0.743,
+   "Rsrc": "fame×vis",
+   "gG": 0.902,
+   "ease": 0.919,
+   "easeFacets": {
+    "when": 0.777,
+    "where": 0.899,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q7715071": {
+   "title": "The Awakening Conscience",
+   "R": 0.742,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.944,
+   "easeFacets": {
+    "when": 0.777,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q232087": {
+   "title": "Two men contemplating the Moon",
+   "R": 0.519,
+   "Rsrc": "fame×vis",
+   "gG": 0.975,
+   "ease": 0.949,
+   "easeFacets": {
+    "when": 0.796,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "aic16568": {
+   "title": "Water Lilies",
+   "R": 0.741,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.911,
+   "easeFacets": {
+    "when": 0.778,
+    "where": 0.866,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q334360": {
+   "title": "The Abbey in the Oakwood",
+   "R": 0.74,
+   "Rsrc": "fame×vis",
+   "gG": 0.975,
+   "ease": 0.938,
+   "easeFacets": {
+    "when": 0.752,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "aic11332": {
+   "title": "Untitled",
+   "R": 0.296,
+   "Rsrc": "fame×vis",
+   "gG": 0.5,
+   "ease": 0.626,
+   "easeFacets": {
+    "when": 0.911,
+    "where": 0.296,
+    "medium": 1,
+    "style": 0.296
+   }
+  },
+  "aic66763": {
+   "title": "Untitled",
+   "R": 0.296,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.802,
+   "easeFacets": {
+    "when": 0.911,
+    "where": 0.296,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q4693305": {
+   "title": "Agnus Dei",
+   "R": 0.628,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.793,
+   "easeFacets": {
+    "when": 0.544,
+    "where": 0.628,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q247282": {
+   "title": "Apollo in the Forge of Vulcan",
+   "R": 0.738,
+   "Rsrc": "fame×vis",
+   "gG": 0.568,
+   "ease": 0.831,
+   "easeFacets": {
+    "when": 0.653,
+    "where": 0.934,
+    "medium": 1,
+    "style": 0.738
+   }
+  },
+  "http://www.wikidata.org/entity/Q166937": {
+   "title": "Woman in Blue Reading a Letter",
+   "R": 0.737,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.945,
+   "easeFacets": {
+    "when": 0.779,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q488825": {
+   "title": "Adoration of the Magi",
+   "R": 0.736,
+   "Rsrc": "fame×vis",
+   "gG": 0.805,
+   "ease": 0.893,
+   "easeFacets": {
+    "when": 0.779,
+    "where": 1,
+    "medium": 1,
+    "style": 0.795
+   }
+  },
+  "http://www.wikidata.org/entity/Q1227359": {
+   "title": "Diptych of Federico da Montefeltro and Battista Sforza",
+   "R": 0.736,
+   "Rsrc": "fame×vis",
+   "gG": 0.45,
+   "ease": 0.8,
+   "easeFacets": {
+    "when": 0.541,
+    "where": 0.736,
+    "medium": 1,
+    "style": 0.921
+   }
+  },
+  "http://www.wikidata.org/entity/Q960447": {
+   "title": "Tiger in a Tropical Storm",
+   "R": 0.735,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.796,
+   "easeFacets": {
+    "when": 0.716,
+    "where": 0.735,
+    "medium": 1,
+    "style": 0.735
+   }
+  },
+  "http://www.wikidata.org/entity/Q2715177": {
+   "title": "Saint Jerome",
+   "R": 0.735,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.915,
+   "easeFacets": {
+    "when": 0.78,
+    "where": 1,
+    "medium": 1,
+    "style": 0.88
+   }
+  },
+  "http://www.wikidata.org/entity/Q695039": {
+   "title": "Gebel el-Arak Knife",
+   "R": 0.624,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.743,
+   "easeFacets": {
+    "when": 0.723,
+    "where": 0.624,
+    "medium": 1,
+    "style": 0.624
+   }
+  },
+  "http://www.wikidata.org/entity/Q2501284": {
+   "title": "The Great Bathers",
+   "R": 0.733,
+   "Rsrc": "fame×vis",
+   "gG": 0.625,
+   "ease": 0.845,
+   "easeFacets": {
+    "when": 0.78,
+    "where": 0.867,
+    "medium": 1,
+    "style": 0.733
+   }
+  },
+  "http://www.wikidata.org/entity/Q378034": {
+   "title": "The Seated Scribe",
+   "R": 0.513,
+   "Rsrc": "fame×vis",
+   "gG": 0.226,
+   "ease": 0.584,
+   "easeFacets": {
+    "when": 0.495,
+    "where": 0.817,
+    "medium": 0.513,
+    "style": 0.513
+   }
+  },
+  "http://www.wikidata.org/entity/Q594470": {
+   "title": "St. Michael Vanquishing Satan",
+   "R": 0.512,
+   "Rsrc": "fame×vis",
+   "gG": 0.63,
+   "ease": 0.781,
+   "easeFacets": {
+    "when": 0.612,
+    "where": 1,
+    "medium": 1,
+    "style": 0.512
+   }
+  },
+  "wd:Q965124": {
+   "title": "The Laughing Cavalier",
+   "R": 0.622,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.859,
+   "easeFacets": {
+    "when": 0.813,
+    "where": 1,
+    "medium": 1,
+    "style": 0.622
+   }
+  },
+  "wikidata:Q1993685": {
+   "title": "The Rooks Have Returned",
+   "R": 0.512,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.84,
+   "easeFacets": {
+    "when": 0.847,
+    "where": 0.512,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q10322900": {
+   "title": "Madame Monet wearing a kimono",
+   "R": 0.73,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.878,
+   "easeFacets": {
+    "when": 0.781,
+    "where": 0.73,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1114881": {
+   "title": "Venus and the Three Graces Presenting Gifts to a Young Woman",
+   "R": 0.73,
+   "Rsrc": "fame×vis",
+   "gG": 0.891,
+   "ease": 0.916,
+   "easeFacets": {
+    "when": 0.781,
+    "where": 1,
+    "medium": 1,
+    "style": 0.882
+   }
+  },
+  "http://www.wikidata.org/entity/Q2610675": {
+   "title": "The Fortune Teller",
+   "R": 0.729,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.945,
+   "easeFacets": {
+    "when": 0.781,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q921429": {
+   "title": "The Dessert: Harmony in Red (The Red Room)",
+   "R": 0.728,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.911,
+   "easeFacets": {
+    "when": 0.781,
+    "where": 0.862,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q1134250": {
+   "title": "Massacre of the Innocents",
+   "R": 0.728,
+   "Rsrc": "fame×vis",
+   "gG": 0.862,
+   "ease": 0.908,
+   "easeFacets": {
+    "when": 0.782,
+    "where": 1,
+    "medium": 1,
+    "style": 0.85
+   }
+  },
+  "http://www.wikidata.org/entity/Q7920648": {
+   "title": "Venus with a Mirror",
+   "R": 0.727,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.776,
+   "easeFacets": {
+    "when": 0.651,
+    "where": 0.727,
+    "medium": 1,
+    "style": 0.727
+   }
+  },
+  "http://www.wikidata.org/entity/Q8874171": {
+   "title": "Hope",
+   "R": 0.618,
+   "Rsrc": "fame×vis",
+   "gG": 0.439,
+   "ease": 0.739,
+   "easeFacets": {
+    "when": 0.539,
+    "where": 0.8,
+    "medium": 1,
+    "style": 0.618
+   }
+  },
+  "http://www.wikidata.org/entity/Q1314013": {
+   "title": "The Intervention of the Sabine Women",
+   "R": 0.508,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.84,
+   "easeFacets": {
+    "when": 0.848,
+    "where": 0.746,
+    "medium": 1,
+    "style": 0.767
+   }
+  },
+  "http://www.wikidata.org/entity/Q644887": {
+   "title": "Judith and Holofernes",
+   "R": 0.725,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.877,
+   "easeFacets": {
+    "when": 0.782,
+    "where": 1,
+    "medium": 1,
+    "style": 0.725
+   }
+  },
+  "wd:Q771017": {
+   "title": "Equestrian statue of Gattamelata",
+   "R": 0.725,
+   "Rsrc": "fame×vis",
+   "gG": 0.438,
+   "ease": 0.791,
+   "easeFacets": {
+    "when": 0.535,
+    "where": 0.904,
+    "medium": 1,
+    "style": 0.725
+   }
+  },
+  "http://www.wikidata.org/entity/Q1167932": {
+   "title": "Belshazzar's Feast",
+   "R": 0.724,
+   "Rsrc": "fame×vis",
+   "gG": 0.877,
+   "ease": 0.912,
+   "easeFacets": {
+    "when": 0.717,
+    "where": 0.93,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q16738523": {
+   "title": "The Peacock Room",
+   "R": 0.723,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.876,
+   "easeFacets": {
+    "when": 0.783,
+    "where": 1,
+    "medium": 1,
+    "style": 0.723
+   }
+  },
+  "http://www.wikidata.org/entity/Q1747282": {
+   "title": "Fight with Cudgels",
+   "R": 0.723,
+   "Rsrc": "fame×vis",
+   "gG": 0.704,
+   "ease": 0.864,
+   "easeFacets": {
+    "when": 0.65,
+    "where": 0.889,
+    "medium": 1,
+    "style": 0.917
+   }
+  },
+  "http://www.wikidata.org/entity/Q1212737": {
+   "title": "The Women of Algiers",
+   "R": 0.614,
+   "Rsrc": "fame×vis",
+   "gG": 0.707,
+   "ease": 0.841,
+   "easeFacets": {
+    "when": 0.723,
+    "where": 0.803,
+    "medium": 1,
+    "style": 0.837
+   }
+  },
+  "http://www.wikidata.org/entity/Q2471531": {
+   "title": "The Virgin and Child with Saint Anne and Saint John the Baptist",
+   "R": 0.613,
+   "Rsrc": "fame×vis",
+   "gG": 0.025,
+   "ease": 0.577,
+   "easeFacets": {
+    "when": 0.468,
+    "where": 0.613,
+    "medium": 0.613,
+    "style": 0.613
+   }
+  },
+  "http://www.wikidata.org/entity/Q2712679": {
+   "title": "Beata Beatrix",
+   "R": 0.505,
+   "Rsrc": "fame×vis",
+   "gG": 0.475,
+   "ease": 0.702,
+   "easeFacets": {
+    "when": 0.799,
+    "where": 0.505,
+    "medium": 1,
+    "style": 0.505
+   }
+  },
+  "wikidata:Q938115": {
+   "title": "Rejtan, or the Fall of Poland",
+   "R": 0.504,
+   "Rsrc": "fame×vis",
+   "gG": 0.577,
+   "ease": 0.752,
+   "easeFacets": {
+    "when": 0.849,
+    "where": 0.504,
+    "medium": 1,
+    "style": 0.657
+   }
+  },
+  "wikidata:Q18393790": {
+   "title": "The Snake Charmer",
+   "R": 0.504,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.899,
+   "easeFacets": {
+    "when": 0.849,
+    "where": 0.747,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q972295": {
+   "title": "Leonidas at Thermopylae",
+   "R": 0.503,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.624,
+   "easeFacets": {
+    "when": 0.491,
+    "where": 0.503,
+    "medium": 1,
+    "style": 0.503
+   }
+  },
+  "http://www.wikidata.org/entity/Q5332757": {
+   "title": "Echo and Narcissus",
+   "R": 0.718,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.875,
+   "easeFacets": {
+    "when": 0.784,
+    "where": 0.718,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q959628": {
+   "title": "Asmodea",
+   "R": 0.502,
+   "Rsrc": "fame×vis",
+   "gG": 0.32,
+   "ease": 0.624,
+   "easeFacets": {
+    "when": 0.491,
+    "where": 0.502,
+    "medium": 1,
+    "style": 0.502
+   }
+  },
+  "http://www.wikidata.org/entity/Q2610936": {
+   "title": "Boy with a Basket of Fruit",
+   "R": 0.717,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.946,
+   "easeFacets": {
+    "when": 0.785,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q871812": {
+   "title": "The Lament for Icarus",
+   "R": 0.716,
+   "Rsrc": "fame×vis",
+   "gG": 0.675,
+   "ease": 0.854,
+   "easeFacets": {
+    "when": 0.785,
+    "where": 0.915,
+    "medium": 1,
+    "style": 0.716
+   }
+  },
+  "wikidata:Q6455615": {
+   "title": "The Red Studio",
+   "R": 0.716,
+   "Rsrc": "fame×vis",
+   "gG": 0.873,
+   "ease": 0.91,
+   "easeFacets": {
+    "when": 0.785,
+    "where": 0.855,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q334604": {
+   "title": "Heart of the Andes",
+   "R": 0.608,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.857,
+   "easeFacets": {
+    "when": 0.818,
+    "where": 0.608,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q585437": {
+   "title": "Boy Bitten by a Lizard",
+   "R": 0.715,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.914,
+   "easeFacets": {
+    "when": 0.786,
+    "where": 1,
+    "medium": 1,
+    "style": 0.87
+   }
+  },
+  "http://www.wikidata.org/entity/Q1217187": {
+   "title": "Calumny of Apelles",
+   "R": 0.714,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.947,
+   "easeFacets": {
+    "when": 0.786,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q882584": {
+   "title": "Blue Nude",
+   "R": 0.606,
+   "Rsrc": "fame×vis",
+   "gG": 0.623,
+   "ease": 0.806,
+   "easeFacets": {
+    "when": 0.818,
+    "where": 0.8,
+    "medium": 1,
+    "style": 0.606
+   }
+  },
+  "http://www.wikidata.org/entity/Q4451145": {
+   "title": "Dance at Bougival",
+   "R": 0.605,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.905,
+   "easeFacets": {
+    "when": 0.818,
+    "where": 0.803,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q4901871": {
+   "title": "La Leocadia",
+   "R": 0.712,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.875,
+   "easeFacets": {
+    "when": 0.786,
+    "where": 1,
+    "medium": 1,
+    "style": 0.712
+   }
+  },
+  "wd:Q706846": {
+   "title": "Dwelling in the Fuchun Mountains",
+   "R": 0.391,
+   "Rsrc": "fame×vis",
+   "gG": 0.864,
+   "ease": 0.888,
+   "easeFacets": {
+    "when": 0.883,
+    "where": 1,
+    "medium": 1,
+    "style": 0.668
+   }
+  },
+  "http://www.wikidata.org/entity/Q1796098": {
+   "title": "Brera Madonna",
+   "R": 0.711,
+   "Rsrc": "fame×vis",
+   "gG": 0.766,
+   "ease": 0.879,
+   "easeFacets": {
+    "when": 0.787,
+    "where": 1,
+    "medium": 0.855,
+    "style": 0.874
+   }
+  },
+  "harvard312306": {
+   "title": "Alexander the Great",
+   "R": 0.284,
+   "Rsrc": "fame×vis",
+   "gG": 0.25,
+   "ease": 0.442,
+   "easeFacets": {
+    "when": 0.199,
+    "where": 0.284,
+    "medium": 1,
+    "style": 0.284
+   }
+  },
+  "http://www.wikidata.org/entity/Q2270768": {
+   "title": "Cutting the Stone",
+   "R": 0.709,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.947,
+   "easeFacets": {
+    "when": 0.787,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3087894": {
+   "title": "Parthenon Frieze",
+   "R": 0.602,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.855,
+   "easeFacets": {
+    "when": 0.819,
+    "where": 1,
+    "medium": 1,
+    "style": 0.602
+   }
+  },
+  "http://www.wikidata.org/entity/Q3080509": {
+   "title": "The Valpinçon Bather",
+   "R": 0.708,
+   "Rsrc": "fame×vis",
+   "gG": 0.742,
+   "ease": 0.872,
+   "easeFacets": {
+    "when": 0.788,
+    "where": 0.838,
+    "medium": 1,
+    "style": 0.862
+   }
+  },
+  "http://www.wikidata.org/entity/Q1282840": {
+   "title": "Napoleon I on his Imperial Throne",
+   "R": 0.707,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.875,
+   "easeFacets": {
+    "when": 0.788,
+    "where": 0.849,
+    "medium": 1,
+    "style": 0.861
+   }
+  },
+  "http://www.wikidata.org/entity/Q2344593": {
+   "title": "Amor and Psyche, children",
+   "R": 0.707,
+   "Rsrc": "fame×vis",
+   "gG": 0.779,
+   "ease": 0.882,
+   "easeFacets": {
+    "when": 0.788,
+    "where": 0.853,
+    "medium": 1,
+    "style": 0.888
+   }
+  },
+  "http://www.wikidata.org/entity/Q2528177": {
+   "title": "Diana and Actaeon",
+   "R": 0.706,
+   "Rsrc": "fame×vis",
+   "gG": 0.849,
+   "ease": 0.903,
+   "easeFacets": {
+    "when": 0.788,
+    "where": 1,
+    "medium": 1,
+    "style": 0.822
+   }
+  },
+  "http://www.wikidata.org/entity/Q3012259": {
+   "title": "Whistlejacket",
+   "R": 0.494,
+   "Rsrc": "fame×vis",
+   "gG": 0.725,
+   "ease": 0.824,
+   "easeFacets": {
+    "when": 0.801,
+    "where": 1,
+    "medium": 1,
+    "style": 0.494
+   }
+  },
+  "http://www.wikidata.org/entity/Q2270955": {
+   "title": "David and Goliath",
+   "R": 0.705,
+   "Rsrc": "fame×vis",
+   "gG": 0.887,
+   "ease": 0.914,
+   "easeFacets": {
+    "when": 0.789,
+    "where": 1,
+    "medium": 1,
+    "style": 0.866
+   }
+  },
+  "wd:Q254794": {
+   "title": "The Great Piece of Turf",
+   "R": 0.704,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.781,
+   "easeFacets": {
+    "when": 0.718,
+    "where": 0.704,
+    "medium": 1,
+    "style": 0.704
+   }
+  },
+  "wikidata:Q3725175": {
+   "title": "Aeneas, Anchises and Ascanius",
+   "R": 0.598,
+   "Rsrc": "fame×vis",
+   "gG": 0.82,
+   "ease": 0.883,
+   "easeFacets": {
+    "when": 0.531,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2892964": {
+   "title": "The Moneylender and his Wife",
+   "R": 0.703,
+   "Rsrc": "fame×vis",
+   "gG": 0.94,
+   "ease": 0.929,
+   "easeFacets": {
+    "when": 0.718,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2318325": {
+   "title": "Salome with the Head of John the Baptist",
+   "R": 0.702,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.947,
+   "easeFacets": {
+    "when": 0.789,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q969367": {
+   "title": "Woman Holding a Balance",
+   "R": 0.701,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.948,
+   "easeFacets": {
+    "when": 0.79,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q28541710": {
+   "title": "The Doctor",
+   "R": 0.491,
+   "Rsrc": "fame×vis",
+   "gG": 0.623,
+   "ease": 0.771,
+   "easeFacets": {
+    "when": 0.853,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.74
+   }
+  },
+  "http://www.wikidata.org/entity/Q2016193": {
+   "title": "Madonna Enthroned",
+   "R": 0.7,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.873,
+   "easeFacets": {
+    "when": 0.79,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7
+   }
+  },
+  "http://www.wikidata.org/entity/Q2701637": {
+   "title": "Scene at the Signing of the Constitution of the United States",
+   "R": 0.595,
+   "Rsrc": "fame×vis",
+   "gG": 0.673,
+   "ease": 0.823,
+   "easeFacets": {
+    "when": 0.724,
+    "where": 0.722,
+    "medium": 1,
+    "style": 0.845
+   }
+  },
+  "http://www.wikidata.org/entity/Q2426058": {
+   "title": "Pallas and the Centaur",
+   "R": 0.699,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.948,
+   "easeFacets": {
+    "when": 0.79,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1224572": {
+   "title": "Bonaparte Crossing the Alps",
+   "R": 0.593,
+   "Rsrc": "fame×vis",
+   "gG": 0.565,
+   "ease": 0.778,
+   "easeFacets": {
+    "when": 0.724,
+    "where": 0.797,
+    "medium": 1,
+    "style": 0.593
+   }
+  },
+  "http://www.wikidata.org/entity/Q6746233": {
+   "title": "Man Mocked by Two Women",
+   "R": 0.698,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.872,
+   "easeFacets": {
+    "when": 0.791,
+    "where": 1,
+    "medium": 1,
+    "style": 0.698
+   }
+  },
+  "http://www.wikidata.org/entity/Q2632688": {
+   "title": "The Baptism of Christ",
+   "R": 0.696,
+   "Rsrc": "fame×vis",
+   "gG": 0.94,
+   "ease": 0.929,
+   "easeFacets": {
+    "when": 0.718,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2619037": {
+   "title": "Portrait of Madame Récamier",
+   "R": 0.696,
+   "Rsrc": "fame×vis",
+   "gG": 0.752,
+   "ease": 0.872,
+   "easeFacets": {
+    "when": 0.791,
+    "where": 0.843,
+    "medium": 1,
+    "style": 0.856
+   }
+  },
+  "http://www.wikidata.org/entity/Q123935": {
+   "title": "The Triumph of Bacchus",
+   "R": 0.487,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.835,
+   "easeFacets": {
+    "when": 0.854,
+    "where": 0.487,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2344505": {
+   "title": "Madonna of the Goldfinch",
+   "R": 0.486,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.964,
+   "easeFacets": {
+    "when": 0.854,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2344396": {
+   "title": "Young Woman with Unicorn",
+   "R": 0.59,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.956,
+   "easeFacets": {
+    "when": 0.823,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q6065609": {
+   "title": "Walk on the Beach",
+   "R": 0.694,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.871,
+   "easeFacets": {
+    "when": 0.792,
+    "where": 0.694,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3268045": {
+   "title": "Luxe, calme et volupté",
+   "R": 0.589,
+   "Rsrc": "fame×vis",
+   "gG": 0.623,
+   "ease": 0.801,
+   "easeFacets": {
+    "when": 0.823,
+    "where": 0.791,
+    "medium": 1,
+    "style": 0.589
+   }
+  },
+  "http://www.wikidata.org/entity/Q2392901": {
+   "title": "Portrait of a Man (Self Portrait?)",
+   "R": 0.692,
+   "Rsrc": "fame×vis",
+   "gG": 0.675,
+   "ease": 0.848,
+   "easeFacets": {
+    "when": 0.645,
+    "where": 0.925,
+    "medium": 1,
+    "style": 0.823
+   }
+  },
+  "http://www.wikidata.org/entity/Q369810": {
+   "title": "The First Mourning",
+   "R": 0.692,
+   "Rsrc": "fame×vis",
+   "gG": 0.714,
+   "ease": 0.86,
+   "easeFacets": {
+    "when": 0.762,
+    "where": 0.846,
+    "medium": 1,
+    "style": 0.832
+   }
+  },
+  "wikidata:Q16679343": {
+   "title": "Over Eternal Quiet",
+   "R": 0.484,
+   "Rsrc": "fame×vis",
+   "gG": 0.902,
+   "ease": 0.913,
+   "easeFacets": {
+    "when": 0.855,
+    "where": 0.798,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q4233325": {
+   "title": "Tree Roots",
+   "R": 0.69,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.909,
+   "easeFacets": {
+    "when": 0.793,
+    "where": 0.845,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q970968": {
+   "title": "Symphony in White, No. 1: The White Girl",
+   "R": 0.689,
+   "Rsrc": "fame×vis",
+   "gG": 0.714,
+   "ease": 0.859,
+   "easeFacets": {
+    "when": 0.793,
+    "where": 0.955,
+    "medium": 1,
+    "style": 0.689
+   }
+  },
+  "wd:Q1764395": {
+   "title": "Vision after the Sermon",
+   "R": 0.689,
+   "Rsrc": "fame×vis",
+   "gG": 0.807,
+   "ease": 0.888,
+   "easeFacets": {
+    "when": 0.793,
+    "where": 0.853,
+    "medium": 1,
+    "style": 0.907
+   }
+  },
+  "http://www.wikidata.org/entity/Q3203231": {
+   "title": "Rebellious Slave",
+   "R": 0.688,
+   "Rsrc": "fame×vis",
+   "gG": 0.475,
+   "ease": 0.785,
+   "easeFacets": {
+    "when": 0.513,
+    "where": 0.938,
+    "medium": 1,
+    "style": 0.688
+   }
+  },
+  "http://www.wikidata.org/entity/Q7732151": {
+   "title": "The end of the world",
+   "R": 0.687,
+   "Rsrc": "fame×vis",
+   "gG": 0.44,
+   "ease": 0.773,
+   "easeFacets": {
+    "when": 0.719,
+    "where": 0.687,
+    "medium": 1,
+    "style": 0.687
+   }
+  },
+  "http://www.wikidata.org/entity/Q3387944": {
+   "title": "Pierrot",
+   "R": 0.584,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.698,
+   "easeFacets": {
+    "when": 0.625,
+    "where": 0.584,
+    "medium": 1,
+    "style": 0.584
+   }
+  },
+  "http://www.wikidata.org/entity/Q1090837": {
+   "title": "Bathers at Asnières",
+   "R": 0.686,
+   "Rsrc": "fame×vis",
+   "gG": 0.796,
+   "ease": 0.885,
+   "easeFacets": {
+    "when": 0.794,
+    "where": 0.838,
+    "medium": 1,
+    "style": 0.906
+   }
+  },
+  "http://www.wikidata.org/entity/Q1212098": {
+   "title": "The Railway",
+   "R": 0.685,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.908,
+   "easeFacets": {
+    "when": 0.794,
+    "where": 0.838,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q1787143": {
+   "title": "Chalk Cliffs at Ruegen",
+   "R": 0.685,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.949,
+   "easeFacets": {
+    "when": 0.795,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3745698": {
+   "title": "The Open Window",
+   "R": 0.478,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.641,
+   "easeFacets": {
+    "when": 0.606,
+    "where": 0.478,
+    "medium": 1,
+    "style": 0.478
+   }
+  },
+  "http://www.wikidata.org/entity/Q3556817": {
+   "title": "Diana leaving her Bath",
+   "R": 0.683,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.908,
+   "easeFacets": {
+    "when": 0.795,
+    "where": 0.837,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3762348": {
+   "title": "Jael and Sisera",
+   "R": 0.683,
+   "Rsrc": "fame×vis",
+   "gG": 0.577,
+   "ease": 0.815,
+   "easeFacets": {
+    "when": 0.719,
+    "where": 0.683,
+    "medium": 1,
+    "style": 0.856
+   }
+  },
+  "http://www.wikidata.org/entity/Q1198912": {
+   "title": "St. Jerome in His Study",
+   "R": 0.682,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.949,
+   "easeFacets": {
+    "when": 0.795,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q775407": {
+   "title": "The Balcony",
+   "R": 0.681,
+   "Rsrc": "fame×vis",
+   "gG": 0.758,
+   "ease": 0.872,
+   "easeFacets": {
+    "when": 0.796,
+    "where": 0.836,
+    "medium": 1,
+    "style": 0.855
+   }
+  },
+  "wikidata:Q1683743": {
+   "title": "Vampire",
+   "R": 0.681,
+   "Rsrc": "fame×vis",
+   "gG": 0.875,
+   "ease": 0.909,
+   "easeFacets": {
+    "when": 0.796,
+    "where": 0.936,
+    "medium": 1,
+    "style": 0.904
+   }
+  },
+  "aic51757": {
+   "title": "L'Assommoir",
+   "R": 0.374,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.891,
+   "easeFacets": {
+    "when": 0.888,
+    "where": 0.677,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2551625": {
+   "title": "Madonna of the Magnificat",
+   "R": 0.679,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.949,
+   "easeFacets": {
+    "when": 0.796,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q729194": {
+   "title": "Portrait of Sebastián de Morra",
+   "R": 0.576,
+   "Rsrc": "fame×vis",
+   "gG": 0.725,
+   "ease": 0.84,
+   "easeFacets": {
+    "when": 0.785,
+    "where": 0.576,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q7194972": {
+   "title": "The Night Revels of Han Xizai",
+   "R": 0.677,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.949,
+   "easeFacets": {
+    "when": 0.797,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wikidata:Q3998985": {
+   "title": "Charles I in Three Positions",
+   "R": 0.575,
+   "Rsrc": "fame×vis",
+   "gG": 0.845,
+   "ease": 0.891,
+   "easeFacets": {
+    "when": 0.827,
+    "where": 0.944,
+    "medium": 1,
+    "style": 0.793
+   }
+  },
+  "http://www.wikidata.org/entity/Q19915289": {
+   "title": "The Execution of Torrijos and his companions in the Malaga's beach",
+   "R": 0.574,
+   "Rsrc": "fame×vis",
+   "gG": 0.604,
+   "ease": 0.788,
+   "easeFacets": {
+    "when": 0.785,
+    "where": 0.574,
+    "medium": 1,
+    "style": 0.794
+   }
+  },
+  "http://www.wikidata.org/entity/Q2963060": {
+   "title": "Marly horses",
+   "R": 0.574,
+   "Rsrc": "fame×vis",
+   "gG": 0.501,
+   "ease": 0.744,
+   "easeFacets": {
+    "when": 0.623,
+    "where": 0.78,
+    "medium": 1,
+    "style": 0.574
+   }
+  },
+  "http://www.wikidata.org/entity/Q1619527": {
+   "title": "Mr and Mrs Andrews",
+   "R": 0.573,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.957,
+   "easeFacets": {
+    "when": 0.828,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3210253": {
+   "title": "Magdalene with the Smoking Flame",
+   "R": 0.674,
+   "Rsrc": "fame×vis",
+   "gG": 0.57,
+   "ease": 0.809,
+   "easeFacets": {
+    "when": 0.563,
+    "where": 0.674,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q2404992": {
+   "title": "Aristotle with a Bust of Homer",
+   "R": 0.673,
+   "Rsrc": "fame×vis",
+   "gG": 1,
+   "ease": 0.95,
+   "easeFacets": {
+    "when": 0.798,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "wd:Q3172259": {
+   "title": "The Oxbow",
+   "R": 0.672,
+   "Rsrc": "fame×vis",
+   "gG": 0.75,
+   "ease": 0.868,
+   "easeFacets": {
+    "when": 0.798,
+    "where": 1,
+    "medium": 1,
+    "style": 0.672
+   }
+  },
+  "wikidata:Q3633419": {
+   "title": "Blue Dancers",
+   "R": 0.672,
+   "Rsrc": "fame×vis",
+   "gG": 0.871,
+   "ease": 0.907,
+   "easeFacets": {
+    "when": 0.798,
+    "where": 0.831,
+    "medium": 1,
+    "style": 1
+   }
+  },
+  "http://www.wikidata.org/entity/Q3314110": {
+   "title": "A Pilgrimage to San Isidro",
+   "R": 0.57,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.691,
+   "easeFacets": {
+    "when": 0.623,
+    "where": 0.57,
+    "medium": 1,
+    "style": 0.57
+   }
+  },
+  "wikidata:Q473237": {
+   "title": "Statue of Bartolomeo Colleoni",
+   "R": 0.67,
+   "Rsrc": "fame×vis",
+   "gG": 0.38,
+   "ease": 0.745,
+   "easeFacets": {
+    "when": 0.641,
+    "where": 0.67,
+    "medium": 1,
+    "style": 0.67
+   }
+  }
+ }
+}

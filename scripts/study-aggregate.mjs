@@ -41,9 +41,15 @@ if (!rows.length) { console.error("no rows — has anyone played the study daili
 const devices = new Set(), work = {}; // work[id] = {tier, byField:{when:{pts:[],guesses:[]}}, n}
 for (const row of rows) { devices.add(row.device_id);
   for (const rd of (row.rounds || [])) { const id = rd.id; if (!id) continue;
-    const wk = work[id] || (work[id] = { tier: row.tier, plays: 0, byField: {} });
+    const wk = work[id] || (work[id] = { tier: row.tier, plays: 0, recognized: 0, byField: {} });
     wk.plays++;
     const pts = rd.cells || {}, g = rd.guess || {};
+    // INFERRED RECOGNITION (for calibrating the ease metric's R + date-discount): a player who nails the artist,
+    // OR gets place+date+style all right, almost certainly RECOGNIZED the work rather than inferred it from pixels.
+    // The gap between recognized-play accuracy and blind accuracy is exactly what the ease metric needs to learn.
+    const hi = f => pts[f] != null && pts[f] >= MAX_CAT * 0.75;
+    const recognized = (pts.artist != null && pts.artist >= MAX_CAT * 0.9) || (hi("when") && hi("where") && (pts.style == null || hi("style")));
+    if (recognized) wk.recognized++;
     const gv = { when: g.year, where: g.ll ? `${(+g.ll[0]).toFixed(1)},${(+g.ll[1]).toFixed(1)}` : null, medium: g.medium, style: g.style, artist: g.artist };
     // hints (labels) map to the field they help — a field people repeatedly hint on is a difficulty tell
     const hintField = l => /century/i.test(l) ? "when" : /continent/i.test(l) ? "where" : /rule out|movement|cultur/i.test(l) ? "style" : /initial/i.test(l) ? "artist" : null;
@@ -57,7 +63,8 @@ const works = Object.entries(work).map(([id, wk]) => {
   for (const f of FIELDS) { const b = wk.byField[f]; if (!b || !b.pts.length) continue;
     byField[f] = { meanPts: Math.round(mean(b.pts)), pct: Math.round(mean(b.pts) / MAX_CAT * 100), n: b.pts.length, hintRate: Math.round((b.hints || 0) / b.pts.length * 100), guesses: b.guesses }; }
   const fieldPcts = Object.values(byField).map(x => x.pct);
-  return { id, title: p?.title || "?", artist: p?.artist || "", tier: wk.tier, plays: wk.plays, overallPct: Math.round(mean(fieldPcts)), byField };
+  return { id, title: p?.title || "?", artist: p?.artist || "", tier: wk.tier, plays: wk.plays,
+    recognizedRate: Math.round((wk.recognized || 0) / wk.plays * 100), overallPct: Math.round(mean(fieldPcts)), byField };
 }).sort((a, b) => a.overallPct - b.overallPct); // hardest (lowest human %) first
 
 // overall per-field means across all works
@@ -65,9 +72,12 @@ console.log(`participants (distinct devices): ${devices.size} · distinct works:
 console.log("overall human accuracy per field (higher = easier for humans):");
 for (const f of FIELDS) { const all = works.flatMap(wk => wk.byField[f] ? [wk.byField[f].pct] : []); const hr = works.flatMap(wk => wk.byField[f] ? [wk.byField[f].hintRate] : []); if (all.length) console.log(`  ${f.padEnd(7)} ${Math.round(mean(all))}% accuracy · ${Math.round(mean(hr))}% hint-lean  (${all.length} works)`); }
 
+const recAll = works.filter(x => x.plays >= 1).map(x => x.recognizedRate);
+if (recAll.length) console.log(`\ninferred recognition: ${Math.round(mean(recAll))}% of plays recognized the work (nailed artist, or place+date+style) — the ease metric's R + date-discount calibrate off this`);
+
 console.log("\nhardest works for humans (lowest overall %, min 2 plays):");
 for (const wk of works.filter(x => x.plays >= 2).slice(0, 20)) {
-  console.log(`  ${String(wk.overallPct).padStart(3)}%  ${(wk.title).slice(0, 30).padEnd(30)} ${wk.tier.padEnd(6)} n=${wk.plays}  [${FIELDS.filter(f => wk.byField[f]).map(f => `${f[0]}${wk.byField[f].pct}`).join(" ")}]`);
+  console.log(`  ${String(wk.overallPct).padStart(3)}%  ${(wk.title).slice(0, 30).padEnd(30)} ${wk.tier.padEnd(6)} n=${wk.plays} rec=${String(wk.recognizedRate).padStart(3)}%  [${FIELDS.filter(f => wk.byField[f]).map(f => `${f[0]}${wk.byField[f].pct}`).join(" ")}]`);
 }
 
 try { mkdirSync("data/incoming", { recursive: true }); } catch {}
