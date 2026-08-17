@@ -76,11 +76,33 @@ export default async function handler(req, res) {
       if (!w.ok) { const detail = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', status: w.status, detail: detail.slice(0, 200) }); }
     }
 
-    // rank = (# scores strictly higher) + 1; count = total entries that day+tier
-    const rankRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${isBest ? total : prev}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
-    const cntRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
-    const parseCount = r => { const cr = r.headers.get('content-range') || '*/0'; return parseInt(cr.split('/')[1], 10) || 0; };
-    return res.status(200).json({ ok: true, isBest, rank: parseCount(rankRes) + 1, count: parseCount(cntRes) });
+    // rank/count must match the leaderboard, which collapses an account's devices to its single best score.
+    // Compute it that way here so the recap ("#7 of 30") never disagrees with the board. Wrapped in its own
+    // try/catch: the score WRITE already happened above, so a rank-display failure must NEVER 500 the submit —
+    // it falls back to the raw per-device count.
+    let rank, count;
+    try {
+      const all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id,total`)).json();
+      const devIds = [...new Set((all || []).map(r => r.device_id))];
+      const profByDev = {};
+      for (let i = 0; i < devIds.length; i += 100) {
+        const chunk = devIds.slice(i, i + 100);
+        const ps = await (await rest(`profiles?device_id=in.(${chunk.map(encodeURIComponent).join(',')})&select=device_id,user_id`)).json();
+        for (const p of (ps || [])) profByDev[p.device_id] = p;
+      }
+      const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
+      const best = new Map();
+      for (const r of (all || [])) { const k = keyOf(r.device_id); const t = Number(r.total); if (!best.has(k) || t > best.get(k)) best.set(k, t); }
+      const myTotal = best.get(keyOf(deviceId)) ?? (isBest ? total : prev);
+      count = best.size;
+      rank = [...best.values()].filter(t => t > myTotal).length + 1;
+    } catch {
+      const rankRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${isBest ? total : prev}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
+      const cntRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
+      const parseCount = r => { const cr = r.headers.get('content-range') || '*/0'; return parseInt(cr.split('/')[1], 10) || 0; };
+      rank = parseCount(rankRes) + 1; count = parseCount(cntRes);
+    }
+    return res.status(200).json({ ok: true, isBest, rank, count });
   } catch (e) {
     return res.status(500).json({ error: 'store failed' });
   }

@@ -2043,7 +2043,7 @@ async function renderLeaderboard(tierKey,dateStr){
   const youShown=data.rows.some(r=>r.isYou);
   let selfRow='';
   if(data.you && !youShown){
-    selfRow=`<div style="position:sticky;bottom:0;background:var(--study-bg);border-top:2px solid var(--accent);margin:0 -8px;padding:0 8px">
+    selfRow=`<div id="lbself" style="position:sticky;bottom:0;background:var(--study-bg);border-top:2px solid var(--accent);margin:0 -8px;padding:0 8px">
       <div style="display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 8px">
         <span class="mono" style="width:30px;text-align:right;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums">${data.you.rank}</span>
         ${dabAvatar(id.name,id.color,34)}
@@ -2068,6 +2068,7 @@ let lbShown=0;
 async function loadMoreLeaderboard(btn){ btn.disabled=true; const orig=btn.textContent; btn.textContent='Loading…';
   try{ const r=await fetch(`/api/leaderboard?date=${lbDate||todayStr()}&tier=${lbTier}&me=${encodeURIComponent(deviceId())}&offset=${lbShown}`); const d=r.ok?await r.json():null;
     if(d&&d.rows&&d.rows.length){ const box=document.getElementById('lbrows'); if(box)box.insertAdjacentHTML('beforeend', d.rows.map(lbRowHTML).join('')); lbShown+=d.rows.length;
+      if(d.rows.some(r=>r.isYou)){ const sr=document.getElementById('lbself'); if(sr)sr.remove(); } // your row is now in the list — drop the duplicate sticky self-row
       if(lbShown>=d.count) btn.remove(); else { btn.disabled=false; btn.textContent=`Show more (${d.count-lbShown} more)`; } }
     else btn.remove();
   }catch{ btn.disabled=false; btn.textContent=orig; } }
@@ -2098,7 +2099,11 @@ async function refreshAuth(){ const c=sb(); if(!c)return null; try{ const {data}
   return authUser; }catch{ return null; } }
 // Phase 2b cross-device sync: bind device→account, merge local identity+streak UP, pull canonical identity
 // + merged streak DOWN (so progress follows you to any device). Falls back to /api/claim if sync fails.
-async function syncAccount(){
+// De-dupe concurrent syncs: onAuthStateChange AND refreshAuth both fire on the same sign-in, so they share ONE
+// in-flight promise instead of racing two read-merge-write cycles (and two onAuthApplied repaints) on login.
+let _syncInFlight=null;
+function syncAccount(){ if(_syncInFlight) return _syncInFlight;
+  _syncInFlight=(async()=>{
   const c=sb(); if(!c||!authUser)return null;
   try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token; if(!tok)return null;
     // only send name/color UP if the user actually chose them — loadIdentity() falls back to a random artist
@@ -2109,6 +2114,8 @@ async function syncAccount(){
     // fallback: at least bind the device
     await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
   }catch{ return null; }
+  })().finally(()=>{ _syncInFlight=null; });
+  return _syncInFlight;
 }
 // apply the account's canonical identity + merged streak to this device (on a fresh login)
 function onAuthApplied(s){ try{
