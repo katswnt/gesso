@@ -2127,6 +2127,9 @@ function trainGivenCats(){ const drop=new Set(); if(!TRAIN)return drop;
   const mv=trainMovements(); if(mv&&mv.size===1) drop.add('style');
   // drilling a single country → the location is a given, not a question (don't make them pin what they picked)
   const cos=TRAIN.facets&&TRAIN.facets.countries; if(cos&&cos.size===1 && TRAIN.axis!=='where') drop.add('where');
+  // drilling a SINGLE artist → the artist is a given (you picked them), so don't ask it every work. Training
+  // TWO+ artists keeps the artist question (telling them apart is the point).
+  const ars=TRAIN.facets&&TRAIN.facets.artists; if(ars&&ars.size===1 && TRAIN.axis!=='artist') drop.add('artist');
   return drop; }
 // the effective answer categories for a round = the work's cats, minus single-pin "given" cats,
 // then narrowed by the single-axis FOCUS control. Guard: never return zero core questions.
@@ -2977,8 +2980,11 @@ function score(){
   const gy = guess.year<lo ? lo : guess.year>hi ? hi : guess.year;              // nearest in-range year
   const pd = Math.abs(yearToPos(guess.year)-yearToPos(gy));                     // slider-distance to the range (0 if inside)
   const ts=timeScore(Math.round(pd/D.timeMult)), bull=!!ts.bull;
+  // HONEST label: only say "right to the decade" when the guess actually shares the decade (dy<=15 can
+  // straddle two decades — 1918 vs 1903 is 15 yrs but different decades). Otherwise state the real distance.
+  const sameDecade = Math.floor(guess.year/10)===Math.floor((dy===0?guess.year:gy)/10);
   cells.when={pts:ts.pts, bull, you:fmtYear(guess.year), actual:fmtDate(it),
-    note:bull?(dy===0?(ranged?"inside the date range":"right to the decade"):dy<=15?"right to the decade":dy<=75?"right generation":"right period"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
+    note:bull?(dy===0?(ranged?"inside the date range":(guess.year===it.y?"the exact year":"right to the decade")):sameDecade?"right to the decade":dy<=25?`within ${dy} years`:dy<=75?"right generation":"right period"):periodName(it,guess.year)===periodName(it,it.y)?"same period":`${dy} yrs off`};
   }
   // where (distance falloff is gentler on easy, steeper on hard)
   if(asked('where')){
@@ -3101,10 +3107,17 @@ function paintBurst(host){
 let __VISMAP=null;
 function VIS(id){ if(__VISMAP===null)__VISMAP=(typeof window!=='undefined'&&window.ARTEFACTUM_VISION)||{}; if(__VISMAP[id])return __VISMAP[id]; const m=String(id).match(/Q\d+/); if(m){ if(__VISMAP['wikidata:'+m[0]])return __VISMAP['wikidata:'+m[0]]; if(__VISMAP['http://www.wikidata.org/entity/'+m[0]])return __VISMAP['http://www.wikidata.org/entity/'+m[0]]; } return null; }
 function visionMarks(it){ const v=VIS(it.id); if(v&&v.pins&&v.pins.length) return `<div class="lookmarks">${v.pins.map((p,i)=>`<button class="lookmark" style="top:${(p.y*100).toFixed(1)}%;left:${(p.x*100).toFixed(1)}%" title="${esc(p.label||'')}">${i+1}</button>`).join('')}</div>`; const hs=(typeof HOTSPOTS!=='undefined'&&HOTSPOTS[it.id])||[]; if(hs.length) return `<div class="lookmarks">${hs.map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%">${h.n||1}</button>`).join('')}</div>`; return ''; }
+// GENERIC follow-up stems that repeat verbatim across thousands of works (matter / how-made / who-for /
+// technique / made-of / who-is-shown …) read as a form. When a work has >=3 genuinely work-specific
+// questions, drop the boilerplate so what shows is the questions that actually arise from THIS image
+// (e.g. "Why does Saint Michael look graceful instead of furious?"). Sparse works keep everything.
+const GENERIC_Q=/^\s*(why does (it|this \w+) matter|what technique|who made it|how was it (made|done)|what (is it|are these|is this) made of|(what.?s|what is) the story( behind)?|who is shown|what (are we|am i) looking at|what should i look at|what am i seeing|where (is it|was it made))\b/i;
 function guideHTML(guide){
   if(!Array.isArray(guide)||!guide.length) return '';
+  const specific=guide.filter(g=>!GENERIC_Q.test((g&&g.q)||''));
+  const show=specific.length>=3?specific:guide; // keep work-specific; sparse works keep all
   return `<div class="askguide">
-    <div class="aglist">${guide.map((g,i)=>`<div class="agrow">
+    <div class="aglist">${show.map((g,i)=>`<div class="agrow">
       <button type="button" class="agq" data-ag="${i}" aria-expanded="false"><span class="agnum">${i+1}</span><span class="agqt">${esc(g.q)}</span><span class="agplus">+</span></button>
       <div class="aga" hidden>${esc(g.a)}</div></div>`).join('')}</div></div>`;
 }
