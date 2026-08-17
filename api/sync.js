@@ -21,6 +21,22 @@ function mergeStreak(a, b){
   return out;
 }
 
+// merge two mastery objects ({byStyle,byRegion,byCategory,byCentury} of key->{correct,total}). Element-wise
+// MAX per key (like streak) — idempotent + monotonic, so re-syncing never double-counts, and maxCorrect<=
+// maxTotal always holds so the ratio stays valid. Trade-off: genuinely-distinct plays on two devices aren't
+// summed; acceptable for a progress display, and it's the safe property that makes "your eye" follow you.
+function mergeMastery(a, b){
+  a=a&&typeof a==='object'?a:{}; b=b&&typeof b==='object'?b:{}; const out={};
+  for(const bucket of new Set([...Object.keys(a), ...Object.keys(b)])){
+    const A=a[bucket]||{}, B=b[bucket]||{}, ob=out[bucket]={};
+    for(const k of new Set([...Object.keys(A), ...Object.keys(B)])){
+      const x=A[k]||{}, y=B[k]||{};
+      ob[k]={ correct: Math.max(+x.correct||0, +y.correct||0), total: Math.max(+x.total||0, +y.total||0) };
+    }
+  }
+  return out;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   if (!allowedOrigin(req.headers.origin)) return res.status(403).json({ error: 'forbidden origin' });
@@ -59,7 +75,17 @@ export default async function handler(req, res) {
     const merged = mergeStreak(serverStreak, body.streak);
     try { await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, streak: merged, updated_at: new Date().toISOString() }) }); } catch {}
 
-    return res.status(200).json({ ok: true, name, color, streak: merged });
+    // MASTERY ("Your Eye") — same up-merge-down as streak, in its OWN try/catch so a not-yet-migrated
+    // user_state.mastery column silently no-ops instead of breaking the streak sync.
+    let mergedMastery = body.mastery || null;
+    try {
+      const ms = await (await rest(`user_state?user_id=eq.${uid}&select=mastery`)).json();
+      const serverMastery = Array.isArray(ms) && ms[0] ? ms[0].mastery : null;
+      mergedMastery = mergeMastery(serverMastery, body.mastery);
+      await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, mastery: mergedMastery, updated_at: new Date().toISOString() }) });
+    } catch { mergedMastery = body.mastery || null; }
+
+    return res.status(200).json({ ok: true, name, color, streak: merged, mastery: mergedMastery });
   } catch (e) {
     return res.status(500).json({ error: 'sync failed' });
   }

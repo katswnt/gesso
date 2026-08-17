@@ -2046,7 +2046,7 @@ async function syncAccount(){
     // only send name/color UP if the user actually chose them — loadIdentity() falls back to a random artist
     // handle + deterministic color, and sync.js would otherwise promote those auto-values as canonical.
     let chosenName='', chosenColor=''; try{ const stored=JSON.parse(localStorage.getItem('gesso.identity')||'{}'); chosenName=String(stored.name||'').slice(0,16); chosenColor=/^#[0-9a-fA-F]{6}$/.test(stored.color||'')?stored.color:''; }catch{}
-    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),name:chosenName||undefined,color:chosenColor||undefined})});
+    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),mastery:loadMastery(),name:chosenName||undefined,color:chosenColor||undefined})});
     if(r.ok)return await r.json();
     // fallback: at least bind the device
     await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
@@ -2056,10 +2056,11 @@ async function syncAccount(){
 function onAuthApplied(s){ try{
   if(s.name||s.color) saveIdentity({name:s.name||loadIdentity().name,color:s.color||loadIdentity().color});
   if(s.streak) saveStreak(s.streak);
+  if(s.mastery) saveMastery(s.mastery); // "Your Eye" now follows the account across devices
 }catch{} }
 // on sign-out, drop the account's local identity/streak/submitted-keys so the next (anon) session on this
 // device gets its own fresh auto-name instead of inheriting the signed-out account's.
-function localSignOutClear(){ try{ localStorage.removeItem('gesso.identity'); localStorage.removeItem('artefactum.streak'); localStorage.removeItem('gesso.sent'); }catch{} }
+function localSignOutClear(){ try{ localStorage.removeItem('gesso.identity'); localStorage.removeItem('artefactum.streak'); localStorage.removeItem('artefactum.mastery'); localStorage.removeItem('gesso.sent'); }catch{} }
 // OAuth providers — each must ALSO be enabled in Supabase Dashboard → Authentication → Providers (+ a provider
 // OAuth app). Buttons here work the moment a provider is enabled; magic-link + email/password work out of the box.
 const OAUTH=[['google','Google'],['apple','Apple']];

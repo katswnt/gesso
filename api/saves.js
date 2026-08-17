@@ -24,15 +24,31 @@ export default async function handler(req, res) {
   const rest = (path, opts = {}) => fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
 
-  // ---- GET: list this device's saved work ids ----
+  // The set of device_ids belonging to the SAME account as `dev` (via the profiles device->user map, which
+  // login/sync populates). An unlinked device is just [dev]. This is what makes a save on one device show up
+  // on all your devices once you're logged in — the same account-dedup the leaderboard already does.
+  async function accountDevices(dev) {
+    try {
+      const p = await (await rest(`profiles?device_id=eq.${encodeURIComponent(dev)}&select=user_id`)).json();
+      const uid = Array.isArray(p) && p[0] && p[0].user_id;
+      if (!uid) return [dev];
+      const ds = await (await rest(`profiles?user_id=eq.${encodeURIComponent(uid)}&select=device_id`)).json();
+      return [...new Set([dev, ...((Array.isArray(ds) ? ds : []).map(x => x.device_id).filter(d => okDevice(d)))])];
+    } catch { return [dev]; }
+  }
+
+  // ---- GET: list saved work ids across the account's devices (newest first, deduped) ----
   if (req.method === 'GET') {
     const me = String(req.query.me || '').slice(0, 64);
     if (!okDevice(me)) return res.status(400).json({ error: 'bad deviceId' });
     try {
-      const r = await rest(`saves?device_id=eq.${encodeURIComponent(me)}&order=created_at.desc&select=work_id`);
+      const devs = await accountDevices(me);
+      const r = await rest(`saves?device_id=in.(${devs.join(',')})&order=created_at.desc&select=work_id`);
       if (!r.ok) return res.status(502).json({ error: 'upstream' });
       const rows = await r.json();
-      return res.status(200).json({ ids: (Array.isArray(rows) ? rows : []).map(x => x.work_id) });
+      const seen = new Set(), ids = [];
+      for (const x of (Array.isArray(rows) ? rows : [])) if (x.work_id && !seen.has(x.work_id)) { seen.add(x.work_id); ids.push(x.work_id); }
+      return res.status(200).json({ ids });
     } catch { return res.status(502).json({ error: 'upstream' }); }
   }
 
@@ -60,7 +76,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
-      const r = await rest(`saves?device_id=eq.${encodeURIComponent(deviceId)}&work_id=eq.${encodeURIComponent(workId)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      // remove the work across ALL the account's devices, so an unsave on one device sticks everywhere
+      const devs = await accountDevices(deviceId);
+      const r = await rest(`saves?device_id=in.(${devs.join(',')})&work_id=eq.${encodeURIComponent(workId)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
       if (!r.ok) return res.status(502).json({ error: 'upstream' });
       return res.status(200).json({ ok: true, saved: false });
     } catch { return res.status(502).json({ error: 'upstream' }); }
