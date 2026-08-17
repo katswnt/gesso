@@ -16,7 +16,8 @@ const sandbox = [
   grab(/const MOV_FAMILY=\{[\s\S]*?return Math\.min\(1,sim\);\n\}/, "movementSim block"),
   grab(/function ptInRing\(x,y,ring\)\{[\s\S]*?return inside; \}/, "ptInRing"),
   grab(/function ptInRegion\(lat,lng,reg\)\{[\s\S]*?return false; \}/, "ptInRegion"),
-  "globalThis.MAX_CAT=MAX_CAT; globalThis.DIFF=DIFF; globalThis.timeScore=timeScore; globalThis.movementSim=movementSim; globalThis.movEra=movEra; globalThis.ptInRegion=ptInRegion;",
+  grab(/function whereCredit\(\{[\s\S]*?\n\}/, "whereCredit"),
+  "globalThis.MAX_CAT=MAX_CAT; globalThis.DIFF=DIFF; globalThis.timeScore=timeScore; globalThis.movementSim=movementSim; globalThis.movEra=movEra; globalThis.ptInRegion=ptInRegion; globalThis.whereCredit=whereCredit;",
 ].join("\n");
 new Function(sandbox)();
 
@@ -55,6 +56,23 @@ ok(globalThis.ptInRegion(0, 0, box) === true, "ptInRegion: pin inside polygon = 
 ok(globalThis.ptInRegion(20, 20, box) === false, "ptInRegion: pin outside polygon = false");
 ok(globalThis.ptInRegion(0, 0, null) === false, "ptInRegion: no region entry = false (falls back to country logic)");
 ok(globalThis.ptInRegion(0, 0, {}) === false, "ptInRegion: missing geometry = false");
+
+// --- whereCredit: B3 tiered place credit ---
+const wc = globalThis.whereCredit;
+const distPts = 400; // stand-in distance falloff value for the fallback tier
+// 1) inside the historical cultural region (or a bullseye) → FULL, regardless of anything else
+eq(wc({ inReg: true, countryHit: true, hasReg: true, inCont: false, distPts }).pts, MAX_CAT, "in-region = full credit");
+eq(wc({ inReg: true, countryHit: false, hasReg: true, inCont: false, distPts }).pts, MAX_CAT, "in-region (bullseye outside country) = full");
+// 2) THE B3 CHANGE: right modern country, but the work HAS a deeper cultural region → 0.8 + teaching tier
+const only = wc({ inReg: false, countryHit: true, hasReg: true, inCont: false, distPts });
+eq(only.pts, Math.round(MAX_CAT * 0.8), "right country but region exists = 0.8 (Benin bronze pinned in Nigeria)");
+eq(only.kind, "countryOnly", "the 0.8 tier is flagged countryOnly (drives the reveal nudge)");
+ok(only.pts < MAX_CAT, "INVARIANT: country-only can never equal in-region credit");
+// 3) right modern country and NO region concept → FULL (the nation genuinely is the answer) — unchanged behavior
+eq(wc({ inReg: false, countryHit: true, hasReg: false, inCont: false, distPts }).pts, MAX_CAT, "right country, no region = full (modern work)");
+// 4) fallbacks unchanged: right continent floor vs distance falloff
+eq(wc({ inReg: false, countryHit: false, hasReg: true, inCont: true, distPts }).pts, Math.max(Math.round(MAX_CAT * 0.5), distPts), "continent tier = max(0.5, distPts)");
+eq(wc({ inReg: false, countryHit: false, hasReg: false, inCont: false, distPts }).pts, distPts, "miss = distance falloff");
 
 console.log(`\nscoring.test: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

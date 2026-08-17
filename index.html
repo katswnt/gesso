@@ -425,6 +425,18 @@ function superRegionFor(it){ const SR=window.ARTEFACTUM_SUPERREGIONS; if(!SR||!S
   for(const sr of SR){ if(sr.members.includes(c.n) && (it.y==null || (it.y>=sr.from && it.y<=sr.to))) return sr; } return null; }
 // the region a work is scored/shaded against: its curated culture polygon if any, else its historical super-region
 function regionFor(it){ return (window.ARTEFACTUM_REGIONS||{})[it&&it.style] || superRegionFor(it); }
+// B3 TIERED WHERE-CREDIT (pure, testable — the test extracts this so shipped code can't drift). The modern
+// nation-state is the wrong PRIMARY unit for a mostly pre-national corpus, but it's still worth most of the
+// credit. So: pin inside the work's historical cultural region (Benin Kingdom, Ancient Egypt, the Low
+// Countries) = FULL; the right modern country ALONE, when the work has a deeper cultural region = 0.8 (with a
+// reveal nudge: "you pinned Nigeria; this is the Benin Kingdom"); the modern country when there is NO region
+// concept = FULL (the nation genuinely is the answer); otherwise credit decays with distance.
+function whereCredit({inReg, countryHit, hasReg, inCont, distPts}){
+  if(inReg) return {pts:MAX_CAT, kind:'region'};                                    // in the cultural region (or a bullseye)
+  if(countryHit) return hasReg ? {pts:Math.round(MAX_CAT*0.8), kind:'countryOnly'}  // right country, but the culture is deeper
+                               : {pts:MAX_CAT, kind:'country'};                     // modern nation IS the right unit
+  return {pts:Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts), kind:inCont?'cont':'dist'};
+}
 function emFor(f){return settings.colorblind?(f>=.75?"✅":f>=.35?"🟡":"❌"):(f>=.75?"🟩":f>=.35?"🟨":"🟥");}
 function norm(s){return (s||"").toLowerCase().replace(/[^a-z ]/g,'').trim();}
 function deaccent(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();} // accent-insensitive matching (Dürer ↔ durer)
@@ -1593,7 +1605,7 @@ function renderCollections(){
         <a href="https://en.wikipedia.org/wiki/Why_Have_There_Been_No_Great_Women_Artists%3F" target="_blank" rel="noopener" style="color:var(--accent)">Nochlin (1971)</a></div></div>
     <div class="kick" style="margin:36px 0 10px">How we score where it&rsquo;s from</div>
     <div class="colcard" style="max-width:none">
-      <div style="font-size:13px;color:var(--muted);line-height:1.65">A border is a recent invention &mdash; most were drawn in the last two centuries, often by empires rather than the people living inside them. So we don&rsquo;t grade your map pin against the modern nation-state: &ldquo;Belgium&rdquo; is an anachronism for a 1562 Bruegel (his world was the <em>Netherlandish</em> Low Countries), and &ldquo;Nigeria&rdquo; a colonial fiction for a Benin bronze. We score against the work&rsquo;s <strong style="color:var(--ink)">historical cultural region</strong> where one applies &mdash; Han China, the Ottoman core, Ancient Egypt, Ukiyo-e Japan &mdash; and its modern country otherwise; either earns full credit, and credit fades with distance beyond it. The rule we hold ourselves to is <strong style="color:var(--ink)">parity</strong>: the same generous, era-aware geography for the West &mdash; the Low Countries, the pre-1861 Italian peninsula, the Russian sphere &mdash; that we already extend to ancient and non-Western art. Not fluid regions for &ldquo;the exotic&rdquo; and hard borders for Europe.</div></div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.65">A border is a recent invention &mdash; most were drawn in the last two centuries, often by empires rather than the people living inside them. So we don&rsquo;t grade your map pin against the modern nation-state: &ldquo;Belgium&rdquo; is an anachronism for a 1562 Bruegel (his world was the <em>Netherlandish</em> Low Countries), and &ldquo;Nigeria&rdquo; a colonial fiction for a Benin bronze. We score against the work&rsquo;s <strong style="color:var(--ink)">historical cultural region</strong> where one applies &mdash; Han China, the Ottoman core, Ancient Egypt, Ukiyo-e Japan &mdash; for full credit; the right modern country <em>alone</em> earns most of it, with a note pointing past the flag to the deeper answer (you pinned Nigeria; this is the Benin Kingdom); and where no such region applies, the modern country simply <em>is</em> the answer. Credit fades with distance beyond. The rule we hold ourselves to is <strong style="color:var(--ink)">parity</strong>: the same generous, era-aware geography for the West &mdash; the Low Countries, the pre-1861 Italian peninsula, the Russian sphere &mdash; that we already extend to ancient and non-Western art. Not fluid regions for &ldquo;the exotic&rdquo; and hard borders for Europe.</div></div>
     ${ATTRIB}
   </div></div>`;
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:1,attributionControl:false}).setView([25,10],1);
@@ -2998,33 +3010,33 @@ function score(){
   }
   // where (distance falloff is gentler on easy, steeper on hard)
   if(asked('where')){
-  let dist=null,sp=0,inC=false,inReg=false,inCont=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
-  const reg=regionFor(it);
+  let dist=null,sp=0,inC=false,inReg=false,inCont=false,countryOnly=false,rad=radiusFor(it.place); const wc=placeCountry(it.place);
+  const reg=regionFor(it); const hasReg=!!reg; const regLabel=reg?(reg.name||it.style||""):"";
   if(guess.ll){ dist=km(guess.ll.lat,guess.ll.lng,it.lat,it.lng);
-    // full credit inside EITHER the historical culture/empire region OR the modern country
-    inReg = reg ? ptInRegion(guess.ll.lat,guess.ll.lng,reg) : false;
-    inC = inReg || (wc ? nearCountry(guess.ll.lat,guess.ll.lng,wc) : (dist<=rad));
-    // right cultural REGION earns a solid partial even if the country/borders are off (many cultures span or
-    // predate modern borders) — BUT only when the pin is genuinely near the right area. it.region is often a
-    // whole continent ("Asia"), so without a distance gate, pinning Cambodia scored "right region" for Iran
-    // (~6000 km). Cap the region bonus to ~3000 km; farther pins fall back to the plain distance falloff.
+    // FULL credit inside the historical culture/empire region. A near-bullseye (≤200 km of the true point) also
+    // counts as "in the region": our region polygons are simplified, so a pin dead-on the real spot must never
+    // be docked to the country tier just because the outline clips it.
+    inReg = (reg ? ptInRegion(guess.ll.lat,guess.ll.lng,reg) : false) || (hasReg && dist<=200);
+    // right modern COUNTRY (border grace), or — when no country resolves — within the place's radius
+    const countryHit = wc ? nearCountry(guess.ll.lat,guess.ll.lng,wc) : (dist<=rad);
+    inC = inReg || countryHit;
+    // right continent earns a solid partial when the pin is genuinely near (it.region is often a whole continent,
+    // so gate to ~3000 km — else pinning Cambodia would score "right region" for Iran, ~6000 km away).
     inCont = !inC && continentOf(guess.ll.lat,guess.ll.lng)===it.region && dist<=3000;
-    // WHERE-SCORING PHILOSOPHY — the modern nation-state is the wrong primary unit for a mostly pre-national
-    // corpus. Borders are a recent, shifting technology (most drawn 19th–20th c.); "made in Belgium" is an
-    // anachronism for a 1562 Bruegel (Netherlandish), and "Nigeria" a colonial fiction for a Benin bronze.
-    // So the "correct area" is: the work's historical CULTURAL REGION if one applies (~17% of the pool — Han
-    // China, Ottoman, Ancient Egypt, Ukiyo-e Japan…), ELSE its modern country. Either one = FULL credit. This
-    // must apply with PARITY: the same generous historical geography for the West (Low Countries, the Italian
-    // peninsula, the Russian/Soviet sphere) that we already give non-Western/ancient art — not fluid regions for
-    // "the exotic" and rigid nation-states for Europe. Roadmap: extend the region polygons to the European/
-    // pre-national gaps + pick the region by PERIOD (Ottoman core for 1600 Anatolia, Turkey for 1980).
-    // Outside the correct area, credit DECAYS from the true point (off = dist) — no flat full-credit disc that
-    // would leak across a border (a Netherlands pin is NOT "in Belgium"; it should land ~2,400, not a flat 2,500).
-    const off=dist;
-    const distPts=Math.round(MAX_CAT*Math.exp(-off/D.distK));        // gentle falloff when the pin is OUTSIDE the right country/region
-    sp = inC ? MAX_CAT : Math.max(inCont?Math.round(MAX_CAT*0.5):0, distPts);}
+    // WHERE-SCORING PHILOSOPHY (B3 tiered credit) — the modern nation-state is the wrong PRIMARY unit for a
+    // mostly pre-national corpus. Borders are a recent, shifting technology (most drawn 19th–20th c.); "made in
+    // Belgium" is an anachronism for a 1562 Bruegel (Netherlandish), and "Nigeria" a colonial fiction for a Benin
+    // bronze. So the historical CULTURAL REGION (~17% of the pool — Han China, Ottoman, Ancient Egypt, Ukiyo-e
+    // Japan…) = FULL credit; the right modern country ALONE, when a deeper region exists, = 0.8 with a teaching
+    // nudge ("you pinned Nigeria; this is the Benin Kingdom"); the modern country when NO region concept applies
+    // = FULL (the nation genuinely is the answer). Applied with PARITY: the same generous historical geography for
+    // the West (Low Countries, the Italian peninsula, the Russian/Soviet sphere) as for non-Western/ancient art.
+    // Outside the correct area, credit DECAYS from the true point (no flat full-credit disc leaking across a border).
+    const distPts=Math.round(MAX_CAT*Math.exp(-dist/D.distK));        // gentle falloff when the pin is OUTSIDE the right country/region
+    const cr=whereCredit({inReg, countryHit, hasReg, inCont, distPts});
+    sp=cr.pts; countryOnly=cr.kind==='countryOnly';}
   cells.where={pts:sp, dist, inC, you:guess.ll?"your pin":"no pin", actual:it.place,
-    note:dist==null?"no pin dropped":inReg?"right area":inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
+    note:dist==null?"no pin dropped":inReg?"right area":countryOnly?`right country · this is ${regLabel}`:inC?"right country":inCont?"right region":`${Math.round(dist)} km off`};
   }
   // medium: exact beats same-family, and same-family is intentionally a fixed 50%.
   // Because medSimple is computed from the raw catalogue string at index time, stale
