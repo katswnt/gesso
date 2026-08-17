@@ -26,8 +26,8 @@ _Rebuilt 2026-08-13 by auditing every planning doc against the live code. Most o
 - [ ] **Blank-reveal non-punitive nudge** — label swap shipped, but the "· skipped, no penalty — here's the tell" behavior on a blank guess is still absent.
 
 ## 🔵 Instrumentation & docs (mostly done — small tails)
-- [ ] **Wire ~7 remaining events**: `collections_view` (measures reach to the honesty page — most useful), `pin_click`, `zoom`, `puzzle_link_copy`, `account_create`, `activation_sentiment`, `support_convert`.
-- [ ] **`docs/metrics.md` is factually stale** — still says "no analytics backend connected." It IS: self-hosted Supabase `/api/event` + Vercel pageviews, 12 events wired. Update it.
+- [x] **Wire remaining events** — DONE (2026-08-17, `060a37f`). `collections_view` (already), `pin_click`, `zoom` (user-zoom only via a programmatic-fit suppressor), `puzzle_link_copy`, `account_create` now fire — 18 distinct events wired. Only `activation_sentiment` remains (needs a post-first-daily "how did that feel?" UI prompt — a product decision, not just a `track()` call). `support_convert` is off-site on Ko-fi → not client-measurable without a Ko-fi webhook.
+- [x] **`docs/metrics.md`** — DONE (`060a37f`). It already correctly said the backend is live (the "no backend" note here was itself stale); refreshed the event dictionary + count to 18 and clarified what's genuinely left.
 - [ ] Confirm the Supabase auth **email templates** (`tasks/email-templates.md`) are actually pasted into the Supabase console.
 
 ## ⚪ Deferred / future (real work, intentionally not queued)
