@@ -2736,6 +2736,9 @@ function renderRound(){
   // seed distractor shuffles per date+tier+work so the option set is the same for everyone (fair/deterministic)
   window.__RNG=mulberry32(seedHash((runDate||todayStr())+'|'+tier+'|'+idx)); Promise.resolve().then(()=>{window.__RNG=null;});
   const it=game[idx]; try{markSeen(it.id)}catch{}
+  // FUNNEL: which round each player starts — reveals daily drop-out (round_start 1..5 vs daily_complete)
+  // and how far a training run goes. mode distinguishes daily / infinite / training.
+  track('round_start',{mode:TRAIN?'training':(infinite?'infinite':'daily'), round:idx+1, of:ROUNDS, tier:tier||null});
   const pstudy = infinite ? studyFor(it) : {cues:[]}; // learning-mode pre-lock hotspot tooltips
   const startYear = TRAIN_SPAN ? Math.round((TRAIN_SPAN.lo+TRAIN_SPAN.hi)/2) : 1700;
   guess={year:startYear, ll:null, medium:null, style:null, artist:"", hints:new Set()};
@@ -3068,6 +3071,7 @@ function score(){
     if(it.y!=null) bumpMastery(String(centuryOf(it.y)),'byCentury',cells.when.pts>=MAX_CAT*0.75);
   }
   results.push({it,cells,coreCats,baseMax,coreNet,bonus,hintPen,hints:guess.hints.size,guess:{...guess}});
+  track('guess_submit',{mode:TRAIN?'training':(infinite?'infinite':'daily'), round:results.length, of:ROUNDS, tier:tier||null}); // each "submit" click, for the funnel
   // daily_complete fires HERE — at the final guess — not on the summary screen. A player who answers all 5
   // then closes (or never taps "See final score") is still a real completion. Firing in the submit path also
   // dedupes naturally: navigating back to the summary re-renders but never re-runs submit.
