@@ -431,6 +431,16 @@ function regionFor(it){ return (window.ARTEFACTUM_REGIONS||{})[it&&it.style] || 
 // Countries) = FULL; the right modern country ALONE, when the work has a deeper cultural region = 0.8 (with a
 // reveal nudge: "you pinned Nigeria; this is the Benin Kingdom"); the modern country when there is NO region
 // concept = FULL (the nation genuinely is the answer); otherwise credit decays with distance.
+// B1 PLACE-NA — some records locate a work only to a continent / broad region, or give no coordinate at all.
+// Asking "where in the world?" then scoring a pin is unfair (there's no meaningful point), so we DROP the where
+// axis for these works (like medium-NA when the medium is unscoreable) and the reveal says why. ~8 works: the
+// Native-North-American pieces and a handful the museum pinned only to an African continent/region.
+const PLACE_NA_RE=/^(africa|americas?|north america|south america|central america|mesoamerica|the andes|andes|asia|europe|oceania|polynesia|melanesia|micronesia|sub[- ]saharan africa|west africa|central africa|east africa|southern africa|north africa|north america \(indigenous\))$/i;
+function isPlaceNA(p){ if(!p) return false;
+  if(p.lat==null||p.lng==null) return true;                      // no coordinate → nothing to score a pin against
+  if(p.style==="Native North America") return true;
+  return PLACE_NA_RE.test(String(p.place||"").trim());           // located only to a continent / broad region
+}                                                                 // (a blank place WITH coords is still distance-scored)
 function whereCredit({inReg, countryHit, hasReg, inCont, distPts}){
   if(inReg) return {pts:MAX_CAT, kind:'region'};                                    // in the cultural region (or a bullseye)
   if(countryHit) return hasReg ? {pts:Math.round(MAX_CAT*0.8), kind:'countryOnly'}  // right country, but the culture is deeper
@@ -448,8 +458,39 @@ function lev(a,b){ if(Math.abs(a.length-b.length)>2)return 9; const m=a.length,n
   for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
   return d[m][n]; }
 const NAME_PARTICLES=new Set(["de","da","del","della","di","van","von","der","den","la","le","el","du","of","the","y","dos","das","ten","ter"]);
+// 1c — curated equivalence GROUPS for artists whose common name shares NO token with their catalogue name:
+// cross-language exonyms (Titian↔Tiziano Vecellio, Raphael↔Raffaello Sanzio) and one-word bynames (Tintoretto↔
+// Jacopo Robusti). Bidirectional (any member matches any other), so it works whichever form the corpus stores AND
+// however the player types it. Entries are in artistMatch's normalized form: deaccented, lowercase, letters+spaces
+// only. Only distinctive, unambiguous names — never a shared first name like "Michelangelo" (Buonarroti vs Merisi).
+const ARTIST_ALIAS_GROUPS=[
+  ["titian","tiziano vecellio","tiziano"],
+  ["raphael","raffaello sanzio","raffaello","raffael"],
+  ["el greco","domenikos theotokopoulos","theotokopoulos"],
+  ["caravaggio","michelangelo merisi da caravaggio","michelangelo merisi"],
+  ["canaletto","giovanni antonio canal","antonio canal"],
+  ["tintoretto","jacopo robusti","jacopo tintoretto"],
+  ["donatello","donato di niccolo di betto bardi"],
+  ["masaccio","tommaso di ser giovanni di simone","tommaso cassai"],
+  ["giorgione","giorgio barbarelli da castelfranco","giorgio da castelfranco"],
+  ["parmigianino","girolamo francesco maria mazzola","francesco mazzola"],
+  ["guercino","giovanni francesco barbieri"],
+  ["correggio","antonio allegri da correggio","antonio allegri"],
+  ["veronese","paolo veronese","paolo caliari"],
+  ["bronzino","agnolo bronzino","agnolo di cosimo"],
+  ["perugino","pietro perugino","pietro vannucci"],
+  ["fra angelico","guido di pietro","giovanni da fiesole"],
+  ["ghirlandaio","domenico ghirlandaio","domenico bigordi"],
+  ["sodoma","giovanni antonio bazzi"],
+];
+// does a normalized string CONTAIN a member of group i as a whole phrase? (names carry extra tokens:
+// "raffaello sanzio italian") → the group member still matches. Which group does a string belong to (or -1)?
+function aliasHit(s,i){ return ARTIST_ALIAS_GROUPS[i].some(n=> s===n || s.startsWith(n+" ") || s.endsWith(" "+n) || s.includes(" "+n+" ")); }
+function aliasGroupOf(s){ for(let i=0;i<ARTIST_ALIAS_GROUPS.length;i++) if(aliasHit(s,i)) return i; return -1; }
 function artistMatch(g,a){ g=deaccent(g).replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim(); a=deaccent(a).replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim();
   if(!g||!a) return false; if(g===a) return true;
+  // curated cross-language / byname equivalence, bidirectional (guess and record in the SAME group)
+  { const gi=aliasGroupOf(g); if(gi>=0 && gi===aliasGroupOf(a)) return true; }
   const at=a.split(" ").filter(Boolean), gt=g.split(" ").filter(Boolean);
   const aSur=at[at.length-1], aDist=at.filter(t=>t.length>=4 && !NAME_PARTICLES.has(t));
   // typos only forgiven on longer names (≥7) so near-collisions like Monet/Manet stay distinct
@@ -1369,7 +1410,8 @@ function buildIndexes(){
   const PERIOD_STYLE=/\b\d{1,2}(st|nd|rd|th)[- ]century\b|^medieval european$/i; // vague period+geo labels are cleared in data; legit "X era/period" cultures (Meiji era, Edo period) stay quizzable
   for(const p of POOL){ p.medSimple=simplifyMedium(p.medium);
     if(!p.medSimple && Array.isArray(p.cats)) p.cats=p.cats.filter(c=>c!=="medium");
-    const c=["when","where"];
+    const c=["when"];
+    if(!isPlaceNA(p)) c.push("where");                             // B1: drop the where axis when there's no scoreable location
     if(p.medSimple) c.push("medium");
     if(p.style && p.styleKind && !PERIOD_STYLE.test(p.style)) c.push("style");
     if(isNamedArtist(p.artist)) c.push("artist");
@@ -3005,7 +3047,15 @@ function score(){
   // precision to begin with. (In training the same helpers honor TRAIN_SPAN, so the window also tracks
   // the narrowed drill slider.) timeMult still layers each tier's leniency on top.
   if(asked('when')){
-  const [lo,hi]=dateRange(it); const ranged=lo!==hi;
+  let [lo,hi]=dateRange(it);
+  // B2 object-datability floor: a period/culture object stored with only a single (placeholder) year shouldn't
+  // demand decade precision — widen the full-credit window to the period's own datable span (movEra), capped at
+  // 400 yrs so a millennium-spanning tradition doesn't become free points. Individually-dated works (an explicit
+  // range, or a named-artist / movement piece) keep their real precision — this only touches styleKind 'culture'.
+  if(lo===hi && it.styleKind==='culture'){ const era=movEra(it.style);
+    if(era && era[0]<=it.y && it.y<=era[1]){ let a=era[0],b=era[1]; const CAP=400;
+      if(b-a>CAP){ a=Math.max(a,it.y-CAP/2); b=Math.min(b,it.y+CAP/2); } lo=a; hi=b; } }
+  const ranged=lo!==hi;
   const dy = guess.year<lo ? lo-guess.year : guess.year>hi ? guess.year-hi : 0; // REAL years outside the range — for the message only
   const gy = guess.year<lo ? lo : guess.year>hi ? hi : guess.year;              // nearest in-range year
   const pd = Math.abs(yearToPos(guess.year)-yearToPos(gy));                     // slider-distance to the range (0 if inside)
@@ -3413,7 +3463,7 @@ function renderReveal(r,ri,push=true){
       </div>
       <div>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
-        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}
+        ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}${!r.cells.where&&!it.cats.includes('where')&&isPlaceNA(it)?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">not scored — ${it.place?`the record locates this only to ${esc(it.place)}`:'no location on record for this work'}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
           <div id="revmap" style="height:170px;border:1px solid var(--line-card);border-radius:2px;overflow:hidden"></div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:9px;font:10px 'Manrope',sans-serif;color:var(--muted)">
