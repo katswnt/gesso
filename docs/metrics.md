@@ -31,7 +31,11 @@ Vendor-agnostic shim: buffers to `localStorage['artefactum.events']` and fires t
 | `guide_open` | — | **Learning engagement / WWL** |
 | `training_start` | — | Depth adoption |
 | `result_share` | `tier` | Referral / virality |
-| *(remaining)* `pin_click`, `zoom`, `puzzle_link_copy`, `account_create`, `activation_sentiment` | | Fuller funnel |
+| `puzzle_link_copy` | `tier` | Referral (copies the deep-link to a puzzle) |
+| `account_create` | `pending` (email-confirm awaited) | Convert |
+| `pin_click` | `mode`, `tier` | Map engagement (once/round) |
+| `zoom` | `mode`, `tier` | Map engagement — genuine user zoom only (once/round) |
+| *(remaining)* `activation_sentiment` | | "felt-taught" guardrail — needs a UI prompt |
 
 ## Engagement & quality metrics
 - **Guide-open rate** = `guide_open` / `daily_complete` — *is the teaching layer actually used?* (the core product question).
@@ -48,6 +52,6 @@ Vendor-agnostic shim: buffers to `localStorage['artefactum.events']` and fires t
 ## Backend (shipped)
 **Decision made and live: self-hosted Supabase events** (full data ownership, no third-party tracker — best brand fit). `track()` (`index.html`) POSTs custom events to `api/event.js` → a Supabase `events` table; **Vercel Web Analytics** covers pageviews. `gtag`/`plausible` are optional no-op guards only (neither is loaded).
 
-**Events wired (12):** `daily_start`, `daily_complete`, `mastery_up`, `guide_open`, `training_start`, `infinite_start`, `streak_milestone`, `result_share`, `work_share`, `collections_view`, `support_shown`, `support_click`.
+**Events wired (18):** `daily_start`, `daily_complete`, `round_start`, `guess_submit`, `mastery_up`, `guide_open`, `training_start`, `infinite_start`, `streak_milestone`, `result_share`, `work_share`, `collections_view`, `pin_click`, `zoom`, `puzzle_link_copy`, `account_create`, `support_shown`, `support_click`.
 
-**Still to wire:** `pin_click`, `zoom`, `puzzle_link_copy`, `account_create`, `activation_sentiment`, `support_convert` (the last happens off-site on Ko-fi).
+**Still to wire:** `activation_sentiment` (needs a lightweight post-first-daily "how did that feel?" prompt — a UI addition, not just a `track()` call). **Not client-measurable:** `support_convert` happens off-site on Ko-fi; the on-site funnel ends at `support_click`. A true conversion count would need a Ko-fi webhook → `api/event`, tracked as a later option.

@@ -2120,6 +2120,7 @@ function openLogin(){
     if(e.target.id==='magic'){ if(!email())return msg('Enter your email first.'); try{ const {error}=await c.auth.signInWithOtp({email:email(),options:{emailRedirectTo:location.origin}}); msg(error?error.message:'Check your email for the link ✓'); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signin'){ try{ const {error}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(error)return msg(error.message); await refreshAuth(); close(); }catch(err){ msg(err.message); } return; }
     if(e.target.id==='signup'){ try{ const {data,error}=await c.auth.signUp({email:email(),password:pass(),options:{emailRedirectTo:location.origin}}); if(error)return msg(error.message);
+      track('account_create',{pending:!(data&&data.session)}); // signup accepted (new account, or awaiting email confirm)
       let session=data&&data.session;
       if(!session){ // confirm-email OFF but no session handed back (e.g. email already existed) → just sign in
         const {data:d2,error:e2}=await c.auth.signInWithPassword({email:email(),password:pass()}); if(!e2&&d2&&d2.session) session=d2.session; }
@@ -2868,6 +2869,9 @@ function renderRound(){
       const k=geoElim(it,leave); free5050=true;
       const gh=document.getElementById('geohint'); if(gh)gh.style.display='none';
       const gb=document.getElementById('geobonus'); if(gb){gb.textContent=`✓ Region matched — ${k} unlikely ${k===1?'school':'schools'} ruled out, free`; gb.style.display='block';}} };
+  // Programmatic map fits (initial frame + place-search) also fire 'zoomend'. Mark them so the zoom-analytics
+  // listener below counts only genuine USER zoom (buttons / pinch / wheel), not our own reframing.
+  let progFit=false, progT=null; const markProg=()=>{ progFit=true; clearTimeout(progT); progT=setTimeout(()=>{progFit=false;},900); };
   // Map place-search: geocode via Nominatim, frame the result, and auto-drop the guess pin at its centre
   // (searching "Amsterdam" pins Amsterdam). The pin stays tappable, so the player can still reposition it.
   { const si=document.getElementById('mapsearch'), sr=document.getElementById('mapsearchres'); let t;
@@ -2890,8 +2894,8 @@ function renderRound(){
           // fitBounds frames the whole result (Russia → whole country, a city → tight); maxZoom caps zoom-IN.
           // A scattered ocean territory (French Polynesia) is inherently mostly water at any zoom — for those,
           // search the specific island. Point-only results fall back to a sensible mid zoom.
-          if(bb.length===4&&bb.every(isFinite)) map.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]],{padding:[30,30],maxZoom:9,animate:!settings.reduceMotion});
-          else map.setView([+el.dataset.lat,+el.dataset.lon],7,{animate:!settings.reduceMotion});
+          if(bb.length===4&&bb.every(isFinite)){ markProg(); map.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]],{padding:[30,30],maxZoom:9,animate:!settings.reduceMotion}); }
+          else { markProg(); map.setView([+el.dataset.lat,+el.dataset.lon],7,{animate:!settings.reduceMotion}); }
           dropPin(+el.dataset.lat, +el.dataset.lon);   // auto-place the pin at the searched location (still tappable to adjust)
           si.value=el.textContent.split(',')[0].trim(); sr.style.display='none';});
       }catch{ sr.style.display='none'; } };
@@ -2901,9 +2905,13 @@ function renderRound(){
   // Training PLACE pin: auto-fit the map to the chosen area instead of the world view. Must run after
   // invalidateSize (container has no size at first paint), exactly like the reveal map's fitBounds.
   const placeFit = TRAIN ? trainPlaceFit() : null;
-  map.on('click',e=>dropPin(e.latlng.lat, ((e.latlng.lng+180)%360+360)%360-180));
+  map.on('click',e=>{ dropPin(e.latlng.lat, ((e.latlng.lng+180)%360+360)%360-180);
+    if(!guess._pinTracked){ guess._pinTracked=true; track('pin_click',{mode:TRAIN?'training':(infinite?'infinite':'daily'), tier:tier||null}); } }); // map engagement, once/round
   setTimeout(()=>{ if(!map)return; map.invalidateSize();
-    if(placeFit){ try{ map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} } },settings.reduceMotion?0:250);
+    if(placeFit){ try{ markProg(); map.fitBounds(L.latLngBounds(placeFit),{padding:[24,24],maxZoom:6,animate:!settings.reduceMotion}); }catch{} }
+    // count only USER zoom: programmatic fits called markProg() so their zoomend is skipped; once/round
+    map.on('zoomend',()=>{ if(progFit){ progFit=false; clearTimeout(progT); return; } if(!guess._zoomTracked){ guess._zoomTracked=true; track('zoom',{mode:TRAIN?'training':(infinite?'infinite':'daily'), tier:tier||null}); } });
+  },settings.reduceMotion?0:250);
   }
   document.getElementById('submit').onclick=score;
   // Belt-and-suspenders for the blank/untappable-until-you-scroll glitch (worst in endless: reveal→round→reveal).
@@ -3699,7 +3707,7 @@ function renderFinal(push=true){
   countUps();
   { const b=document.getElementById('copy'); const html=b.innerHTML; b.onclick=()=>navigator.clipboard.writeText(resultSummary().share).then(()=>{b.innerHTML=`<img src="/assets/copy.svg" width="14" height="14" alt=""> Copied ✓`;setTimeout(()=>{b.innerHTML=html;},1600);}); }
   document.getElementById('imageShare').onclick=()=>downloadShareImage(document.getElementById('imageShare'),lastFinal);
-  { const b=document.getElementById('copylink'); const html=b.innerHTML; b.onclick=()=>{const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{b.innerHTML=`<img src="/assets/link.svg" width="14" height="14" alt=""> Link copied ✓`;setTimeout(()=>{b.innerHTML=html;},1600);});}; }
+  { const b=document.getElementById('copylink'); const html=b.innerHTML; b.onclick=()=>{const url=`${location.origin}/${runDate||todayStr()}/${tier}`;navigator.clipboard.writeText(url).then(()=>{track('puzzle_link_copy',{tier:tier||null});b.innerHTML=`<img src="/assets/link.svg" width="14" height="14" alt=""> Link copied ✓`;setTimeout(()=>{b.innerHTML=html;},1600);});}; }
   document.getElementById('streak').onclick=renderStreak;
   document.getElementById('again').onclick=()=>renderStart();
   if(_showSupport){ try{localStorage.setItem('gesso.supportSeen',String(Date.now()));}catch{} track('support_shown',{streak:_streak});
