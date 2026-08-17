@@ -33,7 +33,22 @@ const hooks = `
     score();
     return results.length ? results[results.length-1] : null;
   },
-  renderRound: function(work, tr){ game=[work]; idx=0; tier=tr; infinite=false; TRAIN=null; runDate=null; results=[]; try{ renderRound(); return true; }catch(e){ throw e; } }
+  renderRound: function(work, tr){ game=[work]; idx=0; tier=tr; infinite=false; TRAIN=null; runDate=null; results=[]; try{ renderRound(); return true; }catch(e){ throw e; } },
+  // full daily: score 5 works into results, then run the recap (renderFinal) — the path every daily ends on
+  runDaily: function(works, tr){
+    game=works.slice(); tier=tr; infinite=false; TRAIN=null; runDate=null; results=[]; hintsUsed=0;
+    for(idx=0; idx<game.length; idx++){ guess={year:1500,ll:{lat:45,lng:10},medium:"Oil paint",style:"Baroque",artist:"",hints:new Set()}; score(); }
+    if(typeof renderFinal==='function') renderFinal();
+    return results.length;
+  },
+  // a training round (TRAIN set) exercises the separate activeCatsFor / given-facet path
+  runTraining: function(work){
+    game=[work]; idx=0; tier=null; infinite=true; runDate=null; results=[];
+    TRAIN={axis:null, facets:{}, label:'smoke'};
+    try{ renderRound(); guess={year:1500,ll:{lat:20,lng:80},medium:null,style:null,artist:"",hints:new Set()}; score(); }
+    finally { TRAIN=null; infinite=false; }
+    return results.length ? results[results.length-1] : null;
+  }
 };`;
 try { vm.runInContext(app + hooks, ctx, { filename:"index.html#app" }); } catch(e){ fail("eval app", e); }
 const S = ctx.__smoke;
@@ -72,5 +87,14 @@ for (const [label, w] of [["placeNA",placeNA],["cultureYr",cultureYr],["superReg
   pass++;
 }
 
-console.log(`\n✅ gameplay-smoke PASS — ${pass} checks, score() + renderRound() ran clean over edge-case works`);
+// full daily → recap: build a 5-work day that deliberately includes a place-NA / no-when work + edge cases
+{
+  const day = [placeNA, cultureYr, superReg, anon, normal].filter(Boolean).slice(0,5);
+  if (day.length >= 3) { try { S.runDaily(day, "medium"); pass++; } catch(e){ fail("runDaily()+renderFinal() over a mixed day", e); } }
+}
+// training round over the trickiest work
+if (placeNA) { try { S.runTraining(placeNA); pass++; } catch(e){ fail("runTraining() place-NA", e); } }
+if (cultureYr) { try { S.runTraining(cultureYr); pass++; } catch(e){ fail("runTraining() widened-date", e); } }
+
+console.log(`\n✅ gameplay-smoke PASS — ${pass} checks, score() + renderRound() + renderFinal() + training ran clean over edge-case works`);
 process.exit(0);
