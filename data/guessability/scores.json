@@ -1,0 +1,7710 @@
+{
+ "model": "claude-sonnet-4-6",
+ "tier": "easy",
+ "note": "g[facet]∈[0,1] = game score of the blinded inference ÷ MAX_CAT, graded at easy tier; G = mean over core cats",
+ "works": {
+  "http://www.wikidata.org/entity/Q12418": {
+   "title": "Mona Lisa",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.745
+  },
+  "wikidata:Q128910": {
+   "title": "The Last Supper",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 0.455,
+    "artist": 0
+   },
+   "G": 0.739
+  },
+  "http://www.wikidata.org/entity/Q45585": {
+   "title": "The Starry Night",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "wikidata:Q48584": {
+   "title": "Rosetta Stone",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.476
+   },
+   "G": 0.869
+  },
+  "http://www.wikidata.org/entity/Q1150997": {
+   "title": "Saturn Devouring His Son",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "wikidata:Q185372": {
+   "title": "Girl with a Pearl Earring",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.925
+  },
+  "http://www.wikidata.org/entity/Q208758": {
+   "title": "Las Meninas",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "http://www.wikidata.org/entity/Q252485": {
+   "title": "The Great Wave off Kanagawa",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.925,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.981
+  },
+  "wikidata:Q215486": {
+   "title": "Vitruvian Man",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.5,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "wikidata:Q500242": {
+   "title": "The Creation of Adam",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q321303": {
+   "title": "The Garden of Earthly Delights",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q698487": {
+   "title": "The Kiss",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q151047": {
+   "title": "The Birth of Venus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.221,
+    "artist": 1
+   },
+   "G": 0.805
+  },
+  "http://www.wikidata.org/entity/Q212616": {
+   "title": "The Raft of the Medusa",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.798,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.52
+  },
+  "wikidata:Q186953": {
+   "title": "The School of Athens",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q18003128": {
+   "title": "The Thinker",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q216402": {
+   "title": "Winged Victory of Samothrace",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0,
+    "medium": 0.5,
+    "style": 0
+   },
+   "G": 0.125
+  },
+  "http://www.wikidata.org/entity/Q219831": {
+   "title": "The Night Watch",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.925
+  },
+  "wikidata:Q152072": {
+   "title": "Manneken Pis",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "http://www.wikidata.org/entity/Q29530": {
+   "title": "Liberty Leading the People",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.625
+  },
+  "http://www.wikidata.org/entity/Q464782": {
+   "title": "American Gothic",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.228,
+    "artist": 0
+   },
+   "G": 0.747
+  },
+  "wikidata:Q474338": {
+   "title": "Lady with an Ermine",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q311243": {
+   "title": "Wanderer above the Sea of Fog",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.5
+  },
+  "http://www.wikidata.org/entity/Q220859": {
+   "title": "Arnolfini Portrait",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q636537": {
+   "title": "The Death of Marat",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 1
+   },
+   "G": 0.754
+  },
+  "http://www.wikidata.org/entity/Q1065493": {
+   "title": "Ophelia",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "wikidata:Q734834": {
+   "title": "Ghent Altarpiece",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q152509": {
+   "title": "Luncheon on the Grass",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.762
+  },
+  "wikidata:Q328523": {
+   "title": "Impression, Sunrise",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.848
+  },
+  "wikidata:Q354396": {
+   "title": "Portrait of Adele Bloch-Bauer I",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.488,
+    "artist": 1
+   },
+   "G": 0.872
+  },
+  "http://www.wikidata.org/entity/Q549847": {
+   "title": "Primavera",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q737062": {
+   "title": "Olympia",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.798
+  },
+  "http://www.wikidata.org/entity/Q465762": {
+   "title": "Laocoön Group",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.796,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.699
+  },
+  "wikidata:Q1025704": {
+   "title": "Café Terrace at Night",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.773
+  },
+  "wikidata:Q2246489": {
+   "title": "The Storm on the Sea of Galilee",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q1091086": {
+   "title": "The Third of May 1808",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q167605": {
+   "title": "The Milkmaid",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wd:Q9048095": {
+   "title": "Mask of Tutankhamun",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.492
+   },
+   "G": 0.873
+  },
+  "wikidata:Q582172": {
+   "title": "Bust of Queen Nefertiti",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 0,
+    "style": 0.106,
+    "artist": 0
+   },
+   "G": 0.501
+  },
+  "http://www.wikidata.org/entity/Q1212937": {
+   "title": "The Ambassadors",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.848,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.962
+  },
+  "wikidata:Q59201": {
+   "title": "Napoleon Crossing the Alps",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.754
+  },
+  "wikidata:Q408623": {
+   "title": "Capitoline Wolf",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q1170315": {
+   "title": "Black Square",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.608,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.902
+  },
+  "wikidata:Q328079": {
+   "title": "Sistine Madonna",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q2629559": {
+   "title": "The Swing",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q661378": {
+   "title": "The Anatomy Lesson of Dr Nicolaes Tulp",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.925
+  },
+  "http://www.wikidata.org/entity/Q687182": {
+   "title": "Arrangement in Grey and Black No. 1",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q1245354": {
+   "title": "A Bar at the Folies-Bergère",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.798
+  },
+  "wikidata:Q1752990": {
+   "title": "The Death of Socrates",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.813,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.523
+  },
+  "http://www.wikidata.org/entity/Q154469": {
+   "title": "The Potato Eaters",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q509806": {
+   "title": "Washington Crossing the Delaware",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.516,
+    "artist": 1
+   },
+   "G": 0.879
+  },
+  "wikidata:Q2963501": {
+   "title": "A Friend in Need",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2664039": {
+   "title": "Madame X (Virginie Amélie Avegno Gautreau)",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.618,
+    "artist": 1
+   },
+   "G": 0.775
+  },
+  "wikidata:Q14515330": {
+   "title": "Proserpine",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.675,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.444
+  },
+  "wikidata:Q634122": {
+   "title": "Wheatfield with Crows",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q1368055": {
+   "title": "The Gleaners",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.54,
+    "artist": 0
+   },
+   "G": 0.76
+  },
+  "wikidata:Q890678": {
+   "title": "Where Do We Come From? What Are We? Where Are We Going?",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.04,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.685
+  },
+  "http://www.wikidata.org/entity/Q2395218": {
+   "title": "Woman with a Parasol – Madame Monet and Her Son",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q683274": {
+   "title": "Bal du moulin de la Galette",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "wikidata:Q133732": {
+   "title": "Discobolus",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.25
+  },
+  "wikidata:Q969377": {
+   "title": "The Calling of Saint Matthew",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wikidata:Q2282256": {
+   "title": "Irises",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q1167907": {
+   "title": "Luncheon of the Boating Party",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q1283024": {
+   "title": "The Birth of Venus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.618,
+    "artist": 1
+   },
+   "G": 0.779
+  },
+  "wikidata:Q533619": {
+   "title": "Netherlandish Proverbs",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.862
+  },
+  "http://www.wikidata.org/entity/Q1978815": {
+   "title": "Grande Odalisque",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 1
+   },
+   "G": 0.756
+  },
+  "http://www.wikidata.org/entity/Q257580": {
+   "title": "The Fighting Temeraire",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q2293905": {
+   "title": "Medusa",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wikidata:Q2247406": {
+   "title": "Judith Slaying Holofernes",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q846213": {
+   "title": "Flaming June",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.5
+  },
+  "wd:Q786806": {
+   "title": "Aztec sun stone",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0.567
+   },
+   "G": 0.867
+  },
+  "http://www.wikidata.org/entity/Q2445726": {
+   "title": "The Lady of Shalott",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.787,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.697
+  },
+  "http://www.wikidata.org/entity/Q2366825": {
+   "title": "The Hay Wain",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.175,
+    "artist": 1
+   },
+   "G": 0.794
+  },
+  "http://www.wikidata.org/entity/Q2027662": {
+   "title": "The Turkish Bath",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 1
+   },
+   "G": 0.752
+  },
+  "wikidata:Q604761": {
+   "title": "The Blue Boy",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.509,
+    "artist": 1
+   },
+   "G": 0.877
+  },
+  "wikidata:Q1240092": {
+   "title": "Portrait of Pope Innocent X",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.69
+  },
+  "wikidata:Q1437492": {
+   "title": "Woman with a Hat",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q644856": {
+   "title": "The Triumph of Death",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.862
+  },
+  "wikidata:Q1219263": {
+   "title": "The Sleeping Gypsy",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q2011510": {
+   "title": "Bacchus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wikidata:Q2538580": {
+   "title": "The Joy of Life",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q2267579": {
+   "title": "The Sick Child",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.65
+  },
+  "wikidata:Q579455": {
+   "title": "White on White",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "wikidata:Q933665": {
+   "title": "Unique Forms of Continuity in Space",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.444,
+    "medium": 0,
+    "style": 0.357,
+    "artist": 0
+   },
+   "G": 0.45
+  },
+  "http://www.wikidata.org/entity/Q568847": {
+   "title": "The Descent from the Cross",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q3494409": {
+   "title": "Mont Sainte-Victoire",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.798
+  },
+  "http://www.wikidata.org/entity/Q2378567": {
+   "title": "Annunciation",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.215,
+    "artist": 1
+   },
+   "G": 0.804
+  },
+  "wikidata:Q3821820": {
+   "title": "The Ballet Class",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q930535": {
+   "title": "Tahitian Women on the Beach",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.04,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.685
+  },
+  "http://www.wikidata.org/entity/Q1213936": {
+   "title": "The Gross Clinic",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "wikidata:Q2990634": {
+   "title": "Composition VII",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q2438357": {
+   "title": "Death and the Maiden",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q500951": {
+   "title": "The Yellow Christ",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.771
+  },
+  "wikidata:Q19609193": {
+   "title": "Composition II in Red, Blue, and Yellow",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.911,
+    "medium": 1,
+    "style": 0.582,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q15461864": {
+   "title": "The Large Blue Horses",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.472,
+    "artist": 0
+   },
+   "G": 0.618
+  },
+  "wikidata:Q259012": {
+   "title": "Et in Arcadia ego",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.94
+  },
+  "wikidata:Q60497141": {
+   "title": "Senecio",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 0,
+    "style": 0.569,
+    "artist": 1
+   },
+   "G": 0.392
+  },
+  "wikidata:Q3210239": {
+   "title": "Twittering Machine",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 0,
+    "style": 0.569,
+    "artist": 1
+   },
+   "G": 0.392
+  },
+  "wikidata:Q3607521": {
+   "title": "At the Moulin Rouge",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.248,
+    "artist": 1
+   },
+   "G": 0.685
+  },
+  "wikidata:Q15293656": {
+   "title": "The Tower of Babel",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.862
+  },
+  "wikidata:Q12366269": {
+   "title": "Great Buddha of Kamakura",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.925,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.731
+  },
+  "wikidata:Q19917658": {
+   "title": "Reclining Nude",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.319,
+    "artist": 1
+   },
+   "G": 0.701
+  },
+  "aic80607": {
+   "title": "Self-Portrait",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.504,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.801
+  },
+  "cleveland136510": {
+   "title": "Water Lilies (Agapanthus)",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "aic27992": {
+   "title": "A Sunday on La Grande Jatte — 1884",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.383,
+    "artist": 1
+   },
+   "G": 0.717
+  },
+  "wikidata:Q18891156": {
+   "title": "The Scream",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.799,
+    "medium": 0.5,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q18890421": {
+   "title": "Madonna",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.799,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "wikidata:Q28792214": {
+   "title": "Moai",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.275
+  },
+  "aic66333": {
+   "title": "Ma",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.475
+  },
+  "wikidata:Q9202": {
+   "title": "Statue of Liberty",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.164,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.672
+  },
+  "wd:Q93304": {
+   "title": "Code of Hammurabi",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q130958": {
+   "title": "Great Sphinx of Giza",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.496
+   },
+   "G": 0.874
+  },
+  "wikidata:Q107486133": {
+   "title": "Fallen Angel",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0.187,
+    "artist": 0
+   },
+   "G": 0.427
+  },
+  "wd:Q157541": {
+   "title": "Sunflowers",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.504,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.876
+  },
+  "wd:Q1126741": {
+   "title": "Mask of Agamemnon",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q21585351": {
+   "title": "Complaint tablet to Ea-nāṣir",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.75
+  },
+  "wikidata:Q2717022": {
+   "title": "The Dream of the Fisherman's Wife",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.932,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.983
+  },
+  "wikidata:Q567861": {
+   "title": "The Last Judgment",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "wikidata:Q151952": {
+   "title": "Venus de Milo",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.794,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.699
+  },
+  "wd:Q351055": {
+   "title": "The Dream",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.621
+  },
+  "wikidata:Q2302517": {
+   "title": "Ecce Homo",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 0.5,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.315
+  },
+  "http://www.wikidata.org/entity/Q1128599": {
+   "title": "Piri Reis map",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wd:Q1333433": {
+   "title": "Ecstasy of Saint Teresa",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.449,
+    "medium": 0,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.552
+  },
+  "wikidata:Q6609268": {
+   "title": "Stańczyk",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.37,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.593
+  },
+  "http://www.wikidata.org/entity/Q17510059": {
+   "title": "After the Bath, Woman drying herself",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q152867": {
+   "title": "La maja desnuda",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.598,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.704
+  },
+  "wikidata:Q478271": {
+   "title": "Reply of the Zaporozhian Cossacks",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.609,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.902
+  },
+  "wikidata:Q606662": {
+   "title": "Elgin Marbles",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0,
+    "medium": 0,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0
+  },
+  "wikidata:Q154987": {
+   "title": "Siegessäule",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.182,
+    "artist": 0
+   },
+   "G": 0.545
+  },
+  "http://www.wikidata.org/entity/Q727875": {
+   "title": "Venus of Urbino",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "wd:Q616159": {
+   "title": "View from the Window at Le Gras",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 0,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.225
+  },
+  "wd:Q131397": {
+   "title": "Venus of Willendorf",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0.406,
+    "medium": 0,
+    "style": 0
+   },
+   "G": 0.102
+  },
+  "http://www.wikidata.org/entity/Q1231009": {
+   "title": "The Coronation of Napoleon",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.798,
+    "medium": 0.5,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.35
+  },
+  "cleveland167459": {
+   "title": "Julius Caesar",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.975
+  },
+  "sinmafa_74-20-1": {
+   "title": "Tusk",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.5
+  },
+  "wd:Q724377": {
+   "title": "Bedroom in Arles",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.504,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.876
+  },
+  "wd:Q2110451": {
+   "title": "The Course of Empire",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.365,
+    "artist": 0
+   },
+   "G": 0.591
+  },
+  "http://www.wikidata.org/entity/Q11180645": {
+   "title": "Tibetan Dragon Sutra",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 1,
+    "medium": 0,
+    "style": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q476458": {
+   "title": "The Oath of the Horatii",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q3173195": {
+   "title": "Declaration of Independence",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "wikidata:Q1362177": {
+   "title": "Melencolia I",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q567833": {
+   "title": "Madonna of Bruges",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q1213453": {
+   "title": "The Execution of Lady Jane Grey",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.854,
+    "medium": 1,
+    "style": 0.516,
+    "artist": 1
+   },
+   "G": 0.843
+  },
+  "wd:Q667124": {
+   "title": "Augustus of Prima Porta",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q512755": {
+   "title": "The Return of the Prodigal Son",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.9
+  },
+  "http://www.wikidata.org/entity/Q500554": {
+   "title": "At Eternity's Gate",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wikidata:Q164517": {
+   "title": "Dance",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wd:Q3062269": {
+   "title": "Olmec colossal heads",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.064,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.516
+  },
+  "http://www.wikidata.org/entity/Q185255": {
+   "title": "The Wedding at Cana",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.476,
+    "artist": 1
+   },
+   "G": 0.869
+  },
+  "http://www.wikidata.org/entity/Q517408": {
+   "title": "Psyche Revived by Cupid's Kiss",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "wd:Q945850": {
+   "title": "Apollo and Daphne",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q735085": {
+   "title": "David",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q275349": {
+   "title": "Rokeby Venus",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.598,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.599
+  },
+  "wikidata:Q671237": {
+   "title": "The Sleep of Reason Produces Monsters",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q500936": {
+   "title": "The Dog",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "wikidata:Q537640": {
+   "title": "Angelus Novus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 0.569,
+    "artist": 1
+   },
+   "G": 0.767
+  },
+  "http://www.wikidata.org/entity/Q1133420": {
+   "title": "The Surrender of Brea",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wd:Q2289754": {
+   "title": "The Lady and the Unicorn",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.457,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.614
+  },
+  "http://www.wikidata.org/entity/Q2571560": {
+   "title": "The Angelus",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.54,
+    "artist": 0
+   },
+   "G": 0.61
+  },
+  "http://www.wikidata.org/entity/Q945250": {
+   "title": "Portrait of Francesco delle Opere",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "wd:Q2626769": {
+   "title": "The Hunt of the Unicorn",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.87,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.492
+  },
+  "wd:Q3595955": {
+   "title": "Lion Capital of Ashoka",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.725
+  },
+  "wd:Q500812": {
+   "title": "Sleeping Venus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.416,
+    "artist": 0
+   },
+   "G": 0.854
+  },
+  "http://www.wikidata.org/entity/Q7749405": {
+   "title": "The Magic Circle",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "wikidata:Q599034": {
+   "title": "Perseus with the Head of Medus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.553,
+    "artist": 1
+   },
+   "G": 0.888
+  },
+  "http://www.wikidata.org/entity/Q3769169": {
+   "title": "Judith Beheading Holofernes",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 0
+   },
+   "G": 0.861
+  },
+  "wd:Q523974": {
+   "title": "View of Delft",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "wikidata:Q3332083": {
+   "title": "Migrant Mother, Nipomo, California",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1217213": {
+   "title": "Annunciation",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.565,
+    "artist": 1
+   },
+   "G": 0.891
+  },
+  "aic18901": {
+   "title": "Arabesque",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q4945054": {
+   "title": "Sleeping Hermaphroditus",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.178,
+    "artist": 0
+   },
+   "G": 0.794
+  },
+  "wikidata:Q265384": {
+   "title": "Column of Marcus Aurelius",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q736832": {
+   "title": "Chōjū-jinbutsu-giga",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.925,
+    "medium": 1,
+    "style": 0.517,
+    "artist": 0
+   },
+   "G": 0.636
+  },
+  "http://www.wikidata.org/entity/Q563727": {
+   "title": "The Virgin and Child with Saint Anne",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q1044742": {
+   "title": "A Sunday Afternoon on the Island of La Grande Jatte",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.383,
+    "artist": 1
+   },
+   "G": 0.721
+  },
+  "http://www.wikidata.org/entity/Q2126369": {
+   "title": "Mona Lisa",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.5,
+    "artist": 0
+   },
+   "G": 0.875
+  },
+  "http://www.wikidata.org/entity/Q783215": {
+   "title": "Saint John the Baptist",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q2734209": {
+   "title": "Little Dancer of Fourteen Years",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 0,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.07
+  },
+  "wd:Q540488": {
+   "title": "A Burial at Ornans",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.472,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.754
+  },
+  "http://www.wikidata.org/entity/Q1267893": {
+   "title": "Ginevra de' Benci",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.5,
+    "artist": 0
+   },
+   "G": 0.815
+  },
+  "wikidata:Q1398760": {
+   "title": "Boxer at Rest",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1755464": {
+   "title": "Knight, Death, and the Devil",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q6122115": {
+   "title": "Saturn",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0.513,
+    "artist": 0
+   },
+   "G": 0.508
+  },
+  "wikidata:Q3793426": {
+   "title": "The Cyclops",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.623
+  },
+  "http://www.wikidata.org/entity/Q2665048": {
+   "title": "Dante and Virgil in Hell",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0.455,
+    "artist": 0
+   },
+   "G": 0.554
+  },
+  "http://www.wikidata.org/entity/Q2354251": {
+   "title": "The Barque of Dante",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.916,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.504
+  },
+  "http://www.wikidata.org/entity/Q2528477": {
+   "title": "Witches' Sabbath",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.598,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.529
+  },
+  "aic86780": {
+   "title": "Mother and Child",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.268,
+    "artist": 0
+   },
+   "G": 0.542
+  },
+  "aic77581": {
+   "title": "Mother and Child",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "wikidata:Q17277950": {
+   "title": "The Card Players",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.134,
+    "artist": 0
+   },
+   "G": 0.656
+  },
+  "http://www.wikidata.org/entity/Q2627056": {
+   "title": "David with the Head of Goliath",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wd:Q2344437": {
+   "title": "The Transfiguration",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 0.476,
+    "artist": 0
+   },
+   "G": 0.744
+  },
+  "wikidata:Q748518": {
+   "title": "The Rhinoceros",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.513,
+    "artist": 1
+   },
+   "G": 0.878
+  },
+  "aic77629": {
+   "title": "Butterflies",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "wd:Q588695": {
+   "title": "The Art of Painting",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q7678417": {
+   "title": "Takiyasha the Witch and the Skeleton Specter",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.932,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.983
+  },
+  "http://www.wikidata.org/entity/Q1638622": {
+   "title": "Adoration of the Magi",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 1,
+    "medium": 0,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.555
+  },
+  "http://www.wikidata.org/entity/Q2290433": {
+   "title": "The Massacre at Chios",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.621
+  },
+  "aic66405": {
+   "title": "Rainbow",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2293953": {
+   "title": "Venus and Mars",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q7536969": {
+   "title": "Skull of a Skeleton with Burning Cigarette",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "wikidata:Q2636368": {
+   "title": "Battle of Grunwald",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q597114": {
+   "title": "Death of the Virgin",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wd:Q674846": {
+   "title": "The Night Café",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.504,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.876
+  },
+  "http://www.wikidata.org/entity/Q23915": {
+   "title": "An Old Man and his Grandson",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.565,
+    "artist": 1
+   },
+   "G": 0.891
+  },
+  "http://www.wikidata.org/entity/Q5220868": {
+   "title": "Marriage A-la-Mode: 1. The Marriage Settlement",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.407,
+    "artist": 0
+   },
+   "G": 0.577
+  },
+  "http://www.wikidata.org/entity/Q1473546": {
+   "title": "Doni Tondo",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.875
+  },
+  "http://www.wikidata.org/entity/Q1059211": {
+   "title": "The Baptism of Christ",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.215,
+    "artist": 0
+   },
+   "G": 0.804
+  },
+  "wikidata:Q279559": {
+   "title": "Babylonian Map of the World",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.301,
+    "medium": 0,
+    "style": 0
+   },
+   "G": 0.205
+  },
+  "http://www.wikidata.org/entity/Q1212861": {
+   "title": "The Birth of Venus",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.6
+  },
+  "wd:Q3565037": {
+   "title": "Fine Wind, Clear Morning",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.925,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.981
+  },
+  "http://www.wikidata.org/entity/Q693746": {
+   "title": "The Monk by the Sea",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "wikidata:Q524447": {
+   "title": "Standard of Ur",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 0
+   },
+   "G": 0.625
+  },
+  "http://www.wikidata.org/entity/Q920030": {
+   "title": "Charles IV of Spain and His Family",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.258,
+    "artist": 1
+   },
+   "G": 0.815
+  },
+  "http://www.wikidata.org/entity/Q1516449": {
+   "title": "Madonna of Chancellor Rolin",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q2339059": {
+   "title": "Rain, Steam and Speed – The Great Western Railway",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.476,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.559
+  },
+  "wikidata:Q4156438": {
+   "title": "Girl with peaches",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.475
+  },
+  "http://www.wikidata.org/entity/Q2213811": {
+   "title": "The Haywain Triptych",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q405814": {
+   "title": "Ship of Fools",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q1560719": {
+   "title": "Carnation, Lily, Lily and Rose",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1167796": {
+   "title": "An Experiment on a Bird in the Air Pump",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.495
+  },
+  "http://www.wikidata.org/entity/Q656434": {
+   "title": "La Belle Ferronnière",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.455,
+    "artist": 0
+   },
+   "G": 0.614
+  },
+  "wd:Q500985": {
+   "title": "The Hunters in the Snow",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.862
+  },
+  "http://www.wikidata.org/entity/Q766782": {
+   "title": "The Jewish Bride",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q1899740": {
+   "title": "Assumption of the Virgin",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.416,
+    "artist": 0
+   },
+   "G": 0.794
+  },
+  "http://www.wikidata.org/entity/Q2706250": {
+   "title": "An Old Woman ('The Ugly Duchess')",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 1,
+    "medium": 1,
+    "style": 0.497,
+    "artist": 0
+   },
+   "G": 0.754
+  },
+  "http://www.wikidata.org/entity/Q18939074": {
+   "title": "Pandemonium",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.516,
+    "artist": 0
+   },
+   "G": 0.604
+  },
+  "http://www.wikidata.org/entity/Q17275221": {
+   "title": "Truth Coming Out of Her Well",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.618,
+    "artist": 0
+   },
+   "G": 0.754
+  },
+  "http://www.wikidata.org/entity/Q2304870": {
+   "title": "The Seven Deadly Sins and the Four Last Things",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q318947": {
+   "title": "Supper at Emmaus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "http://www.wikidata.org/entity/Q2983399": {
+   "title": "The Second of May 1808",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q3277782": {
+   "title": "The Voyage of Life",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q531329": {
+   "title": "The Embarkation for Cythera",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q6251405": {
+   "title": "Pink and Blue",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q1133821": {
+   "title": "Death of Sardanapalus",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.578,
+    "artist": 0
+   },
+   "G": 0.707
+  },
+  "wikidata:Q3978274": {
+   "title": "Susanna and the Elders",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 0
+   },
+   "G": 0.887
+  },
+  "wd:Q930137": {
+   "title": "The Tempest",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "wikidata:Q4157667": {
+   "title": "The Demon Seated",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q794077": {
+   "title": "Sacred and Profane Love",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q2354080": {
+   "title": "Christ in the Wilderness",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.608,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.902
+  },
+  "http://www.wikidata.org/entity/Q1206860": {
+   "title": "Bacchus and Ariadne",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.416,
+    "artist": 0
+   },
+   "G": 0.794
+  },
+  "vaO11148": {
+   "title": "Daisy",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "wd:Q557000": {
+   "title": "Haystacks",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.487,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.847
+  },
+  "wd:Q219344": {
+   "title": "The Slave Ship",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wd:Q699552": {
+   "title": "Praying Hands",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.828,
+    "medium": 0,
+    "style": 0.441,
+    "artist": 0
+   },
+   "G": 0.567
+  },
+  "wikidata:Q22953800": {
+   "title": "Lucifer",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.975
+  },
+  "http://www.wikidata.org/entity/Q3686086": {
+   "title": "Pastoral Concert",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.802
+  },
+  "http://www.wikidata.org/entity/Q3399440": {
+   "title": "Portrait of Louis XIV",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "wikidata:Q3205872": {
+   "title": "Moonlit Night on the Dnieper",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0.472,
+    "artist": 0
+   },
+   "G": 0.438
+  },
+  "http://www.wikidata.org/entity/Q2413468": {
+   "title": "The Colossus",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.642,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.54
+  },
+  "http://www.wikidata.org/entity/Q2909916": {
+   "title": "Bonaparte Visiting the Plague Victims of Jaffa",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "wd:Q697208": {
+   "title": "Cellini Salt Cellar",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q544315": {
+   "title": "The Astronomer",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.925
+  },
+  "http://www.wikidata.org/entity/Q83862": {
+   "title": "Dying Slave",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.275
+  },
+  "wd:Q18344787": {
+   "title": "Lady Agnew of Lochnaw",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q17319663": {
+   "title": "The Corpses of the De Witt Brothers",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.675
+  },
+  "wikidata:Q2324643": {
+   "title": "Judith and the Head of Holofernes",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q2268524": {
+   "title": "The Three Graces",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.513,
+    "artist": 1
+   },
+   "G": 0.878
+  },
+  "http://www.wikidata.org/entity/Q774967": {
+   "title": "Venus de' Medici",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.794,
+    "medium": 0.5,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.349
+  },
+  "http://www.wikidata.org/entity/Q3693952": {
+   "title": "Crown of Empress Eugénie",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q984058": {
+   "title": "Las Hilanderas",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.45
+  },
+  "wd:Q2324840": {
+   "title": "The Ancient of Days",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.5
+  },
+  "http://www.wikidata.org/entity/Q646337": {
+   "title": "Nocturne in Black and Gold – The Falling Rocket",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1215604": {
+   "title": "The Source",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.752
+  },
+  "http://www.wikidata.org/entity/Q2735507": {
+   "title": "The Clothed Maja",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q2528741": {
+   "title": "Christ Crucified",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.45
+  },
+  "http://www.wikidata.org/entity/Q644106": {
+   "title": "The Daughters of Edward Darley Boit",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q15874516": {
+   "title": "The Sin",
+   "recognized": false,
+   "stopRung": 1,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2629423": {
+   "title": "A Young Girl Reading",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.445
+  },
+  "http://www.wikidata.org/entity/Q15728649": {
+   "title": "Witches' Flight",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1088425": {
+   "title": "Stele of the Vultures",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q3202169": {
+   "title": "The Apotheosis of Homer",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.692
+  },
+  "http://www.wikidata.org/entity/Q960157": {
+   "title": "Christ in the House of His Parents",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "aic20684": {
+   "title": "Paris Street; Rainy Day",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.258,
+    "artist": 1
+   },
+   "G": 0.685
+  },
+  "http://www.wikidata.org/entity/Q4003071": {
+   "title": "Ulysses deriding Polyphemus",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "wd:Q637414": {
+   "title": "Rouen Cathedral Series",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "http://www.wikidata.org/entity/Q16950902": {
+   "title": "Beauty Revealed",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.315,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.519
+  },
+  "wikidata:Q883994": {
+   "title": "View of Toledo",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0.15,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.287
+  },
+  "wd:Q1230882": {
+   "title": "Charioteer of Delphi",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 0.5,
+    "style": 0
+   },
+   "G": 0.375
+  },
+  "wikidata:Q867403": {
+   "title": "Madonna with the Long Neck",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "http://www.wikidata.org/entity/Q1170480": {
+   "title": "Syndics of the Drapers' Guild",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q3543882": {
+   "title": "Atropos",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q6644913": {
+   "title": "A Nude Woman Doing Her Hair Before a Mirror",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.704,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.451
+  },
+  "http://www.wikidata.org/entity/Q1787460": {
+   "title": "Watson and the Shark",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0.136,
+    "artist": 0
+   },
+   "G": 0.759
+  },
+  "http://www.wikidata.org/entity/Q1395699": {
+   "title": "The Four Seasons",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.818,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.679
+  },
+  "http://www.wikidata.org/entity/Q1216387": {
+   "title": "The Lacemaker",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.748,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.507
+  },
+  "http://www.wikidata.org/entity/Q1212920": {
+   "title": "Flagellation of Christ",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.522,
+    "artist": 0
+   },
+   "G": 0.631
+  },
+  "http://www.wikidata.org/entity/Q5526647": {
+   "title": "Gassed",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q1313605": {
+   "title": "The Emperor Napoleon in His Study at the Tuileries",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.752
+  },
+  "http://www.wikidata.org/entity/Q586035": {
+   "title": "The Little Street",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q10866080": {
+   "title": "Mikazuki Munechika",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.925,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.731
+  },
+  "http://www.wikidata.org/entity/Q5930190": {
+   "title": "Road with Cypress and Star",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q2584518": {
+   "title": "Diana of Versailles",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q136433749": {
+   "title": "Portrait of Elisabeth Lederer",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.925
+  },
+  "http://www.wikidata.org/entity/Q2343778": {
+   "title": "La Belle Jardinière",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.975
+  },
+  "http://www.wikidata.org/entity/Q3228069": {
+   "title": "The Lock",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.407,
+    "artist": 0
+   },
+   "G": 0.602
+  },
+  "wikidata:Q4279895": {
+   "title": "Beat the Whites with the Red Wedge",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.609,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.902
+  },
+  "wikidata:Q7715071": {
+   "title": "The Awakening Conscience",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q232087": {
+   "title": "Two men contemplating the Moon",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.975
+  },
+  "aic16568": {
+   "title": "Water Lilies",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.871
+  },
+  "wd:Q334360": {
+   "title": "The Abbey in the Oakwood",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.975
+  },
+  "aic11332": {
+   "title": "Untitled",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.5
+  },
+  "aic66763": {
+   "title": "Untitled",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q4693305": {
+   "title": "Agnus Dei",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q247282": {
+   "title": "Apollo in the Forge of Vulcan",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.75,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.568
+  },
+  "http://www.wikidata.org/entity/Q166937": {
+   "title": "Woman in Blue Reading a Letter",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q488825": {
+   "title": "Adoration of the Magi",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.221,
+    "artist": 1
+   },
+   "G": 0.805
+  },
+  "http://www.wikidata.org/entity/Q1227359": {
+   "title": "Diptych of Federico da Montefeltro and Battista Sforza",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.45
+  },
+  "http://www.wikidata.org/entity/Q960447": {
+   "title": "Tiger in a Tropical Storm",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "http://www.wikidata.org/entity/Q2715177": {
+   "title": "Saint Jerome",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "http://www.wikidata.org/entity/Q695039": {
+   "title": "Gebel el-Arak Knife",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.44
+  },
+  "http://www.wikidata.org/entity/Q2501284": {
+   "title": "The Great Bathers",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.625
+  },
+  "http://www.wikidata.org/entity/Q378034": {
+   "title": "The Seated Scribe",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.624,
+    "medium": 0,
+    "style": 0
+   },
+   "G": 0.226
+  },
+  "http://www.wikidata.org/entity/Q594470": {
+   "title": "St. Michael Vanquishing Satan",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.63
+  },
+  "wd:Q965124": {
+   "title": "The Laughing Cavalier",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "wikidata:Q1993685": {
+   "title": "The Rooks Have Returned",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q10322900": {
+   "title": "Madame Monet wearing a kimono",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1114881": {
+   "title": "Venus and the Three Graces Presenting Gifts to a Young Woman",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.565,
+    "artist": 1
+   },
+   "G": 0.891
+  },
+  "http://www.wikidata.org/entity/Q2610675": {
+   "title": "The Fortune Teller",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q921429": {
+   "title": "The Dessert: Harmony in Red (The Red Room)",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "wd:Q1134250": {
+   "title": "Massacre of the Innocents",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.448,
+    "artist": 1
+   },
+   "G": 0.862
+  },
+  "http://www.wikidata.org/entity/Q7920648": {
+   "title": "Venus with a Mirror",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q8874171": {
+   "title": "Hope",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0.476,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.439
+  },
+  "http://www.wikidata.org/entity/Q1314013": {
+   "title": "The Intervention of the Sabine Women",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.752
+  },
+  "http://www.wikidata.org/entity/Q644887": {
+   "title": "Judith and Holofernes",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wd:Q771017": {
+   "title": "Equestrian statue of Gattamelata",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.653,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.438
+  },
+  "http://www.wikidata.org/entity/Q1167932": {
+   "title": "Belshazzar's Feast",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.748,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.877
+  },
+  "wikidata:Q16738523": {
+   "title": "The Peacock Room",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q1747282": {
+   "title": "Fight with Cudgels",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.598,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 0
+   },
+   "G": 0.704
+  },
+  "http://www.wikidata.org/entity/Q1212737": {
+   "title": "The Women of Algiers",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0.578,
+    "artist": 0
+   },
+   "G": 0.707
+  },
+  "http://www.wikidata.org/entity/Q2471531": {
+   "title": "The Virgin and Child with Saint Anne and Saint John the Baptist",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0,
+    "medium": 0,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.025
+  },
+  "http://www.wikidata.org/entity/Q2712679": {
+   "title": "Beata Beatrix",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.475
+  },
+  "wikidata:Q938115": {
+   "title": "Rejtan, or the Fall of Poland",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.309,
+    "artist": 0
+   },
+   "G": 0.577
+  },
+  "wikidata:Q18393790": {
+   "title": "The Snake Charmer",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q972295": {
+   "title": "Leonidas at Thermopylae",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q5332757": {
+   "title": "Echo and Narcissus",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q959628": {
+   "title": "Asmodea",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.32
+  },
+  "http://www.wikidata.org/entity/Q2610936": {
+   "title": "Boy with a Basket of Fruit",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q871812": {
+   "title": "The Lament for Icarus",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.702,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.675
+  },
+  "wikidata:Q6455615": {
+   "title": "The Red Studio",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.873
+  },
+  "http://www.wikidata.org/entity/Q334604": {
+   "title": "Heart of the Andes",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q585437": {
+   "title": "Boy Bitten by a Lizard",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "http://www.wikidata.org/entity/Q1217187": {
+   "title": "Calumny of Apelles",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q882584": {
+   "title": "Blue Nude",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.623
+  },
+  "http://www.wikidata.org/entity/Q4451145": {
+   "title": "Dance at Bougival",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.875
+  },
+  "http://www.wikidata.org/entity/Q4901871": {
+   "title": "La Leocadia",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wd:Q706846": {
+   "title": "Dwelling in the Fuchun Mountains",
+   "recognized": false,
+   "stopRung": 1,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.455,
+    "artist": 0
+   },
+   "G": 0.864
+  },
+  "http://www.wikidata.org/entity/Q1796098": {
+   "title": "Brera Madonna",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 0.5,
+    "style": 0.565,
+    "artist": 0
+   },
+   "G": 0.766
+  },
+  "harvard312306": {
+   "title": "Alexander the Great",
+   "recognized": false,
+   "stopRung": 0,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0,
+    "where": 0,
+    "medium": 1,
+    "style": 0
+   },
+   "G": 0.25
+  },
+  "http://www.wikidata.org/entity/Q2270768": {
+   "title": "Cutting the Stone",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wikidata:Q3087894": {
+   "title": "Parthenon Frieze",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q3080509": {
+   "title": "The Valpinçon Bather",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.444,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 1
+   },
+   "G": 0.742
+  },
+  "http://www.wikidata.org/entity/Q1282840": {
+   "title": "Napoleon I on his Imperial Throne",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 0
+   },
+   "G": 0.752
+  },
+  "http://www.wikidata.org/entity/Q2344593": {
+   "title": "Amor and Psyche, children",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.618,
+    "artist": 1
+   },
+   "G": 0.779
+  },
+  "http://www.wikidata.org/entity/Q2528177": {
+   "title": "Diana and Actaeon",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.395,
+    "artist": 1
+   },
+   "G": 0.849
+  },
+  "http://www.wikidata.org/entity/Q3012259": {
+   "title": "Whistlejacket",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.725
+  },
+  "http://www.wikidata.org/entity/Q2270955": {
+   "title": "David and Goliath",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.887
+  },
+  "wd:Q254794": {
+   "title": "The Great Piece of Turf",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "wikidata:Q3725175": {
+   "title": "Aeneas, Anchises and Ascanius",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.82
+  },
+  "http://www.wikidata.org/entity/Q2892964": {
+   "title": "The Moneylender and his Wife",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.94
+  },
+  "http://www.wikidata.org/entity/Q2318325": {
+   "title": "Salome with the Head of John the Baptist",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q969367": {
+   "title": "Woman Holding a Balance",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q28541710": {
+   "title": "The Doctor",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 0.49,
+    "artist": 0
+   },
+   "G": 0.623
+  },
+  "http://www.wikidata.org/entity/Q2016193": {
+   "title": "Madonna Enthroned",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2701637": {
+   "title": "Scene at the Signing of the Constitution of the United States",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.315,
+    "medium": 1,
+    "style": 0.618,
+    "artist": 0
+   },
+   "G": 0.673
+  },
+  "http://www.wikidata.org/entity/Q2426058": {
+   "title": "Pallas and the Centaur",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q1224572": {
+   "title": "Bonaparte Crossing the Alps",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.565
+  },
+  "http://www.wikidata.org/entity/Q6746233": {
+   "title": "Man Mocked by Two Women",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2632688": {
+   "title": "The Baptism of Christ",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.94
+  },
+  "http://www.wikidata.org/entity/Q2619037": {
+   "title": "Portrait of Madame Récamier",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.526,
+    "artist": 1
+   },
+   "G": 0.752
+  },
+  "http://www.wikidata.org/entity/Q123935": {
+   "title": "The Triumph of Bacchus",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.75
+  },
+  "http://www.wikidata.org/entity/Q2344505": {
+   "title": "Madonna of the Goldfinch",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q2344396": {
+   "title": "Young Woman with Unicorn",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "wikidata:Q6065609": {
+   "title": "Walk on the Beach",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q3268045": {
+   "title": "Luxe, calme et volupté",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.491,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.623
+  },
+  "http://www.wikidata.org/entity/Q2392901": {
+   "title": "Portrait of a Man (Self Portrait?)",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.756,
+    "medium": 1,
+    "style": 0.424,
+    "artist": 0
+   },
+   "G": 0.675
+  },
+  "http://www.wikidata.org/entity/Q369810": {
+   "title": "The First Mourning",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0.5,
+    "medium": 1,
+    "style": 0.455,
+    "artist": 1
+   },
+   "G": 0.714
+  },
+  "wikidata:Q16679343": {
+   "title": "Over Eternal Quiet",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.609,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.902
+  },
+  "http://www.wikidata.org/entity/Q4233325": {
+   "title": "Tree Roots",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.5,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "http://www.wikidata.org/entity/Q970968": {
+   "title": "Symphony in White, No. 1: The White Girl",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.855,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.714
+  },
+  "wd:Q1764395": {
+   "title": "Vision after the Sermon",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.527,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.807
+  },
+  "http://www.wikidata.org/entity/Q3203231": {
+   "title": "Rebellious Slave",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.1,
+    "where": 0.8,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.475
+  },
+  "http://www.wikidata.org/entity/Q7732151": {
+   "title": "The end of the world",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.44
+  },
+  "http://www.wikidata.org/entity/Q3387944": {
+   "title": "Pierrot",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q1090837": {
+   "title": "Bathers at Asnières",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.796
+  },
+  "http://www.wikidata.org/entity/Q1212098": {
+   "title": "The Railway",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q1787143": {
+   "title": "Chalk Cliffs at Ruegen",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q3745698": {
+   "title": "The Open Window",
+   "recognized": false,
+   "stopRung": 2,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "http://www.wikidata.org/entity/Q3556817": {
+   "title": "Diana leaving her Bath",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "wikidata:Q3762348": {
+   "title": "Jael and Sisera",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.76,
+    "where": 0,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 0
+   },
+   "G": 0.577
+  },
+  "http://www.wikidata.org/entity/Q1198912": {
+   "title": "St. Jerome in His Study",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 1
+  },
+  "wd:Q775407": {
+   "title": "The Balcony",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0.546,
+    "artist": 1
+   },
+   "G": 0.758
+  },
+  "wikidata:Q1683743": {
+   "title": "Vampire",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.799,
+    "medium": 1,
+    "style": 0.7,
+    "artist": 1
+   },
+   "G": 0.875
+  },
+  "aic51757": {
+   "title": "L'Assommoir",
+   "recognized": false,
+   "stopRung": 1,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q2551625": {
+   "title": "Madonna of the Magnificat",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q729194": {
+   "title": "Portrait of Sebastián de Morra",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.725
+  },
+  "wd:Q7194972": {
+   "title": "The Night Revels of Han Xizai",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "wikidata:Q3998985": {
+   "title": "Charles I in Three Positions",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.869,
+    "medium": 1,
+    "style": 0.513,
+    "artist": 1
+   },
+   "G": 0.845
+  },
+  "http://www.wikidata.org/entity/Q19915289": {
+   "title": "The Execution of Torrijos and his companions in the Malaga's beach",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.9,
+    "where": 0,
+    "medium": 1,
+    "style": 0.516,
+    "artist": 0
+   },
+   "G": 0.604
+  },
+  "http://www.wikidata.org/entity/Q2963060": {
+   "title": "Marly horses",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0.484,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.501
+  },
+  "http://www.wikidata.org/entity/Q1619527": {
+   "title": "Mr and Mrs Andrews",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "http://www.wikidata.org/entity/Q3210253": {
+   "title": "Magdalene with the Smoking Flame",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.28,
+    "where": 0,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 0.57
+  },
+  "http://www.wikidata.org/entity/Q2404992": {
+   "title": "Aristotle with a Bust of Homer",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 1,
+    "artist": 0
+   },
+   "G": 1
+  },
+  "wd:Q3172259": {
+   "title": "The Oxbow",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 1,
+    "medium": 1,
+    "style": 0,
+    "artist": 1
+   },
+   "G": 0.75
+  },
+  "wikidata:Q3633419": {
+   "title": "Blue Dancers",
+   "recognized": true,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 1,
+    "where": 0.484,
+    "medium": 1,
+    "style": 1,
+    "artist": 1
+   },
+   "G": 0.871
+  },
+  "http://www.wikidata.org/entity/Q3314110": {
+   "title": "A Pilgrimage to San Isidro",
+   "recognized": false,
+   "stopRung": 3,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  },
+  "wikidata:Q473237": {
+   "title": "Statue of Bartolomeo Colleoni",
+   "recognized": false,
+   "stopRung": 4,
+   "cats": [
+    "when",
+    "where",
+    "medium",
+    "style"
+   ],
+   "g": {
+    "when": 0.52,
+    "where": 0,
+    "medium": 1,
+    "style": 0,
+    "artist": 0
+   },
+   "G": 0.38
+  }
+ }
+}

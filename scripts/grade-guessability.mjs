@@ -11,8 +11,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import vm from "node:vm";
 
 const TIER = (process.argv.find(a => a.startsWith("--tier=")) || "--tier=easy").split("=")[1];
-const PROBE = "data/incoming/vision-guessability-claude-sonnet-4-6-adaptive.json";
-const OUT = "data/incoming/guessability-scores.json";
+// Committed, durable home (data/incoming/ is gitignored). The raw probe is the vision run's blinded inferences;
+// scores.json is regenerated from it by this script. Both are committed so the freeze/gate can read them.
+const PROBE = "data/guessability/probe-sonnet.json";
+const OUT = "data/guessability/scores.json";
 
 // ---- stubbed DOM/vm context (mirrors tests/dom-harness.mjs) ----
 const NODE = new Proxy(function(){}, { get(_t,p){ if(p===Symbol.toPrimitive||p===Symbol.toStringTag)return()=>""; if(p==="length")return 0; if(p==="style"||p==="dataset"||p==="classList")return NODE; if(["value","textContent","innerHTML","className","id"].includes(p))return ""; if(p==="children"||p==="childNodes")return []; if(p===Symbol.iterator)return [][Symbol.iterator].bind([]); return NODE; }, apply(){return NODE;}, construct(){return NODE;}, set(){return true;} });
