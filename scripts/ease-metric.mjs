@@ -25,6 +25,7 @@ const TIER = (process.argv.find(a => a.startsWith("--tier=")) || "--tier=easy").
 // ─── PARAMS (placeholders — recalibrate from human study data) ──────────────────────────────────────────────
 const PARAMS = {
   REC: { when: 0.70, where: 1.0, medium: 1.0, style: 1.0 }, // a recognizer's per-facet score; date stays fuzzy
+  REC_artist: 0.90,                                         // a recognizer usually names a famous work's artist
   R_fame: { p50: 0.90, steep: 0.05 },                       // fame-percentile at which familiarity=0.5 (conservative)
   R_vis: { floor: 0.40, span: 0.60 },                       // visual-recognizability from the probe's stopRung: floor + span*(stopRung/4)
   maxRung: 4,                                                // ladder depth (full→…→crop45); higher stopRung = more robustly recognized
@@ -69,18 +70,23 @@ for (const [id, s] of Object.entries(scores)) {
   const facets = {}; const eF = {};
   for (const f of CORE) { if (s.g[f] == null) continue; const rec = PARAMS.REC[f] ?? 1; eF[f] = +(R * rec + (1 - R) * s.g[f]).toFixed(3); facets[f] = s.g[f]; }
   const vals = Object.values(eF); if (!vals.length) continue;
-  out[id] = { title: s.title, R: +R.toFixed(3), Rsrc: src, gG: s.G, ease: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3), easeFacets: eF };
+  // ARTIST FEEL-GOOD (Kat): recognition-conditioned artist payoff — the "I know this, it's Leonardo!" hit. NOT in
+  // the difficulty gate (ease), so a diverse work is never penalized for an unknowable artist; a separate lever
+  // composition uses to make sure each easy day has a few artist-gettable works. ~0.9·R on famous, ~0 on obscure.
+  const feelGood = (s.g.artist != null) ? +(R * PARAMS.REC_artist + (1 - R) * s.g.artist).toFixed(3) : null;
+  out[id] = { title: s.title, R: +R.toFixed(3), Rsrc: src, gG: s.G, ease: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3), feelGood, easeFacets: eF };
 }
-writeFileSync("data/guessability/ease.json", JSON.stringify({ tier: TIER, params: PARAMS, note: "Ease_f = R*REC_f + (1-R)*g_f; R from human recognizedRate where available (>=3 plays) else fame-percentile logistic. Placeholders — recalibrate from friend play.", works: out }, null, 1));
+writeFileSync("data/guessability/ease.json", JSON.stringify({ tier: TIER, params: PARAMS, note: "ease = mean over 4 core facets of R*REC_f+(1-R)*g_f (artist NOT in the difficulty gate). feelGood = recognition-conditioned artist payoff, a composition lever. R from human recognizedRate where available (>=3 plays) else fame×vis estimate. Placeholders — recalibrate from friend play.", works: out }, null, 1));
 console.log(`computed ease for ${Object.keys(out).length} works -> data/guessability/ease.json (R src: human=${Object.values(out).filter(o => o.Rsrc === "human").length}, estimated=${Object.values(out).filter(o => o.Rsrc !== "human").length})`);
 
 // ─── distributions + backtest ───────────────────────────────────────────────────────────────────────────────
 const pctl = (arr, p) => { const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p / 100 * s.length))]; };
 const dist = (arr, label) => { if (!arr.length) return console.log("  " + label + ": (none)"); const a = [...arr].sort((x, y) => x - y); console.log(`  ${label} (n=${a.length}): min ${a[0].toFixed(2)} · p10 ${pctl(a, 10).toFixed(2)} · p25 ${pctl(a, 25).toFixed(2)} · median ${pctl(a, 50).toFixed(2)} · p75 ${pctl(a, 75).toFixed(2)} · max ${a[a.length - 1].toFixed(2)}`); };
 
-console.log("\n=== per-work: pure-visual G vs blended Ease ===");
-dist(Object.values(out).map(o => o.gG).filter(v => v != null), "G    (pure visual)");
-dist(Object.values(out).map(o => o.ease), "Ease (recognition-blended)");
+console.log("\n=== per-work: pure-visual G vs blended Ease vs artist feel-good ===");
+dist(Object.values(out).map(o => o.gG).filter(v => v != null), "G        (pure visual)");
+dist(Object.values(out).map(o => o.ease), "Ease     (difficulty, 4 core facets)");
+dist(Object.values(out).map(o => o.feelGood).filter(v => v != null), "feelGood (artist payoff)");
 
 // how much does recognition lift the famous works? show the biggest movers
 const movers = Object.entries(out).map(([id, o]) => ({ id, title: o.title, gG: o.gG, ease: o.ease, R: o.R, lift: +(o.ease - (o.gG ?? o.ease)).toFixed(2) })).filter(m => m.gG != null).sort((a, b) => b.lift - a.lift);
@@ -97,6 +103,14 @@ for (const [date, day] of Object.entries(bd)) { const ids = day[TIER] || []; if 
 console.log(`\n=== per-puzzle backtest over ${puzzles.length} frozen ${TIER} dailies (Ease) ===`);
 dist(puzzles.map(p => p.A), "A(day) = mean Ease");
 dist(puzzles.map(p => p.floor), "floor = min Ease");
+
+// artist feel-good per day: does each easy day have a few "I know this!" works? (composition target, not a gate)
+const fgHits = [];
+for (const [date, day] of Object.entries(bd)) { const ids = day[TIER] || []; if (!ids.length) continue;
+  const n = ids.filter(id => (out[id]?.feelGood ?? 0) >= 0.6).length; fgHits.push(n); }
+const hcount = {}; for (const n of fgHits) hcount[n] = (hcount[n] || 0) + 1;
+console.log(`\nartist feel-good per easy day (# works with feelGood>=0.6, a "I know the artist" hit):`);
+console.log("  " + Object.entries(hcount).sort((a, b) => +a[0] - +b[0]).map(([k, v]) => `${k} hits: ${v} days`).join(" · ") + `  (composition target: >=1-2/day)`);
 const A = puzzles.map(p => p.A);
 console.log("\nCANDIDATE EASE BANDS (from percentiles — provisional until friend play):");
 console.log(`  easy ease-floor @ p10 = ${pctl(A, 10).toFixed(2)}  ·  p25 = ${pctl(A, 25).toFixed(2)}  ·  median day = ${pctl(A, 50).toFixed(2)}`);
