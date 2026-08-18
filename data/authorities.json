@@ -789,7 +789,7 @@
       "period",
       "culture"
     ],
-    "works": 20,
+    "works": 29,
     "authorities": {
       "aat": {
         "id": "300018420",
@@ -883,7 +883,7 @@
       "culture",
       "movement"
     ],
-    "works": 69,
+    "works": 71,
     "authorities": {
       "aat": {
         "id": "300018478",
@@ -905,7 +905,7 @@
       "culture",
       "period"
     ],
-    "works": 27,
+    "works": 28,
     "authorities": {
       "aat": {
         "id": "300018438",
@@ -969,7 +969,7 @@
       "period",
       "culture"
     ],
-    "works": 24,
+    "works": 28,
     "authorities": {
       "aat": {
         "id": "300018427",
@@ -1045,25 +1045,26 @@
     "note": "",
     "constructType": null
   },
-  "Kamakura Buddhist art": {
-    "label": "Kamakura Buddhist art",
+  "Kamakura period": {
+    "label": "Kamakura period",
     "kinds": [
       "culture",
       "period"
     ],
-    "works": 19,
+    "works": 31,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018558",
+        "pref": "Kamakura",
+        "match": "base",
+        "inFacet": true,
+        "dates": "1185–1333"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Kanō school": {
@@ -1272,7 +1273,7 @@
     "kinds": [
       "culture"
     ],
-    "works": 2,
+    "works": 3,
     "authorities": {
       "aat": {
         "id": "300019239",
@@ -1372,26 +1373,6 @@
         "pref": "Central Asian",
         "match": "fuzzy",
         "inFacet": true
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Qing dynasty Buddhist art": {
-    "label": "Qing dynasty Buddhist art",
-    "kinds": [
-      "culture"
-    ],
-    "works": 2,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
       },
       "wikidata": null,
       "tkLabel": null
@@ -2436,7 +2417,7 @@
       "culture",
       "movement"
     ],
-    "works": 42,
+    "works": 46,
     "authorities": {
       "aat": {
         "id": "300106643",
@@ -2553,24 +2534,26 @@
     "note": "",
     "constructType": null
   },
-  "Yuan dynasty Buddhist art": {
-    "label": "Yuan dynasty Buddhist art",
+  "Yuan dynasty": {
+    "label": "Yuan dynasty",
     "kinds": [
-      "culture"
+      "culture",
+      "period"
     ],
-    "works": 4,
+    "works": 15,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018436",
+        "pref": "Yüan (dynastic styles and period)",
+        "match": "norm",
+        "inFacet": true,
+        "dates": "1260–1368"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Song dynasty literati painting": {
@@ -2594,26 +2577,6 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Edo Buddhist art": {
-    "label": "Edo Buddhist art",
-    "kinds": [
-      "culture"
-    ],
-    "works": 4,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
   "Pala-Sena period": {
     "label": "Pala-Sena period",
     "kinds": [
@@ -2627,28 +2590,6 @@
         "pref": "Pala (Indian style)",
         "match": "norm",
         "inFacet": true
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
-    "constructType": null
-  },
-  "Yuan dynasty": {
-    "label": "Yuan dynasty",
-    "kinds": [
-      "culture",
-      "period"
-    ],
-    "works": 11,
-    "authorities": {
-      "aat": {
-        "id": "300018436",
-        "pref": "Yüan (dynastic styles and period)",
-        "match": "norm",
-        "inFacet": true,
-        "dates": "1260–1368"
       },
       "wikidata": null,
       "tkLabel": null
@@ -2691,26 +2632,6 @@
         "match": "fuzzy",
         "inFacet": true,
         "dates": "1960–1970"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Vietnamese Buddhist art": {
-    "label": "Vietnamese Buddhist art",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
       },
       "wikidata": null,
       "tkLabel": null
@@ -3166,24 +3087,25 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Nara Buddhist art": {
-    "label": "Nara Buddhist art",
+  "Nara period": {
+    "label": "Nara period",
     "kinds": [
-      "culture"
+      "period"
     ],
-    "works": 2,
+    "works": 4,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018545",
+        "pref": "Nara (Japanese culture or style)",
+        "match": "norm",
+        "inFacet": true,
+        "dates": "710–794"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Early Goryeo dynasty": {
@@ -3228,24 +3150,25 @@
     "note": "",
     "constructType": null
   },
-  "Asuka Buddhist art": {
-    "label": "Asuka Buddhist art",
+  "Asuka period": {
+    "label": "Asuka period",
     "kinds": [
       "culture"
     ],
-    "works": 3,
+    "works": 4,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018543",
+        "pref": "Asuka",
+        "match": "base",
+        "inFacet": true,
+        "dates": "552–645"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Minangkabau": {
@@ -3320,26 +3243,6 @@
     "note": "",
     "constructType": null
   },
-  "Nara-period Japanese Buddhist art": {
-    "label": "Nara-period Japanese Buddhist art",
-    "kinds": [
-      "period"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300022000",
-        "pref": "Japanese Buddhism",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
   "New Kingdom Egyptian art": {
     "label": "New Kingdom Egyptian art",
     "kinds": [
@@ -3360,28 +3263,6 @@
     },
     "canonical": "none-adequate",
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Kamakura period": {
-    "label": "Kamakura period",
-    "kinds": [
-      "period",
-      "culture"
-    ],
-    "works": 11,
-    "authorities": {
-      "aat": {
-        "id": "300018558",
-        "pref": "Kamakura",
-        "match": "base",
-        "inFacet": true,
-        "dates": "1185–1333"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
     "constructType": null
   },
   "Kofun period": {
@@ -3405,24 +3286,26 @@
     "note": "",
     "constructType": null
   },
-  "Heian Buddhist art": {
-    "label": "Heian Buddhist art",
+  "Heian period": {
+    "label": "Heian period",
     "kinds": [
-      "culture"
+      "culture",
+      "period"
     ],
-    "works": 10,
+    "works": 20,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018550",
+        "pref": "Heian",
+        "match": "base",
+        "inFacet": true,
+        "dates": "794–1185"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Qing dynasty literati painting": {
@@ -4545,24 +4428,26 @@
     "note": "",
     "constructType": null
   },
-  "Muromachi Buddhist art": {
-    "label": "Muromachi Buddhist art",
+  "Muromachi period": {
+    "label": "Muromachi period",
     "kinds": [
-      "culture"
+      "culture",
+      "period"
     ],
-    "works": 12,
+    "works": 15,
     "authorities": {
       "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
+        "id": "300018561",
+        "pref": "Muromachi",
+        "match": "base",
+        "inFacet": true,
+        "dates": "1338–1573"
       },
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "aat",
+    "note": "",
     "constructType": null
   },
   "Yuan dynasty literati painting": {
@@ -4578,26 +4463,6 @@
         "match": "fuzzy",
         "inFacet": true,
         "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Ming dynasty Buddhist art": {
-    "label": "Ming dynasty Buddhist art",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
       },
       "wikidata": null,
       "tkLabel": null
@@ -4852,27 +4717,6 @@
     },
     "canonical": "none-adequate",
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Asuka period": {
-    "label": "Asuka period",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300018543",
-        "pref": "Asuka",
-        "match": "base",
-        "inFacet": true,
-        "dates": "552–645"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
     "constructType": null
   },
   "Kushan period": {
@@ -5750,7 +5594,7 @@
       "period",
       "culture"
     ],
-    "works": 3,
+    "works": 4,
     "authorities": {
       "aat": {
         "id": "300134127",
@@ -5785,74 +5629,6 @@
     },
     "canonical": "aat",
     "note": "",
-    "constructType": null
-  },
-  "Muromachi period": {
-    "label": "Muromachi period",
-    "kinds": [
-      "period",
-      "culture"
-    ],
-    "works": 3,
-    "authorities": {
-      "aat": {
-        "id": "300018561",
-        "pref": "Muromachi",
-        "match": "base",
-        "inFacet": true,
-        "dates": "1338–1573"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
-    "constructType": null
-  },
-  "Kamakura-period Japanese Buddhist painting": {
-    "label": "Kamakura-period Japanese Buddhist painting",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300022000",
-        "pref": "Japanese Buddhism",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Goryeo Buddhist painting": {
-    "label": "Goryeo Buddhist painting",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": {
-        "qid": "Q12584160",
-        "label": "Goryeo Buddhist paintings",
-        "desc": "Korean art form",
-        "p31": [],
-        "confident": false
-      },
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Bamileke people": {
@@ -6179,26 +5955,6 @@
       "aat": {
         "id": "300417601",
         "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Song dynasty Buddhist art": {
-    "label": "Song dynasty Buddhist art",
-    "kinds": [
-      "culture"
-    ],
-    "works": 4,
-    "authorities": {
-      "aat": {
-        "id": "300389298",
-        "pref": "Song (language)",
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
@@ -6896,27 +6652,6 @@
     },
     "canonical": "aat",
     "note": "",
-    "constructType": null
-  },
-  "Tang dynasty Buddhist art": {
-    "label": "Tang dynasty Buddhist art",
-    "kinds": [
-      "culture",
-      "tradition"
-    ],
-    "works": 9,
-    "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Colonial American portraiture": {
@@ -9172,27 +8907,6 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Nara period": {
-    "label": "Nara period",
-    "kinds": [
-      "period"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300018545",
-        "pref": "Nara (Japanese culture or style)",
-        "match": "norm",
-        "inFacet": true,
-        "dates": "710–794"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
-    "constructType": null
-  },
   "Qijia culture": {
     "label": "Qijia culture",
     "kinds": [
@@ -9861,28 +9575,6 @@
     },
     "canonical": "wikidata",
     "note": "Wikidata Q756712 (painting technique)",
-    "constructType": null
-  },
-  "Heian period": {
-    "label": "Heian period",
-    "kinds": [
-      "period",
-      "culture"
-    ],
-    "works": 10,
-    "authorities": {
-      "aat": {
-        "id": "300018550",
-        "pref": "Heian",
-        "match": "base",
-        "inFacet": true,
-        "dates": "794–1185"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "aat",
-    "note": "",
     "constructType": null
   },
   "Song dynasty calligraphy": {
@@ -13531,6 +13223,26 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
+  "Vietnamese Buddhist art": {
+    "label": "Vietnamese Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
   "Kamakura-period Buddhist sculpture": {
     "label": "Kamakura-period Buddhist sculpture",
     "kinds": [
@@ -13848,6 +13560,26 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
+  "Kamakura-period Japanese Buddhist painting": {
+    "label": "Kamakura-period Japanese Buddhist painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300022000",
+        "pref": "Japanese Buddhism",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
   "Egyptian Late Period": {
     "label": "Egyptian Late Period",
     "kinds": [
@@ -13862,6 +13594,32 @@
         "inFacet": true
       },
       "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Goryeo Buddhist painting": {
+    "label": "Goryeo Buddhist painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": {
+        "qid": "Q12584160",
+        "label": "Goryeo Buddhist paintings",
+        "desc": "Korean art form",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -14038,6 +13796,226 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
+  "Tang dynasty Buddhist art": {
+    "label": "Tang dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Song dynasty Buddhist art": {
+    "label": "Song dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300389298",
+        "pref": "Song (language)",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Yuan dynasty Buddhist art": {
+    "label": "Yuan dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Ming dynasty Buddhist art": {
+    "label": "Ming dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Qing dynasty Buddhist art": {
+    "label": "Qing dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Kamakura Buddhist art": {
+    "label": "Kamakura Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Edo Buddhist art": {
+    "label": "Edo Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Nara Buddhist art": {
+    "label": "Nara Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Heian Buddhist art": {
+    "label": "Heian Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Asuka Buddhist art": {
+    "label": "Asuka Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Muromachi Buddhist art": {
+    "label": "Muromachi Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
   "Safavid Persian manuscript art": {
     "label": "Safavid Persian manuscript art",
     "kinds": [
@@ -14151,6 +14129,26 @@
         "pref": "Chinese painting styles",
         "match": "fuzzy",
         "inFacet": true
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Nara-period Japanese Buddhist art": {
+    "label": "Nara-period Japanese Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300022000",
+        "pref": "Japanese Buddhism",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
       },
       "wikidata": null,
       "tkLabel": null
