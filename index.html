@@ -2038,7 +2038,7 @@ async function renderLeaderboard(tierKey,dateStr){
       <div style="margin:7px auto 0;height:${m.ph}px;width:80%;background:${m.plinth};border:1px solid ${m.pb};border-radius:2px 6px 0 0;display:flex;align-items:center;justify-content:center;font:800 ${rank===0?24:rank===1?18:16}px 'Faculty Glyphic';color:${m.pink}">${r.rank}</div>
     </div>`;};
   const podium=`<div style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;padding:6px 0 14px">${podOrder.map(podiumCell).join('')}</div>`;
-  const rest=data.rows.slice(3);
+  const rest=data.rows;   // show ALL real players in the list (not just rank 4+), so a small board still lists everyone — the top 3 also appear on the podium above
   // sticky self-row: pin only if you're not already shown in the rendered rows
   const youShown=data.rows.some(r=>r.isYou);
   let selfRow='';
