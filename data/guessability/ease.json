@@ -8,6 +8,18 @@
    "style": 1
   },
   "REC_artist": 0.9,
+  "humanBlind": {
+   "when": 0.24,
+   "where": 0.65,
+   "medium": 0.95,
+   "style": 0.8
+  },
+  "modelTrust": {
+   "when": 0.15,
+   "where": 0.25,
+   "medium": 0.5,
+   "style": 0.25
+  },
   "R_fame": {
    "p50": 0.9,
    "steep": 0.05
@@ -40,13 +52,13 @@
    "R": 0.88,
    "Rsrc": "fame×vis",
    "gG": 0.739,
-   "ease": 0.903,
+   "ease": 0.89,
    "feelGood": 0.792,
    "easeFacets": {
-    "when": 0.736,
-    "where": 1,
-    "medium": 0.94,
-    "style": 0.935
+    "when": 0.659,
+    "where": 0.969,
+    "medium": 0.967,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q45585": {
@@ -54,13 +66,13 @@
    "R": 0.88,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.919,
+   "ease": 0.897,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.736,
-    "where": 0.94,
-    "medium": 1,
-    "style": 1
+    "when": 0.658,
+    "where": 0.953,
+    "medium": 0.997,
+    "style": 0.982
    }
   },
   "wikidata:Q48584": {
@@ -68,13 +80,13 @@
    "R": 0.879,
    "Rsrc": "fame×vis",
    "gG": 0.869,
-   "ease": 0.918,
+   "ease": 0.897,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.736,
-    "where": 1,
-    "medium": 1,
-    "style": 0.937
+    "when": 0.658,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q1150997": {
@@ -82,13 +94,13 @@
    "R": 0.879,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.852,
+   "ease": 0.883,
    "feelGood": 0.791,
    "easeFacets": {
-    "when": 0.649,
-    "where": 0.879,
-    "medium": 1,
-    "style": 0.879
+    "when": 0.645,
+    "where": 0.938,
+    "medium": 0.997,
+    "style": 0.952
    }
   },
   "wikidata:Q185372": {
@@ -96,13 +108,13 @@
    "R": 0.879,
    "Rsrc": "fame×vis",
    "gG": 0.925,
-   "ease": 0.925,
+   "ease": 0.899,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.736,
-    "where": 1,
-    "medium": 1,
-    "style": 0.964
+    "when": 0.658,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.973
    }
   },
   "http://www.wikidata.org/entity/Q208758": {
@@ -110,13 +122,13 @@
    "R": 0.878,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.846,
+   "ease": 0.882,
    "feelGood": 0.791,
    "easeFacets": {
-    "when": 0.627,
-    "where": 0.878,
-    "medium": 1,
-    "style": 0.878
+    "when": 0.642,
+    "where": 0.938,
+    "medium": 0.997,
+    "style": 0.951
    }
   },
   "http://www.wikidata.org/entity/Q252485": {
@@ -138,13 +150,13 @@
    "R": 0.878,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.919,
+   "ease": 0.897,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 0.939
+    "when": 0.658,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.966
    }
   },
   "wikidata:Q500242": {
@@ -152,13 +164,13 @@
    "R": 0.877,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.901,
    "feelGood": 0.79,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.658,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.982
    }
   },
   "http://www.wikidata.org/entity/Q321303": {
@@ -166,13 +178,13 @@
    "R": 0.877,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.901,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.657,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.982
    }
   },
   "wikidata:Q698487": {
@@ -180,13 +192,13 @@
    "R": 0.877,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.901,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.657,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.982
    }
   },
   "http://www.wikidata.org/entity/Q151047": {
@@ -194,13 +206,13 @@
    "R": 0.876,
    "Rsrc": "fame×vis",
    "gG": 0.805,
-   "ease": 0.91,
+   "ease": 0.895,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 0.904
+    "when": 0.657,
+    "where": 0.968,
+    "medium": 0.997,
+    "style": 0.957
    }
   },
   "http://www.wikidata.org/entity/Q212616": {
@@ -208,13 +220,13 @@
    "R": 0.745,
    "Rsrc": "fame×vis",
    "gG": 0.52,
-   "ease": 0.822,
+   "ease": 0.849,
    "feelGood": 0.67,
    "easeFacets": {
-    "when": 0.593,
-    "where": 0.948,
-    "medium": 1,
-    "style": 0.745
+    "when": 0.584,
+    "where": 0.92,
+    "medium": 0.994,
+    "style": 0.898
    }
   },
   "wikidata:Q186953": {
@@ -222,13 +234,13 @@
    "R": 0.876,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.9,
    "feelGood": 0.912,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.657,
+    "where": 0.967,
+    "medium": 0.997,
+    "style": 0.981
    }
   },
   "wikidata:Q18003128": {
@@ -236,13 +248,13 @@
    "R": 0.744,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.912,
+   "ease": 0.867,
    "feelGood": 0.67,
    "easeFacets": {
-    "when": 0.777,
-    "where": 0.87,
-    "medium": 1,
-    "style": 1
+    "when": 0.611,
+    "where": 0.9,
+    "medium": 0.994,
+    "style": 0.962
    }
   },
   "http://www.wikidata.org/entity/Q216402": {
@@ -250,13 +262,13 @@
    "R": 0.33,
    "Rsrc": "human",
    "gG": 0.125,
-   "ease": 0.389,
+   "ease": 0.643,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.231,
-    "where": 0.33,
-    "medium": 0.665,
-    "style": 0.33
+    "when": 0.368,
+    "where": 0.657,
+    "medium": 0.816,
+    "style": 0.732
    }
   },
   "http://www.wikidata.org/entity/Q219831": {
@@ -264,13 +276,13 @@
    "R": 0.875,
    "Rsrc": "fame×vis",
    "gG": 0.925,
-   "ease": 0.925,
+   "ease": 0.898,
    "feelGood": 0.787,
    "easeFacets": {
-    "when": 0.738,
-    "where": 1,
-    "medium": 1,
-    "style": 0.962
+    "when": 0.657,
+    "where": 0.967,
+    "medium": 0.997,
+    "style": 0.972
    }
   },
   "wikidata:Q152072": {
@@ -278,13 +290,13 @@
    "R": 0.743,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.758,
+   "ease": 0.834,
    "feelGood": 0.669,
    "easeFacets": {
-    "when": 0.546,
-    "where": 0.743,
-    "medium": 1,
-    "style": 0.743
+    "when": 0.576,
+    "where": 0.868,
+    "medium": 0.994,
+    "style": 0.897
    }
   },
   "http://www.wikidata.org/entity/Q29530": {
@@ -320,13 +332,13 @@
    "R": 0.873,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.9,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.738,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.656,
+    "where": 0.967,
+    "medium": 0.997,
+    "style": 0.981
    }
   },
   "http://www.wikidata.org/entity/Q311243": {
@@ -334,13 +346,13 @@
    "R": 0.873,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.871,
+   "ease": 0.884,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.738,
-    "where": 0.873,
-    "medium": 1,
-    "style": 0.873
+    "when": 0.656,
+    "where": 0.935,
+    "medium": 0.997,
+    "style": 0.949
    }
   },
   "http://www.wikidata.org/entity/Q220859": {
@@ -348,13 +360,13 @@
    "R": 0.873,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.934,
+   "ease": 0.9,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.738,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.656,
+    "where": 0.967,
+    "medium": 0.997,
+    "style": 0.981
    }
   },
   "wikidata:Q636537": {
@@ -362,13 +374,13 @@
    "R": 0.872,
    "Rsrc": "fame×vis",
    "gG": 0.754,
-   "ease": 0.903,
+   "ease": 0.892,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.738,
-    "where": 0.935,
-    "medium": 1,
-    "style": 0.939
+    "when": 0.656,
+    "where": 0.95,
+    "medium": 0.997,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q1065493": {
@@ -376,13 +388,13 @@
    "R": 0.872,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.902,
+   "ease": 0.892,
    "feelGood": 0.785,
    "easeFacets": {
-    "when": 0.738,
-    "where": 1,
-    "medium": 1,
-    "style": 0.872
+    "when": 0.656,
+    "where": 0.966,
+    "medium": 0.997,
+    "style": 0.949
    }
   },
   "wikidata:Q734834": {
@@ -390,13 +402,13 @@
    "R": 0.872,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.935,
+   "ease": 0.9,
    "feelGood": 0.784,
    "easeFacets": {
-    "when": 0.739,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.656,
+    "where": 0.966,
+    "medium": 0.997,
+    "style": 0.981
    }
   },
   "http://www.wikidata.org/entity/Q152509": {
@@ -404,13 +416,13 @@
    "R": 0.871,
    "Rsrc": "fame×vis",
    "gG": 0.762,
-   "ease": 0.904,
+   "ease": 0.892,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.739,
-    "where": 0.936,
-    "medium": 1,
-    "style": 0.942
+    "when": 0.655,
+    "where": 0.95,
+    "medium": 0.997,
+    "style": 0.966
    }
   },
   "wikidata:Q328523": {
@@ -418,13 +430,13 @@
    "R": 0.74,
    "Rsrc": "fame×vis",
    "gG": 0.848,
-   "ease": 0.905,
+   "ease": 0.865,
    "feelGood": 0.926,
    "easeFacets": {
-    "when": 0.752,
-    "where": 0.868,
-    "medium": 1,
-    "style": 1
+    "when": 0.606,
+    "where": 0.899,
+    "medium": 0.994,
+    "style": 0.961
    }
   },
   "wikidata:Q354396": {
@@ -432,13 +444,13 @@
    "R": 0.871,
    "Rsrc": "fame×vis",
    "gG": 0.872,
-   "ease": 0.918,
+   "ease": 0.895,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.739,
-    "where": 1,
-    "medium": 1,
-    "style": 0.934
+    "when": 0.655,
+    "where": 0.966,
+    "medium": 0.997,
+    "style": 0.964
    }
   },
   "http://www.wikidata.org/entity/Q549847": {
@@ -446,13 +458,13 @@
    "R": 0.87,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.935,
+   "ease": 0.9,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.739,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.655,
+    "where": 0.966,
+    "medium": 0.997,
+    "style": 0.981
    }
   },
   "wikidata:Q737062": {
@@ -460,13 +472,13 @@
    "R": 0.87,
    "Rsrc": "fame×vis",
    "gG": 0.798,
-   "ease": 0.908,
+   "ease": 0.893,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.739,
-    "where": 0.934,
-    "medium": 1,
-    "style": 0.961
+    "when": 0.655,
+    "where": 0.949,
+    "medium": 0.997,
+    "style": 0.971
    }
   },
   "http://www.wikidata.org/entity/Q465762": {
@@ -474,13 +486,13 @@
    "R": 0.869,
    "Rsrc": "fame×vis",
    "gG": 0.699,
-   "ease": 0.895,
+   "ease": 0.89,
    "feelGood": 0.782,
    "easeFacets": {
-    "when": 0.739,
-    "where": 0.973,
-    "medium": 1,
-    "style": 0.869
+    "when": 0.655,
+    "where": 0.959,
+    "medium": 0.997,
+    "style": 0.948
    }
   },
   "wikidata:Q1025704": {
@@ -488,13 +500,13 @@
    "R": 0.869,
    "Rsrc": "fame×vis",
    "gG": 0.773,
-   "ease": 0.905,
+   "ease": 0.892,
    "feelGood": 0.782,
    "easeFacets": {
-    "when": 0.726,
-    "where": 0.933,
-    "medium": 1,
-    "style": 0.961
+    "when": 0.653,
+    "where": 0.949,
+    "medium": 0.997,
+    "style": 0.97
    }
   },
   "wikidata:Q2246489": {
@@ -502,13 +514,13 @@
    "R": 0.868,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.845,
+   "ease": 0.879,
    "feelGood": 0.782,
    "easeFacets": {
-    "when": 0.645,
-    "where": 0.868,
-    "medium": 1,
-    "style": 0.868
+    "when": 0.64,
+    "where": 0.933,
+    "medium": 0.997,
+    "style": 0.947
    }
   },
   "http://www.wikidata.org/entity/Q1091086": {
@@ -530,13 +542,13 @@
    "R": 0.868,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.935,
+   "ease": 0.899,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.74,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.654,
+    "where": 0.965,
+    "medium": 0.997,
+    "style": 0.98
    }
   },
   "wd:Q9048095": {
@@ -544,13 +556,13 @@
    "R": 0.867,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.918,
+   "ease": 0.895,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.74,
-    "where": 1,
-    "medium": 1,
-    "style": 0.933
+    "when": 0.654,
+    "where": 0.965,
+    "medium": 0.997,
+    "style": 0.963
    }
   },
   "wikidata:Q582172": {
@@ -558,13 +570,13 @@
    "R": 0.867,
    "Rsrc": "fame×vis",
    "gG": 0.501,
-   "ease": 0.869,
+   "ease": 0.874,
    "feelGood": 0.78,
    "easeFacets": {
-    "when": 0.727,
-    "where": 1,
-    "medium": 0.867,
-    "style": 0.881
+    "when": 0.652,
+    "where": 0.965,
+    "medium": 0.93,
+    "style": 0.95
    }
   },
   "http://www.wikidata.org/entity/Q1212937": {
@@ -572,13 +584,13 @@
    "R": 0.867,
    "Rsrc": "fame×vis",
    "gG": 0.962,
-   "ease": 0.93,
+   "ease": 0.898,
    "feelGood": 0.78,
    "easeFacets": {
-    "when": 0.74,
-    "where": 0.98,
-    "medium": 1,
-    "style": 1
+    "when": 0.654,
+    "where": 0.96,
+    "medium": 0.997,
+    "style": 0.98
    }
   },
   "wikidata:Q59201": {
@@ -586,13 +598,13 @@
    "R": 0.866,
    "Rsrc": "fame×vis",
    "gG": 0.754,
-   "ease": 0.902,
+   "ease": 0.891,
    "feelGood": 0.78,
    "easeFacets": {
-    "when": 0.74,
-    "where": 0.932,
-    "medium": 1,
-    "style": 0.937
+    "when": 0.654,
+    "where": 0.948,
+    "medium": 0.997,
+    "style": 0.964
    }
   },
   "wikidata:Q408623": {
@@ -600,13 +612,13 @@
    "R": 0.736,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.831,
+   "ease": 0.85,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.589,
-    "where": 1,
-    "medium": 1,
-    "style": 0.736
+    "when": 0.58,
+    "where": 0.931,
+    "medium": 0.993,
+    "style": 0.894
    }
   },
   "http://www.wikidata.org/entity/Q1170315": {
@@ -614,13 +626,13 @@
    "R": 0.865,
    "Rsrc": "fame×vis",
    "gG": 0.902,
-   "ease": 0.922,
+   "ease": 0.895,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.74,
-    "where": 0.947,
-    "medium": 1,
-    "style": 1
+    "when": 0.653,
+    "where": 0.952,
+    "medium": 0.997,
+    "style": 0.98
    }
   },
   "wikidata:Q328079": {
@@ -628,13 +640,13 @@
    "R": 0.865,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.935,
+   "ease": 0.899,
    "feelGood": 0.913,
    "easeFacets": {
-    "when": 0.74,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.653,
+    "where": 0.965,
+    "medium": 0.997,
+    "style": 0.98
    }
   },
   "wikidata:Q2629559": {
@@ -642,13 +654,13 @@
    "R": 0.865,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.918,
+   "ease": 0.894,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.741,
-    "where": 0.931,
-    "medium": 1,
-    "style": 1
+    "when": 0.653,
+    "where": 0.947,
+    "medium": 0.997,
+    "style": 0.98
    }
   },
   "wikidata:Q661378": {
@@ -656,13 +668,13 @@
    "R": 0.864,
    "Rsrc": "fame×vis",
    "gG": 0.925,
-   "ease": 0.925,
+   "ease": 0.896,
    "feelGood": 0.778,
    "easeFacets": {
-    "when": 0.741,
-    "where": 1,
-    "medium": 1,
-    "style": 0.959
+    "when": 0.653,
+    "where": 0.964,
+    "medium": 0.997,
+    "style": 0.969
    }
   },
   "http://www.wikidata.org/entity/Q687182": {
@@ -670,13 +682,13 @@
    "R": 0.6,
    "Rsrc": "human",
    "gG": 0.75,
-   "ease": 0.855,
+   "ease": 0.822,
    "feelGood": 0.94,
    "easeFacets": {
-    "when": 0.82,
-    "where": 1,
-    "medium": 1,
-    "style": 0.6
+    "when": 0.562,
+    "where": 0.895,
+    "medium": 0.99,
+    "style": 0.84
    }
   },
   "wikidata:Q1245354": {
@@ -684,13 +696,13 @@
    "R": 0.864,
    "Rsrc": "fame×vis",
    "gG": 0.798,
-   "ease": 0.908,
+   "ease": 0.891,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.741,
-    "where": 0.931,
-    "medium": 1,
-    "style": 0.959
+    "when": 0.653,
+    "where": 0.947,
+    "medium": 0.997,
+    "style": 0.969
    }
   },
   "wikidata:Q1752990": {
@@ -698,13 +710,13 @@
    "R": 0.863,
    "Rsrc": "fame×vis",
    "gG": 0.523,
-   "ease": 0.87,
+   "ease": 0.884,
    "feelGood": 0.777,
    "easeFacets": {
-    "when": 0.643,
-    "where": 0.974,
-    "medium": 1,
-    "style": 0.863
+    "when": 0.638,
+    "where": 0.958,
+    "medium": 0.997,
+    "style": 0.945
    }
   },
   "http://www.wikidata.org/entity/Q154469": {
@@ -712,13 +724,13 @@
    "R": 0.863,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.901,
+   "ease": 0.89,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.741,
-    "where": 0.863,
-    "medium": 1,
-    "style": 1
+    "when": 0.653,
+    "where": 0.93,
+    "medium": 0.997,
+    "style": 0.979
    }
   },
   "http://www.wikidata.org/entity/Q509806": {
@@ -726,13 +738,13 @@
    "R": 0.863,
    "Rsrc": "fame×vis",
    "gG": 0.879,
-   "ease": 0.919,
+   "ease": 0.894,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.741,
-    "where": 1,
-    "medium": 1,
-    "style": 0.933
+    "when": 0.652,
+    "where": 0.964,
+    "medium": 0.997,
+    "style": 0.963
    }
   },
   "wikidata:Q2963501": {
@@ -754,13 +766,13 @@
    "R": 0.862,
    "Rsrc": "fame×vis",
    "gG": 0.775,
-   "ease": 0.904,
+   "ease": 0.89,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.741,
-    "where": 0.929,
-    "medium": 1,
-    "style": 0.947
+    "when": 0.652,
+    "where": 0.946,
+    "medium": 0.997,
+    "style": 0.966
    }
   },
   "wikidata:Q14515330": {
@@ -768,13 +780,13 @@
    "R": 0.67,
    "Rsrc": "human",
    "gG": 0.444,
-   "ease": 0.766,
+   "ease": 0.822,
    "feelGood": 0.603,
    "easeFacets": {
-    "when": 0.502,
-    "where": 0.893,
-    "medium": 1,
-    "style": 0.67
+    "when": 0.541,
+    "where": 0.887,
+    "medium": 0.992,
+    "style": 0.868
    }
   },
   "wikidata:Q634122": {
@@ -782,13 +794,13 @@
    "R": 0.861,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.918,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.929,
-    "medium": 1,
-    "style": 1
+    "when": 0.652,
+    "where": 0.946,
+    "medium": 0.997,
+    "style": 0.979
    }
   },
   "http://www.wikidata.org/entity/Q1368055": {
@@ -796,13 +808,13 @@
    "R": 0.732,
    "Rsrc": "fame×vis",
    "gG": 0.76,
-   "ease": 0.881,
+   "ease": 0.856,
    "feelGood": 0.658,
    "easeFacets": {
-    "when": 0.781,
-    "where": 0.866,
-    "medium": 1,
-    "style": 0.877
+    "when": 0.607,
+    "where": 0.896,
+    "medium": 0.993,
+    "style": 0.929
    }
   },
   "wikidata:Q890678": {
@@ -810,13 +822,13 @@
    "R": 0.86,
    "Rsrc": "fame×vis",
    "gG": 0.685,
-   "ease": 0.891,
+   "ease": 0.887,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.866,
-    "medium": 1,
-    "style": 0.958
+    "when": 0.652,
+    "where": 0.93,
+    "medium": 0.997,
+    "style": 0.969
    }
   },
   "http://www.wikidata.org/entity/Q2395218": {
@@ -824,13 +836,13 @@
    "R": 0.86,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.917,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.928,
-    "medium": 1,
-    "style": 1
+    "when": 0.652,
+    "where": 0.945,
+    "medium": 0.996,
+    "style": 0.979
    }
   },
   "http://www.wikidata.org/entity/Q683274": {
@@ -838,13 +850,13 @@
    "R": 0.86,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.918,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.93,
-    "medium": 1,
-    "style": 1
+    "when": 0.651,
+    "where": 0.946,
+    "medium": 0.996,
+    "style": 0.979
    }
   },
   "wikidata:Q133732": {
@@ -852,13 +864,13 @@
    "R": 0.859,
    "Rsrc": "fame×vis",
    "gG": 0.25,
-   "ease": 0.83,
+   "ease": 0.875,
    "feelGood": 0.773,
    "easeFacets": {
-    "when": 0.601,
-    "where": 0.859,
-    "medium": 1,
-    "style": 0.859
+    "when": 0.63,
+    "where": 0.928,
+    "medium": 0.996,
+    "style": 0.944
    }
   },
   "wikidata:Q969377": {
@@ -866,13 +878,13 @@
    "R": 0.859,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.919,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.742,
-    "where": 1,
-    "medium": 1,
-    "style": 0.936
+    "when": 0.651,
+    "where": 0.963,
+    "medium": 0.996,
+    "style": 0.963
    }
   },
   "wikidata:Q2282256": {
@@ -880,13 +892,13 @@
    "R": 0.858,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.918,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.743,
-    "where": 0.928,
-    "medium": 1,
-    "style": 1
+    "when": 0.651,
+    "where": 0.945,
+    "medium": 0.996,
+    "style": 0.979
    }
   },
   "wikidata:Q1167907": {
@@ -894,13 +906,13 @@
    "R": 0.858,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.918,
+   "ease": 0.893,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.743,
-    "where": 0.928,
-    "medium": 1,
-    "style": 1
+    "when": 0.651,
+    "where": 0.945,
+    "medium": 0.996,
+    "style": 0.979
    }
   },
   "http://www.wikidata.org/entity/Q1283024": {
@@ -922,13 +934,13 @@
    "R": 0.857,
    "Rsrc": "fame×vis",
    "gG": 0.862,
-   "ease": 0.916,
+   "ease": 0.892,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.743,
-    "where": 1,
-    "medium": 1,
-    "style": 0.921
+    "when": 0.651,
+    "where": 0.963,
+    "medium": 0.996,
+    "style": 0.959
    }
   },
   "http://www.wikidata.org/entity/Q1978815": {
@@ -936,13 +948,13 @@
    "R": 0.67,
    "Rsrc": "human",
    "gG": 0.756,
-   "ease": 0.869,
+   "ease": 0.84,
    "feelGood": 0.933,
    "easeFacets": {
-    "when": 0.799,
-    "where": 0.835,
-    "medium": 1,
-    "style": 0.844
+    "when": 0.586,
+    "where": 0.872,
+    "medium": 0.992,
+    "style": 0.911
    }
   },
   "http://www.wikidata.org/entity/Q257580": {
@@ -950,13 +962,13 @@
    "R": 0.856,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.847,
+   "ease": 0.876,
    "feelGood": 0.771,
    "easeFacets": {
-    "when": 0.674,
-    "where": 0.856,
-    "medium": 1,
-    "style": 0.856
+    "when": 0.64,
+    "where": 0.926,
+    "medium": 0.996,
+    "style": 0.943
    }
   },
   "http://www.wikidata.org/entity/Q2293905": {
@@ -992,13 +1004,13 @@
    "R": 0.855,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.863,
+   "ease": 0.879,
    "feelGood": 0.914,
    "easeFacets": {
-    "when": 0.743,
-    "where": 0.855,
-    "medium": 1,
-    "style": 0.855
+    "when": 0.65,
+    "where": 0.926,
+    "medium": 0.996,
+    "style": 0.942
    }
   },
   "wd:Q786806": {
@@ -1006,13 +1018,13 @@
    "R": 0.855,
    "Rsrc": "fame×vis",
    "gG": 0.867,
-   "ease": 0.917,
+   "ease": 0.892,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.729,
-    "where": 1,
-    "medium": 1,
-    "style": 0.937
+    "when": 0.648,
+    "where": 0.962,
+    "medium": 0.996,
+    "style": 0.963
    }
   },
   "http://www.wikidata.org/entity/Q2445726": {
@@ -1020,13 +1032,13 @@
    "R": 0.75,
    "Rsrc": "human",
    "gG": 0.697,
-   "ease": 0.868,
+   "ease": 0.857,
    "feelGood": 0.675,
    "easeFacets": {
-    "when": 0.775,
-    "where": 0.947,
-    "medium": 1,
-    "style": 0.75
+    "when": 0.613,
+    "where": 0.921,
+    "medium": 0.994,
+    "style": 0.9
    }
   },
   "http://www.wikidata.org/entity/Q2366825": {
@@ -1048,13 +1060,13 @@
    "R": 0.854,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.9,
+   "ease": 0.887,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.744,
-    "where": 0.925,
-    "medium": 1,
-    "style": 0.931
+    "when": 0.649,
+    "where": 0.943,
+    "medium": 0.996,
+    "style": 0.961
    }
   },
   "wikidata:Q604761": {
@@ -1062,13 +1074,13 @@
    "R": 0.853,
    "Rsrc": "fame×vis",
    "gG": 0.877,
-   "ease": 0.918,
+   "ease": 0.891,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.744,
-    "where": 1,
-    "medium": 1,
-    "style": 0.928
+    "when": 0.649,
+    "where": 0.961,
+    "medium": 0.996,
+    "style": 0.96
    }
   },
   "wikidata:Q1240092": {
@@ -1076,13 +1088,13 @@
    "R": 0.853,
    "Rsrc": "fame×vis",
    "gG": 0.69,
-   "ease": 0.89,
+   "ease": 0.886,
    "feelGood": 0.768,
    "easeFacets": {
-    "when": 0.709,
-    "where": 0.853,
-    "medium": 1,
-    "style": 1
+    "when": 0.644,
+    "where": 0.925,
+    "medium": 0.996,
+    "style": 0.978
    }
   },
   "wikidata:Q1437492": {
@@ -1090,13 +1102,13 @@
    "R": 0.853,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.917,
+   "ease": 0.891,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.744,
-    "where": 0.925,
-    "medium": 1,
-    "style": 1
+    "when": 0.649,
+    "where": 0.943,
+    "medium": 0.996,
+    "style": 0.978
    }
   },
   "http://www.wikidata.org/entity/Q644856": {
@@ -1104,13 +1116,13 @@
    "R": 0.67,
    "Rsrc": "human",
    "gG": 0.862,
-   "ease": 0.904,
+   "ease": 0.849,
    "feelGood": 0.933,
    "easeFacets": {
-    "when": 0.799,
-    "where": 1,
-    "medium": 1,
-    "style": 0.818
+    "when": 0.586,
+    "where": 0.913,
+    "medium": 0.992,
+    "style": 0.905
    }
   },
   "wikidata:Q1219263": {
@@ -1118,13 +1130,13 @@
    "R": 0.724,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.758,
+   "ease": 0.829,
    "feelGood": 0.652,
    "easeFacets": {
-    "when": 0.584,
-    "where": 0.724,
-    "medium": 1,
-    "style": 0.724
+    "when": 0.575,
+    "where": 0.859,
+    "medium": 0.993,
+    "style": 0.89
    }
   },
   "http://www.wikidata.org/entity/Q2011510": {
@@ -1132,13 +1144,13 @@
    "R": 0.851,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.919,
+   "ease": 0.892,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.745,
-    "where": 1,
-    "medium": 1,
-    "style": 0.933
+    "when": 0.649,
+    "where": 0.961,
+    "medium": 0.996,
+    "style": 0.961
    }
   },
   "wikidata:Q2538580": {
@@ -1146,13 +1158,13 @@
    "R": 0.851,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.917,
+   "ease": 0.891,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.745,
-    "where": 0.924,
-    "medium": 1,
-    "style": 1
+    "when": 0.648,
+    "where": 0.942,
+    "medium": 0.996,
+    "style": 0.978
    }
   },
   "wikidata:Q2267579": {
@@ -1160,13 +1172,13 @@
    "R": 0.851,
    "Rsrc": "fame×vis",
    "gG": 0.65,
-   "ease": 0.884,
+   "ease": 0.883,
    "feelGood": 0.765,
    "easeFacets": {
-    "when": 0.73,
-    "where": 0.851,
-    "medium": 1,
-    "style": 0.955
+    "when": 0.646,
+    "where": 0.923,
+    "medium": 0.996,
+    "style": 0.966
    }
   },
   "wikidata:Q579455": {
@@ -1174,13 +1186,13 @@
    "R": 0.723,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.791,
+   "ease": 0.833,
    "feelGood": 0.65,
    "easeFacets": {
-    "when": 0.717,
-    "where": 0.723,
-    "medium": 1,
-    "style": 0.723
+    "when": 0.594,
+    "where": 0.858,
+    "medium": 0.993,
+    "style": 0.889
    }
   },
   "wikidata:Q933665": {
@@ -1188,13 +1200,13 @@
    "R": 0.595,
    "Rsrc": "fame×vis",
    "gG": 0.45,
-   "ease": 0.733,
+   "ease": 0.765,
    "feelGood": 0.535,
    "easeFacets": {
-    "when": 0.822,
-    "where": 0.775,
-    "medium": 0.595,
-    "style": 0.739
+    "when": 0.56,
+    "where": 0.837,
+    "medium": 0.787,
+    "style": 0.874
    }
   },
   "http://www.wikidata.org/entity/Q568847": {
@@ -1202,13 +1214,13 @@
    "R": 0.849,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.936,
+   "ease": 0.895,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.745,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.648,
+    "where": 0.96,
+    "medium": 0.996,
+    "style": 0.977
    }
   },
   "wikidata:Q3494409": {
@@ -1216,13 +1228,13 @@
    "R": 0.849,
    "Rsrc": "fame×vis",
    "gG": 0.798,
-   "ease": 0.906,
+   "ease": 0.888,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.745,
-    "where": 0.923,
-    "medium": 1,
-    "style": 0.955
+    "when": 0.648,
+    "where": 0.941,
+    "medium": 0.996,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q2378567": {
@@ -1230,13 +1242,13 @@
    "R": 0.849,
    "Rsrc": "fame×vis",
    "gG": 0.804,
-   "ease": 0.907,
+   "ease": 0.888,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.745,
-    "where": 1,
-    "medium": 1,
-    "style": 0.881
+    "when": 0.648,
+    "where": 0.96,
+    "medium": 0.996,
+    "style": 0.948
    }
   },
   "wikidata:Q3821820": {
@@ -1244,13 +1256,13 @@
    "R": 0.848,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.917,
+   "ease": 0.89,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.746,
-    "where": 0.923,
-    "medium": 1,
-    "style": 1
+    "when": 0.647,
+    "where": 0.941,
+    "medium": 0.996,
+    "style": 0.977
    }
   },
   "wikidata:Q930535": {
@@ -1258,13 +1270,13 @@
    "R": 0.848,
    "Rsrc": "fame×vis",
    "gG": 0.685,
-   "ease": 0.889,
+   "ease": 0.883,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.746,
-    "where": 0.854,
-    "medium": 1,
-    "style": 0.954
+    "when": 0.647,
+    "where": 0.923,
+    "medium": 0.996,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q1213936": {
@@ -1272,13 +1284,13 @@
    "R": 0.75,
    "Rsrc": "human",
    "gG": 0.5,
-   "ease": 0.819,
+   "ease": 0.845,
    "feelGood": 0.675,
    "easeFacets": {
-    "when": 0.775,
-    "where": 0.75,
-    "medium": 1,
-    "style": 0.75
+    "when": 0.613,
+    "where": 0.872,
+    "medium": 0.994,
+    "style": 0.9
    }
   },
   "wikidata:Q2990634": {
@@ -1286,13 +1298,13 @@
    "R": 0.847,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.898,
+   "ease": 0.885,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.746,
-    "where": 1,
-    "medium": 1,
-    "style": 0.847
+    "when": 0.647,
+    "where": 0.96,
+    "medium": 0.996,
+    "style": 0.939
    }
   },
   "wikidata:Q2438357": {
@@ -1300,13 +1312,13 @@
    "R": 0.846,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.936,
+   "ease": 0.895,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.746,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.647,
+    "where": 0.96,
+    "medium": 0.996,
+    "style": 0.977
    }
   },
   "http://www.wikidata.org/entity/Q500951": {
@@ -1314,13 +1326,13 @@
    "R": 0.719,
    "Rsrc": "fame×vis",
    "gG": 0.771,
-   "ease": 0.882,
+   "ease": 0.855,
    "feelGood": 0.647,
    "easeFacets": {
-    "when": 0.756,
-    "where": 0.855,
-    "medium": 1,
-    "style": 0.916
+    "when": 0.599,
+    "where": 0.89,
+    "medium": 0.993,
+    "style": 0.937
    }
   },
   "wikidata:Q19609193": {
@@ -1328,13 +1340,13 @@
    "R": 0.846,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.917,
+   "ease": 0.89,
    "feelGood": 0.915,
    "easeFacets": {
-    "when": 0.746,
-    "where": 0.986,
-    "medium": 1,
-    "style": 0.935
+    "when": 0.647,
+    "where": 0.956,
+    "medium": 0.996,
+    "style": 0.961
    }
   },
   "wikidata:Q15461864": {
@@ -1342,13 +1354,13 @@
    "R": 0.845,
    "Rsrc": "fame×vis",
    "gG": 0.618,
-   "ease": 0.877,
+   "ease": 0.88,
    "feelGood": 0.761,
    "easeFacets": {
-    "when": 0.746,
-    "where": 0.845,
-    "medium": 1,
-    "style": 0.918
+    "when": 0.646,
+    "where": 0.921,
+    "medium": 0.996,
+    "style": 0.956
    }
   },
   "wikidata:Q259012": {
@@ -1356,13 +1368,13 @@
    "R": 0.591,
    "Rsrc": "fame×vis",
    "gG": 0.94,
-   "ease": 0.931,
+   "ease": 0.842,
    "feelGood": 0.532,
    "easeFacets": {
-    "when": 0.725,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.544,
+    "where": 0.893,
+    "medium": 0.99,
+    "style": 0.939
    }
   },
   "wikidata:Q60497141": {
@@ -1370,13 +1382,13 @@
    "R": 0.844,
    "Rsrc": "fame×vis",
    "gG": 0.392,
-   "ease": 0.842,
+   "ease": 0.861,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.844,
-    "medium": 0.844,
-    "style": 0.933
+    "when": 0.646,
+    "where": 0.92,
+    "medium": 0.918,
+    "style": 0.96
    }
   },
   "wikidata:Q3210239": {
@@ -1384,13 +1396,13 @@
    "R": 0.844,
    "Rsrc": "fame×vis",
    "gG": 0.392,
-   "ease": 0.842,
+   "ease": 0.861,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.844,
-    "medium": 0.844,
-    "style": 0.933
+    "when": 0.646,
+    "where": 0.92,
+    "medium": 0.918,
+    "style": 0.96
    }
   },
   "wikidata:Q3607521": {
@@ -1398,13 +1410,13 @@
    "R": 0.844,
    "Rsrc": "fame×vis",
    "gG": 0.685,
-   "ease": 0.887,
+   "ease": 0.882,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.92,
-    "medium": 1,
-    "style": 0.882
+    "when": 0.646,
+    "where": 0.939,
+    "medium": 0.996,
+    "style": 0.947
    }
   },
   "wikidata:Q15293656": {
@@ -1412,13 +1424,13 @@
    "R": 0.843,
    "Rsrc": "fame×vis",
    "gG": 0.862,
-   "ease": 0.915,
+   "ease": 0.889,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 1,
-    "medium": 1,
-    "style": 0.913
+    "when": 0.646,
+    "where": 0.959,
+    "medium": 0.996,
+    "style": 0.955
    }
   },
   "wikidata:Q12366269": {
@@ -1426,13 +1438,13 @@
    "R": 0.843,
    "Rsrc": "fame×vis",
    "gG": 0.731,
-   "ease": 0.894,
+   "ease": 0.884,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.988,
-    "medium": 1,
-    "style": 0.843
+    "when": 0.646,
+    "where": 0.956,
+    "medium": 0.996,
+    "style": 0.937
    }
   },
   "wikidata:Q19917658": {
@@ -1440,13 +1452,13 @@
    "R": 0.842,
    "Rsrc": "fame×vis",
    "gG": 0.701,
-   "ease": 0.89,
+   "ease": 0.882,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.919,
-    "medium": 1,
-    "style": 0.893
+    "when": 0.645,
+    "where": 0.938,
+    "medium": 0.996,
+    "style": 0.95
    }
   },
   "aic80607": {
@@ -1454,13 +1466,13 @@
    "R": 0.842,
    "Rsrc": "fame×vis",
    "gG": 0.801,
-   "ease": 0.905,
+   "ease": 0.886,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.747,
-    "where": 0.922,
-    "medium": 1,
-    "style": 0.953
+    "when": 0.645,
+    "where": 0.939,
+    "medium": 0.996,
+    "style": 0.964
    }
   },
   "cleveland136510": {
@@ -1468,13 +1480,13 @@
    "R": 0.842,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.916,
+   "ease": 0.889,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.748,
-    "where": 0.918,
-    "medium": 1,
-    "style": 1
+    "when": 0.645,
+    "where": 0.938,
+    "medium": 0.996,
+    "style": 0.976
    }
   },
   "aic27992": {
@@ -1496,13 +1508,13 @@
    "R": 0.841,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.897,
+   "ease": 0.879,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.748,
-    "where": 0.968,
-    "medium": 0.92,
-    "style": 0.952
+    "when": 0.645,
+    "where": 0.95,
+    "medium": 0.956,
+    "style": 0.964
    }
   },
   "wikidata:Q18890421": {
@@ -1510,13 +1522,13 @@
    "R": 0.84,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.917,
+   "ease": 0.889,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.748,
-    "where": 0.968,
-    "medium": 1,
-    "style": 0.952
+    "when": 0.645,
+    "where": 0.95,
+    "medium": 0.996,
+    "style": 0.964
    }
   },
   "wikidata:Q28792214": {
@@ -1524,13 +1536,13 @@
    "R": 0.714,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.739,
+   "ease": 0.824,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.528,
-    "where": 0.714,
-    "medium": 1,
-    "style": 0.714
+    "when": 0.562,
+    "where": 0.853,
+    "medium": 0.993,
+    "style": 0.886
    }
   },
   "aic66333": {
@@ -1538,13 +1550,13 @@
    "R": 0.336,
    "Rsrc": "fame×vis",
    "gG": 0.475,
-   "ease": 0.626,
+   "ease": 0.709,
    "feelGood": 0.302,
    "easeFacets": {
-    "when": 0.833,
-    "where": 0.336,
-    "medium": 1,
-    "style": 0.336
+    "when": 0.46,
+    "where": 0.66,
+    "medium": 0.983,
+    "style": 0.734
    }
   },
   "wikidata:Q9202": {
@@ -1566,13 +1578,13 @@
    "R": 0.839,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.897,
+   "ease": 0.883,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.748,
-    "where": 1,
-    "medium": 1,
-    "style": 0.839
+    "when": 0.644,
+    "where": 0.958,
+    "medium": 0.996,
+    "style": 0.935
    }
   },
   "http://www.wikidata.org/entity/Q130958": {
@@ -1580,13 +1592,13 @@
    "R": 0.5,
    "Rsrc": "human",
    "gG": 0.874,
-   "ease": 0.899,
+   "ease": 0.811,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.85,
-    "where": 1,
-    "medium": 1,
-    "style": 0.748
+    "when": 0.527,
+    "where": 0.869,
+    "medium": 0.988,
+    "style": 0.862
    }
   },
   "wikidata:Q107486133": {
@@ -1594,13 +1606,13 @@
    "R": 0.712,
    "Rsrc": "fame×vis",
    "gG": 0.427,
-   "ease": 0.781,
+   "ease": 0.831,
    "feelGood": 0.641,
    "easeFacets": {
-    "when": 0.648,
-    "where": 0.712,
-    "medium": 1,
-    "style": 0.766
+    "when": 0.58,
+    "where": 0.852,
+    "medium": 0.993,
+    "style": 0.898
    }
   },
   "wd:Q157541": {
@@ -1608,13 +1620,13 @@
    "R": 0.837,
    "Rsrc": "fame×vis",
    "gG": 0.876,
-   "ease": 0.917,
+   "ease": 0.888,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.749,
-    "where": 0.919,
-    "medium": 1,
-    "style": 1
+    "when": 0.644,
+    "where": 0.937,
+    "medium": 0.996,
+    "style": 0.976
    }
   },
   "wd:Q1126741": {
@@ -1622,13 +1634,13 @@
    "R": 0.837,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.937,
+   "ease": 0.893,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.749,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.644,
+    "where": 0.957,
+    "medium": 0.996,
+    "style": 0.976
    }
   },
   "wikidata:Q21585351": {
@@ -1636,13 +1648,13 @@
    "R": 0.335,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.809,
+   "ease": 0.753,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.9,
-    "where": 1,
-    "medium": 1,
-    "style": 0.335
+    "when": 0.47,
+    "where": 0.825,
+    "medium": 0.983,
+    "style": 0.734
    }
   },
   "wikidata:Q2717022": {
@@ -1650,13 +1662,13 @@
    "R": 0.836,
    "Rsrc": "fame×vis",
    "gG": 0.983,
-   "ease": 0.934,
+   "ease": 0.892,
    "feelGood": 0.916,
    "easeFacets": {
-    "when": 0.749,
-    "where": 0.989,
-    "medium": 1,
-    "style": 1
+    "when": 0.643,
+    "where": 0.954,
+    "medium": 0.996,
+    "style": 0.975
    }
   },
   "wikidata:Q567861": {
@@ -1664,13 +1676,13 @@
    "R": 0.836,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.937,
+   "ease": 0.893,
    "feelGood": 0.752,
    "easeFacets": {
-    "when": 0.749,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.643,
+    "where": 0.957,
+    "medium": 0.996,
+    "style": 0.975
    }
   },
   "wikidata:Q151952": {
@@ -1678,13 +1690,13 @@
    "R": 0.33,
    "Rsrc": "human",
    "gG": 0.699,
-   "ease": 0.773,
+   "ease": 0.743,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.901,
-    "where": 0.862,
-    "medium": 1,
-    "style": 0.33
+    "when": 0.468,
+    "where": 0.79,
+    "medium": 0.983,
+    "style": 0.732
    }
   },
   "wd:Q351055": {
@@ -1692,13 +1704,13 @@
    "R": 0.835,
    "Rsrc": "fame×vis",
    "gG": 0.621,
-   "ease": 0.875,
+   "ease": 0.877,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.75,
-    "where": 0.915,
-    "medium": 1,
-    "style": 0.835
+    "when": 0.643,
+    "where": 0.935,
+    "medium": 0.996,
+    "style": 0.934
    }
   },
   "wikidata:Q2302517": {
@@ -1706,13 +1718,13 @@
    "R": 0.584,
    "Rsrc": "fame×vis",
    "gG": 0.315,
-   "ease": 0.671,
+   "ease": 0.762,
    "feelGood": 0.526,
    "easeFacets": {
-    "when": 0.725,
-    "where": 0.584,
-    "medium": 0.792,
-    "style": 0.584
+    "when": 0.541,
+    "where": 0.787,
+    "medium": 0.886,
+    "style": 0.834
    }
   },
   "http://www.wikidata.org/entity/Q1128599": {
@@ -1720,13 +1732,13 @@
    "R": 0.834,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.938,
+   "ease": 0.892,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.75,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.642,
+    "where": 0.956,
+    "medium": 0.996,
+    "style": 0.975
    }
   },
   "wd:Q1333433": {
@@ -1734,13 +1746,13 @@
    "R": 0.833,
    "Rsrc": "fame×vis",
    "gG": 0.552,
-   "ease": 0.863,
+   "ease": 0.864,
    "feelGood": 0.75,
    "easeFacets": {
-    "when": 0.71,
-    "where": 0.908,
-    "medium": 0.833,
-    "style": 1
+    "when": 0.636,
+    "where": 0.933,
+    "medium": 0.913,
+    "style": 0.975
    }
   },
   "wikidata:Q6609268": {
@@ -1748,13 +1760,13 @@
    "R": 0.583,
    "Rsrc": "fame×vis",
    "gG": 0.593,
-   "ease": 0.786,
+   "ease": 0.801,
    "feelGood": 0.525,
    "easeFacets": {
-    "when": 0.825,
-    "where": 0.737,
-    "medium": 1,
-    "style": 0.583
+    "when": 0.556,
+    "where": 0.825,
+    "medium": 0.99,
+    "style": 0.833
    }
   },
   "http://www.wikidata.org/entity/Q17510059": {
@@ -1762,13 +1774,13 @@
    "R": 0.833,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.916,
+   "ease": 0.887,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.75,
-    "where": 0.914,
-    "medium": 1,
-    "style": 1
+    "when": 0.642,
+    "where": 0.934,
+    "medium": 0.996,
+    "style": 0.975
    }
   },
   "http://www.wikidata.org/entity/Q152867": {
@@ -1776,13 +1788,13 @@
    "R": 0.707,
    "Rsrc": "fame×vis",
    "gG": 0.704,
-   "ease": 0.86,
+   "ease": 0.85,
    "feelGood": 0.637,
    "easeFacets": {
-    "when": 0.647,
-    "where": 0.882,
-    "medium": 1,
-    "style": 0.912
+    "when": 0.578,
+    "where": 0.894,
+    "medium": 0.993,
+    "style": 0.934
    }
   },
   "wikidata:Q478271": {
@@ -1790,13 +1802,13 @@
    "R": 0.832,
    "Rsrc": "fame×vis",
    "gG": 0.902,
-   "ease": 0.921,
+   "ease": 0.888,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.751,
-    "where": 0.934,
-    "medium": 1,
-    "style": 1
+    "when": 0.642,
+    "where": 0.939,
+    "medium": 0.996,
+    "style": 0.975
    }
   },
   "wikidata:Q606662": {
@@ -1804,13 +1816,13 @@
    "R": 0.831,
    "Rsrc": "fame×vis",
    "gG": 0,
-   "ease": 0.769,
+   "ease": 0.843,
    "feelGood": 0.748,
    "easeFacets": {
-    "when": 0.582,
-    "where": 0.831,
-    "medium": 0.831,
-    "style": 0.831
+    "when": 0.616,
+    "where": 0.913,
+    "medium": 0.911,
+    "style": 0.932
    }
   },
   "wikidata:Q154987": {
@@ -1818,13 +1830,13 @@
    "R": 0.831,
    "Rsrc": "fame×vis",
    "gG": 0.545,
-   "ease": 0.861,
+   "ease": 0.872,
    "feelGood": 0.748,
    "easeFacets": {
-    "when": 0.751,
-    "where": 0.831,
-    "medium": 1,
-    "style": 0.862
+    "when": 0.641,
+    "where": 0.913,
+    "medium": 0.996,
+    "style": 0.94
    }
   },
   "http://www.wikidata.org/entity/Q727875": {
@@ -1832,13 +1844,13 @@
    "R": 0.706,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.734,
+   "ease": 0.821,
    "feelGood": 0.635,
    "easeFacets": {
-    "when": 0.523,
-    "where": 0.706,
-    "medium": 1,
-    "style": 0.706
+    "when": 0.558,
+    "where": 0.849,
+    "medium": 0.993,
+    "style": 0.882
    }
   },
   "wd:Q616159": {
@@ -1846,13 +1858,13 @@
    "R": 0.332,
    "Rsrc": "fame×vis",
    "gG": 0.225,
-   "ease": 0.458,
+   "ease": 0.625,
    "feelGood": 0.299,
    "easeFacets": {
-    "when": 0.834,
-    "where": 0.332,
-    "medium": 0.332,
-    "style": 0.332
+    "when": 0.459,
+    "where": 0.658,
+    "medium": 0.649,
+    "style": 0.733
    }
   },
   "wd:Q131397": {
@@ -1860,13 +1872,13 @@
    "R": 0.705,
    "Rsrc": "fame×vis",
    "gG": 0.102,
-   "ease": 0.682,
+   "ease": 0.79,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.493,
-    "where": 0.825,
-    "medium": 0.705,
-    "style": 0.705
+    "when": 0.554,
+    "where": 0.879,
+    "medium": 0.845,
+    "style": 0.882
    }
   },
   "http://www.wikidata.org/entity/Q1231009": {
@@ -1874,13 +1886,13 @@
    "R": 0.829,
    "Rsrc": "fame×vis",
    "gG": 0.35,
-   "ease": 0.826,
+   "ease": 0.862,
    "feelGood": 0.746,
    "easeFacets": {
-    "when": 0.597,
-    "where": 0.965,
-    "medium": 0.914,
-    "style": 0.829
+    "when": 0.618,
+    "where": 0.946,
+    "medium": 0.953,
+    "style": 0.932
    }
   },
   "cleveland167459": {
@@ -1888,13 +1900,13 @@
    "R": 0.331,
    "Rsrc": "fame×vis",
    "gG": 0.975,
-   "ease": 0.959,
+   "ease": 0.791,
    "feelGood": 0.298,
    "easeFacets": {
-    "when": 0.834,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.459,
+    "where": 0.824,
+    "medium": 0.983,
+    "style": 0.9
    }
   },
   "sinmafa_74-20-1": {
@@ -1902,13 +1914,13 @@
    "R": 0.331,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.641,
+   "ease": 0.71,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.901,
-    "where": 0.331,
-    "medium": 1,
-    "style": 0.331
+    "when": 0.469,
+    "where": 0.657,
+    "medium": 0.983,
+    "style": 0.732
    }
   },
   "wd:Q724377": {
@@ -1916,13 +1928,13 @@
    "R": 0.828,
    "Rsrc": "fame×vis",
    "gG": 0.876,
-   "ease": 0.916,
+   "ease": 0.886,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.752,
-    "where": 0.914,
-    "medium": 1,
-    "style": 1
+    "when": 0.64,
+    "where": 0.933,
+    "medium": 0.996,
+    "style": 0.974
    }
   },
   "wd:Q2110451": {
@@ -1930,13 +1942,13 @@
    "R": 0.827,
    "Rsrc": "fame×vis",
    "gG": 0.591,
-   "ease": 0.867,
+   "ease": 0.874,
    "feelGood": 0.744,
    "easeFacets": {
-    "when": 0.752,
-    "where": 0.827,
-    "medium": 1,
-    "style": 0.89
+    "when": 0.64,
+    "where": 0.911,
+    "medium": 0.996,
+    "style": 0.947
    }
   },
   "http://www.wikidata.org/entity/Q11180645": {
@@ -1944,13 +1956,13 @@
    "R": 0.33,
    "Rsrc": "human",
    "gG": 0.38,
-   "ease": 0.56,
+   "ease": 0.656,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.579,
-    "where": 1,
-    "medium": 0.33,
-    "style": 0.33
+    "when": 0.42,
+    "where": 0.824,
+    "medium": 0.648,
+    "style": 0.732
    }
   },
   "http://www.wikidata.org/entity/Q476458": {
@@ -1958,13 +1970,13 @@
    "R": 0.826,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.863,
+   "ease": 0.875,
    "feelGood": 0.744,
    "easeFacets": {
-    "when": 0.627,
-    "where": 1,
-    "medium": 1,
-    "style": 0.826
+    "when": 0.621,
+    "where": 0.954,
+    "medium": 0.996,
+    "style": 0.931
    }
   },
   "http://www.wikidata.org/entity/Q3173195": {
@@ -1972,13 +1984,13 @@
    "R": 0.826,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.83,
+   "ease": 0.866,
    "feelGood": 0.743,
    "easeFacets": {
-    "when": 0.669,
-    "where": 0.826,
-    "medium": 1,
-    "style": 0.826
+    "when": 0.627,
+    "where": 0.911,
+    "medium": 0.996,
+    "style": 0.93
    }
   },
   "wikidata:Q1362177": {
@@ -1986,13 +1998,13 @@
    "R": 0.825,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.938,
+   "ease": 0.891,
    "feelGood": 0.917,
    "easeFacets": {
-    "when": 0.752,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.64,
+    "where": 0.954,
+    "medium": 0.996,
+    "style": 0.974
    }
   },
   "wikidata:Q567833": {
@@ -2000,13 +2012,13 @@
    "R": 0.701,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.744,
+   "ease": 0.821,
    "feelGood": 0.631,
    "easeFacets": {
-    "when": 0.574,
-    "where": 0.701,
-    "medium": 1,
-    "style": 0.701
+    "when": 0.564,
+    "where": 0.847,
+    "medium": 0.993,
+    "style": 0.88
    }
   },
   "http://www.wikidata.org/entity/Q1213453": {
@@ -2014,13 +2026,13 @@
    "R": 0.824,
    "Rsrc": "fame×vis",
    "gG": 0.843,
-   "ease": 0.91,
+   "ease": 0.884,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.753,
-    "where": 0.974,
-    "medium": 1,
-    "style": 0.915
+    "when": 0.639,
+    "where": 0.948,
+    "medium": 0.996,
+    "style": 0.952
    }
   },
   "wd:Q667124": {
@@ -2028,13 +2040,13 @@
    "R": 0.824,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.894,
+   "ease": 0.88,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.753,
-    "where": 1,
-    "medium": 1,
-    "style": 0.824
+    "when": 0.639,
+    "where": 0.954,
+    "medium": 0.996,
+    "style": 0.93
    }
   },
   "http://www.wikidata.org/entity/Q512755": {
@@ -2042,13 +2054,13 @@
    "R": 0.7,
    "Rsrc": "fame×vis",
    "gG": 0.9,
-   "ease": 0.917,
+   "ease": 0.86,
    "feelGood": 0.63,
    "easeFacets": {
-    "when": 0.76,
-    "where": 1,
-    "medium": 1,
-    "style": 0.91
+    "when": 0.592,
+    "where": 0.921,
+    "medium": 0.993,
+    "style": 0.933
    }
   },
   "http://www.wikidata.org/entity/Q500554": {
@@ -2056,13 +2068,13 @@
    "R": 0.823,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.916,
+   "ease": 0.885,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.753,
-    "where": 0.91,
-    "medium": 1,
-    "style": 1
+    "when": 0.639,
+    "where": 0.931,
+    "medium": 0.996,
+    "style": 0.973
    }
   },
   "wikidata:Q164517": {
@@ -2070,13 +2082,13 @@
    "R": 0.823,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.916,
+   "ease": 0.885,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.753,
-    "where": 0.91,
-    "medium": 1,
-    "style": 1
+    "when": 0.639,
+    "where": 0.931,
+    "medium": 0.996,
+    "style": 0.973
    }
   },
   "wd:Q3062269": {
@@ -2084,13 +2096,13 @@
    "R": 0.699,
    "Rsrc": "fame×vis",
    "gG": 0.516,
-   "ease": 0.802,
+   "ease": 0.829,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.79,
-    "where": 0.718,
-    "medium": 1,
-    "style": 0.699
+    "when": 0.596,
+    "where": 0.85,
+    "medium": 0.992,
+    "style": 0.88
    }
   },
   "http://www.wikidata.org/entity/Q185255": {
@@ -2098,13 +2110,13 @@
    "R": 0.822,
    "Rsrc": "fame×vis",
    "gG": 0.869,
-   "ease": 0.915,
+   "ease": 0.884,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.753,
-    "where": 1,
-    "medium": 1,
-    "style": 0.907
+    "when": 0.638,
+    "where": 0.953,
+    "medium": 0.996,
+    "style": 0.95
    }
   },
   "http://www.wikidata.org/entity/Q517408": {
@@ -2112,13 +2124,13 @@
    "R": 0.821,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.849,
+   "ease": 0.867,
    "feelGood": 0.739,
    "easeFacets": {
-    "when": 0.754,
-    "where": 0.821,
-    "medium": 1,
-    "style": 0.821
+    "when": 0.638,
+    "where": 0.908,
+    "medium": 0.996,
+    "style": 0.928
    }
   },
   "wd:Q945850": {
@@ -2126,13 +2138,13 @@
    "R": 0.821,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.939,
+   "ease": 0.89,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.754,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.638,
+    "where": 0.953,
+    "medium": 0.996,
+    "style": 0.973
    }
   },
   "wikidata:Q735085": {
@@ -2140,13 +2152,13 @@
    "R": 0.574,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.774,
+   "ease": 0.803,
    "feelGood": 0.517,
    "easeFacets": {
-    "when": 0.521,
-    "where": 1,
-    "medium": 1,
-    "style": 0.574
+    "when": 0.507,
+    "where": 0.888,
+    "medium": 0.989,
+    "style": 0.83
    }
   },
   "http://www.wikidata.org/entity/Q275349": {
@@ -2154,13 +2166,13 @@
    "R": 0.82,
    "Rsrc": "fame×vis",
    "gG": 0.599,
-   "ease": 0.867,
+   "ease": 0.876,
    "feelGood": 0.738,
    "easeFacets": {
-    "when": 0.592,
-    "where": 0.928,
-    "medium": 1,
-    "style": 0.946
+    "when": 0.613,
+    "where": 0.935,
+    "medium": 0.995,
+    "style": 0.959
    }
   },
   "wikidata:Q671237": {
@@ -2168,13 +2180,13 @@
    "R": 0.819,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.893,
+   "ease": 0.878,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.754,
-    "where": 1,
-    "medium": 1,
-    "style": 0.819
+    "when": 0.638,
+    "where": 0.953,
+    "medium": 0.995,
+    "style": 0.928
    }
   },
   "http://www.wikidata.org/entity/Q500936": {
@@ -2182,13 +2194,13 @@
    "R": 0.696,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.777,
+   "ease": 0.825,
    "feelGood": 0.626,
    "easeFacets": {
-    "when": 0.718,
-    "where": 0.696,
-    "medium": 1,
-    "style": 0.696
+    "when": 0.584,
+    "where": 0.844,
+    "medium": 0.992,
+    "style": 0.878
    }
   },
   "wikidata:Q537640": {
@@ -2196,13 +2208,13 @@
    "R": 0.818,
    "Rsrc": "fame×vis",
    "gG": 0.767,
-   "ease": 0.896,
+   "ease": 0.873,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.754,
-    "where": 1,
-    "medium": 0.909,
-    "style": 0.922
+    "when": 0.637,
+    "where": 0.952,
+    "medium": 0.95,
+    "style": 0.953
    }
   },
   "http://www.wikidata.org/entity/Q1133420": {
@@ -2210,13 +2222,13 @@
    "R": 0.818,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.893,
+   "ease": 0.878,
    "feelGood": 0.918,
    "easeFacets": {
-    "when": 0.755,
-    "where": 1,
-    "medium": 1,
-    "style": 0.818
+    "when": 0.637,
+    "where": 0.952,
+    "medium": 0.995,
+    "style": 0.927
    }
   },
   "wd:Q2289754": {
@@ -2224,13 +2236,13 @@
    "R": 0.818,
    "Rsrc": "fame×vis",
    "gG": 0.614,
-   "ease": 0.869,
+   "ease": 0.872,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.755,
-    "where": 0.901,
-    "medium": 1,
-    "style": 0.818
+    "when": 0.637,
+    "where": 0.927,
+    "medium": 0.995,
+    "style": 0.927
    }
   },
   "http://www.wikidata.org/entity/Q2571560": {
@@ -2238,13 +2250,13 @@
    "R": 0.694,
    "Rsrc": "fame×vis",
    "gG": 0.61,
-   "ease": 0.829,
+   "ease": 0.836,
    "feelGood": 0.625,
    "easeFacets": {
-    "when": 0.761,
-    "where": 0.694,
-    "medium": 1,
-    "style": 0.859
+    "when": 0.59,
+    "where": 0.843,
+    "medium": 0.992,
+    "style": 0.919
    }
   },
   "http://www.wikidata.org/entity/Q945250": {
@@ -2252,13 +2264,13 @@
    "R": 0.817,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.806,
+   "ease": 0.86,
    "feelGood": 0.735,
    "easeFacets": {
-    "when": 0.59,
-    "where": 0.817,
-    "medium": 1,
-    "style": 0.817
+    "when": 0.612,
+    "where": 0.906,
+    "medium": 0.995,
+    "style": 0.927
    }
   },
   "wd:Q2626769": {
@@ -2266,13 +2278,13 @@
    "R": 0.816,
    "Rsrc": "fame×vis",
    "gG": 0.492,
-   "ease": 0.845,
+   "ease": 0.87,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.59,
-    "where": 0.976,
-    "medium": 1,
-    "style": 0.816
+    "when": 0.612,
+    "where": 0.946,
+    "medium": 0.995,
+    "style": 0.926
    }
   },
   "wd:Q3595955": {
@@ -2280,13 +2292,13 @@
    "R": 0.693,
    "Rsrc": "fame×vis",
    "gG": 0.725,
-   "ease": 0.864,
+   "ease": 0.844,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.761,
-    "where": 1,
-    "medium": 1,
-    "style": 0.693
+    "when": 0.589,
+    "where": 0.919,
+    "medium": 0.992,
+    "style": 0.877
    }
   },
   "wd:Q500812": {
@@ -2294,13 +2306,13 @@
    "R": 0.815,
    "Rsrc": "fame×vis",
    "gG": 0.854,
-   "ease": 0.912,
+   "ease": 0.882,
    "feelGood": 0.734,
    "easeFacets": {
-    "when": 0.755,
-    "where": 1,
-    "medium": 1,
-    "style": 0.892
+    "when": 0.636,
+    "where": 0.951,
+    "medium": 0.995,
+    "style": 0.945
    }
   },
   "http://www.wikidata.org/entity/Q7749405": {
@@ -2308,13 +2320,13 @@
    "R": 0.815,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.846,
+   "ease": 0.866,
    "feelGood": 0.733,
    "easeFacets": {
-    "when": 0.756,
-    "where": 0.815,
-    "medium": 1,
-    "style": 0.815
+    "when": 0.636,
+    "where": 0.905,
+    "medium": 0.995,
+    "style": 0.926
    }
   },
   "wikidata:Q599034": {
@@ -2322,13 +2334,13 @@
    "R": 0.814,
    "Rsrc": "fame×vis",
    "gG": 0.888,
-   "ease": 0.918,
+   "ease": 0.883,
    "feelGood": 0.919,
    "easeFacets": {
-    "when": 0.756,
-    "where": 1,
-    "medium": 1,
-    "style": 0.917
+    "when": 0.636,
+    "where": 0.951,
+    "medium": 0.995,
+    "style": 0.951
    }
   },
   "http://www.wikidata.org/entity/Q3769169": {
@@ -2336,13 +2348,13 @@
    "R": 0.814,
    "Rsrc": "fame×vis",
    "gG": 0.861,
-   "ease": 0.913,
+   "ease": 0.883,
    "feelGood": 0.732,
    "easeFacets": {
-    "when": 0.737,
-    "where": 1,
-    "medium": 1,
-    "style": 0.915
+    "when": 0.633,
+    "where": 0.951,
+    "medium": 0.995,
+    "style": 0.951
    }
   },
   "wd:Q523974": {
@@ -2350,13 +2362,13 @@
    "R": 0.813,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.803,
+   "ease": 0.859,
    "feelGood": 0.732,
    "easeFacets": {
-    "when": 0.588,
-    "where": 0.813,
-    "medium": 1,
-    "style": 0.813
+    "when": 0.61,
+    "where": 0.904,
+    "medium": 0.995,
+    "style": 0.925
    }
   },
   "wikidata:Q3332083": {
@@ -2364,13 +2376,13 @@
    "R": 0.691,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.871,
+   "ease": 0.845,
    "feelGood": 0.622,
    "easeFacets": {
-    "when": 0.793,
-    "where": 1,
-    "medium": 1,
-    "style": 0.691
+    "when": 0.593,
+    "where": 0.919,
+    "medium": 0.992,
+    "style": 0.876
    }
   },
   "http://www.wikidata.org/entity/Q1217213": {
@@ -2378,13 +2390,13 @@
    "R": 0.812,
    "Rsrc": "fame×vis",
    "gG": 0.891,
-   "ease": 0.919,
+   "ease": 0.883,
    "feelGood": 0.919,
    "easeFacets": {
-    "when": 0.756,
-    "where": 1,
-    "medium": 1,
-    "style": 0.918
+    "when": 0.635,
+    "where": 0.951,
+    "medium": 0.995,
+    "style": 0.951
    }
   },
   "aic18901": {
@@ -2392,13 +2404,13 @@
    "R": 0.568,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.69,
+   "ease": 0.779,
    "feelGood": 0.511,
    "easeFacets": {
-    "when": 0.622,
-    "where": 0.568,
-    "medium": 1,
-    "style": 0.568
+    "when": 0.52,
+    "where": 0.779,
+    "medium": 0.989,
+    "style": 0.827
    }
   },
   "http://www.wikidata.org/entity/Q4945054": {
@@ -2406,13 +2418,13 @@
    "R": 0.568,
    "Rsrc": "fame×vis",
    "gG": 0.794,
-   "ease": 0.869,
+   "ease": 0.818,
    "feelGood": 0.511,
    "easeFacets": {
-    "when": 0.83,
-    "where": 1,
-    "medium": 1,
-    "style": 0.645
+    "when": 0.551,
+    "where": 0.887,
+    "medium": 0.989,
+    "style": 0.846
    }
   },
   "wikidata:Q265384": {
@@ -2420,13 +2432,13 @@
    "R": 0.811,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.939,
+   "ease": 0.888,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.757,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.635,
+    "where": 0.95,
+    "medium": 0.995,
+    "style": 0.972
    }
   },
   "http://www.wikidata.org/entity/Q736832": {
@@ -2434,13 +2446,13 @@
    "R": 0.689,
    "Rsrc": "fame×vis",
    "gG": 0.636,
-   "ease": 0.835,
+   "ease": 0.843,
    "feelGood": 0.62,
    "easeFacets": {
-    "when": 0.513,
-    "where": 0.977,
-    "medium": 1,
-    "style": 0.85
+    "when": 0.55,
+    "where": 0.912,
+    "medium": 0.992,
+    "style": 0.916
    }
   },
   "http://www.wikidata.org/entity/Q563727": {
@@ -2448,13 +2460,13 @@
    "R": 0.81,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.939,
+   "ease": 0.888,
    "feelGood": 0.729,
    "easeFacets": {
-    "when": 0.757,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.634,
+    "where": 0.95,
+    "medium": 0.995,
+    "style": 0.971
    }
   },
   "http://www.wikidata.org/entity/Q1044742": {
@@ -2462,13 +2474,13 @@
    "R": 0.809,
    "Rsrc": "fame×vis",
    "gG": 0.721,
-   "ease": 0.886,
+   "ease": 0.874,
    "feelGood": 0.919,
    "easeFacets": {
-    "when": 0.757,
-    "where": 0.905,
-    "medium": 1,
-    "style": 0.882
+    "when": 0.634,
+    "where": 0.926,
+    "medium": 0.995,
+    "style": 0.942
    }
   },
   "http://www.wikidata.org/entity/Q2126369": {
@@ -2476,13 +2488,13 @@
    "R": 0.688,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.909,
+   "ease": 0.854,
    "feelGood": 0.619,
    "easeFacets": {
-    "when": 0.794,
-    "where": 1,
-    "medium": 1,
-    "style": 0.844
+    "when": 0.592,
+    "where": 0.918,
+    "medium": 0.992,
+    "style": 0.914
    }
   },
   "http://www.wikidata.org/entity/Q783215": {
@@ -2490,13 +2502,13 @@
    "R": 0.808,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.939,
+   "ease": 0.888,
    "feelGood": 0.728,
    "easeFacets": {
-    "when": 0.757,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.634,
+    "where": 0.95,
+    "medium": 0.995,
+    "style": 0.971
    }
   },
   "http://www.wikidata.org/entity/Q2734209": {
@@ -2504,13 +2516,13 @@
    "R": 0.808,
    "Rsrc": "fame×vis",
    "gG": 0.07,
-   "ease": 0.761,
+   "ease": 0.834,
    "feelGood": 0.727,
    "easeFacets": {
-    "when": 0.619,
-    "where": 0.808,
-    "medium": 0.808,
-    "style": 0.808
+    "when": 0.613,
+    "where": 0.902,
+    "medium": 0.899,
+    "style": 0.923
    }
   },
   "wd:Q540488": {
@@ -2518,13 +2530,13 @@
    "R": 0.807,
    "Rsrc": "fame×vis",
    "gG": 0.754,
-   "ease": 0.892,
+   "ease": 0.875,
    "feelGood": 0.919,
    "easeFacets": {
-    "when": 0.758,
-    "where": 0.898,
-    "medium": 1,
-    "style": 0.913
+    "when": 0.633,
+    "where": 0.924,
+    "medium": 0.995,
+    "style": 0.949
    }
   },
   "http://www.wikidata.org/entity/Q1267893": {
@@ -2532,13 +2544,13 @@
    "R": 0.807,
    "Rsrc": "fame×vis",
    "gG": 0.815,
-   "ease": 0.904,
+   "ease": 0.879,
    "feelGood": 0.726,
    "easeFacets": {
-    "when": 0.712,
-    "where": 1,
-    "medium": 1,
-    "style": 0.903
+    "when": 0.626,
+    "where": 0.949,
+    "medium": 0.995,
+    "style": 0.947
    }
   },
   "wikidata:Q1398760": {
@@ -2546,13 +2558,13 @@
    "R": 0.806,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.891,
+   "ease": 0.875,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.758,
-    "where": 1,
-    "medium": 1,
-    "style": 0.806
+    "when": 0.633,
+    "where": 0.949,
+    "medium": 0.995,
+    "style": 0.923
    }
   },
   "http://www.wikidata.org/entity/Q1755464": {
@@ -2560,13 +2572,13 @@
    "R": 0.806,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.94,
+   "ease": 0.887,
    "feelGood": 0.919,
    "easeFacets": {
-    "when": 0.758,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.633,
+    "where": 0.949,
+    "medium": 0.995,
+    "style": 0.971
    }
   },
   "http://www.wikidata.org/entity/Q6122115": {
@@ -2574,13 +2586,13 @@
    "R": 0.805,
    "Rsrc": "fame×vis",
    "gG": 0.508,
-   "ease": 0.844,
+   "ease": 0.865,
    "feelGood": 0.725,
    "easeFacets": {
-    "when": 0.665,
-    "where": 0.805,
-    "medium": 1,
-    "style": 0.905
+    "when": 0.619,
+    "where": 0.9,
+    "medium": 0.995,
+    "style": 0.947
    }
   },
   "wikidata:Q3793426": {
@@ -2588,13 +2600,13 @@
    "R": 0.805,
    "Rsrc": "fame×vis",
    "gG": 0.623,
-   "ease": 0.866,
+   "ease": 0.869,
    "feelGood": 0.724,
    "easeFacets": {
-    "when": 0.759,
-    "where": 0.901,
-    "medium": 1,
-    "style": 0.805
+    "when": 0.633,
+    "where": 0.924,
+    "medium": 0.995,
+    "style": 0.922
    }
   },
   "http://www.wikidata.org/entity/Q2665048": {
@@ -2602,13 +2614,13 @@
    "R": 0.804,
    "Rsrc": "fame×vis",
    "gG": 0.554,
-   "ease": 0.852,
+   "ease": 0.866,
    "feelGood": 0.724,
    "easeFacets": {
-    "when": 0.712,
-    "where": 0.804,
-    "medium": 1,
-    "style": 0.893
+    "when": 0.625,
+    "where": 0.9,
+    "medium": 0.995,
+    "style": 0.944
    }
   },
   "http://www.wikidata.org/entity/Q2354251": {
@@ -2616,13 +2628,13 @@
    "R": 0.804,
    "Rsrc": "fame×vis",
    "gG": 0.504,
-   "ease": 0.843,
+   "ease": 0.867,
    "feelGood": 0.724,
    "easeFacets": {
-    "when": 0.582,
-    "where": 0.984,
-    "medium": 1,
-    "style": 0.804
+    "when": 0.606,
+    "where": 0.944,
+    "medium": 0.995,
+    "style": 0.922
    }
   },
   "http://www.wikidata.org/entity/Q2528477": {
@@ -2630,13 +2642,13 @@
    "R": 0.562,
    "Rsrc": "fame×vis",
    "gG": 0.529,
-   "ease": 0.752,
+   "ease": 0.793,
    "feelGood": 0.506,
    "easeFacets": {
-    "when": 0.621,
-    "where": 0.824,
-    "medium": 1,
-    "style": 0.562
+    "when": 0.517,
+    "where": 0.841,
+    "medium": 0.989,
+    "style": 0.825
    }
   },
   "aic86780": {
@@ -2644,13 +2656,13 @@
    "R": 0.321,
    "Rsrc": "fame×vis",
    "gG": 0.542,
-   "ease": 0.665,
+   "ease": 0.716,
    "feelGood": 0.289,
    "easeFacets": {
-    "when": 0.836,
-    "where": 0.321,
-    "medium": 1,
-    "style": 0.503
+    "when": 0.455,
+    "where": 0.652,
+    "medium": 0.983,
+    "style": 0.774
    }
   },
   "aic77581": {
@@ -2658,13 +2670,13 @@
    "R": 0.321,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.806,
+   "ease": 0.75,
    "feelGood": 0.289,
    "easeFacets": {
-    "when": 0.904,
-    "where": 0.321,
-    "medium": 1,
-    "style": 1
+    "when": 0.465,
+    "where": 0.652,
+    "medium": 0.983,
+    "style": 0.898
    }
   },
   "wikidata:Q17277950": {
@@ -2672,13 +2684,13 @@
    "R": 0.802,
    "Rsrc": "fame×vis",
    "gG": 0.656,
-   "ease": 0.872,
+   "ease": 0.869,
    "feelGood": 0.722,
    "easeFacets": {
-    "when": 0.759,
-    "where": 0.899,
-    "medium": 1,
-    "style": 0.829
+    "when": 0.631,
+    "where": 0.923,
+    "medium": 0.995,
+    "style": 0.927
    }
   },
   "http://www.wikidata.org/entity/Q2627056": {
@@ -2686,13 +2698,13 @@
    "R": 0.802,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.917,
+   "ease": 0.88,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.76,
-    "where": 1,
-    "medium": 1,
-    "style": 0.91
+    "when": 0.631,
+    "where": 0.948,
+    "medium": 0.995,
+    "style": 0.948
    }
   },
   "wd:Q2344437": {
@@ -2700,13 +2712,13 @@
    "R": 0.801,
    "Rsrc": "fame×vis",
    "gG": 0.744,
-   "ease": 0.889,
+   "ease": 0.867,
    "feelGood": 0.721,
    "easeFacets": {
-    "when": 0.76,
-    "where": 1,
-    "medium": 0.901,
-    "style": 0.896
+    "when": 0.631,
+    "where": 0.948,
+    "medium": 0.945,
+    "style": 0.944
    }
   },
   "wikidata:Q748518": {
@@ -2714,13 +2726,13 @@
    "R": 0.801,
    "Rsrc": "fame×vis",
    "gG": 0.878,
-   "ease": 0.916,
+   "ease": 0.88,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.76,
-    "where": 1,
-    "medium": 1,
-    "style": 0.903
+    "when": 0.631,
+    "where": 0.948,
+    "medium": 0.995,
+    "style": 0.946
    }
   },
   "aic77629": {
@@ -2742,13 +2754,13 @@
    "R": 0.799,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.94,
+   "ease": 0.886,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.76,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.631,
+    "where": 0.947,
+    "medium": 0.995,
+    "style": 0.97
    }
   },
   "wikidata:Q7678417": {
@@ -2756,13 +2768,13 @@
    "R": 0.799,
    "Rsrc": "fame×vis",
    "gG": 0.983,
-   "ease": 0.936,
+   "ease": 0.885,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.76,
-    "where": 0.986,
-    "medium": 1,
-    "style": 1
+    "when": 0.63,
+    "where": 0.944,
+    "medium": 0.995,
+    "style": 0.97
    }
   },
   "http://www.wikidata.org/entity/Q1638622": {
@@ -2770,13 +2782,13 @@
    "R": 0.559,
    "Rsrc": "fame×vis",
    "gG": 0.555,
-   "ease": 0.762,
+   "ease": 0.767,
    "feelGood": 0.503,
    "easeFacets": {
-    "when": 0.621,
-    "where": 1,
-    "medium": 0.559,
-    "style": 0.868
+    "when": 0.516,
+    "where": 0.884,
+    "medium": 0.768,
+    "style": 0.901
    }
   },
   "http://www.wikidata.org/entity/Q2290433": {
@@ -2784,13 +2796,13 @@
    "R": 0.798,
    "Rsrc": "fame×vis",
    "gG": 0.621,
-   "ease": 0.864,
+   "ease": 0.866,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.761,
-    "where": 0.896,
-    "medium": 1,
-    "style": 0.798
+    "when": 0.63,
+    "where": 0.921,
+    "medium": 0.995,
+    "style": 0.919
    }
   },
   "aic66405": {
@@ -2798,13 +2810,13 @@
    "R": 0.319,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.806,
+   "ease": 0.749,
    "feelGood": 0.968,
    "easeFacets": {
-    "when": 0.904,
-    "where": 1,
-    "medium": 1,
-    "style": 0.319
+    "when": 0.464,
+    "where": 0.821,
+    "medium": 0.983,
+    "style": 0.728
    }
   },
   "http://www.wikidata.org/entity/Q2293953": {
@@ -2812,13 +2824,13 @@
    "R": 0.797,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.94,
+   "ease": 0.885,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.761,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.63,
+    "where": 0.947,
+    "medium": 0.995,
+    "style": 0.97
    }
   },
   "http://www.wikidata.org/entity/Q7536969": {
@@ -2826,13 +2838,13 @@
    "R": 0.796,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.838,
+   "ease": 0.86,
    "feelGood": 0.717,
    "easeFacets": {
-    "when": 0.761,
-    "where": 0.796,
-    "medium": 1,
-    "style": 0.796
+    "when": 0.63,
+    "where": 0.896,
+    "medium": 0.995,
+    "style": 0.919
    }
   },
   "wikidata:Q2636368": {
@@ -2840,13 +2852,13 @@
    "R": 0.796,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.853,
+   "ease": 0.867,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.614,
-    "where": 1,
-    "medium": 1,
-    "style": 0.796
+    "when": 0.607,
+    "where": 0.946,
+    "medium": 0.995,
+    "style": 0.918
    }
   },
   "http://www.wikidata.org/entity/Q597114": {
@@ -2854,13 +2866,13 @@
    "R": 0.795,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.917,
+   "ease": 0.879,
    "feelGood": 0.92,
    "easeFacets": {
-    "when": 0.761,
-    "where": 1,
-    "medium": 1,
-    "style": 0.907
+    "when": 0.629,
+    "where": 0.946,
+    "medium": 0.995,
+    "style": 0.946
    }
   },
   "wd:Q674846": {
@@ -2868,13 +2880,13 @@
    "R": 0.795,
    "Rsrc": "fame×vis",
    "gG": 0.876,
-   "ease": 0.915,
+   "ease": 0.878,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.762,
-    "where": 0.898,
-    "medium": 1,
-    "style": 1
+    "when": 0.629,
+    "where": 0.921,
+    "medium": 0.995,
+    "style": 0.969
    }
   },
   "http://www.wikidata.org/entity/Q23915": {
@@ -2882,13 +2894,13 @@
    "R": 0.794,
    "Rsrc": "fame×vis",
    "gG": 0.891,
-   "ease": 0.918,
+   "ease": 0.879,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.762,
-    "where": 1,
-    "medium": 1,
-    "style": 0.91
+    "when": 0.629,
+    "where": 0.946,
+    "medium": 0.995,
+    "style": 0.947
    }
   },
   "http://www.wikidata.org/entity/Q5220868": {
@@ -2896,13 +2908,13 @@
    "R": 0.793,
    "Rsrc": "fame×vis",
    "gG": 0.577,
-   "ease": 0.853,
+   "ease": 0.863,
    "feelGood": 0.714,
    "easeFacets": {
-    "when": 0.741,
-    "where": 0.793,
-    "medium": 1,
-    "style": 0.877
+    "when": 0.625,
+    "where": 0.894,
+    "medium": 0.995,
+    "style": 0.938
    }
   },
   "http://www.wikidata.org/entity/Q1473546": {
@@ -2910,13 +2922,13 @@
    "R": 0.793,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.914,
+   "ease": 0.871,
    "feelGood": 0.714,
    "easeFacets": {
-    "when": 0.762,
-    "where": 1,
-    "medium": 0.896,
-    "style": 1
+    "when": 0.628,
+    "where": 0.946,
+    "medium": 0.943,
+    "style": 0.969
    }
   },
   "http://www.wikidata.org/entity/Q1059211": {
@@ -2924,13 +2936,13 @@
    "R": 0.792,
    "Rsrc": "fame×vis",
    "gG": 0.804,
-   "ease": 0.9,
+   "ease": 0.874,
    "feelGood": 0.713,
    "easeFacets": {
-    "when": 0.762,
-    "where": 1,
-    "medium": 1,
-    "style": 0.837
+    "when": 0.628,
+    "where": 0.945,
+    "medium": 0.995,
+    "style": 0.928
    }
   },
   "wikidata:Q279559": {
@@ -2938,13 +2950,13 @@
    "R": 0.792,
    "Rsrc": "fame×vis",
    "gG": 0.205,
-   "ease": 0.775,
+   "ease": 0.833,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.663,
-    "where": 0.854,
-    "medium": 0.792,
-    "style": 0.792
+    "when": 0.613,
+    "where": 0.909,
+    "medium": 0.891,
+    "style": 0.917
    }
   },
   "http://www.wikidata.org/entity/Q1212861": {
@@ -2952,13 +2964,13 @@
    "R": 0.791,
    "Rsrc": "fame×vis",
    "gG": 0.6,
-   "ease": 0.857,
+   "ease": 0.864,
    "feelGood": 0.712,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.896,
-    "medium": 1,
-    "style": 0.791
+    "when": 0.625,
+    "where": 0.919,
+    "medium": 0.995,
+    "style": 0.917
    }
   },
   "wd:Q3565037": {
@@ -2966,13 +2978,13 @@
    "R": 0.791,
    "Rsrc": "fame×vis",
    "gG": 0.981,
-   "ease": 0.937,
+   "ease": 0.883,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.763,
-    "where": 0.984,
-    "medium": 1,
-    "style": 1
+    "when": 0.628,
+    "where": 0.941,
+    "medium": 0.995,
+    "style": 0.969
    }
   },
   "http://www.wikidata.org/entity/Q693746": {
@@ -2980,13 +2992,13 @@
    "R": 0.672,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.727,
+   "ease": 0.811,
    "feelGood": 0.605,
    "easeFacets": {
-    "when": 0.562,
-    "where": 0.672,
-    "medium": 1,
-    "style": 0.672
+    "when": 0.551,
+    "where": 0.832,
+    "medium": 0.992,
+    "style": 0.869
    }
   },
   "wikidata:Q524447": {
@@ -2994,13 +3006,13 @@
    "R": 0.79,
    "Rsrc": "fame×vis",
    "gG": 0.625,
-   "ease": 0.862,
+   "ease": 0.858,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.763,
-    "where": 1,
-    "medium": 0.895,
-    "style": 0.79
+    "when": 0.627,
+    "where": 0.945,
+    "medium": 0.942,
+    "style": 0.916
    }
   },
   "http://www.wikidata.org/entity/Q920030": {
@@ -3008,13 +3020,13 @@
    "R": 0.789,
    "Rsrc": "fame×vis",
    "gG": 0.815,
-   "ease": 0.902,
+   "ease": 0.874,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.763,
-    "where": 1,
-    "medium": 1,
-    "style": 0.844
+    "when": 0.627,
+    "where": 0.945,
+    "medium": 0.995,
+    "style": 0.929
    }
   },
   "http://www.wikidata.org/entity/Q1516449": {
@@ -3022,13 +3034,13 @@
    "R": 0.789,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.941,
+   "ease": 0.884,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.763,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.627,
+    "where": 0.945,
+    "medium": 0.995,
+    "style": 0.968
    }
   },
   "http://www.wikidata.org/entity/Q2339059": {
@@ -3036,13 +3048,13 @@
    "R": 0.788,
    "Rsrc": "fame×vis",
    "gG": 0.559,
-   "ease": 0.847,
+   "ease": 0.862,
    "feelGood": 0.709,
    "easeFacets": {
-    "when": 0.713,
-    "where": 0.889,
-    "medium": 1,
-    "style": 0.788
+    "when": 0.619,
+    "where": 0.917,
+    "medium": 0.995,
+    "style": 0.915
    }
   },
   "wikidata:Q4156438": {
@@ -3050,13 +3062,13 @@
    "R": 0.551,
    "Rsrc": "fame×vis",
    "gG": 0.475,
-   "ease": 0.723,
+   "ease": 0.78,
    "feelGood": 0.496,
    "easeFacets": {
-    "when": 0.79,
-    "where": 0.551,
-    "medium": 1,
-    "style": 0.551
+    "when": 0.538,
+    "where": 0.77,
+    "medium": 0.989,
+    "style": 0.821
    }
   },
   "http://www.wikidata.org/entity/Q2213811": {
@@ -3064,13 +3076,13 @@
    "R": 0.787,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.941,
+   "ease": 0.883,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.764,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.626,
+    "where": 0.944,
+    "medium": 0.995,
+    "style": 0.968
    }
   },
   "http://www.wikidata.org/entity/Q405814": {
@@ -3078,13 +3090,13 @@
    "R": 0.787,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.941,
+   "ease": 0.883,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.764,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.626,
+    "where": 0.944,
+    "medium": 0.995,
+    "style": 0.968
    }
   },
   "http://www.wikidata.org/entity/Q1560719": {
@@ -3092,13 +3104,13 @@
    "R": 0.786,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.887,
+   "ease": 0.87,
    "feelGood": 0.921,
    "easeFacets": {
-    "when": 0.764,
-    "where": 0.786,
-    "medium": 1,
-    "style": 1
+    "when": 0.626,
+    "where": 0.89,
+    "medium": 0.995,
+    "style": 0.968
    }
   },
   "http://www.wikidata.org/entity/Q1167796": {
@@ -3106,13 +3118,13 @@
    "R": 0.786,
    "Rsrc": "fame×vis",
    "gG": 0.495,
-   "ease": 0.833,
+   "ease": 0.86,
    "feelGood": 0.707,
    "easeFacets": {
-    "when": 0.61,
-    "where": 0.786,
-    "medium": 1,
-    "style": 0.936
+    "when": 0.603,
+    "where": 0.89,
+    "medium": 0.995,
+    "style": 0.952
    }
   },
   "http://www.wikidata.org/entity/Q656434": {
@@ -3120,13 +3132,13 @@
    "R": 0.785,
    "Rsrc": "fame×vis",
    "gG": 0.614,
-   "ease": 0.858,
+   "ease": 0.862,
    "feelGood": 0.706,
    "easeFacets": {
-    "when": 0.765,
-    "where": 0.785,
-    "medium": 1,
-    "style": 0.883
+    "when": 0.626,
+    "where": 0.89,
+    "medium": 0.995,
+    "style": 0.938
    }
   },
   "wd:Q500985": {
@@ -3134,13 +3146,13 @@
    "R": 0.784,
    "Rsrc": "fame×vis",
    "gG": 0.862,
-   "ease": 0.911,
+   "ease": 0.875,
    "feelGood": 0.922,
    "easeFacets": {
-    "when": 0.765,
-    "where": 1,
-    "medium": 1,
-    "style": 0.881
+    "when": 0.625,
+    "where": 0.943,
+    "medium": 0.995,
+    "style": 0.938
    }
   },
   "http://www.wikidata.org/entity/Q766782": {
@@ -3148,13 +3160,13 @@
    "R": 0.784,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.941,
+   "ease": 0.883,
    "feelGood": 0.706,
    "easeFacets": {
-    "when": 0.765,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.625,
+    "where": 0.943,
+    "medium": 0.995,
+    "style": 0.968
    }
   },
   "http://www.wikidata.org/entity/Q1899740": {
@@ -3162,13 +3174,13 @@
    "R": 0.783,
    "Rsrc": "fame×vis",
    "gG": 0.794,
-   "ease": 0.897,
+   "ease": 0.873,
    "feelGood": 0.705,
    "easeFacets": {
-    "when": 0.713,
-    "where": 1,
-    "medium": 1,
-    "style": 0.874
+    "when": 0.617,
+    "where": 0.943,
+    "medium": 0.995,
+    "style": 0.936
    }
   },
   "http://www.wikidata.org/entity/Q2706250": {
@@ -3176,13 +3188,13 @@
    "R": 0.783,
    "Rsrc": "fame×vis",
    "gG": 0.754,
-   "ease": 0.888,
+   "ease": 0.872,
    "feelGood": 0.705,
    "easeFacets": {
-    "when": 0.661,
-    "where": 1,
-    "medium": 1,
-    "style": 0.891
+    "when": 0.609,
+    "where": 0.943,
+    "medium": 0.995,
+    "style": 0.94
    }
   },
   "http://www.wikidata.org/entity/Q18939074": {
@@ -3190,13 +3202,13 @@
    "R": 0.782,
    "Rsrc": "fame×vis",
    "gG": 0.604,
-   "ease": 0.855,
+   "ease": 0.861,
    "feelGood": 0.704,
    "easeFacets": {
-    "when": 0.744,
-    "where": 0.782,
-    "medium": 1,
-    "style": 0.895
+    "when": 0.621,
+    "where": 0.888,
+    "medium": 0.995,
+    "style": 0.941
    }
   },
   "http://www.wikidata.org/entity/Q17275221": {
@@ -3204,13 +3216,13 @@
    "R": 0.547,
    "Rsrc": "fame×vis",
    "gG": 0.754,
-   "ease": 0.848,
+   "ease": 0.81,
    "feelGood": 0.493,
    "easeFacets": {
-    "when": 0.791,
-    "where": 0.774,
-    "medium": 1,
-    "style": 0.827
+    "when": 0.537,
+    "where": 0.825,
+    "medium": 0.989,
+    "style": 0.889
    }
   },
   "http://www.wikidata.org/entity/Q2304870": {
@@ -3218,13 +3230,13 @@
    "R": 0.781,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.942,
+   "ease": 0.882,
    "feelGood": 0.922,
    "easeFacets": {
-    "when": 0.766,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.624,
+    "where": 0.943,
+    "medium": 0.995,
+    "style": 0.967
    }
   },
   "http://www.wikidata.org/entity/Q318947": {
@@ -3232,13 +3244,13 @@
    "R": 0.781,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.916,
+   "ease": 0.876,
    "feelGood": 0.922,
    "easeFacets": {
-    "when": 0.766,
-    "where": 1,
-    "medium": 1,
-    "style": 0.9
+    "when": 0.624,
+    "where": 0.942,
+    "medium": 0.995,
+    "style": 0.942
    }
   },
   "http://www.wikidata.org/entity/Q2983399": {
@@ -3246,13 +3258,13 @@
    "R": 0.663,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.866,
+   "ease": 0.838,
    "feelGood": 0.597,
    "easeFacets": {
-    "when": 0.801,
-    "where": 0.663,
-    "medium": 1,
-    "style": 1
+    "when": 0.583,
+    "where": 0.827,
+    "medium": 0.992,
+    "style": 0.949
    }
   },
   "http://www.wikidata.org/entity/Q3277782": {
@@ -3260,13 +3272,13 @@
    "R": 0.663,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.95,
+   "ease": 0.859,
    "feelGood": 0.934,
    "easeFacets": {
-    "when": 0.801,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.583,
+    "where": 0.911,
+    "medium": 0.992,
+    "style": 0.949
    }
   },
   "http://www.wikidata.org/entity/Q531329": {
@@ -3274,13 +3286,13 @@
    "R": 0.779,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.913,
+   "ease": 0.875,
    "feelGood": 0.922,
    "easeFacets": {
-    "when": 0.766,
-    "where": 0.886,
-    "medium": 1,
-    "style": 1
+    "when": 0.624,
+    "where": 0.914,
+    "medium": 0.994,
+    "style": 0.967
    }
   },
   "http://www.wikidata.org/entity/Q6251405": {
@@ -3288,13 +3300,13 @@
    "R": 0.778,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.913,
+   "ease": 0.874,
    "feelGood": 0.922,
    "easeFacets": {
-    "when": 0.767,
-    "where": 0.885,
-    "medium": 1,
-    "style": 1
+    "when": 0.623,
+    "where": 0.913,
+    "medium": 0.994,
+    "style": 0.967
    }
   },
   "http://www.wikidata.org/entity/Q1133821": {
@@ -3302,13 +3314,13 @@
    "R": 0.545,
    "Rsrc": "fame×vis",
    "gG": 0.707,
-   "ease": 0.826,
+   "ease": 0.805,
    "feelGood": 0.49,
    "easeFacets": {
-    "when": 0.727,
-    "where": 0.768,
-    "medium": 1,
-    "style": 0.808
+    "when": 0.526,
+    "where": 0.823,
+    "medium": 0.989,
+    "style": 0.884
    }
   },
   "wikidata:Q3978274": {
@@ -3316,13 +3328,13 @@
    "R": 0.777,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.916,
+   "ease": 0.875,
    "feelGood": 0.699,
    "easeFacets": {
-    "when": 0.767,
-    "where": 1,
-    "medium": 1,
-    "style": 0.899
+    "when": 0.623,
+    "where": 0.941,
+    "medium": 0.994,
+    "style": 0.941
    }
   },
   "wd:Q930137": {
@@ -3330,13 +3342,13 @@
    "R": 0.544,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.959,
+   "ease": 0.836,
    "feelGood": 0.489,
    "easeFacets": {
-    "when": 0.837,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.542,
+    "where": 0.88,
+    "medium": 0.989,
+    "style": 0.932
    }
   },
   "wikidata:Q4157667": {
@@ -3344,13 +3356,13 @@
    "R": 0.543,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.649,
+   "ease": 0.766,
    "feelGood": 0.489,
    "easeFacets": {
-    "when": 0.508,
-    "where": 0.543,
-    "medium": 1,
-    "style": 0.543
+    "when": 0.493,
+    "where": 0.766,
+    "medium": 0.989,
+    "style": 0.817
    }
   },
   "http://www.wikidata.org/entity/Q794077": {
@@ -3358,13 +3370,13 @@
    "R": 0.776,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.79,
+   "ease": 0.847,
    "feelGood": 0.698,
    "easeFacets": {
-    "when": 0.606,
-    "where": 0.776,
-    "medium": 1,
-    "style": 0.776
+    "when": 0.598,
+    "where": 0.885,
+    "medium": 0.994,
+    "style": 0.91
    }
   },
   "http://www.wikidata.org/entity/Q2354080": {
@@ -3372,13 +3384,13 @@
    "R": 0.775,
    "Rsrc": "fame×vis",
    "gG": 0.902,
-   "ease": 0.92,
+   "ease": 0.875,
    "feelGood": 0.697,
    "easeFacets": {
-    "when": 0.768,
-    "where": 0.912,
-    "medium": 1,
-    "style": 1
+    "when": 0.622,
+    "where": 0.919,
+    "medium": 0.994,
+    "style": 0.966
    }
   },
   "http://www.wikidata.org/entity/Q1206860": {
@@ -3386,13 +3398,13 @@
    "R": 0.775,
    "Rsrc": "fame×vis",
    "gG": 0.794,
-   "ease": 0.895,
+   "ease": 0.871,
    "feelGood": 0.697,
    "easeFacets": {
-    "when": 0.714,
-    "where": 1,
-    "medium": 1,
-    "style": 0.868
+    "when": 0.614,
+    "where": 0.941,
+    "medium": 0.994,
+    "style": 0.933
    }
   },
   "vaO11148": {
@@ -3400,13 +3412,13 @@
    "R": 0.31,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.507,
+   "ease": 0.685,
    "feelGood": 0.279,
    "easeFacets": {
-    "when": 0.41,
-    "where": 0.31,
-    "medium": 1,
-    "style": 0.31
+    "when": 0.387,
+    "where": 0.646,
+    "medium": 0.983,
+    "style": 0.724
    }
   },
   "wd:Q557000": {
@@ -3414,13 +3426,13 @@
    "R": 0.542,
    "Rsrc": "fame×vis",
    "gG": 0.847,
-   "ease": 0.889,
+   "ease": 0.819,
    "feelGood": 0.487,
    "easeFacets": {
-    "when": 0.792,
-    "where": 0.765,
-    "medium": 1,
-    "style": 1
+    "when": 0.534,
+    "where": 0.821,
+    "medium": 0.989,
+    "style": 0.931
    }
   },
   "wd:Q219344": {
@@ -3428,13 +3440,13 @@
    "R": 0.773,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.885,
+   "ease": 0.866,
    "feelGood": 0.923,
    "easeFacets": {
-    "when": 0.768,
-    "where": 1,
-    "medium": 1,
-    "style": 0.773
+    "when": 0.621,
+    "where": 0.94,
+    "medium": 0.994,
+    "style": 0.909
    }
   },
   "wd:Q699552": {
@@ -3442,13 +3454,13 @@
    "R": 0.773,
    "Rsrc": "fame×vis",
    "gG": 0.567,
-   "ease": 0.844,
+   "ease": 0.842,
    "feelGood": 0.695,
    "easeFacets": {
-    "when": 0.768,
-    "where": 0.961,
-    "medium": 0.773,
-    "style": 0.873
+    "when": 0.621,
+    "where": 0.931,
+    "medium": 0.881,
+    "style": 0.934
    }
   },
   "wikidata:Q22953800": {
@@ -3456,13 +3468,13 @@
    "R": 0.54,
    "Rsrc": "fame×vis",
    "gG": 0.975,
-   "ease": 0.948,
+   "ease": 0.833,
    "feelGood": 0.486,
    "easeFacets": {
-    "when": 0.792,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.534,
+    "where": 0.879,
+    "medium": 0.989,
+    "style": 0.931
    }
   },
   "http://www.wikidata.org/entity/Q3686086": {
@@ -3470,13 +3482,13 @@
    "R": 0.54,
    "Rsrc": "fame×vis",
    "gG": 0.802,
-   "ease": 0.868,
+   "ease": 0.815,
    "feelGood": 0.946,
    "easeFacets": {
-    "when": 0.728,
-    "where": 1,
-    "medium": 1,
-    "style": 0.746
+    "when": 0.524,
+    "where": 0.879,
+    "medium": 0.988,
+    "style": 0.868
    }
   },
   "http://www.wikidata.org/entity/Q3399440": {
@@ -3484,13 +3496,13 @@
    "R": 0.771,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.913,
+   "ease": 0.873,
    "feelGood": 0.923,
    "easeFacets": {
-    "when": 0.769,
-    "where": 0.882,
-    "medium": 1,
-    "style": 1
+    "when": 0.621,
+    "where": 0.91,
+    "medium": 0.994,
+    "style": 0.966
    }
   },
   "wikidata:Q3205872": {
@@ -3498,13 +3510,13 @@
    "R": 0.539,
    "Rsrc": "fame×vis",
    "gG": 0.438,
-   "ease": 0.701,
+   "ease": 0.778,
    "feelGood": 0.485,
    "easeFacets": {
-    "when": 0.506,
-    "where": 0.539,
-    "medium": 1,
-    "style": 0.757
+    "when": 0.491,
+    "where": 0.764,
+    "medium": 0.988,
+    "style": 0.87
    }
   },
   "http://www.wikidata.org/entity/Q2413468": {
@@ -3512,13 +3524,13 @@
    "R": 0.539,
    "Rsrc": "fame×vis",
    "gG": 0.54,
-   "ease": 0.748,
+   "ease": 0.787,
    "feelGood": 0.485,
    "easeFacets": {
-    "when": 0.617,
-    "where": 0.835,
-    "medium": 1,
-    "style": 0.539
+    "when": 0.507,
+    "where": 0.838,
+    "medium": 0.988,
+    "style": 0.816
    }
   },
   "http://www.wikidata.org/entity/Q2909916": {
@@ -3526,13 +3538,13 @@
    "R": 0.538,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.9,
+   "ease": 0.82,
    "feelGood": 0.946,
    "easeFacets": {
-    "when": 0.838,
-    "where": 0.762,
-    "medium": 1,
-    "style": 1
+    "when": 0.54,
+    "where": 0.819,
+    "medium": 0.988,
+    "style": 0.931
    }
   },
   "wd:Q697208": {
@@ -3540,13 +3552,13 @@
    "R": 0.769,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.912,
+   "ease": 0.872,
    "feelGood": 0.923,
    "easeFacets": {
-    "when": 0.769,
-    "where": 0.881,
-    "medium": 1,
-    "style": 1
+    "when": 0.62,
+    "where": 0.909,
+    "medium": 0.994,
+    "style": 0.965
    }
   },
   "http://www.wikidata.org/entity/Q544315": {
@@ -3554,13 +3566,13 @@
    "R": 0.768,
    "Rsrc": "fame×vis",
    "gG": 0.925,
-   "ease": 0.925,
+   "ease": 0.875,
    "feelGood": 0.691,
    "easeFacets": {
-    "when": 0.77,
-    "where": 1,
-    "medium": 1,
-    "style": 0.93
+    "when": 0.62,
+    "where": 0.939,
+    "medium": 0.994,
+    "style": 0.948
    }
   },
   "http://www.wikidata.org/entity/Q83862": {
@@ -3568,13 +3580,13 @@
    "R": 0.537,
    "Rsrc": "fame×vis",
    "gG": 0.275,
-   "ease": 0.624,
+   "ease": 0.761,
    "feelGood": 0.484,
    "easeFacets": {
-    "when": 0.422,
-    "where": 0.537,
-    "medium": 1,
-    "style": 0.537
+    "when": 0.477,
+    "where": 0.763,
+    "medium": 0.988,
+    "style": 0.815
    }
   },
   "wd:Q18344787": {
@@ -3582,13 +3594,13 @@
    "R": 0.767,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.784,
+   "ease": 0.844,
    "feelGood": 0.69,
    "easeFacets": {
-    "when": 0.602,
-    "where": 0.767,
-    "medium": 1,
-    "style": 0.767
+    "when": 0.594,
+    "where": 0.881,
+    "medium": 0.994,
+    "style": 0.907
    }
   },
   "http://www.wikidata.org/entity/Q17319663": {
@@ -3596,13 +3608,13 @@
    "R": 0.307,
    "Rsrc": "fame×vis",
    "gG": 0.675,
-   "ease": 0.752,
+   "ease": 0.733,
    "feelGood": 0.276,
    "easeFacets": {
-    "when": 0.908,
-    "where": 0.307,
-    "medium": 1,
-    "style": 0.792
+    "when": 0.46,
+    "where": 0.645,
+    "medium": 0.983,
+    "style": 0.844
    }
   },
   "wikidata:Q2324643": {
@@ -3610,13 +3622,13 @@
    "R": 0.766,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.943,
+   "ease": 0.879,
    "feelGood": 0.923,
    "easeFacets": {
-    "when": 0.77,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.619,
+    "where": 0.939,
+    "medium": 0.994,
+    "style": 0.965
    }
   },
   "http://www.wikidata.org/entity/Q2268524": {
@@ -3624,13 +3636,13 @@
    "R": 0.765,
    "Rsrc": "fame×vis",
    "gG": 0.878,
-   "ease": 0.914,
+   "ease": 0.872,
    "feelGood": 0.923,
    "easeFacets": {
-    "when": 0.77,
-    "where": 1,
-    "medium": 1,
-    "style": 0.886
+    "when": 0.619,
+    "where": 0.938,
+    "medium": 0.994,
+    "style": 0.936
    }
   },
   "http://www.wikidata.org/entity/Q774967": {
@@ -3638,13 +3650,13 @@
    "R": 0.765,
    "Rsrc": "fame×vis",
    "gG": 0.349,
-   "ease": 0.79,
+   "ease": 0.839,
    "feelGood": 0.688,
    "easeFacets": {
-    "when": 0.559,
-    "where": 0.952,
-    "medium": 0.882,
-    "style": 0.765
+    "when": 0.587,
+    "where": 0.926,
+    "medium": 0.935,
+    "style": 0.906
    }
   },
   "http://www.wikidata.org/entity/Q3693952": {
@@ -3652,13 +3664,13 @@
    "R": 0.65,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.734,
+   "ease": 0.806,
    "feelGood": 0.585,
    "easeFacets": {
-    "when": 0.637,
-    "where": 0.65,
-    "medium": 1,
-    "style": 0.65
+    "when": 0.553,
+    "where": 0.82,
+    "medium": 0.991,
+    "style": 0.86
    }
   },
   "http://www.wikidata.org/entity/Q984058": {
@@ -3666,13 +3678,13 @@
    "R": 0.649,
    "Rsrc": "fame×vis",
    "gG": 0.45,
-   "ease": 0.758,
+   "ease": 0.816,
    "feelGood": 0.584,
    "easeFacets": {
-    "when": 0.489,
-    "where": 0.649,
-    "medium": 1,
-    "style": 0.895
+    "when": 0.531,
+    "where": 0.82,
+    "medium": 0.991,
+    "style": 0.921
    }
   },
   "wd:Q2324840": {
@@ -3680,13 +3692,13 @@
    "R": 0.763,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.824,
+   "ease": 0.834,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.771,
-    "where": 1,
-    "medium": 0.763,
-    "style": 0.763
+    "when": 0.618,
+    "where": 0.938,
+    "medium": 0.876,
+    "style": 0.905
    }
   },
   "http://www.wikidata.org/entity/Q646337": {
@@ -3694,13 +3706,13 @@
    "R": 0.762,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.883,
+   "ease": 0.864,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.771,
-    "where": 0.762,
-    "medium": 1,
-    "style": 1
+    "when": 0.618,
+    "where": 0.878,
+    "medium": 0.994,
+    "style": 0.964
    }
   },
   "http://www.wikidata.org/entity/Q1215604": {
@@ -3708,13 +3720,13 @@
    "R": 0.533,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.845,
+   "ease": 0.805,
    "feelGood": 0.48,
    "easeFacets": {
-    "when": 0.84,
-    "where": 0.759,
-    "medium": 1,
-    "style": 0.779
+    "when": 0.539,
+    "where": 0.817,
+    "medium": 0.988,
+    "style": 0.875
    }
   },
   "http://www.wikidata.org/entity/Q2735507": {
@@ -3722,13 +3734,13 @@
    "R": 0.761,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.795,
+   "ease": 0.844,
    "feelGood": 0.685,
    "easeFacets": {
-    "when": 0.657,
-    "where": 0.761,
-    "medium": 1,
-    "style": 0.761
+    "when": 0.6,
+    "where": 0.878,
+    "medium": 0.994,
+    "style": 0.905
    }
   },
   "http://www.wikidata.org/entity/Q2528741": {
@@ -3736,13 +3748,13 @@
    "R": 0.761,
    "Rsrc": "fame×vis",
    "gG": 0.45,
-   "ease": 0.811,
+   "ease": 0.851,
    "feelGood": 0.685,
    "easeFacets": {
-    "when": 0.556,
-    "where": 0.761,
-    "medium": 1,
-    "style": 0.928
+    "when": 0.585,
+    "where": 0.877,
+    "medium": 0.994,
+    "style": 0.946
    }
   },
   "http://www.wikidata.org/entity/Q644106": {
@@ -3750,13 +3762,13 @@
    "R": 0.76,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.883,
+   "ease": 0.863,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.772,
-    "where": 0.76,
-    "medium": 1,
-    "style": 1
+    "when": 0.617,
+    "where": 0.877,
+    "medium": 0.994,
+    "style": 0.964
    }
   },
   "wikidata:Q15874516": {
@@ -3764,13 +3776,13 @@
    "R": 0.418,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.823,
+   "ease": 0.775,
    "feelGood": 0.958,
    "easeFacets": {
-    "when": 0.875,
-    "where": 0.418,
-    "medium": 1,
-    "style": 1
+    "when": 0.499,
+    "where": 0.702,
+    "medium": 0.985,
+    "style": 0.913
    }
   },
   "http://www.wikidata.org/entity/Q2629423": {
@@ -3778,13 +3790,13 @@
    "R": 0.645,
    "Rsrc": "fame×vis",
    "gG": 0.445,
-   "ease": 0.755,
+   "ease": 0.813,
    "feelGood": 0.581,
    "easeFacets": {
-    "when": 0.551,
-    "where": 0.823,
-    "medium": 1,
-    "style": 0.645
+    "when": 0.539,
+    "where": 0.862,
+    "medium": 0.991,
+    "style": 0.858
    }
   },
   "http://www.wikidata.org/entity/Q15728649": {
@@ -3792,13 +3804,13 @@
    "R": 0.758,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.883,
+   "ease": 0.862,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.772,
-    "where": 1,
-    "medium": 1,
-    "style": 0.758
+    "when": 0.616,
+    "where": 0.937,
+    "medium": 0.994,
+    "style": 0.903
    }
   },
   "http://www.wikidata.org/entity/Q1088425": {
@@ -3806,13 +3818,13 @@
    "R": 0.303,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.977,
+   "ease": 0.788,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.909,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.459,
+    "where": 0.817,
+    "medium": 0.983,
+    "style": 0.895
    }
   },
   "http://www.wikidata.org/entity/Q3202169": {
@@ -3820,13 +3832,13 @@
    "R": 0.644,
    "Rsrc": "fame×vis",
    "gG": 0.692,
-   "ease": 0.842,
+   "ease": 0.83,
    "feelGood": 0.579,
    "easeFacets": {
-    "when": 0.721,
-    "where": 0.816,
-    "medium": 1,
-    "style": 0.831
+    "when": 0.564,
+    "where": 0.86,
+    "medium": 0.991,
+    "style": 0.904
    }
   },
   "http://www.wikidata.org/entity/Q960157": {
@@ -3834,13 +3846,13 @@
    "R": 0.757,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.943,
+   "ease": 0.878,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.773,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.616,
+    "where": 0.936,
+    "medium": 0.994,
+    "style": 0.964
    }
   },
   "aic20684": {
@@ -3848,13 +3860,13 @@
    "R": 0.756,
    "Rsrc": "fame×vis",
    "gG": 0.685,
-   "ease": 0.867,
+   "ease": 0.858,
    "feelGood": 0.924,
    "easeFacets": {
-    "when": 0.773,
-    "where": 0.874,
-    "medium": 1,
-    "style": 0.819
+    "when": 0.616,
+    "where": 0.905,
+    "medium": 0.994,
+    "style": 0.918
    }
   },
   "http://www.wikidata.org/entity/Q4003071": {
@@ -3862,13 +3874,13 @@
    "R": 0.756,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.792,
+   "ease": 0.842,
    "feelGood": 0.68,
    "easeFacets": {
-    "when": 0.656,
-    "where": 0.756,
-    "medium": 1,
-    "style": 0.756
+    "when": 0.598,
+    "where": 0.875,
+    "medium": 0.994,
+    "style": 0.902
    }
   },
   "wd:Q637414": {
@@ -3876,13 +3888,13 @@
    "R": 0.755,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.821,
+   "ease": 0.846,
    "feelGood": 0.679,
    "easeFacets": {
-    "when": 0.774,
-    "where": 0.755,
-    "medium": 1,
-    "style": 0.755
+    "when": 0.615,
+    "where": 0.874,
+    "medium": 0.994,
+    "style": 0.902
    }
   },
   "http://www.wikidata.org/entity/Q16950902": {
@@ -3890,13 +3902,13 @@
    "R": 0.302,
    "Rsrc": "fame×vis",
    "gG": 0.519,
-   "ease": 0.642,
+   "ease": 0.709,
    "feelGood": 0.271,
    "easeFacets": {
-    "when": 0.742,
-    "where": 0.522,
-    "medium": 1,
-    "style": 0.302
+    "when": 0.433,
+    "where": 0.697,
+    "medium": 0.983,
+    "style": 0.721
    }
   },
   "wikidata:Q883994": {
@@ -3904,13 +3916,13 @@
    "R": 0.641,
    "Rsrc": "fame×vis",
    "gG": 0.287,
-   "ease": 0.696,
+   "ease": 0.799,
    "feelGood": 0.577,
    "easeFacets": {
-    "when": 0.448,
-    "where": 0.695,
-    "medium": 1,
-    "style": 0.641
+    "when": 0.522,
+    "where": 0.829,
+    "medium": 0.991,
+    "style": 0.856
    }
   },
   "wd:Q1230882": {
@@ -3918,13 +3930,13 @@
    "R": 0.753,
    "Rsrc": "fame×vis",
    "gG": 0.375,
-   "ease": 0.789,
+   "ease": 0.831,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.774,
-    "where": 0.753,
-    "medium": 0.877,
-    "style": 0.753
+    "when": 0.615,
+    "where": 0.874,
+    "medium": 0.932,
+    "style": 0.901
    }
   },
   "wikidata:Q867403": {
@@ -3932,13 +3944,13 @@
    "R": 0.64,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.751,
+   "ease": 0.806,
    "feelGood": 0.576,
    "easeFacets": {
-    "when": 0.722,
-    "where": 0.64,
-    "medium": 1,
-    "style": 0.64
+    "when": 0.562,
+    "where": 0.815,
+    "medium": 0.991,
+    "style": 0.856
    }
   },
   "http://www.wikidata.org/entity/Q1170480": {
@@ -3946,13 +3958,13 @@
    "R": 0.752,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.944,
+   "ease": 0.877,
    "feelGood": 0.677,
    "easeFacets": {
-    "when": 0.774,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.614,
+    "where": 0.935,
+    "medium": 0.994,
+    "style": 0.963
    }
   },
   "http://www.wikidata.org/entity/Q3543882": {
@@ -3960,13 +3972,13 @@
    "R": 0.639,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.707,
+   "ease": 0.799,
    "feelGood": 0.575,
    "easeFacets": {
-    "when": 0.548,
-    "where": 0.639,
-    "medium": 1,
-    "style": 0.639
+    "when": 0.536,
+    "where": 0.815,
+    "medium": 0.991,
+    "style": 0.855
    }
   },
   "http://www.wikidata.org/entity/Q6644913": {
@@ -3974,13 +3986,13 @@
    "R": 0.751,
    "Rsrc": "fame×vis",
    "gG": 0.451,
-   "ease": 0.807,
+   "ease": 0.848,
    "feelGood": 0.676,
    "easeFacets": {
-    "when": 0.551,
-    "where": 0.926,
-    "medium": 1,
-    "style": 0.751
+    "when": 0.58,
+    "where": 0.916,
+    "medium": 0.994,
+    "style": 0.9
    }
   },
   "http://www.wikidata.org/entity/Q1787460": {
@@ -3988,13 +4000,13 @@
    "R": 0.638,
    "Rsrc": "fame×vis",
    "gG": 0.759,
-   "ease": 0.865,
+   "ease": 0.833,
    "feelGood": 0.574,
    "easeFacets": {
-    "when": 0.772,
-    "where": 1,
-    "medium": 1,
-    "style": 0.687
+    "when": 0.569,
+    "where": 0.905,
+    "medium": 0.991,
+    "style": 0.867
    }
   },
   "http://www.wikidata.org/entity/Q1395699": {
@@ -4002,13 +4014,13 @@
    "R": 0.637,
    "Rsrc": "fame×vis",
    "gG": 0.679,
-   "ease": 0.836,
+   "ease": 0.826,
    "feelGood": 0.573,
    "easeFacets": {
-    "when": 0.773,
-    "where": 0.934,
-    "medium": 1,
-    "style": 0.637
+    "when": 0.569,
+    "where": 0.888,
+    "medium": 0.991,
+    "style": 0.855
    }
   },
   "http://www.wikidata.org/entity/Q1216387": {
@@ -4016,13 +4028,13 @@
    "R": 0.749,
    "Rsrc": "fame×vis",
    "gG": 0.507,
-   "ease": 0.82,
+   "ease": 0.85,
    "feelGood": 0.674,
    "easeFacets": {
-    "when": 0.595,
-    "where": 0.937,
-    "medium": 1,
-    "style": 0.749
+    "when": 0.586,
+    "where": 0.918,
+    "medium": 0.994,
+    "style": 0.9
    }
   },
   "http://www.wikidata.org/entity/Q1212920": {
@@ -4030,13 +4042,13 @@
    "R": 0.748,
    "Rsrc": "fame×vis",
    "gG": 0.631,
-   "ease": 0.851,
+   "ease": 0.852,
    "feelGood": 0.674,
    "easeFacets": {
-    "when": 0.775,
-    "where": 0.748,
-    "medium": 1,
-    "style": 0.88
+    "when": 0.613,
+    "where": 0.871,
+    "medium": 0.994,
+    "style": 0.932
    }
   },
   "http://www.wikidata.org/entity/Q5526647": {
@@ -4044,13 +4056,13 @@
    "R": 0.524,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.961,
+   "ease": 0.832,
    "feelGood": 0.471,
    "easeFacets": {
-    "when": 0.843,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.535,
+    "where": 0.875,
+    "medium": 0.988,
+    "style": 0.929
    }
   },
   "http://www.wikidata.org/entity/Q1313605": {
@@ -4058,13 +4070,13 @@
    "R": 0.747,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.881,
+   "ease": 0.86,
    "feelGood": 0.673,
    "easeFacets": {
-    "when": 0.776,
-    "where": 0.87,
-    "medium": 1,
-    "style": 0.88
+    "when": 0.613,
+    "where": 0.901,
+    "medium": 0.994,
+    "style": 0.932
    }
   },
   "http://www.wikidata.org/entity/Q586035": {
@@ -4072,13 +4084,13 @@
    "R": 0.747,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.944,
+   "ease": 0.875,
    "feelGood": 0.925,
    "easeFacets": {
-    "when": 0.776,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.612,
+    "where": 0.934,
+    "medium": 0.994,
+    "style": 0.962
    }
   },
   "http://www.wikidata.org/entity/Q10866080": {
@@ -4086,13 +4098,13 @@
    "R": 0.298,
    "Rsrc": "fame×vis",
    "gG": 0.731,
-   "ease": 0.789,
+   "ease": 0.74,
    "feelGood": 0.269,
    "easeFacets": {
-    "when": 0.91,
-    "where": 0.947,
-    "medium": 1,
-    "style": 0.298
+    "when": 0.457,
+    "where": 0.803,
+    "medium": 0.982,
+    "style": 0.719
    }
   },
   "http://www.wikidata.org/entity/Q5930190": {
@@ -4100,13 +4112,13 @@
    "R": 0.745,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.911,
+   "ease": 0.867,
    "feelGood": 0.925,
    "easeFacets": {
-    "when": 0.776,
-    "where": 0.87,
-    "medium": 1,
-    "style": 1
+    "when": 0.612,
+    "where": 0.901,
+    "medium": 0.994,
+    "style": 0.962
    }
   },
   "http://www.wikidata.org/entity/Q2584518": {
@@ -4114,13 +4126,13 @@
    "R": 0.633,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.953,
+   "ease": 0.853,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.81,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.573,
+    "where": 0.904,
+    "medium": 0.991,
+    "style": 0.945
    }
   },
   "http://www.wikidata.org/entity/Q136433749": {
@@ -4128,13 +4140,13 @@
    "R": 0.744,
    "Rsrc": "fame×vis",
    "gG": 0.925,
-   "ease": 0.925,
+   "ease": 0.87,
    "feelGood": 0.926,
    "easeFacets": {
-    "when": 0.777,
-    "where": 1,
-    "medium": 1,
-    "style": 0.923
+    "when": 0.612,
+    "where": 0.933,
+    "medium": 0.994,
+    "style": 0.942
    }
   },
   "http://www.wikidata.org/entity/Q2343778": {
@@ -4142,13 +4154,13 @@
    "R": 0.744,
    "Rsrc": "fame×vis",
    "gG": 0.975,
-   "ease": 0.938,
+   "ease": 0.874,
    "feelGood": 0.669,
    "easeFacets": {
-    "when": 0.751,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.607,
+    "where": 0.933,
+    "medium": 0.994,
+    "style": 0.962
    }
   },
   "http://www.wikidata.org/entity/Q3228069": {
@@ -4156,13 +4168,13 @@
    "R": 0.52,
    "Rsrc": "fame×vis",
    "gG": 0.602,
-   "ease": 0.77,
+   "ease": 0.783,
    "feelGood": 0.468,
    "easeFacets": {
-    "when": 0.844,
-    "where": 0.52,
-    "medium": 1,
-    "style": 0.715
+    "when": 0.534,
+    "where": 0.754,
+    "medium": 0.988,
+    "style": 0.857
    }
   },
   "wikidata:Q4279895": {
@@ -4170,13 +4182,13 @@
    "R": 0.743,
    "Rsrc": "fame×vis",
    "gG": 0.902,
-   "ease": 0.919,
+   "ease": 0.868,
    "feelGood": 0.668,
    "easeFacets": {
-    "when": 0.777,
-    "where": 0.899,
-    "medium": 1,
-    "style": 1
+    "when": 0.611,
+    "where": 0.907,
+    "medium": 0.994,
+    "style": 0.961
    }
   },
   "wikidata:Q7715071": {
@@ -4184,13 +4196,13 @@
    "R": 0.742,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.944,
+   "ease": 0.874,
    "feelGood": 0.668,
    "easeFacets": {
-    "when": 0.777,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.611,
+    "where": 0.932,
+    "medium": 0.994,
+    "style": 0.961
    }
   },
   "http://www.wikidata.org/entity/Q232087": {
@@ -4198,13 +4210,13 @@
    "R": 0.519,
    "Rsrc": "fame×vis",
    "gG": 0.975,
-   "ease": 0.949,
+   "ease": 0.829,
    "feelGood": 0.467,
    "easeFacets": {
-    "when": 0.796,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.526,
+    "where": 0.874,
+    "medium": 0.988,
+    "style": 0.928
    }
   },
   "aic16568": {
@@ -4212,13 +4224,13 @@
    "R": 0.741,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.911,
+   "ease": 0.866,
    "feelGood": 0.667,
    "easeFacets": {
-    "when": 0.778,
-    "where": 0.866,
-    "medium": 1,
-    "style": 1
+    "when": 0.61,
+    "where": 0.898,
+    "medium": 0.994,
+    "style": 0.961
    }
   },
   "wd:Q334360": {
@@ -4226,13 +4238,13 @@
    "R": 0.74,
    "Rsrc": "fame×vis",
    "gG": 0.975,
-   "ease": 0.938,
+   "ease": 0.873,
    "feelGood": 0.926,
    "easeFacets": {
-    "when": 0.752,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.606,
+    "where": 0.932,
+    "medium": 0.994,
+    "style": 0.961
    }
   },
   "aic11332": {
@@ -4240,13 +4252,13 @@
    "R": 0.296,
    "Rsrc": "fame×vis",
    "gG": 0.5,
-   "ease": 0.626,
+   "ease": 0.699,
    "feelGood": 0.266,
    "easeFacets": {
-    "when": 0.911,
-    "where": 0.296,
-    "medium": 1,
-    "style": 0.296
+    "when": 0.456,
+    "where": 0.639,
+    "medium": 0.982,
+    "style": 0.718
    }
   },
   "aic66763": {
@@ -4254,13 +4266,13 @@
    "R": 0.296,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.802,
+   "ease": 0.743,
    "feelGood": 0.266,
    "easeFacets": {
-    "when": 0.911,
-    "where": 0.296,
-    "medium": 1,
-    "style": 1
+    "when": 0.456,
+    "where": 0.639,
+    "medium": 0.982,
+    "style": 0.894
    }
   },
   "http://www.wikidata.org/entity/Q4693305": {
@@ -4268,13 +4280,13 @@
    "R": 0.628,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.793,
+   "ease": 0.819,
    "feelGood": 0.565,
    "easeFacets": {
-    "when": 0.544,
-    "where": 0.628,
-    "medium": 1,
-    "style": 1
+    "when": 0.531,
+    "where": 0.809,
+    "medium": 0.991,
+    "style": 0.944
    }
   },
   "http://www.wikidata.org/entity/Q247282": {
@@ -4282,13 +4294,13 @@
    "R": 0.738,
    "Rsrc": "fame×vis",
    "gG": 0.568,
-   "ease": 0.831,
+   "ease": 0.848,
    "feelGood": 0.664,
    "easeFacets": {
-    "when": 0.653,
-    "where": 0.934,
-    "medium": 1,
-    "style": 0.738
+    "when": 0.59,
+    "where": 0.915,
+    "medium": 0.993,
+    "style": 0.895
    }
   },
   "http://www.wikidata.org/entity/Q166937": {
@@ -4296,13 +4308,13 @@
    "R": 0.737,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.945,
+   "ease": 0.873,
    "feelGood": 0.926,
    "easeFacets": {
-    "when": 0.779,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.609,
+    "where": 0.931,
+    "medium": 0.993,
+    "style": 0.961
    }
   },
   "http://www.wikidata.org/entity/Q488825": {
@@ -4310,13 +4322,13 @@
    "R": 0.736,
    "Rsrc": "fame×vis",
    "gG": 0.805,
-   "ease": 0.893,
+   "ease": 0.861,
    "feelGood": 0.926,
    "easeFacets": {
-    "when": 0.779,
-    "where": 1,
-    "medium": 1,
-    "style": 0.795
+    "when": 0.609,
+    "where": 0.931,
+    "medium": 0.993,
+    "style": 0.909
    }
   },
   "http://www.wikidata.org/entity/Q1227359": {
@@ -4324,13 +4336,13 @@
    "R": 0.736,
    "Rsrc": "fame×vis",
    "gG": 0.45,
-   "ease": 0.8,
+   "ease": 0.843,
    "feelGood": 0.662,
    "easeFacets": {
-    "when": 0.541,
-    "where": 0.736,
-    "medium": 1,
-    "style": 0.921
+    "when": 0.573,
+    "where": 0.865,
+    "medium": 0.993,
+    "style": 0.941
    }
   },
   "http://www.wikidata.org/entity/Q960447": {
@@ -4338,13 +4350,13 @@
    "R": 0.735,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.796,
+   "ease": 0.838,
    "feelGood": 0.662,
    "easeFacets": {
-    "when": 0.716,
-    "where": 0.735,
-    "medium": 1,
-    "style": 0.735
+    "when": 0.599,
+    "where": 0.864,
+    "medium": 0.993,
+    "style": 0.894
    }
   },
   "http://www.wikidata.org/entity/Q2715177": {
@@ -4352,13 +4364,13 @@
    "R": 0.735,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.915,
+   "ease": 0.865,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.78,
-    "where": 1,
-    "medium": 1,
-    "style": 0.88
+    "when": 0.608,
+    "where": 0.93,
+    "medium": 0.993,
+    "style": 0.93
    }
   },
   "http://www.wikidata.org/entity/Q695039": {
@@ -4366,13 +4378,13 @@
    "R": 0.624,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.743,
+   "ease": 0.801,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.723,
-    "where": 0.624,
-    "medium": 1,
-    "style": 0.624
+    "when": 0.556,
+    "where": 0.807,
+    "medium": 0.991,
+    "style": 0.85
    }
   },
   "http://www.wikidata.org/entity/Q2501284": {
@@ -4380,13 +4392,13 @@
    "R": 0.733,
    "Rsrc": "fame×vis",
    "gG": 0.625,
-   "ease": 0.845,
+   "ease": 0.848,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.78,
-    "where": 0.867,
-    "medium": 1,
-    "style": 0.733
+    "when": 0.608,
+    "where": 0.897,
+    "medium": 0.993,
+    "style": 0.893
    }
   },
   "http://www.wikidata.org/entity/Q378034": {
@@ -4394,13 +4406,13 @@
    "R": 0.513,
    "Rsrc": "fame×vis",
    "gG": 0.226,
-   "ease": 0.584,
+   "ease": 0.714,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.495,
-    "where": 0.817,
-    "medium": 0.513,
-    "style": 0.513
+    "when": 0.479,
+    "where": 0.826,
+    "medium": 0.744,
+    "style": 0.805
    }
   },
   "http://www.wikidata.org/entity/Q594470": {
@@ -4408,13 +4420,13 @@
    "R": 0.512,
    "Rsrc": "fame×vis",
    "gG": 0.63,
-   "ease": 0.781,
+   "ease": 0.79,
    "feelGood": 0.461,
    "easeFacets": {
-    "when": 0.612,
-    "where": 1,
-    "medium": 1,
-    "style": 0.512
+    "when": 0.496,
+    "where": 0.872,
+    "medium": 0.988,
+    "style": 0.805
    }
   },
   "wd:Q965124": {
@@ -4422,13 +4434,13 @@
    "R": 0.622,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.859,
+   "ease": 0.827,
    "feelGood": 0.56,
    "easeFacets": {
-    "when": 0.813,
-    "where": 1,
-    "medium": 1,
-    "style": 0.622
+    "when": 0.569,
+    "where": 0.901,
+    "medium": 0.991,
+    "style": 0.849
    }
   },
   "wikidata:Q1993685": {
@@ -4436,13 +4448,13 @@
    "R": 0.512,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.84,
+   "ease": 0.799,
    "feelGood": 0.46,
    "easeFacets": {
-    "when": 0.847,
-    "where": 0.512,
-    "medium": 1,
-    "style": 1
+    "when": 0.531,
+    "where": 0.75,
+    "medium": 0.988,
+    "style": 0.927
    }
   },
   "http://www.wikidata.org/entity/Q10322900": {
@@ -4450,13 +4462,13 @@
    "R": 0.73,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.878,
+   "ease": 0.855,
    "feelGood": 0.657,
    "easeFacets": {
-    "when": 0.781,
-    "where": 0.73,
-    "medium": 1,
-    "style": 1
+    "when": 0.607,
+    "where": 0.862,
+    "medium": 0.993,
+    "style": 0.96
    }
   },
   "http://www.wikidata.org/entity/Q1114881": {
@@ -4464,13 +4476,13 @@
    "R": 0.73,
    "Rsrc": "fame×vis",
    "gG": 0.891,
-   "ease": 0.916,
+   "ease": 0.865,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.781,
-    "where": 1,
-    "medium": 1,
-    "style": 0.882
+    "when": 0.606,
+    "where": 0.929,
+    "medium": 0.993,
+    "style": 0.93
    }
   },
   "http://www.wikidata.org/entity/Q2610675": {
@@ -4478,13 +4490,13 @@
    "R": 0.729,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.945,
+   "ease": 0.872,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.781,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.606,
+    "where": 0.929,
+    "medium": 0.993,
+    "style": 0.959
    }
   },
   "wikidata:Q921429": {
@@ -4492,13 +4504,13 @@
    "R": 0.728,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.911,
+   "ease": 0.863,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.781,
-    "where": 0.862,
-    "medium": 1,
-    "style": 1
+    "when": 0.606,
+    "where": 0.894,
+    "medium": 0.993,
+    "style": 0.959
    }
   },
   "wd:Q1134250": {
@@ -4506,13 +4518,13 @@
    "R": 0.728,
    "Rsrc": "fame×vis",
    "gG": 0.862,
-   "ease": 0.908,
+   "ease": 0.863,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.782,
-    "where": 1,
-    "medium": 1,
-    "style": 0.85
+    "when": 0.606,
+    "where": 0.929,
+    "medium": 0.993,
+    "style": 0.922
    }
   },
   "http://www.wikidata.org/entity/Q7920648": {
@@ -4520,13 +4532,13 @@
    "R": 0.727,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.776,
+   "ease": 0.833,
    "feelGood": 0.654,
    "easeFacets": {
-    "when": 0.651,
-    "where": 0.727,
-    "medium": 1,
-    "style": 0.727
+    "when": 0.586,
+    "where": 0.86,
+    "medium": 0.993,
+    "style": 0.891
    }
   },
   "http://www.wikidata.org/entity/Q8874171": {
@@ -4534,13 +4546,13 @@
    "R": 0.618,
    "Rsrc": "fame×vis",
    "gG": 0.439,
-   "ease": 0.739,
+   "ease": 0.803,
    "feelGood": 0.556,
    "easeFacets": {
-    "when": 0.539,
-    "where": 0.8,
-    "medium": 1,
-    "style": 0.618
+    "when": 0.526,
+    "where": 0.85,
+    "medium": 0.99,
+    "style": 0.847
    }
   },
   "http://www.wikidata.org/entity/Q1314013": {
@@ -4548,13 +4560,13 @@
    "R": 0.508,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.84,
+   "ease": 0.798,
    "feelGood": 0.457,
    "easeFacets": {
-    "when": 0.848,
-    "where": 0.746,
-    "medium": 1,
-    "style": 0.767
+    "when": 0.53,
+    "where": 0.807,
+    "medium": 0.988,
+    "style": 0.868
    }
   },
   "http://www.wikidata.org/entity/Q644887": {
@@ -4562,13 +4574,13 @@
    "R": 0.725,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.877,
+   "ease": 0.854,
    "feelGood": 0.927,
    "easeFacets": {
-    "when": 0.782,
-    "where": 1,
-    "medium": 1,
-    "style": 0.725
+    "when": 0.605,
+    "where": 0.928,
+    "medium": 0.993,
+    "style": 0.89
    }
   },
   "wd:Q771017": {
@@ -4576,13 +4588,13 @@
    "R": 0.725,
    "Rsrc": "fame×vis",
    "gG": 0.438,
-   "ease": 0.791,
+   "ease": 0.839,
    "feelGood": 0.652,
    "easeFacets": {
-    "when": 0.535,
+    "when": 0.568,
     "where": 0.904,
-    "medium": 1,
-    "style": 0.725
+    "medium": 0.993,
+    "style": 0.89
    }
   },
   "http://www.wikidata.org/entity/Q1167932": {
@@ -4590,13 +4602,13 @@
    "R": 0.724,
    "Rsrc": "fame×vis",
    "gG": 0.877,
-   "ease": 0.912,
+   "ease": 0.864,
    "feelGood": 0.652,
    "easeFacets": {
-    "when": 0.717,
-    "where": 0.93,
-    "medium": 1,
-    "style": 1
+    "when": 0.595,
+    "where": 0.91,
+    "medium": 0.993,
+    "style": 0.959
    }
   },
   "wikidata:Q16738523": {
@@ -4604,13 +4616,13 @@
    "R": 0.723,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.876,
+   "ease": 0.853,
    "feelGood": 0.928,
    "easeFacets": {
-    "when": 0.783,
-    "where": 1,
-    "medium": 1,
-    "style": 0.723
+    "when": 0.604,
+    "where": 0.927,
+    "medium": 0.993,
+    "style": 0.889
    }
   },
   "http://www.wikidata.org/entity/Q1747282": {
@@ -4618,13 +4630,13 @@
    "R": 0.723,
    "Rsrc": "fame×vis",
    "gG": 0.704,
-   "ease": 0.864,
+   "ease": 0.853,
    "feelGood": 0.651,
    "easeFacets": {
-    "when": 0.65,
-    "where": 0.889,
-    "medium": 1,
-    "style": 0.917
+    "when": 0.584,
+    "where": 0.899,
+    "medium": 0.993,
+    "style": 0.938
    }
   },
   "http://www.wikidata.org/entity/Q1212737": {
@@ -4632,13 +4644,13 @@
    "R": 0.614,
    "Rsrc": "fame×vis",
    "gG": 0.707,
-   "ease": 0.841,
+   "ease": 0.823,
    "feelGood": 0.552,
    "easeFacets": {
-    "when": 0.723,
-    "where": 0.803,
-    "medium": 1,
-    "style": 0.837
+    "when": 0.552,
+    "where": 0.849,
+    "medium": 0.99,
+    "style": 0.901
    }
   },
   "http://www.wikidata.org/entity/Q2471531": {
@@ -4646,13 +4658,13 @@
    "R": 0.613,
    "Rsrc": "fame×vis",
    "gG": 0.025,
-   "ease": 0.577,
+   "ease": 0.74,
    "feelGood": 0.552,
    "easeFacets": {
-    "when": 0.468,
-    "where": 0.613,
-    "medium": 0.613,
-    "style": 0.613
+    "when": 0.514,
+    "where": 0.802,
+    "medium": 0.797,
+    "style": 0.845
    }
   },
   "http://www.wikidata.org/entity/Q2712679": {
@@ -4660,13 +4672,13 @@
    "R": 0.505,
    "Rsrc": "fame×vis",
    "gG": 0.475,
-   "ease": 0.702,
+   "ease": 0.764,
    "feelGood": 0.454,
    "easeFacets": {
-    "when": 0.799,
-    "where": 0.505,
-    "medium": 1,
-    "style": 0.505
+    "when": 0.521,
+    "where": 0.746,
+    "medium": 0.988,
+    "style": 0.802
    }
   },
   "wikidata:Q938115": {
@@ -4674,13 +4686,13 @@
    "R": 0.504,
    "Rsrc": "fame×vis",
    "gG": 0.577,
-   "ease": 0.752,
+   "ease": 0.775,
    "feelGood": 0.454,
    "easeFacets": {
-    "when": 0.849,
-    "where": 0.504,
-    "medium": 1,
-    "style": 0.657
+    "when": 0.528,
+    "where": 0.746,
+    "medium": 0.988,
+    "style": 0.84
    }
   },
   "wikidata:Q18393790": {
@@ -4688,13 +4700,13 @@
    "R": 0.504,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.899,
+   "ease": 0.812,
    "feelGood": 0.453,
    "easeFacets": {
-    "when": 0.849,
-    "where": 0.747,
-    "medium": 1,
-    "style": 1
+    "when": 0.528,
+    "where": 0.807,
+    "medium": 0.988,
+    "style": 0.926
    }
   },
   "http://www.wikidata.org/entity/Q972295": {
@@ -4702,13 +4714,13 @@
    "R": 0.503,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.624,
+   "ease": 0.752,
    "feelGood": 0.453,
    "easeFacets": {
-    "when": 0.491,
-    "where": 0.503,
-    "medium": 1,
-    "style": 0.503
+    "when": 0.474,
+    "where": 0.745,
+    "medium": 0.988,
+    "style": 0.801
    }
   },
   "http://www.wikidata.org/entity/Q5332757": {
@@ -4716,13 +4728,13 @@
    "R": 0.718,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.875,
+   "ease": 0.853,
    "feelGood": 0.928,
    "easeFacets": {
-    "when": 0.784,
-    "where": 0.718,
-    "medium": 1,
-    "style": 1
+    "when": 0.603,
+    "where": 0.856,
+    "medium": 0.993,
+    "style": 0.958
    }
   },
   "http://www.wikidata.org/entity/Q959628": {
@@ -4730,13 +4742,13 @@
    "R": 0.502,
    "Rsrc": "fame×vis",
    "gG": 0.32,
-   "ease": 0.624,
+   "ease": 0.752,
    "feelGood": 0.452,
    "easeFacets": {
-    "when": 0.491,
-    "where": 0.502,
-    "medium": 1,
-    "style": 0.502
+    "when": 0.474,
+    "where": 0.745,
+    "medium": 0.988,
+    "style": 0.801
    }
   },
   "http://www.wikidata.org/entity/Q2610936": {
@@ -4744,13 +4756,13 @@
    "R": 0.717,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.946,
+   "ease": 0.87,
    "feelGood": 0.928,
    "easeFacets": {
-    "when": 0.785,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.602,
+    "where": 0.926,
+    "medium": 0.993,
+    "style": 0.958
    }
   },
   "http://www.wikidata.org/entity/Q871812": {
@@ -4758,13 +4770,13 @@
    "R": 0.716,
    "Rsrc": "fame×vis",
    "gG": 0.675,
-   "ease": 0.854,
+   "ease": 0.847,
    "feelGood": 0.645,
    "easeFacets": {
-    "when": 0.785,
-    "where": 0.915,
-    "medium": 1,
-    "style": 0.716
+    "when": 0.602,
+    "where": 0.904,
+    "medium": 0.993,
+    "style": 0.887
    }
   },
   "wikidata:Q6455615": {
@@ -4772,13 +4784,13 @@
    "R": 0.716,
    "Rsrc": "fame×vis",
    "gG": 0.873,
-   "ease": 0.91,
+   "ease": 0.86,
    "feelGood": 0.928,
    "easeFacets": {
-    "when": 0.785,
-    "where": 0.855,
-    "medium": 1,
-    "style": 1
+    "when": 0.602,
+    "where": 0.889,
+    "medium": 0.993,
+    "style": 0.957
    }
   },
   "http://www.wikidata.org/entity/Q334604": {
@@ -4786,13 +4798,13 @@
    "R": 0.608,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.857,
+   "ease": 0.823,
    "feelGood": 0.547,
    "easeFacets": {
-    "when": 0.818,
-    "where": 0.608,
-    "medium": 1,
-    "style": 1
+    "when": 0.564,
+    "where": 0.799,
+    "medium": 0.99,
+    "style": 0.941
    }
   },
   "http://www.wikidata.org/entity/Q585437": {
@@ -4800,13 +4812,13 @@
    "R": 0.715,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.914,
+   "ease": 0.861,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.786,
-    "where": 1,
-    "medium": 1,
-    "style": 0.87
+    "when": 0.601,
+    "where": 0.925,
+    "medium": 0.993,
+    "style": 0.925
    }
   },
   "http://www.wikidata.org/entity/Q1217187": {
@@ -4814,13 +4826,13 @@
    "R": 0.714,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.947,
+   "ease": 0.869,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.786,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.601,
+    "where": 0.925,
+    "medium": 0.993,
+    "style": 0.957
    }
   },
   "wikidata:Q882584": {
@@ -4828,13 +4840,13 @@
    "R": 0.606,
    "Rsrc": "fame×vis",
    "gG": 0.623,
-   "ease": 0.806,
+   "ease": 0.811,
    "feelGood": 0.546,
    "easeFacets": {
-    "when": 0.818,
-    "where": 0.8,
-    "medium": 1,
-    "style": 0.606
+    "when": 0.564,
+    "where": 0.847,
+    "medium": 0.99,
+    "style": 0.842
    }
   },
   "http://www.wikidata.org/entity/Q4451145": {
@@ -4842,13 +4854,13 @@
    "R": 0.605,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.905,
+   "ease": 0.835,
    "feelGood": 0.545,
    "easeFacets": {
-    "when": 0.818,
-    "where": 0.803,
-    "medium": 1,
-    "style": 1
+    "when": 0.563,
+    "where": 0.847,
+    "medium": 0.99,
+    "style": 0.941
    }
   },
   "http://www.wikidata.org/entity/Q4901871": {
@@ -4856,13 +4868,13 @@
    "R": 0.712,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.875,
+   "ease": 0.851,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.786,
-    "where": 1,
-    "medium": 1,
-    "style": 0.712
+    "when": 0.6,
+    "where": 0.924,
+    "medium": 0.993,
+    "style": 0.885
    }
   },
   "wd:Q706846": {
@@ -4870,13 +4882,13 @@
    "R": 0.391,
    "Rsrc": "fame×vis",
    "gG": 0.864,
-   "ease": 0.888,
+   "ease": 0.785,
    "feelGood": 0.352,
    "easeFacets": {
-    "when": 0.883,
-    "where": 1,
-    "medium": 1,
-    "style": 0.668
+    "when": 0.489,
+    "where": 0.84,
+    "medium": 0.985,
+    "style": 0.826
    }
   },
   "http://www.wikidata.org/entity/Q1796098": {
@@ -4884,13 +4896,13 @@
    "R": 0.711,
    "Rsrc": "fame×vis",
    "gG": 0.766,
-   "ease": 0.879,
+   "ease": 0.842,
    "feelGood": 0.64,
    "easeFacets": {
-    "when": 0.787,
-    "where": 1,
-    "medium": 0.855,
-    "style": 0.874
+    "when": 0.6,
+    "where": 0.924,
+    "medium": 0.92,
+    "style": 0.925
    }
   },
   "harvard312306": {
@@ -4898,13 +4910,13 @@
    "R": 0.284,
    "Rsrc": "fame×vis",
    "gG": 0.25,
-   "ease": 0.442,
+   "ease": 0.668,
    "feelGood": null,
    "easeFacets": {
-    "when": 0.199,
-    "where": 0.284,
-    "medium": 1,
-    "style": 0.284
+    "when": 0.345,
+    "where": 0.633,
+    "medium": 0.982,
+    "style": 0.713
    }
   },
   "http://www.wikidata.org/entity/Q2270768": {
@@ -4912,13 +4924,13 @@
    "R": 0.709,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.947,
+   "ease": 0.868,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.787,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.599,
+    "where": 0.924,
+    "medium": 0.993,
+    "style": 0.956
    }
   },
   "wikidata:Q3087894": {
@@ -4926,13 +4938,13 @@
    "R": 0.602,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.855,
+   "ease": 0.822,
    "feelGood": 0.542,
    "easeFacets": {
-    "when": 0.819,
-    "where": 1,
-    "medium": 1,
-    "style": 0.602
+    "when": 0.562,
+    "where": 0.896,
+    "medium": 0.99,
+    "style": 0.841
    }
   },
   "http://www.wikidata.org/entity/Q3080509": {
@@ -4940,13 +4952,13 @@
    "R": 0.708,
    "Rsrc": "fame×vis",
    "gG": 0.742,
-   "ease": 0.872,
+   "ease": 0.849,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.788,
-    "where": 0.838,
-    "medium": 1,
-    "style": 0.862
+    "when": 0.599,
+    "where": 0.883,
+    "medium": 0.993,
+    "style": 0.922
    }
   },
   "http://www.wikidata.org/entity/Q1282840": {
@@ -4954,13 +4966,13 @@
    "R": 0.707,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.875,
+   "ease": 0.849,
    "feelGood": 0.637,
    "easeFacets": {
-    "when": 0.788,
-    "where": 0.849,
-    "medium": 1,
-    "style": 0.861
+    "when": 0.599,
+    "where": 0.885,
+    "medium": 0.993,
+    "style": 0.921
    }
   },
   "http://www.wikidata.org/entity/Q2344593": {
@@ -4968,13 +4980,13 @@
    "R": 0.707,
    "Rsrc": "fame×vis",
    "gG": 0.779,
-   "ease": 0.882,
+   "ease": 0.851,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.788,
-    "where": 0.853,
-    "medium": 1,
-    "style": 0.888
+    "when": 0.599,
+    "where": 0.886,
+    "medium": 0.993,
+    "style": 0.928
    }
   },
   "http://www.wikidata.org/entity/Q2528177": {
@@ -4982,13 +4994,13 @@
    "R": 0.706,
    "Rsrc": "fame×vis",
    "gG": 0.849,
-   "ease": 0.903,
+   "ease": 0.856,
    "feelGood": 0.929,
    "easeFacets": {
-    "when": 0.788,
-    "where": 1,
-    "medium": 1,
-    "style": 0.822
+    "when": 0.598,
+    "where": 0.923,
+    "medium": 0.993,
+    "style": 0.911
    }
   },
   "http://www.wikidata.org/entity/Q3012259": {
@@ -4996,13 +5008,13 @@
    "R": 0.494,
    "Rsrc": "fame×vis",
    "gG": 0.725,
-   "ease": 0.824,
+   "ease": 0.792,
    "feelGood": 0.951,
    "easeFacets": {
-    "when": 0.801,
-    "where": 1,
-    "medium": 1,
-    "style": 0.494
+    "when": 0.517,
+    "where": 0.867,
+    "medium": 0.987,
+    "style": 0.798
    }
   },
   "http://www.wikidata.org/entity/Q2270955": {
@@ -5010,13 +5022,13 @@
    "R": 0.705,
    "Rsrc": "fame×vis",
    "gG": 0.887,
-   "ease": 0.914,
+   "ease": 0.859,
    "feelGood": 0.93,
    "easeFacets": {
-    "when": 0.789,
-    "where": 1,
-    "medium": 1,
-    "style": 0.866
+    "when": 0.598,
+    "where": 0.923,
+    "medium": 0.993,
+    "style": 0.922
    }
   },
   "wd:Q254794": {
@@ -5024,13 +5036,13 @@
    "R": 0.704,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.781,
+   "ease": 0.828,
    "feelGood": 0.634,
    "easeFacets": {
-    "when": 0.718,
-    "where": 0.704,
-    "medium": 1,
-    "style": 0.704
+    "when": 0.587,
+    "where": 0.848,
+    "medium": 0.993,
+    "style": 0.882
    }
   },
   "wikidata:Q3725175": {
@@ -5038,13 +5050,13 @@
    "R": 0.598,
    "Rsrc": "fame×vis",
    "gG": 0.82,
-   "ease": 0.883,
+   "ease": 0.835,
    "feelGood": 0.538,
    "easeFacets": {
-    "when": 0.531,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.517,
+    "where": 0.894,
+    "medium": 0.99,
+    "style": 0.94
    }
   },
   "http://www.wikidata.org/entity/Q2892964": {
@@ -5052,13 +5064,13 @@
    "R": 0.703,
    "Rsrc": "fame×vis",
    "gG": 0.94,
-   "ease": 0.929,
+   "ease": 0.864,
    "feelGood": 0.633,
    "easeFacets": {
-    "when": 0.718,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.586,
+    "where": 0.922,
+    "medium": 0.993,
+    "style": 0.955
    }
   },
   "http://www.wikidata.org/entity/Q2318325": {
@@ -5066,13 +5078,13 @@
    "R": 0.702,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.947,
+   "ease": 0.867,
    "feelGood": 0.93,
    "easeFacets": {
-    "when": 0.789,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.597,
+    "where": 0.922,
+    "medium": 0.993,
+    "style": 0.955
    }
   },
   "http://www.wikidata.org/entity/Q969367": {
@@ -5080,13 +5092,13 @@
    "R": 0.701,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.948,
+   "ease": 0.866,
    "feelGood": 0.93,
    "easeFacets": {
-    "when": 0.79,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.596,
+    "where": 0.921,
+    "medium": 0.993,
+    "style": 0.955
    }
   },
   "http://www.wikidata.org/entity/Q28541710": {
@@ -5094,13 +5106,13 @@
    "R": 0.491,
    "Rsrc": "fame×vis",
    "gG": 0.623,
-   "ease": 0.771,
+   "ease": 0.777,
    "feelGood": 0.442,
    "easeFacets": {
-    "when": 0.853,
-    "where": 0.491,
-    "medium": 1,
-    "style": 0.74
+    "when": 0.524,
+    "where": 0.739,
+    "medium": 0.987,
+    "style": 0.859
    }
   },
   "http://www.wikidata.org/entity/Q2016193": {
@@ -5108,13 +5120,13 @@
    "R": 0.7,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.873,
+   "ease": 0.847,
    "feelGood": 0.63,
    "easeFacets": {
-    "when": 0.79,
-    "where": 1,
-    "medium": 1,
-    "style": 0.7
+    "when": 0.596,
+    "where": 0.921,
+    "medium": 0.993,
+    "style": 0.88
    }
   },
   "http://www.wikidata.org/entity/Q2701637": {
@@ -5122,13 +5134,13 @@
    "R": 0.595,
    "Rsrc": "fame×vis",
    "gG": 0.673,
-   "ease": 0.823,
+   "ease": 0.815,
    "feelGood": 0.535,
    "easeFacets": {
-    "when": 0.724,
-    "where": 0.722,
-    "medium": 1,
-    "style": 0.845
+    "when": 0.545,
+    "where": 0.824,
+    "medium": 0.99,
+    "style": 0.9
    }
   },
   "http://www.wikidata.org/entity/Q2426058": {
@@ -5136,13 +5148,13 @@
    "R": 0.699,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.948,
+   "ease": 0.866,
    "feelGood": 0.93,
    "easeFacets": {
-    "when": 0.79,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.596,
+    "where": 0.921,
+    "medium": 0.992,
+    "style": 0.955
    }
   },
   "http://www.wikidata.org/entity/Q1224572": {
@@ -5150,13 +5162,13 @@
    "R": 0.593,
    "Rsrc": "fame×vis",
    "gG": 0.565,
-   "ease": 0.778,
+   "ease": 0.803,
    "feelGood": 0.534,
    "easeFacets": {
-    "when": 0.724,
-    "where": 0.797,
-    "medium": 1,
-    "style": 0.593
+    "when": 0.545,
+    "where": 0.842,
+    "medium": 0.99,
+    "style": 0.837
    }
   },
   "http://www.wikidata.org/entity/Q6746233": {
@@ -5164,13 +5176,13 @@
    "R": 0.698,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.872,
+   "ease": 0.847,
    "feelGood": 0.628,
    "easeFacets": {
-    "when": 0.791,
-    "where": 1,
-    "medium": 1,
-    "style": 0.698
+    "when": 0.595,
+    "where": 0.921,
+    "medium": 0.992,
+    "style": 0.879
    }
   },
   "http://www.wikidata.org/entity/Q2632688": {
@@ -5178,13 +5190,13 @@
    "R": 0.696,
    "Rsrc": "fame×vis",
    "gG": 0.94,
-   "ease": 0.929,
+   "ease": 0.863,
    "feelGood": 0.627,
    "easeFacets": {
-    "when": 0.718,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.584,
+    "where": 0.92,
+    "medium": 0.992,
+    "style": 0.954
    }
   },
   "http://www.wikidata.org/entity/Q2619037": {
@@ -5192,13 +5204,13 @@
    "R": 0.696,
    "Rsrc": "fame×vis",
    "gG": 0.752,
-   "ease": 0.872,
+   "ease": 0.847,
    "feelGood": 0.93,
    "easeFacets": {
-    "when": 0.791,
-    "where": 0.843,
-    "medium": 1,
-    "style": 0.856
+    "when": 0.595,
+    "where": 0.881,
+    "medium": 0.992,
+    "style": 0.918
    }
   },
   "http://www.wikidata.org/entity/Q123935": {
@@ -5206,13 +5218,13 @@
    "R": 0.487,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.835,
+   "ease": 0.792,
    "feelGood": 0.438,
    "easeFacets": {
-    "when": 0.854,
-    "where": 0.487,
-    "medium": 1,
-    "style": 1
+    "when": 0.522,
+    "where": 0.737,
+    "medium": 0.987,
+    "style": 0.923
    }
   },
   "http://www.wikidata.org/entity/Q2344505": {
@@ -5220,13 +5232,13 @@
    "R": 0.486,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.964,
+   "ease": 0.824,
    "feelGood": 0.951,
    "easeFacets": {
-    "when": 0.854,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.522,
+    "where": 0.865,
+    "medium": 0.987,
+    "style": 0.923
    }
   },
   "http://www.wikidata.org/entity/Q2344396": {
@@ -5234,13 +5246,13 @@
    "R": 0.59,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.956,
+   "ease": 0.845,
    "feelGood": 0.531,
    "easeFacets": {
-    "when": 0.823,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.558,
+    "where": 0.892,
+    "medium": 0.99,
+    "style": 0.939
    }
   },
   "wikidata:Q6065609": {
@@ -5248,13 +5260,13 @@
    "R": 0.694,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.871,
+   "ease": 0.846,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.792,
-    "where": 0.694,
-    "medium": 1,
-    "style": 1
+    "when": 0.594,
+    "where": 0.843,
+    "medium": 0.992,
+    "style": 0.954
    }
   },
   "wikidata:Q3268045": {
@@ -5262,13 +5274,13 @@
    "R": 0.589,
    "Rsrc": "fame×vis",
    "gG": 0.623,
-   "ease": 0.801,
+   "ease": 0.806,
    "feelGood": 0.941,
    "easeFacets": {
-    "when": 0.823,
-    "where": 0.791,
-    "medium": 1,
-    "style": 0.589
+    "when": 0.558,
+    "where": 0.84,
+    "medium": 0.99,
+    "style": 0.836
    }
   },
   "http://www.wikidata.org/entity/Q2392901": {
@@ -5276,13 +5288,13 @@
    "R": 0.692,
    "Rsrc": "fame×vis",
    "gG": 0.675,
-   "ease": 0.848,
+   "ease": 0.843,
    "feelGood": 0.623,
    "easeFacets": {
-    "when": 0.645,
-    "where": 0.925,
-    "medium": 1,
-    "style": 0.823
+    "when": 0.571,
+    "where": 0.9,
+    "medium": 0.992,
+    "style": 0.91
    }
   },
   "http://www.wikidata.org/entity/Q369810": {
@@ -5290,13 +5302,13 @@
    "R": 0.692,
    "Rsrc": "fame×vis",
    "gG": 0.714,
-   "ease": 0.86,
+   "ease": 0.843,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.762,
-    "where": 0.846,
-    "medium": 1,
-    "style": 0.832
+    "when": 0.589,
+    "where": 0.88,
+    "medium": 0.992,
+    "style": 0.912
    }
   },
   "wikidata:Q16679343": {
@@ -5304,13 +5316,13 @@
    "R": 0.484,
    "Rsrc": "fame×vis",
    "gG": 0.902,
-   "ease": 0.913,
+   "ease": 0.811,
    "feelGood": 0.952,
    "easeFacets": {
-    "when": 0.855,
-    "where": 0.798,
-    "medium": 1,
-    "style": 1
+    "when": 0.521,
+    "where": 0.814,
+    "medium": 0.987,
+    "style": 0.923
    }
   },
   "http://www.wikidata.org/entity/Q4233325": {
@@ -5318,13 +5330,13 @@
    "R": 0.69,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.909,
+   "ease": 0.855,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.793,
-    "where": 0.845,
-    "medium": 1,
-    "style": 1
+    "when": 0.593,
+    "where": 0.88,
+    "medium": 0.992,
+    "style": 0.954
    }
   },
   "http://www.wikidata.org/entity/Q970968": {
@@ -5332,13 +5344,13 @@
    "R": 0.689,
    "Rsrc": "fame×vis",
    "gG": 0.714,
-   "ease": 0.859,
+   "ease": 0.842,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.793,
-    "where": 0.955,
-    "medium": 1,
-    "style": 0.689
+    "when": 0.592,
+    "where": 0.907,
+    "medium": 0.992,
+    "style": 0.876
    }
   },
   "wd:Q1764395": {
@@ -5346,13 +5358,13 @@
    "R": 0.689,
    "Rsrc": "fame×vis",
    "gG": 0.807,
-   "ease": 0.888,
+   "ease": 0.849,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.793,
-    "where": 0.853,
-    "medium": 1,
-    "style": 0.907
+    "when": 0.592,
+    "where": 0.882,
+    "medium": 0.992,
+    "style": 0.93
    }
   },
   "http://www.wikidata.org/entity/Q3203231": {
@@ -5360,13 +5372,13 @@
    "R": 0.688,
    "Rsrc": "fame×vis",
    "gG": 0.475,
-   "ease": 0.785,
+   "ease": 0.83,
    "feelGood": 0.619,
    "easeFacets": {
-    "when": 0.513,
-    "where": 0.938,
-    "medium": 1,
-    "style": 0.688
+    "when": 0.55,
+    "where": 0.903,
+    "medium": 0.992,
+    "style": 0.875
    }
   },
   "http://www.wikidata.org/entity/Q7732151": {
@@ -5374,13 +5386,13 @@
    "R": 0.687,
    "Rsrc": "fame×vis",
    "gG": 0.44,
-   "ease": 0.773,
+   "ease": 0.822,
    "feelGood": 0.619,
    "easeFacets": {
-    "when": 0.719,
-    "where": 0.687,
-    "medium": 1,
-    "style": 0.687
+    "when": 0.581,
+    "where": 0.84,
+    "medium": 0.992,
+    "style": 0.875
    }
   },
   "http://www.wikidata.org/entity/Q3387944": {
@@ -5388,13 +5400,13 @@
    "R": 0.584,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.698,
+   "ease": 0.784,
    "feelGood": 0.525,
    "easeFacets": {
-    "when": 0.625,
-    "where": 0.584,
-    "medium": 1,
-    "style": 0.584
+    "when": 0.526,
+    "where": 0.787,
+    "medium": 0.99,
+    "style": 0.834
    }
   },
   "http://www.wikidata.org/entity/Q1090837": {
@@ -5402,13 +5414,13 @@
    "R": 0.686,
    "Rsrc": "fame×vis",
    "gG": 0.796,
-   "ease": 0.885,
+   "ease": 0.847,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.794,
-    "where": 0.838,
-    "medium": 1,
-    "style": 0.906
+    "when": 0.591,
+    "where": 0.877,
+    "medium": 0.992,
+    "style": 0.929
    }
   },
   "http://www.wikidata.org/entity/Q1212098": {
@@ -5416,13 +5428,13 @@
    "R": 0.685,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.908,
+   "ease": 0.853,
    "feelGood": 0.931,
    "easeFacets": {
-    "when": 0.794,
-    "where": 0.838,
-    "medium": 1,
-    "style": 1
+    "when": 0.591,
+    "where": 0.877,
+    "medium": 0.992,
+    "style": 0.953
    }
   },
   "http://www.wikidata.org/entity/Q1787143": {
@@ -5430,13 +5442,13 @@
    "R": 0.685,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.949,
+   "ease": 0.863,
    "feelGood": 0.932,
    "easeFacets": {
-    "when": 0.795,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.591,
+    "where": 0.917,
+    "medium": 0.992,
+    "style": 0.953
    }
   },
   "http://www.wikidata.org/entity/Q3745698": {
@@ -5444,13 +5456,13 @@
    "R": 0.478,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.641,
+   "ease": 0.748,
    "feelGood": 0.431,
    "easeFacets": {
-    "when": 0.606,
-    "where": 0.478,
-    "medium": 1,
-    "style": 0.478
+    "when": 0.482,
+    "where": 0.733,
+    "medium": 0.987,
+    "style": 0.791
    }
   },
   "http://www.wikidata.org/entity/Q3556817": {
@@ -5458,13 +5470,13 @@
    "R": 0.683,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.908,
+   "ease": 0.853,
    "feelGood": 0.932,
    "easeFacets": {
-    "when": 0.795,
-    "where": 0.837,
-    "medium": 1,
-    "style": 1
+    "when": 0.59,
+    "where": 0.876,
+    "medium": 0.992,
+    "style": 0.953
    }
   },
   "wikidata:Q3762348": {
@@ -5472,13 +5484,13 @@
    "R": 0.683,
    "Rsrc": "fame×vis",
    "gG": 0.577,
-   "ease": 0.815,
+   "ease": 0.831,
    "feelGood": 0.614,
    "easeFacets": {
-    "when": 0.719,
-    "where": 0.683,
-    "medium": 1,
-    "style": 0.856
+    "when": 0.579,
+    "where": 0.837,
+    "medium": 0.992,
+    "style": 0.916
    }
   },
   "http://www.wikidata.org/entity/Q1198912": {
@@ -5486,13 +5498,13 @@
    "R": 0.682,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.949,
+   "ease": 0.863,
    "feelGood": 0.932,
    "easeFacets": {
-    "when": 0.795,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.59,
+    "where": 0.917,
+    "medium": 0.992,
+    "style": 0.952
    }
   },
   "wd:Q775407": {
@@ -5500,13 +5512,13 @@
    "R": 0.681,
    "Rsrc": "fame×vis",
    "gG": 0.758,
-   "ease": 0.872,
+   "ease": 0.843,
    "feelGood": 0.932,
    "easeFacets": {
-    "when": 0.796,
-    "where": 0.836,
-    "medium": 1,
-    "style": 0.855
+    "when": 0.59,
+    "where": 0.875,
+    "medium": 0.992,
+    "style": 0.916
    }
   },
   "wikidata:Q1683743": {
@@ -5514,13 +5526,13 @@
    "R": 0.681,
    "Rsrc": "fame×vis",
    "gG": 0.875,
-   "ease": 0.909,
+   "ease": 0.853,
    "feelGood": 0.932,
    "easeFacets": {
-    "when": 0.796,
-    "where": 0.936,
-    "medium": 1,
-    "style": 0.904
+    "when": 0.59,
+    "where": 0.9,
+    "medium": 0.992,
+    "style": 0.928
    }
   },
   "aic51757": {
@@ -5528,13 +5540,13 @@
    "R": 0.374,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.891,
+   "ease": 0.782,
    "feelGood": 0.337,
    "easeFacets": {
-    "when": 0.888,
-    "where": 0.677,
-    "medium": 1,
-    "style": 1
+    "when": 0.483,
+    "where": 0.755,
+    "medium": 0.984,
+    "style": 0.906
    }
   },
   "http://www.wikidata.org/entity/Q2551625": {
@@ -5542,13 +5554,13 @@
    "R": 0.679,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.949,
+   "ease": 0.862,
    "feelGood": 0.611,
    "easeFacets": {
-    "when": 0.796,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.589,
+    "where": 0.916,
+    "medium": 0.992,
+    "style": 0.952
    }
   },
   "http://www.wikidata.org/entity/Q729194": {
@@ -5556,13 +5568,13 @@
    "R": 0.576,
    "Rsrc": "fame×vis",
    "gG": 0.725,
-   "ease": 0.84,
+   "ease": 0.814,
    "feelGood": 0.519,
    "easeFacets": {
-    "when": 0.785,
-    "where": 0.576,
-    "medium": 1,
-    "style": 1
+    "when": 0.547,
+    "where": 0.783,
+    "medium": 0.989,
+    "style": 0.936
    }
   },
   "wd:Q7194972": {
@@ -5570,13 +5582,13 @@
    "R": 0.677,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.949,
+   "ease": 0.862,
    "feelGood": 0.61,
    "easeFacets": {
-    "when": 0.797,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.588,
+    "where": 0.915,
+    "medium": 0.992,
+    "style": 0.952
    }
   },
   "wikidata:Q3998985": {
@@ -5584,13 +5596,13 @@
    "R": 0.575,
    "Rsrc": "fame×vis",
    "gG": 0.845,
-   "ease": 0.891,
+   "ease": 0.825,
    "feelGood": 0.942,
    "easeFacets": {
-    "when": 0.827,
-    "where": 0.944,
-    "medium": 1,
-    "style": 0.793
+    "when": 0.553,
+    "where": 0.875,
+    "medium": 0.989,
+    "style": 0.885
    }
   },
   "http://www.wikidata.org/entity/Q19915289": {
@@ -5598,13 +5610,13 @@
    "R": 0.574,
    "Rsrc": "fame×vis",
    "gG": 0.604,
-   "ease": 0.788,
+   "ease": 0.8,
    "feelGood": 0.517,
    "easeFacets": {
-    "when": 0.785,
-    "where": 0.574,
-    "medium": 1,
-    "style": 0.794
+    "when": 0.546,
+    "where": 0.782,
+    "medium": 0.989,
+    "style": 0.885
    }
   },
   "http://www.wikidata.org/entity/Q2963060": {
@@ -5612,13 +5624,13 @@
    "R": 0.574,
    "Rsrc": "fame×vis",
    "gG": 0.501,
-   "ease": 0.744,
+   "ease": 0.793,
    "feelGood": 0.517,
    "easeFacets": {
-    "when": 0.623,
-    "where": 0.78,
-    "medium": 1,
-    "style": 0.574
+    "when": 0.522,
+    "where": 0.833,
+    "medium": 0.989,
+    "style": 0.83
    }
   },
   "http://www.wikidata.org/entity/Q1619527": {
@@ -5626,13 +5638,13 @@
    "R": 0.573,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.957,
+   "ease": 0.841,
    "feelGood": 0.516,
    "easeFacets": {
-    "when": 0.828,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.552,
+    "where": 0.888,
+    "medium": 0.989,
+    "style": 0.936
    }
   },
   "http://www.wikidata.org/entity/Q3210253": {
@@ -5640,13 +5652,13 @@
    "R": 0.674,
    "Rsrc": "fame×vis",
    "gG": 0.57,
-   "ease": 0.809,
+   "ease": 0.832,
    "feelGood": 0.606,
    "easeFacets": {
-    "when": 0.563,
-    "where": 0.674,
-    "medium": 1,
-    "style": 1
+    "when": 0.552,
+    "where": 0.833,
+    "medium": 0.992,
+    "style": 0.951
    }
   },
   "http://www.wikidata.org/entity/Q2404992": {
@@ -5654,13 +5666,13 @@
    "R": 0.673,
    "Rsrc": "fame×vis",
    "gG": 1,
-   "ease": 0.95,
+   "ease": 0.861,
    "feelGood": 0.606,
    "easeFacets": {
-    "when": 0.798,
-    "where": 1,
-    "medium": 1,
-    "style": 1
+    "when": 0.587,
+    "where": 0.914,
+    "medium": 0.992,
+    "style": 0.951
    }
   },
   "wd:Q3172259": {
@@ -5668,13 +5680,13 @@
    "R": 0.672,
    "Rsrc": "fame×vis",
    "gG": 0.75,
-   "ease": 0.868,
+   "ease": 0.841,
    "feelGood": 0.933,
    "easeFacets": {
-    "when": 0.798,
-    "where": 1,
-    "medium": 1,
-    "style": 0.672
+    "when": 0.587,
+    "where": 0.914,
+    "medium": 0.992,
+    "style": 0.869
    }
   },
   "wikidata:Q3633419": {
@@ -5682,13 +5694,13 @@
    "R": 0.672,
    "Rsrc": "fame×vis",
    "gG": 0.871,
-   "ease": 0.907,
+   "ease": 0.85,
    "feelGood": 0.933,
    "easeFacets": {
-    "when": 0.798,
-    "where": 0.831,
-    "medium": 1,
-    "style": 1
+    "when": 0.586,
+    "where": 0.871,
+    "medium": 0.992,
+    "style": 0.951
    }
   },
   "http://www.wikidata.org/entity/Q3314110": {
@@ -5696,13 +5708,13 @@
    "R": 0.57,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.691,
+   "ease": 0.779,
    "feelGood": 0.513,
    "easeFacets": {
-    "when": 0.623,
-    "where": 0.57,
-    "medium": 1,
-    "style": 0.57
+    "when": 0.52,
+    "where": 0.78,
+    "medium": 0.989,
+    "style": 0.828
    }
   },
   "wikidata:Q473237": {
@@ -5710,13 +5722,13 @@
    "R": 0.67,
    "Rsrc": "fame×vis",
    "gG": 0.38,
-   "ease": 0.745,
+   "ease": 0.813,
    "feelGood": 0.603,
    "easeFacets": {
-    "when": 0.641,
-    "where": 0.67,
-    "medium": 1,
-    "style": 0.67
+    "when": 0.562,
+    "where": 0.831,
+    "medium": 0.992,
+    "style": 0.868
    }
   }
  }

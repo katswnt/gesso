@@ -26,6 +26,12 @@ const TIER = (process.argv.find(a => a.startsWith("--tier=")) || "--tier=easy").
 const PARAMS = {
   REC: { when: 0.70, where: 1.0, medium: 1.0, style: 1.0 }, // a recognizer's per-facet score; date stays fuzzy
   REC_artist: 0.90,                                         // a recognizer usually names a famous work's artist
+  // BLIND (unrecognized) human accuracy per facet, anchored to Kat's measured COLD play (0-prior-exposure transfer):
+  // the model's own g is a superhuman style-reader (it dates a Sumerian relief perfectly), so we don't trust it as a
+  // human estimate. We take the cold-human floor + a small bonus for how visually legible the model finds the work.
+  // (Interim calibration from one player's Euro-heavy history; the retuned-probe re-run replaces g with per-work layPct.)
+  humanBlind: { when: 0.24, where: 0.65, medium: 0.95, style: 0.80 },
+  modelTrust: { when: 0.15, where: 0.25, medium: 0.50, style: 0.25 }, // how much the model's per-work g adds atop the floor
   R_fame: { p50: 0.90, steep: 0.05 },                       // fame-percentile at which familiarity=0.5 (conservative)
   R_vis: { floor: 0.40, span: 0.60 },                       // visual-recognizability from the probe's stopRung: floor + span*(stopRung/4)
   maxRung: 4,                                                // ladder depth (full→…→crop45); higher stopRung = more robustly recognized
@@ -68,7 +74,11 @@ for (const [id, s] of Object.entries(scores)) {
   if (!s.g) continue;
   const { R, src } = recognitionR(id, s.stopRung);
   const facets = {}; const eF = {};
-  for (const f of CORE) { if (s.g[f] == null) continue; const rec = PARAMS.REC[f] ?? 1; eF[f] = +(R * rec + (1 - R) * s.g[f]).toFixed(3); facets[f] = s.g[f]; }
+  for (const f of CORE) { if (s.g[f] == null) continue; const rec = PARAMS.REC[f] ?? 1;
+    // blind human guessability: cold floor + small legibility bonus, NOT the model's superhuman g
+    const hb = PARAMS.humanBlind[f] ?? 0.5, tr = PARAMS.modelTrust[f] ?? 0.3;
+    const blindG = Math.max(0, Math.min(1, hb + (s.g[f] - hb) * tr));
+    eF[f] = +(R * rec + (1 - R) * blindG).toFixed(3); facets[f] = s.g[f]; }
   const vals = Object.values(eF); if (!vals.length) continue;
   // ARTIST FEEL-GOOD (Kat): recognition-conditioned artist payoff — the "I know this, it's Leonardo!" hit. NOT in
   // the difficulty gate (ease), so a diverse work is never penalized for an unknowable artist; a separate lever
