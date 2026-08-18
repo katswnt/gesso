@@ -54,17 +54,25 @@ else for (const [d, t] of STUDY) for (const id of ((led[d] || {})[t] || [])) ids
 const works = [...ids].map(res).filter(Boolean);
 console.log(`vision PoC · model=${MODEL} · ${works.length} study works (blinded, no tools) · adaptive escalation [${LADDER.map(x => x.label).join(" → ")}]\n`);
 
-const PROMPT = `You are shown ONLY an image of an artwork — no title, caption, artist, date, or any metadata. Role-play a museum-goer with general art-history literacy but NO memorized knowledge of THIS specific work. Reason only from what is visually present: style, technique, materials, palette, subject, iconography, condition, framing. Do not try to recall this work's catalog facts; infer as a person standing in front of it would.
+const PROMPT = `You are shown ONLY an image of an artwork — no title, caption, artist, date, or metadata.
 
-For each field give your best inference, a confidence 0.0-1.0, and the concrete visual cues you used. Also honestly report whether you nonetheless recognize the specific work.
+For EACH of the five fields, do two things:
+1. "guess"/"year"/"country": YOUR best inference from visual evidence alone (style, technique, materials, palette, subject, iconography, condition). Use your full expertise here.
+2. "layPct": the fraction 0.0-1.0 of TYPICAL museum-goers — educated adults who are NOT art historians and who do NOT recognize this specific work — who could infer that field roughly correctly from the image alone. Judge this HONESTLY and usually PESSIMISTICALLY; you are a far better visual guesser than a typical person, so do not project your own ability. Realities:
+- DATE: most non-specialists can only date very familiar styles (Impressionism → late 1800s, "looks Renaissance", "modern/abstract" → 1900s). They CANNOT date ancient, medieval, or non-Western work within centuries. A Mesopotamian relief, a Chinese bronze, an Egyptian statue → layPct for date is LOW (~0.05-0.2), even though you can date it.
+- PLACE: they can name a broad region only for very visually distinctive, widely-known traditions (Japanese woodblock print, Egyptian tomb art, Greek marble). They CANNOT locate Mesopotamia, distinguish Chinese/Korean/Japanese, or place most non-European or ancient work. Most people cannot point to Mesopotamia on a map even if told it's the Middle East.
+- MEDIUM: usually EASY — most can tell painting vs sculpture vs print vs drawing (layPct often 0.7-0.95).
+- STYLE/MOVEMENT: they know a handful (Impressionism, Cubism, Surrealism, Pop, "Renaissance"). Anything else → LOW.
+- ARTIST: ~0 unless they recognize the specific work.
+Also honestly report whether YOU recognize the specific work (this is separate from layPct).
 
 Respond with ONLY this JSON, no prose:
 {"recognized": true|false,
- "when":   {"year": <integer, negative = BCE>, "confidence": <0-1>, "cues": "<short>"},
- "where":  {"country": "<modern country or region>", "confidence": <0-1>, "cues": "<short>"},
- "medium": {"guess": "<e.g. Oil paint, Marble, Woodblock print, Bronze>", "confidence": <0-1>, "cues": "<short>"},
- "style":  {"guess": "<movement or culture, e.g. Impressionism, Edo ukiyo-e, Chola bronze>", "confidence": <0-1>, "cues": "<short>"},
- "artist": {"guess": "<name, or 'unknown'>", "confidence": <0-1>, "cues": "<short>"}}`;
+ "when":   {"year": <integer, negative = BCE>, "layPct": <0-1>, "cues": "<short>"},
+ "where":  {"country": "<modern country or region>", "layPct": <0-1>, "cues": "<short>"},
+ "medium": {"guess": "<e.g. Oil paint, Marble, Woodblock print, Bronze>", "layPct": <0-1>, "cues": "<short>"},
+ "style":  {"guess": "<movement or culture, e.g. Impressionism, Edo ukiyo-e, Chola bronze>", "layPct": <0-1>, "cues": "<short>"},
+ "artist": {"guess": "<name, or 'unknown'>", "layPct": <0-1>, "cues": "<short>"}}`;
 
 // fetch the image ONCE (script fetches; the MODEL never does), to a temp file we re-render per rung.
 async function download(url, i) {
