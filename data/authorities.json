@@ -13138,44 +13138,64 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Polynesian art": {
-    "label": "Polynesian art",
+  "Hawaiian": {
+    "label": "Hawaiian",
     "kinds": [
       "culture"
     ],
-    "works": 5,
+    "works": 2,
     "authorities": {
-      "aat": {
-        "id": "300021944",
-        "pref": "Polynesian",
-        "match": "base",
-        "inFacet": true
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "aat",
-    "note": "",
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Melanesian art": {
-    "label": "Melanesian art",
+  "Solomon Islands": {
+    "label": "Solomon Islands",
     "kinds": [
       "culture"
     ],
-    "works": 6,
+    "works": 2,
     "authorities": {
-      "aat": {
-        "id": "300021867",
-        "pref": "Melanesian",
-        "match": "base",
-        "inFacet": true
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
-    "canonical": "aat",
-    "note": "",
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Rarotongan": {
+    "label": "Rarotongan",
+    "kinds": [
+      "culture"
+    ],
+    "works": 2,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Tahitian": {
+    "label": "Tahitian",
+    "kinds": [
+      "culture"
+    ],
+    "works": 1,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Māori art": {
@@ -13203,6 +13223,36 @@
         ],
         "confident": false
       },
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "New Guinea Highlands": {
+    "label": "New Guinea Highlands",
+    "kinds": [
+      "culture"
+    ],
+    "works": 1,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Sepik": {
+    "label": "Sepik",
+    "kinds": [
+      "culture"
+    ],
+    "works": 3,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
       "tkLabel": null
     },
     "canonical": "none-adequate",
