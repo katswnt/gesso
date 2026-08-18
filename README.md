@@ -273,6 +273,7 @@ Image delivery uses card-sized sources by default, loads full resolution only on
 - The v2 pixel-grounded audit is still burning down most-seen-first.
 - Historical regions remain broader and less period-specific than the finished product should ultimately support.
 - The movement/culture ontology can reproduce a two-tier history in which Western art gets named movements while non-Western art gets broad cultures or dynasties.
+- **The canon in the pool skews overwhelmingly male.** Among works whose creator resolves on Wikidata (about 3,000), roughly 96% are by men by work and 94% by distinct artist (`scripts/audit-canon-gender.mjs`). This mirrors museum and Wikipedia representation rather than any deliberate choice, but the taxonomy work interrogated the geographic bias while leaving the gender bias unaddressed; it is tracked here on the same footing, not solved.
 - Public-domain restrictions underrepresent twentieth- and twenty-first-century art.
 - The single-file application has outgrown the maintainability benefits of its original no-build constraint.
 - The harvest is not byte-for-byte reproducible because its upstream knowledge graphs continue to change; committed snapshots or locks would close that gap.
