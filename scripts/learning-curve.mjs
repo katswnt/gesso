@@ -57,3 +57,33 @@ for (const wk of works.sort((a, b) => a.resid - b.resid).slice(0, 15))
   console.log(`  resid ${String(wk.resid).padStart(4)}  (raw ${String(wk.pct).padStart(3)}%)  ${wk.title.slice(0, 40).padEnd(40)} played run#${wk.first + 1}/${n}`);
 console.log("\nresidual removes your learning trend, so an early low score on an easy work won't read as 'hard'. compare to the vision predictions on the same works.");
 
+// ── the education thesis: are you LEARNING — on the same work, and (the real test) transferring to NEW works? ──
+const poolOf = id => idx[id] || (String(id).match(/Q\d+/) && idx["wikidata:" + String(id).match(/Q\d+/)[0]]) || null;
+const centuryBucket = y => y == null ? null : (y < 0 ? "bce" + Math.ceil(-y / 100) : "ce" + Math.floor(y / 100));
+// the category a facet should transfer WITHIN: see more of this → get better at that facet on unseen works
+const catOf = (p, f) => f === "when" ? centuryBucket(p.y) : f === "where" ? (p.region || null) : f === "style" ? (p.style || null) : f === "medium" ? (p.medSimple || null) : f === "artist" ? (p.artist || null) : null;
+// ordered timeline of individual plays (runs already sorted oldest → newest by updated_at)
+const tl = [];
+for (const r of runs) for (const rd of (r.rounds || [])) { const p = poolOf(rd.id); if (!p) continue;
+  const facs = {}; for (const f of FIELDS) { const v = rd.cells?.[f]; if (v != null) facs[f] = v / MAX_CAT; }
+  tl.push({ order: r.i, id: rd.id, p, facs }); }
+
+// (A) SAME-WORK: your score the FIRST vs LATEST time you saw a work you've seen 2+ times
+const byW = {}; for (const t of tl) (byW[t.id] = byW[t.id] || []).push(t);
+const reps = Object.values(byW).filter(a => a.length >= 2);
+console.log(`\n=== (A) SAME-WORK learning — ${reps.length} works you saw 2+ times (first → latest) ===`);
+for (const f of FIELDS) { let a = 0, b = 0, n = 0; for (const arr of reps) { const fst = arr[0], lst = arr[arr.length - 1]; if (fst.facs[f] != null && lst.facs[f] != null) { a += fst.facs[f]; b += lst.facs[f]; n++; } }
+  if (n) console.log(`  ${f.padEnd(7)} first ${Math.round(a / n * 100)}% → latest ${Math.round(b / n * 100)}%  (${b >= a ? "+" : ""}${Math.round((b - a) / n * 100)}, n=${n})`); }
+
+// (B) TRANSFER: facet accuracy on a work vs how many DISTINCT PRIOR works of the SAME category you'd already seen
+console.log(`\n=== (B) TRANSFER learning — accuracy on works vs # prior works of the same period/region/movement/medium/artist ===`);
+const seen = {}; for (const f of FIELDS) seen[f] = {};
+const bins = [[0, 0], [1, 2], [3, 5], [6, 1e9]], lab = ["0 prior", "1-2", "3-5", "6+"];
+const agg = {}; for (const f of FIELDS) agg[f] = bins.map(() => ({ s: 0, n: 0 }));
+for (const t of tl) for (const f of FIELDS) { if (t.facs[f] == null) continue; const cat = catOf(t.p, f); if (!cat) continue;
+  const set = seen[f][cat] || (seen[f][cat] = new Set()); const prior = set.size - (set.has(t.id) ? 1 : 0);
+  const bi = bins.findIndex(([lo, hi]) => prior >= lo && prior <= hi); agg[f][bi].s += t.facs[f]; agg[f][bi].n++; set.add(t.id); }
+for (const f of FIELDS) console.log(`  ${f.padEnd(7)} ${agg[f].map((b, i) => b.n ? `${lab[i]}: ${Math.round(b.s / b.n * 100)}%(n${b.n})` : `${lab[i]}: —`).join("   ")}`);
+console.log(`\nRising left→right in (B) = you get better on NEW works as you see more of the same period/region/movement/medium/artist.`);
+console.log(`That transfer (not just re-scoring a work you memorized) is the learning thesis — and it's the recognition signal the ease metric needs.`);
+
