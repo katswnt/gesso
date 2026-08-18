@@ -13,7 +13,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1404472",
+        "label": "Italian Renaissance",
+        "desc": "cultural movement from the 14th to 17th century",
+        "p31": [
+          "Q2198855"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -163,11 +171,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2477112",
+        "label": "German Romanticism",
+        "desc": "intellectual movement in the culture of German-speaking countries in the late-18th and early 19th centuries",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q2477112 (intellectual movement in the culture of German-speaking countries in the late-18th and early 19th centuries)",
     "constructType": null
   },
   "Hellenistic art": {
@@ -332,11 +348,20 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q189458",
+        "label": "academic art",
+        "desc": "style of painting and sculpture produced under the influence of European academies of art",
+        "p31": [
+          "Q968159",
+          "Q32880"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q189458 (style of painting and sculpture produced under the influence of European academies of art)",
     "constructType": null
   },
   "Mannerism": {
@@ -539,7 +564,16 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2455000",
+        "label": "German Renaissance",
+        "desc": "cultural and artistic movement, part of the Northern Renaissance",
+        "p31": [
+          "Q2198855",
+          "Q32880"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -580,7 +614,16 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q6076358",
+        "label": "Spanish Baroque painting",
+        "desc": "style of painting",
+        "p31": [
+          "Q65266274",
+          "Q3326867"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -644,11 +687,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q4745527",
+        "label": "American realism",
+        "desc": "style in art, music and literature that depicted contemporary social realities and the lives and everyday activities of ordinary people",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q4745527 (style in art, music and literature that depicted contemporary social realities and the lives and everyday activities of ordinary people)",
     "constructType": null
   },
   "Italian Baroque": {
@@ -664,7 +715,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q13581485",
+        "label": "Italian Baroque",
+        "desc": "movement in art and architecture",
+        "p31": [
+          "Q2198855"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -685,7 +744,16 @@
         "inFacet": true,
         "dates": "450–750"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2614483",
+        "label": "Pre-romanticism",
+        "desc": "literary movement developed in Europe in the last third of the century XVIII",
+        "p31": [
+          "Q2198855",
+          "Q3326717"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -793,7 +861,15 @@
         "inFacet": true,
         "dates": "1609–1713"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q934618",
+        "label": "Danish Golden Age",
+        "desc": "period in Denmark during the first half of the 19th century",
+        "p31": [
+          "Q2198855"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -1050,7 +1126,15 @@
         "inFacet": false,
         "dates": "1731"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q59308573",
+        "label": "Bird-and-Flower Paintings",
+        "desc": "print at the Metropolitan Museum of Art (MET, JP1855)",
+        "p31": [
+          "Q18219090"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -1238,11 +1322,22 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2444884",
+        "label": "Tibet",
+        "desc": "former de facto state in East Asia",
+        "p31": [
+          "Q3024240",
+          "Q10711424",
+          "Q15239622"
+        ],
+        "endonym": "བོད།",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q2444884 (former de facto state in East Asia)",
     "constructType": null
   },
   "Eastern Tibet": {
@@ -1555,7 +1650,18 @@
         "match": "alt",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q975405",
+        "label": "Sultanate of Rum",
+        "desc": "former sultanate in Anatolia",
+        "p31": [
+          "Q12759805",
+          "Q3024240",
+          "Q1088391"
+        ],
+        "endonym": "سلجوقیان روم",
+        "confident": true
+      },
       "tkLabel": null
     },
     "canonical": "endonym",
@@ -1617,11 +1723,20 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q577622",
+        "label": "Coptic art",
+        "desc": "Christian art of the Byzantine-Greco-Roman Egypt and of Coptic Christian Churches",
+        "p31": [
+          "Q1792379",
+          "Q64222339"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q577622 (Christian art of the Byzantine-Greco-Roman Egypt and of Coptic Christian Churches)",
     "constructType": null
   },
   "Fatimid": {
@@ -1822,11 +1937,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q105747936",
+        "label": "Roman Egypt Era",
+        "desc": "era of Egyptian history from 30 BC to 395 AD",
+        "p31": [
+          "Q11514315"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q105747936 (era of Egyptian history from 30 BC to 395 AD)",
     "constructType": null
   },
   "New Kingdom": {
@@ -1908,7 +2031,15 @@
         "inFacet": true,
         "dates": "304"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2320005",
+        "label": "Ptolemaic Kingdom",
+        "desc": "period from 305 to 30 BC in ancient Egypt",
+        "p31": [
+          "Q3932025"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -2095,7 +2226,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q633683",
+        "label": "red-figure pottery",
+        "desc": "ancient Greek pottery style",
+        "p31": [
+          "Q24017852"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -2326,11 +2465,24 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q28179",
+        "label": "Joseon",
+        "desc": "Korean dynasty / kingdom (1392–1897)",
+        "p31": [
+          "Q3024240",
+          "Q417175",
+          "Q3624078",
+          "Q1309121",
+          "Q164950"
+        ],
+        "endonym": "조선",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q28179 (Korean dynasty / kingdom (1392–1897))",
     "constructType": null
   },
   "Edo Individualists": {
@@ -2661,11 +2813,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q215583",
+        "label": "Dogon people",
+        "desc": "ethnic group indigenous to Mali",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q215583 (ethnic group indigenous to Mali)",
     "constructType": null
   },
   "Old Kingdom": {
@@ -2738,11 +2898,24 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q47690",
+        "label": "Babylonia",
+        "desc": "historical country",
+        "p31": [
+          "Q7275",
+          "Q3024240",
+          "Q3502482",
+          "Q28171280",
+          "Q96196009"
+        ],
+        "endonym": "𒆳𒆍𒀭𒊏𒆠",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q47690 (historical country)",
     "constructType": null
   },
   "Middle Kingdom": {
@@ -2840,11 +3013,19 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q4342543",
+        "label": "paleoart",
+        "desc": "art genre attempting to depict prehistoric life according to scientific evidence",
+        "p31": [
+          "Q1792379"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q4342543 (art genre attempting to depict prehistoric life according to scientific evidence)",
     "constructType": null
   },
   "Spanish Colonial": {
@@ -2901,11 +3082,19 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q46825",
+        "label": "Gothic art",
+        "desc": "style of Medieval art developed in Northern France",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q46825 (style of Medieval art developed in Northern France)",
     "constructType": null
   },
   "Toltec": {
@@ -2962,7 +3151,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2477787",
+        "label": "American Impressionism",
+        "desc": "style of painting",
+        "p31": [
+          "Q3326867"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -3064,11 +3261,22 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1130350",
+        "label": "Minangkabau",
+        "desc": "Sumatran indigenous group native to Minangkabau Highlands in western Sumatra",
+        "p31": [
+          "Q41710",
+          "Q83828",
+          "Q1945590"
+        ],
+        "endonym": "bangso Minangkabau",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1130350 (Sumatran indigenous group native to Minangkabau Highlands in western Sumatra)",
     "constructType": null
   },
   "Viking art": {
@@ -3272,11 +3480,22 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q11768",
+        "label": "Ancient Egypt",
+        "desc": "Egyptian civilization from the 4th millennium BC",
+        "p31": [
+          "Q28171280",
+          "Q3502482",
+          "Q3024240",
+          "Q1620908"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q11768 (Egyptian civilization from the 4th millennium BC)",
     "constructType": null
   },
   "Amarna period": {
@@ -3416,7 +3635,13 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q6124024",
+        "label": "Jain art",
+        "desc": "works of art associated with Jainism",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -3644,7 +3869,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q189594",
+        "label": "Islamic art",
+        "desc": "artistic production that developed from the hegira (year 622) to the nineteenth century, from Spain to India among populations of Islamic culture",
+        "p31": [
+          "Q1792644"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -3705,11 +3938,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q11696332",
+        "label": "Medieval Egypt",
+        "desc": "Egyptian civilization in the Middle Ages",
+        "p31": [
+          "Q3024240"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q11696332 (Egyptian civilization in the Middle Ages)",
     "constructType": null
   },
   "Proto-Elamite": {
@@ -3930,7 +4171,15 @@
         "inFacet": false,
         "dates": "330"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q629602",
+        "label": "black-figure pottery",
+        "desc": "style of painting on ancient Greek vases",
+        "p31": [
+          "Q24017852"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -3992,7 +4241,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q67429126",
+        "label": "Ancient Near Eastern Art",
+        "desc": "curatorial department of The Metropolitan Museum of Art in New York, USA",
+        "p31": [
+          "Q61781831"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -4363,11 +4620,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q861297",
+        "label": "Company style",
+        "desc": "hybrid Indo-European style of paintings made in India by Indian artists in the 18th and 19th centuries",
+        "p31": [
+          "Q968159",
+          "Q1887220"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q861297 (hybrid Indo-European style of paintings made in India by Indian artists in the 18th and 19th centuries)",
     "constructType": null
   },
   "Kubachi": {
@@ -4550,11 +4816,22 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q171203",
+        "label": "Benin Empire",
+        "desc": "West African kingdom (1180–1897)",
+        "p31": [
+          "Q3024240",
+          "Q18920569",
+          "Q1250464",
+          "Q1063239"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q171203 (West African kingdom (1180–1897))",
     "constructType": null
   },
   "Zhou dynasty bronze": {
@@ -4673,7 +4950,13 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q256",
+        "label": "Turkish",
+        "desc": "Oghuz Turkic language of the Turkish people",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -4894,7 +5177,16 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1994273",
+        "label": "Flemish Baroque painting",
+        "desc": "painting movement",
+        "p31": [
+          "Q3326867",
+          "Q65266274"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -5035,7 +5327,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q5595260",
+        "label": "Grand manner",
+        "desc": "Idealized aesthetic style of painting",
+        "p31": [
+          "Q1792644"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -5204,11 +5504,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q15941800",
+        "label": "Ghent-Bruges school",
+        "desc": "school of manuscript illumination in the Southern Netherlands",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q15941800 (school of manuscript illumination in the Southern Netherlands)",
     "constructType": null
   },
   "American Chippendale": {
@@ -5224,7 +5532,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q137882893",
+        "label": "American Chippendale furniture",
+        "desc": "American furniture style",
+        "p31": [
+          "Q1292119"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -5305,11 +5621,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q15571255",
+        "label": "indigenous peoples of North America",
+        "desc": "precontact inhabitants of North America",
+        "p31": [
+          "Q41710",
+          "Q851990"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q15571255 (precontact inhabitants of North America)",
     "constructType": null
   },
   "Safavid Persian miniature": {
@@ -5517,7 +5842,13 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q12584160",
+        "label": "Goryeo Buddhist paintings",
+        "desc": "Korean art form",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -5537,11 +5868,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q806017",
+        "label": "Bamileke people",
+        "desc": "ethnic group of West Province of Cameroon",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q806017 (ethnic group of West Province of Cameroon)",
     "constructType": null
   },
   "Akan": {
@@ -5775,7 +6114,13 @@
     "works": 2,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q108395333",
+        "label": "Marlik Cup",
+        "desc": "ancient cup in the Marlik period",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -5898,11 +6243,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q458076",
+        "label": "Copper Hoard Culture",
+        "desc": "find-complexes in the western Ganges-Yamuna doab in the Indian subcontinent",
+        "p31": [
+          "Q465299"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q458076 (find-complexes in the western Ganges-Yamuna doab in the Indian subcontinent)",
     "constructType": null
   },
   "Visigothic": {
@@ -5939,11 +6292,20 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q714601",
+        "label": "Predynastic Period of Egypt",
+        "desc": "period of ancient Egyptian history",
+        "p31": [
+          "Q6428674",
+          "Q11514315"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q714601 (period of ancient Egyptian history)",
     "constructType": null
   },
   "Urartian": {
@@ -6041,7 +6403,13 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2688661",
+        "label": "Ethiopian art",
+        "desc": "art of Ethiopian culture",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -6495,11 +6863,19 @@
         "match": "alt-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1935974",
+        "label": "cityscape",
+        "desc": "art genre depicting the urban landscape",
+        "p31": [
+          "Q1792379"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1935974 (art genre depicting the urban landscape)",
     "constructType": null
   },
   "American Colonial": {
@@ -7502,7 +7878,17 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1497437",
+        "label": "Jun ware",
+        "desc": "a type of Chinese pottery from one of the Five Great Kilns of Song dynasty",
+        "p31": [
+          "Q483394",
+          "Q16686448",
+          "Q133250"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -7557,7 +7943,13 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q109535316",
+        "label": "Farangi-Sazi",
+        "desc": "style of Persian painting",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -7619,7 +8011,15 @@
         "inFacet": false,
         "dates": "400"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q137132584",
+        "label": "Nepali Pagoda architecture style",
+        "desc": "Characterized by multi-tiered roofs and intricate woodwork, this style is prominent in Nepal and has influenced architecture in neighboring regions. (ID: INHF-305680075-18-11-25-NY)",
+        "p31": [
+          "Q32880"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -7745,7 +8145,15 @@
         "inFacet": true,
         "dates": "1400–1594"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1420751",
+        "label": "Venetian Renaissance",
+        "desc": "Venetian cultural movement",
+        "p31": [
+          "Q65266274"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -7990,7 +8398,15 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q101516754",
+        "label": "Plate",
+        "desc": "art work by Yabu Meizan",
+        "p31": [
+          "Q57216"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -8031,7 +8447,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2245489",
+        "label": "Italian Gothic architecture",
+        "desc": "style of architecture",
+        "p31": [
+          "Q25484644"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -8072,7 +8496,16 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2349908",
+        "label": "French Renaissance",
+        "desc": "cultural movement from the 15th to 17th century",
+        "p31": [
+          "Q2198855",
+          "Q1792644"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -8093,7 +8526,13 @@
         "inFacet": false,
         "dates": "1573–1619"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q98882832",
+        "label": "Five colour glaze",
+        "desc": "type of Chinese porcelain decoration in a palette of five colours dating from the Ming period, 1368-1642 where five colors are three enamels (red, green and yellow), underglaze blue, plus the white of the porcelain body",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -8579,11 +9018,22 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q751880",
+        "label": "Japonisme",
+        "desc": "European imitation of Japanese art during the 19th and 20th centuries",
+        "p31": [
+          "Q2198855",
+          "Q968159",
+          "Q3326717",
+          "Q12020884"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q751880 (European imitation of Japanese art during the 19th and 20th centuries)",
     "constructType": null
   },
   "Songze culture": {
@@ -8599,11 +9049,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q30257",
+        "label": "culture of Songze",
+        "desc": "neolithic culture in China",
+        "p31": [
+          "Q465299"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q30257 (neolithic culture in China)",
     "constructType": null
   },
   "Sanxingdui culture": {
@@ -8619,11 +9077,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q118173543",
+        "label": "Sanxingdui culture",
+        "desc": "archaeological culture in China",
+        "p31": [
+          "Q465299"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q118173543 (archaeological culture in China)",
     "constructType": null
   },
   "Longshan jade": {
@@ -8843,11 +9309,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q273506",
+        "label": "School of Paris",
+        "desc": "art movement",
+        "p31": [
+          "Q968159",
+          "Q4502119"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q273506 (art movement)",
     "constructType": null
   },
   "De Stijl": {
@@ -8886,11 +9361,20 @@
         "inFacet": true,
         "dates": "1920"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q4745501",
+        "label": "American modernism",
+        "desc": "American philosophical movement",
+        "p31": [
+          "Q968159",
+          "Q2198855"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q4745501 (American philosophical movement)",
     "constructType": null
   },
   "Cubism": {
@@ -8927,11 +9411,21 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q55995",
+        "label": "Naturalism",
+        "desc": "art movement",
+        "p31": [
+          "Q968159",
+          "Q1207505",
+          "Q1792644"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q55995 (art movement)",
     "constructType": null
   },
   "American folk art": {
@@ -8948,7 +9442,16 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q110816870",
+        "label": "American Folk Art",
+        "desc": "1938 exhibition at Museum of Modern Art",
+        "p31": [
+          "Q667276",
+          "Q1656682"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -9254,11 +9757,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q478717",
+        "label": "Amsterdam Impressionism",
+        "desc": "art movement",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q478717 (art movement)",
     "constructType": null
   },
   "Auricular style": {
@@ -9335,11 +9846,21 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q756712",
+        "label": "ink wash painting",
+        "desc": "painting technique",
+        "p31": [
+          "Q1231896",
+          "Q968159"
+        ],
+        "endonym": "水墨畫",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q756712 (painting technique)",
     "constructType": null
   },
   "Heian period": {
@@ -9437,7 +9958,13 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q140331971",
+        "label": "Predynastic Egyptian mummies",
+        "desc": "mummies of the Egyptian predynastic period",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -9599,11 +10126,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q322083",
+        "label": "Bamun people",
+        "desc": "ethnic group in Cameroon",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q322083 (ethnic group in Cameroon)",
     "constructType": null
   },
   "Amhara people": {
@@ -9619,11 +10154,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q464237",
+        "label": "Amhara people",
+        "desc": "Semitic-speaking Horner ethnic group native to Ethiopia in the Ethiopian Highlands",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q464237 (Semitic-speaking Horner ethnic group native to Ethiopia in the Ethiopian Highlands)",
     "constructType": null
   },
   "Kuba": {
@@ -9659,11 +10202,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q721854",
+        "label": "Swahili people",
+        "desc": "East African ethnic group",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q721854 (East African ethnic group)",
     "constructType": null
   },
   "Ewe people": {
@@ -9679,7 +10230,13 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q732317",
+        "label": "Ewe people",
+        "desc": "ethnic group in Ghana and Togo",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -9719,7 +10276,13 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1295544",
+        "label": "Fang people",
+        "desc": "ethnic group in Cameroon, Gabon and Equatorial Guinea",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -9779,11 +10342,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2928170",
+        "label": "Bunda people",
+        "desc": "Congolese people",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q2928170 (Congolese people)",
     "constructType": null
   },
   "Mbembe people": {
@@ -9799,11 +10370,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q15407287",
+        "label": "Mbembe people",
+        "desc": "ethnic group in the Cameroon",
+        "p31": [
+          "Q41710"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q15407287 (ethnic group in the Cameroon)",
     "constructType": null
   },
   "Islamic calligraphy": {
@@ -9839,11 +10418,20 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q170292",
+        "label": "Classicism",
+        "desc": "art movement; architectural style",
+        "p31": [
+          "Q968159",
+          "Q32880"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q170292 (art movement; architectural style)",
     "constructType": null
   },
   "Social Realism": {
@@ -9860,11 +10448,19 @@
         "inFacet": false,
         "dates": "1930–1940"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q837024",
+        "label": "social realism",
+        "desc": "art showing conditions of the working class",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q837024 (art showing conditions of the working class)",
     "constructType": null
   },
   "International Gothic": {
@@ -9902,7 +10498,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q430167",
+        "label": "Spanish Renaissance",
+        "desc": "cultural movement",
+        "p31": [
+          "Q2198855"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -9922,7 +10526,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q27301872",
+        "label": "Romanticism in France",
+        "desc": "literary and artistic movement",
+        "p31": [
+          "Q2198855"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -10123,11 +10735,19 @@
         "match": "alt-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q281108",
+        "label": "naïve art",
+        "desc": "art movement",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q281108 (art movement)",
     "constructType": null
   },
   "Venetian veduta": {
@@ -10183,11 +10803,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1322229",
+        "label": "Spanish Enlightenment",
+        "desc": "intellectual and cultural movement in Spain",
+        "p31": [
+          "Q136329308",
+          "Q11514315"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1322229 (intellectual and cultural movement in Spain)",
     "constructType": null
   },
   "Victorian art": {
@@ -10249,7 +10878,13 @@
         "inFacet": true,
         "dates": "1571–1610"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1628039",
+        "label": "Utrecht Caravaggism",
+        "desc": "art movement",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -10269,11 +10904,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q477134",
+        "label": "Antwerp Mannerism",
+        "desc": "style of painting and drawing practiced by artists working in Antwerp during the period from circa 1500 to 1530",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q477134 (style of painting and drawing practiced by artists working in Antwerp during the period from circa 1500 to 1530)",
     "constructType": null
   },
   "Hague School": {
@@ -10289,11 +10932,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1232633",
+        "label": "Hague School",
+        "desc": "artistic movement",
+        "p31": [
+          "Q4502119",
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1232633 (artistic movement)",
     "constructType": null
   },
   "Dutch genre painting": {
@@ -10370,7 +11022,16 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2642826",
+        "label": "French Realism",
+        "desc": "French painting movement",
+        "p31": [
+          "Q3326867",
+          "Q1292119"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -10448,11 +11109,21 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q693980",
+        "label": "Duchy of Swabia",
+        "desc": "duchy of Holy Roman Empire (909-1268)",
+        "p31": [
+          "Q3024240",
+          "Q154547"
+        ],
+        "endonym": "ducatus Sueviae",
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q693980 (duchy of Holy Roman Empire (909-1268))",
     "constructType": null
   },
   "Vienna Secession": {
@@ -10509,11 +11180,20 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q519443",
+        "label": "Orphism",
+        "desc": "art movement",
+        "p31": [
+          "Q968159",
+          "Q17399019"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q519443 (art movement)",
     "constructType": null
   },
   "Natural history illustration": {
@@ -10713,7 +11393,13 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2316866",
+        "label": "geometric abstraction",
+        "desc": "form of abstract art involving geometry",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -10815,11 +11501,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1401605",
+        "label": "Russian avant-garde",
+        "desc": "influential wave of modern art that flourished in Russia about 1890 to 1930",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1401605 (influential wave of modern art that flourished in Russia about 1890 to 1930)",
     "constructType": null
   },
   "Cubo-Futurism": {
@@ -10993,11 +11687,20 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q178665",
+        "label": "Mitanni",
+        "desc": "state in northern Syria and south-east Anatolia from ca. 1500 BC–1300 BC",
+        "p31": [
+          "Q3024240",
+          "Q417175"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q178665 (state in northern Syria and south-east Anatolia from ca. 1500 BC–1300 BC)",
     "constructType": null
   },
   "Early Dynastic Sumerian": {
@@ -11053,11 +11756,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q3411971",
+        "label": "Etruscan Orientalizing period",
+        "desc": "",
+        "p31": [
+          "Q11514315"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q3411971 ()",
     "constructType": null
   },
   "Castro culture": {
@@ -11073,11 +11784,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1049966",
+        "label": "Castro culture",
+        "desc": "archaeological culture",
+        "p31": [
+          "Q465299"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1049966 (archaeological culture)",
     "constructType": null
   },
   "Anglo-Scandinavian": {
@@ -11296,7 +12015,15 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q5249786",
+        "label": "New Spanish Baroque",
+        "desc": "Baroque art in the Viceroyalty of New Spain",
+        "p31": [
+          "Q65266274"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -11356,11 +12083,24 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q11772",
+        "label": "Ancient Greece",
+        "desc": "Greek civilization from 1200 BC to 600 AD",
+        "p31": [
+          "Q1792644",
+          "Q28171280",
+          "Q1620908",
+          "Q3502482",
+          "Q11042",
+          "Q8432"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q11772 (Greek civilization from 1200 BC to 600 AD)",
     "constructType": null
   },
   "Islamic scientific instruments": {
@@ -11391,11 +12131,20 @@
     "works": 1,
     "authorities": {
       "aat": null,
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2920817",
+        "label": "Chupícuaro",
+        "desc": "Mesoamerican culture and archaeological site of the pre-classical period",
+        "p31": [
+          "Q465299",
+          "Q839954"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q2920817 (Mesoamerican culture and archaeological site of the pre-classical period)",
     "constructType": null
   },
   "American Post-Impressionism": {
@@ -11451,7 +12200,15 @@
         "match": "exact-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q468930",
+        "label": "trompe-l'œil",
+        "desc": "art technique of illusory tridimensionality",
+        "p31": [
+          "Q16743958"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -11656,11 +12413,19 @@
         "inFacet": true,
         "dates": "1400–1500"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q267256",
+        "label": "Dian kingdom",
+        "desc": "former country",
+        "p31": [
+          "Q3024240"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q267256 (former country)",
     "constructType": null
   },
   "Nazarene": {
@@ -11738,7 +12503,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1998617",
+        "label": "Russian icons",
+        "desc": "Russian religious art",
+        "p31": [
+          "Q25621246"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -11839,11 +12612,19 @@
         "inFacet": true,
         "dates": "1888"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q503708",
+        "label": "Les Nabis",
+        "desc": "artist collective",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q503708 (artist collective)",
     "constructType": null
   },
   "Vorticism": {
@@ -11962,11 +12743,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1253440",
+        "label": "Roman mosaic",
+        "desc": "style of mosaic from the Roman period",
+        "p31": [
+          "Q1792379"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1253440 (style of mosaic from the Roman period)",
     "constructType": null
   },
   "Mycenaean": {
@@ -12023,11 +12812,20 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q612118",
+        "label": "Insular art",
+        "desc": "style of art produced in the post-Roman history of the British Isles",
+        "p31": [
+          "Q968159",
+          "Q1292119"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q612118 (style of art produced in the post-Roman history of the British Isles)",
     "constructType": null
   },
   "Russian Modernism": {
@@ -12064,11 +12862,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1879488",
+        "label": "Russian symbolism",
+        "desc": "activities and events of the Symbolist movement in 19th-century Russia",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1879488 (activities and events of the Symbolist movement in 19th-century Russia)",
     "constructType": null
   },
   "Russian Revival": {
@@ -12188,7 +12994,15 @@
         "inFacet": false,
         "dates": "1920"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q160476",
+        "label": "German Expressionism",
+        "desc": "cultural movement",
+        "p31": [
+          "Q3001152"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -12288,11 +13102,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q3032335",
+        "label": "Heidelberg School",
+        "desc": "late 19th century Australian art movement focusing on Australian life, the bush, and the harsh sunlight that typifies the country",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q3032335 (late 19th century Australian art movement focusing on Australian life, the bush, and the harsh sunlight that typifies the country)",
     "constructType": null
   },
   "Canadian Modernism": {
@@ -12369,7 +13191,18 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q25389336",
+        "label": "Māori art",
+        "desc": "type of art from New Zealand",
+        "p31": [
+          "Q120400477",
+          "Q1047113",
+          "Q627436",
+          "Q11862829"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -12492,7 +13325,15 @@
         "inFacet": true,
         "dates": "1960–1970"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q430831",
+        "label": "contemporary African art",
+        "desc": "art made by Africans or their descendants in the post-colonial era",
+        "p31": [
+          "Q25679497"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -12874,11 +13715,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q962151",
+        "label": "Classical Greek sculpture",
+        "desc": "period in ancient Greek sculpture",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q962151 (period in ancient Greek sculpture)",
     "constructType": null
   },
   "Early Northern Renaissance": {
@@ -12914,7 +13763,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1965056",
+        "label": "Kraak porcelain",
+        "desc": "Chinese Ming Dynasty imported porcelain in 16th- & 17th-century Europe",
+        "p31": [
+          "Q24017852"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -12994,11 +13851,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1089246",
+        "label": "studio glass",
+        "desc": "the use of glass as an artistic medium to produce sculptures or three-dimensional artworks",
+        "p31": [
+          "Q1792379",
+          "Q62302889"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1089246 (the use of glass as an artistic medium to produce sculptures or three-dimensional artworks)",
     "constructType": null
   },
   "Jain painting": {
@@ -13357,11 +14223,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q962151",
+        "label": "Classical Greek sculpture",
+        "desc": "period in ancient Greek sculpture",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q962151 (period in ancient Greek sculpture)",
     "constructType": null
   },
   "Pre-Romanticism": {
@@ -13378,7 +14252,16 @@
         "inFacet": true,
         "dates": "450–750"
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2614483",
+        "label": "Pre-romanticism",
+        "desc": "literary movement developed in Europe in the last third of the century XVIII",
+        "p31": [
+          "Q2198855",
+          "Q3326717"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -13398,7 +14281,13 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q7682684",
+        "label": "Tang dynasty painting",
+        "desc": "visual art during the Tang dynasty period in China",
+        "p31": [],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -13533,11 +14422,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q936588",
+        "label": "Renaissance sculpture",
+        "desc": "art of sculpture in the Renaissance",
+        "p31": [
+          "Q968159",
+          "Q1792644"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q936588 (art of sculpture in the Renaissance)",
     "constructType": null
   },
   "South Italy": {
@@ -13593,11 +14491,20 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q180568",
+        "label": "Egyptian Empire",
+        "desc": "period from 1570 to 1069 BC in Egypt",
+        "p31": [
+          "Q3024240",
+          "Q11514315"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q180568 (period from 1570 to 1069 BC in Egypt)",
     "constructType": null
   },
   "Gothic": {
@@ -13773,11 +14680,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q1580145",
+        "label": "Hellenistic sculpture",
+        "desc": "sculpture of the Hellenistic culture of antiquity",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q1580145 (sculpture of the Hellenistic culture of antiquity)",
     "constructType": null
   },
   "Land art": {
@@ -13793,11 +14708,20 @@
         "match": "norm-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q326478",
+        "label": "land art",
+        "desc": "form of art creation in which landscape and the work of art are inextricably linked",
+        "p31": [
+          "Q968159",
+          "Q1792379"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q326478 (form of art creation in which landscape and the work of art are inextricably linked)",
     "constructType": null
   },
   "Pakistan, Khyber-Pakhtunkhwa province, possibly Takht-i-bahi monastery, ancient region of Gandhara": {
@@ -13914,11 +14838,19 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q632355",
+        "label": "Archaic Greek sculpture",
+        "desc": "period in ancient Greek sculpture",
+        "p31": [
+          "Q968159"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q632355 (period in ancient Greek sculpture)",
     "constructType": null
   },
   "Assyrian Empire": {
@@ -13934,11 +14866,20 @@
         "match": "fuzzy",
         "inFacet": true
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q41137",
+        "label": "Assyrian Empire",
+        "desc": "major Mesopotamian East Semitic kingdom",
+        "p31": [
+          "Q3024240",
+          "Q48349"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q41137 (major Mesopotamian East Semitic kingdom)",
     "constructType": null
   },
   "Ancient Celts": {
@@ -13954,11 +14895,19 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q35966",
+        "label": "Ancient Celts",
+        "desc": "Indo-European ethnolinguistic group of tribal societies in Iron Age Europe",
+        "p31": [
+          "Q4204501"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q35966 (Indo-European ethnolinguistic group of tribal societies in Iron Age Europe)",
     "constructType": null
   },
   "Anglo-Saxons": {
@@ -14037,7 +14986,15 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q268639",
+        "label": "Ottoman miniature",
+        "desc": "art form in the Ottoman Empire",
+        "p31": [
+          "Q64222339"
+        ],
+        "confident": false
+      },
       "tkLabel": null
     },
     "canonical": "none-adequate",
@@ -14118,11 +15075,20 @@
         "match": "fuzzy-offfacet",
         "inFacet": false
       },
-      "wikidata": null,
+      "wikidata": {
+        "qid": "Q2405999",
+        "label": "fairy painting",
+        "desc": "Victorian painting genre and movement",
+        "p31": [
+          "Q968159",
+          "Q16743958"
+        ],
+        "confident": true
+      },
       "tkLabel": null
     },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "canonical": "wikidata",
+    "note": "Wikidata Q2405999 (Victorian painting genre and movement)",
     "constructType": null
   },
   "American portrait miniature": {

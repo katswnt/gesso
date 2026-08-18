@@ -35,11 +35,15 @@ const GOOD_P31 = new Set([
 const BAD_P31 = new Set(["Q34770", "Q4167410", "Q315"]); // language, Wikimedia disambiguation, language(alt)
 
 async function api(params) {
-  const url = API + "?" + new URLSearchParams({ format: "json", origin: "*", ...params });
-  for (let a = 0; a < 5; a++) {
-    if (a) await sleep(1000 * a);
-    try { const r = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
-      if (r.ok) return await r.json(); } catch {}
+  // NB: no `origin` param — origin=* forces anonymous CORS mode, which Wikidata rate-limits far harder.
+  // maxlag is the polite-bot convention; on lag the API returns an error and we back off.
+  const url = API + "?" + new URLSearchParams({ format: "json", maxlag: "5", ...params });
+  for (let a = 0; a < 6; a++) {
+    if (a) await sleep(1200 * a);
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+      if (r.ok) { const j = await r.json(); if (!j.error) return j; }
+    } catch {}
   }
   return null;
 }
