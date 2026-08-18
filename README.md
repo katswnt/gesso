@@ -150,12 +150,22 @@ The page is also a deliberately mixed reading-and-viewing list. Its links includ
 - **Creation and custody are separate facts.** A Benin object held in London does not become British data, and an artist's nationality is not substituted for where an object was made.
 - **Historical geography is applied with parity.** Ancient Egypt, Safavid Persia, the Ottoman core, the Low Countries, the pre-unification Italian peninsula, and other historical regions can all be valid scoring areas. Fluid geography is not reserved for non-Western art while Europe gets modern borders.
 - **Anonymous makers remain first-class.** Optional attribution and low artist-coverage floors keep ceramics, textiles, ritual objects, and workshop production playable instead of filtering them out for lacking a celebrated individual name.
-- **Movement is not a universal category.** The data distinguishes movements, schools, periods, traditions, and cultures instead of forcing every object into a Western “-ism.” The remaining tendency for Western art to receive dynamic movement labels while other art receives broad cultural or dynastic labels is documented as an unresolved ontology problem.
+- **Movement is not a universal category.** The data distinguishes movements, schools, periods, traditions, and cultures instead of forcing every object into a Western “-ism.” The remaining tendency for Western art to receive dynamic movement labels while other art receives broad cultural or dynastic labels is documented as an unresolved ontology problem. How the label vocabulary is structured, and how it is anchored to a standard authority, is described in [Style, movement, and the Getty AAT backbone](#style-movement-and-the-getty-aat-backbone) below.
 - **Uncertainty remains visible.** Date ranges receive full credit throughout the sourced interval; “attributed to,” workshop, circle, and follower labels are preserved rather than collapsed into false certainty.
 - **Some objects should not be gamified.** Human and ancestral remains are excluded from play. Source sensitivity flags are respected, and contested, funerary, sacred, and ceremonial material is routed toward context and additional review.
 - **The app's voice is accountable.** Gesso-authored notes are screened for harmful language. Historically assigned museum titles can themselves carry a colonial voice; consistently annotating those inherited titles remains open work rather than a solved claim.
 
 These choices reduce particular distortions; they do not “decolonize” a dataset built from uneven museum, legal, and Wikimedia infrastructure. The project keeps a [choices and assumptions register](docs/ethos.md) so the values, tradeoffs, criticisms, and alternatives remain legible and revisable.
+
+### Style, movement, and the Getty AAT backbone
+
+The style facet a player guesses (Baroque, Ukiyo-e, Dutch Golden Age, Maori) has to do two jobs at once: name the object the way a curator would, and score fairly as one option among distractors. Those pull in different directions, most visibly around whether to split a broad movement like “Baroque” into national variants. Gesso's answer, reasoned through as an art historian, a curator, and a product designer would each see it:
+
+- **Model a hierarchy; display the parent.** “Baroque” is the guessable label. Children exist in the structure but are not multiplied for their own sake.
+- **Never nationalize mechanically.** A parent is split only into a genuinely distinct **named school** a specialist recognizes (Dutch Golden Age, Caravaggism, Utrecht Caravaggism, Siglo de Oro, Flemish Baroque), never into an invented “[Country] Baroque” minted only to record a work's nationality.
+- **Geography lives in the WHERE facet, not the style label.** Place is already scored on its own axis, so a nationality baked into the style string would double-count geography and pollute the style distractors. Style tests style; place tests place.
+
+Internally, the family grouping that decides which labels are too confusable to show together as options is tuned for game fairness, not for cataloguing. It is kept honest by a **backstage** mapping of every style/culture label to the [Getty Art & Architecture Thesaurus](https://www.getty.edu/research/tools/vocabularies/aat/) — used for canonical spelling, hierarchy validation, concept-identity de-duplication, and period dates, but never surfaced to players. The full rationale, the data structures, and how to regenerate the AAT map are in [docs/taxonomy.md](docs/taxonomy.md).
 
 ### Giving something back
 
