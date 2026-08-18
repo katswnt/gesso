@@ -115,5 +115,37 @@ ok(!na({ lat: 48.8, lng: 2.3, place: "" }), "blank place WITH coords is still di
 eq(JSON.stringify(globalThis.movEra("Ming dynasty")), JSON.stringify([1368, 1644]), "Ming span parses (widen source)");
 ok(globalThis.movEra("Ming dynasty")[1] - globalThis.movEra("Ming dynasty")[0] > 200, "a dynasty span is much wider than ±12 (the point of B2)");
 
+// --- B2 widening window: named-PERIOD works get the full-credit window widened to their era ---
+// Mirrors the exact arithmetic in score()'s when-block (kept in lockstep with index.html). Given a single-year
+// culture/movement work, returns the [lo,hi] full-credit window. Guessing anywhere in [lo,hi] scores a bullseye.
+function b2Window(it){
+  let lo=it.y, hi=it.y;                                 // dateRange for a single-year work (no yr[])
+  if(lo===hi && (it.styleKind==='culture'||it.styleKind==='movement')){ const e=globalThis.movEra(it.style);
+    const SLACK=100;
+    if(e && it.y>=e[0]-SLACK && it.y<=e[1]+SLACK){ let a=Math.min(e[0],it.y), b=Math.max(e[1],it.y); const CAP=400;
+      if(b-a>CAP){ a=Math.max(a,it.y-CAP/2); b=Math.min(b,it.y+CAP/2); } lo=a; hi=b; } }
+  return [lo,hi];
+}
+// verify the mirror matches the shipped line (guards against drift)
+{ const shipped = src.match(/if\(lo===hi && \(it\.styleKind==='culture'\|\|it\.styleKind==='movement'\)\)\{ const era=movEra/);
+  ok(!!shipped, "B2 widening covers BOTH culture AND movement styleKinds in index.html"); }
+// THE BUG: Rachel Ruysch's "A Nosegay of Roses…" is dated 1710 but labelled the period "Dutch Golden Age"
+// (~1600–1680 per MOVEMENTS). A player nailing the period (e.g. a guess of 1650) must score FULL, not ~a century off.
+const dga = globalThis.movEra("Dutch Golden Age");
+const ruysch = { y: 1710, style: "Dutch Golden Age", styleKind: "movement" };
+const [rlo, rhi] = b2Window(ruysch);
+ok(rlo <= 1650 && rhi >= 1650, "REGRESSION: a 1650 guess falls inside the widened Dutch-Golden-Age window (period nailed = full)");
+ok(rlo <= dga[0] && rhi >= dga[1], "widened window spans the whole named period era");
+ok(rlo <= 1710 && rhi >= 1710, "widened window still includes the true catalogue date (union, not replacement)");
+// culture behavior preserved: a work whose year sits inside its era widens to (at most) that era, unchanged
+const cul = b2Window({ y: 1500, style: "Ming dynasty", styleKind: "culture" });
+eq(JSON.stringify(cul), JSON.stringify([1368, 1644]), "culture case unchanged: single-year Ming work widens to the dynasty span");
+// slack guard: a badly-mislabelled / parse-broken era far from the year does NOT mint a huge free window
+const junk = b2Window({ y: 250, style: "Gandhara", styleKind: "culture" }); // era ~[-1,5], 245yrs beyond → no widen
+eq(JSON.stringify(junk), JSON.stringify([250, 250]), "slack guard: work >100yrs outside its era keeps real precision (data bug, not scored away)");
+// non-period works are never widened (a named-artist movement piece keeps decade precision) — enforced by styleKind
+const school = b2Window({ y: 1710, style: "Baroque", styleKind: "school" });
+eq(JSON.stringify(school), JSON.stringify([1710, 1710]), "styleKind 'school' is not widened");
+
 console.log(`\nscoring.test: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

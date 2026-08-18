@@ -3057,12 +3057,20 @@ function score(){
   // the narrowed drill slider.) timeMult still layers each tier's leniency on top.
   if(asked('when')){
   let [lo,hi]=dateRange(it);
-  // B2 object-datability floor: a period/culture object stored with only a single (placeholder) year shouldn't
+  // B2 object-datability floor: a work whose style names a broad period/culture (a "culture" like Ancient Egypt,
+  // or a period "movement" like Dutch Golden Age) and is stored with only a single (placeholder) year shouldn't
   // demand decade precision — widen the full-credit window to the period's own datable span (movEra), capped at
   // 400 yrs so a millennium-spanning tradition doesn't become free points. Individually-dated works (an explicit
-  // range, or a named-artist / movement piece) keep their real precision — this only touches styleKind 'culture'.
-  if(lo===hi && it.styleKind==='culture'){ const era=movEra(it.style);
-    if(era && era[0]<=it.y && it.y<=era[1]){ let a=era[0],b=era[1]; const CAP=400;
+  // yr range) keep their real precision — this only touches single-year styleKind 'culture' and 'movement' works.
+  // We UNION the era with the work's own year, so a guess anywhere inside the NAMED period scores full even when
+  // the catalogue date sits just outside it (e.g. a 1710 Rachel Ruysch labelled "Dutch Golden Age" ~1600–1680:
+  // nailing the period must not be scored ~a century off). Unioning is a no-op for the classic culture case where
+  // the year already sits inside the era, so existing culture behavior is preserved. A SLACK bound (≤100 yrs
+  // outside the era edge) keeps this a period-boundary grace, not cover for a garbage era parse or a badly
+  // mislabelled work — those are data bugs to fix, not score away, and would otherwise mint a huge free window.
+  if(lo===hi && (it.styleKind==='culture'||it.styleKind==='movement')){ const era=movEra(it.style);
+    const SLACK=100;
+    if(era && it.y>=era[0]-SLACK && it.y<=era[1]+SLACK){ let a=Math.min(era[0],it.y), b=Math.max(era[1],it.y); const CAP=400;
       if(b-a>CAP){ a=Math.max(a,it.y-CAP/2); b=Math.min(b,it.y+CAP/2); } lo=a; hi=b; } }
   const ranged=lo!==hi;
   const dy = guess.year<lo ? lo-guess.year : guess.year>hi ? guess.year-hi : 0; // REAL years outside the range — for the message only
