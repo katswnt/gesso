@@ -126,33 +126,22 @@ function toCand(b) {
     note: note.slice(0, 240),
   };
 }
-// from indexed-literal hits: prefer a concept whose PREF == term (exact), then whose ALT == term (alt),
-// else it matched a stripped/folded variant (base = lower confidence, still worth keeping over fuzzy).
-function chooseLiteral(term, cands) {
-  const lc = s => s.toLowerCase();
-  const exact = cands.find(c => lc(c.aatPref) === lc(term));
-  if (exact) return { ...exact, match: "exact" };
-  const alt = cands.find(c => c.alts.some(a => lc(a) === lc(term)));
-  if (alt) return { ...alt, match: "alt" };
-  return cands.length ? { ...cands[0], match: "base" } : null;
-}
 // AAT often qualifies a period label parenthetically ("Edo (Japanese period)", "New Kingdom (Egyptian)").
 // Normalize BOTH sides (drop diacritics, parentheticals, punctuation) so we can match those; a looser form also
-// drops generic descriptors (period/dynasty/style/culture/art). Used to rescue fuzzy candidates the raw
-// relevance ranker orders wrong (it puts "Hittite Empire" above "New Kingdom (Egyptian)" for "New Kingdom").
+// drops generic descriptors (period/dynasty/style/culture/art). Used to rescue candidates the raw relevance
+// ranker orders wrong (it puts "Hittite Empire" above "New Kingdom (Egyptian)" for "New Kingdom").
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 const normLoose = s => norm(s).replace(/\b(art|culture|cultures|styles?|periods?|dynasty|dynasties|era|painting|school)\b/g, " ").replace(/\s+/g, " ").trim();
-// pick the best fuzzy candidate: exact-normalized pref/alt, then loose-normalized, else top relevance rank.
-function chooseFuzzy(term, cands) {
-  if (!cands.length) return null;
-  const nt = norm(term), lt = normLoose(term);
-  const hit = cands.find(c => norm(c.aatPref) === nt)
-    || cands.find(c => c.alts.some(a => norm(a) === nt))
-    || (lt.length >= 3 && cands.find(c => normLoose(c.aatPref) === lt))
-    || (lt.length >= 3 && cands.find(c => c.alts.some(a => normLoose(a) === lt)));
-  if (hit) return { ...hit, match: "norm" };
-  return { ...cands[0], match: "fuzzy" };
+// tag each candidate with a match TIER against the term (does not pick — the caller facet-checks then picks).
+const TIER_RANK = { exact: 5, alt: 4, norm: 3, base: 2, fuzzy: 1 };
+function tierOf(term, c) {
+  const lc = s => s.toLowerCase(), nt = norm(term), lt = normLoose(term);
+  if (lc(c.aatPref) === lc(term)) return "exact";
+  if (c.alts.some(a => lc(a) === lc(term))) return "alt";
+  if (norm(c.aatPref) === nt || c.alts.some(a => norm(a) === nt)) return "norm";
+  if (lt.length >= 3 && (normLoose(c.aatPref) === lt || c.alts.some(a => normLoose(a) === lt))) return "norm";
+  return null; // matched only a stripped/folded literal variant, or only relevance-ranked (base/fuzzy)
 }
 
 const worklist = JSON.parse(readFileSync("data/incoming/aat-worklist.json", "utf8"));
@@ -161,33 +150,39 @@ let done = Object.keys(map).length, errs = 0;
 console.log(`AAT fetch: ${worklist.length} labels, ${done} already mapped, ${worklist.length - done} to go`);
 
 const FACET_ANCESTORS = new Set([FACET]); // a concept is in-facet if 300264088 is among its ancestor ids
+async function facetCheck(id) {
+  const p = await run(qPath(id));
+  if (p === null) return null; // endpoint hiccup
+  const path = p[0]?.anc?.value || "";
+  const ancIds = p[0]?.ancIds?.value ? p[0].ancIds.value.split(" ") : [];
+  return { path, inFacet: ancIds.some(x => FACET_ANCESTORS.has(x)), facet: (path.split(" > ").pop() || "").trim() };
+}
 for (const { label, kinds, works } of worklist) {
   if (map[label] && map[label].match !== "endpoint-error") continue; // resume
-  // 1) indexed exact-literal lookup (reliable, no relevance ranking); 2) fuzzy full-text only if that misses
+  // 1) indexed exact-literal lookup (reliable); 2) fuzzy full-text only if that misses. Tier every candidate.
   let rows = await run(qLiteral(label));
-  let chosen = rows === null ? null : chooseLiteral(label, rows.map(toCand).filter(c => c.aatId));
-  if (rows !== null && !chosen) {
+  let cands = rows === null ? null : rows.map(toCand).filter(c => c.aatId).map(c => ({ ...c, tier: tierOf(label, c) || "base" }));
+  if (rows !== null && (!cands.length || !cands.some(c => c.tier !== "base"))) {
     await sleep(PACE_MS);
     const cRows = await run(qCandidates(label));
-    rows = cRows;
-    chosen = cRows === null ? null : chooseFuzzy(label, cRows.map(toCand).filter(x => x.aatId));
+    if (cRows === null) rows = null;
+    else { const fz = cRows.map(toCand).filter(c => c.aatId).map(c => ({ ...c, tier: tierOf(label, c) || "fuzzy" }));
+           cands = [...(cands || []), ...fz]; }
   }
   let res;
   if (rows === null) { res = { match: "endpoint-error" }; errs++; }
+  else if (!cands || !cands.length) { res = { match: "none" }; }
   else {
-    if (!chosen) res = { match: "none" };
-    else {
-      await sleep(PACE_MS);
-      const pRows = await run(qPath(chosen.aatId));
-      const path = pRows?.[0]?.anc?.value || "";
-      const ancIds = pRows?.[0]?.ancIds?.value ? pRows[0].ancIds.value.split(" ") : [];
-      const inFacet = ancIds.some(id => FACET_ANCESTORS.has(id)); // in Styles-and-Periods proper
-      const facet = (path.split(" > ").pop() || "").trim();       // top-level facet name for the review report
-      res = { ...chosen, path, facet, inFacet };
-      // matches OUTSIDE Styles&Periods (object-types like Vedute, or peoples/cultures in another facet) → tag for
-      // review; NOT auto-rejected, since some cultures legitimately live in a different AAT facet.
-      if (!inFacet) res.match = res.match + "-offfacet";
-    }
+    // facet-check the tiered candidates (+ the top relevance hit if all are pure fuzzy), then PREFER an in-facet
+    // style/period/culture concept over an off-facet homograph (language/object-type). Bounded to a few queries.
+    const toCheck = cands.filter(c => c.tier !== "fuzzy" && c.tier !== "base").slice(0, 6);
+    if (!toCheck.length) toCheck.push(cands[0]);
+    for (const c of toCheck) { await sleep(PACE_MS); Object.assign(c, (await facetCheck(c.aatId)) || { path: "", inFacet: false, facet: "" }); }
+    // score: an in-facet LABEL match dominates; a pure-fuzzy in-facet hit gets NO boost (avoids in-facet junk
+    // beating a genuine off-facet exact like "vedute"). Ties break by tier rank.
+    const score = c => (c.inFacet && c.tier !== "fuzzy" ? 100 : 0) + (TIER_RANK[c.tier] || 0);
+    const pick = toCheck.slice().sort((a, b) => score(b) - score(a))[0];
+    res = { ...pick, match: pick.inFacet ? pick.tier : pick.tier + "-offfacet" };
   }
   map[label] = { label, kinds, works, ...res };
   writeFileSync(OUT, JSON.stringify(map, null, 2)); // checkpoint every label
