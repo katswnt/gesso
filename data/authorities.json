@@ -1207,10 +1207,9 @@
   "Chinese literati painting": {
     "label": "Chinese literati painting",
     "kinds": [
-      "movement",
-      "tradition"
+      "movement"
     ],
-    "works": 7,
+    "works": 35,
     "authorities": {
       "aat": {
         "id": "300417409",
@@ -2535,27 +2534,6 @@
     "note": "",
     "constructType": null
   },
-  "Song dynasty literati painting": {
-    "label": "Song dynasty literati painting",
-    "kinds": [
-      "period"
-    ],
-    "works": 2,
-    "authorities": {
-      "aat": {
-        "id": "300417409",
-        "pref": "New Literati Painting",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
   "Pala-Sena period": {
     "label": "Pala-Sena period",
     "kinds": [
@@ -3285,27 +3263,6 @@
     },
     "canonical": "aat",
     "note": "",
-    "constructType": null
-  },
-  "Qing dynasty literati painting": {
-    "label": "Qing dynasty literati painting",
-    "kinds": [
-      "period"
-    ],
-    "works": 22,
-    "authorities": {
-      "aat": {
-        "id": "300417409",
-        "pref": "New Literati Painting",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Ancient Egypt": {
@@ -4408,27 +4365,6 @@
     "note": "",
     "constructType": null
   },
-  "Yuan dynasty literati painting": {
-    "label": "Yuan dynasty literati painting",
-    "kinds": [
-      "period"
-    ],
-    "works": 2,
-    "authorities": {
-      "aat": {
-        "id": "300417409",
-        "pref": "New Literati Painting",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
   "Company painting": {
     "label": "Company painting",
     "kinds": [
@@ -4518,27 +4454,6 @@
     },
     "canonical": "aat",
     "note": "",
-    "constructType": null
-  },
-  "Ming dynasty literati painting": {
-    "label": "Ming dynasty literati painting",
-    "kinds": [
-      "period"
-    ],
-    "works": 2,
-    "authorities": {
-      "aat": {
-        "id": "300417409",
-        "pref": "New Literati Painting",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Third Intermediate Period": {
@@ -13786,6 +13701,90 @@
         "match": "fuzzy",
         "inFacet": true,
         "dates": "386–535"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Song dynasty literati painting": {
+    "label": "Song dynasty literati painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417409",
+        "pref": "New Literati Painting",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "1980–1997"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Yuan dynasty literati painting": {
+    "label": "Yuan dynasty literati painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417409",
+        "pref": "New Literati Painting",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "1980–1997"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Ming dynasty literati painting": {
+    "label": "Ming dynasty literati painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417409",
+        "pref": "New Literati Painting",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "1980–1997"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Qing dynasty literati painting": {
+    "label": "Qing dynasty literati painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417409",
+        "pref": "New Literati Painting",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "1980–1997"
       },
       "wikidata": null,
       "tkLabel": null
