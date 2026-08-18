@@ -66,7 +66,26 @@ try {
   }
 } catch {}
 
-const report = { totals: { styles: labels.length, works: POOL.length }, casing, exactDups, fragments, orphanMovements };
+// ---- 4. CONCEPT-IDENTITY dupes: 2+ current pool labels sharing one Getty AAT concept id (via the backstage
+// authority crosswalk data/authorities.json). Stronger than string similarity — catches same-concept labels
+// that don't look alike (e.g. two spellings, or a compound and its base that AAT maps to one concept). ----
+let conceptDups = [];
+try {
+  const auth = JSON.parse(readFileSync("data/authorities.json", "utf8"));
+  const poolStyles = new Set(labels);
+  const CLEAN = new Set(["exact", "alt", "norm", "base"]); // trust only in-facet label matches, NOT fuzzy/offfacet
+  const byId = {};
+  for (const [label, v] of Object.entries(auth)) {
+    if (!poolStyles.has(label)) continue;              // only labels live in the pool
+    const a = v.authorities?.aat;
+    if (!a?.id || !CLEAN.has(a.match) || !a.inFacet) continue; // a fuzzy/off-facet id is a wrong-concept grouping
+    (byId[a.id] = byId[a.id] || []).push(label);
+  }
+  conceptDups = Object.entries(byId).filter(([, ls]) => ls.length > 1)
+    .map(([id, ls]) => ({ id, pref: auth[ls[0]].authorities.aat.pref, labels: ls }));
+} catch {}
+
+const report = { totals: { styles: labels.length, works: POOL.length }, casing, exactDups, fragments, orphanMovements, conceptDups };
 
 if (process.argv.includes("--json")) { console.log(JSON.stringify(report, null, 1)); process.exit(0); }
 
@@ -92,5 +111,9 @@ for (const f of fragments) {
 console.log(`\n④ ORPHAN MOVEMENTS ENTRIES (${orphanMovements.length}) — MOVEMENTS keys with 0 pool works (stale)`);
 console.log(orphanMovements.length ? "   " + orphanMovements.map(k => `"${k}"`).join(", ") : "   none");
 
-console.log(`\n${bar}\nSummary: ${casing.length} casing · ${exactDups.length} exact-dup groups · ${fragments.length} fragmented vocabularies · ${orphanMovements.length} orphan movements`);
+console.log(`\n⑤ CONCEPT-IDENTITY DUPES (${conceptDups.length}) — 2+ pool labels = one Getty AAT concept (merge candidates)`);
+if (!conceptDups.length) console.log("   none");
+for (const d of conceptDups) console.log(`   [${d.id}] "${d.pref}" ← ${d.labels.map(l => `"${l}"`).join(", ")}`);
+
+console.log(`\n${bar}\nSummary: ${casing.length} casing · ${exactDups.length} exact-dup groups · ${fragments.length} fragmented vocabularies · ${orphanMovements.length} orphan movements · ${conceptDups.length} concept-identity dupes`);
 console.log("These are DISTRACTOR-POISONING and label-cruft issues. Review, then apply a consolidation map + re-gate.\n");

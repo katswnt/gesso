@@ -10089,7 +10089,7 @@
       "movement",
       "period"
     ],
-    "works": 5,
+    "works": 4,
     "authorities": {
       "aat": {
         "id": "300105686",
@@ -10403,6 +10403,21 @@
     },
     "canonical": "aat",
     "note": "",
+    "constructType": null
+  },
+  "Caravaggism": {
+    "label": "Caravaggism",
+    "kinds": [
+      "movement"
+    ],
+    "works": 1,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
   "Utrecht Caravaggism": {
