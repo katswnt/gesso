@@ -55,30 +55,57 @@ teachable distractor pair. So we keep our own grouping and use AAT to validate i
   game-fairness grouping, validated against AAT but not dictated by it.
 - **`parentStyle(style)`** — resolves a label to its family display label via `MOV_FAMILY`.
 
-## The Getty AAT backbone (backstage)
+## A plural authority crosswalk (backstage), not one backbone
 
-AAT is the standard controlled vocabulary curators catalogue against. We map every Gesso style/culture label
-to an AAT concept id and keep the result in **`data/aat-map.json`** — a sidecar data file, kept out of the
-app bundle and **never shown to players**. It buys four things:
+The Collections page cites a reading list — the Sarr–Savoy Report, Dan Hicks's *The Brutish Museums*, Walter
+Mignolo, Local Contexts / Traditional Knowledge (TK) Labels, Nicholas Thomas, Linda Nochlin, *Statues Also
+Die*, *Dahomey*. Read against our own data work, they make one demand: **no single institution should be
+"the backbone."** Resolving every plural tradition to one Getty hierarchy is, in Mignolo's terms,
+subordinating many knowledges to one locus of enunciation — and AAT's own frame shows it (it fuses
+Renaissance-Baroque, and files living cultures under *languages*).
 
-1. **Canonical spelling.** AAT's preferred term corrects our hand-authored labels (e.g. our "Caravaggisti"
-   → AAT's `Caravaggism`, id `300386054`).
-2. **Hierarchy validation.** AAT's parent/ancestor chain flags any label we filed under the wrong family.
-3. **Concept-identity de-duplication.** Two of our labels resolving to the *same* AAT id are the same
-   concept — a stronger near-duplicate signal than string similarity (feeds `audit-labels.mjs`).
-4. **Dates.** AAT scope notes carry period dates we would otherwise guess, to seed `MOVEMENTS.dates`.
+So the model is a crosswalk, not a backbone. **`data/authorities.json`** (tracked; never shown to players)
+gives every concept several authority slots and one field naming which we defer to *for the name*:
 
-### Regenerating the map
+```
+"Mexica": {
+  authorities: { aat: {id:"300017033", pref:"Aztec (culture or style)", ...}, wikidata: {...}, tkLabel: null },
+  canonical: "endonym",   // AAT holds the concept but under the EXONYM "Aztec" — we don't defer to it for the name
+  note: "endonym; AAT pref is the exonym Aztec. We display the people's own name."
+}
+```
 
-`node scripts/aat-fetch.mjs` (run **locally with plain node** — it needs network; a sandbox cannot reach
-Getty). It is paced with backoff and checkpoints every label to `data/incoming/aat-map.json`, so re-running
-resumes. Matching is deliberate: an **indexed exact-literal** lookup (pref/alt label, with case/diacritic/
-suffix variants) is tried first, because Getty's full-text relevance ranking buries exact concepts
-("Baroque" ranks below "Naryshkin Baroque"). Only on an exact miss do we fall back to a relevance-ranked
-fuzzy search, tagged `fuzzy` for human review. Matches outside the Styles-and-Periods facet (object-types
-like *vedute*, or peoples/cultures filed in another AAT facet) are tagged `offfacet`. **We never
-auto-accept a fuzzy or off-facet match as canonical** — those are a review queue, not a result.
+`canonical` values:
+- **`aat`** — Getty holds the concept and names it compatibly with us. One advisory voice, useful for concept
+  identity, hierarchy validation, and period dates. Not the truth.
+- **`wikidata`** — a community-editable, endonym-richer item is the better source (e.g. `Yoruba` →
+  `Q190168` "Yoruba people"). The concrete delinking: Getty stops being sole arbiter.
+- **`endonym`** — the concept exists in an institutional source but under an exonym/imprecise pref, so we use
+  the community's own name and keep the institutional id only as a cross-reference (`Mexica` not "Aztec",
+  `Seljuq` not "Seljuk").
+- **`tkLabel`** — a Local Contexts / TK Label protocol governs this heritage; the source community's
+  authority outranks any thesaurus. (Manual; always wins.)
+- **`none-adequate`** — **no source holds a community-grounded concept** (`Māori art`, the over-fine compound
+  tail). We record *that*, with a note pointing to Local Contexts / TK Labels, instead of forcing a wrong
+  Getty id. This honest "we don't have the right to name this here" is the whole point.
 
-Match tiers, highest to lowest confidence: `exact` (pref label) → `alt` (alternate label) → `base` (matched
-a stripped/folded variant, e.g. "Ayutthaya period" → "Ayudhya") → `fuzzy` (relevance guess) → `none`. Any of
-these may carry an `-offfacet` suffix.
+What the crosswalk buys, unchanged from before: canonical spelling, hierarchy validation, concept-identity
+de-duplication (two labels → one id = the same concept; feeds `audit-labels.mjs`), and period dates.
+
+### Regenerating the crosswalk
+
+Two backstage fetches feed `data/authorities.json` (built by `scripts/build-authorities.mjs`, which keys off
+the *current* pool and preserves manual `tkLabel`/`canonical` overrides). Both run **locally with plain node**
+(they need network; a sandbox can't reach Getty or Wikidata), are paced with backoff, and checkpoint so a
+re-run resumes:
+
+- `scripts/aat-fetch.mjs` → `data/incoming/aat-map.json`. Matching is deliberate: an **indexed exact-literal**
+  lookup (pref/alt, with case/diacritic/suffix variants) first, because Getty's relevance ranking buries exact
+  concepts ("Baroque" ranks below "Naryshkin Baroque"); then a facet-preferred fuzzy fallback that favors an
+  in-facet style/period/culture concept over a same-named language/object-type. Match tiers: `exact` → `alt`
+  → `norm` (parenthetical-qualified, e.g. "New Kingdom (Egyptian)") → `base` → `fuzzy` → `none`, any of which
+  may carry `-offfacet`. **We never auto-accept a fuzzy or off-facet match** — those stay a review queue.
+- `scripts/wikidata-authorities.mjs` → fills the `wikidata` slot, preferring an item whose P31 (*instance of*)
+  is a culture/people/movement/period over a same-named language or disambiguation page — the Wikidata analog
+  of the AAT facet-preference. A confident match on a currently `none-adequate` label promotes it to
+  `canonical: "wikidata"`.

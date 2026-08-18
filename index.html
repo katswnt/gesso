@@ -578,10 +578,11 @@ const RELATED_MOV={
   "Neoclassicism":["Romanticism","Renaissance"],
 };
 // Unified label -> { dates, region, palette } lookup for every style/culture label (all styleKinds).
-// dates -> date-tolerance window (movEra); region -> map + distractor spread; palette is OURS (AAT gives no
-// colors). Each key should also carry an AAT concept id in data/aat-map.json (backstage authority for canonical
-// spelling, hierarchy validation, and the dates seeded here). Prefer AAT's preferred term for the label
-// (e.g. "Caravaggism", not "Caravaggisti"). See docs/taxonomy.md.
+// dates -> date-tolerance window (movEra); region -> map + distractor spread; palette is OURS (no thesaurus
+// gives colors). Each concept is cross-referenced in data/authorities.json — a PLURAL backstage crosswalk
+// (Getty AAT + Wikidata + TK Labels), NOT one authority. The display label here is chosen ENDONYM-FIRST: where
+// a source names a concept by a colonial exonym we keep the community name and the id only as a cross-ref
+// (e.g. "Mexica" not "Aztec", "Seljuq" not "Seljuk"). See docs/taxonomy.md.
 const MOVEMENTS={"Longquan celadon":{dates:"960–1600",region:"China",palette:["#8a8472","#c9b98f","#eceae2","#2f2c27"]},"Jun ware":{dates:"960–1368",region:"China",palette:["#8a8472","#c9b98f","#eceae2","#2f2c27"]},
   "Ayutthaya period":{dates:"1351–1767",region:"Southeast Asia",palette:["#B8860B","#F5C518","#8B6914","#FFD700"]},
   "Pala-Sena period":{dates:"750–1200",region:"South Asia",palette:["#5C3317","#C19A6B","#8B4513","#D4A76A"]},
@@ -1254,8 +1255,8 @@ const MOVEMENTS={"Longquan celadon":{dates:"960–1600",region:"China",palette:[
 // close enough that showing two of them together as distractors would be unfair, and it is the parent for
 // partial credit. It intentionally does NOT mirror the Getty AAT tree (AAT fuses Renaissance+Baroque, which
 // is too coarse for credit, and lumps visually-distinct schools like Dutch Golden Age vs Italian Baroque,
-// which are a fair distractor pair). We keep families game-tuned and VALIDATE them against AAT backstage
-// (data/aat-map.json). Split a parent only into a genuinely distinct NAMED school (Dutch Golden Age,
+// which are a fair distractor pair). We keep families game-tuned and VALIDATE them against the backstage authority crosswalk
+// (data/authorities.json). Split a parent only into a genuinely distinct NAMED school (Dutch Golden Age,
 // Caravaggism, Utrecht Caravaggism), never a mechanical "[Country] Baroque" — geography is the WHERE facet's
 // job, not the style label's. See docs/taxonomy.md.
 const MOV_FAMILY={
