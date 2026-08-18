@@ -942,34 +942,13 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Southern Song Buddhist painting": {
-    "label": "Southern Song Buddhist painting",
-    "kinds": [
-      "culture"
-    ],
-    "works": 2,
-    "authorities": {
-      "aat": {
-        "id": "300018434",
-        "pref": "Southern Song",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "1127–1279"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
   "Song dynasty": {
     "label": "Song dynasty",
     "kinds": [
-      "period",
-      "culture"
+      "culture",
+      "period"
     ],
-    "works": 28,
+    "works": 30,
     "authorities": {
       "aat": {
         "id": "300018427",
@@ -3292,7 +3271,7 @@
       "culture",
       "period"
     ],
-    "works": 20,
+    "works": 21,
     "authorities": {
       "aat": {
         "id": "300018550",
@@ -3321,27 +3300,6 @@
         "match": "fuzzy",
         "inFacet": true,
         "dates": "1980–1997"
-      },
-      "wikidata": null,
-      "tkLabel": null
-    },
-    "canonical": "none-adequate",
-    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
-    "constructType": null
-  },
-  "Early Heian Buddhist sculpture": {
-    "label": "Early Heian Buddhist sculpture",
-    "kinds": [
-      "culture"
-    ],
-    "works": 1,
-    "authorities": {
-      "aat": {
-        "id": "300018551",
-        "pref": "Early Heian",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "794–898"
       },
       "wikidata": null,
       "tkLabel": null
@@ -5923,21 +5881,14 @@
     "note": "",
     "constructType": null
   },
-  "Northern Wei Buddhist art": {
-    "label": "Northern Wei Buddhist art",
+  "Northern Wei": {
+    "label": "Northern Wei",
     "kinds": [
-      "period",
-      "culture"
+      "period"
     ],
     "works": 5,
     "authorities": {
-      "aat": {
-        "id": "300444405",
-        "pref": "Wei",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "386–535"
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
@@ -5945,19 +5896,14 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Sui dynasty Buddhist art": {
-    "label": "Sui dynasty Buddhist art",
+  "Sui dynasty": {
+    "label": "Sui dynasty",
     "kinds": [
-      "culture"
+      "period"
     ],
     "works": 3,
     "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
@@ -7126,19 +7072,14 @@
     "note": "",
     "constructType": null
   },
-  "Five Dynasties Buddhist art": {
-    "label": "Five Dynasties Buddhist art",
+  "Five Dynasties": {
+    "label": "Five Dynasties",
     "kinds": [
-      "culture"
+      "period"
     ],
     "works": 1,
     "authorities": {
-      "aat": {
-        "id": "300417601",
-        "pref": "Buddhist chants",
-        "match": "fuzzy-offfacet",
-        "inFacet": false
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
@@ -7579,20 +7520,14 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
-  "Northern Qi Buddhist art": {
-    "label": "Northern Qi Buddhist art",
+  "Northern Qi": {
+    "label": "Northern Qi",
     "kinds": [
-      "culture"
+      "period"
     ],
     "works": 7,
     "authorities": {
-      "aat": {
-        "id": "300018405",
-        "pref": "Northern Qi",
-        "match": "fuzzy",
-        "inFacet": true,
-        "dates": "550–577"
-      },
+      "aat": null,
       "wikidata": null,
       "tkLabel": null
     },
@@ -13053,6 +12988,27 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
+  "Early Heian Buddhist sculpture": {
+    "label": "Early Heian Buddhist sculpture",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300018551",
+        "pref": "Early Heian",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "794–898"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
   "Contemporary African art": {
     "label": "Contemporary African art",
     "kinds": [
@@ -13235,6 +13191,27 @@
         "pref": "Buddhist chants",
         "match": "fuzzy-offfacet",
         "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Southern Song Buddhist painting": {
+    "label": "Southern Song Buddhist painting",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300018434",
+        "pref": "Southern Song",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "1127–1279"
       },
       "wikidata": null,
       "tkLabel": null
@@ -13796,8 +13773,90 @@
     "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
     "constructType": null
   },
+  "Northern Wei Buddhist art": {
+    "label": "Northern Wei Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300444405",
+        "pref": "Wei",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "386–535"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
   "Tang dynasty Buddhist art": {
     "label": "Tang dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Northern Qi Buddhist art": {
+    "label": "Northern Qi Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300018405",
+        "pref": "Northern Qi",
+        "match": "fuzzy",
+        "inFacet": true,
+        "dates": "550–577"
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Sui dynasty Buddhist art": {
+    "label": "Sui dynasty Buddhist art",
+    "kinds": [
+      "(movements-map-only)"
+    ],
+    "works": 0,
+    "authorities": {
+      "aat": {
+        "id": "300417601",
+        "pref": "Buddhist chants",
+        "match": "fuzzy-offfacet",
+        "inFacet": false
+      },
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Five Dynasties Buddhist art": {
+    "label": "Five Dynasties Buddhist art",
     "kinds": [
       "(movements-map-only)"
     ],

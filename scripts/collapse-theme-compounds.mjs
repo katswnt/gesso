@@ -15,6 +15,10 @@ const COLLAPSE = {
   "Nara-period Japanese Buddhist art": "Nara period", "Asuka Buddhist art": "Asuka period",
   "Edo Buddhist art": "Edo period", "Goryeo Buddhist painting": "Goryeo dynasty",
   "Vietnamese Buddhist art": "Vietnamese",
+  // second tier: real Chinese dynasties (defs just added) + fold sub-periods into their existing base
+  "Sui dynasty Buddhist art": "Sui dynasty", "Northern Wei Buddhist art": "Northern Wei",
+  "Northern Qi Buddhist art": "Northern Qi", "Five Dynasties Buddhist art": "Five Dynasties",
+  "Southern Song Buddhist painting": "Song dynasty", "Early Heian Buddhist sculpture": "Heian period",
 };
 
 const path = "data/pool.js";
@@ -25,7 +29,8 @@ const pool = JSON.parse(raw.slice(raw.indexOf("["), raw.lastIndexOf("]") + 1));
 // dominant styleKind of each collapse TARGET (from its existing works), so relabeled works adopt it
 const kinds = {};
 for (const p of pool) { const t = new Set(Object.values(COLLAPSE)); if (t.has(p.style)) (kinds[p.style] = kinds[p.style] || {})[p.styleKind] = (kinds[p.style]?.[p.styleKind] || 0) + 1; }
-const domKind = t => Object.entries(kinds[t] || { culture: 1 }).sort((a, b) => b[1] - a[1])[0][0];
+// newly-created dynasty targets have no existing works yet → default them to "period"
+const domKind = t => Object.entries(kinds[t] || { period: 1 }).sort((a, b) => b[1] - a[1])[0][0];
 
 const changes = [];
 for (const p of pool) {
