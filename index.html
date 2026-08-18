@@ -2012,11 +2012,13 @@ async function renderLeaderboard(tierKey,dateStr){
       <button class="lbday" data-lbd="${nextD}" aria-label="next day" ${hasNext?'':'disabled'} style="background:none;border:0;cursor:${hasNext?'pointer':'default'};display:flex;align-items:center;gap:6px;padding:4px;font:400 0.75rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;color:${hasNext?'var(--ink)':'var(--line-card)'}">Next day <img src="/assets/arrow-right.svg" alt="" width="16" height="16"></button></div>
     ${isToday?`<div style="font:400 0.875rem/1.6 'Manrope',sans-serif;color:var(--muted);margin-bottom:6px">closes in <span id="lbcd" style="font-variant-numeric:tabular-nums">--:--:--</span></div>`:''}
     <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0 24px">${tabs}</div>
+    <button data-playlb style="display:block;width:100%;max-width:320px;margin:0 auto 22px;padding:12px;border:1px solid var(--ink);background:var(--ink);color:#fff;font:400 0.8rem 'Faculty Glyphic',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:2px">${isToday?`Play today&rsquo;s ${esc(lbTier)} puzzle`:`Play NO. ${esc(accession)} &middot; ${esc(lbTier)}`} &rarr;</button>
     <div id="lbbody" aria-live="polite" style="text-align:left"><div class="mono" style="color:var(--muted);padding:20px 0">Loading…</div></div>
     <div style="margin-top:18px"><button class="btn2" data-editid>Edit your name &amp; color</button>
       <button class="btn2" data-route="home" style="margin-top:10px">&larr; Back to home</button></div>
   </div></div>`;
   veilWire();
+  { const pb=document.querySelector('[data-playlb]'); if(pb) pb.onclick=()=>startGame(lbTier, isToday?undefined:date); } // play the viewed day+tier (past dates replay as archive)
   document.querySelectorAll('.lbday').forEach(b=>{ if(!b.disabled) b.onclick=()=>{ const d=b.dataset.lbd; pushNav({v:'register',date:d===today?undefined:d}); renderLeaderboard(lbTier,d); }; });
   // live countdown (today only)
   const cd=document.getElementById('lbcd');if(cd){const tick=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let ms=m-n,h=Math.floor(ms/36e5);ms-=h*36e5;let min=Math.floor(ms/6e4);ms-=min*6e4;let sec=Math.floor(ms/1e3);cd.textContent=[h,min,sec].map(x=>String(x).padStart(2,'0')).join(':');};tick();countdownTimer=setInterval(tick,1000);}
