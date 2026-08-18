@@ -656,7 +656,7 @@ const MOVEMENTS={"Longquan celadon":{dates:"960–1600",region:"China",palette:[
   "Attic Greek":{dates:"c. 700-300 BCE",region:"Greece, Europe",palette:["#d8c1a4","#b57946","#2f2c27","#9c9b96"]},
   "Late Shang dynasty bronze":{dates:"c. 1300–1046 BCE",region:"China, East Asia",palette:["#7f9f93","#48685b","#26382f","#b8c0c2"]},
   "Kushan period":{dates:"c. 1st-3rd century CE",region:"Northern India, especially Mathura",palette:["#8c5f46","#b48766","#5a4033","#d0c7bd"]},
-  "Aztec":{dates:"c. 1300-1521",region:"Mesoamerica",palette:["#0B0A08","#4F4638","#8A785F","#C8B08A"]},
+  "Mexica":{dates:"c. 1300-1521",region:"Mesoamerica",palette:["#0B0A08","#4F4638","#8A785F","#C8B08A"]},
   "Late Period Egyptian":{dates:"c. 664-332 BCE",region:"Egypt, Africa",palette:["#c69a5a","#8d6633","#3f2b1b","#e5d6bb"]},
   "Russian Symbolism":{dates:"c. 1880–1910",region:"Russia",palette:["#b8c4d4","#2a3a4a","#e8d890","#7a6a5a"]},
   "Russian Revivalism":{dates:"c. 1860–1920",region:"Russia",palette:["#c45a1a","#1a1a2e","#d4a84b","#6b3a2a"]},
@@ -1171,7 +1171,7 @@ const MOVEMENTS={"Longquan celadon":{dates:"960–1600",region:"China",palette:[
   "Proto-Elamite":{dates:"c. 3200–2700 BCE",region:"Iran",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Sasanian":{dates:"224–651",region:"Iran / Persia",palette:["#1f6f8b","#c0392b","#d8b46a","#e8ddc3"]},
   "Abbasid":{dates:"750–1258",region:"Iran / Mesopotamia",palette:["#1f3a5f","#2f8f6a","#d79b32","#e8ddc3"]},
-  "Seljuk":{dates:"1037–1194",region:"Iran / Anatolia",palette:["#1f6f8b","#2f8f6a","#d79b32","#e8ddc3"]},
+  "Seljuq":{dates:"1037–1194",region:"Iran / Anatolia",palette:["#1f6f8b","#2f8f6a","#d79b32","#e8ddc3"]},
   "Urartian":{dates:"c. 860–590 BCE",region:"Anatolia / Armenia",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Mitanni":{dates:"c. 1500–1300 BCE",region:"Syria / Mesopotamia",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
   "Canaanite":{dates:"c. 2000–700 BCE",region:"Levant / Syria",palette:["#6f4e2f","#b28a4a","#d8c3a5","#1b1916"]},
@@ -1389,7 +1389,7 @@ function histTitleHTML(it){ if(!it||!it.titleFlag)return ''; const t=TITLE_NOTES
 let ALL_MED=[], MOVS=[], CULTS=[], MOVEMENT_NAMES=[], GLOSSARY_NAMES=[], ARTIST_POOL=[], artistStyle={}, styleRegion={}, styleCountry={}, artistMeta={};
 const CANON_STYLE={"academic":"Academic art","land":"Land art","pop":"Pop art","surrealism":"Surrealism",
   "Post-impressionism":"Post-Impressionism","American realism":"American Realism","French realism":"French Realism",
-  "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish"};
+  "Pre-Raphaelite Brotherhood":"Pre-Raphaelite","Early Netherlandish painting":"Early Netherlandish","Aztec":"Mexica","Seljuk":"Seljuq"};
 function buildIndexes(){
   for(const p of POOL){ if(p.styleKind==='movement'&&CANON_STYLE[p.style]) p.style=CANON_STYLE[p.style]; }
   // overlay real "how well known" scores (Wikidata sitelinks + pageviews) so difficulty tiers track recognizability
