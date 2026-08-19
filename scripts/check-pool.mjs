@@ -323,6 +323,22 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const vg=globalThis.__visgap; if(vg) console.log(`vision-audit gap: ${vg.n} works scheduled in the next ${vg.win}d NOT yet image-grounded (${vg.sample.join(", ")}${vg.n>vg.sample.length?", …":""}) — run scripts/vision-next.mjs`); }
 { const cg=globalThis.__catgap; if(cg) console.log(`category gap (next ${cg.win}d dailies): ${cg.mov} missing MOVEMENT, ${cg.med} missing MEDIUM — dead scorecard rows (${cg.sample.join(", ")}${cg.mov>cg.sample.length?", …":""})`); }
 { const lg=globalThis.__language; if(lg&&(lg.voice||lg.ctx)) console.log(`harmful-language: ${lg.voice} our-voice hits (reword), ${lg.ctx} harmful titles missing a context note`); }
+// FAME-DRIFT: pool.fame must equal the fame.js overlay (the value scheduling + this gate actually read). A stale
+// pool.fame silently misleads tiering + debugging (it read 59 for famous works). Deterministic + network-free, so
+// gate it — regenerate with `node scripts/resync-fame.mjs`. (Overlay-uncovered works are left alone.)
+{ let drift=0; const eg=[];
+  for(const p of pool){ if(fame[p.id]==null) continue; const v=Math.round(fame[p.id]); if((p.fame||0)!==v){ drift++; if(eg.length<4) eg.push(`${(p.title||p.id).slice(0,26)} ${p.fame||0}≠${v}`); } }
+  if(drift) hard.push(`[fame-drift] ${drift} works: pool.fame ≠ fame.js overlay (${eg.join("; ")}) — run scripts/resync-fame.mjs`); }
+
+// EASY-EXCLUDE STALENESS: a fame-competitive ANCIENT work (dated before the cutoff AND within the top-margin by
+// fame, i.e. reachable by the Easy tier) MUST be in easy-exclude.json — else it lands in Easy with an ungettable
+// WHEN facet (famous but not gettable). Deterministic, so gate it — regenerate with `node scripts/build-easy-exclude.mjs`.
+{ let ex={}; try{ ex=JSON.parse(readFileSync("data/easy-exclude.json","utf8")); }catch{}
+  const cutoff=ex.cutoff??800, margin=ex.margin??650, ids=new Set(ex.ids||[]);
+  const zone=new Set([...pool].sort((a,b)=>fa(b)-fa(a)).slice(0,margin).map(p=>p.id));
+  const miss=pool.filter(p=>p.y!=null && p.y<cutoff && zone.has(p.id) && !ids.has(p.id));
+  if(miss.length) hard.push(`[easy-exclude-stale] ${miss.length} fame-top ancient works missing from easy-exclude.json (${miss.slice(0,4).map(p=>`"${(p.title||"").slice(0,24)}"(${p.y})`).join(", ")}) — run scripts/build-easy-exclude.mjs`); }
+
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);

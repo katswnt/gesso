@@ -6,6 +6,7 @@
     "test": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node tests/gameplay-smoke.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs && node scripts/audit-local.mjs && node scripts/audit-labels.mjs",
     "test:ci": "node tests/scoring.test.mjs && node tests/medium.test.mjs && node tests/static-module.test.mjs && node tests/dom-harness.mjs && node tests/gameplay-smoke.mjs && node scripts/check-pool.mjs && node scripts/check-design.mjs",
     "check:pool": "node scripts/check-pool.mjs",
+    "normalize": "node scripts/resync-fame.mjs && node scripts/build-easy-exclude.mjs --write && node scripts/build-authorities.mjs --write",
     "check:syntax": "node --check tests/scoring.test.mjs && for f in scripts/*.mjs api/*.js; do node --check \"$f\" || exit 1; done",
     "audit": "node scripts/audit-all.mjs",
     "audit:local": "node scripts/audit-local.mjs",

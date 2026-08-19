@@ -1,6 +1,7 @@
 {
- "note": "Works excluded from the EASY tier because the blinded guessability probe shows an expert-level DATE facet (|Δyr|>500y) — recognizable but not gettable (Moai, antiquities). They still appear in medium/hard. Regenerate: see the probe at data/incoming/vision-guessability-*.json.",
- "threshold": 500,
+ "note": "Excluded from EASY: recognizable works whose WHEN facet is expert-level (dated before 800 CE — you can recognize it but not date it within tolerance). Deterministic date rule (scripts/build-easy-exclude.mjs); check-pool HARD-fails if this list goes stale. Demoted to medium/hard by fame, not dropped.",
+ "cutoff": 800,
+ "margin": 650,
  "ids": [
   "wd:Q131397",
   "wikidata:Q28792214",
@@ -13,68 +14,37 @@
   "http://www.wikidata.org/entity/Q774967",
   "wikidata:Q279559",
   "http://www.wikidata.org/entity/Q695039",
-  "http://www.wikidata.org/entity/Q736832"
- ],
- "works": [
-  {
-   "id": "wd:Q131397",
-   "title": "Venus of Willendorf",
-   "dyr": 27000
-  },
-  {
-   "id": "wikidata:Q28792214",
-   "title": "Moai",
-   "dyr": 6250
-  },
-  {
-   "id": "wikidata:Q606662",
-   "title": "Elgin Marbles",
-   "dyr": 2410
-  },
-  {
-   "id": "wikidata:Q133732",
-   "title": "Discobolus",
-   "dyr": 2250
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q378034",
-   "title": "The Seated Scribe",
-   "dyr": 2100
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q3203231",
-   "title": "Rebellious Slave",
-   "dyr": 1943
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q216402",
-   "title": "Winged Victory of Samothrace",
-   "dyr": 1925
-  },
-  {
-   "id": "harvard312306",
-   "title": "Alexander the Great",
-   "dyr": 1723
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q774967",
-   "title": "Venus de' Medici",
-   "dyr": 1650
-  },
-  {
-   "id": "wikidata:Q279559",
-   "title": "Babylonian Map of the World",
-   "dyr": 950
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q695039",
-   "title": "Gebel el-Arak Knife",
-   "dyr": 799
-  },
-  {
-   "id": "http://www.wikidata.org/entity/Q736832",
-   "title": "Chōjū-jinbutsu-giga",
-   "dyr": 630
-  }
+  "http://www.wikidata.org/entity/Q736832",
+  "http://www.wikidata.org/entity/Q465762",
+  "http://www.wikidata.org/entity/Q1088425",
+  "wikidata:Q151952",
+  "wikidata:Q265384",
+  "wikidata:Q1398760",
+  "wikidata:Q137836",
+  "wikidata:Q3087894",
+  "wikidata:Q91239334",
+  "met675980",
+  "http://www.wikidata.org/entity/Q847274",
+  "http://www.wikidata.org/entity/Q130958",
+  "http://www.wikidata.org/entity/Q2584518",
+  "http://www.wikidata.org/entity/Q2020438",
+  "http://www.wikidata.org/entity/Q185392",
+  "http://www.wikidata.org/entity/Q4945054",
+  "http://www.wikidata.org/entity/Q3501413",
+  "wikidata:Q48584",
+  "wikidata:Q47672",
+  "wikidata:Q582172",
+  "wikidata:Q21585351",
+  "wikidata:Q524447",
+  "wikidata:Q2063494",
+  "wd:Q93304",
+  "wd:Q9048095",
+  "wd:Q667124",
+  "wd:Q3595955",
+  "wd:Q3062269",
+  "wd:Q1126741",
+  "wd:Q1230882",
+  "wd:Q897474",
+  "wd:Q921351"
  ]
 }
