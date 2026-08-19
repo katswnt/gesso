@@ -339,6 +339,23 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
   const miss=pool.filter(p=>p.y!=null && p.y<cutoff && zone.has(p.id) && !ids.has(p.id));
   if(miss.length) hard.push(`[easy-exclude-stale] ${miss.length} fame-top ancient works missing from easy-exclude.json (${miss.slice(0,4).map(p=>`"${(p.title||"").slice(0,24)}"(${p.y})`).join(", ")}) — run scripts/build-easy-exclude.mjs`); }
 
+// AUTHORITIES COVERAGE: every current pool style label must have an entry in the backstage authority crosswalk,
+// else it drifted (a style was added/renamed without rebuilding). Deterministic → gate it. Fix: npm run normalize.
+{ let auth={}; try{ auth=JSON.parse(readFileSync("data/authorities.json","utf8")); }catch{}
+  const KIND=new Set(["movement","culture","period","school","tradition","genre"]);
+  const styles=new Set(); for(const p of pool) if(p.style&&KIND.has(p.styleKind)) styles.add(p.style);
+  const miss=[...styles].filter(l=>!auth[l]);
+  if(miss.length) hard.push(`[authorities-stale] ${miss.length} pool styles missing from data/authorities.json (${miss.slice(0,4).map(l=>`"${l}"`).join(", ")}) — run npm run normalize`); }
+
+// EASY-FREEZE STALE: the frozen FUTURE easy rotation must not contain an easy-exclude work — else the exclusion
+// rule changed but the freeze wasn't re-run (past+today stay pinned, so only future is checked). Fix: RESHUFFLE_FUTURE=1 npm run freeze.
+{ let excl=new Set(); try{ excl=new Set(JSON.parse(readFileSync("data/easy-exclude.json","utf8")).ids); }catch{}
+  const variants=id=>[id, id.replace("http://www.wikidata.org/entity/","wd:"), id.replace("http://www.wikidata.org/entity/","wikidata:")];
+  const today=new Date().toISOString().slice(0,10);
+  let bd={}; try{ const w={}; new Function("window",readFileSync("data/daily-order.js","utf8"))(w); bd=(w.ARTEFACTUM_DAILY&&w.ARTEFACTUM_DAILY.byDate)||{}; }catch{}
+  let bad=0; const eg=[]; for(const [date,d] of Object.entries(bd)){ if(date<=today)continue; for(const id of (d.easy||[])) if(variants(id).some(x=>excl.has(x))){ bad++; if(eg.length<3)eg.push(date); } }
+  if(bad) hard.push(`[easy-freeze-stale] ${bad} easy-exclude works still pinned in FUTURE easy days (${eg.join(", ")}…) — run RESHUFFLE_FUTURE=1 npm run freeze`); }
+
 report("⚠ HARD violations (block ship)", hard);
 report("ℹ warnings (review)", warn);
 console.log(`\n${hard.length?"❌ FAIL — "+hard.length+" hard violations":"✅ PASS — no hard violations"}`);
