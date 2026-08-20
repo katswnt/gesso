@@ -278,7 +278,7 @@
       "movement",
       "period"
     ],
-    "works": 117,
+    "works": 118,
     "authorities": {
       "aat": {
         "id": "300021477",
@@ -585,7 +585,7 @@
     "kinds": [
       "movement"
     ],
-    "works": 41,
+    "works": 45,
     "authorities": {
       "aat": {
         "id": "300021225",
@@ -12807,6 +12807,36 @@
       "culture"
     ],
     "works": 3,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "Mir iskusstva": {
+    "label": "Mir iskusstva",
+    "kinds": [
+      "movement"
+    ],
+    "works": 1,
+    "authorities": {
+      "aat": null,
+      "wikidata": null,
+      "tkLabel": null
+    },
+    "canonical": "none-adequate",
+    "note": "no confident institutional match; for Indigenous/community material prefer a community protocol (Local Contexts / TK Labels) over an institutional id — see docs/taxonomy.md",
+    "constructType": null
+  },
+  "British Impressionism": {
+    "label": "British Impressionism",
+    "kinds": [
+      "movement"
+    ],
+    "works": 1,
     "authorities": {
       "aat": null,
       "wikidata": null,
