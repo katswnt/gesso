@@ -1,5 +1,6 @@
 {
   "buildCommand": "node scripts/build-teach-shards.mjs",
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/((?!api/|data/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
