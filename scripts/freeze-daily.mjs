@@ -19,6 +19,9 @@ const fameOf = id => overlay[id]!=null ? overlay[id] : (poolFame[id]||0);
 // one of {medium, movement}. Works missing BOTH are excluded from every tier so they never enter a daily.
 const _html=readFileSync("index.html","utf8"); const _a=_html.indexOf("const MOVEMENTS={"),_b=_html.indexOf("const MOV_FAMILY=");
 const _movKeys=new Set([..._html.slice(_a,_b).matchAll(/"([^"]+)":\{dates:/g)].map(m=>m[1]));
+// movement FAMILY map so the daily-spread treats Impressionism / Post-Impressionism / Neo-Impressionism / Fauvism
+// as ONE cluster (not three different style strings) — else a day stacks 3 French moderns. See MOV_FAMILY in index.html.
+let _MOV_FAM_OF={}; try{ const MF=new Function(_html.match(/const MOV_FAMILY=\{[\s\S]*?\n\};/)[0]+"\nreturn MOV_FAMILY;")(); for(const f in MF) for(const m of MF[f]) _MOV_FAM_OF[m]=f; }catch{}
 const workComplete=p=>!!(p&&((p.medium&&String(p.medium).trim())||(p.style&&(_movKeys.has(p.style)||p.styleKind==="culture"||p.styleKind==="movement"))));
 
 // --- daily diversity: no two works by the same NAMED artist in one day's set; soft region/era spread ---
@@ -26,7 +29,9 @@ const byId = Object.fromEntries(pool.map(p=>[p.id,p]));
 const namedArtist = id => { const a=String(byId[id]?.artist||"").trim(); return (a && !/^(unknown|anonymous|unidentified)/i.test(a)) ? a.toLowerCase() : ""; };
 const regionOf = id => byId[id]?.region||"";
 const centOf = id => { const y=byId[id]?.y; return y==null?"~":Math.floor(y/100); };
-const styleOf = id => String(byId[id]?.style||"").toLowerCase();          // culture/movement — spreads "5 Chinese textiles"
+// spread by movement FAMILY (Impressionism≈Post-Impressionism≈Fauvism) so a day can't stack 3 French moderns;
+// falls back to the raw style for labels not in any family (e.g. "Ukiyo-e").
+const styleOf = id => { const s=byId[id]?.style||""; return String(_MOV_FAM_OF[s]||s).toLowerCase(); };
 const medOf = id => simplifyMedium(byId[id]?.medium||"");                  // bucketed medium — spreads "all textiles"
 const countryOf = id => { const p=String(byId[id]?.place||"").replace(/\([^)]*\)/g,"").trim(); const parts=p.split(","); return (parts[parts.length-1]||"").trim().toLowerCase(); }; // spreads "5 Italian" easy days within Europe
 // Reorder so any window of `win` consecutive avoids a repeated NAMED artist (hard) and spreads
@@ -40,7 +45,7 @@ function diversify(ids, win){
           rs=recent.map(styleOf).filter(Boolean), rm=recent.map(medOf).filter(Boolean), rq=recent.map(countryOf).filter(Boolean);
     let bestI=0, best=Infinity;
     for(let i=0;i<rem.length;i++){ const id=rem[i], a=namedArtist(id), s=styleOf(id), m=medOf(id), cq=countryOf(id);
-      const score=(a&&ra.includes(a)?1000:0)+(s&&rs.includes(s)?8:0)+(cq&&rq.includes(cq)?5:0)+(m&&rm.includes(m)?4:0)+(rr.includes(regionOf(id))?1:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
+      const score=(a&&ra.includes(a)?1000:0)+(cq&&rq.includes(cq)?11:0)+(s&&rs.includes(s)?9:0)+(m&&rm.includes(m)?4:0)+(rr.includes(regionOf(id))?1:0)+(rc.includes(centOf(id))?1:0)+i*0.0001;
       if(score<best){best=score;bestI=i; if(best<0.5)break;} }
     out.push(rem.splice(bestI,1)[0]);
   }

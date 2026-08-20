@@ -21,6 +21,7 @@ const o={};
 // use fame.json's sitelinks/pageviews if present, else fall back to the work's own fame (= Wikidata sitelinks).
 for(const p of pool){
   const e=fame[p.id]||{};
+  if(e.collision){ o[p.id]=0; zeroed++; continue; } // title-collision (scripts/audit-fame-collisions.mjs): never fame it
   const sl=Number.isFinite(e.sitelinks)?e.sitelinks:(Number.isFinite(p.fame)?p.fame:0);
   const pv=Number.isFinite(e.pageviews)?e.pageviews:0;
   // RECOGNIZABILITY: Wikipedia pageviews (real pop-fame) dominate; sitelinks a weak tiebreak.
