@@ -55,3 +55,18 @@ export function continentOf(place){
   for(let i=parts.length-1;i>=0;i--){ c=look(parts[i]); if(c) return c; }
   return "";
 }
+
+// Modern country a place STRING resolves to (the canonical data/countries.js name), or "" if none is
+// recognizable. Reads the country off "City, Country" / "Country (City)" / "Region/Subregion" forms just like
+// continentOf, but returns the COUNTRY not the continent — used to compare a hand-authored place against a
+// Wikidata-suggested country of creation so the audit only flags genuine cross-country mismatches (a
+// city-prefixed place like "Venice, Italy" must not read as different from "Italy"). Parentheticals are
+// removed NON-greedily so a trailing country survives ("Rapa Nui (Easter Island), Chile" → "Chile").
+export function countryOf(place){
+  const raw = String(place||"").replace(/\s*\([^)]*\)/g,"").split("/")[0].trim();
+  const look = s => { const low = String(s||"").trim().toLowerCase(); return SPELLING_ALIAS[low] || byLower[low] || ""; };
+  let c = look(raw); if(c) return c;                      // whole string is a known country
+  const parts = raw.split(",").map(s=>s.trim()).filter(Boolean); // read the country off the end
+  for(let i=parts.length-1;i>=0;i--){ c=look(parts[i]); if(c) return c; }
+  return "";
+}

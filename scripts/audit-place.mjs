@@ -10,7 +10,7 @@
 //        node scripts/audit-place.mjs --apply    (also write HIGH-confidence fixes into data/pool.js)
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
-import { canonicalizePlace, isPlaceCanonical, continentOf } from "./lib/places.mjs";
+import { canonicalizePlace, isPlaceCanonical, continentOf, countryOf } from "./lib/places.mjs";
 import { loadWdEntities } from "./lib/wd-cache.mjs";
 
 const DIR = "data/incoming/place-audit";
@@ -35,7 +35,7 @@ for (const q of Object.keys(byQid)) { const e = ents.get(q); const inc = yearOf(
 const NORM = {
   "United States":"United States of America",
   "Ancient Egypt":"Egypt","Fatimid Egyptian Caliphate":"Egypt","Mamluk Sultanate of Egypt":"Egypt",
-  "Qing dynasty":"China","Ming dynasty":"China","Northern Song dynasty":"China","Southern Song dynasty":"China","Tang dynasty":"China","People's Republic of China":"China",
+  "Qing dynasty":"China","Ming dynasty":"China","Yuan dynasty":"China","Northern Song dynasty":"China","Southern Song dynasty":"China","Song dynasty":"China","Tang dynasty":"China","Han dynasty":"China","People's Republic of China":"China",
   "Safavid Iran":"Iran","Achaemenid Empire":"Iran","Afsharid Iran":"Iran","Qajar Iran":"Iran","Sasanian Empire":"Iran","Parthian Empire":"Iran",
   "Soviet Union":"Russia","Russian Soviet Federative Socialist Republic":"Russia",
   "Tokugawa shogunate":"Japan","Edo":"Japan","Empire of Japan":"Japan",
@@ -53,19 +53,43 @@ const NORM = {
 const AMBIG = new Set(["Holy Roman Empire","Ottoman Empire","Byzantine Empire","Austria–Hungary","Austria-Hungary","Habsburg Netherlands","Habsburg Monarchy"]);
 const canon = s => { try { return canonicalizePlace(s); } catch { return s; } };
 const modern = s => { if (NORM[s]) return NORM[s]; if (AMBIG.has(s)) return null; const cs = canon(s); return isPlaceCanonical(cs) ? cs : null; };
+// A dependent territory's place is NOT a mismatch against its sovereign parent — Gauguin's Tahiti works are
+// correctly "French Polynesia", and WD's P1071 "France" is just the sovereign, not a better/different place.
+const TERRITORY_PARENT = {
+  "french polynesia":"France","new caledonia":"France","wallis and futuna":"France","réunion":"France","reunion":"France",
+  "greenland":"Denmark","puerto rico":"United States of America","hawaii":"United States of America","hawaiian islands":"United States of America",
+};
+const territoryParent = place => { const base = String(place||"").replace(/\s*\([^)]*\)/g,"").split(",")[0].trim().toLowerCase(); return TERRITORY_PARENT[base] || null; };
+// Verified-correct-as-is: the current place is right and the WD suggestion is the false positive. Documented so
+// the audit stops crying wolf on them. (Reason kept next to the id so a future reviewer sees WHY it's exempt.)
+const WHITELIST = {
+  "wikidata:Q9202": "Statue of Liberty was fabricated in Bartholdi's Paris workshop; France is where it was MADE (WD P1071 US = final assembly site).",
+  "http://www.wikidata.org/entity/Q24249": "Titian's Madonna of the Rabbit was painted in Venice (~1530), Louvre-held; WD P1071 'United States' is bad data.",
+  "http://www.wikidata.org/entity/Q4722116": "Titian's Alfonso d'Avalos painted in Venice, ITALY; WD P1071 links the wrong 'Venice' (Q773853 = Venice, Florida, P17 US) — data error, not a real US origin.",
+};
 const HIGH = [], MED = [];
 for (const w of works) {
   const c = cache[w.qid]; if (!c) continue;
+  if (WHITELIST[w.p.id]) continue;                        // verified correct — see reason above
   const place = canon(w.p.place);
+  const curCountry = countryOf(w.p.place);                // modern country the CURRENT place resolves to ("" if unknown)
+  const parent = territoryParent(w.p.place);
   const birth = new Set((c.birth || []).map(modern).filter(Boolean));
   // ONLY use P1071 location-of-creation. P495 country-of-origin is unreliable (WD frequently sets it to the
   // artist's nationality, which produces false positives — a van Gogh painted in France flagged as Netherlands).
   const sugg = [...new Set((c.loc || []).map(modern).filter(Boolean))];
-  const better = sugg.find(s => s !== place);
+  // Compare COUNTRY-to-COUNTRY, not string-to-string: "Venice, Italy" vs "Italy" is the SAME country, not a bug.
+  // Only a suggestion whose country differs from the current place's country (and its sovereign parent) is a
+  // genuine cross-country mismatch worth reviewing.
+  const better = sugg.find(s => s !== curCountry && s !== place && s !== parent);
   if (!better) continue;
+  // If we can't read a country off the current place AND there's no birthplace signal, it's low-value noise
+  // (vague strings like "North Africa, possibly Tunisia") — skip.
+  const birthMatch = curCountry ? birth.has(curCountry) : birth.has(place);
+  if (!curCountry && !birthMatch) continue;
   const rec = { id: w.p.id, title: (w.p.title || "").slice(0, 50), artist: w.p.artist, current: w.p.place, suggest: better,
-    suggestRegion: continentOf(better) || null, birthplaceMatch: birth.has(place) };
-  if (birth.has(place)) HIGH.push(rec); else MED.push(rec);
+    suggestRegion: continentOf(better) || null, birthplaceMatch: birthMatch };
+  if (birthMatch) HIGH.push(rec); else MED.push(rec);
 }
 writeFileSync(`${DIR}/report.json`, JSON.stringify({ HIGH, MED }, null, 1));
 console.error(`\nHIGH (place==birthplace, has better origin): ${HIGH.length}`);
