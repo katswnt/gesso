@@ -56,11 +56,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/cues.js"></script>
 <script src="data/cues-ext.js"></script>
-<!-- teach-works.js is ~9MB of per-work study notes, needed only at reveal (not first paint), so it's
-     deferred. It MERGES window.ARTEFACTUM_CUES.work into the object cues.js created (same reference the
-     app captured), so notes hydrate live once it loads; until then studyFor() falls back to the
-     style/culture/region cues from cues.js. -->
-<script src="data/teach-works.js" defer></script>
+<!-- Per-work reveal notes are NO LONGER bundled here (teach-works.js grew to 22MB and every visitor paid the
+     full parse + a redeploy-refetch on every note edit). They are sharded into data/notes/notes-<idx>.json and
+     fetched on demand by ensureNotes() in the app script (see the CUES.work loader). data/teach-works.js
+     remains the committed source of truth the shards are built from; it is just no longer shipped to clients. -->
 <script src="data/hotspots.js"></script>
 <script src="data/vision.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -86,6 +85,27 @@
 */
 const MAX_CAT=2500, ROUNDS=5, HINT_COST=500, HINT_LIMIT=3;
 const CUES = window.ARTEFACTUM_CUES || {style:{},culture:{},region:{},medium:{}};
+// Reveal study notes (why/cues/guide) are NOT bundled — they live in data/notes/notes-<idx>.json, 64 shards
+// keyed by a stable hash of the work id (scripts/build-teach-shards.mjs, auto-built by writeTeachWorks).
+// ensureNotes(ids) fetches only the shard(s) for the works in play and merges them into CUES.work; renderRound
+// prefetches the current + next works so the note is present by reveal. studyFor() falls back to style/culture
+// cues until a shard lands, so this is best-effort and never blocks or breaks a reveal. Keep noteShard IDENTICAL
+// to scripts/lib/note-shard.mjs (tests/note-shard.test.mjs asserts they bucket every id the same).
+CUES.work = CUES.work || {};
+const NOTE_SHARDS = 64;
+function noteShard(id){ let h=0x811c9dc5; const s=String(id); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193); } return (h>>>0)%NOTE_SHARDS; }
+const _noteLoaded=new Set(), _noteInflight=new Map();
+function ensureNotes(ids){
+  const need=new Set();
+  for(const id of ids){ if(id==null) continue; const s=noteShard(id); if(!_noteLoaded.has(s)) need.add(s); }
+  return Promise.all([...need].map(s=>{
+    if(_noteInflight.has(s)) return _noteInflight.get(s);
+    const p=fetch(`data/notes/notes-${s}.json`).then(r=>r.ok?r.json():{})
+      .then(d=>{ Object.assign(CUES.work,d); _noteLoaded.add(s); _noteInflight.delete(s); })
+      .catch(()=>{ _noteInflight.delete(s); }); // best-effort; studyFor() already falls back
+    _noteInflight.set(s,p); return p;
+  }));
+}
 const HOTSPOTS = window.ARTEFACTUM_HOTSPOTS || {};
 // difficulty tunes scoring leniency + how confusable the distractors are
 const DIFF={
@@ -2796,6 +2816,8 @@ function renderRound(){
   // seed distractor shuffles per date+tier+work so the option set is the same for everyone (fair/deterministic)
   window.__RNG=mulberry32(seedHash((runDate||todayStr())+'|'+tier+'|'+idx)); Promise.resolve().then(()=>{window.__RNG=null;});
   const it=game[idx]; try{markSeen(it.id)}catch{}
+  // prefetch reveal-note shards for this work + the next two (loads behind the player's guessing time)
+  try{ ensureNotes([game[idx],game[idx+1],game[idx+2]].filter(Boolean).map(w=>w.id)); }catch{}
   // FUNNEL: which round each player starts — reveals daily drop-out (round_start 1..5 vs daily_complete)
   // and how far a training run goes. mode distinguishes daily / infinite / training.
   track('round_start',{mode:TRAIN?'training':(infinite?'infinite':'daily'), round:idx+1, of:ROUNDS, tier:tier||null});

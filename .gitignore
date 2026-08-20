@@ -1,5 +1,6 @@
 .DS_Store
 data/incoming/
+data/notes/
 scripts/codex-prompts/
 
 .env

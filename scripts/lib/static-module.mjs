@@ -5,6 +5,7 @@
 //    so an interruption or malformed value can never leave a half-written / corrupt corpus.
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { buildShards } from "../build-teach-shards.mjs";
 
 // Evaluate a data module and return the `window` object it populated (handles `window.X=...` and the
 // `window.X=window.X||{}; window.X.work=...` merge form alike).
@@ -33,4 +34,11 @@ export function writeAssignment(path, name, value){
 // so it never clobbers the style/culture/region/medium maps. (See index.html deferred-load note.)
 export function writeTeachWorks(path, workMap){
   writeAtomic(path, `window.ARTEFACTUM_CUES=window.ARTEFACTUM_CUES||{};\nwindow.ARTEFACTUM_CUES.work=${JSON.stringify(workMap)};\n`);
+  // CHOKE POINT: re-derive the reveal-note shards (data/notes/notes-<idx>.json) every time notes are written,
+  // so a future note addition can't ship without its shard (freshness by construction, not by remembering).
+  // Only for the canonical corpus — a script writing a temp/alt copy must not clobber the real shards.
+  if(/(^|\/)data\/teach-works\.js$/.test(path)){
+    try{ buildShards(workMap); }
+    catch(e){ console.error("writeTeachWorks: shard build failed —", e.message); } // never block the note write
+  }
 }
