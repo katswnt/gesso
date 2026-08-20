@@ -42,10 +42,17 @@ async function sparql(query){
     if(!r.ok) return null; return (await r.json()).results.bindings;
   }catch(e){ await sleep(1000*(t+1)); } } return null;
 }
-const q = (museumQ)=>`SELECT ?item ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?materialLabel ?countryLabel ?image ?sl WHERE {
+// PLACE = where the work was MADE, not the artist's nationality. Pull P1071 location-of-creation → its country
+// (P17) as the primary signal, and P495 country-of-origin only as a fallback. P495 is unreliable for NAMED
+// artists (Wikidata routinely sets it to the creator's nationality — a Titian painted in Augsburg comes back
+// "Italy"), so below we only trust P495 when the work is anonymous/cultural (no P170 creator), where origin-
+// country genuinely IS the geographic signal. Mirrors scripts/audit-place.mjs + fetch-harvest.mjs's P1071→P276
+// preference so this harvest can't re-introduce the "place = birthplace/nationality" bug. See memory place=birthplace.
+const q = (museumQ)=>`SELECT ?item ?itemLabel ?creatorLabel (YEAR(?inception) AS ?yr) ?movementLabel ?materialLabel ?countryLabel ?locCountryLabel ?image ?sl WHERE {
   ?item wdt:P195 wd:${museumQ}; wdt:P18 ?image; wikibase:sitelinks ?sl. FILTER(?sl>=${FLOOR})
   OPTIONAL{?item wdt:P571 ?inception.} OPTIONAL{?item wdt:P170 ?creator.}
   OPTIONAL{?item wdt:P135 ?movement.} OPTIONAL{?item wdt:P186 ?material.} OPTIONAL{?item wdt:P495 ?country.}
+  OPTIONAL{?item wdt:P1071 ?loc. ?loc wdt:P17 ?locCountry.}
   SERVICE wikibase:label{bd:serviceParam wikibase:language "en".}
 } ORDER BY DESC(?sl) LIMIT 3000`;
 
@@ -56,8 +63,12 @@ for(const m of MUSEUMS){
   let n=0;
   for(const b of rows){ const g=k=>b[k]&&b[k].value; const id=g("item"); if(!id||seen.has(id))continue; seen.add(id);
     const y=parseInt(g("yr"),10), img=g("image"); if(!Number.isFinite(y)||!img)continue;
-    out.push({ id, title:g("itemLabel")||"Untitled", artist:g("creatorLabel")||"", year:y,
-      place:g("countryLabel")||"", culture:"", movement:(g("movementLabel")||"").replace(/\s+(painting|art)$/i,""),
+    const artist=g("creatorLabel")||"", locCountry=g("locCountryLabel")||"", origCountry=g("countryLabel")||"";
+    // prefer location-of-creation (P1071→P17); fall back to P495 origin ONLY for anonymous/cultural works
+    // (see the note above the SELECT — P495 on a named-artist work is the nationality trap).
+    const place = locCountry || (artist ? "" : origCountry);
+    out.push({ id, title:g("itemLabel")||"Untitled", artist, year:y,
+      place, culture:"", movement:(g("movementLabel")||"").replace(/\s+(painting|art)$/i,""),
       medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=1600", src:"wdmus", fameHint:parseInt(g("sl"),10)||0 });
     n++; }
   report.push(`  ${m.name.padEnd(42)} ${String(n).padStart(4)}  [${m.region}]`);
