@@ -24,7 +24,7 @@ _Rebuilt 2026-08-13 by auditing every planning doc against the live code. Most o
 
 ## 🟢 Content / vision enrichment
 - [ ] **~1,442 thin guides** remain (24%) — guides pipeline runs in ~100-work batches; keep grinding.
-- [ ] **Next-vision-pass fields** — image pass done, but 5/6 banked enrichment fields never folded in: `visDiff` (2nd difficulty signal), `mediumFull`, `anonReason`, `living`, provenance/"how it got here". Only `sensitive` (63 works) landed.
+- [ ] **Next-vision-pass fields — PREMISE WAS STALE (verified 2026-08-20).** The named fields (`visDiff`, `mediumFull`, `anonReason`, `living`, `contextNote`) exist in NO data file and NO vision/codex script produces them — they were planned in the deleted `next-vision-pass.md` but never collected. What actually landed + renders via `contextHTML()`: `sensitive` (46 works) + `provenanceNote` (71). Separately, `data/vision.js` (`ARTEFACTUM_VISION`, 202 works) is a real dead bank of an OLDER schema (palette/pose/delights/condition/guessability/movement_suggestion) — superseded by teach-works+hotspots, so not worth wiring. To actually get these fields you must COLLECT them (add to the vision prompt + a manual Sonnet run — expensive, ask first), OR derive the cheap subset from the WD cache (`mediumFull` from P186, `living` from P570). Not a plumbing job.
 - [ ] **Blank-reveal non-punitive nudge** — label swap shipped, but the "· skipped, no penalty — here's the tell" behavior on a blank guess is still absent.
 
 ## 🔵 Instrumentation & docs (mostly done — small tails)
