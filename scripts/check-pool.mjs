@@ -30,6 +30,9 @@ const isNamedArtist = a => a && !/(century|workshop|school|dynasty|period|cultur
 if(PD_PENDING.size) console.error(`  ⓘ post-pd-cutoff guard active; ${PD_PENDING.size} works grandfathered pending URAA adjudication (docs/uraa-review.md)`);
 const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
+// verified-legit date-vs-lifespan cases (older object mounted by a later hand, etc.) — see the guard below
+let DL_EXEMPT=new Set(); try{ DL_EXEMPT=new Set(Object.keys(JSON.parse(readFileSync("data/date-lifespan-exempt.json","utf8")))); }catch{}
+const dateLifeBacklog=[];
 
 for(const p of pool){
   // INVISIBLE-WORK guard: a work with an image but no cats is silently dropped by the game's runtime
@@ -54,6 +57,15 @@ for(const p of pool){
     if(ms.split(" ").length>2 || /album|scroll|sheet|folio|volume|first of|\bpage\b|untitled|reformatted|fragment/i.test(ms)) add(hard,"medium-junk",p,`"${ms}"`);
     else add(warn,"medium-nonbucket",p,`"${ms}"`); /* single real material (Leather/Wax) — fine as an answer */ } }
   if(p.medium && /^[a-z]/.test(p.medium)) add(hard,"medium-lowercase",p,`"${p.medium}"`);
+  // DATE vs ARTIST LIFESPAN (baked born/died from scripts/build-lifespans.mjs): a named artist can't have made
+  // a work before ~age 8 or after death — catches impossible dates AND the mounter/copyist attribution class.
+  // WARN not HARD: copies-of-older-masters, albums dated to compilation, and imperfect WD lifespans make a hard
+  // block unsafe (the ewer taught us this); this surfaces a review backlog. See tasks/provenance-gates-plan.md.
+  if(p.y!=null && (p.born!=null||p.died!=null) && Array.isArray(p.cats) && p.cats.includes("when") && !DL_EXEMPT.has(p.id)
+     && ((p.born!=null && p.y < p.born+8) || (p.died!=null && p.y > p.died+5))){
+    add(warn,"date-outside-lifespan",p,`y${p.y} vs artist ${p.born??"?"}–${p.died??"?"}`);
+    dateLifeBacklog.push({id:p.id,title:p.title,artist:p.artist,y:p.y,born:p.born,died:p.died});
+  }
   // STYLE
   if(p.style && /^[a-z]/.test(p.style)) add(hard,"style-lowercase",p,`"${p.style}"`);
   if(p.style && BAD_STYLE.test(p.style.trim())) add(hard,"style-is-place",p,`"${p.style}"`);
@@ -317,6 +329,8 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
 { const pc=globalThis.__pinCoverage; if(pc) console.log(`pin-coverage: ${pc.missing} figurative works with 0 pins (excl. abstract + ${pc.reviewed} reviewed) → data/incoming/pin-backlog.json`); }
 { const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
+{ try{ writeFileSync("data/incoming/date-lifespan-backlog.json",JSON.stringify(dateLifeBacklog,null,1)); }catch{}
+  if(dateLifeBacklog.length) console.log(`date-outside-lifespan: ${dateLifeBacklog.length} works whose y is outside the artist's baked born–died (review; copies/albums/bad-WD-lifespan expected) → data/incoming/date-lifespan-backlog.json`); }
 { const sf=globalThis.__styleFromNote; if(sf) console.log(`style-from-note: ${sf.n} junk-style works whose note names a mapped movement → data/incoming/style-from-note-backlog.json`); }
 { const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
 { const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
