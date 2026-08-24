@@ -1,3 +1,18 @@
 {
-  "http://www.wikidata.org/entity/Q111362936": "Fatimid rock-crystal ewer c.1000 mounted in gold by 19th-c Jean-Valentin Morel; y=1000 correctly dates the crystal, the 'artist' is the later mounter, not the maker (verified in the 2026-08-20 date review)."
+  "http://www.wikidata.org/entity/Q111362936": "Fatimid rock-crystal ewer c.1000 mounted in gold by 19th-c Jean-Valentin Morel; y=1000 dates the crystal, the 'artist' is the later mounter (2026-08-20 date review).",
+
+  "http://www.wikidata.org/entity/Q4945054": "Sleeping Hermaphroditus: antique Roman marble figure (y~100); Bernini only carved the mattress (1620), so y predates the attributed artist by design.",
+  "http://www.wikidata.org/entity/Q109344915": "Emperor Ming-huang's Flight: surviving Song-dynasty copy (~1150) of a composition by the Tang master Li Zhaodao (d.758); date=copy, artist=original designer.",
+  "wikidata:Q133732": "Discobolus: Roman marble copy of Myron's lost bronze; y~-450 is the original composition, the object/artist reflect the copy.",
+  "http://www.wikidata.org/entity/Q111628414": "St. Petersburg Album: an album; y~1800 dates the compilation, the attributed artist (calligrapher Mir Emad, d.1615) worked earlier.",
+  "wikidata:Q24933218": "Silver Altar of San Giovanni Battista: made 1367-1483 by successive goldsmiths; y is the start, the baked lifespan is one later contributor.",
+  "http://www.wikidata.org/entity/Q3475272": "Scepter of Charles V: 14th-c French royal object; Biennais (1764-1843) is the Napoleonic-coronation restorer, not the maker.",
+  "http://www.wikidata.org/entity/Q736832": "Choju-jinbutsu-giga: traditional (legendary) attribution to Toba Sojo d.1140; scholarly date ~1150, so y just postdates the attributed monk.",
+  "http://www.wikidata.org/entity/Q465762": "Laocoon Group: ancient; the Rhodian sculptors' lifespan is only a scholarly estimate, y is the accepted date.",
+
+  "http://www.wikidata.org/entity/Q6163441": "BAD BAKED LIFESPAN: 'Jaume Serra' resolved to the wrong WD entity (baked 1400-1405; the painter was active ~1358-1395). y1359 is correct.",
+  "http://www.wikidata.org/entity/Q185392": "BAD BAKED LIFESPAN: Borghese Gladiator sculptor's baked death 1612 is spurious (Agasias, ~100 BCE). y-100 is correct.",
+  "wikidata:Q20667108": "BAD BAKED LIFESPAN: baked the American Samuel Colman (1832-1920); this apocalyptic painting is by the British Samuel Colman (c.1780-1845). y1836 is correct.",
+  "wikidata:Q18749366": "BAD BAKED LIFESPAN: baked Richard Caton Woodville Sr (1825-1855); the 1900 self-portrait is by Woodville Jr (1856-1927). y1900 is correct.",
+  "wikidata:Q7039789": "BAD BAKED LIFESPAN: a palindrome inscription with no single datable artist; baked lifespan is spurious. y400 is correct."
 }
