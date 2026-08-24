@@ -2,6 +2,7 @@
 // Pure Wikidata SPARQL — no Codex. Writes data/incoming/wd-museums.json + prints per-museum coverage.
 // Run: node scripts/pull-wd-collection.mjs [perMuseumLimit]
 import { writeFileSync } from "node:fs";
+import { pickPlace } from "./lib/wd-fields.mjs";
 const FLOOR = parseInt(process.argv[2]||"4",10); // sitelinks floor (notability); uncapped per museum
 const UA = "GessoArtGame/1.0 (kathryn.swint@gmail.com)";
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -64,9 +65,7 @@ for(const m of MUSEUMS){
   for(const b of rows){ const g=k=>b[k]&&b[k].value; const id=g("item"); if(!id||seen.has(id))continue; seen.add(id);
     const y=parseInt(g("yr"),10), img=g("image"); if(!Number.isFinite(y)||!img)continue;
     const artist=g("creatorLabel")||"", locCountry=g("locCountryLabel")||"", origCountry=g("countryLabel")||"";
-    // prefer location-of-creation (P1071→P17); fall back to P495 origin ONLY for anonymous/cultural works
-    // (see the note above the SELECT — P495 on a named-artist work is the nationality trap).
-    const place = locCountry || (artist ? "" : origCountry);
+    const place = pickPlace({ locCountry, origCountry, hasNamedCreator: !!artist }); // shared rule (see wd-fields.mjs)
     out.push({ id, title:g("itemLabel")||"Untitled", artist, year:y,
       place, culture:"", movement:(g("movementLabel")||"").replace(/\s+(painting|art)$/i,""),
       medium:g("materialLabel")||"", image:img.replace(/^http:/,"https:")+"?width=1600", src:"wdmus", fameHint:parseInt(g("sl"),10)||0 });

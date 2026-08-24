@@ -89,7 +89,16 @@ the trusted source; the noisiest of the three, so keep it conservative.
 
 ---
 
-## #2 — Shared harvest resolver (prevent at source)
+## #2 — Shared harvest resolver (prevent at source) — SHIPPED (place rule) 2026-08-24
+The one rule that actually leaked (P495-as-place) is now centralized: `scripts/lib/wd-fields.mjs` exports
+`pickPlace({locCountry, origCountry, hasNamedCreator})` — P1071/P276 location wins; P495 origin used ONLY for
+anonymous/cultural works (never a named artist's nationality). Both active harvesters route through it
+(`pull-wd-collection.mjs`, `fetch-harvest.mjs`), and `tests/wd-fields.test.mjs` (7 checks, in test + test:ci)
+locks the rule so no script can re-derive it wrong. Deferred by design: (a) harvest-time date-sanity is
+redundant with the #1 lifespan gate that already catches impossible dates post-hoc; (b) mounter/restorer
+role-flagging from WD qualifiers is fuzzy/low-yield — the exempt-list path handles those cases when they surface.
+
+### Original design
 Each harvest script picks WD fields its own way — that's how P495-as-place leaked into `pull-wd-collection` but
 not `fetch-harvest`. Consolidate the field rules into ONE helper so bad data can't enter.
 

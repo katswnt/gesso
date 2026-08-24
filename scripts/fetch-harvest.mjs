@@ -2,6 +2,7 @@
 // Reads /tmp/harvest-novel.json [{title,artist,qid,...}]. Writes data/incoming/harvest-fetched.json.
 // Run: node scripts/fetch-harvest.mjs
 import { readFileSync, writeFileSync } from "node:fs";
+import { pickPlace } from "./lib/wd-fields.mjs";
 const UA="GessoHarvest/1.0 (kathryn.swint@gmail.com)";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const novel=JSON.parse(readFileSync("/tmp/harvest-novel.json","utf8"));
@@ -27,7 +28,9 @@ for(const m of novel){ const qid=m.qid; if(!qid)continue;
   const inc=claim(e,"P571"); let y=null; if(inc&&inc.time){const mm=inc.time.match(/([+-]\d+)/); if(mm)y=parseInt(mm[1],10);}
   const creator=await label(qOf(claim(e,"P170")))||m.artist||""; await sleep(100);
   const locQ=qOf(claim(e,"P1071"))||qOf(claim(e,"P276")); const placeRaw=locQ?await countryOf(locQ):""; await sleep(100);
-  const place=toCountry(placeRaw)||"";
+  // shared rule (wd-fields.mjs): P1071/P276 location wins; this harvester deliberately reads no P495, so a
+  // named-artist work with no creation-location stays blank rather than picking up the artist's nationality.
+  const place=pickPlace({ locCountry: toCountry(placeRaw), origCountry: "", hasNamedCreator: !!creator });
   const material=await label(qOf(claim(e,"P186")))||""; await sleep(100);
   const movement=await label(qOf(claim(e,"P135")))||""; await sleep(100);
   out.push({ id:"wikidata:"+qid, title:m.title, artist:creator, y, place, region:place?contOf(place):"Europe",
