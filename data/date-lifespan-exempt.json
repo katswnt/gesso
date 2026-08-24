@@ -14,5 +14,20 @@
   "http://www.wikidata.org/entity/Q185392": "BAD BAKED LIFESPAN: Borghese Gladiator sculptor's baked death 1612 is spurious (Agasias, ~100 BCE). y-100 is correct.",
   "wikidata:Q20667108": "BAD BAKED LIFESPAN: baked the American Samuel Colman (1832-1920); this apocalyptic painting is by the British Samuel Colman (c.1780-1845). y1836 is correct.",
   "wikidata:Q18749366": "BAD BAKED LIFESPAN: baked Richard Caton Woodville Sr (1825-1855); the 1900 self-portrait is by Woodville Jr (1856-1927). y1900 is correct.",
-  "wikidata:Q7039789": "BAD BAKED LIFESPAN: a palindrome inscription with no single datable artist; baked lifespan is spurious. y400 is correct."
+  "wikidata:Q7039789": "BAD BAKED LIFESPAN: a palindrome inscription with no single datable artist; baked lifespan is spurious. y400 is correct.",
+
+  "harvard200061": "Tale of Genji Album: an album; y~1600 dates the compilation, the attributed artist (Tosa Mitsunobu, d.1525) worked earlier.",
+  "harvard194260": "Fans on a Stream: y1750 is ~107y after Sotatsu's death (d.1643) — a later Rinpa copy of his design, not by his hand.",
+  "met45692": "River Landscape in Evening: note says a Kano-SCHOOL work ~1650, not by Motonobu (d.1559) himself; school attribution.",
+  "http://www.wikidata.org/entity/Q15623976": "Shuhanron Emaki: a later copy of the narrative handscroll; note says 'attributed to' Motonobu (d.1569).",
+  "http://www.wikidata.org/entity/Q107045268": "Writing Box with Pontoon Bridge: note says 'in the tradition of' Koetsu (d.1637), not by him — early-18th-c object.",
+  "wikidata:Q132830949": "Hannibal the Carthaginian: note says from Verrocchio's WORKSHOP ~1500 (post-master-death is normal for a workshop piece).",
+  "sifsg_F1909.207": "The Wang River estate: an early-17th-c copy of Wang Wei's famous composition; Song Xu (d.1606) attribution to a later copy.",
+  "aic13272": "Hokusai '36 Views' print: y1881 is a LATER IMPRESSION of Hokusai's ~1830 Edo design (blocks reprinted); object date honest, artist is the designer.",
+  "aic196872": "Hokusai 'Hyakunin isshu' print: note itself says '1921 woodblock edition of Hokusai's Edo-period' design — later edition of the ~1835 block.",
+  "aic196873": "Hokusai 'Hyakunin isshu' print: 1921 woodblock edition after Hokusai's ~1835 Edo design (later strike).",
+  "aic196895": "Hokusai 'Hyakunin isshu' print: 1921 woodblock edition after Hokusai's ~1835 Edo design (later strike).",
+  "aic196896": "Hokusai 'Hyakunin isshu' print: 1921 woodblock edition after Hokusai's ~1835 Edo design (later strike).",
+  "aic197424": "Red Parrot: 1905 woodblock print after Ito Jakuchu (d.1800) — later impression of an earlier design.",
+  "aic53862": "Moonlight off Haneda: 1929 woodblock print; Kiyochika d.1915, so a posthumous impression of his design."
 }
