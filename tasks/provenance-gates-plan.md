@@ -58,7 +58,18 @@ catches the whole impossible-date/wrong-maker class on the next `npm test`, zero
 
 ---
 
-## #3 — Field-vs-note consistency gate (the note is a free second reviewer)
+## #3 — Field-vs-note consistency gate — SHIPPED (partial) 2026-08-24
+`check-pool` now WARNs `note-artist-conflict`: a work whose reveal note explicitly calls the maker
+anonymous/unknown/unidentified while the pool names a real artist (1 hit: "Athena Painter", a convention name
+for an anonymous Greek vase painter). Joins the existing `century-off` (note-vs-date). Both network-free, every
+commit. The **note-vs-PLACE** sub-check was built and DROPPED after empirical review: the note's opening demonym
+is the artist's NATIONALITY, not where the work was made, so it flagged 124/124 false positives (Sargent
+"American" painting Madame X in Paris, Goya "Spanish" in Bordeaux) — it fought the place=where-made principle.
+There is no reliable note signal for place-of-creation, so place stays covered by audit-place (network) + the
+#2 harvest resolver. Follow-up: a reverse artist check (note names a specific person ≠ pool artist) is possible
+but NLP-noisy; deferred.
+
+### Original design
 The reveal note is vision/human-verified and independent of WD; it's what caught the ewer ("Fatimid crystal…
 later mounted by Morel"). `check-pool` already does ONE of these (`century-off`: note-century vs `y`). Generalize.
 

@@ -223,7 +223,24 @@ for(const p of pool){
       warn.push(`[century-off] ${(p.title||id).slice(0,34)} · y${p.y}=${tc}th, note says ${[...claimed].join("/")}th`); }
   }
   try{ writeFileSync("data/incoming/century-backlog.json",JSON.stringify(centBacklog,null,1)); }catch{}
-  globalThis.__century={off:centBacklog.length}; }
+  globalThis.__century={off:centBacklog.length};
+
+  // NOTE-vs-FIELD CONSISTENCY (#3): the reveal note is vision/human-verified and independent of Wikidata, so a
+  // note that contradicts a structured field is a high-signal review flag. Conservative WARN only.
+  // ARTIST: note explicitly calls the maker anonymous/unknown/unidentified, but pool names a real artist.
+  // (A note-vs-PLACE check was tried and DROPPED: the note's opening demonym is the artist's NATIONALITY, not
+  //  where the work was made — flagging "place France, note 'American'" for a Sargent painted in Paris fights
+  //  the place=where-made principle. 124/124 were that false positive. No reliable note signal for place origin.)
+  const reAnonMaker=/\b(?:by|from)\s+an?\s+(?:anonymous|unknown|unidentified)\b|\ban?\s+(?:anonymous|unknown|unidentified)\s+(?:\w+\s+){0,2}(?:artist|maker|master|sculptor|painter|craftsman|carver|potter|goldsmith|workshop)\b|\bthe\s+(?:anonymous|unidentified)\s+(?:artist|maker|master|sculptor|painter|craftsman|carver)\b/i;
+  const artistConf=[];
+  for(const [id,c] of Object.entries(teach)){
+    const p=pool.find(x=>x.id===id); if(!p||!c||!isNamedArtist(p.artist))continue;
+    const txt=(c.why||"")+" "+(Array.isArray(c.notes)?c.notes.map(n=>(n.head||"")+" "+(n.body||"")).join(" "):"");
+    if(reAnonMaker.test(txt)){ artistConf.push({id,title:p.title,artist:p.artist});
+      warn.push(`[note-artist-conflict] ${(p.title||id).slice(0,34)} — pool artist "${p.artist}" but note calls the maker anonymous/unknown`); }
+  }
+  try{ writeFileSync("data/incoming/note-conflict-backlog.json",JSON.stringify({artist:artistConf},null,1)); }catch{}
+  globalThis.__noteConflict={artist:artistConf.length}; }
 
 // STYLE-FROM-NOTE: a work whose style is a junk placeholder / empty but whose teach note clearly NAMES a
 // mapped movement is leaving MOVEMENT unscored for no reason (the answer is sitting right in the note). Flag
@@ -333,6 +350,7 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const ci=globalThis.__copyIntegrity; if(ci) console.log(`copy-integrity backlog: ${ci.works} works · ${JSON.stringify(ci.counts)} → data/incoming/copy-integrity-backlog.json`); }
 { const pc=globalThis.__pinCoverage; if(pc) console.log(`pin-coverage: ${pc.missing} figurative works with 0 pins (excl. abstract + ${pc.reviewed} reviewed) → data/incoming/pin-backlog.json`); }
 { const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
+{ const nc=globalThis.__noteConflict; if(nc&&nc.artist) console.log(`note-artist-conflict: ${nc.artist} works — note calls the maker anonymous but pool names an artist → data/incoming/note-conflict-backlog.json`); }
 { try{ writeFileSync("data/incoming/date-lifespan-backlog.json",JSON.stringify(dateLifeBacklog,null,1)); }catch{}
   if(dateLifeBacklog.length) console.log(`date-outside-lifespan: ${dateLifeBacklog.length} works whose y is outside the artist's baked born–died (review; copies/albums/bad-WD-lifespan expected) → data/incoming/date-lifespan-backlog.json`); }
 { const covered=pool.filter(p=>p.born!=null||p.died!=null).length;
