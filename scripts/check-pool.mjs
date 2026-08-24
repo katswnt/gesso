@@ -32,7 +32,7 @@ const hard=[], warn=[];
 const add=(arr,cat,p,note)=>arr.push(`[${cat}] ${(p.title||"?").slice(0,40)} — ${p.artist||"anon"}${note?" · "+note:""}`);
 // verified-legit date-vs-lifespan cases (older object mounted by a later hand, etc.) — see the guard below
 let DL_EXEMPT=new Set(); try{ DL_EXEMPT=new Set(Object.keys(JSON.parse(readFileSync("data/date-lifespan-exempt.json","utf8")))); }catch{}
-const dateLifeBacklog=[];
+const dateLifeBacklog=[]; let lifespanUncovered=0;
 
 for(const p of pool){
   // INVISIBLE-WORK guard: a work with an image but no cats is silently dropped by the game's runtime
@@ -66,6 +66,10 @@ for(const p of pool){
     add(warn,"date-outside-lifespan",p,`y${p.y} vs artist ${p.born??"?"}–${p.died??"?"}`);
     dateLifeBacklog.push({id:p.id,title:p.title,artist:p.artist,y:p.y,born:p.born,died:p.died});
   }
+  // COVERAGE METER: a named-artist work scoring WHEN with no baked lifespan can't be date-checked at all —
+  // the date-outside-lifespan gate is blind to it. Count these so the blind spot is a tracked number to drive
+  // toward zero (extend scripts/build-lifespans.mjs to resolve accession-work artists by name→QID).
+  if(p.y!=null && Array.isArray(p.cats) && p.cats.includes("when") && isNamedArtist(p.artist) && p.born==null && p.died==null) lifespanUncovered++;
   // STYLE
   if(p.style && /^[a-z]/.test(p.style)) add(hard,"style-lowercase",p,`"${p.style}"`);
   if(p.style && BAD_STYLE.test(p.style.trim())) add(hard,"style-is-place",p,`"${p.style}"`);
@@ -331,6 +335,8 @@ console.log(`styles with no MOVEMENTS entry: ${unmappedStyles.size} distinct`);
 { const cn=globalThis.__century; if(cn) console.log(`century-off (note ±1 vs date): ${cn.off} works → data/incoming/century-backlog.json`); }
 { try{ writeFileSync("data/incoming/date-lifespan-backlog.json",JSON.stringify(dateLifeBacklog,null,1)); }catch{}
   if(dateLifeBacklog.length) console.log(`date-outside-lifespan: ${dateLifeBacklog.length} works whose y is outside the artist's baked born–died (review; copies/albums/bad-WD-lifespan expected) → data/incoming/date-lifespan-backlog.json`); }
+{ const covered=pool.filter(p=>p.born!=null||p.died!=null).length;
+  console.log(`lifespan-coverage: ${covered} works have baked born/died; ${lifespanUncovered} named-artist WHEN-scoring works are UNCHECKED (no lifespan) — the date gate's blind spot (shrink via scripts/build-lifespans.mjs name→QID)`); }
 { const sf=globalThis.__styleFromNote; if(sf) console.log(`style-from-note: ${sf.n} junk-style works whose note names a mapped movement → data/incoming/style-from-note-backlog.json`); }
 { const th=globalThis.__thin; if(th) console.log(`thin works (no medium AND no movement — excluded from play): ${th.n} → data/incoming/thin-backlog.json`); }
 { const mc=globalThis.__medConflict; if(mc) console.log(`medium-from-note conflicts (note declares a different technique): ${mc.n} → data/incoming/medium-conflict-backlog.json`); }
