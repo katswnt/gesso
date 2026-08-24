@@ -199,6 +199,10 @@ function fmtYear(y){return y<0?`${-y} BCE`:`${y} CE`;}
 // so when-scoring can give full credit anywhere inside the span (e.g. "c. 1st century BCE" accepts −100..−1).
 function dateRange(it){ const r=it&&Array.isArray(it.yr)&&it.yr.length===2?it.yr:null; return r?[Math.min(r[0],r[1]),Math.max(r[0],r[1])]:[it.y,it.y]; }
 function fmtDate(it){ const r=it&&Array.isArray(it.yr)&&it.yr.length===2&&it.yr[0]!==it.yr[1]; if(!r)return fmtYear(it.y); const a=Math.min(it.yr[0],it.yr[1]),b=Math.max(it.yr[0],it.yr[1]); return `c. ${Math.abs(a)}–${fmtYear(b)}`; }
+// Reveal DATE line. For a MULTIPLE (a print with a `printed` impression year), the SCORED date is the DESIGN
+// date (it.y — what the image reads as, e.g. Edo Hokusai) and we show the later impression as context, so the
+// scored answer and the shown fact never contradict: "designed 1832 CE · printed 1921 CE". No-op otherwise.
+function dateLine(it){ return it&&it.printed ? `designed ${fmtDate(it)} · printed ${fmtYear(it.printed)}` : fmtDate(it); }
 const motionQuery=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
 let settings=loadSettings();
 function loadSettings(){try{const s=JSON.parse(localStorage.getItem("gesso.settings"))||{};return {reduceMotion:typeof s.reduceMotion==='boolean'?s.reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:!!s.colorblind,units:s.units==='in'?'in':'cm'};}catch{return{reduceMotion:!!(motionQuery&&motionQuery.matches),colorblind:false,units:'cm'};}}
@@ -3395,7 +3399,7 @@ function qaCardHTML(id){ const it=qaResolve(id);
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
       <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
-      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||"")}${fact(styleKindLabel(it),it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
+      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",dateLine(it))}${fact("ORIGIN",it.place||"")}${fact(styleKindLabel(it),it.style||"—")}${fact("MEDIUM",it.medium||"")}</div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}</div>
     </div></div>`;
@@ -3428,7 +3432,7 @@ function renderWorkPage(id){ clearTimers&&clearTimers(); const it=qaResolve(id),
     <div class="revealgrid"><div>
       <div style="position:relative" class="plate"><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onerror="imgFail(this)">${marks}${saveBtnHTML(it.id)}</div>
       <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
-      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",fmtDate(it))}${fact("ORIGIN",it.place||it.region)}${fact(styleKindLabel(it),it.style)}${fact("MEDIUM",it.medium)}${fact("HELD AT",museumLine(it))}</div>
+      <div style="padding:6px 0 4px">${fact("ARTIST",artistDisplay(it)||"Unknown / anonymous")}${fact("DATE",dateLine(it))}${fact("ORIGIN",it.place||it.region)}${fact(styleKindLabel(it),it.style)}${fact("MEDIUM",it.medium)}${fact("HELD AT",museumLine(it))}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"><button type="button" id="sharework" class="btn2">Share this work</button><a class="btn2" href="${sourceURL(it)}" target="_blank" rel="noopener">View at source &rarr;</a></div>
     </div>
     <div><div class="kick">STUDY NOTE &middot; TEACH ME</div><p style="font-size:17px">${esc(study.why)}</p>${notesHTML(study.notes)}${guideHTML(study.guide)}
