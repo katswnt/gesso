@@ -48,6 +48,15 @@ const CASES = [
   ["Silver, gold, and enamel", "Silver"],    // composite → bucket by primary (first-named) material
   ["Silver, gilt", "Silver"],
   ["Hammered brass inlaid with gold, silver, and black paste", "Bronze"], // brass basin → primary metal, guessable
+  // metals are NOT all "Bronze" (regression: a steel sword / pewter photo plate scored as Bronze — wrong)
+  ["Steel", "Steel"],
+  ["Steel, gold, fish skin, wood", "Steel"],          // sabre → primary steel, not Bronze
+  ["Cut steel with gold accents", "Steel"],
+  ["Iron", "Iron"],
+  ["Etching on iron plate", "Engraving"],             // the PROCESS (etching) wins over the plate metal
+  ["Heliograph on pewter plate coated with bitumen", "Photograph"], // Niépce's first photo — not Bronze
+  ["Daguerreotype", "Photograph"],
+  ["ironwood", "Wood"],                                // \biron\b must NOT match ironwood
 ];
 
 let pass=0, fail=0;

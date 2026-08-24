@@ -15,7 +15,7 @@ const COUNTRY_NAMES = new Set((readGlobal("data/countries.js","ARTEFACTUM_COUNTR
 let fame={}; try{ const f=readFileSync("data/fame.js","utf8"); fame=JSON.parse(f.slice(f.indexOf("{"),f.lastIndexOf("}")+1)); }catch{}
 const fa = p => fame[p.id]!=null?fame[p.id]:(p.fame||0);
 
-const BUCKETS = new Set(["Oil paint","Tempera","Fresco","Watercolor","Ink","Drawing","Woodblock print","Bronze","Copper","Marble","Stone","Wood","Ivory","Jade","Ceramic","Glass","Textile","Gold","Silver","Lacquer","Photograph","Mixed media","Leather","Wax","Beadwork","Engraving","Lithograph"]);
+const BUCKETS = new Set(["Oil paint","Tempera","Fresco","Watercolor","Ink","Drawing","Woodblock print","Bronze","Steel","Iron","Metal","Copper","Marble","Stone","Wood","Ivory","Jade","Ceramic","Glass","Textile","Gold","Silver","Lacquer","Photograph","Mixed media","Leather","Wax","Beadwork","Engraving","Lithograph"]);
 
 const PD_OK = new Set(["wd:Q1960268"]); // Steichen, The Pond—Moonlight (1904, US-PD by publication)
 // STRUCTURAL copyright guard: isInCopyright (below) is a hand-maintained artist DENYLIST — incomplete by design,

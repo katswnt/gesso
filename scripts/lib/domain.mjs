@@ -134,7 +134,7 @@ export function simplifyMedium(s){
     const t = " " + String(chunk).toLowerCase() + " ";
     if(/\boil\b/.test(t))return "Oil paint"; if(/tempera|distemper/.test(t))return "Tempera"; if(/fresco/.test(t))return "Fresco";
     if(/water-?colou?r|gouache/.test(t))return "Watercolor";
-    if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock)
+    if(/photograph|gelatin|albumen|daguerreotype|collotype|platinum print|palladium print|carbon print|collodion|heliograph|calotype|tintype|ambrotype|cyanotype|autochrome|ferrotype|salt print/.test(t))return "Photograph"; // BEFORE the generic print rule (a "gelatin silver print" is a photo, not a woodblock); incl. early processes (heliograph=Niépce's first photo, on a pewter plate)
     if(/lithograph/.test(t))return "Lithograph"; // Western planographic print
     if(/engrav|\betch|drypoint|aquatint|mezzotint|intaglio/.test(t))return "Engraving"; // Western intaglio print (NOT East-Asian woodblock)
     if(/woodcut|woodblock|screenprint|silkscreen|offset print|offset printing|printed matter|\bprint\b/.test(t))return "Woodblock print";
@@ -147,7 +147,10 @@ export function simplifyMedium(s){
     if(/glass|enamel|cloisonn/.test(t))return "Glass";
     if(/vermeil/.test(t))return "Silver"; // vermeil = gilt silver → base material is silver
     if(/\bgold\b|gilt|gild|electrum/.test(t))return "Gold"; if(/silver/.test(t))return "Silver";
-    if(/\bcopper\b/.test(t))return "Copper"; if(/bronze|brass|\btin\b|pewter|\bmetal\b|\blead\b|iron|steel|nickel/.test(t))return "Bronze";
+    if(/\bcopper\b/.test(t))return "Copper";
+    if(/bronze|brass/.test(t))return "Bronze"; // brass (copper-zinc) reads as bronze-family; guessable
+    if(/\bsteel\b/.test(t))return "Steel"; if(/\biron\b/.test(t))return "Iron"; // ferrous — NOT bronze (swords, ironwork, etching plates)
+    if(/pewter|\btin\b|\blead\b|nickel|\bmetal\b/.test(t))return "Metal"; // rare soft/unspecified base metals
     if(/silk|cotton|\bwool\b|linen|textile|tapestry|embroider|velvet|cloth|canvas|flax|raffia|fiber|fibre|carpet|thread|hessian/.test(t))return "Textile";
     if(/limestone|sandstone|granite|alabaster|steatite|soapstone|basalt|quartzite|greywacke|graywacke|granodiorite|diorite|gabbro|travertine|schist|serpentin(?:e|ite)|porphyry|gneiss|dolomite|calcite|gypsum|chlorite|argillite|malachite|fluorite|carnelian|lapis lazuli|chalcedony|quartz|chert|flint|andesite|dacite|feldspathoid|rock crystal|pietra serena|diamond|plaster|stucco|magnesite|\btuff\b|\bstone\b/.test(t))return "Stone";
     if(/lacquer|wood|panel|\boak\b|\bpine\b|walnut|bamboo|sugi|sycamore|sycomore|olive.?pit|fruit.?stone|nutshell|coquilla|\bnut\b|coconut|living tree/.test(t))return "Wood";
