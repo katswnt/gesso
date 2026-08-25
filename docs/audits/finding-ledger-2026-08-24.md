@@ -50,12 +50,12 @@ incidents were raised. No product or data file was edited. Method notes per clus
 ## Security — device ownership & account erasure  →  Roadmap Batch 1 (PRs 3–4) · **P0**
 | ID | Finding | Severity | Status | Evidence (HEAD) | Intended change | Acceptance test | PR |
 |---|---|---|---|---|---|---|---|
-| SEC-1 | `claim.js` writes caller-supplied `deviceId`→`profiles.user_id` after only JWT validation (no ownership check); secret key bypasses RLS | P0 | **Confirmed — 3A partial** (devices relation + hardened `claim_device` fn added (uncommitted) & gate-checked; not yet wired into `claim.js` or applied to prod) | `api/claim.js:38` (JWT `:29-32`, regex `:24`, `:34`); `db/devices.sql` | Require proof of device capability; reject if device already bound to another account | Foreign-device claim rejected; already-claimed device rejected; replayed capability (reused cap / cap for another device) rejected via `UNIQUE(capability_hash)` | 3 |
-| SEC-2 | `sync.js` performs the same unowned bind, then reads/merges all uid profiles + overwrites identity | P0 | **Confirmed — 3A partial** (bind fn exists; `sync.js` not yet migrated to it / to `devices.user_id`) | `api/sync.js:71` (`:65-68,:74,:80`) | Resolve devices server-side from authed uid; never trust body deviceId for authority | Foreign-device sync rejected; account-scoped read of foreign state impossible | 3 |
+| SEC-1 | `claim.js` writes caller-supplied `deviceId`→`profiles.user_id` after only JWT validation (no ownership check); secret key bypasses RLS | P0 | **Confirmed — 3A partial** (devices relation + hardened `claim_device` fn committed, applied to prod & live-verified; `claim.js` still unchanged — enforcement pending 3B) | `api/claim.js:38` (JWT `:29-32`, regex `:24`, `:34`); `db/devices.sql` | Require proof of device capability; reject if device already bound to another account | Foreign-device claim rejected; already-claimed device rejected; replayed capability (reused cap / cap for another device) rejected via `UNIQUE(capability_hash)` | 3 |
+| SEC-2 | `sync.js` performs the same unowned bind, then reads/merges all uid profiles + overwrites identity | P0 | **Confirmed — 3A partial** (bind fn applied to prod & live-verified; `sync.js` still unchanged / not yet on `devices.user_id` — pending 3B) | `api/sync.js:71` (`:65-68,:74,:80`) | Resolve devices server-side from authed uid; never trust body deviceId for authority | Foreign-device sync rejected; account-scoped read of foreign state impossible | 3 |
 | SEC-3 | `delete-account.js` unions caller `deviceId` with account devices → deletes a foreign device's rows | P0 | **Confirmed** | `api/delete-account.js:27-32,:28` | Derive deletable devices **only from `devices.user_id = auth.uid()`** (never the caller body deviceId, never the contaminated `profiles.user_id`); delete scores/saves/profiles for exactly those device_ids. Foreign-device-deletion fix lands in **3B**; full transactional erasure incl. `events` in PR 4 | Foreign-device delete affects nothing; another account's rows untouched | 3B/4 |
 | SEC-4 | Deletion omits `saves` and `events` despite "delete everything" | P1 | **Confirmed** | `delete-account.js:29-35`; tables real (`api/saves.js:7`, `api/event.js:6,56`) | Transactional DB fn deletes profiles+scores+saves+events+user_state+auth | Verify every owned table emptied | 4 |
 | SEC-5 | Deletion checks no responses → returns `{ok:true}` on partial failure | P1 | **Confirmed** | `delete-account.js:30-36` | Check each step; fail on partial erasure | Forced failure at each step ⇒ non-2xx, no partial commit | 4 |
-| SEC-6 | No server-side ownership capability/nonce anywhere; JWT is the only boundary | P0 | **Confirmed — 3A partial** (capability model + hardened `SECURITY DEFINER` register/claim fns added (uncommitted) in `db/devices.sql`; `api/lib` + enforcement pending 3B/3C) | grep `api/` (no `api/lib`, no nonce/ownership); `db/devices.sql` | Client-minted device capability (only its 64-hex SHA-256 hash stored, `UNIQUE`), replay resistance via `UNIQUE(capability_hash)` + first-writer-wins (no separate nonce), DB uniqueness, enforced in a hardened `SECURITY DEFINER` claim/bind function (`search_path=''`, schema-qualified, execute revoked from `PUBLIC`/`anon`/`authenticated`/`service_role` then granted only to the intended role, atomic `for update` check-and-bind, `auth.uid()`-derived identity), + rate limiting/audit logging | Capability required before claim; **replayable bearer capability** — `UNIQUE(capability_hash)` blocks cross-device reuse, but a stolen valid cap can be replayed for its **own** device (proves possession, not freshness); concurrent-claim race cannot double-bind | 3 |
+| SEC-6 | No server-side ownership capability/nonce anywhere; JWT is the only boundary | P0 | **Confirmed — 3A partial** (capability model + hardened `SECURITY DEFINER` register/claim fns applied to prod & live-verified; `api/lib` + enforcement pending 3B/3C) | grep `api/` (no `api/lib`, no nonce/ownership); `db/devices.sql` | Client-minted device capability (only its 64-hex SHA-256 hash stored, `UNIQUE`), replay resistance via `UNIQUE(capability_hash)` + first-writer-wins (no separate nonce), DB uniqueness, enforced in a hardened `SECURITY DEFINER` claim/bind function (`search_path=''`, schema-qualified, execute revoked from `PUBLIC`/`anon`/`authenticated`/`service_role` then granted only to the intended role, atomic `for update` check-and-bind, `auth.uid()`-derived identity), + rate limiting/audit logging | Capability required before claim; **replayable bearer capability** — `UNIQUE(capability_hash)` blocks cross-device reuse, but a stolen valid cap can be replayed for its **own** device (proves possession, not freshness); concurrent-claim race cannot double-bind | 3 |
 
 **Nuance (verified):** for a *foreign* device, delete destroys the victim's `scores`+`profiles` only — `user_state`/auth-user
 are keyed by the attacker's uid so they aren't hit. Still identity-hijack (SEC-1/2) + data-destruction (SEC-3). The
@@ -129,7 +129,7 @@ and `DQ-6` remain systemically **Confirmed**, not a claim that the later eligibi
 
 **Implementation log — production schema baseline, 2026-08-25:** captured the real production `public` schema
 (project `jmrpqmejupouqfergyyg`, PostgreSQL 17.6) via `pg_dump 18.6 --schema=public --schema-only --no-owner` through
-the session pooler; sanitized (no rows, no ownership, no credentials — scan clean) and **captured (uncommitted)** as
+the session pooler; sanitized (no rows, no ownership, no credentials — scan clean) and **committed** (`9ac7f86`) as
 `db/production-schema-baseline.sql` (+ `.md` provenance, SHA-256 pinned) with an offline gate
 `scripts/check-production-schema-baseline.mjs` (now wired into `test`/`test:ci`). A live PostgREST OpenAPI cross-check
 matched all 5 tables/columns. Read-only `pg_catalog` queries then **verified** (not inferred): **0 foreign keys**,
@@ -156,11 +156,19 @@ binding) and `claim_device` (authenticated; identity from `auth.uid()`, never a 
 `for update` check-and-bind; returns `bound`/`already_bound_same_user`/`conflict_other_user`/`unregistered`/`revoked`/
 `bad_capability`). Offline gate `scripts/check-devices-migration.mjs` (wired into `test`/`test:ci`) asserts the migration
 text; falsifiability confirmed. Real-Supabase integration test `scripts/db-verify-devices.mjs` (`npm run db:verify`,
-scratch-project only, prod-ref-guarded) written but **not yet executed** — no local Docker/`supabase start`, no scratch
-project configured. **SEC-1 / SEC-2 / SEC-6 remain Confirmed — 3A partially fixes them** (the ownership relation +
-hardened bind/register functions exist (uncommitted) and are gate-checked, but are **not yet wired into the API handlers or applied to
-production**, and the live `auth.uid()`/RPC-grants/locking behavior is pending the integration run). Nothing committed;
-production apply is a separate gate.
+permanent prod guard + deliberate exact-ref override). **Committed** on branch `verify/pr3-3a-device-auth` as
+`465580946eb703f3eb4c7c916c2746f536b2bebd`; `db/devices.sql` SHA-256
+`713bee406404989e9877e1fecacacb0af8eb208479daa4f8e52c938825b0f188`. **Applied to production project
+`jmrpqmejupouqfergyyg`** on 2026-08-25 (single transaction, additive) and **live-verified**: preflight clean, then
+**22/22 catalog assertions** and **39/39 functional assertions** passed — RLS on / not forced; anon/authenticated
+denied all table privileges; execute grants (register→service_role, claim→authenticated, **service_role ∉ claim**);
+both `SECURITY DEFINER` with exact `search_path=""`; `UNIQUE` + both CHECKs; two-JWT `bound`/`conflict_other_user`;
+`hash_in_use`; concurrent → **exactly one bound + one conflict** (real `FOR UPDATE` lock); revoked rejected by both
+functions. **Cleanup verified: zero `public.devices` rows, zero `dv*` verifier rows, zero `dvtest_*` Auth users**;
+expected `dvtest_*` create/delete traces remain in the prod Auth audit log (the one residue of verifying on prod).
+**SEC-1 / SEC-2 / SEC-6 remain Confirmed — 3A partial**: the ownership relation + hardened register/claim functions
+are committed, applied, and verified, but the **vulnerable API handlers are unchanged** — capability enforcement and
+wiring `claim`/`sync`/`saves`/`profile`/`score`/`delete-account` onto `devices.user_id` remains **pending 3B/3C**.
 
 ---
 

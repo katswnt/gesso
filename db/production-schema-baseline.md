@@ -6,9 +6,11 @@ trigger (catalog-verified). It is used to author the device-ownership / account-
 tracked base schema (PR 8). **It is not a migration — do not apply it.**
 
 > **This baseline is a dated PRE-migration snapshot (2026-08-25).** Tracked schema changes land as their own
-> migration files and are the delta on top of it — e.g. `db/devices.sql` (PR 3 Part 3A) adds `public.devices` + the
-> `register_device`/`claim_device` functions. Once such a migration is applied, this snapshot no longer reflects the
-> live schema; re-capture (same method) if you need a current picture.
+> migration files and are the delta on top of it. **`db/devices.sql` (PR 3 Part 3A) is now an APPLIED tracked delta**
+> — applied to production `jmrpqmejupouqfergyyg` on 2026-08-25 (commit `4655809`; SHA-256 `713bee40…`), adding
+> `public.devices` + the `register_device`/`claim_device` functions, and live-verified (22/22 catalog + 39/39
+> functional). So the live schema = this snapshot **+ `db/devices.sql`**; this file remains the pre-`devices` baseline
+> (do not treat it as current). Re-capture (same method) if you need a fresh full picture.
 
 ## Provenance
 
