@@ -889,6 +889,14 @@ minimum role with `PUBLIC`/`anon` revoked, atomic check-and-bind under the uniqu
 derived from `auth.uid()` where feasible — never trust a caller-supplied UID. Add rate limiting + audit logging on
 capability issuance and claim.
 
+**Baseline-verified RLS/grants note (PR 3 + PR 4 migrations).** The captured production baseline
+(`db/production-schema-baseline.sql`) shows every `public` table relies on RLS-enabled-with-no-policies for isolation,
+auto-enabled by the `ensure_rls` event trigger. That trigger's function only `RAISE LOG`s if `enable row level
+security` fails, so a new table can be created with RLS silently off. Therefore every new security table (e.g.
+`devices`) and any cascade migration must **explicitly** `enable row level security` and set **minimal** grants in the
+migration itself — do **not** rely on `rls_auto_enable`. A migration/integration test must assert the post-apply RLS
+state (`relrowsecurity`) and grants for the new relations, not merely that the tables exist.
+
 **Tests and acceptance:** hostile-device claim/sync, already-bound device, malformed capability, replay, cross-user
 read, same-user retry, and concurrent claim race. The test must fail on the vulnerable revision and pass with the fix;
 all merged commits stay green. A local database test proves the unique ownership constraint.

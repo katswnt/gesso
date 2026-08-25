@@ -127,6 +127,25 @@ the raw hard rotation.
 `tests/daily-incidents.test.mjs` now locks all three work IDs. This is evidence that `DQ-1`/`DQ-2`/`DQ-5`
 and `DQ-6` remain systemically **Confirmed**, not a claim that the later eligibility gate is complete.
 
+**Implementation log — production schema baseline, 2026-08-25:** captured the real production `public` schema
+(project `jmrpqmejupouqfergyyg`, PostgreSQL 17.6) via `pg_dump 18.6 --schema=public --schema-only --no-owner` through
+the session pooler; sanitized (no rows, no ownership, no credentials — scan clean) and **captured (uncommitted)** as
+`db/production-schema-baseline.sql` (+ `.md` provenance, SHA-256 pinned) with an offline gate
+`scripts/check-production-schema-baseline.mjs` (now wired into `test`/`test:ci`). A live PostgREST OpenAPI cross-check
+matched all 5 tables/columns. Read-only `pg_catalog` queries then **verified** (not inferred): **0 foreign keys**,
+**0 policies**, **0 non-internal table triggers**, RLS enabled + not forced on all 5 tables, and the RLS event trigger
+`ensure_rls` (`ddl_command_end` → `public.rls_auto_enable()`, enabled) — whose sanitized `CREATE EVENT TRIGGER` DDL is
+now appended to the baseline `.sql`. Key facts for PR 3/PR 4: `profiles.device_id` is UNIQUE (but nullable); **neither
+`profiles.user_id` nor `user_state.user_id` has any FK to `auth.users`** (no cascade); `scores`/`saves`/`events` have
+**no** device/profile FK; RLS is service-role-only (zero policies) while `GRANT ALL` to `anon`/`authenticated` is broad
+and neutralized *only* by RLS; `rls_auto_enable()` is `SECURITY DEFINER` (search_path `pg_catalog`) but only `RAISE LOG`s
+on enable failure, so migrations must set RLS explicitly. This is **capture-and-verify only** — it does **not** fix
+`INF-6b`: clean-database replay, the tracked base-schema migrations, and API/database tests remain pending (PR 8 / PR 3).
+Account-erasure scope (evidence-based): `auth.users` is definitely in scope; **no account-linked** Vercel Blob (it holds
+public artwork images), Redis (anonymous reports + per-IP rate limits), or Supabase Storage (no usage found) data was
+found in the repo. External stores + platform logs still need a documented reader/writer inventory before PR 4;
+anonymous-report/IP retention is a separate privacy-retention question, not account erasure.
+
 ---
 
 ## Infrastructure — writers, CI, hooks, DB  →  Roadmap Batches 1/4/7 (PRs 3–4,8,10) · **P2**
@@ -137,7 +156,7 @@ and `DQ-6` remain systemically **Confirmed**, not a claim that the later eligibi
 | INF-3 | CI runs `test:ci` but not `check:syntax` | **Confirmed** | `ci.yml`, `package.json:12` | Add `check:syntax` (+ API tests) to CI | 8 |
 | INF-4 | `.githooks/pre-commit` tracked but inactive (`core.hooksPath=.git/hooks`) | **Confirmed** | git config; `.git/hooks` has none | Treat hooks as convenience; enforce in CI; document install | 8 |
 | INF-5 | No API behavior tests (claim/sync/delete/score-race/capability) | **Confirmed** | `tests/` (7 files, none touch `api/`) | Add API test harness + hostile-device regression tests | 3 |
-| INF-6 | Only `saves.sql` has CREATE TABLE; **scores/profiles/events/user_state have no CREATE TABLE** in tracked SQL | **Confirmed** | `db/*.sql` (3 files, 2 ALTER-only) | **Split: INF-6b** = PR 8 owns tracking the existing base schema (after a sanitized production baseline captured before PR 3); **INF-6a** = the security PRs (3/4) add the new `devices` relation + cascades on top | 8 (INF-6b) / 3–4 (INF-6a) |
+| INF-6 | Only `saves.sql` has CREATE TABLE; **scores/profiles/events/user_state have no CREATE TABLE** in tracked SQL | **Confirmed** — production schema now **captured & verified** (`db/production-schema-baseline.sql`, 2026-08-25); INF-6b tracking (clean-DB replay + base-schema migrations + CI) still **pending** | `db/*.sql` (3 files, 2 ALTER-only) + `db/production-schema-baseline.sql` | **Split: INF-6b** = PR 8 owns tracking the existing base schema (sanitized production baseline captured ✓ before PR 3); **INF-6a** = the security PRs (3/4) add the new `devices` relation + cascades on top | 8 (INF-6b) / 3–4 (INF-6a) |
 | INF-7 | `package-lock.json` gitignored ⇒ no repo-pinned dep graph (sharp/@vercel/blob) | **Confirmed** | `.gitignore:8` | Track the lockfile; enables `npm ci` in CI | 8 |
 
 ---
