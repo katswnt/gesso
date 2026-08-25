@@ -151,6 +151,9 @@ function mediumChoices(ans,dropMixed){const look=dcfg().look;
   // Composite objects (gold+lapis+glass mask, etc.) bucket to a primary material, but "Mixed media" is a
   // defensible read of them — so never offer it as a WRONG distractor for such works (it'd be an unfair trap).
   if(dropMixed&&ans!=='Mixed media')POOL_MED=POOL_MED.filter(m=>m!=='Mixed media');
+  // Never offer a subsumption partner of the answer (e.g. "Stone" for a Marble work, "Metal" for Bronze) — the
+  // generic term is a valid read of the specific one, so co-showing them makes the correct broad guess a wrong option.
+  const excl=MED_EXCLUDE[ans]; if(excl)POOL_MED=POOL_MED.filter(m=>m===ans||!excl.has(m));
   const same=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]&&MED_FAMILY[m]===MED_FAMILY[ans]);
   const diff=POOL_MED.filter(m=>m!==ans&&MED_FAMILY[m]!==MED_FAMILY[ans]);
   let picks; if(look==='far')picks=pickN(diff,3); else if(look==='near')picks=[...pickN(same,3),...pickN(diff,3)].slice(0,3); else picks=[...pickN(same,1),...pickN(diff,2)];
@@ -553,6 +556,13 @@ const MED_FAMILY={ "Oil paint":"paint","Tempera":"paint","Fresco":"paint","Water
   "Drawing":"draw","Woodblock print":"print","Engraving":"print","Lithograph":"print",
   "Bronze":"sculpt","Copper":"sculpt","Marble":"sculpt","Stone":"sculpt","Wood":"sculpt","Ivory":"sculpt","Jade":"sculpt",
   "Ceramic":"craft","Glass":"craft","Textile":"craft","Gold":"craft","Silver":"craft","Lacquer":"craft","Photograph":"craft","Mixed media":"craft" };
+// A generic material subsumes the specific ones under it: marble/jade ARE stone; bronze/copper/gold/silver ARE
+// metal. Offering the generic term as a distractor for the specific answer — or the reverse — unfairly punishes a
+// correct broader read (a marble statue genuinely IS stone), so subsumption partners must never co-appear as medium
+// options. MED_EXCLUDE is the symmetric closure keyed by medium; mediumChoices drops the answer's partners.
+const MED_SUBSUMES={ "Stone":["Marble","Jade"], "Metal":["Bronze","Copper","Gold","Silver","Steel","Iron"] };
+const MED_EXCLUDE=(()=>{const m={};const add=(a,b)=>{(m[a]=m[a]||new Set()).add(b);(m[b]=m[b]||new Set()).add(a);};
+  for(const[g,subs]of Object.entries(MED_SUBSUMES))for(const s of subs)add(g,s);return m;})();
 // Normalize museum catalogue medium strings into player-facing answer buckets.
 // This encodes the domain convention that "medium" is the art-making material or
 // process. Supports such as panel/paper/copper only win when no stronger medium

@@ -41,6 +41,10 @@ const hooks = `
     if(typeof renderFinal==='function') renderFinal();
     return results.length;
   },
+  // medium distractor fairness: expose the exclusion map + an option builder (tier sets the difficulty 'look')
+  MED_EXCLUDE: (typeof MED_EXCLUDE!=='undefined'?MED_EXCLUDE:null),
+  allMed: function(){ if((typeof ALL_MED==='undefined'||!ALL_MED.length)&&typeof buildIndexes==='function'){try{buildIndexes();}catch{}} return (typeof ALL_MED!=='undefined'?ALL_MED:[]); },
+  mediumOptions: function(ans, tierName){ const prev=tier; tier=tierName; try{ return mediumChoices(ans,false); } finally{ tier=prev; } },
   // a training round (TRAIN set) exercises the separate activeCatsFor / given-facet path
   runTraining: function(work){
     game=[work]; idx=0; tier=null; infinite=true; runDate=null; results=[];
@@ -95,6 +99,28 @@ for (const [label, w] of [["placeNA",placeNA],["cultureYr",cultureYr],["superReg
 // training round over the trickiest work
 if (placeNA) { try { S.runTraining(placeNA); pass++; } catch(e){ fail("runTraining() place-NA", e); } }
 if (cultureYr) { try { S.runTraining(cultureYr); pass++; } catch(e){ fail("runTraining() widened-date", e); } }
+
+// MEDIUM distractor fairness: a generic material (Stone/Metal) must never be offered alongside the specific one it
+// subsumes (Marble/Jade/Bronze/…), because the broad term is a valid read of the specific answer. Regression guard
+// for the "Stone · Marble — same family" half-credit trap. Run across difficulties (hard/impossible use the
+// same-family 'near' look, which is where the collision surfaced) and repeat to beat the shuffle randomness.
+if (S.MED_EXCLUDE && S.mediumOptions) {
+  const allMed = S.allMed();
+  const atRisk = allMed.filter(m => S.MED_EXCLUDE[m] && S.MED_EXCLUDE[m].size);
+  let sets = 0;
+  for (const ans of atRisk) {
+    const excl = S.MED_EXCLUDE[ans];
+    for (const tierName of ["medium","hard","impossible"]) {
+      for (let r=0; r<40; r++) {
+        const opts = S.mediumOptions(ans, tierName) || [];
+        for (const o of opts) ok(o===ans || !excl.has(o), `mediumChoices offered subsumption partner "${o}" for answer "${ans}" (${tierName})`);
+        sets++;
+      }
+    }
+  }
+  ok(atRisk.length > 0, "at least one subsumption medium (e.g. Marble/Stone) present in the pool to guard");
+  console.log(`  medium subsumption guard: ${sets} option-sets clean across at-risk mediums [${atRisk.join(", ")}]`);
+}
 
 console.log(`\n✅ gameplay-smoke PASS — ${pass} checks, score() + renderRound() + renderFinal() + training ran clean over edge-case works`);
 process.exit(0);
