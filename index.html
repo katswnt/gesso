@@ -1848,6 +1848,45 @@ function route(name,push=true){try{window.scrollTo(0,0);}catch{}if(push)pushNav(
 
 // ---------- leaderboard (Accounts+Leaderboards Phase 1: anonymous daily board) ----------
 function deviceId(){let d=null;try{d=localStorage.getItem("gesso.device");}catch{}if(!d||!/^[A-Za-z0-9_-]{8,64}$/.test(d)){d=(crypto.randomUUID&&crypto.randomUUID()||(Date.now()+'-'+Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);try{localStorage.setItem("gesso.device",d);}catch{}}return d;}
+// DEVICE CAPABILITY (PR 3): a 32-byte secret proving this device owns its rows. Minted client-side; the server
+// stores only its SHA-256. Sent as x-gesso-cap on capability-protected calls, AFTER ensureDeviceRegistered().
+function capability(){let c=null;try{c=localStorage.getItem("gesso.cap");}catch{}
+  if(!c||!/^[A-Za-z0-9_-]{43}$/.test(c)){const b=new Uint8Array(32);(crypto.getRandomValues?crypto.getRandomValues(b):b.forEach((_,i,a)=>a[i]=Math.floor(Math.random()*256)));
+    c=btoa(String.fromCharCode.apply(null,b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');try{localStorage.setItem("gesso.cap",c);}catch{}}
+  return c;}
+// two-tab race + unrecoverable-cap fallback: server holds only the hash, so a losing tab can't recover the
+// winner's raw secret — mint a brand-new identity rather than leave localStorage mismatched with the DB.
+function newDeviceIdentity(){try{localStorage.removeItem("gesso.cap");const b=new Uint8Array(16);crypto.getRandomValues(b);localStorage.setItem("gesso.device",[...b].map(x=>x.toString(16).padStart(2,'0')).join(''));}catch{}}
+let __regPromise=null;
+// Register this device's capability once, serialized across tabs with Web Locks so two tabs converge on one
+// cap. Awaited before every capability-protected request. On failure the cap is STILL sent so the server can
+// reject it as revoked/unregistered (never a cap-less legacy downgrade); __regPromise resets so it retries.
+function ensureDeviceRegistered(){
+  if(__regPromise) return __regPromise;
+  const run=async()=>{
+    try{ const r=await fetch("/api/register-device",{method:"POST",headers:{"Content-Type":"application/json","x-gesso-cap":capability()},body:JSON.stringify({deviceId:deviceId()})});
+      if(r.ok) return true;
+      if(r.status===409){ newDeviceIdentity(); const r2=await fetch("/api/register-device",{method:"POST",headers:{"Content-Type":"application/json","x-gesso-cap":capability()},body:JSON.stringify({deviceId:deviceId()})}); return r2.ok; }
+      return false;
+    }catch{ return false; }
+  };
+  // reset __regPromise on FAILURE so a transient error retries on the next call; memoize on success.
+  const p=(navigator.locks&&navigator.locks.request)?navigator.locks.request("gesso-cap-register",run):Promise.resolve().then(run);
+  __regPromise=p.then(okReg=>{ if(!okReg) __regPromise=null; return okReg; }, ()=>{ __regPromise=null; return false; });
+  return __regPromise;
+}
+// capFetch(build): await registration, THEN build+send with the FINAL {deviceId, capability} as one
+// consistent pair (rotation-safe — a 409→newDeviceIdentity() during registration can't leave the URL/body on
+// the old id while the header carries the new cap). A capability-aware client ALWAYS sends its cap; it never
+// falls back to a cap-less legacy request (that path is only for genuinely old clients without this code).
+// build(deviceId, capability) must return the fetch(...) Promise.
+async function capFetch(build){ try{ await ensureDeviceRegistered(); }catch{} return build(deviceId(), capability()); }
+// visible consumer for the account/device-conflict case (this device is already bound to another account).
+function showDeviceConflict(msg){ try{ if(document.getElementById('gesso-devconflict'))return;
+  const b=document.createElement('div'); b.id='gesso-devconflict'; b.setAttribute('role','alert'); b.textContent=msg;
+  b.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99999;background:#2230b8;color:#fff;padding:12px 16px;border-radius:10px;font:500 14px/1.4 system-ui,sans-serif;max-width:90vw;box-shadow:0 6px 24px rgba(0,0,0,.25);cursor:pointer';
+  b.addEventListener('click',()=>b.remove()); setTimeout(()=>{try{b.remove();}catch{}},9000); document.body.appendChild(b);
+}catch{} }
 // analytics sink: fire-and-forget the tracked event to our own Supabase-backed /api/event (see api/event.js).
 window.__sink=function(event,props){ try{ fetch("/api/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),event,props:props||{}})}).catch(()=>{}); }catch{} };
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16)||defaultName(),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:defaultName(),color:defaultColor()};}}
@@ -1860,7 +1899,7 @@ if(window.__DEMO&&!SAVED.size){ POOL.slice().sort((a,b)=>(b.fame||0)-(a.fame||0)
 function persistSaved(){ try{ localStorage.setItem("gesso.saved",JSON.stringify([...SAVED])); localStorage.setItem("gesso.savedAt",JSON.stringify(SAVED_AT)); }catch{} }
 function isSaved(id){ return SAVED.has(id); }
 let __savedSynced=false;
-async function syncSaved(){ try{ const r=await fetch("/api/saves?me="+encodeURIComponent(deviceId())); if(!r.ok)return; const j=await r.json();
+async function syncSaved(){ try{ const r=await capFetch((dev,cap)=>fetch("/api/saves?me="+encodeURIComponent(dev),{headers:{"x-gesso-cap":cap}})); if(!r.ok)return; const j=await r.json();
   if(Array.isArray(j.ids)){ SAVED=new Set(j.ids); persistSaved(); __savedSynced=true; } }catch{} } // server is source of truth (optimistic writes already fired)
 const PENNANT_SVG_STROKE=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
 const PENNANT_SVG_FILL=`<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3v18"/><path d="M6 4h11l-3 3.6L17 11H6z"/></svg>`;
@@ -1899,7 +1938,7 @@ function toggleSave(id,btn){
       }
     }
   }
-  fetch("/api/saves",{method:now?"POST":"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),workId:id})}).catch(()=>{});
+  capFetch((dev,cap)=>fetch("/api/saves",{method:now?"POST":"DELETE",headers:{"Content-Type":"application/json","x-gesso-cap":cap},body:JSON.stringify({deviceId:dev,workId:id})})).catch(()=>{});
   return now;
 }
 document.addEventListener("click",function(e){ const b=e.target&&e.target.closest&&e.target.closest("[data-save]"); if(b){ e.preventDefault(); toggleSave(b.dataset.save,b); } }); // delegated: works for any reveal/gallery rendered later
@@ -1914,19 +1953,19 @@ async function backfillScores(){
   for(const date in (s.byDay||{})){ if(date<"2025-01-01")continue;
     for(const tier in s.byDay[date]){ const key=date+"|"+tier, total=+s.byDay[date][tier];
       if(sent.has(key)||!(total>0))continue;
-      try{ const r=await fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({deviceId:deviceId(),name:id.name,color:id.color,date,tier,total})});
+      try{ const r=await capFetch((dev,cap)=>fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-gesso-cap':cap},
+        body:JSON.stringify({deviceId:dev,name:id.name,color:id.color,date,tier,total})}));
         if(r.ok){ sent.add(key); localStorage.setItem("gesso.sent",JSON.stringify([...sent])); } }catch{}
     } }
 }
 async function submitScore(date,tierKey,summary){ // fire-and-forget; never blocks the recap
   try{ const id=loadIdentity();
-    const r=await fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      deviceId:deviceId(),name:id.name,color:id.color,date,tier:tierKey,total:summary.grand,
+    const r=await capFetch((dev,cap)=>fetch('/api/score',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','x-gesso-cap':cap},body:JSON.stringify({
+      deviceId:dev,name:id.name,color:id.color,date,tier:tierKey,total:summary.grand,
       perfects:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)).length,
       masterpieces:results.filter(x=>x.coreCats.length&&x.coreCats.every(c=>x.cells[c].pts===MAX_CAT)&&x.cells.artist&&x.cells.artist.pts===MAX_CAT).length,
       rounds:results.map(x=>({id:x.it.id,cells:Object.fromEntries(Object.entries(x.cells).map(([k,v])=>[k,v.pts])),guess:{year:x.guess.year,ll:x.guess.ll,medium:x.guess.medium,style:x.guess.style,artist:x.guess.artist},hints:[...(x.guess.hints||[])]}))
-    })}); return r.ok?await r.json():null; }catch{ return null; }
+    })})); return r.ok?await r.json():null; }catch{ return null; }
 }
 // 48-color dab palette (handoff 19: 8 families × 6 steps) — white initial stays legible on each; harmonizes on cream.
 const SWATCHES=['#2230b8','#1b2570','#3f4cbe','#5663d4','#7480d4','#9aa3e0','#0f5b63','#166b6b','#1f7a8c','#2a9d9d','#3aa6a0','#5cc0b6','#1f6b45','#2f8f5b','#3a9d4f','#5a8f3a','#6b9e3f','#86ab57','#a7741f','#b5852a','#c9962f','#cf9f3a','#d9a441','#e0b14a','#a13526','#b33d2e','#c14b3a','#cf5b45','#d97150','#e08c6a','#a83a5c','#b8466b','#c4577a','#d06b8a','#d98ba3','#e0a0b5','#4d3590','#5a3fa0','#6b4fb8','#7d5fc4','#8e6fd0','#a487da','#1b1916','#3a362d','#4a4640','#6b6557','#7d7866','#8a8472'];
@@ -1967,7 +2006,7 @@ function openIdentityModal(after){
         if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; btn.disabled=false; btn.textContent=orig; return; } }catch{} }
       saveIdentity(cur);
       // push to the server so the board reflects the new name/color (fire-and-forget — don't delay the close)
-      fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),name:cur.name,color:cur.color})}).catch(()=>{});
+      capFetch((dev,cap)=>fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json','x-gesso-cap':cap},body:JSON.stringify({deviceId:dev,name:cur.name,color:cur.color})})).catch(()=>{});
       close();if(after)after(); } });
   veil.addEventListener('input',e=>{if(e.target.id==='idname'){cur.name=e.target.value;prev();}});
 }
@@ -2144,10 +2183,15 @@ function syncAccount(){ if(_syncInFlight) return _syncInFlight;
     // only send name/color UP if the user actually chose them — loadIdentity() falls back to a random artist
     // handle + deterministic color, and sync.js would otherwise promote those auto-values as canonical.
     let chosenName='', chosenColor=''; try{ const stored=JSON.parse(localStorage.getItem('gesso.identity')||'{}'); chosenName=String(stored.name||'').slice(0,16); chosenColor=/^#[0-9a-fA-F]{6}$/.test(stored.color||'')?stored.color:''; }catch{}
-    const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok,streak:loadStreak(),mastery:loadMastery(),glossary:loadGlossary(),seen:[...SEEN],name:chosenName||undefined,color:chosenColor||undefined})});
+    const r=await capFetch((dev,cap)=>fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json','x-gesso-cap':cap},body:JSON.stringify({deviceId:dev,accessToken:tok,streak:loadStreak(),mastery:loadMastery(),glossary:loadGlossary(),seen:[...SEEN],name:chosenName||undefined,color:chosenColor||undefined})}));
     if(r.ok)return await r.json();
+    // this device belongs to ANOTHER account (409): don't retry-bind, don't silently proceed — flag it gently.
+    if(r.status===409){ let reason=''; try{ reason=((await r.json())||{}).error||''; }catch{}
+      if(/another account/i.test(reason)){ try{ window.__deviceConflict=true; window.__sink&&window.__sink('device_conflict',{}); }catch{}
+        showDeviceConflict("This device is already linked to a different account, so progress here can't be merged. Sign in on the device you first used, or continue on a new device."); }
+      return null; } // never retry-bind or silently proceed on any 409
     // fallback: at least bind the device
-    await fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})}); return null;
+    await capFetch((dev,cap)=>fetch('/api/claim',{method:'POST',headers:{'Content-Type':'application/json','x-gesso-cap':cap},body:JSON.stringify({deviceId:dev,accessToken:tok})})); return null;
   }catch{ return null; }
   })().finally(()=>{ _syncInFlight=null; });
   return _syncInFlight;

@@ -3,29 +3,22 @@
 // Vercel as SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY). The project URL is public, hardcoded below.
 // Anonymous — keyed by a client-generated deviceId. Best-score-per-day guarded. Raw guesses stored for
 // later server re-scoring (Phase 4). Abuse controls mirror report.js: origin allowlist, honeypot.
-import { SUPABASE_URL } from './_supabase.js';
+import { allowedOrigin, parseBody } from './lib/http.js';
+import { admin } from './lib/supabaseAdmin.js';
+import { requireDeviceCap } from './lib/device-ownership.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const ROUNDS = 5, MAX_CAT = 2500, MAX_TOTAL = ROUNDS * (4 + 1) * MAX_CAT;
-
-function allowedOrigin(origin) {
-  if (!origin) return true;
-  try { const h = new URL(origin).hostname; return h === 'gesso.katswint.com' || h === 'localhost' || h.endsWith('.vercel.app'); }
-  catch { return false; }
-}
 const isDateStr = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   if (!allowedOrigin(req.headers.origin)) return res.status(403).json({ error: 'forbidden origin' });
 
-  const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) return res.status(503).json({ error: 'storage not configured' });
-  const rest = (path, opts = {}) => fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+  const a = admin();
+  if (!a) return res.status(503).json({ error: 'storage not configured' });
+  const rest = a.rest;
 
-  let body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
-  body = body || {};
+  const body = parseBody(req);
   if (body.hp) return res.status(200).json({ ok: true }); // honeypot
 
   const deviceId = String(body.deviceId || '').slice(0, 64);
@@ -41,6 +34,10 @@ export default async function handler(req, res) {
   if (date > tomorrow) return res.status(400).json({ error: 'date in future' });
   if (date < '2025-01-01') return res.status(400).json({ error: 'date too old' });
 
+  // score writes the device's profile + scores → capability-gated (kills bare-deviceId score/profile writes).
+  const gate = await requireDeviceCap(req, a, deviceId, 'score');
+  if (!gate.ok) return res.status(gate.status).json({ error: gate.reason });
+
   const name = String(body.name || '').slice(0, 16);
   const color = /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : '#2230b8';
   const perfects = Math.max(0, Math.min(ROUNDS, parseInt(body.perfects, 10) || 0));
@@ -52,8 +49,9 @@ export default async function handler(req, res) {
     if (name) {
       const claimants = await (await rest(`profiles?name=ilike.${encodeURIComponent(name)}&user_id=not.is.null&select=user_id,device_id`)).json();
       if (Array.isArray(claimants) && claimants.length) {
-        const me = await (await rest(`profiles?device_id=eq.${encodeURIComponent(deviceId)}&select=user_id`)).json();
-        const myUserId = Array.isArray(me) && me[0] ? me[0].user_id : null;
+        // caller identity from the authoritative devices.user_id (verified); profiles projection only on the legacy path
+        let myUserId = gate.user_id || null;
+        if (gate.legacy) { const me = await (await rest(`profiles?device_id=eq.${encodeURIComponent(deviceId)}&select=user_id`)).json(); myUserId = Array.isArray(me) && me[0] ? me[0].user_id : null; }
         if (claimants.some(c => c.user_id && c.user_id !== myUserId)) useName = ''; // reserved → drop it
       }
     }

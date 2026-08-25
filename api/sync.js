@@ -1,11 +1,12 @@
 // Vercel serverless function: cross-device sync (Accounts Phase 2b). On login, merge this device's local
-// identity + streak UP into the account, and return the account's canonical identity + merged streak to
-// pull DOWN — so progress follows you to any device. POST { deviceId, accessToken, streak, name, color }.
-// Storage: Supabase. Server verifies the JWT (proves identity), then uses the SECRET key for reads/writes.
-// Requires a user_state table:
-//   create table if not exists public.user_state (user_id uuid primary key, streak jsonb, updated_at timestamptz default now());
-import { SUPABASE_URL, SUPA_ANON } from './_supabase.js';
-function allowedOrigin(o){ if(!o)return true; try{const h=new URL(o).hostname;return h==='gesso.katswint.com'||h==='localhost'||h.endsWith('.vercel.app');}catch{return false;} }
+// identity + streak/mastery/glossary/seen UP into the account, and return the account's canonical state to
+// pull DOWN. POST { deviceId, accessToken, streak, mastery, glossary, seen, name, color } + header x-gesso-cap.
+// Binding now goes through claim_device() (ownership from devices.user_id via auth.uid()); a device bound to
+// another account → 409 with NO merge. CAP_MODE=observe grandfathers a MISSING cap via the legacy bind.
+import { allowedOrigin, parseBody } from './lib/http.js';
+import { admin, userRpc } from './lib/supabaseAdmin.js';
+import { verifyJwt } from './lib/auth.js';
+import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from './lib/device-ownership.js';
 
 // merge two streak objects, taking the better of each (max counts, union of played dates, max per-date score)
 function mergeStreak(a, b){
@@ -20,11 +21,7 @@ function mergeStreak(a, b){
   for(const [d,tiers] of Object.entries(b.byDay||{})){ out.byDay[d]={...(out.byDay[d]||{})}; for(const [t,v] of Object.entries(tiers||{})) out.byDay[d][t]=Math.max(+out.byDay[d][t]||0, +v||0); }
   return out;
 }
-
-// merge two mastery objects ({byStyle,byRegion,byCategory,byCentury} of key->{correct,total}). Element-wise
-// MAX per key (like streak) — idempotent + monotonic, so re-syncing never double-counts, and maxCorrect<=
-// maxTotal always holds so the ratio stays valid. Trade-off: genuinely-distinct plays on two devices aren't
-// summed; acceptable for a progress display, and it's the safe property that makes "your eye" follow you.
+// element-wise MAX per bucket/key — idempotent + monotonic (re-syncing never double-counts)
 function mergeMastery(a, b){
   a=a&&typeof a==='object'?a:{}; b=b&&typeof b==='object'?b:{}; const out={};
   for(const bucket of new Set([...Object.keys(a), ...Object.keys(b)])){
@@ -44,49 +41,55 @@ function mergeGlossary(a, b){
   const pending=[...new Set([...(Array.isArray(a.pending)?a.pending:[]), ...(Array.isArray(b.pending)?b.pending:[])])];
   return { met, pending };
 }
-// seen = array of work ids — union.
 function mergeSeen(a, b){ return [...new Set([...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])])]; }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   if (!allowedOrigin(req.headers.origin)) return res.status(403).json({ error: 'forbidden origin' });
-  const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) return res.status(503).json({ error: 'storage not configured' });
-  const rest = (p, opts={}) => fetch(`${SUPABASE_URL}/rest/v1/${p}`, { ...opts, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type':'application/json', ...(opts.headers||{}) } });
+  const a = admin();
+  if (!a) return res.status(503).json({ error: 'storage not configured' });
+  const rest = a.rest;
 
-  let body = req.body; if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } } body = body || {};
+  const body = parseBody(req);
   const deviceId = String(body.deviceId || '').slice(0, 64);
   const accessToken = String(body.accessToken || '');
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(deviceId)) return res.status(400).json({ error: 'bad deviceId' });
-  if (!accessToken) return res.status(400).json({ error: 'missing token' });
+  const who = await verifyJwt(accessToken);
+  if (!who) return res.status(401).json({ error: 'invalid session' });
+  const uid = who.uid;
 
   try {
-    // verify JWT → user id
-    const ures = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${accessToken}` } });
-    if (!ures.ok) return res.status(401).json({ error: 'invalid session' });
-    const user = await ures.json(); if (!user || !user.id) return res.status(401).json({ error: 'invalid session' });
-    const uid = user.id;
+    // ---- BIND (authorized) ----
+    const d = bindDecision(req, 'sync');
+    if (d.action === 'reject') return res.status(d.status).json({ error: d.reason });
+    if (d.action === 'claim') {
+      const result = await claimDevice(userRpc, deviceId, d.hash, accessToken);
+      logAdoption('sync', d.mode, result || 'error');
+      const http = claimResultToHttp(result);
+      if (!http.ok) return res.status(http.status).json({ error: http.reason }); // e.g. conflict_other_user → 409, no merge
+      await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
+    } else {
+      // legacy (observe + missing cap): OLD unowned profiles bind, kept until enforce
+      logAdoption('sync', d.mode, 'legacy');
+      await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
+    }
 
-    // bind this device to the account
-    await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
-
+    // ---- state merge (all uid-keyed; identity from the verified JWT, never the body deviceId) ----
     // CANONICAL IDENTITY: prefer a name/color already on any of the account's profiles; else adopt this device's local one
     const profs = await (await rest(`profiles?user_id=eq.${uid}&select=name,color,device_id`)).json();
     let name='', color='';
     for (const p of (profs||[])) { if (p.name && !name) name=p.name; if (p.color && !color) color=p.color; }
     if (!name && body.name) name=String(body.name).slice(0,16);
     if (!color && /^#[0-9a-fA-F]{6}$/.test(body.color||'')) color=body.color;
-    // write the canonical identity onto THIS device's profile so the board shows it
     await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid, name, color }) });
 
-    // STREAK: merge account state with the device's local streak
+    // STREAK
     let serverStreak=null;
     try { const st = await (await rest(`user_state?user_id=eq.${uid}&select=streak`)).json(); serverStreak = Array.isArray(st)&&st[0]?st[0].streak:null; } catch {}
     const merged = mergeStreak(serverStreak, body.streak);
     try { await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, streak: merged, updated_at: new Date().toISOString() }) }); } catch {}
 
-    // MASTERY ("Your Eye") — same up-merge-down as streak, in its OWN try/catch so a not-yet-migrated
-    // user_state.mastery column silently no-ops instead of breaking the streak sync.
+    // MASTERY ("Your Eye") — own try/catch so a not-yet-migrated column no-ops
     let mergedMastery = body.mastery || null;
     try {
       const ms = await (await rest(`user_state?user_id=eq.${uid}&select=mastery`)).json();
@@ -95,8 +98,7 @@ export default async function handler(req, res) {
       await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, mastery: mergedMastery, updated_at: new Date().toISOString() }) });
     } catch { mergedMastery = body.mastery || null; }
 
-    // GLOSSARY + SEEN — same up-merge-down, in their OWN try/catch (columns added by
-    // db/user_state-glossary-seen.sql) so they no-op until that migration runs, without touching mastery.
+    // GLOSSARY + SEEN — own try/catch (columns added by db/user_state-glossary-seen.sql)
     let mergedGlossary = body.glossary || null, mergedSeen = Array.isArray(body.seen) ? body.seen : null;
     try {
       const gs = await (await rest(`user_state?user_id=eq.${uid}&select=glossary,seen`)).json();
