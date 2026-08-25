@@ -184,17 +184,26 @@ For every later batch:
 
 ### Required architecture
 
-The public `deviceId` must stop functioning as proof of possession. Introduce a server-issued, high-entropy device capability:
+The public `deviceId` must stop functioning as proof of possession. Introduce a high-entropy device capability
+(**chosen implementation: client-minted, server stores only its SHA-256 hash** — the raw secret never traverses a
+server response; accepted tradeoff that it is XSS-readable, same as the session):
 
-- Return the secret only to the device.
-- Store only a hash server-side.
+- The device holds the raw secret (localStorage); the server persists **only** its hash (`UNIQUE`, 64-hex).
 - Require proof of the capability before an anonymous device can be claimed.
-- Use a one-time claim nonce or equivalent replay-resistant claim exchange.
-- Enforce a database uniqueness rule preventing a device from being bound to multiple accounts.
-- Resolve account devices server-side from the authenticated user for sync and deletion.
+- Replay resistance comes from **`UNIQUE(capability_hash)` + first-writer-wins registration** (a reused cap for a
+  different device is rejected), not a separate one-time nonce.
+- Enforce a database uniqueness rule + an atomic `SECURITY DEFINER` claim that never rebinds a device across users.
+- Resolve account devices server-side **from `devices.user_id` (authoritative), keyed on `auth.uid()`** — never from
+  `profiles.user_id` (a display/compat projection) — for sync and deletion.
 - Never extend authority merely because a request body contains a device ID.
 
-If an existing installation has only a public identifier and cannot prove possession, do not silently grandfather it into ownership. Use an explicit upgrade or re-registration path.
+Existing installations have only a public identifier. **Chosen policy: a time-boxed trust-on-first-use (TOFU)
+grandfather** — the first contact from an unregistered device provisions its capability — gated by an env flag
+`CAP_MODE` (`observe` overrides the deadline for rollback; otherwise enforce after `ENFORCE_CAP_AFTER=2026-09-24`;
+an invalid value fails closed). This is an **honest, temporary, accepted exposure**: the public `deviceId` is not
+secret, so a known id could be pre-registered by an attacker to lock out the real device — bounded by the window, not
+prevented. Only a *missing* capability is grandfathered, and only in `observe`; a *wrong / malformed / revoked /
+unregistered-with-cap* request is always rejected in both modes.
 
 Use a tracked `devices` relation as the ownership boundary. The migration should provide, at minimum:
 
@@ -210,11 +219,14 @@ devices
 
 Tables keyed by a device (`profiles`, `scores`, `saves`, and `events`) should reference `devices.device_id` with the
 reviewed cascade behavior. Account tables such as `user_state` should reference `auth.users.id` with `on delete
-cascade`. For the high-entropy raw capability, store only a keyed HMAC or equivalent preimage-resistant digest and
-use constant-time comparison; do not store the secret itself. A claim may bind an unclaimed device or confirm an
-existing same-user binding; a device bound to another user returns
-`409` without mutation. `sync` resolves the authenticated user's device set server-side rather than binding the
-body's `deviceId` as a side effect.
+cascade` (**FK/cascade work deferred to PR 4**; PR 3's `devices` table is additive). For the high-entropy raw
+capability, store only its **SHA-256 digest (64-hex, `UNIQUE`)** — the 32-byte capability has ample entropy, so a
+plain SHA-256 is preimage-resistant and no keyed HMAC is needed. Be precise about the property this gives:
+this is a **replayable bearer capability** — `UNIQUE(capability_hash)` prevents cross-device reuse, but a *stolen
+valid capability can be replayed for its own device* (it proves possession, not freshness). A claim may bind an
+unclaimed device or confirm an existing same-user binding; a device bound to another user returns `409` without
+mutation. `sync` resolves the authenticated user's device set server-side (from `devices.user_id`, keyed on
+`auth.uid()`) rather than binding the body's `deviceId` as a side effect.
 
 **Defense in depth, not one helper.** RLS cannot rescue a bad authorization decision because these endpoints use the
 service-role client (which bypasses RLS). So authorization must be layered: a shared application authorization helper;
@@ -229,13 +241,13 @@ limiting + audit logging on capability issuance and claim. Harden that `SECURITY
 - Derive the acting identity from `auth.uid()` inside the function where feasible; never trust a caller-supplied UID
   merely because the application verified a JWT earlier in the request.
 
-The legacy-device decision is a required product decision before migration:
-
-- **Recommended:** issue a new capability-backed identity, leave legacy server rows unclaimable/read-only, and offer
-  an explicit support migration when evidence exists.
-- **Compatibility option:** a time-boxed one-time migration flow with its weaker proof and abuse risk documented.
-
-Do not silently treat possession of an old public ID as possession of the device.
+The legacy-device decision is **made** (see "Required architecture" above): a **time-boxed trust-on-first-use (TOFU)
+grandfather** gated by `CAP_MODE`, with its residual exposure documented honestly. The rejected alternative was to
+leave legacy rows unclaimable/read-only and require explicit re-registration — safer, but discontinuous for
+anonymous-only players. Because the public `deviceId` is not secret, TOFU cannot fully prevent a pre-registration
+takeover of a *known* id; the window bounds this, and only a **missing** capability is grandfathered (in `observe`
+only) — a wrong / malformed / revoked / unregistered-with-cap request is always rejected. So the old public ID is
+never, by itself, treated as proof of possession outside that explicit, bounded window.
 
 Make account erasure one supported privileged operation: delete the authenticated user with the Supabase admin API,
 after the tracked schema has been migrated so the reviewed foreign-key cascades remove all account- and device-owned
@@ -257,7 +269,7 @@ policy is satisfied.
 - Read account-scoped state through a foreign device.
 - Delete a foreign device.
 - Claim a device already bound to a different account.
-- Replay a used claim capability or nonce.
+- Replay a capability (reuse another device's cap, or a cap for a different device_id) → rejected by `UNIQUE(capability_hash)` + first-writer-wins.
 - Retry an interrupted claim or deletion.
 - Force failure at each erasure step.
 - Verify complete deletion of every owned table.
@@ -866,8 +878,10 @@ links point to the current audits. **Rollback:** documentation-only revert.
 
 ### PR 3 — Device capability and endpoint authorization
 
-**Ledger:** `SEC-1`, `SEC-2`, `SEC-6`, `INF-5`, `INF-6a` (new `devices` relation + security cascades; builds on the
-`INF-6b` base schema tracked by PR 8, which — with the sanitized production baseline — must exist first).
+**Ledger:** `SEC-1`, `SEC-2`, `SEC-3` (3B stage: foreign-device-deletion fix — `delete-account` derives deletable
+devices from `devices.user_id = auth.uid()` only, never the body deviceId or the contaminated `profiles.user_id`;
+full transactional erasure stays PR 4), `SEC-6`, `INF-5`, `INF-6a` (new `devices` relation + security cascades; builds
+on the `INF-6b` base schema tracked by PR 8, which — with the sanitized production baseline — must exist first).
 
 **Root problem:** a public `deviceId` is currently treated as possession and can be bound to the wrong account.
 

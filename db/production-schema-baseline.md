@@ -5,6 +5,11 @@ point-in-time snapshot** of the production `public` schema DDL, plus the one dir
 trigger (catalog-verified). It is used to author the device-ownership / account-erasure work (PR 3 / PR 4) and the
 tracked base schema (PR 8). **It is not a migration — do not apply it.**
 
+> **This baseline is a dated PRE-migration snapshot (2026-08-25).** Tracked schema changes land as their own
+> migration files and are the delta on top of it — e.g. `db/devices.sql` (PR 3 Part 3A) adds `public.devices` + the
+> `register_device`/`claim_device` functions. Once such a migration is applied, this snapshot no longer reflects the
+> live schema; re-capture (same method) if you need a current picture.
+
 ## Provenance
 
 | | |
