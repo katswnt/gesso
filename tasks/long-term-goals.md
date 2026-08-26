@@ -105,6 +105,15 @@
 - [ ] ~~Per-region quotas within difficulty tiers~~ **SUPERSEDED**: coverage is by belonging / real fame, region-blind — never quotas. Add whatever clears `sitelinks>=6`, wherever it's from (more Western works fine if they belong).
 - [ ] Themed dailies ("Women artists", "The year 1600 around the world").
 
+## Reveal Easter eggs / playful moments (idea bank)
+**Purpose:** reward attentive repeat players with tiny, surprising jokes that appear only after a guess is locked. These are garnish, never part of scoring or required art-history context.
+
+| Trigger | Candidate gag | Status / constraints |
+|---|---|---|
+| A work whose accepted reveal year is exactly **1738** | A brief, rights-safe Fetty Wap / “1738” nod somewhere in the reveal | Idea only. Confirm the intended work ID before building. Prefer an original text/graphic treatment; do not use unlicensed music, photography, or likeness. |
+
+Guardrails: keep each gag deterministic and keyed to an explicit work ID or reviewed fact; never cover the artwork, answer, teaching note, or controls; respect reduced-motion and accessibility settings; make no network request; and include a regression proving it cannot appear on unrelated works. Keep adding candidate jokes to this table rather than scattering them through code comments.
+
 ## Contemporary / modern art (the copyright gap) — plan
 Full findings: tasks/contemporary-art-research.md. TL;DR prioritized:
 
