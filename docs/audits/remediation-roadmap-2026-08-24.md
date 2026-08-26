@@ -51,8 +51,10 @@ actually mandated." Three tiers plus a hard stop.
    pool/image/freeze change; repair or remove blockers before deploy. Bridges until the thin gate lands.
 2. **Commit the evidence docs** (PR 1) and **capture a sanitized schema-only production baseline** (required before
    any security migration — the tracked schema is empty).
-3. **P0 device-ownership + complete account erasure** (PRs 3–4). Real, exploitable, and small: ~3 API files, a device
-   capability, and the deletion cascade. Do it properly, incl. `saves`/`events`.
+3. **P0 device-ownership + authoritative-device account erasure** (PRs 3–4; **partial — full write/erase
+   serialization via guarded writes + legacy-device backfill still pending**). Real, exploitable, and small: ~3 API
+   files, a device capability, and the deletion of every owned table (incl. `saves`/`events`) for authoritatively-
+   registered devices.
 4. **Thin enforced daily gate — "PR 11a-lite":** upgrade `vision-mark` to record a real verdict (`pass`/`blocked`,
    not a bare ID); a `check:daily` fails deploy when a work in today + a short horizon lacks a `pass` verdict, has an
    unreachable/undersized image, or contradicts an active override; freeze skips verdict-`blocked` works. Uses
@@ -87,7 +89,7 @@ it and must not delay it, and they ideally live in their own brief rather than t
 | Batch | Workstream | Completion gate |
 |---|---|---|
 | 0 | Evidence and worktree control | Every finding has a status, owner, evidence, and acceptance test |
-| 1 | Device ownership and account erasure | A valid account cannot act on a foreign device; erasure is complete and transactional |
+| 1 | Device ownership and authoritative-device erasure | A valid account cannot act on a foreign device; erasure is transactional for authoritatively-registered devices (full write/erase serialization + legacy-device backfill pending) |
 | 2 | Fail-closed network audits and Wikidata cache | Lost coverage cannot produce a green audit or valid empty cache records |
 | 3 | Safe generator foundation | Missing inputs produce a nonzero exit and no canonical changes |
 | 4 | Deterministic clean-checkout verification | Default tests run offline, without ignored inputs, and reproduce across clean archives |
@@ -918,7 +920,22 @@ all merged commits stay green. A local database test proves the unique ownership
 **Rollout/rollback:** deploy additive schema first; measure capability adoption; then enforce. Rolling application code
 back must not drop the new ownership constraint. Never roll back to accepting an ID as proof.
 
-### PR 4 — Complete account erasure
+### PR 4 — Authoritative-device account erasure (partial: guarded writes + legacy backfill pending)
+
+> **STATUS (2026-08-25): PR 4 is EXPLICITLY PARTIAL.** 4A (erasure migration) is applied to prod + verified. 4B
+> (API/client wiring + erase-side serialization primitive + purge cron) is built, uncommitted, not deployed. Two
+> guarantees are **not yet closed**, so PR 4 must NOT be marked "complete" until both land:
+> 1. **Write/erase serialization (SEC-4 residual).** `erase_account` locks device rows `FOR UPDATE` before the
+>    sweep (the primitive), but the capability writers still insert via raw PostgREST and do **not** take that
+>    lock, so an unguarded write can race erasure. Closing it = the **guarded-writes follow-up**: route
+>    `saves.js`, `score.js` (scores + profiles projection), `profile.js`, **`claim.js`/`sync.js` profiles
+>    projections, and `sync.js` `user_state`** through a device-row-locking definer fn under enforce. `event.js`
+>    stays ungated (anonymous, no authority) and is excluded from the guarantee by decision.
+> 2. **Legacy-device gap (SEC-4 legacy).** Profile-only devices (no `devices` row) are deliberately preserved and
+>    remain un-erasable until backfilled/migrated.
+>
+> Until both close, deletion is honest for authoritatively-registered devices only; docs must not claim total
+> erasure. The guarded-writes follow-up + legacy backfill are their own audited PR (couple with 3C enforce).
 
 **Ledger:** `SEC-3`–`SEC-5`, remaining `INF-6a` erasure cascades, `DOC-10` stage 2 (final wording matching shipped erasure).
 

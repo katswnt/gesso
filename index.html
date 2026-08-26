@@ -1880,7 +1880,25 @@ function ensureDeviceRegistered(){
 // the old id while the header carries the new cap). A capability-aware client ALWAYS sends its cap; it never
 // falls back to a cap-less legacy request (that path is only for genuinely old clients without this code).
 // build(deviceId, capability) must return the fetch(...) Promise.
-async function capFetch(build){ try{ await ensureDeviceRegistered(); }catch{} return build(deviceId(), capability()); }
+// Shared account-deletion state — an ADVISORY (best-effort) guard: capFetch consults it so this app's own
+// protected writes (save/profile/score/sync) don't begin while an erasure is in flight, mirrored to
+// localStorage so other tabs of the same account also stand down. It is NOT the correctness guarantee — the
+// real serialization is the DB-level erase-side device-row lock (db/erase-account-serialize.sql). End-to-end
+// write/erase serialization awaits guarded writes (SEC-4 partial). The cross-tab marker is a TIMESTAMP with a
+// bounded LEASE, not a permanent flag: a tab that crashed or reloaded mid-delete leaves a stale marker that
+// self-expires (and is cleared on read) so writes aren't blocked forever. The acting tab's in-memory
+// __accountDeleting is authoritative for its own request.
+const DELETE_LEASE_MS=60000, DELETE_LEASE_SKEW_MS=5000;
+let __accountDeleting=false;
+function isAccountDeleting(){ if(__accountDeleting) return true;
+  try{ const t=parseInt(localStorage.getItem('gesso.deleting')||'',10);
+    if(!t) return false;
+    const age=Date.now()-t;
+    if(age < DELETE_LEASE_MS && age > -DELETE_LEASE_SKEW_MS) return true;   // active within lease (small clock skew tolerated)
+    localStorage.removeItem('gesso.deleting'); return false;   // stale: expired, OR materially future-dated (skew/tamper)
+  }catch{ return false; } }
+function setAccountDeleting(on){ __accountDeleting=!!on; try{ if(on) localStorage.setItem('gesso.deleting',String(Date.now())); else localStorage.removeItem('gesso.deleting'); }catch{} }
+async function capFetch(build){ if(isAccountDeleting()) throw new Error('account deletion in progress'); try{ await ensureDeviceRegistered(); }catch{} return build(deviceId(), capability()); }
 // visible consumer for the account/device-conflict case (this device is already bound to another account).
 function showDeviceConflict(msg){ try{ if(document.getElementById('gesso-devconflict'))return;
   const b=document.createElement('div'); b.id='gesso-devconflict'; b.setAttribute('role','alert'); b.textContent=msg;
@@ -2589,15 +2607,44 @@ function renderAccount(push=true){ clearTimers(); if(push)pushNav({v:'account'})
   // already-signed-in user. Re-check auth and repaint once if it flips. (Guarded by the flip so it can't loop.)
   if(!authUser){ (async()=>{ const was=!!authUser; try{ await refreshAuth(); }catch{} if(!!authUser!==was && location.pathname.includes('account')) renderAccount(false); })(); }
 }
+// Full wipe after a CONFIRMED account deletion: session-scoped state + this device's identity/cap + local
+// gallery + the in-memory identity so nothing outlives the account. Clearing __regPromise/__savedSynced forces
+// the next (anonymous) use to register a brand-new device and re-sync from scratch.
+function clearDeletedAccountData(){ localSignOutClear();
+  try{ localStorage.removeItem('gesso.device'); localStorage.removeItem('gesso.cap'); localStorage.removeItem('gesso.saved'); localStorage.removeItem('gesso.savedAt'); }catch{}
+  try{ SAVED=new Set(); SAVED_AT={}; SEEN=new Set(); }catch{}
+  __savedSynced=false; __regPromise=null; }
+// Account-deletion workflow, decoupled from the modal for testability. Holds the shared deletion lock for its
+// whole duration (blocking concurrent protected writes). ONLY a status-200 body {ok:true} counts as deleted and
+// triggers local cleanup; a malformed 200, a 401 (session not verified), a 5xx, or a network error do NOT.
+async function runAccountDeletion(getToken){
+  if(isAccountDeleting()) return {status:'busy'};                        // shared guard: no concurrent/second run
+  setAccountDeleting(true);
+  let res;
+  try{
+    const tok=await getToken();
+    const r=await fetch('/api/delete-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:tok})}); // deviceId NOT sent
+    if(r.status===200){ let j=null; try{ j=await r.json(); }catch{} res=(j&&j.ok===true)?{status:'deleted',cleanupPending:!!j.cleanupPending}:{status:'error'}; }
+    else if(r.status===401) res={status:'unverified'};                   // deletion NOT confirmed — preserve ALL local data
+    else res={status:'error'};
+  }catch{ res={status:'error'}; }
+  if(res.status==='deleted'){ try{ const c=sb(); if(c) await c.auth.signOut(); }catch{} authUser=null; clearDeletedAccountData(); }
+  setAccountDeleting(false);
+  return res;
+}
 function confirmDeleteAccount(){
   const {veil,close}=openModal({title:'Delete account?',body:`<div style="padding:18px 22px"><p style="margin:0 0 16px;font-size:14px;color:var(--ink)">This permanently deletes your account, leaderboard entries, and synced progress. This can&rsquo;t be undone.</p>
     <button class="btn" id="acdelconfirm" style="background:var(--miss)">Delete everything</button><div id="acdelmsg" class="mono" style="font-size:12px;color:var(--miss);min-height:15px;margin-top:8px"></div></div>`});
   veil.addEventListener('click',async e=>{
-    if(e.target.id==='acdelconfirm'){ const c=sb(); const m=veil.querySelector('#acdelmsg'); m.textContent='Deleting…';
-      try{ const {data}=await c.auth.getSession(); const tok=data&&data.session&&data.session.access_token;
-        const r=await fetch('/api/delete-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId(),accessToken:tok})});
-        if(r.ok){ await c.auth.signOut(); authUser=null; localSignOutClear(); close(); renderStart(); } else m.textContent='Could not delete — try again.';
-      }catch{ m.textContent='Could not delete — try again.'; } } });
+    if(e.target.id!=='acdelconfirm') return;
+    if(isAccountDeleting()) return;                                       // shared guard (double-submit + cross-tab)
+    const m=veil.querySelector('#acdelmsg'); const btn=veil.querySelector('#acdelconfirm');
+    if(btn) btn.disabled=true; m.textContent='Deleting…';
+    const res=await runAccountDeletion(async()=>{ const c=sb(); const {data}=await c.auth.getSession(); return data&&data.session&&data.session.access_token; });
+    if(res.status==='deleted'){ close(); renderStart(); return; }
+    if(res.status==='unverified'){ m.textContent='Couldn’t verify deletion — your session may have expired. Sign in again, then retry.'; if(btn) btn.disabled=false; return; }
+    m.textContent='Could not delete — try again.'; if(btn) btn.disabled=false;   // error / busy: nothing deleted, allow retry
+  });
 }
 
 function pathFor(s){ if(!s||s.v==='home')return '/'; if(s.v==='play')return `/${s.date||todayStr()}/${s.key}`; if(s.v==='rev')return `/${s.date||todayStr()}/${s.key}/r${s.ri}`; if(s.v==='final')return `/${s.date||todayStr()}/${s.key}/result`; if(s.v==='pick')return `/${s.date}`; if(s.v==='inf')return `/infinite/${s.key}`; if(s.v==='movement')return `/movement/${encodeURIComponent(s.slug)}`; if(s.v==='register')return '/leaderboard'+(s.date?'/'+s.date:''); if(s.v==='train')return '/training'; if(s.v==='account')return '/account'; return `/${s.v}`; }

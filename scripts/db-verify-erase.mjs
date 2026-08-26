@@ -48,10 +48,13 @@ async function delUser(uid){ return fetch(`${URL_}/auth/v1/admin/users/${uid}`,{
 // controllable psql session that HOLDS a FOR UPDATE row lock until released — real readiness handshake
 function openLockSession(){
   const child = spawn(PSQL, pgArgs(['-q','-A','-t']), { env:pgEnv, stdio:['pipe','pipe','pipe'] });
-  let buf=''; child.stdout.on('data', d => buf += d);
+  let buf=''; child.stdout.on('data', d => buf += d); let pid=null;
   return {
     async lock(uid){ child.stdin.write(`begin;\nselect id from auth.users where id='${uid}' for update;\n`);
       for (let i=0;i<50;i++){ if (buf.includes(uid)) return true; await sleep(100); } return false; },  // SELECT returned the id ⇒ row locked
+    async lockDevice(deviceId){ child.stdin.write(`begin;\nselect device_id from public.devices where device_id='${deviceId}' for update;\nselect 'PIDIS='||pg_backend_pid();\n`);
+      for (let i=0;i<50;i++){ const m=buf.match(/PIDIS=(\d+)/); if (buf.includes(deviceId) && m){ pid=m[1]; return true; } await sleep(100); } return false; },  // simulates a guarded writer holding the device-row lock; captures its backend pid
+    pid(){ return pid; },
     release(){ return new Promise(res=>{ child.on('exit', c=>res(c)); child.stdin.write('commit;\n'); child.stdin.end(); }); },
   };
 }
@@ -121,6 +124,38 @@ async function main(){
     const p=rpcUser('claim_device',{p_device_id:dD,p_capability_hash:capD},D.token); const st=settledFlag(p); await sleep(1200);
     ok(!st.done, 'claim_device BLOCKED while D auth-row lock held'); const code=await S.release(); ok(code===0, 'lock session exited 0');
     const rr=await p; ok(rr.status===200 && await scalar(rr)==='bound', 'claim_device completes → bound after release'); }
+
+  // ---- Finding-1: DEVICE-ROW lock serializes erase (erase-side serialization primitive from
+  // db/erase-account-serialize.sql). A writer holding a device-row FOR UPDATE lock blocks erase's pre-sweep
+  // device lock; on release erase completes and sweeps the device + its rows. (Fails until that migration is
+  // applied — erase must lock devices FOR UPDATE before deleting children.)
+  // Live ordering assertion (falsifiable vs the OLD fn): the applied definition must lock devices FOR UPDATE
+  // BEFORE the child sweep. Against the pre-migration function this fails.
+  { const def=sql(`select pg_get_functiondef('public.erase_account()'::regprocedure)`);
+    const lockPos=def.search(/from public\.devices where user_id = v_uid for update/i);
+    const sweepPos=def.search(/delete from public\.saves/i);
+    ok(lockPos>-1 && sweepPos>-1 && lockPos<sweepPos, 'live erase_account def: device FOR UPDATE precedes the child sweep'); }
+  const SRu=await mkUser('sr'); const dSR=dev('sr'); madeDevices.add(dSR);
+  seed(`insert into public.devices(device_id,capability_hash,user_id) values ('${dSR}','${rnd()}','${SRu.uid}')`);
+  seed(`insert into public.saves(device_id,work_id) values ('${dSR}','w')`);
+  { const S=openLockSession(); ok(await S.lockDevice(dSR), 'lock session holds a device row (FOR UPDATE returned)');
+    const holderPid=S.pid(); ok(!!holderPid, 'captured device-lock holder backend pid');
+    const p=rpcUser('erase_account',{},SRu.token); const st=settledFlag(p);
+    // DETERMINISTIC: poll pg_blocking_pids() until some backend (the erase RPC) is confirmed WAITING on the
+    // holder pid. Fail closed on timeout (10s). No fixed sleep — the block is observed, not assumed.
+    let waiting=false; for(let i=0;i<100 && !st.done;i++){
+      // require the blocked backend to be ACTIVE, waiting on a LOCK, and running an erase_account query — so we
+      // confirm the erase RPC specifically, not merely any backend blocked by the holder.
+      if (Number(sql(`select count(*) from pg_stat_activity a where '${holderPid}'::int = any(pg_blocking_pids(a.pid)) and a.state='active' and a.wait_event_type='Lock' and a.query ilike '%erase_account%'`)) > 0){ waiting=true; break; }
+      await sleep(100); }
+    ok(waiting && !st.done, 'erase_account RPC confirmed WAITING on a lock held by the device-lock holder (pg_blocking_pids + active/Lock/query), still unsettled');
+    // FALSIFIABLE: with the pre-sweep device lock, erase blocks BEFORE any child delete, so the seeded save row
+    // is still lockable by a THIRD txn. Against the OLD fn, erase would have already locked+deleted the save
+    // (the DELETE runs before the device-delete that blocks), so this NOWAIT probe would fail.
+    ok(!sqlTry(`select work_id from public.saves where device_id='${dSR}' for update nowait`), 'seeded child save still lockable while erase blocked (pre-sweep lock proven; fails vs old erase)');
+    const code=await S.release(); ok(code===0, 'device lock session committed + exited 0');
+    const rr=await p; const jj=await scalar(rr); ok(rr.status===200 && jj && jj.ok===true, 'erase_account completes 200 ok after device-lock release');
+    ok(cnt('devices','device_id',dSR)===0 && cnt('saves','device_id',dSR)===0, 'device + its saves swept after serialized erase'); }
 
   // concurrent erase+claim: exact allowed outcomes + no device left bound
   const E=await mkUser('e'); const dE=dev('e'); madeDevices.add(dE); const capE=rnd(); seed(`insert into public.devices(device_id,capability_hash) values ('${dE}','${capE}')`);

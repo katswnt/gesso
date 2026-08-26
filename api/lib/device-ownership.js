@@ -99,6 +99,8 @@ export function claimResultToHttp(result) {
     case 'revoked':                 return { ok: false, status: 403, reason: 'device revoked' };
     case 'bad_capability':          return { ok: false, status: 401, reason: 'bad capability' };
     case 'no_auth':                 return { ok: false, status: 401, reason: 'no auth' };
+    case 'no_user':                 return { ok: false, status: 401, reason: 'no user' };          // JWT for a deleted account
+    case 'erased':                  return { ok: false, status: 410, reason: 'account erased' };    // tombstoned mid-erasure
     case 'bad_device':              return { ok: false, status: 400, reason: 'bad device' };
     default:                        return { ok: false, status: 502, reason: 'claim failed' };
   }

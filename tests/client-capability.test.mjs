@@ -34,7 +34,12 @@ const hooks = `
 ;globalThis.__capT=(function(){ let bannerCount=0; showDeviceConflict=function(){bannerCount++;};
   return { capability, deviceId, newDeviceIdentity, ensureDeviceRegistered, capFetch, syncAccount,
     resetReg:()=>{ try{__regPromise=null;}catch{} }, resetSync:()=>{ try{_syncInFlight=null;}catch{} },
-    setAuth:(u)=>{ try{authUser=u;}catch{} }, banner:()=>bannerCount, resetBanner:()=>{bannerCount=0;} }; })();`;
+    setAuth:(u)=>{ try{authUser=u;}catch{} }, banner:()=>bannerCount, resetBanner:()=>{bannerCount=0;},
+    runDelete:(tok)=>runAccountDeletion(async()=>tok),
+    isDeleting:()=>isAccountDeleting(), setDeleting:(on)=>setAccountDeleting(on),
+    seedForDelete:()=>{ try{ SAVED=new Set(['w1']); SEEN=new Set(['s1']); SAVED_AT={w1:1}; __savedSynced=true; __regPromise=Promise.resolve(true); authUser={id:'u1'}; }catch{}
+      localStorage.setItem('gesso.device','devx'); localStorage.setItem('gesso.cap','capx'); localStorage.setItem('gesso.saved','["w1"]'); localStorage.setItem('gesso.savedAt','{"w1":1}'); localStorage.setItem('gesso.seen','["s1"]'); localStorage.setItem('gesso.identity','{"name":"X"}'); },
+    delState:()=>({ regPromise:__regPromise, savedSynced:__savedSynced, seen:SEEN.size, saved:SAVED.size, authUser:authUser }) }; })();`;
 try { vm.runInContext(app + hooks, ctx, { filename:'index.html#app' }); } catch(e){ fail('eval app', e); }
 const S = ctx.__capT;
 
@@ -82,6 +87,84 @@ async function main(){
   ok(builders === 7, `case6: exactly 7 rotation-safe capFetch builders (found ${builders})`);
   ok(stringForm === 0, 'case6: no legacy string-form capFetch("...") remains');
 
-  console.log(`client-capability.test: ${pass} assertions passed (registration-failure, retry, 409 rotation, conflict/unregistered banner, builder inventory)`);
+  // ---- account deletion (PR 4B) ----
+  // 7. exact success: 200 {ok:true} → cleanup; identity/gallery/session storage + in-memory state fully reset; lock released
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  FETCH = async u => u.includes('/api/delete-account') ? R(200,{ ok:true, counts:{} }) : R(200,{});
+  let d = await S.runDelete('tok');
+  ok(d.status==='deleted', 'case7: 200 {ok:true} → deleted');
+  ok(store.get('gesso.device')===undefined && store.get('gesso.cap')===undefined, 'case7: device + cap storage cleared');
+  ok(store.get('gesso.saved')===undefined && store.get('gesso.savedAt')===undefined && store.get('gesso.seen')===undefined, 'case7: gallery + seen storage cleared');
+  { const st=S.delState(); ok(st.saved===0 && st.seen===0 && st.savedSynced===false && st.regPromise===null && st.authUser===null, 'case7: in-memory identity fully reset (SAVED/SEEN/__savedSynced/__regPromise/authUser)'); }
+  ok(!S.isDeleting(), 'case7: deletion lock released after cleanup');
+
+  // 8. malformed 200 (no ok:true) → NOT deleted; local data preserved; lock released
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  FETCH = async u => u.includes('/api/delete-account') ? R(200,{ counts:{} }) : R(200,{});
+  d = await S.runDelete('tok');
+  ok(d.status==='error', 'case8: malformed 200 → error (not deleted)');
+  ok(store.get('gesso.device')==='devx' && S.delState().saved===1, 'case8: local data preserved on malformed 200');
+  ok(!S.isDeleting(), 'case8: lock released after malformed 200');
+
+  // 9. 401 → unverified; ALL local data + session preserved (no cleanup)
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  FETCH = async u => u.includes('/api/delete-account') ? R(401,{ error:'invalid session' }) : R(200,{});
+  d = await S.runDelete('tok');
+  ok(d.status==='unverified', 'case9: 401 → unverified');
+  ok(store.get('gesso.device')==='devx' && store.get('gesso.saved')==='["w1"]', 'case9: 401 preserves device + gallery storage');
+  { const st=S.delState(); ok(st.saved===1 && st.seen===1 && st.authUser && st.authUser.id==='u1', 'case9: 401 preserves in-memory identity + session'); }
+  ok(!S.isDeleting(), 'case9: lock released after 401');
+
+  // 10. 500 → error; preserved; lock released
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  FETCH = async u => u.includes('/api/delete-account') ? R(500,{}) : R(200,{});
+  d = await S.runDelete('tok');
+  ok(d.status==='error' && store.get('gesso.device')==='devx' && !S.isDeleting(), 'case10: 500 → error, preserved, lock released');
+
+  // 11. network failure (throw) → error; preserved
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  FETCH = async u => { if(u.includes('/api/delete-account')) throw new Error('net'); return R(200,{}); };
+  d = await S.runDelete('tok');
+  ok(d.status==='error' && store.get('gesso.device')==='devx' && !S.isDeleting(), 'case11: network failure → error, preserved');
+
+  // 12. double-submit: a second runDelete while one is in flight returns busy; exactly one POST
+  freshDevice(); S.seedForDelete(); CALLS.length=0;
+  let release; FETCH = async u => u.includes('/api/delete-account') ? new Promise(r=>{ release=()=>r(R(200,{ ok:true })); }) : R(200,{});
+  const p1=S.runDelete('tok'); const p2=await S.runDelete('tok');
+  ok(p2.status==='busy', 'case12: concurrent runDelete → busy');
+  release(); await p1;
+  ok(CALLS.filter(c=>c.url.includes('/api/delete-account')).length===1, 'case12: exactly one delete POST despite double-submit');
+
+  // 13. protected calls blocked while deletion is pending (capFetch refuses to start; no request issued)
+  freshDevice(); S.setDeleting(true); CALLS.length=0;
+  let threw=false; try{ await S.capFetch((dev,cap)=>R(200,{})); }catch{ threw=true; }
+  ok(threw, 'case13: capFetch rejects while deletion pending');
+  ok(!CALLS.some(c=>c.url.includes('/api/register-device')||c.url.includes('/api/')), 'case13: no protected request started during deletion');
+  S.setDeleting(false);
+
+  // 14. stale cross-tab marker (crash/reload mid-delete) self-expires → capFetch works again
+  freshDevice(); store.set('gesso.deleting', String(Date.now()-120000)); CALLS.length=0;
+  FETCH = async u => R(200,{});
+  ok(!S.isDeleting(), 'case14: stale deletion marker treated as expired');
+  ok(store.get('gesso.deleting')===undefined, 'case14: stale marker cleared on read');
+  let ran=false; await S.capFetch((dev,cap)=>{ ran=true; return R(200,{}); });
+  ok(ran, 'case14: capFetch proceeds after stale-marker recovery');
+
+  // 15. fresh cross-tab marker (another tab actively deleting) blocks capFetch
+  freshDevice(); store.set('gesso.deleting', String(Date.now())); CALLS.length=0;
+  ok(S.isDeleting(), 'case15: fresh deletion marker is active within lease');
+  let blocked=false; try{ await S.capFetch((dev,cap)=>R(200,{})); }catch{ blocked=true; }
+  ok(blocked, 'case15: capFetch blocked by a fresh cross-tab marker');
+  store.delete('gesso.deleting');
+
+  // 16. materially future-dated marker (clock skew / tamper) treated as stale; minor skew still active
+  freshDevice(); store.set('gesso.deleting', String(Date.now()+3600000)); FETCH=async u=>R(200,{});
+  ok(!S.isDeleting(), 'case16: 1h-future marker treated as stale');
+  ok(store.get('gesso.deleting')===undefined, 'case16: future-dated marker cleared on read');
+  freshDevice(); store.set('gesso.deleting', String(Date.now()+2000));
+  ok(S.isDeleting(), 'case16: minor +2s skew still within tolerance (active)');
+  store.delete('gesso.deleting');
+
+  console.log(`client-capability.test: ${pass} assertions passed (registration-failure, retry, 409 rotation, conflict/unregistered banner, builder inventory, account-deletion success/malformed/401/500/network/double-submit/lock, deletion-lease stale-recovery)`);
 }
 main().catch(e => fail('main', e));

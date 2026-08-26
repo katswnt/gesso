@@ -53,8 +53,8 @@ incidents were raised. No product or data file was edited. Method notes per clus
 | SEC-1 | `claim.js` writes caller-supplied `deviceId`→`profiles.user_id` after only JWT validation (no ownership check); secret key bypasses RLS | P0 | **Confirmed — 3B (observe, not deployed)** (`claim.js` now binds via `claim_device` under the user JWT; capability installed in observe mode; missing-cap legacy exposure until 3C enforce) | `api/claim.js:38` (JWT `:29-32`, regex `:24`, `:34`); `db/devices.sql` | Require proof of device capability; reject if device already bound to another account | Foreign-device claim rejected; already-claimed device rejected; replayed capability (reused cap / cap for another device) rejected via `UNIQUE(capability_hash)` | 3 |
 | SEC-2 | `sync.js` performs the same unowned bind, then reads/merges all uid profiles + overwrites identity | P0 | **Confirmed — 3B (observe, not deployed)** (`sync.js` binds via `claim_device`, resolves account devices from `devices.user_id`, 409 on cross-user; enforce pending 3C) | `api/sync.js:71` (`:65-68,:74,:80`) | Resolve devices server-side from authed uid; never trust body deviceId for authority | Foreign-device sync rejected; account-scoped read of foreign state impossible | 3 |
 | SEC-3 | `delete-account.js` unions caller `deviceId` with account devices → deletes a foreign device's rows | P0 | **Confirmed — 3B fixed (observe, not deployed)** (device set only from `devices.user_id=auth.uid()`; foreign-device deletion closed) | `api/delete-account.js:27-32,:28` | Derive deletable devices **only from `devices.user_id = auth.uid()`** (never the caller body deviceId, never the contaminated `profiles.user_id`); delete scores/saves/profiles for exactly those device_ids. Foreign-device-deletion fix lands in **3B**; full transactional erasure incl. `events` in PR 4 | Foreign-device delete affects nothing; another account's rows untouched | 3B/4 |
-| SEC-4 | Deletion omits `saves` and `events` despite "delete everything" | P1 | **Confirmed — partial** (3B deletes `saves`; `events` + atomicity still PR 4) | `delete-account.js:29-35`; tables real (`api/saves.js:7`, `api/event.js:6,56`) | Transactional DB fn deletes profiles+scores+saves+events+user_state+auth | Verify every owned table emptied | 4 |
-| SEC-5 | Deletion checks no responses → returns `{ok:true}` on partial failure | P1 | **Confirmed** | `delete-account.js:30-36` | Check each step; fail on partial erasure | Forced failure at each step ⇒ non-2xx, no partial commit | 4 |
+| SEC-4 | Deletion omits `saves` and `events` despite "delete everything" | P1 | **4B (built, not deployed) — every owned table erased; write/erase serialization PARTIAL** (`erase_account` transactionally deletes events+saves+scores+profiles-by-device+user_state+devices; erase-side device-row-lock primitive shipped in `db/erase-account-serialize.sql`. Residual: capability writers still insert via raw PostgREST and don't yet take the device lock → an unguarded write can race the sweep. Client deletion-lease is advisory only) | `api/delete-account.js`, `db/erase-account.sql`, `db/erase-account-serialize.sql` | **Guarded-writes follow-up (full inventory of writers that must take the device-row lock under enforce):** `saves.js` (saves insert/delete), `score.js` (scores insert **+ profiles projection**), `profile.js` (profiles upsert), **`claim.js` profiles-projection write** (`:35`), **`sync.js` profiles-projection write + `user_state` write**. Each routes through a device-row-locking SECURITY DEFINER fn so writer↔erase serialize end-to-end. **Events decision:** `event.js` is intentionally NOT gated (anonymous, no authority; PR3 scope) → excluded from the guarantee; on confirmed deletion the client mints a fresh device identity so later events key to a NEW device, and erase sweeps the old device's events. Residual: an in-flight event during the erase window may orphan one row keyed to a now-dead device_id (no PII/authority) — accepted, GC-able by a retention job. **Also:** legacy profile-only devices (no `devices` row) stay un-erasable until backfilled (SEC-4 legacy gap). | Every owned table emptied ✓ (real-DB verify); device-row lock provably serializes erase (falsifiable NOWAIT + live-def-order) ✓; end-to-end no-orphan awaits guarded writes | 4B (partial) / follow-up |
+| SEC-5 | Deletion checks no responses → returns `{ok:true}` on partial failure | P1 | **4B fixed (built, not deployed)** — `erase_account` RPC checked (no_auth/no_user→401, failure→500, nothing partially deleted); auth-delete checked (5xx→500 tombstone-retained, 404 idempotent); `finalize_erasure` scalar-false (auth user still present) → 500 (no client wipe), transport failure → 200 `cleanupPending` for the cron backstop | `api/delete-account.js` | Check each step; fail on partial erasure | Forced failure at each step ⇒ non-2xx, no false success (server + client regressions) | 4B |
 | SEC-6 | No server-side ownership capability/nonce anywhere; JWT is the only boundary | P0 | **Confirmed — 3B (observe, not deployed)** (`api/lib` capability boundary + `register-device` installed; observe mode; enforcement pending 3C) | grep `api/` (no `api/lib`, no nonce/ownership); `db/devices.sql` | Client-minted device capability (only its 64-hex SHA-256 hash stored, `UNIQUE`), replay resistance via `UNIQUE(capability_hash)` + first-writer-wins (no separate nonce), DB uniqueness, enforced in a hardened `SECURITY DEFINER` claim/bind function (`search_path=''`, schema-qualified, execute revoked from `PUBLIC`/`anon`/`authenticated`/`service_role` then granted only to the intended role, atomic `for update` check-and-bind, `auth.uid()`-derived identity), + rate limiting/audit logging | Capability required before claim; **replayable bearer capability** — `UNIQUE(capability_hash)` blocks cross-device reuse, but a stolen valid cap can be replayed for its **own** device (proves possession, not freshness); concurrent-claim race cannot double-bind | 3 |
 
 **Nuance (verified):** for a *foreign* device, delete destroys the victim's `scores`+`profiles` only — `user_state`/auth-user
@@ -209,6 +209,31 @@ functions/triggers; migration objects intact. **SEC-4 remains partial** — lega
 `profiles` rows bound without an authoritative `devices` row (deliberately preserved; SEC-4 partial while > 0). **SEC-4
 / SEC-5 stay Confirmed until 4B** wires `delete-account.js` onto `erase_account` (checked responses, `events`
 deletion, auth-delete ordering, `finalize_erasure`/`purge_stale_tombstones`).
+
+**Implementation log — PR 4 Part 4B (API + client erasure wiring), 2026-08-25 (built, uncommitted, NOT deployed):**
+`api/delete-account.js` rewritten to JWT-only authority (body `deviceId` ignored): verify JWT → `erase_account`
+**under the user JWT** (transactional, all owned tables incl. `events`) → checked (no_auth/no_user→401, failure→500,
+nothing partial) → auth-user delete (404 idempotent; 5xx→500 with tombstone retained) → `finalize_erasure`
+response-checked (scalar-false = auth user still present → **500, no client wipe**; transport failure → 200
+`cleanupPending`). New `api/purge-tombstones.js` (Vercel cron `0 3 * * *`) — method-enforced, fail-closed auth
+(`CRON_SECRET`, constant-time), fail-closed unless the RPC returns a nonnegative integer — is the independent
+purge backstop. `claimResultToHttp`: `erased`→410, `no_user`→401. Client (`index.html`): decoupled
+`runAccountDeletion` requires **status 200 + body.ok===true** to wipe (removes device/cap/gallery + resets
+`SAVED`/`SEEN`/`__savedSynced`/`__regPromise`); 401 preserves ALL local data; shared cross-tab **deletion lease**
+(timestamped, self-expiring) consulted by `capFetch` blocks protected writes during erasure — **advisory only**.
+**SEC-4 write/erase serialization primitive** (`db/erase-account-serialize.sql`, forward migration, uncommitted):
+`erase_account` `CREATE OR REPLACE`d to lock the account's device rows `FOR UPDATE` (via PERFORM) **before** the
+child-table sweep — a device-row-locking writer is serialized (commit-before → swept; block → device gone →
+reject). Tests: `api-device-ownership` **75** (erase completeness, checked-step matrix incl. finalize
+false/transport/malformed + tombstone-retained-on-false, claim/sync no_user→401 + erased→410), `api-purge-tombstones`
+**18** (method + fail-closed matrix), `client-capability` **37** (success/malformed/401/500/network/double-submit/
+protected-blocking/lease stale-recovery + future-dated-lease); offline gates `check-erase-serialize-migration` +
+`db-verify-erase` device-lock serialization regression made **deterministic** (`pg_blocking_pids` wait) and
+**falsifiable** (`FOR UPDATE NOWAIT` probe + live `pg_get_functiondef` order) — runs at apply gate. **Pending
+4C/apply:** apply `db/erase-account-serialize.sql` to prod + live `db:verify-erase`; set `CRON_SECRET` in Vercel;
+deploy. **Guarded-writes follow-up** closes the SEC-4 residual — full writer inventory in the SEC-4 row above
+(`saves.js`, `score.js` scores+projection, `profile.js`, `claim.js` projection, `sync.js` projection + `user_state`;
+`event.js` excluded by decision) + the legacy profile-only backfill.
 
 ---
 
@@ -393,8 +418,9 @@ updates. *(This file is the ledger.)*
 **First CODE PR — PR 3 (revised).** PR 2 is now the urgent documentation-truth correction. A test suite deliberately
 written to **fail** against HEAD is a valid TDD step but is **not independently mergeable** because it turns
 `main`/CI red. Put the hostile-device regression tests and the narrow device-ownership fix in PR 3, demonstrating in
-the PR that the tests fail before the fix and pass after it. PR 4 handles complete account erasure. Every merged
-commit stays green while SEC-1…SEC-5 are still proven with executable regressions.
+the PR that the tests fail before the fix and pass after it. PR 4 handles **authoritative-device account erasure —
+partial**, with full write/erase serialization (guarded writes) and the legacy profile-only backfill still pending.
+Every merged commit stays green while SEC-1…SEC-5 are still proven with executable regressions.
 
 > Do not start implementation until this ledger and the canonical roadmap are approved. Update the PR column here as
 > each contract lands.
