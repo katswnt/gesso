@@ -235,6 +235,27 @@ deploy. **Guarded-writes follow-up** closes the SEC-4 residual — full writer i
 (`saves.js`, `score.js` scores+projection, `profile.js`, `claim.js` projection, `sync.js` projection + `user_state`;
 `event.js` excluded by decision) + the legacy profile-only backfill.
 
+**Production evidence — PR 4B code committed + PR 4C Steps 2–3 (serialization migration applied + verified),
+2026-08-26:** PR 4B committed on `pr3-3b-observe` at **`26062bee419065b5a79cb85b81af34bdaf72857e`** (code + docs;
+research candidate excluded, `data/incoming/*` preserved; NOT pushed/merged/deployed). **4C Step 2 (apply):**
+`db/erase-account-serialize.sql` (SHA-256 `2a667a6bb2de5c17e6d80263e2c536394b18425fcfecee26080d22f104c00fe1`,
+checksum reverified at apply) **applied ONCE to production `jmrpqmejupouqfergyyg`** in its single transaction
+(`BEGIN…CREATE FUNCTION…REVOKE…GRANT…COMMIT`); post-apply catalog confirmed exactly one `erase_account` overload,
+`SECURITY DEFINER`, `search_path=""`, authenticated-only, and the **pre-sweep `PERFORM … devices … FOR UPDATE`
+before the child sweep** (lock line before `delete … saves`). *(A wrapper `PIPESTATUS` bug printed a false "FAILED"
+line; the transaction committed once and no retry occurred — to be fixed before the next apply.)* **4C Step 3
+(functional verify, rollback injection OFF):** `db:verify-erase` with `ALLOW_PROD_VERIFY=jmrpqmejupouqfergyyg` ran
+once → **67/67 assertions PASS**. Device-lock **serialization** proven deterministically: live `pg_get_functiondef`
+order (device `FOR UPDATE` precedes sweep), holder backend PID captured, and the `erase_account` RPC confirmed
+WAITING on that PID via `pg_blocking_pids` filtered to `state='active' + wait_event_type='Lock' + query ilike
+'%erase_account%'`, plus the `FOR UPDATE NOWAIT` probe (seeded save still lockable while erase blocked → fails vs
+the old fn) and post-release sweep. **Second Auth delete → 404** (not a server error). **Legacy-gap metric remains
+7** profile rows without an authoritative `devices` row (SEC-4 partial while > 0). **Zero test residue** (independent
+read-only sweep: 0 `erasetest_*` users, 0 tombstones, 0 `__erase_probe_*` fns/triggers, 0 `dv*` devices/rows;
+migration objects intact). Expected Auth **audit-log** create/delete traces for the ephemeral test users remain (no
+users persist) — honest residue of verifying on prod. **Still pending (separate approvals):** set `CRON_SECRET` +
+`CAP_MODE=observe` in Vercel, then merge/push/deploy + smoke-test; enforcement (3C) later.
+
 ---
 
 ## Infrastructure — writers, CI, hooks, DB  →  Roadmap Batches 1/4/7 (PRs 3–4,8,10) · **P2**
