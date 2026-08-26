@@ -189,6 +189,27 @@ profile/score authority from `devices.user_id`, header contract, CAP_MODE deadli
 `events` deletion, and delete response-verification (SEC-4/SEC-5). 3C = deploy with `CAP_MODE=observe`, verify adoption
 metrics, then flip to enforce.
 
+**Implementation log — PR 4 Part 4A (account-erasure migration), 2026-08-25:** the erasure store + functions are
+**applied to production project `jmrpqmejupouqfergyyg`** but the API is **not yet wired** (that is 4B). Migration
+`db/erase-account.sql` SHA-256 `31c6ecfff71c4a91c69f20a7d328c9f8c15909c5c2f123b78d048f48df051480` (committed
+`f652657`) applied on 2026-08-25 in a **single transaction, additive** — `public.account_tombstones` (RLS on; ALL
+revoked incl. `service_role`; `service_role` SELECT only), new `erase_account()` (authenticated), `finalize_erasure(uuid)`
++ `purge_stale_tombstones()` (service-only), and a `CREATE OR REPLACE` of `claim_device` adding the `auth.users FOR
+UPDATE` lock + `no_user`/`erased` guards. **Read-only preflight** first confirmed all four new objects absent +
+`claim_device` present + checksum match + **Storage empty (0 buckets / 0 objects** ⇒ no user-owned objects to block
+GoTrue deletion). Post-apply **live functional verification** (`db:verify-erase`, `ALLOW_PROD_VERIFY=<prod ref>`,
+**rollback injection off**): **59/59 assertions** — catalog (all 4 fns `SECURITY DEFINER` + exact `search_path=""`;
+grants; `account_tombstones` full privilege matrix incl. TRUNCATE/REFERENCES/TRIGGER); transactional erasure across all
+tables; authority from `devices.user_id` only; foreign-account B + B-owned contaminated device + legacy profile-only
+rows preserved; idempotent re-erase; **confirmed-lock serialization** (erase and claim each provably blocked while an
+`auth.users` row lock is held, then complete on release); concurrent erase→claim yields `erased` + no device bound;
+finalize/purge true-positives; second auth-delete non-5xx (404); post-deletion claim → `no_user`. **Zero-residual
+verified** (independent sweep): 0 tombstone rows, 0 `erasetest_*@example.test` users, 0 `__erase_probe_*`
+functions/triggers; migration objects intact. **SEC-4 remains partial** — legacy-gap metric reports **7** production
+`profiles` rows bound without an authoritative `devices` row (deliberately preserved; SEC-4 partial while > 0). **SEC-4
+/ SEC-5 stay Confirmed until 4B** wires `delete-account.js` onto `erase_account` (checked responses, `events`
+deletion, auth-delete ordering, `finalize_erasure`/`purge_stale_tombstones`).
+
 ---
 
 ## Infrastructure — writers, CI, hooks, DB  →  Roadmap Batches 1/4/7 (PRs 3–4,8,10) · **P2**
