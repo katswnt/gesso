@@ -888,7 +888,7 @@ on the `INF-6b` base schema tracked by PR 8, which — with the sanitized produc
 **Root problem:** a public `deviceId` is currently treated as possession and can be bound to the wrong account.
 
 **Likely files:** `api/claim.js`, `api/sync.js`, new device-registration endpoint, new
-`api/lib/device-ownership.js`, authenticated client integration in `index.html`, new tracked DB migrations,
+`server/api/device-ownership.js`, authenticated client integration in `index.html`, new tracked DB migrations,
 `tests/api-device-ownership.test.mjs`, `package.json`, CI. Review `api/profile.js`, `api/saves.js`, `api/score.js`,
 and `api/event.js` so any private device-scoped read/write uses the same boundary; public telemetry must never grant
 authority merely because it accepts a device label.

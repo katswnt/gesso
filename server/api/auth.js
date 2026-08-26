@@ -1,5 +1,5 @@
 // Verify a Supabase access token → the authenticated user id. Deduped from claim/sync/delete-account.
-import { SUPABASE_URL, SUPA_ANON } from '../_supabase.js';
+import { SUPABASE_URL, SUPA_ANON } from '../../api/_supabase.js';
 
 export async function verifyJwt(accessToken) {
   if (!accessToken) return null;

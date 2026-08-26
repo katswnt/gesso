@@ -1,9 +1,9 @@
 // Vercel serverless function: update a device's leaderboard display name/color. POST { deviceId, name, color }
 // + header x-gesso-cap. Device-scoped, so capability-gated (CAP_MODE observe grandfathers a MISSING cap only).
 // Honors the name-reservation rule (a name held by another ACCOUNT is dropped).
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin } from './lib/supabaseAdmin.js';
-import { requireDeviceCap } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin } from '../server/api/supabaseAdmin.js';
+import { requireDeviceCap } from '../server/api/device-ownership.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

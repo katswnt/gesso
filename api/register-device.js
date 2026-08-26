@@ -4,9 +4,9 @@
 // registration of the same device with a DIFFERENT cap is rejected. Conflict responses conceal the conflict
 // TYPE and owner identity (bad_capability/hash_in_use both → generic 409); existence is not fully hidden
 // (ok→200 vs conflict→409 vs revoked→403 are distinguishable — acceptable). Best-effort per-IP rate limit.
-import { allowedOrigin, parseBody, clientIp } from './lib/http.js';
-import { admin } from './lib/supabaseAdmin.js';
-import { readCap, registerDevice, capMode, logAdoption } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody, clientIp } from '../server/api/http.js';
+import { admin } from '../server/api/supabaseAdmin.js';
+import { readCap, registerDevice, capMode, logAdoption } from '../server/api/device-ownership.js';
 
 const RATE_MAX = 60, RATE_WINDOW = 3600; // registrations per IP per hour (best-effort)
 

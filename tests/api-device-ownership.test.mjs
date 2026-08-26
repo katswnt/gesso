@@ -1,6 +1,6 @@
 // PR 3 device-ownership authorization tests — network-free, in test:ci.
 // Drives the REAL api/* handlers with mock req/res and a single stubbed globalThis.fetch over an in-memory
-// Supabase model (the one network boundary, via api/lib/supabaseAdmin.js). Proves the CAP_MODE state machine
+// Supabase model (the one network boundary, via server/api/supabaseAdmin.js). Proves the CAP_MODE state machine
 // and the hostile matrix. Each case asserts the fixed behavior; the pre-fix handlers would fail these.
 //   node tests/api-device-ownership.test.mjs
 import { createHash } from 'node:crypto';
@@ -143,8 +143,8 @@ const score = (await import('../api/score.js')).default;
 const del = (await import('../api/delete-account.js')).default;
 const register = (await import('../api/register-device.js')).default;
 const profile = (await import('../api/profile.js')).default;
-const { capMode, claimResultToHttp } = await import('../api/lib/device-ownership.js');
-const { svcHeaders, admin: mkAdmin, userRpc: uRpc } = await import('../api/lib/supabaseAdmin.js');
+const { capMode, claimResultToHttp } = await import('../server/api/device-ownership.js');
+const { svcHeaders, admin: mkAdmin, userRpc: uRpc } = await import('../server/api/supabaseAdmin.js');
 
 // helpers to seed
 const RAW = tag => (tag + 'A'.repeat(43)).slice(0, 43);          // 43-char base64url-ish raw cap

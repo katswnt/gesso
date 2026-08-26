@@ -3,10 +3,10 @@
 // claim_device() SECURITY DEFINER function under the USER's JWT (identity from auth.uid(), ownership from
 // devices.user_id) — a device is bound only if unclaimed or already same-user; another user's device → 409.
 // CAP_MODE=observe grandfathers a MISSING capability via the legacy profiles bind; enforce requires it.
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin, userRpc } from './lib/supabaseAdmin.js';
-import { verifyJwt } from './lib/auth.js';
-import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin, userRpc } from '../server/api/supabaseAdmin.js';
+import { verifyJwt } from '../server/api/auth.js';
+import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from '../server/api/device-ownership.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

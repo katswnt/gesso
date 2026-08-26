@@ -5,9 +5,9 @@
 // A device's gallery is private, so every method is capability-gated (CAP_MODE observe grandfathers a
 // MISSING cap only). Account devices are resolved from devices.user_id (authoritative); the legacy
 // profiles-based resolution is used only for grandfathered missing-cap requests during the observe window.
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin } from './lib/supabaseAdmin.js';
-import { requireDeviceCap, ownedDevices, legacyOwnedDevices } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin } from '../server/api/supabaseAdmin.js';
+import { requireDeviceCap, ownedDevices, legacyOwnedDevices } from '../server/api/device-ownership.js';
 
 const MAX_SAVES = 1000;
 const okDevice = d => /^[A-Za-z0-9_-]{8,64}$/.test(d);

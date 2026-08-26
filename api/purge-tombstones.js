@@ -6,7 +6,7 @@
 // `Authorization: Bearer <CRON_SECRET>`. We enforce the method, fail CLOSED when CRON_SECRET is unset or the
 // header does not match (constant-time compare), and fail CLOSED unless the RPC returns a valid nonnegative
 // integer count. Service-role only — purge_stale_tombstones deletes nothing that still has an auth user.
-import { admin } from './lib/supabaseAdmin.js';
+import { admin } from '../server/api/supabaseAdmin.js';
 import { timingSafeEqual } from 'node:crypto';
 
 function safeEq(a, b) { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && timingSafeEqual(x, y); }

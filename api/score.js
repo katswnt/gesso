@@ -3,9 +3,9 @@
 // Vercel as SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY). The project URL is public, hardcoded below.
 // Anonymous — keyed by a client-generated deviceId. Best-score-per-day guarded. Raw guesses stored for
 // later server re-scoring (Phase 4). Abuse controls mirror report.js: origin allowlist, honeypot.
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin } from './lib/supabaseAdmin.js';
-import { requireDeviceCap } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin } from '../server/api/supabaseAdmin.js';
+import { requireDeviceCap } from '../server/api/device-ownership.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const ROUNDS = 5, MAX_CAT = 2500, MAX_TOTAL = ROUNDS * (4 + 1) * MAX_CAT;
 const isDateStr = s => /^\d{4}-\d{2}-\d{2}$/.test(s);

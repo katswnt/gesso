@@ -1,6 +1,6 @@
 // Confines all service-role (RLS-bypassing) Supabase access + the user-JWT RPC path to one reviewed module.
 // This is also the single network boundary the api-device-ownership tests stub (globalThis.fetch).
-import { SUPABASE_URL, SUPA_ANON } from '../_supabase.js';
+import { SUPABASE_URL, SUPA_ANON } from '../../api/_supabase.js';
 
 export function secretKey() {
   return process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';

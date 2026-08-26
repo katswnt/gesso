@@ -3,10 +3,10 @@
 // pull DOWN. POST { deviceId, accessToken, streak, mastery, glossary, seen, name, color } + header x-gesso-cap.
 // Binding now goes through claim_device() (ownership from devices.user_id via auth.uid()); a device bound to
 // another account → 409 with NO merge. CAP_MODE=observe grandfathers a MISSING cap via the legacy bind.
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin, userRpc } from './lib/supabaseAdmin.js';
-import { verifyJwt } from './lib/auth.js';
-import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from './lib/device-ownership.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin, userRpc } from '../server/api/supabaseAdmin.js';
+import { verifyJwt } from '../server/api/auth.js';
+import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from '../server/api/device-ownership.js';
 
 // merge two streak objects, taking the better of each (max counts, union of played dates, max per-date score)
 function mergeStreak(a, b){

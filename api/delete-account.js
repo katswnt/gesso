@@ -11,9 +11,9 @@
 //   3. ONLY if erase ok → delete the auth user (admin). 404 == already gone == idempotent success.
 //   4. ONLY after the auth user is truly gone → finalize_erasure(uid) removes the tombstone (best-effort;
 //      purge_stale_tombstones GCs it if this ever fails, so a lost finalize never blocks the deletion).
-import { allowedOrigin, parseBody } from './lib/http.js';
-import { admin, userRpc } from './lib/supabaseAdmin.js';
-import { verifyJwt } from './lib/auth.js';
+import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { admin, userRpc } from '../server/api/supabaseAdmin.js';
+import { verifyJwt } from '../server/api/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

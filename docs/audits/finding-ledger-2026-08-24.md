@@ -172,7 +172,7 @@ wiring `claim`/`sync`/`saves`/`profile`/`score`/`delete-account` onto `devices.u
 
 **Implementation log — PR 3 Part 3B (API + client capability integration, observe mode), 2026-08-25:**
 authorization is now **installed in observe mode** — **not deployed** (evidence commit only; no `CAP_MODE` change).
-New `api/lib/{http,supabaseAdmin,auth,device-ownership}.js` (shared origin/body, service-role + user-JWT boundary,
+New `server/api/{http,supabaseAdmin,auth,device-ownership}.js` (shared origin/body, service-role + user-JWT boundary,
 `verifyJwt`, the CAP_MODE state machine) + `api/register-device.js`. `claim`/`sync` bind via `claim_device` under the
 user JWT (`conflict_other_user`→409, no bind/merge; account devices from `devices.user_id`); `saves`/`profile`/`score`
 are capability-gated; `delete-account` derives the device set **only** from `devices.user_id = auth.uid()` (kills the
