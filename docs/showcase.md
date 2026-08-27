@@ -21,13 +21,13 @@ A hiring committee plays for 30 seconds and leaves. This is the guide to *showin
 
 ## Numbers worth quoting
 - ~**5,950** curated public-domain works; grew coverage (Russian Peredvizhniki, PD women, German/Belgian, national icons) via an artist-seeded harvest → copyright-audited → promoted.
-- **~915k tokens** of AI QA over 213 new works, behind human-defined verification gates — an AI-in-the-loop pipeline with fail-closed quality control.
+- AI-assisted QA surfaced **417 hidden works** and caught the England/Paris place-resolution bug, *The Skater*'s unscored style, and the Vanuatu stone's missing cultural category.
 - ~20 commits this cycle, **zero shipped regressions** (one near-miss corruption caught + reverted by the gate).
 
 ## The one-line narrative (use verbatim)
 > *"I built and run a daily art-history game, and I treat its ~6,000-work collection the way a museum would — decolonized taxonomy, provenance ethics, attribution rigor — while shipping AI-generated teaching content behind fail-closed quality gates."*
 
-That single sentence signals **consumer craft + data rigor + ethics + AI ops** — a combination very few PMs can claim in one artifact.
+That single sentence signals **consumer craft + data rigor + ethics + AI ops**.
 
 ## Reading order for a reviewer
 `docs/icp.md` (who + why) → `docs/metrics.md` (how success is measured) → `docs/case-study-honesty-pass.md` (the hero decision) → this file (proof) → `docs/monetization.md` (business judgment).
