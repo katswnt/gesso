@@ -277,6 +277,21 @@ never affected — the prior good deploy stayed live. Fixed in **`6c9288d`** by 
 `scripts/check-function-count.mjs` (in `test` + `test:ci`) that recursively counts deployable files under `api/` and
 fails above 12. **Zero endpoint headroom (12/12)** — consolidate endpoints before adding another.
 
+**Guarded writes — Stage A APPLIED to prod + verified LIVE, 2026-08-27 (commit `6e11d0b`).** Additive migration
+`db/guarded-writes.sql` (SHA-256 `6bcbd0b4a4e57c17d743e5869511d0a20ef6d9db0a95b8b213cb40d9849b80be`) applied once
+(single txn): six narrow SECURITY DEFINER functions (`guarded_save`, `guarded_unsave`, `guarded_score`,
+`guarded_profile`, `guarded_user_state`, `guarded_claim_device`) that serialize against `erase_account` on the same
+lock order (auth.users→devices→children). `claim_device` and `erase_account` unchanged (verified: pre-sweep device
+`FOR UPDATE` intact, `claim_device` body free of `guarded_`). Post-apply catalog: all 6 present, `SECURITY DEFINER`,
+`search_path=""`, granted save/unsave/score/profile→service_role and user_state/claim→authenticated (anon/other
+false). Live `db:verify-guarded` (`ALLOW_PROD_VERIFY`) → **94/94 assertions**: writer-first + erasure-first
+(real-`erase_account`, child-row blocker, captured PIDs + `pg_blocking_pids`) serialization for saves AND user_state
+(both orderings, commit-exit + `ok:true` + zero residual); score best-decision-under-lock invariants + field storage;
+`guarded_profile` name/color change with `user_id` preserved; claim result set (bound/conflict/unregistered/
+bad_device); anonymous vs account-wide unsave; contaminated-`profiles.user_id` cannot authorize; all rejects;
+exact run-owned teardown + independent zero-residual (0 `guardtest_*` users, 0 `gd*` rows, 0 tombstones). **Not yet
+used by any handler** (Stage B wires the verified-cap paths). MAX_SAVES `full` branch present but not live-tested yet.
+
 ---
 
 ## Infrastructure — writers, CI, hooks, DB  →  Roadmap Batches 1/4/7 (PRs 3–4,8,10) · **P2**
