@@ -1,11 +1,29 @@
 {
-  "buildCommand": "node scripts/check-pool.mjs && node scripts/build-teach-shards.mjs",
-  "outputDirectory": ".",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "crons": [
     { "path": "/api/purge-tombstones", "schedule": "0 3 * * *" }
   ],
   "rewrites": [
-    { "source": "/((?!api/|data/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/:date(\\d{4}-\\d{2}-\\d{2})", "destination": "/index.html" },
+    { "source": "/:date(\\d{4}-\\d{2}-\\d{2})/:tier(easy|medium|hard|impossible)", "destination": "/index.html" },
+    { "source": "/:date(\\d{4}-\\d{2}-\\d{2})/:tier(easy|medium|hard|impossible)/result", "destination": "/index.html" },
+    { "source": "/:date(\\d{4}-\\d{2}-\\d{2})/:tier(easy|medium|hard|impossible)/:round(r\\d+)", "destination": "/index.html" },
+    { "source": "/leaderboard", "destination": "/index.html" },
+    { "source": "/leaderboard/:date(\\d{4}-\\d{2}-\\d{2})", "destination": "/index.html" },
+    { "source": "/register", "destination": "/index.html" },
+    { "source": "/register/:date(\\d{4}-\\d{2}-\\d{2})", "destination": "/index.html" },
+    { "source": "/infinite/:tier(easy|medium|hard|impossible)", "destination": "/index.html" },
+    { "source": "/movement/:slug", "destination": "/index.html" },
+    { "source": "/training", "destination": "/index.html" },
+    { "source": "/account", "destination": "/index.html" },
+    { "source": "/archive", "destination": "/index.html" },
+    { "source": "/streak", "destination": "/index.html" },
+    { "source": "/stats", "destination": "/index.html" },
+    { "source": "/glossary", "destination": "/index.html" },
+    { "source": "/collections", "destination": "/index.html" },
+    { "source": "/gallery", "destination": "/index.html" },
+    { "source": "/gallery/:id", "destination": "/index.html" }
   ],
   "headers": [
     {
