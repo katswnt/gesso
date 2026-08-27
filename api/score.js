@@ -5,7 +5,7 @@
 // later server re-scoring (Phase 4). Abuse controls mirror report.js: origin allowlist, honeypot.
 import { allowedOrigin, parseBody } from '../server/api/http.js';
 import { admin } from '../server/api/supabaseAdmin.js';
-import { requireDeviceCap } from '../server/api/device-ownership.js';
+import { requireDeviceCap, callGuarded, guardedWriteToHttp } from '../server/api/device-ownership.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const ROUNDS = 5, MAX_CAT = 2500, MAX_TOTAL = ROUNDS * (4 + 1) * MAX_CAT;
 const isDateStr = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -55,23 +55,26 @@ export default async function handler(req, res) {
         if (claimants.some(c => c.user_id && c.user_id !== myUserId)) useName = ''; // reserved → drop it
       }
     }
-    // upsert display profile (unique on device_id)
-    await rest('profiles?on_conflict=device_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ device_id: deviceId, name: useName, color }) });
-
-    // best-score guard: read existing, only write if this run is higher
-    const cur = await (await rest(`scores?device_id=eq.${encodeURIComponent(deviceId)}&date=eq.${date}&tier=eq.${tier}&select=total`)).json();
-    const prev = Array.isArray(cur) && cur[0] ? Number(cur[0].total) : null;
-    const isBest = prev == null || total > prev;
-    if (isBest) {
-      // cold = achieved on the FIRST attempt (prev==null); a later run that BEATS it means retries were used → cold:false.
-      // The `cold` column may not exist yet: try with it, and self-heal by retrying without it so score writes never break.
-      // One-time migration: alter table scores add column if not exists cold boolean not null default false;
-      const payload = { device_id: deviceId, date, tier, total, perfects, masterpieces, cold: prev == null, rounds: body.rounds || null, updated_at: new Date().toISOString() };
-      const put = () => rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(payload) });
-      let w = await put();
-      if (!w.ok) { delete payload.cold; w = await put(); } // graceful fallback until the cold column is added
-      if (!w.ok) { const detail = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', status: w.status, detail: detail.slice(0, 200) }); }
+    let isBest, finalTotal;
+    if (gate.verified) {   // VERIFIED-CAP: scores + name/color projection, best decided UNDER the device lock (erasure-serialized)
+      const j = await callGuarded(a.rpc('guarded_score', { p_device_id: deviceId, p_capability_hash: gate.hash, p_date: date, p_tier: tier, p_total: total, p_perfects: perfects, p_masterpieces: masterpieces, p_rounds: body.rounds || null, p_name: useName, p_color: color }), jj => typeof jj.isBest === 'boolean' && typeof jj.storedTotal === 'number' && Number.isFinite(jj.storedTotal));
+      const h = guardedWriteToHttp(j);
+      if (!h.ok) return res.status(h.status).json({ error: h.reason });
+      isBest = j.isBest === true; finalTotal = Number(j.storedTotal);
+    } else {
+      // LEGACY (observe + missing cap): raw projection + best-score guard — temporary until enforce
+      await rest('profiles?on_conflict=device_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ device_id: deviceId, name: useName, color }) });
+      const cur = await (await rest(`scores?device_id=eq.${encodeURIComponent(deviceId)}&date=eq.${date}&tier=eq.${tier}&select=total`)).json();
+      const prev = Array.isArray(cur) && cur[0] ? Number(cur[0].total) : null;
+      isBest = prev == null || total > prev; finalTotal = isBest ? total : prev;
+      if (isBest) {
+        const payload = { device_id: deviceId, date, tier, total, perfects, masterpieces, cold: prev == null, rounds: body.rounds || null, updated_at: new Date().toISOString() };
+        const put = () => rest('scores?on_conflict=device_id,date,tier', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(payload) });
+        let w = await put();
+        if (!w.ok) { delete payload.cold; w = await put(); } // graceful fallback until the cold column is added
+        if (!w.ok) { const detail = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', status: w.status, detail: detail.slice(0, 200) }); }
+      }
     }
 
     // rank/count must match the leaderboard, which collapses an account's devices to its single best score.
@@ -91,11 +94,11 @@ export default async function handler(req, res) {
       const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
       const best = new Map();
       for (const r of (all || [])) { const k = keyOf(r.device_id); const t = Number(r.total); if (!best.has(k) || t > best.get(k)) best.set(k, t); }
-      const myTotal = best.get(keyOf(deviceId)) ?? (isBest ? total : prev);
+      const myTotal = best.get(keyOf(deviceId)) ?? finalTotal;
       count = best.size;
       rank = [...best.values()].filter(t => t > myTotal).length + 1;
     } catch {
-      const rankRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${isBest ? total : prev}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
+      const rankRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${finalTotal}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
       const cntRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
       const parseCount = r => { const cr = r.headers.get('content-range') || '*/0'; return parseInt(cr.split('/')[1], 10) || 0; };
       rank = parseCount(rankRes) + 1; count = parseCount(cntRes);

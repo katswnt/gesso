@@ -8,6 +8,7 @@
     "db:verify": "node scripts/db-verify-devices.mjs",
     "db:verify-erase": "node scripts/db-verify-erase.mjs",
     "db:verify-guarded": "node scripts/db-verify-guarded.mjs",
+    "check:daily-flip": "node scripts/check-daily-flip.mjs",
     "build": "node scripts/build-teach-shards.mjs",
     "notes:build": "node scripts/build-teach-shards.mjs",
     "check:pool": "node scripts/check-pool.mjs",

@@ -106,6 +106,54 @@ export function claimResultToHttp(result) {
   }
 }
 
+// Await a guarded_* RPC (fetch promise) and return its structured JSON result. Any transport/non-2xx or
+// malformed (non-{ok:boolean}) response becomes {ok:false,error:'transport'|'malformed'} so the caller can map
+// it to a definite non-2xx WITHOUT ever falling back to a raw write.
+export async function callGuarded(fetchPromise, validateSuccess) {
+  try {
+    const r = await fetchPromise;
+    if (!r.ok) return { ok: false, error: 'transport', status: r.status };
+    const j = await r.json().catch(() => null);
+    if (!j || typeof j.ok !== 'boolean') return { ok: false, error: 'malformed' };
+    if (j.ok === true) {
+      if (j.error != null) return { ok: false, error: 'malformed' };                                    // a success must NOT carry an error
+      if (typeof validateSuccess === 'function' && !validateSuccess(j)) return { ok: false, error: 'malformed' };  // + function-specific success shape
+    } else if (typeof j.error !== 'string' || j.error.length === 0) {
+      return { ok: false, error: 'malformed' };                                                          // a failure MUST carry a string error
+    }
+    return j;
+  } catch { return { ok: false, error: 'transport' }; }
+}
+
+// Map a guarded_claim_device envelope to HTTP. Requires full internal consistency — never trust `result`
+// independently of `ok`: a bind result must be ok:true with no error; any other result must be ok:false with
+// error === result. A contradictory/absent envelope → 502.
+export function guardedClaimToHttp(j) {
+  if (!j || typeof j.result !== 'string') return { ok: false, status: 502, reason: 'claim failed' };
+  const bind = j.result === 'bound' || j.result === 'already_bound_same_user';
+  if (bind) { if (j.ok !== true || j.error != null) return { ok: false, status: 502, reason: 'claim failed' }; }
+  else { if (j.ok !== false || j.error !== j.result) return { ok: false, status: 502, reason: 'claim failed' }; }
+  return claimResultToHttp(j.result);
+}
+
+// Map a guarded write result ({ok:true,...} or {ok:false,error}) to an HTTP outcome.
+export function guardedWriteToHttp(j) {
+  if (j && j.ok === true) return { ok: true };
+  switch (j && j.error) {
+    case 'full':           return { ok: false, status: 409, reason: 'gallery full' };
+    case 'erased':         return { ok: false, status: 410, reason: 'account erased' };
+    case 'no_user':        return { ok: false, status: 401, reason: 'no user' };
+    case 'no_auth':        return { ok: false, status: 401, reason: 'no auth' };
+    case 'revoked':        return { ok: false, status: 403, reason: 'device revoked' };
+    case 'unregistered':   return { ok: false, status: 409, reason: 'device not registered' };
+    case 'bad_capability': return { ok: false, status: 401, reason: 'bad capability' };
+    case 'bad_device':     return { ok: false, status: 400, reason: 'bad device' };
+    case 'bad_work':       return { ok: false, status: 400, reason: 'bad work' };
+    case 'bad_total':      return { ok: false, status: 400, reason: 'bad total' };
+    default:               return { ok: false, status: 502, reason: 'write failed' };   // transport/malformed
+  }
+}
+
 // Run claim_device under the user's JWT. Returns the scalar result string (or null on transport error).
 export async function claimDevice(userRpc, deviceId, hash, accessToken) {
   try {

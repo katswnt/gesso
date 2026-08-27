@@ -6,7 +6,7 @@
 import { allowedOrigin, parseBody } from '../server/api/http.js';
 import { admin, userRpc } from '../server/api/supabaseAdmin.js';
 import { verifyJwt } from '../server/api/auth.js';
-import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from '../server/api/device-ownership.js';
+import { bindDecision, logAdoption, callGuarded, guardedClaimToHttp } from '../server/api/device-ownership.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -27,12 +27,12 @@ export default async function handler(req, res) {
     if (d.action === 'reject') return res.status(d.status).json({ error: d.reason });
 
     if (d.action === 'claim') {
-      const result = await claimDevice(userRpc, deviceId, d.hash, accessToken);
-      logAdoption('claim', d.mode, result || 'error');
-      const http = claimResultToHttp(result);
+      // VERIFIED-CAP: bind + profiles.user_id projection under the held locks (erasure-serialized). j.result
+      // carries the full claim outcome; a transport/malformed reply → undefined → claimResultToHttp → 502 (no raw write).
+      const j = await callGuarded(userRpc('guarded_claim_device', { p_device_id: deviceId, p_capability_hash: d.hash }, accessToken));
+      logAdoption('claim', d.mode, (j && j.result) || (j && j.error) || 'error');
+      const http = guardedClaimToHttp(j);   // rejects contradictory/absent envelopes as 502; never trusts result over ok
       if (!http.ok) return res.status(http.status).json({ error: http.reason });
-      // authorized → stamp the display projection (profiles.user_id) via the service role
-      await a.rest('profiles?on_conflict=device_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
       return res.status(200).json({ ok: true, userId: uid });
     }
 

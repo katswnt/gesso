@@ -7,7 +7,7 @@
 // profiles-based resolution is used only for grandfathered missing-cap requests during the observe window.
 import { allowedOrigin, parseBody } from '../server/api/http.js';
 import { admin } from '../server/api/supabaseAdmin.js';
-import { requireDeviceCap, ownedDevices, legacyOwnedDevices } from '../server/api/device-ownership.js';
+import { requireDeviceCap, ownedDevices, legacyOwnedDevices, callGuarded, guardedWriteToHttp } from '../server/api/device-ownership.js';
 
 const MAX_SAVES = 1000;
 const okDevice = d => /^[A-Za-z0-9_-]{8,64}$/.test(d);
@@ -54,6 +54,12 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
+      if (gate.verified) {   // VERIFIED-CAP: serialize the insert against erasure (MAX_SAVES enforced in-fn)
+        const h = guardedWriteToHttp(await callGuarded(a.rpc('guarded_save', { p_device_id: deviceId, p_capability_hash: gate.hash, p_work_id: workId })));
+        if (!h.ok) return res.status(h.status).json({ error: h.reason });
+        return res.status(200).json({ ok: true, saved: true });
+      }
+      // LEGACY (observe + missing cap): raw insert with the app-side MAX_SAVES check — temporary until enforce
       const cnt = await (await rest(`saves?device_id=eq.${encodeURIComponent(deviceId)}&select=work_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } })).headers.get('content-range');
       const total = cnt ? parseInt(String(cnt).split('/')[1], 10) || 0 : 0;
       if (total >= MAX_SAVES) return res.status(409).json({ error: 'gallery full', max: MAX_SAVES });
@@ -65,6 +71,12 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
+      if (gate.verified) {   // VERIFIED-CAP: account-wide unsave serialized against erasure (deleted must be a nonneg int)
+        const h = guardedWriteToHttp(await callGuarded(a.rpc('guarded_unsave', { p_device_id: deviceId, p_capability_hash: gate.hash, p_work_id: workId }), j => Number.isInteger(j.deleted) && j.deleted >= 0));
+        if (!h.ok) return res.status(h.status).json({ error: h.reason });
+        return res.status(200).json({ ok: true, saved: false });
+      }
+      // LEGACY (observe + missing cap): resolve account devices the old way + raw delete
       const devs = await resolveDevs(gate, deviceId);
       const r = await rest(`saves?device_id=in.(${devs.map(encodeURIComponent).join(',')})&work_id=eq.${encodeURIComponent(workId)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
       if (!r.ok) return res.status(502).json({ error: 'upstream' });

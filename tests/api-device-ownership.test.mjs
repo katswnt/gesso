@@ -16,7 +16,8 @@ let DB;
 function reset() {
   DB = { devices: new Map(), profiles: new Map(), saves: [], scores: [], events: [], user_state: new Map(),
          tokens: new Map(/* accessToken -> uid */), deletedUsers: [], tombstones: new Set(),
-         failDevicesGet: false, eraseFail: null, authDeleteStatus: 200, finalizeStatus: 200, finalizeForce: undefined };
+         failDevicesGet: false, eraseFail: null, authDeleteStatus: 200, finalizeStatus: 200, finalizeForce: undefined,
+         guardedStatus: 200, guardedMalformed: false, guardedForce: undefined, failUserStateGet: false, userStatePartial: undefined, userStateMulti: undefined };
 }
 const R = (status, data, headers) => ({ ok: status < 400, status,
   json: async () => data, text: async () => (typeof data === 'string' ? data : JSON.stringify(data)),
@@ -68,10 +69,65 @@ function erase_account(uid) {
 }
 function finalize_erasure(uid) { if (!uid || !userGone(uid)) return false; DB.tombstones.delete(uid); return true; }  // only after auth user truly gone
 
+// ---- guarded_* emulators mirror db/guarded-writes.sql (structured {ok,...} contract) ----
+// auth.users presence is modeled as "not in deletedUsers" (same as the erase emulator's userGone), so a bound
+// device with a live owner passes; owner-missing-from-auth.users is exercised via DB.deletedUsers here and by a
+// real ghost-uuid case in db-verify-guarded.mjs.
+function guardedGate(deviceId, hash) {
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(deviceId || '')) return { error: 'bad_device' };
+  if (!/^[0-9a-f]{64}$/.test(hash || '')) return { error: 'bad_capability' };
+  const row = DB.devices.get(deviceId);
+  if (!row) return { error: 'unregistered' };
+  if (row.revoked_at) return { error: 'revoked' };
+  if (row.capability_hash !== hash) return { error: 'bad_capability' };
+  if (row.user_id != null) { if (DB.tombstones.has(row.user_id)) return { error: 'erased' }; if (userGone(row.user_id)) return { error: 'no_user' }; }
+  return { row };
+}
+function guarded_save(deviceId, hash, workId) {
+  const g = guardedGate(deviceId, hash); if (g.error) return { ok: false, error: g.error };
+  if (!workId || String(workId).length === 0 || String(workId).length > 200) return { ok: false, error: 'bad_work' };
+  if (DB.saves.filter(s => s.device_id === deviceId).length >= 1000) return { ok: false, error: 'full' };
+  if (!DB.saves.find(s => s.device_id === deviceId && s.work_id === workId)) DB.saves.push({ device_id: deviceId, work_id: workId });
+  return { ok: true };
+}
+function guarded_unsave(deviceId, hash, workId) {
+  const g = guardedGate(deviceId, hash); if (g.error) return { ok: false, error: g.error };
+  const devs = g.row.user_id != null ? [...DB.devices.values()].filter(r => r.user_id === g.row.user_id).map(r => r.device_id) : [deviceId];
+  const before = DB.saves.length; DB.saves = DB.saves.filter(s => !(s.work_id === workId && devs.includes(s.device_id)));
+  return { ok: true, deleted: before - DB.saves.length };
+}
+function guarded_score(deviceId, hash, date, tier, total, perfects, masterpieces, rounds, name, color) {
+  const g = guardedGate(deviceId, hash); if (g.error) return { ok: false, error: g.error };
+  if (total == null || total < 0) return { ok: false, error: 'bad_total' };
+  const cur = DB.scores.find(s => s.device_id === deviceId && s.date === date && s.tier === tier);
+  const stored = cur ? Number(cur.total) : null;
+  const isBest = stored == null || total > stored;
+  if (isBest) { const rec = { device_id: deviceId, date, tier, total, perfects, masterpieces, cold: stored == null, rounds }; if (cur) Object.assign(cur, rec); else DB.scores.push(rec); }
+  const p = DB.profiles.get(deviceId) || { device_id: deviceId }; p.name = name; p.color = color; DB.profiles.set(deviceId, p);  // preserve user_id
+  return { ok: true, isBest, storedTotal: isBest ? total : stored };
+}
+function guarded_profile(deviceId, hash, name, color) {
+  const g = guardedGate(deviceId, hash); if (g.error) return { ok: false, error: g.error };
+  const p = DB.profiles.get(deviceId) || { device_id: deviceId }; p.name = name; p.color = color; DB.profiles.set(deviceId, p);  // preserve user_id
+  return { ok: true };
+}
+function guarded_user_state(uid, streak, mastery, glossary, seen) {
+  if (!uid) return { ok: false, error: 'no_auth' };
+  if (userGone(uid)) return { ok: false, error: 'no_user' };
+  if (DB.tombstones.has(uid)) return { ok: false, error: 'erased' };
+  DB.user_state.set(uid, { user_id: uid, streak, mastery, glossary, seen });
+  return { ok: true };
+}
+function guarded_claim_device(uid, deviceId, hash) {
+  const result = claim_device(uid, deviceId, hash);
+  if (result === 'bound' || result === 'already_bound_same_user') { const p = DB.profiles.get(deviceId) || { device_id: deviceId }; p.user_id = uid; DB.profiles.set(deviceId, p); return { ok: true, result }; }
+  return { ok: false, result, error: result };
+}
+
 globalThis.fetch = async (url, opts = {}) => {
   const u = new URL(url); const p = u.pathname; const sp = u.searchParams; const m = (opts.method || 'GET').toUpperCase();
   const hdr = opts.headers || {}; const body = opts.body ? JSON.parse(opts.body) : {};
-  DB.lastHeaders = hdr; DB.lastUrl = url; (DB.reqs || (DB.reqs = [])).push({ path: p, headers: hdr });
+  DB.lastHeaders = hdr; DB.lastUrl = url; (DB.reqs || (DB.reqs = [])).push({ path: p, method: m, headers: hdr });
   // auth: verify user
   if (p === '/auth/v1/user') { const t = (hdr.Authorization || '').replace('Bearer ', ''); const uid = DB.tokens.get(t); return uid ? R(200, { id: uid }) : R(401, {}); }
   if (p.startsWith('/auth/v1/admin/users/')) { if (m === 'DELETE') { const id = p.split('/').pop(); const st = DB.authDeleteStatus; if (st < 400 || st === 404) DB.deletedUsers.push(id); return R(st, {}); } }
@@ -82,6 +138,19 @@ globalThis.fetch = async (url, opts = {}) => {
   if (p === '/rest/v1/rpc/finalize_erasure') { const st = DB.finalizeStatus || 200;
     if (st >= 400) return R(st, {});   // transport/non-2xx: the function did not complete → NO side effect (tombstone untouched)
     const val = DB.finalizeForce !== undefined ? DB.finalizeForce : finalize_erasure(body.p_user_id); return R(st, val); }   // service role
+  // guarded_* writes. DB.guardedStatus (>=400) simulates a transport failure; DB.guardedMalformed returns a non-{ok} body.
+  if (p.startsWith('/rest/v1/rpc/guarded_')) {
+    if (DB.guardedStatus && DB.guardedStatus >= 400) return R(DB.guardedStatus, {});
+    if (DB.guardedMalformed) return R(200, { weird: true });
+    if (DB.guardedForce !== undefined) return R(200, DB.guardedForce);   // forced envelope (unknown/contradictory success shapes)
+    const uid = () => DB.tokens.get((hdr.Authorization || '').replace('Bearer ', '')) || null;
+    if (p === '/rest/v1/rpc/guarded_save') return R(200, guarded_save(body.p_device_id, body.p_capability_hash, body.p_work_id));
+    if (p === '/rest/v1/rpc/guarded_unsave') return R(200, guarded_unsave(body.p_device_id, body.p_capability_hash, body.p_work_id));
+    if (p === '/rest/v1/rpc/guarded_score') return R(200, guarded_score(body.p_device_id, body.p_capability_hash, body.p_date, body.p_tier, body.p_total, body.p_perfects, body.p_masterpieces, body.p_rounds, body.p_name, body.p_color));
+    if (p === '/rest/v1/rpc/guarded_profile') return R(200, guarded_profile(body.p_device_id, body.p_capability_hash, body.p_name, body.p_color));
+    if (p === '/rest/v1/rpc/guarded_user_state') return R(200, guarded_user_state(uid(), body.p_streak, body.p_mastery, body.p_glossary, body.p_seen));
+    if (p === '/rest/v1/rpc/guarded_claim_device') return R(200, guarded_claim_device(uid(), body.p_device_id, body.p_capability_hash));
+  }
   // devices
   if (p === '/rest/v1/devices') {
     if (DB.failDevicesGet && m === 'GET') return R(502, {});
@@ -124,7 +193,7 @@ globalThis.fetch = async (url, opts = {}) => {
   }
   // user_state
   if (p === '/rest/v1/user_state') {
-    if (m === 'GET') { const uid = eqParam(sp, 'user_id'); const r = DB.user_state.get(uid); return R(200, r ? [r] : []); }
+    if (m === 'GET') { if (DB.failUserStateGet) return R(502, {}); if (DB.userStateMulti) return R(200, DB.userStateMulti); if (DB.userStatePartial) return R(200, [DB.userStatePartial]); const uid = eqParam(sp, 'user_id'); const r = DB.user_state.get(uid); return R(200, r ? [r] : []); }
     if (m === 'POST') { DB.user_state.set(body.user_id, { ...(DB.user_state.get(body.user_id) || {}), ...body }); return R(201, {}); }
     if (m === 'DELETE') { const uid = eqParam(sp, 'user_id'); DB.user_state.delete(uid); return R(200, {}); }
   }
@@ -384,6 +453,122 @@ async function main() {
     Date.now = realNow; }
   process.env.CAP_MODE = 'observe';
 
-  console.log(`api-device-ownership.test: ${pass} assertions passed (observe/enforce state machine + hostile matrix + profile/header/CAP_MODE/deletion regressions)`);
+  // ================= Stage B: verified→guarded RPC; legacy→raw; no raw fallback; success-shape validated ==========
+  const hit = path => (DB.reqs || []).some(q => q.path === path);
+  const hitM = (path, method) => (DB.reqs || []).some(q => q.path === path && q.method === method);   // forbid raw POST/DELETE, allow reads
+
+  // saves POST — verified → guarded_save + NO raw POST; legacy → raw POST + NO guarded RPC
+  reset(); const rawSv = RAW('sv'); seedDevice('devsaveAAAA', rawSv);
+  r = await call(saves, { method: 'POST', cap: rawSv, body: { deviceId: 'devsaveAAAA', workId: 'w1' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_save') && !hitM('/rest/v1/saves', 'POST'), 'saves POST verified → guarded_save (no raw POST)');
+  ok(DB.saves.some(s => s.device_id === 'devsaveAAAA' && s.work_id === 'w1'), 'guarded_save wrote the row');
+  reset(); r = await call(saves, { method: 'POST', body: { deviceId: 'legacysavedev', workId: 'w1' } });
+  ok(r._s === 200 && hitM('/rest/v1/saves', 'POST') && !hit('/rest/v1/rpc/guarded_save'), 'saves POST legacy → raw POST, no guarded RPC');
+
+  // saves DELETE — verified → guarded_unsave (no raw DELETE); legacy → raw DELETE (no guarded RPC)
+  reset(); const rawSu = RAW('su'); seedUser('tokU', 'userU'); seedDevice('devuAAAAA', rawSu, 'userU'); seedDevice('devuBBBBB', RAW('ub'), 'userU');
+  DB.saves.push({ device_id: 'devuAAAAA', work_id: 'ww' }, { device_id: 'devuBBBBB', work_id: 'ww' });
+  r = await call(saves, { method: 'DELETE', cap: rawSu, body: { deviceId: 'devuAAAAA', workId: 'ww' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_unsave') && !hitM('/rest/v1/saves', 'DELETE'), 'saves DELETE verified → guarded_unsave (no raw DELETE)');
+  ok(!DB.saves.some(s => s.work_id === 'ww'), 'account-wide unsave removed the work from BOTH account devices');
+  reset(); seedUser('tokUL', 'userUL'); DB.profiles.set('devulAAAAA', { device_id: 'devulAAAAA', user_id: 'userUL' }); DB.saves.push({ device_id: 'devulAAAAA', work_id: 'ww' });
+  r = await call(saves, { method: 'DELETE', body: { deviceId: 'devulAAAAA', workId: 'ww' } });
+  ok(r._s === 200 && hitM('/rest/v1/saves', 'DELETE') && !hit('/rest/v1/rpc/guarded_unsave'), 'saves DELETE legacy → raw DELETE, no guarded RPC');
+
+  // guarded-RPC transport / malformed → non-2xx + NO raw fallback mutation (side-effect suppression is the stub's, not the guarantee)
+  reset(); seedDevice('devfailAAAA', rawSv); DB.guardedStatus = 502;
+  r = await call(saves, { method: 'POST', cap: rawSv, body: { deviceId: 'devfailAAAA', workId: 'w1' } });
+  ok(r._s >= 500 && !hitM('/rest/v1/saves', 'POST'), 'guarded RPC transport failure → non-2xx, no raw fallback POST');
+  reset(); seedDevice('devmalAAAA', rawSv); DB.guardedMalformed = true;
+  r = await call(saves, { method: 'POST', cap: rawSv, body: { deviceId: 'devmalAAAA', workId: 'w1' } });
+  ok(r._s >= 500 && !hitM('/rest/v1/saves', 'POST'), 'malformed guarded response → non-2xx, no raw fallback POST');
+
+  // unknown/contradictory success envelopes are rejected as malformed (not accepted as success)
+  reset(); const rawUsk = RAW('usk'); seedUser('tokUsk', 'userUsk'); seedDevice('devuskAAAA', rawUsk, 'userUsk'); DB.saves.push({ device_id: 'devuskAAAA', work_id: 'ww' }); DB.guardedForce = { ok: true };   // guarded_unsave ok:true but missing `deleted`
+  r = await call(saves, { method: 'DELETE', cap: rawUsk, body: { deviceId: 'devuskAAAA', workId: 'ww' } });
+  ok(r._s >= 500, 'guarded_unsave {ok:true} without a nonneg-int `deleted` → 502 (unknown-success rejected)');
+  DB.guardedForce = undefined;
+  reset(); const rawSk2 = RAW('sk2'); seedUser('tokSk2', 'userSk2'); seedDevice('devscoreSK', rawSk2, 'userSk2'); DB.guardedForce = { ok: true };   // score without isBest/storedTotal
+  r = await call(score, { cap: rawSk2, body: { deviceId: 'devscoreSK', date: '2026-08-01', tier: 'easy', total: 5000 } });
+  ok(r._s >= 500, 'guarded_score {ok:true} without isBest/storedTotal → 502 (unknown-success rejected)');
+  DB.guardedForce = undefined;
+  reset(); const rawSk3 = RAW('sk3'); seedUser('tokSk3', 'userSk3'); seedDevice('devclaimSK', rawSk3); DB.guardedForce = { ok: true, result: 'conflict_other_user' };   // contradictory claim envelope
+  r = await call(claim, { cap: rawSk3, body: { deviceId: 'devclaimSK', accessToken: 'tokSk3' } });
+  ok(r._s === 502, 'guarded_claim_device {ok:true, result:conflict_other_user} → 502 (contradictory envelope rejected)');
+  DB.guardedForce = undefined;
+  // coercible score total (numeric string) → rejected (no Number() coercion)
+  reset(); const rawC1 = RAW('c1'); seedUser('tokC1', 'userC1'); seedDevice('devscC1AAAA', rawC1, 'userC1'); DB.guardedForce = { ok: true, isBest: true, storedTotal: '5000' };
+  r = await call(score, { cap: rawC1, body: { deviceId: 'devscC1AAAA', date: '2026-08-01', tier: 'easy', total: 5000 } });
+  ok(r._s >= 500, 'guarded_score storedTotal as a numeric STRING → 502 (no coercion)');
+  DB.guardedForce = undefined;
+  // contradictory generic success {ok:true, error} → rejected, no raw fallback
+  reset(); const rawC2 = RAW('c2'); seedDevice('devsvC2AAAA', rawC2); DB.guardedForce = { ok: true, error: 'erased' };
+  r = await call(saves, { method: 'POST', cap: rawC2, body: { deviceId: 'devsvC2AAAA', workId: 'w1' } });
+  ok(r._s >= 500 && !hitM('/rest/v1/saves', 'POST'), 'guarded_save {ok:true, error:erased} → 502 (contradictory), no raw fallback');
+  DB.guardedForce = undefined;
+  // ok:false without a string error → rejected
+  reset(); const rawC3 = RAW('c3'); seedDevice('devsvC3AAAA', rawC3); DB.guardedForce = { ok: false };
+  r = await call(saves, { method: 'POST', cap: rawC3, body: { deviceId: 'devsvC3AAAA', workId: 'w1' } });
+  ok(r._s >= 500, 'guarded_save {ok:false} with no string error → 502');
+  DB.guardedForce = undefined;
+  // contradictory claim failure (error ≠ result) → rejected, NOT mapped via result
+  reset(); const rawC4 = RAW('c4'); seedUser('tokC4', 'userC4'); seedDevice('devclC4AAAA', rawC4); DB.guardedForce = { ok: false, result: 'conflict_other_user', error: 'unregistered' };
+  r = await call(claim, { cap: rawC4, body: { deviceId: 'devclC4AAAA', accessToken: 'tokC4' } });
+  ok(r._s === 502, 'guarded_claim_device {ok:false, result≠error} → 502 (never mapped via result)');
+  DB.guardedForce = undefined;
+
+  // score verified → guarded_score; tombstoned owner → 410
+  reset(); const rawSco = RAW('sco'); seedUser('tokSc', 'userSc'); seedDevice('devscoAAAA', rawSco, 'userSc');
+  r = await call(score, { cap: rawSco, body: { deviceId: 'devscoAAAA', date: '2026-08-01', tier: 'easy', total: 5000, name: 'Al', color: '#123456' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_score') && !hitM('/rest/v1/scores', 'POST') && !hitM('/rest/v1/profiles', 'POST'), 'score verified → guarded_score (no raw scores/profiles POST)');
+  ok(DB.scores.some(s => s.device_id === 'devscoAAAA' && s.total === 5000) && DB.profiles.get('devscoAAAA').name === 'Al', 'guarded_score wrote score + name/color projection');
+  reset(); seedUser('tokSc', 'userSc'); seedDevice('devscoAAAA', rawSco, 'userSc'); DB.tombstones.add('userSc');
+  r = await call(score, { cap: rawSco, body: { deviceId: 'devscoAAAA', date: '2026-08-01', tier: 'easy', total: 5000 } });
+  ok(r._s === 410, 'score verified on a tombstoned account → 410 (guarded erased)');
+  reset(); r = await call(score, { body: { deviceId: 'legacyscoredev', date: '2026-08-01', tier: 'easy', total: 5000, name: 'L' } });
+  ok(r._s === 200 && hitM('/rest/v1/scores', 'POST') && !hit('/rest/v1/rpc/guarded_score'), 'score legacy → raw scores POST, no guarded RPC');
+
+  // profile verified → guarded_profile (no raw POST), preserves user_id; legacy → raw POST
+  reset(); const rawPr = RAW('pr'); seedUser('tokPr', 'userPr'); seedDevice('devprAAAA', rawPr, 'userPr'); DB.profiles.set('devprAAAA', { device_id: 'devprAAAA', user_id: 'userPr' });
+  r = await call(profile, { cap: rawPr, body: { deviceId: 'devprAAAA', name: 'Bea', color: '#654321' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_profile') && !hitM('/rest/v1/profiles', 'POST'), 'profile verified → guarded_profile (no raw POST)');
+  ok(DB.profiles.get('devprAAAA').name === 'Bea' && DB.profiles.get('devprAAAA').user_id === 'userPr', 'guarded_profile changed name, preserved user_id');
+  reset(); r = await call(profile, { body: { deviceId: 'legacyprofdev', name: 'L', color: '#111111' } });
+  ok(r._s === 200 && hitM('/rest/v1/profiles', 'POST') && !hit('/rest/v1/rpc/guarded_profile'), 'profile legacy → raw POST, no guarded RPC');
+
+  // claim verified → guarded_claim_device (no raw profiles POST); cross-account → 409; legacy → raw bind
+  reset(); seedUser('tokCa', 'userCa'); seedUser('tokCb', 'userCb'); const rawCl = RAW('cl'); seedDevice('devclAAAA', rawCl);
+  r = await call(claim, { cap: rawCl, body: { deviceId: 'devclAAAA', accessToken: 'tokCa' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_claim_device') && !hitM('/rest/v1/profiles', 'POST') && DB.devices.get('devclAAAA').user_id === 'userCa' && DB.profiles.get('devclAAAA').user_id === 'userCa', 'claim verified → guarded_claim_device bound + projection (no raw profiles POST)');
+  r = await call(claim, { cap: rawCl, body: { deviceId: 'devclAAAA', accessToken: 'tokCb' } });
+  ok(r._s === 409 && DB.devices.get('devclAAAA').user_id === 'userCa', 'cross-account claim → 409, authoritative binding unchanged');
+  reset(); seedUser('tokClL', 'userClL'); r = await call(claim, { body: { deviceId: 'legacyclaimdev', accessToken: 'tokClL' } });
+  ok(r._s === 200 && hitM('/rest/v1/profiles', 'POST') && !hit('/rest/v1/rpc/guarded_claim_device'), 'claim legacy → raw profiles bind, no guarded claim');
+
+  // sync verified → guarded claim + profile + user_state; NO raw profiles/user_state POST; merged; legacy → raw profiles + guarded user_state (no guarded claim/profile)
+  reset(); seedUser('tokSy', 'userSy'); const rawSy = RAW('sy'); seedDevice('devsyAAAA', rawSy);
+  DB.user_state.set('userSy', { user_id: 'userSy', streak: { current: 1 }, mastery: {}, glossary: {}, seen: ['a'] });
+  r = await call(sync, { cap: rawSy, body: { deviceId: 'devsyAAAA', accessToken: 'tokSy', streak: { current: 3 }, seen: ['b'], name: 'Cy', color: '#abcdef' } });
+  ok(r._s === 200 && hit('/rest/v1/rpc/guarded_claim_device') && hit('/rest/v1/rpc/guarded_profile') && hit('/rest/v1/rpc/guarded_user_state') && !hitM('/rest/v1/profiles', 'POST') && !hitM('/rest/v1/user_state', 'POST'), 'sync verified → guarded claim+profile+user_state (no raw profiles/user_state POST)');
+  { const us = DB.user_state.get('userSy'); ok(us && us.streak.current === 3 && us.seen.includes('a') && us.seen.includes('b'), 'sync merged state (max streak, union seen) via one guarded write'); }
+  reset(); seedUser('tokSyL', 'userSyL'); r = await call(sync, { body: { deviceId: 'legacysyncdev', accessToken: 'tokSyL', streak: { current: 2 }, seen: ['x'] } });
+  ok(r._s === 200 && hitM('/rest/v1/profiles', 'POST') && hit('/rest/v1/rpc/guarded_user_state') && !hit('/rest/v1/rpc/guarded_claim_device') && !hit('/rest/v1/rpc/guarded_profile'), 'sync legacy → raw profiles bind + guarded user_state, no guarded claim/profile');
+
+  // sync read failures / partial rows → non-2xx, stored state NOT overwritten (no partial fallback)
+  reset(); seedUser('tokSy', 'userSy'); seedDevice('devsyAAAA', rawSy); DB.user_state.set('userSy', { user_id: 'userSy', streak: { current: 9 }, mastery: {}, glossary: {}, seen: [] }); DB.failUserStateGet = true;
+  r = await call(sync, { cap: rawSy, body: { deviceId: 'devsyAAAA', accessToken: 'tokSy', streak: { current: 1 }, seen: [] } });
+  ok(r._s >= 500 && DB.user_state.get('userSy').streak.current === 9, 'sync user_state read failure → non-2xx, stored state preserved');
+  reset(); seedUser('tokSyP', 'userSyP'); seedDevice('devsypAAAA', rawSy); DB.userStatePartial = { user_id: 'userSyP', streak: { current: 7 } };   // row missing mastery/glossary/seen
+  r = await call(sync, { cap: rawSy, body: { deviceId: 'devsypAAAA', accessToken: 'tokSyP', streak: { current: 1 }, seen: ['z'] } });
+  ok(r._s >= 500 && !hit('/rest/v1/rpc/guarded_user_state'), 'sync partial user_state row (missing columns) → non-2xx, no guarded write (no overwrite with empty defaults)');
+  DB.userStatePartial = undefined;
+  reset(); seedUser('tokSyM', 'userSyM'); seedDevice('devsymAAAA', rawSy);
+  DB.userStateMulti = [{ user_id: 'userSyM', streak: { current: 1 }, mastery: {}, glossary: {}, seen: [] }, { user_id: 'userSyM', streak: { current: 2 }, mastery: {}, glossary: {}, seen: [] }];
+  r = await call(sync, { cap: rawSy, body: { deviceId: 'devsymAAAA', accessToken: 'tokSyM', streak: { current: 5 }, seen: [] } });
+  ok(r._s >= 500 && !hit('/rest/v1/rpc/guarded_user_state'), 'sync multiple user_state rows → non-2xx, no guarded write (uniqueness violated ⇒ malformed)');
+  DB.userStateMulti = undefined;
+  process.env.CAP_MODE = 'observe';
+
+  console.log(`api-device-ownership.test: ${pass} assertions passed (observe/enforce state machine + hostile matrix + profile/header/CAP_MODE/deletion + Stage B guarded-RPC wiring)`);
 }
 main().catch(e => { console.error('❌ api-device-ownership.test FAILED'); console.error(e); process.exit(1); });

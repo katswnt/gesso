@@ -6,7 +6,7 @@
 import { allowedOrigin, parseBody } from '../server/api/http.js';
 import { admin, userRpc } from '../server/api/supabaseAdmin.js';
 import { verifyJwt } from '../server/api/auth.js';
-import { bindDecision, claimDevice, claimResultToHttp, logAdoption } from '../server/api/device-ownership.js';
+import { bindDecision, logAdoption, callGuarded, guardedWriteToHttp, guardedClaimToHttp } from '../server/api/device-ownership.js';
 
 // merge two streak objects, taking the better of each (max counts, union of played dates, max per-date score)
 function mergeStreak(a, b){
@@ -62,53 +62,55 @@ export default async function handler(req, res) {
     // ---- BIND (authorized) ----
     const d = bindDecision(req, 'sync');
     if (d.action === 'reject') return res.status(d.status).json({ error: d.reason });
-    if (d.action === 'claim') {
-      const result = await claimDevice(userRpc, deviceId, d.hash, accessToken);
-      logAdoption('sync', d.mode, result || 'error');
-      const http = claimResultToHttp(result);
-      if (!http.ok) return res.status(http.status).json({ error: http.reason }); // e.g. conflict_other_user → 409, no merge
-      await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
+    const verified = d.action === 'claim';
+    if (verified) {   // VERIFIED-CAP: bind + profiles.user_id projection under the held locks
+      const j = await callGuarded(userRpc('guarded_claim_device', { p_device_id: deviceId, p_capability_hash: d.hash }, accessToken));
+      logAdoption('sync', d.mode, (j && j.result) || (j && j.error) || 'error');
+      const http = guardedClaimToHttp(j);   // consistency-checked; conflict_other_user → 409, no merge
+      if (!http.ok) return res.status(http.status).json({ error: http.reason });
     } else {
-      // legacy (observe + missing cap): OLD unowned profiles bind, kept until enforce
+      // LEGACY (observe + missing cap): OLD unowned profiles bind, kept until enforce
       logAdoption('sync', d.mode, 'legacy');
-      await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
+      const b = await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid }) });
+      if (!b.ok) return res.status(502).json({ error: 'bind failed' });
     }
 
-    // ---- state merge (all uid-keyed; identity from the verified JWT, never the body deviceId) ----
-    // CANONICAL IDENTITY: prefer a name/color already on any of the account's profiles; else adopt this device's local one
+    // ---- CANONICAL IDENTITY: prefer a name/color already on any of the account's profiles; else this device's ----
     const profs = await (await rest(`profiles?user_id=eq.${uid}&select=name,color,device_id`)).json();
     let name='', color='';
     for (const p of (profs||[])) { if (p.name && !name) name=p.name; if (p.color && !color) color=p.color; }
     if (!name && body.name) name=String(body.name).slice(0,16);
     if (!color && /^#[0-9a-fA-F]{6}$/.test(body.color||'')) color=body.color;
-    await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid, name, color }) });
+    if (verified) {   // name/color projection through the locked, erasure-serialized fn (preserves user_id)
+      const h = guardedWriteToHttp(await callGuarded(a.rpc('guarded_profile', { p_device_id: deviceId, p_capability_hash: d.hash, p_name: name, p_color: color })));
+      if (!h.ok) return res.status(h.status).json({ error: h.reason });
+    } else {
+      const w = await rest('profiles?on_conflict=device_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, user_id: uid, name, color }) });
+      if (!w.ok) return res.status(502).json({ error: 'identity write failed' });
+    }
 
-    // STREAK
-    let serverStreak=null;
-    try { const st = await (await rest(`user_state?user_id=eq.${uid}&select=streak`)).json(); serverStreak = Array.isArray(st)&&st[0]?st[0].streak:null; } catch {}
-    const merged = mergeStreak(serverStreak, body.streak);
-    try { await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, streak: merged, updated_at: new Date().toISOString() }) }); } catch {}
+    // ---- user_state: ONE checked 4-column read → ONE JS merge → ONE guarded write (no partial fallback) ----
+    const usr = await rest(`user_state?user_id=eq.${uid}&select=streak,mastery,glossary,seen`);
+    if (!usr.ok) return res.status(502).json({ error: 'state read failed' });
+    let arr; try { arr = await usr.json(); } catch { arr = null; }
+    if (!Array.isArray(arr) || arr.length > 1) return res.status(502).json({ error: 'state read malformed' });   // user_id is unique → 0 or 1 rows; >1 is malformed
+    let row;
+    if (arr.length === 0) { row = {}; }   // genuinely empty (first sync) → merge from nothing
+    else {
+      row = arr[0];
+      // an existing row MUST carry all four selected columns; a partial row must NOT overwrite stored values with empty defaults
+      if (!row || typeof row !== 'object' || !['streak', 'mastery', 'glossary', 'seen'].every(k => Object.prototype.hasOwnProperty.call(row, k)))
+        return res.status(502).json({ error: 'state read malformed' });
+    }
+    const mergedStreak = mergeStreak(row.streak, body.streak);
+    const mergedMastery = mergeMastery(row.mastery, body.mastery);
+    const mergedGlossary = mergeGlossary(row.glossary, body.glossary);
+    const mergedSeen = mergeSeen(row.seen, body.seen);
+    // guarded_user_state is JWT-authenticated (auth.users lock) → used in BOTH observe branches
+    const us = guardedWriteToHttp(await callGuarded(userRpc('guarded_user_state', { p_streak: mergedStreak, p_mastery: mergedMastery, p_glossary: mergedGlossary, p_seen: mergedSeen }, accessToken)));
+    if (!us.ok) return res.status(us.status).json({ error: us.reason });
 
-    // MASTERY ("Your Eye") — own try/catch so a not-yet-migrated column no-ops
-    let mergedMastery = body.mastery || null;
-    try {
-      const ms = await (await rest(`user_state?user_id=eq.${uid}&select=mastery`)).json();
-      const serverMastery = Array.isArray(ms) && ms[0] ? ms[0].mastery : null;
-      mergedMastery = mergeMastery(serverMastery, body.mastery);
-      await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, mastery: mergedMastery, updated_at: new Date().toISOString() }) });
-    } catch { mergedMastery = body.mastery || null; }
-
-    // GLOSSARY + SEEN — own try/catch (columns added by db/user_state-glossary-seen.sql)
-    let mergedGlossary = body.glossary || null, mergedSeen = Array.isArray(body.seen) ? body.seen : null;
-    try {
-      const gs = await (await rest(`user_state?user_id=eq.${uid}&select=glossary,seen`)).json();
-      const row = Array.isArray(gs) && gs[0] ? gs[0] : {};
-      mergedGlossary = mergeGlossary(row.glossary, body.glossary);
-      mergedSeen = mergeSeen(row.seen, body.seen);
-      await rest('user_state?on_conflict=user_id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: uid, glossary: mergedGlossary, seen: mergedSeen, updated_at: new Date().toISOString() }) });
-    } catch { mergedGlossary = body.glossary || null; mergedSeen = Array.isArray(body.seen) ? body.seen : null; }
-
-    return res.status(200).json({ ok: true, name, color, streak: merged, mastery: mergedMastery, glossary: mergedGlossary, seen: mergedSeen });
+    return res.status(200).json({ ok: true, name, color, streak: mergedStreak, mastery: mergedMastery, glossary: mergedGlossary, seen: mergedSeen });
   } catch (e) {
     return res.status(500).json({ error: 'sync failed' });
   }

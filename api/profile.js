@@ -3,7 +3,7 @@
 // Honors the name-reservation rule (a name held by another ACCOUNT is dropped).
 import { allowedOrigin, parseBody } from '../server/api/http.js';
 import { admin } from '../server/api/supabaseAdmin.js';
-import { requireDeviceCap } from '../server/api/device-ownership.js';
+import { requireDeviceCap, callGuarded, guardedWriteToHttp } from '../server/api/device-ownership.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -31,6 +31,12 @@ export default async function handler(req, res) {
         if (claimants.some(c => c.user_id && c.user_id !== myUserId)) return res.status(409).json({ error: 'name reserved' });
       }
     }
+    if (gate.verified) {   // VERIFIED-CAP: locked, erasure-serialized projection (name/color only; preserves user_id)
+      const h = guardedWriteToHttp(await callGuarded(a.rpc('guarded_profile', { p_device_id: deviceId, p_capability_hash: gate.hash, p_name: name, p_color: color })));
+      if (!h.ok) return res.status(h.status).json({ error: h.reason });
+      return res.status(200).json({ ok: true, name, color });
+    }
+    // LEGACY (observe + missing cap): raw projection upsert — temporary until enforce
     const w = await rest('profiles?on_conflict=device_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ device_id: deviceId, name, color }) });
     if (!w.ok) { const d = await w.text().catch(() => ''); return res.status(502).json({ error: 'write failed', detail: d.slice(0, 200) }); }
     return res.status(200).json({ ok: true, name, color });
