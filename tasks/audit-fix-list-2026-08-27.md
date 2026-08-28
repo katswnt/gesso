@@ -1,6 +1,6 @@
 # Gesso — 2026-08-27 audit fix list and research plan
 
-_Durable project record of the two consolidated audits supplied on 2026-08-27. The second audit (v2) supersedes v1 wherever their figures or interpretations disagree. This is an intake and sequencing document: verify every open item against current `HEAD` before changing code or claims._
+_Durable action plan for the three consolidated audits supplied on 2026-08-27. **V3 is authoritative** wherever the audits disagree; v1/v2 remain historical inputs. The supplied v3 source is preserved verbatim at [`docs/audits/gesso-fix-list-2026-08-27-v3.md`](../docs/audits/gesso-fix-list-2026-08-27-v3.md). This is an intake and sequencing document: verify every open item against current `HEAD` before changing code or claims._
 
 ## Current-HEAD reconciliation
 
@@ -9,7 +9,7 @@ _Durable project record of the two consolidated audits supplied on 2026-08-27. T
 - **G-19 is fixed locally.** Commit `cbfcfe8` replaces the token-spend claim with concrete QA outcomes and removes the unsupported rarity claim. It has not yet ridden a substantive push.
 - The security rollout remains in `CAP_MODE=observe`. Nothing in this audit authorizes an enforcement flip, a legacy-row mutation, or a production change.
 
-## Corrections from v2 (authoritative)
+## Corrections carried into v3 (authoritative)
 
 These corrections must travel with any analysis or writeup derived from v1.
 
@@ -39,15 +39,17 @@ The sign was reported stable across era bands, both oil-medium subsets, and non-
 
 ### Immediate product/security fixes
 
+- [ ] **G-21 — preserve stored daily/archive records when an id goes stale.** `dailyItems()` currently resolves all five pinned ids, filters missing/unplayable works, and discards the entire stored tier-day unless all five survive. Audit measurement: 2/736 tier-days in `daily-order` and 15/200 (`7.5%`) in `daily-history` silently replay different rotations. Preserve every resolvable stored work and backfill only missing slots, or fail loudly; never silently replace an append-only day wholesale. Add fixtures for missing ids and later `play:false`/sensitivity changes, plus a visible diagnostic.
+- [ ] **G-24 — repair unfair style distractor guards.** Real-function sweeps found 941/118,220 option sets (`0.80%`) with two defensible answers, affecting 549/5,911 works; the shipped-calendar sweep found 54/7,072 style rounds (`0.76%`), roughly one daily in 27. Normalize/casefold/tokenize labels; treat token subsumption separately from semantic similarity; reconcile `sib()` with curated `RELATED_MOV` near-misses; resolve 17 movement/culture dual classifications; decide distractor pools for `period|tradition|school|genre`; and define training-mode behavior when a restricted pool yields only two options. Tests must drive the real `styleChoices` function and include Baroque/New Spanish Baroque, Realism/Academic realism, Roman/Ancient Roman, plus curated fair near-misses that should remain offerable.
 - [ ] **G-02 — stop serving repository internals in production.** `vercel.json` uses `outputDirectory: "."`, making tracked files under `/docs`, `/tasks`, `/db`, `/tests`, `/server`, and `/scripts` fetchable. This was verified as reconnaissance-only: no secrets or untracked participant data were exposed, RLS denied anonymous table reads/writes, and `devices` is explicitly revoked. Short-term option: explicit 404 routes for private source/document trees without adding a Vercel function. Long-term option: build a real public output directory. Do not blindly add `.vercelignore`; build scripts require repository files during deployment.
 - [ ] **G-03 — harden the corpus-image/agent boundary.** `scripts/vision-audit-prompt.md` interpolates untrusted image URLs into a shell instruction; `vision-v2-prep.mjs` follows arbitrary redirects, buffers responses, and lacks scheme/final-host/IP/MIME/size checks. Build one hardened in-process fetch broker with HTTPS/scheme policy, redirect-hop and final-host revalidation, private/loopback/link-local rejection, MIME and byte/dimension caps, bounded decompression/decoding, and provenance-bound structured output. Add hostile fixtures for shell metacharacters, redirect-to-private-IP, oversized/wrong-MIME/malformed images, EXIF prompt injection, and pixel prompt injection. Write up the capability-boundary mistake honestly.
-- [ ] **G-01/G-11/G-12 — deliberate date-scoring pass.** Do not patch these independently without the owner's scoring decision described below.
+- [ ] **G-01/G-11/G-12/G-22/G-23 — deliberate date-scoring/index pass.** G-23 (Venus of Willendorf cannot score above 10%) is live and should be removed by restoring stored category opt-outs, but do not redesign the broader scoring model without the owner's decision described below. Make `buildIndexes()` idempotent and add an invariant that every date-quizzed work lies within the slider domain.
 
 ### Research/data repairs
 
 - [ ] **G-05 — repair geographic guessability grading, regenerate scores, then recompute the exploratory inversion.** Parse model disjunctions such as “Netherlands or Belgium” rather than splitting only on `[,/;]`. Replace bounding-box-midpoint centroids that put France and Russia outside their intended regions. Add direct tests and wire the grader into an appropriate reproducibility gate. Audit claim: 103/407 (`25.3%`) where scores were false zeros; 49.2% of clean-read works carried a false zero.
 - [ ] **V1-G-08 / v2 S-5 — recover human-study map pins.** The client writes `guess.ll={lat,lng}` while `study-aggregate.mjs` reads array indices, producing `"NaN,NaN"` for 713 logged where-guesses. Correct the reader, rerun against the intact Supabase source rows, preserve a before/after regression fixture, and explore directional misconceptions (including whether museum custody pulls guesses toward the holding institution). No production-row mutation is needed for the repair.
-- [ ] **G-04 — rebuild the visual auditor benchmark.** The reported 100% recall is reproducible with no vision: a string-only filename/title strategy flags 25/25 decoys; current decoys use only two distinct images because of `.find()`, and filenames disclose the swapped work. Preserve the three-arm measurement (filename intact, opaque path, no image), then build distinct and graded near-miss decoys, independently sourced controls, fame/tier stratification, ambiguous-label handling, per-cell bootstrap intervals, and an explicit error-cost threshold.
+- [ ] **G-04 — publish the valid Arm-B baseline, then build the near-miss benchmark.** The completed 150-call experiment settled the ambiguity: image+real URL scored 100/100; image+hashed URL also scored 100/100; **no image+real URL scored 100/100**. The original instrument was invalid because filenames alone reproduce its score, while Arm B vindicates the detector by retaining performance after destroying that shortcut. Preserve the `$0.44` run and exact arm definitions; make Arm B the baseline; replace `.find()` so 25 decoys do not collapse to two images; downscale the >10 MB controls instead of silently excluding them; then add graded, independently sourced, fame-stratified near misses, ambiguous labels, per-cell intervals, and a stated error-cost threshold.
 
 ### Scheduler, gameplay, and test integrity
 
@@ -57,8 +59,8 @@ The sign was reported stable across era bands, both oil-medium subsets, and non-
 - [ ] **G-14 — convert silent skips/warnings into fail-closed fixture floors.** `dom-harness` silently skips missing functions and suppresses timer exceptions; gameplay smoke warns when intended fixtures disappear; a date test mirrors source with regex rather than executing production logic. Apply the `note-shard` minimum-fixture pattern to every important harness.
 - [ ] **G-15 — deduplicate correctness predicates and PRNGs.** Consolidate `workComplete` copies in freeze, pool checking, daily auditing, and runtime code through a shared/generated contract. Reconcile seeded PRNG implementations.
 - [ ] **G-16 — stop regex-evaluating production HTML.** Replace `index.html` substring/regex extraction and `new Function` with importable shared logic or generated data. At minimum, make movement-family extraction fail loudly rather than falling back to an empty map.
-- [ ] **Next audit target: `styleChoices`.** Distractor generation decides whether a round is fair, has no direct tests, and consumes a fragmented style vocabulary. Reproduce before assigning severity.
-- [ ] **Next audit target: daily/archive replay.** G-01 and G-12 share a pattern of runtime mutation overriding curated pool fields; inspect replay paths for a third instance.
+- [ ] **Broader training-mode audit.** G-24 found an undocumented two-option round when only two movements are pinned. Inspect restricted-pool selection and its scoring baseline beyond this one path.
+- [ ] **Broader runtime/replay audit.** G-21–G-23 confirmed the predicted mutation/replay class. Inspect remaining rendering, routing, gallery, training, sharing, and archive code without assuming a fourth `buildIndexes()` field overwrite—the v3 enumeration found only six assignments there.
 
 ### Claims, documentation, and portfolio surface
 
@@ -75,7 +77,9 @@ These are coupled symptoms of one unreviewed scoring model:
 
 - **G-01:** runtime `MINY` changes from `-2500` to pool minimum `-11000`, so one deep-prehistory outlier rescales the entire pre-1400 axis. Audit fixture: Winged Victory at `-175`, guessed `425`, can receive 2500/2500; about 1,428 of 6,546 date-scored works are pre-1400.
 - **G-11:** `timeMult` is easy `1.3`, medium `1.3`, hard `1.35`, impossible `1.4`; because score divides by it, harder tiers are more forgiving on date.
-- **G-12:** runtime category rebuilding starts with `['when']` and re-enables the date category for ten works whose stored `cats` deliberately opted out. Deep-prehistory works can then be asked an impossible date question.
+- **G-12:** runtime category rebuilding starts with `['when']` and re-enables the date category for **11** works whose stored `cats` deliberately opted out.
+- **G-22:** `buildIndexes()` is non-idempotent because `MINY` is derived before category rebuilding. First call yields `-11000`; subsequent calls see the corrupted categories and yield `-25000`. It currently has one production call site, so this is latent rather than a present reload failure.
+- **G-23:** Venus of Willendorf (`y=-25000`) is date-quizzed outside the `-11000` slider floor and can reach only 250/2500. It is not in frozen `byDate`, but can surface through rotation fallback. Fixing G-12 should remove the live defect; keep a direct reachability regression.
 - Previously observed copy mismatch: a 1905 work guessed as 1892 earned full credit while reveal copy reported “within 13 years.” Slider-position distance drives points; raw calendar distance drives copy.
 
 Owner decision required before implementation: what is the learning goal across precisely dated modern works, older works, BCE dates, catalogue ranges, and broadly datable cultural objects? Compare a hard historical floor with a clamped/segmented model; decide whether tier should affect date precision at all; preserve explicit opt-outs; and design truthful reveal copy independently. Only then add golden `yearToPos`/`posToYear`, boundary, tier-order, opt-out, and pool-minimum drift regressions.
@@ -93,13 +97,14 @@ Owner decision required before implementation: what is the learning goal across 
 
 Highest-value evaluation spinoff once immediate product/security fixes are contained:
 
-1. Distinct decoy per trial; never `.find()` the same top eligible record repeatedly.
-2. Opaque/hash URL path so title cannot be recovered from the filename.
+1. Preserve and publish **Arm B** (image present, filename/path opaque) as the valid gross-decoy baseline; distinguish the broken instrument from the vindicated detector.
+2. Distinct decoy per trial; never `.find()` the same top eligible record repeatedly.
 3. Graded cells: cross-region; same region/different era; same movement/different artist; same artist/different work; same artist/within ten years/same medium; same artist/same series.
 4. Independent control provenance rather than “previously audited.”
 5. Stratify by fame and product tier.
 6. Hand-review hardest cells or label legitimate alternate views/details/workshop replicas `ambiguous` and exclude them from binary scoring while reporting their rate.
-7. Report precision/recall and bootstrap intervals per cell; state the false-positive/false-negative cost ratio used to choose a threshold.
+7. Downscale images above the model limit rather than dropping them; the v3 run lost two controls in image arms at 10.5 MB and 22.5 MB.
+8. Report precision/recall and bootstrap intervals per cell; state the false-positive/false-negative cost ratio used to choose a threshold.
 
 Audit feasibility snapshot: 4,823 usable works; 464 artists with at least two works; 242 with at least four; 33,758 same-artist pairs within ten years; 106 style groups with at least five. Recompute before use.
 
@@ -120,6 +125,13 @@ Audit feasibility snapshot: 4,823 usable works; 464 artists with at least two wo
 - [ ] Run relevant CI for feature branches rather than only after landing on `main`.
 - [ ] Add tests/gates at data-producing and scheduling inputs, not only at downstream arbiters.
 - [ ] Preserve incident provenance in every new detector, but schedule periodic threat-model and correctness reviews so governance is not exclusively incident-triggered.
+
+## Writeup queue from v3
+
+1. **Eval methodology first:** the no-image arm reproduced 100/100, while the hashed-filename image arm also held 100/100. General lesson: an eval that retains an alternative explanation cannot identify the capability named by its metric.
+2. **Fairness guard second:** G-24 is a measured safeguard inversion—subsumption collisions pass while curated pedagogical near-misses are blocked. Preserve the measured shipped rate and the mechanism, not just the bug fix.
+3. **Agent boundary third:** G-03 remains the adversarial security artifact.
+4. **Negative-correlation research later:** blocked on G-05, censoring reduction, and non-European coverage.
 
 ## Status protocol
 
