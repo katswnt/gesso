@@ -10,6 +10,16 @@
 // ---- static asset allowlist ----
 export const PUBLIC_FILES = ['index.html', 'styles.css', 'favicon.ico', 'favicon.png', 'apple-touch-icon.png'];
 export const PUBLIC_DIRS = ['assets', 'data/notes'];            // copied recursively (data/notes/* are generated shards)
+
+// Per-dir entry allowlists (defense-in-depth: a stray non-shard / non-asset file must FAIL the build, not ship).
+// data/notes holds ONLY the generated reveal-note shards notes-<n>.json; assets holds ONLY image/font files.
+export const NOTE_SHARD_RE = /^notes-\d+\.json$/;
+export const ASSET_EXTENSIONS = new Set(['svg', 'png', 'webp', 'jpg', 'jpeg', 'gif', 'avif', 'ico', 'woff', 'woff2', 'ttf', 'otf']);
+export function isAllowedInDir(topDir, basename) {
+  if (topDir === 'data/notes') return NOTE_SHARD_RE.test(basename);
+  if (topDir === 'assets') { const ext = (basename.split('.').pop() || '').toLowerCase(); return ASSET_EXTENSIONS.has(ext); }
+  return true;
+}
 export const PUBLIC_DATA_SCRIPTS = [                            // the <script src="data/*.js"> tags index.html loads
   'countries', 'cues-ext', 'cues', 'daily-history', 'daily-order', 'fame', 'hotspots',
   'movement-artists', 'movement-wiki', 'museums', 'pool', 'regions', 'vision',
@@ -41,11 +51,18 @@ const stripLocal = raw => {
   return s;
 };
 
-// Local asset paths referenced by index.html via src=/href= (scripts, css, favicons, /assets/*, data/*.js).
+// Local asset paths referenced by index.html via src=/href= — double-quoted, single-quoted, OR unquoted.
+// First remove <script>/<style> BODIES (keeping the opening tags + their attributes) so JavaScript like
+// `img.src = hiRes(x)` or `const href = url` inside the big inline app script can't masquerade as an HTML
+// attribute; the structural <script src>/<link href> tags we must catch live in markup, not in JS.
 export function referencedLocalAssets(indexHtml) {
+  const markup = indexHtml
+    .replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, '$1')
+    .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, '$1');
   const out = new Set();
-  for (const m of indexHtml.matchAll(/(?:src|href)\s*=\s*"([^"]*)"/gi)) {
-    const rel = stripLocal(m[1]);
+  const re = /(?:src|href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
+  for (const m of markup.matchAll(re)) {
+    const rel = stripLocal(m[1] ?? m[2] ?? m[3]);
     if (rel) out.add(rel);
   }
   return [...out];
@@ -90,11 +107,11 @@ export const ROUTE_PATTERNS = [
   { name: 'movement/slug',   vercelSource: `/movement/:slug`,                                   re: /^\/movement\/[^/]+$/,                           view: 'renderMovement',   sample: '/movement/Impressionism' },
   { name: 'training',        vercelSource: `/training`,                                         re: /^\/training$/,                                  view: 'renderTraining',   sample: '/training' },
   { name: 'account',         vercelSource: `/account`,                                          re: /^\/account$/,                                   view: 'renderAccount',    sample: '/account' },
-  { name: 'archive',         vercelSource: `/archive`,                                          re: /^\/archive$/,                                   view: 'route',            sample: '/archive' },
-  { name: 'streak',          vercelSource: `/streak`,                                           re: /^\/streak$/,                                    view: 'route',            sample: '/streak' },
-  { name: 'stats',           vercelSource: `/stats`,                                            re: /^\/stats$/,                                     view: 'route',            sample: '/stats' },
-  { name: 'glossary',        vercelSource: `/glossary`,                                         re: /^\/glossary$/,                                  view: 'route',            sample: '/glossary' },
-  { name: 'collections',     vercelSource: `/collections`,                                      re: /^\/collections$/,                               view: 'route',            sample: '/collections' },
+  { name: 'archive',         vercelSource: `/archive`,                                          re: /^\/archive$/,                                   view: 'renderArchive',    sample: '/archive' },
+  { name: 'streak',          vercelSource: `/streak`,                                           re: /^\/streak$/,                                    view: 'renderStreak',     sample: '/streak' },
+  { name: 'stats',           vercelSource: `/stats`,                                            re: /^\/stats$/,                                     view: 'renderStats',      sample: '/stats' },
+  { name: 'glossary',        vercelSource: `/glossary`,                                         re: /^\/glossary$/,                                  view: 'renderGlossary',   sample: '/glossary' },
+  { name: 'collections',     vercelSource: `/collections`,                                      re: /^\/collections$/,                               view: 'renderCollections',sample: '/collections' },
   { name: 'gallery',         vercelSource: `/gallery`,                                          re: /^\/gallery$/,                                   view: 'home',             sample: '/gallery' },
   { name: 'gallery/id',      vercelSource: `/gallery/:id`,                                      re: /^\/gallery\/[^/]+$/,                            view: 'home',             sample: '/gallery/some-work-id' },
 ];

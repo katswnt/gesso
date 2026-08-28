@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  PUBLIC_FILES, PUBLIC_DATA_SCRIPTS, PUBLIC_DIRS, isCovered, PLATFORM_EXCEPTIONS,
+  PUBLIC_FILES, PUBLIC_DATA_SCRIPTS, PUBLIC_DIRS, isCovered, PLATFORM_EXCEPTIONS, NOTE_SHARD_RE,
   referencedLocalAssets, cssUrlRefs, assetStringLiterals, VERCEL_REWRITE_SOURCES,
 } from './public-manifest.mjs';
 
@@ -40,12 +40,20 @@ try {
   // --- assemble into a throwaway dir (regenerates source data/notes/ first; only assembly is redirected) ---
   execFileSync('node', ['scripts/build-teach-shards.mjs'], { cwd: ROOT, stdio: 'pipe' });
   tmp = mkdtempSync(join(tmpdir(), 'gesso-public-'));
-  execFileSync('node', ['scripts/build-public.mjs', tmp], { cwd: ROOT, stdio: 'pipe' });
+  const outDir = join(tmp, 'output');              // a FRESH child (build-public refuses to clean anything else)
+  execFileSync('node', ['scripts/build-public.mjs', outDir], { cwd: ROOT, stdio: 'pipe' });
 
   const index = readFileSync(R('index.html'), 'utf8');
   const css = readFileSync(R('styles.css'), 'utf8');
 
   // 1. ASSET CLOSURE — nothing the browser is told to load may fall outside the allowlist ----------------------
+  // parser self-check (mutation regression): the closure scanner must catch an un-allowlisted local ref written
+  // in ANY common attribute form — double-quoted, single-quoted, or unquoted — else it would false-green.
+  for (const frag of ['<script src="data/nope.js"></script>', "<script src='data/nope.js'></script>", '<script src=data/nope.js></script>']) {
+    need(referencedLocalAssets(frag).includes('data/nope.js'), `closure scanner missed an un-allowlisted ref form: ${frag}`);
+  }
+  need(!isCovered('data/nope.js'), 'sanity: data/nope.js must be uncovered');
+
   const referenced = referencedLocalAssets(index);
   for (const rel of referenced) need(isCovered(rel), `index.html references un-allowlisted local asset: ${rel}`);
   for (const rel of cssUrlRefs(css)) need(isCovered(rel), `styles.css url() references un-allowlisted local asset: ${rel}`);
@@ -60,13 +68,16 @@ try {
   need(PLATFORM_EXCEPTIONS.includes('_vercel/insights/script.js'), 'platform-exception list must excuse _vercel insights');
 
   // 2. BUILD COMPLETENESS -------------------------------------------------------------------------------------
-  const emitted = walk(tmp);
+  const emitted = walk(outDir);
   const emittedSet = new Set(emitted);
   for (const f of [...PUBLIC_FILES, ...PUBLIC_DATA_SCRIPTS]) need(emittedSet.has(f), `output missing allowlisted file: ${f}`);
-  // generated shard set must match source exactly
+  // generated shard set: every output note must be a shard, they must be contiguous notes-0..N-1, and match source
   const srcNotes = existsSync(R('data/notes')) ? readdirSync(R('data/notes')).sort() : [];
   const outNotes = emitted.filter(f => f.startsWith('data/notes/')).map(f => f.slice('data/notes/'.length)).sort();
   need(srcNotes.length > 0, 'source data/notes/ is empty (shard build did not run?)');
+  need(outNotes.every(f => NOTE_SHARD_RE.test(f)), 'output data/notes/ contains a non-shard file');
+  const nums = outNotes.map(f => Number((f.match(/\d+/) || [])[0])).sort((a, b) => a - b);
+  need(nums.length > 0 && nums[0] === 0 && nums.every((n, i) => n === i), `output data/notes/ shard numbers are not contiguous 0..${nums.length - 1}`);
   need(setEq(srcNotes, outNotes), `output data/notes/ set != source (${outNotes.length} vs ${srcNotes.length})`);
   need(emitted.some(f => f.startsWith('assets/')), 'output has no assets/');
 
@@ -93,7 +104,11 @@ try {
   need(rw.every(r => !/^\/(api|data)\b/.test(r.source)), 'no rewrite may shadow /api or /data (they must fall through to functions/files)');
   need(setEq(rw.map(r => r.source), VERCEL_REWRITE_SOURCES),
     `vercel.json rewrite sources != manifest route set\n      vercel: ${rw.map(r => r.source).sort().join('  ')}\n      manifest: ${[...VERCEL_REWRITE_SOURCES].sort().join('  ')}`);
-  // no-store header must still cover the app shell but not data/api
+  // no-store header: intentionally the ORIGINAL broad extension-less pattern (NOT the narrow rewrite set). It sets
+  // cache headers on the HTML app shell exactly as before; on private extension-less paths (e.g. /secretpage) it is
+  // a harmless header on a response that 404s anyway. We assert its ACTUAL behavior: covers the shell + root, never
+  // covers /data, /api, or any extensioned static file. (It does also match would-be-404 extension-less paths — by
+  // design, since narrowing it buys nothing and risks drifting from the shell.)
   const noStore = (vj.headers || []).find(h => (h.headers || []).some(x => x.key === 'Cache-Control' && /no-store/.test(x.value)));
   need(!!noStore, 'vercel.json must keep a no-store Cache-Control header block for the app shell');
   if (noStore) {
@@ -101,7 +116,7 @@ try {
     need(!!shellRe, `no-store header source is not a usable pattern: ${noStore.source}`);
     if (shellRe) {
       for (const p of ['/', '/training', '/leaderboard', '/2026-08-27/easy']) need(shellRe.test(p), `no-store must cover shell route ${p}`);
-      for (const p of ['/data/pool.js', '/api/score']) need(!shellRe.test(p), `no-store must NOT cover ${p}`);
+      for (const p of ['/data/pool.js', '/api/score', '/favicon.png', '/docs/private.md']) need(!shellRe.test(p), `no-store must NOT cover ${p}`);
     }
   }
 } catch (e) {
@@ -115,4 +130,4 @@ if (fails.length) {
   for (const f of fails) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('✅ PASS — public-output: allowlist closed over index.html+styles.css, build complete (files + exact shard set), no private-tree/source/json leak, vercel.json points at public via `npm run build` with the exact narrow rewrite set and a shell-only no-store header');
+console.log('✅ PASS — public-output: allowlist closed over index.html+styles.css (double/single/unquoted refs), build complete (files + contiguous notes-0..N shards only), no private-tree/source/json leak, vercel.json points at public via `npm run build` with the EXACT narrow rewrite set and a no-store header that covers the shell but never /data, /api, or extensioned files');

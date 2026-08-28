@@ -68,10 +68,16 @@ try { vm.runInContext(app, ctx, { filename: 'index.html#app' }); } catch (e) { d
 
 if (typeof ctx.renderFromPath !== 'function') die('renderFromPath is not defined — cannot verify routing');
 
+// From here on, timer failures MUST propagate (no swallowing) — the swallowing stub above is only tolerated during
+// the app load; a throw inside a driven render is a real failure, not a false-green (audit finding G-14).
+ctx.setTimeout = (f) => { if (typeof f === 'function') f(); return 0; };
+
 // ---- install view spies (top-level function decls are global props, so reassignment is observable) ----
-// Any dispatch target renderFromPath can reach; a required one that is missing is a hard failure below.
+// Spy the LEAF renderers, NOT route(): archive/streak/stats/glossary/collections go through the REAL route(), so
+// spying them (and leaving route() real) proves route() actually reaches each view — not merely that it was called.
 const SPY_FNS = ['renderStart', 'renderDayView', 'startGame', 'startInfinite', 'renderMovement', 'renderLeaderboard',
-  'renderTraining', 'renderAccount', 'route', 'renderFinal', 'renderRound', 'renderReveal'];
+  'renderTraining', 'renderAccount', 'renderArchive', 'renderStreak', 'renderStats', 'renderGlossary',
+  'renderCollections', 'renderFinal', 'renderRound', 'renderReveal'];
 let lastCalls = [];
 for (const n of SPY_FNS) {
   if (typeof ctx[n] === 'function') ctx[n] = (...a) => { lastCalls.push(n); return undefined; };
@@ -96,11 +102,11 @@ const CASES = [
   { name: 'movement/slug',    path: '/movement/Impressionism',     expect: 'renderMovement' },
   { name: 'training',         path: '/training',                   expect: 'renderTraining' },
   { name: 'account',          path: '/account',                    expect: 'renderAccount' },
-  { name: 'archive',          path: '/archive',                    expect: 'route' },
-  { name: 'streak',           path: '/streak',                     expect: 'route' },
-  { name: 'stats',            path: '/stats',                      expect: 'route' },
-  { name: 'glossary',         path: '/glossary',                   expect: 'route' },
-  { name: 'collections',      path: '/collections',                expect: 'route' },
+  { name: 'archive',          path: '/archive',                    expect: 'renderArchive' },
+  { name: 'streak',           path: '/streak',                     expect: 'renderStreak' },
+  { name: 'stats',            path: '/stats',                      expect: 'renderStats' },
+  { name: 'glossary',         path: '/glossary',                   expect: 'renderGlossary' },
+  { name: 'collections',      path: '/collections',                expect: 'renderCollections' },
   { name: 'gallery',          path: '/gallery',                    expect: 'home' },     // known non-restore -> home
   { name: 'gallery/id',       path: '/gallery/some-work-id',       expect: 'home' },     // known non-restore -> home
 ];
