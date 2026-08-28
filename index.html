@@ -1684,7 +1684,7 @@ function renderCollections(){
     ${ATTRIB}
   </div></div>`;
   try{const m=L.map('colmap',{worldCopyJump:true,scrollWheelZoom:false,minZoom:1,attributionControl:false}).setView([25,10],1);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(m);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2hef_1_d3463003d1be6cfa7f920008',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(m);
     const pts=[];C.sources.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[22,20],iconAnchor:[11,10]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works`);pts.push([s.lat,s.lng]);});
     C.holdings.filter(s=>s.lat!=null).forEach((s,i)=>{const ic=L.divIcon({className:'mblob mblob-wd v'+((i+3)%6+1),html:'<span></span>',iconSize:[14,13],iconAnchor:[7,6]});L.marker([s.lat,s.lng],{icon:ic}).addTo(m).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.city)} · ${s.count} works · via Wikidata`);pts.push([s.lat,s.lng]);});
     setTimeout(()=>{m.invalidateSize(); if(pts.length)m.fitBounds(pts,{padding:[40,40],maxZoom:5});},200);
@@ -3031,7 +3031,7 @@ function renderRound(){
   if(!hideMap){
   map=L.map('map',{keyboard:false,worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,zoomAnimation:!settings.reduceMotion,markerZoomAnimation:!settings.reduceMotion}).setView([34,12],1);
   // Voyager basemap keeps place labels legible when zoomed in (the 'light' basemap thins them out).
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:13,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2hef_1_d3463003d1be6cfa7f920008',{maxZoom:13,attribution:'© OpenStreetMap, © CARTO'}).addTo(map);
   // Drop (or move) the guess pin at a spot — shared by map-click AND the place-search select (so searching
   // "Amsterdam" auto-pins its centre; the pin stays draggable/tappable, so it's still adjustable).
   const dropPin=(lat,lng)=>{ const ll={lat,lng}; guess.ll=ll; if(marker)marker.setLatLng(ll);
@@ -3445,7 +3445,7 @@ async function renderGallery(push=true){ clearTimers&&clearTimers(); if(push)pus
   if(state.sort==='museum'&&museumPins.length&&typeof L!=='undefined'){ try{
     const mx=Math.max(...museumPins.map(p=>p.n));
     const gm=L.map('galmuseummap',{worldCopyJump:true,scrollWheelZoom:false,attributionControl:false,minZoom:1}).setView([30,0],1);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8}).addTo(gm);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2hef_1_d3463003d1be6cfa7f920008',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(gm);
     const pts=[]; museumPins.forEach((p,i)=>{ const sz=14+Math.round(14*p.n/mx);
       const ic=L.divIcon({className:'mblob v'+(i%6+1),html:'<span></span>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
       L.marker([p.lat,p.lng],{icon:ic}).addTo(gm).bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.city||'')} &middot; ${p.n} of your saves`); pts.push([p.lat,p.lng]); });
@@ -3654,7 +3654,7 @@ function renderReveal(r,ri,push=true){
   }
   // reveal map
   const rm=L.map('revmap',{worldCopyJump:true,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}).setView([30,10],2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2hef_1_d3463003d1be6cfa7f920008',{maxZoom:8,attribution:'© OpenStreetMap, © CARTO'}).addTo(rm);
   const t=[it.lat,it.lng], pts=[t];
   L.marker(t,{icon:dabIcon('actual')}).addTo(rm);
   let poly=null;
