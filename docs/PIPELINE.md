@@ -1,5 +1,10 @@
 # Data pipeline runbook
 
+> **Scope:** this file documents what is implemented and runnable today. The canonical
+> owner-approved product and operating decisions live in
+> [`docs/vision-system.md`](vision-system.md). Read that record before changing this
+> pipeline; do not infer that a planned capability already ships.
+
 Operator's reference for the vision-audit / curation pipeline — how works get selected,
 what runs on them, where the rules live, and how to drive it. (The README is the public
 overview; this is the internal how-to.)
