@@ -38,6 +38,12 @@ Historical filenames may keep their existing names during migration. “Pass A�
 
 ## Pass A — recognizability and blinded guessability
 
+Research-design history is preserved separately: the
+[`2026-08-27 v1 pre-registration`](research/recognition-inference-preregistration-v1-2026-08-27.md)
+is frozen, and the
+[`v2 working design`](research/recognition-inference-preregistration-v2-working.md) records
+prospective revisions before registration. Neither document authorizes data collection by itself.
+
 ### The measurements are distinct
 
 - **Model recognizability:** whether the model recognizes the exact work from its
