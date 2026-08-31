@@ -1,55 +1,26 @@
-# Guide regeneration pipeline (text-based, Sonnet)
+# Guide regeneration pipeline — RETIRED (G-03)
 
-Fixes thin/template "Ask the guide" Q&A. The old guides came from `gen-teach` via **Codex, from tombstone
-metadata only (no image)**, so they fell back to a generic 5-slot template. This pipeline regenerates them
-**text-only** from each work's existing image-grounded notes and cues (which are good), via **Sonnet agents**.
-Do NOT route this through Codex.
+> **This pipeline is retired. Do not run `scripts/guides-regen.mjs` — it is a fail-closed tombstone.**
 
-## Steps
+The old flow spawned tool-capable Sonnet agents that read corpus context off disk and wrote model output
+straight into `data/teach-works.js` (the `guide` field) — a raw model-output sink with no human approval and no
+provenance binding. G-03 closes every such path: model-derived content reaches `teach-works.js` **only** through
+the reviewed, hash-bound merge (`scripts/curate-merge.mjs --run <runDir>`), never from a tool-capable agent.
 
-1. **Select** (writes context chunks for works still needing regen, skips ids that already have an output):
-   ```
-   node scripts/guides-regen.mjs select [N=100] [chunkSize=13]
-   ```
-   Picks the top-N "thin" works by fame. Thin = guide of ≤6 questions with ≥2 pure-template phrases.
-   Writes `data/incoming/guides/chunks/chunk-*.json` and `selected.json`.
+## The "Ask the Guide" Q&A is a DEFERRED capability
 
-2. **Generate**: spawn ONE Sonnet agent per chunk with the prompt below. Each reads its
-   `chunk-<n>.json` and writes `data/incoming/guides/out/out-<n>.json` = `{"<id>":[{"q","a"},...]}`.
+The study-guide Q&A is **not** part of the security-only tool-less pass (which does notes/pins + image QA only).
+Rebuilding richer per-work Q&A is a deferred follow-up that must run on the **same secure path**:
 
-3. **Merge** (validates, writes `guide` field into `data/teach-works.js` for selected ids):
-   ```
-   node scripts/guides-regen.mjs merge
-   ```
+1. **Broker + select** — `node scripts/vision-next.mjs …` fetches each image through the hardened broker
+   (`scripts/lib/img-broker.mjs`) into a run-scoped dir with a URL-free provenance manifest.
+2. **Tool-less completion** — `node scripts/vision-audit-run.mjs <runDir>` (cost-gated, never in CI): one
+   multimodal completion per work, **no `tools`**, no agent wrapper, no shell/fs/net. The Q&A schema would be
+   added to `scripts/lib/vision-run.mjs` as new completion fields, strictly validated (enums/bounds/no-HTML).
+3. **Human field-level review** — `scripts/vision-review.mjs` writes `approved.json` copying the exact approved
+   values + `completionSha256`.
+4. **Hash-bound merge** — `scripts/curate-merge.mjs --run <runDir>` verifies every binding and applies **only**
+   the approved values.
 
-4. **Gate** as its own step, then commit:
-   ```
-   node tests/dom-harness.mjs && node scripts/check-pool.mjs
-   ```
-
-## Canonical agent prompt
-
-> You are upgrading the "Ask the Guide" Q&A for Gesso, an art-history game. These works currently have a thin,
-> generic guide built from a fixed template (medium slot, subject slot, "why does this matter", "what technique
-> should I notice", "who made it and for whom"). Make each guide genuinely specific to its work.
->
-> Gold standard, Boccioni's "Unique Forms of Continuity in Space": "Why does this figure look as if it is being
-> peeled open by the air?", "Why does the figure have no arms or face?", "How is it different from Cubist
-> sculpture?". Curiosity-driven, work-specific.
->
-> Read `data/incoming/guides/chunks/chunk-<n>.json` (array of works: id, title, artist, y, movement, place, why,
-> cues, notes, oldGuide). For each:
-> - KEEP any oldGuide question already specific to this work (polish, carry its answer content).
-> - DROP the pure-template slots ("why does this matter", "what technique should I notice", "who made it and for
->   whom", "what should I look for").
-> - ADD work-specific questions so the final guide has 8 to 12, curiosity-driven: subject, symbolism,
->   composition, technique, history, scale, function, comparisons, controversies.
-> Ground everything in the provided why/cues/notes plus well-established art history. NEVER invent a name, date,
-> patron, or attribution not supported by the material. Each entry is {"q","a"} with a 2 to 3 sentence answer in
-> plain, warm prose. No em-dashes. Every question must only make sense for this specific work.
->
-> Write `{"<id>":[{"q","a"},...]}` for your works to `data/incoming/guides/out/out-<n>.json`.
-
-## Notes
-- Reuse: put prior good outputs in `data/incoming/guides/out/` and `select` will skip those ids.
-- The merge only touches the `guide` field; `why`, `cues`, and hotspot `notes` are left alone.
+Until that schema + review UX is built, there is no supported guide-regeneration path. See the G-03 boundary in
+`docs/image-pipeline.md` and the memory `gesso-vision-security-boundary`.

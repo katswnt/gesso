@@ -2,7 +2,7 @@
 
 The pipeline exists so the site never carries a **wrong, blurry, silently-changed, or un-taught image**, a **forked/miscased label**, or a **bad data row** — and so the quality tools we've built actually *run at the right moments* instead of sitting unused.
 
-**Core principle:** works are TARGETED any way (by museum, region, artist, coverage gap), but IMAGES are fetched via **Wikidata/Commons P18**, never the museum's own API/site. Commons already holds high-res images across all museums, so going through Wikidata broadens the museums we can use (museum sites are often low-res / JS-rendered — e.g. NGV's own site is 694px). Every added image is **fingerprinted** for drift detection; every work added to the site is **queued for a vision pass that Kat runs MANUALLY with Sonnet agents** (never Codex, never auto-run).
+**Core principle:** works are TARGETED any way (by museum, region, artist, coverage gap), but IMAGES are fetched via **Wikidata/Commons P18**, never the museum's own API/site. Commons already holds high-res images across all museums, so going through Wikidata broadens the museums we can use (museum sites are often low-res / JS-rendered — e.g. NGV's own site is 694px). Every added image is **fingerprinted** for drift detection; every work added to the site is **queued for a TOOL-LESS vision pass** (G-03): broker-fetched sanitized image → tool-less model completion (no tools/shell/net) → human field-level review → hash-bound guarded merge. Cost-gated, never auto-run; a tool-capable agent may explore but may never feed the merge.
 
 ---
 
@@ -82,12 +82,12 @@ Everything else. Two reasons a check can't be in Tier 1:
 - **Gate as its OWN step.** Read `✅ PASS` visibly, THEN commit separately. Never `gate && commit`.
 - Field-scope-diff the pool before commit (only intended fields changed — see the diff snippet in `consolidate-styles.mjs`'s workflow).
 
-### 7. Queue for vision — `vision-next.mjs`
-- Selects the next N works not in the ledger (`data/vision-audit.json`) in schedule/easy order; writes `vw-in-N.json` chunks + a manifest. Does NOT run vision.
+### 7. Build a vision run — `vision-next.mjs`
+- Selects the next N works not in the ledger (`data/vision-audit.json`) in schedule/easy order, and **fetches each image through the hardened broker** (`scripts/lib/img-broker.mjs`: HTTPS-only, SSRF-vetted, IPv4-only, decoded + EXIF-stripped + size-capped) into a fresh run dir `data/incoming/vision/runs/<runId>/` with a provenance manifest. Does NOT call a model. The model never sees a URL.
 
-### 8. Vision (MANUAL, Sonnet) — `scripts/vision-audit-prompt.md`
-- Kat spawns one Sonnet agent per chunk. Each downloads + VIEWS each image and judges: image.ok (wrong-art → suggestedUrl), playable (featureless → false), imageQuality, framing, mediumLegible, and 5–7 feature-anchored look-closer pins (x,y % measured ON the feature). Writes `vw-out-N.json`.
-- Merge: `curate-merge.mjs <out…>` (notes/pins/medium/style — creates the teach entry for newly-audited works) + `vision-mark.mjs` (record ids in the ledger). Never auto-run; ask before a bulk pass and give the cost. **Codex is NOT used for vision** (the curate-codex path was removed 2026-08-15).
+### 8. Vision (TOOL-LESS completion) — `scripts/vision-audit-run.mjs` + `scripts/vision-audit-prompt.md`
+- **G-03:** the audit is a **tool-less** multimodal completion — no tools, no shell, no filesystem, no network. Each work's sanitized derivative + text metadata goes to the model; it judges image.ok/playable/imageQuality/framing/mediumLegible + 5–7 feature-anchored pins and returns strict JSON, written to a **quarantined** `completions/` dir. Cost-gated (`VISION_RUN_LIVE=1`), never in CI, never auto-run — ask before a bulk pass and give the cost.
+- **Apply only via human review:** `scripts/vision-review.mjs <run> --approve <decisions.json>` writes a hash-bound `approved.json` (per id, only the fields the human approves), then `scripts/curate-merge.mjs --run <run>` verifies every binding, applies **only** approved values, and records that run's approved ids in the ledger. Nothing auto-applies; a manifest/completion edited after review is rejected before any write. **A tool-capable vision agent may be used for exploration only and may never feed the merge** (the `curate-codex`/`hotspot-codex`/`vision-mark`/`merge-hotspots` paths are retired).
 
 ### 9. Drift-watch — `check-image-drift.mjs` (goal: weekly)
 - Re-fetch fingerprints, diff vs baseline → content-changed (sha1) / size-changed / gone / url-changed. Confirm "gone" with a retry (kill transient 429s). Changed works → re-audit queue. `npm run check:drift`.

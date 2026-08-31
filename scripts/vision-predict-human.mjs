@@ -13,7 +13,11 @@
 // Run:  ANTHROPIC_API_KEY=sk-ant-... node scripts/vision-predict-human.mjs
 //   MODEL=claude-haiku-4-5-20251001 node scripts/vision-predict-human.mjs
 // Output: data/incoming/vision-predict-human-<model>.json
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import broker from "./lib/img-broker.mjs";
+const TMPDIR = mkdtempSync(join(tmpdir(), "vpredict-"));
 
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) { console.error("Missing ANTHROPIC_API_KEY. Get one at console.anthropic.com, then:\n  ANTHROPIC_API_KEY=sk-ant-... node scripts/vision-predict-human.mjs"); process.exit(1); }
@@ -54,15 +58,10 @@ Respond with ONLY this JSON, no prose:
  "artist": {"exply": <0-100>, "why": "<short>"}}`;
 
 async function grab(url) {
-  let u = url;
-  if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=1200";
-  const r = await fetch(u, { headers: { "User-Agent": "GessoPredictHuman/1.0 (kathryn.swint@gmail.com)" } });
-  if (!r.ok) throw new Error("img " + r.status);
-  let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
-  if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(media)) media = "image/jpeg";
-  const b = Buffer.from(await r.arrayBuffer());
-  if (b.length > 4.8 * 1024 * 1024) throw new Error("img too large " + b.length);
-  return { media, data: b.toString("base64") };
+  // G-03: corpus image via the hardened broker (SSRF-vetted, decoded, EXIF-stripped, capped) before the tool-less model.
+  const res = await broker.fetchImageToModelFile(url, TMPDIR, { userAgent: "GessoPredictHuman/1.0 (kathryn.swint@gmail.com)", referer: true });
+  if (!res.ok) throw new Error("img " + res.reason);
+  return { media: res.mime, data: readFileSync(res.savedPath).toString("base64") };
 }
 
 async function ask(img) {

@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium, BAD_STYLE, isInCopyright, styleSignature } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
+import { auditedOracle } from "./lib/vision-ledger.mjs";   // dependency-free ledger contract (no sharp/network)
 import { scanLanguage } from "./check-language.mjs";
 
 const CONTINENTS = new Set(["Europe","Asia","Africa","North America","South America","Oceania"]);
@@ -52,6 +53,10 @@ for(const p of pool){
   // the instant Commons renames/deletes the file — it hid Battersea Shield on a live daily. The Special:FilePath
   // redirect follows renames. scripts/normalize-images.mjs converts them; fail closed here so the class can't return.
   if(p.img && /upload\.wikimedia\.org\/wikipedia\/commons\/thumb/.test(p.img)) add(hard,"fragile-thumb-url",p,"hardcoded Commons thumbnail — run scripts/normalize-images.mjs (→ Special:FilePath)");
+  // NON-HTTPS image: the site is https (mixed-content → the image won't load for players) AND the G-03 broker is
+  // HTTPS-only (vision can never fetch it, so the vision pipeline would loop on it). Surfaced here so the class is
+  // TRACKED every run and the offending image gets rehosted to https. WARN (doesn't block deploy of existing works).
+  if(p.img && /^http:\/\//i.test(p.img)) add(warn,"non-https-image",p,"http:// image — rehost to https (mixed-content on the live site; unfetchable by the vision broker)");
   // MEDIUM: simplified value must be a real bucket (else it leaks as a junk guess-option)
   if(p.medium){ const ms=simplifyMedium(p.medium); if(ms && !BUCKETS.has(ms)){
     if(ms.split(" ").length>2 || /album|scroll|sheet|folio|volume|first of|\bpage\b|untitled|reformatted|fragment/i.test(ms)) add(hard,"medium-junk",p,`"${ms}"`);
@@ -195,7 +200,7 @@ for(const p of pool){
   // legitimately have ZERO. So a 0-pin work is only a MISS if it's NOT abstract and NOT already reviewed.
   // Abstract styles auto-exempt; the vision re-pin pass writes ids it judged unpinnable to no-pins-reviewed.json.
   const ABSTRACT=new Set(["Suprematism","De Stijl","Neoplasticism","Constructivism","Abstract art","Abstract Expressionism","Color Field","Color field painting","Minimalism","Concrete art","Op Art","Orphism","Hard-edge painting"]);
-  let reviewedNoPins=new Set(); try{ reviewedNoPins=new Set(JSON.parse(readFileSync("data/incoming/no-pins-reviewed.json","utf8"))); }catch{}
+  let reviewedNoPins=new Set(); try{ reviewedNoPins=new Set(JSON.parse(readFileSync("data/no-pins-reviewed.json","utf8"))); }catch{}
   const pinBacklog=[];
   for(const [id,c] of Object.entries(teach)){
     if(!c||!Array.isArray(c.notes)||!c.notes.length)continue;
@@ -289,12 +294,17 @@ for(const p of pool){
   // VISION-AUDIT COVERAGE: how many works scheduled in the next VIS_WIN days have NOT had a genuine image-grounded
   // notes/pins pass (data/vision-audit.json). WARN only — this is the rollout gauge that keeps the audit ahead of
   // what players see. When it reaches 0, upcoming dailies are fully vision-verified.
-  { const VIS_WIN=14; let audited=new Set(); try{ audited=new Set((JSON.parse(readFileSync("data/vision-audit.json","utf8")).ids)||[]); }catch{}
+  { const VIS_WIN=14; let audited=()=>false; try{ let ev={}; try{ ev=JSON.parse(readFileSync("data/vision-evidence.json","utf8")); }catch{} audited=auditedOracle(JSON.parse(readFileSync("data/vision-audit.json","utf8")), ev); }catch{}
     const horizon=new Date(Date.now()+VIS_WIN*86400000).toISOString().slice(0,10);
     const gap=new Set();
     for(const [date,day] of Object.entries(daily.byDate||{})){ if(date<=today||date>horizon) continue;
-      for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])) if(!audited.has(id)) gap.add(id); }
+      for(const k of ["easy","medium","hard","impossible"]) for(const id of (day[k]||[])) if(!audited(id)) gap.add(id); }
     if(gap.size) globalThis.__visgap={n:gap.size,win:VIS_WIN,sample:[...gap].slice(0,6).map(id=>(byId[id]?.title||id).slice(0,34))}; }
+  // BROKER BACKOFF: works whose image the vision broker has PERMANENTLY failed to fetch (unchanged url) — surfaced so
+  // the offending image gets fixed. Only stable failures count; transient (dns/timeout/429/5xx) are retried, not shown.
+  { let bf={}; try{ bf=JSON.parse(readFileSync("data/vision-fetch-failures.json","utf8")); }catch{}
+    for(const [id,f] of Object.entries(bf)){ const p=byId[id]; if(!p) continue;
+      if(f && f.url===p.img && (f.stableAttempts||0)>=3) warn.push(`[vision-fetch-blocked] ${(p.title||id).slice(0,34)} · ${f.reason}${f.status?" "+f.status:""} (image unfetchable by the vision broker — fix the url)`); } }
   // MISSING-CATEGORY COVERAGE (schedule-first): upcoming daily works with NO movement or NO medium reach players
   // with a dead scorecard row. Surface them ahead of time so a curate/vision pass can fill the blank before go-live.
   { const WIN=14; const horizon=new Date(Date.now()+WIN*86400000).toISOString().slice(0,10);

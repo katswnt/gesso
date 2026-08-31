@@ -8,14 +8,26 @@ overview; this is the internal how-to.)
 
 ## The 6 stages
 
+SECURITY (G-03): corpus images are untrusted, so the pass is **tool-less** end to end. Images are fetched by a
+hardened broker (SSRF-vetted, decoded, EXIF-stripped, size-capped) into a run dir; the model call has **no tools,
+no shell, no filesystem, no network** and sees only the sanitized image + text metadata (never a URL); its JSON is
+**quarantined** and reaches the game only after a **human field-level review**, hash-bound to the exact run/image/
+prompt/model. Never hand a corpus image to a tool-capable agent that can act — that path is retired.
+
 ```
-1. SELECT   scripts/vision-next.mjs      → picks works by priority, writes vw-in-*.json chunks + manifest
-2. AUDIT    Sonnet agents (one/chunk)    → each VIEWS the images, writes vw-out-*.json     ← the image pass
-3. MERGE    scripts/curate-merge.mjs     → applies SAFE fields, queues RISKY, replaces pins
-4. MARK     scripts/vision-mark.mjs      → records done ids in data/vision-audit.json (the ledger)
-5. GATE     scripts/check-pool.mjs       → fail-closed; must print ✅ PASS (run as its OWN step)
-6. COMMIT   pool.js, teach-works.js, hotspots.js, vision-audit.json (+ daily-order.js if works dropped)
+1. BUILD    scripts/vision-next.mjs                → selects works, broker-downloads sanitized derivatives + manifest
+                                                      into data/incoming/vision/runs/<runId>/  (no model, no URLs to model)
+2. AUDIT    VISION_RUN_LIVE=1 scripts/vision-audit-run.mjs <runDir>   → TOOL-LESS multimodal completion per work;
+                                                      writes QUARANTINED completions/  (cost-gated, never in CI)
+3. REVIEW   scripts/vision-review.mjs <runDir> [--approve <decisions.json>]  → human field-level approval → approved.json
+                                                      (bound to run+image+completion+prompt+model; only approved fields)
+4. MERGE    scripts/curate-merge.mjs --run <runDir> → verifies every binding, rejects before write, applies ONLY
+                                                      approved values, AND records that run's approved ids in the ledger
+5. GATE     scripts/check-pool.mjs                  → fail-closed; must print ✅ PASS (run as its OWN step)
+6. COMMIT   pool.js, teach-works.js, hotspots.js, vision-audit.json, vision-evidence.json, no-pins-reviewed.json
+                                                      (+ daily-order.js if works dropped)
 ```
+A manual tool-capable vision agent may be used for EXPLORATION only and may never feed steps 3–4.
 
 Every stage is resumable: the ledger (`data/vision-audit.json`) is the done-list, so re-runs
 advance instead of repeating.
@@ -63,34 +75,40 @@ written without ever seeing the image, and place pins precisely.
 
 | File | Controls |
 |---|---|
-| `scripts/vision-next.mjs` | **which works, in what order** (prioritization) |
-| `scripts/vision-audit-prompt.md` | **what's judged on each work** (the combined audit spec) |
-| `scripts/curate-merge.mjs` | **safe-vs-risky merge** (auto-apply vs. queue for review) |
-| `data/vision-audit.json` | **the ledger** — done-list that drives "skip already audited" |
-| `scripts/check-pool.mjs` | **the gate** — fail-closed quality guard |
+| `scripts/lib/img-broker.mjs` | **hardened image fetch** (SSRF/decode/EXIF/size) — all corpus images go through it |
+| `scripts/vision-next.mjs` | **which works + broker-download** into a run dir (prioritization + provenance) |
+| `scripts/vision-audit-run.mjs` | **the tool-less model call** (no tools; image + text only) |
+| `scripts/vision-audit-prompt.md` | **what's judged on each work** (the tool-less completion instructions) |
+| `scripts/vision-review.mjs` | **human field-level approval** → `approved.json` (bound to the run) |
+| `scripts/curate-merge.mjs` | **the ONLY authoritative sink** — verifies approval + applies + updates the ledger |
+| `scripts/lib/vision-run.mjs` | **the contract** — run layout, strict schema, approval verifier |
+| `scripts/check-img-broker.mjs` | **the G-03 gate** — enforces the whole boundary offline |
+| `data/vision-audit.json` | **the ledger** — done-list; written ONLY by an approved curate-merge run |
+| `scripts/check-pool.mjs` | **the data gate** — fail-closed quality guard |
 | `data/incoming/vision/priority.json` | **manual line-jumpers** (specific ids first) |
 
-**Safe vs. risky** (`curate-merge.mjs`): style / styleKind / medium / notes / pins auto-apply;
-image / title / place / region / lat-lng / date are QUEUED to `review-queue.json` (never
-auto-applied — a wrong "correction" to the spine is worse than the original).
+**Only approved fields apply** (`curate-merge.mjs --run`): the human's `approved.json` says, per id, exactly which
+fields/notes/pins to apply. Everything is hash-bound; anything unreviewed/unbound is rejected before any write. The
+old "safe auto-apply vs. risky queue" split is gone — nothing auto-applies without human approval.
 
 ---
 
 ## Running a batch
 
 ```bash
-# 1. SELECT — count, chunkSize, mode  (25/chunk → 4 parallel agents)
-node scripts/vision-next.mjs 100 25 easy      # easy/most-seen first
-#   modes: "easy" (most-seen) | "schedule" (soonest-scheduled)
+# 1. BUILD — select works + broker-download sanitized derivatives into a run dir (prints the runId + path)
+node scripts/vision-next.mjs 100 easy         # modes: "easy" (most-seen) | "schedule" (soonest-scheduled)
+RUN=data/incoming/vision/runs/<runId>
 
-# 2. AUDIT — spawn one Sonnet agent per vw-in-N.json chunk, each following
-#    scripts/vision-audit-prompt.md, writing vw-out-N.json  (done by the assistant)
+# 2. AUDIT — TOOL-LESS model completions (cost-gated; approve the spend). Writes quarantined completions/.
+VISION_RUN_LIVE=1 node scripts/vision-audit-run.mjs "$RUN"
 
-# 3. MERGE
-node scripts/curate-merge.mjs data/incoming/vision/vw-out-*.json
+# 3. REVIEW — inspect, then author decisions.json (per id, the fields to apply) and approve:
+node scripts/vision-review.mjs "$RUN"                          # writes review-draft.json to inspect
+node scripts/vision-review.mjs "$RUN" --approve decisions.json  # writes + self-verifies approved.json
 
-# 4. MARK
-node scripts/vision-mark.mjs data/incoming/vision/vw-out-*.json
+# 4. MERGE — verifies every binding, applies ONLY approved values, records approved ids in the ledger
+node scripts/curate-merge.mjs --run "$RUN"
 
 # 5. GATE — as its OWN step; read the PASS/FAIL line, never chain a commit after a piped gate
 node tests/dom-harness.mjs
@@ -99,7 +117,10 @@ node scripts/check-pool.mjs
 #   node scripts/drop-from-dailies.mjs --unplayable   (or <id ...>)
 
 # 6. COMMIT only on ✅ PASS
-git add data/pool.js data/teach-works.js data/hotspots.js data/vision-audit.json data/daily-order.js
+git add data/pool.js data/teach-works.js data/hotspots.js data/vision-audit.json data/vision-evidence.json data/no-pins-reviewed.json data/daily-order.js
+#   data/vision-evidence.json is the DURABLE audit trail (a terminal ledger entry is only "audited" if its evidence
+#   is committed here); data/no-pins-reviewed.json is the tracked no-pins exemption set. Stage BOTH or a clean
+#   checkout loses the provenance and re-audits everything.
 git commit && git push
 ```
 
@@ -107,19 +128,25 @@ git commit && git push
 - **"Run another 100"** → default easy/most-seen burn-down.
 - **"Run 100 on works no one's ever image-checked"** → target the blind-legacy set (works with
   notes/pins but NOT in the ledger).
-- **"Re-audit these: `<ids>`"** → dropped into `priority.json`, then run.
-- **"Re-pin the already-audited works"** → the v1→v2 upgrade: remove those ids from the ledger
-  (`data/vision-audit.json`) so the feature-anchored pass redoes them, then run.
+- **Image-blocked works re-audit automatically** — a work the merge marked `needs-image` (wrong / poor /
+  cropped / detail / lost) is persisted as blocked in the **tracked** ledger (`data/vision-audit.json`
+  `entries[]`) and `vision-next` picks it FIRST once its image is fixed. No manual requeue.
+- **"Re-audit these: `<ids>`"** → an explicit operator override: drop them in
+  `data/incoming/vision/priority.json` (ephemeral/local; can force a re-audit even of an already-audited work).
+- **"Re-pin the already-audited works"** → a pass upgrade: bump `SCHEMA_VERSION` (entries stamped with an older
+  pass become re-auditable), or remove those ids from `entries`/`ids`, then run.
 
 ---
 
-## Two engines
+## One engine (G-03)
 
-- **Sonnet, on-demand** (what we use) — the assistant spawns Task agents per batch. Higher
-  quality; run interactively.
-- **Codex, autonomous loop** — a scheduled background loop (`scripts/curate-codex.mjs`) that
-  reads the SAME `vision-audit-prompt.md` and runs `vision-next.mjs … codex`. Lower-touch, for
-  overnight burn-down. Never commits unless the gate passes.
+There is now exactly **one** authoritative path: the **tool-less multimodal completion** in
+`scripts/vision-audit-run.mjs` — no `tools`, no agent wrapper, no shell/fs/net; the model sees only the
+broker-sanitized derivative + text metadata (never a URL). The old tool-capable engines are **retired**: the
+Sonnet Task-agent-per-batch flow and the `curate-codex.mjs` autonomous loop both handed corpus images to a
+tool-capable agent and fed an authoritative merge — the exact P0 G-03 closed. A tool-capable agent (Codex or a
+subagent) may **explore** an image but may **never** feed `curate-merge`. Output reaches the corpus only through
+human field-level review (`scripts/vision-review.mjs`) + the hash-bound merge (`curate-merge.mjs --run`).
 
 ---
 
