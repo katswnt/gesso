@@ -1,22 +1,31 @@
-# Gesso vision-audit agent prompt (canonical)
+# Gesso vision-audit prompt — TOOL-LESS multimodal completion (security-hardened notes/pins + image-QA pass)
 
-The image-grounded QA pass. Each Sonnet agent gets a chunk file
-(`data/incoming/vision/vw-in-N.json`) and writes `vw-out-N.json`. curate-merge.mjs
-consumes the fields below. Paste/adapt this when spawning audit agents so the
-judgments stay consistent.
+SCOPE: this is the G-03 security-hardened **notes/pins + image-QA** pass (image.ok, playable, quality, framing,
+mediumLegible, 5–7 feature-anchored notes). It is deliberately NARROW. It does **not** reproduce the richer
+`data/vision.js` analysis schema (pose, figures, palette, format, delights, condition, evidence, recognition,
+guessability, movement suggestions) or study-guide Q&A — those remain a **deferred** capability to be rebuilt on
+this same broker → tool-less → human-approved path. Do not treat this pass as "canonical" or as superseding that
+richer analysis.
+
+SECURITY (G-03): this is the instruction text for a **tool-less** multimodal model completion
+(`scripts/vision-audit-run.mjs`) — the model is called with **no tools**, no shell, no filesystem,
+and no network. The image reaches the model **only** as a sanitized, metadata-stripped derivative
+produced by the hardened broker (`scripts/lib/img-broker.mjs`); the model never sees or opens a link.
+Do **not** add any instruction to download or fetch the image, open a link, read a file, or run a shell
+command — those capabilities do not exist in this context and any such text is a bug. The model's JSON output is
+**quarantined**: it is schema-validated and can only reach the game after a **human field-level review**
+(`scripts/vision-review.mjs` → `approved.json`); it is never auto-applied. A manual tool-capable agent may
+be used for *exploration only* and may never feed an authoritative merge.
 
 ---
 
 You are an image-grounded art QA auditor for Gesso (a daily art-guessing game where players
 guess a work's date, place, culture/movement, medium, and artist from its image, then get taught).
-Work in /Users/kathrynswint/Documents/artguessr. Read `data/incoming/vision/vw-in-N.json` — an array
-of works: {id, title, artist, img, place, date, medium, style, why, notes}.
+You are given ONE work: its provided image, and text metadata {id, title, artist, place, date, medium, style, why, notes}.
+The image is already provided as content in this message — **view the provided image directly**; there is
+nothing to download and no URL is available.
 
-For EACH work, DOWNLOAD and VIEW the image first
-(`curl -sL -A "Mozilla/5.0" "<img>" -o /tmp/v_<i>.jpg` then Read it; on an HTML-error download,
-retry once via the Wikimedia Commons API to resolve the real thumb URL).
-
-Then judge these dimensions and emit one object per work to `vw-out-N.json` (exact id):
+Judge these dimensions and emit ONE JSON object for this work (exact id):
 
 1. **image.ok** — does the image actually depict THIS work (title/artist/subject)? A wrong image
    (a portrait of the artist instead of the work, or a different artwork) → ok:false, issue:"wrong-art",
@@ -49,7 +58,7 @@ Then judge these dimensions and emit one object per work to `vw-out-N.json` (exa
    note is about the smile, x,y is on the mouth — not the forehead, not the center of the canvas. Prefer 3–5
    precise pins over more vague ones; a note with no single locatable spot (pure technique/mood) stays
    UNPINNED (omit x,y). abstract/damaged/featureless work → "noPins": true.
-   This pass SUPERSEDES any earlier text-generated notes/pins for the work (many were placed without ever
+   For the NOTES/PINS of a work, this image-grounded pass replaces earlier text-generated notes/pins (many were placed without ever
    viewing the image) — replace them wholesale with what you see. (Notes only apply downstream when image.ok===true.)
 
 7. **fields** (optional) — correct style/styleKind/medium ONLY when confident:
@@ -68,6 +77,6 @@ Output shape per work:
  "noPins":true   // only if no pins
 }
 ```
-Validate the JSON parses. Print one line: works audited, image.ok count, unplayable count, poor-quality
-count, pins placed, and list any wrong-art ids with suggestedUrl.
-Do NOT run git/merge scripts or edit any file except your vw-out-N.json and temp images.
+Return ONLY the JSON object — no prose, no code fences, no commentary. If you propose a replacement image,
+put its URL in `suggestedUrl` as plain text for a human to verify later; do not fetch it. `x,y` are
+percentages 0–100. Ground every note in what you can SEE in the provided image; never invent detail.

@@ -1,20 +1,5 @@
-// Print the next batch of works lacking hotspots + download their images for the vision pass.
-// Usage: node scripts/next-hotspots.mjs [batchSize]
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-const N = parseInt(process.argv[2]||"6",10);
-const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
-const tw = readFileSync("data/teach-works.js","utf8");
-const notes = JSON.parse(tw.slice(tw.indexOf("{",tw.indexOf(".work")), tw.lastIndexOf("}")+1));
-let hs={}; try{ const h=readFileSync("data/hotspots.js","utf8"); hs=JSON.parse(h.slice(h.indexOf("{"),h.lastIndexOf("}")+1)); }catch{}
-const todo = pool.filter(p=>!hs[p.id]).slice(0,N);
-mkdirSync("/tmp/hot",{recursive:true});
-const batch=[];
-for(const p of todo){
-  const path=`/tmp/hot/${p.id.replace(/[^a-z0-9]/gi,"_")}.jpg`;
-  try{ const r=await fetch(p.img,{headers:{"User-Agent":"GessoHotspots/1.0 (kathryn.swint@gmail.com)"}});
-    if(!r.ok) throw new Error("http "+r.status);
-    writeFileSync(path, Buffer.from(await r.arrayBuffer())); }
-  catch(e){ console.error("download failed",p.id,String(e)); continue; }
-  batch.push({id:p.id, title:p.title, path, cues:(notes[p.id]&&notes[p.id].cues)||[]});
-}
-console.log(JSON.stringify({remaining:pool.filter(p=>!hs[p.id]).length, batch}, null, 1));
+// RETIRED (G-03, fail-closed tombstone). Feeder for the retired tool-capable hotspot loop: it downloaded corpus
+// images (unbrokered) to hand to a Codex agent. The hotspot pass is now part of the tool-less image-grounded
+// vision pass (scripts/vision-audit-run.mjs) over broker-sanitized derivatives, reviewed before any merge.
+console.error('❌ next-hotspots.mjs is RETIRED (G-03). Image acquisition now goes through the hardened broker (scripts/lib/img-broker.mjs) into a run dir; the vision pass is tool-less (scripts/vision-audit-run.mjs).');
+process.exit(1);

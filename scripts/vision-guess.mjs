@@ -13,9 +13,12 @@
 // Adaptive: per work it climbs a transform ladder (full → flip → +rotate → +crop) and stops at the LEAST
 // composition-destroying rung that defeats recognition, then reads guessability there. Output:
 // data/incoming/vision-guessability-<model>-adaptive.json.
-import { readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, unlinkSync, mkdtempSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import broker from "./lib/img-broker.mjs";
+const TMPDIR = mkdtempSync(join(tmpdir(), "vguess-"));
 
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) { console.error("Missing ANTHROPIC_API_KEY. Get one at console.anthropic.com, then:\n  ANTHROPIC_API_KEY=sk-ant-... node scripts/vision-guess.mjs"); process.exit(1); }
@@ -76,14 +79,11 @@ Respond with ONLY this JSON, no prose:
 
 // fetch the image ONCE (script fetches; the MODEL never does), to a temp file we re-render per rung.
 async function download(url, i) {
-  let u = url;
-  if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=1200";
-  const r = await fetch(u, { headers: { "User-Agent": "GessoVisionPoC/1.0 (kathryn.swint@gmail.com)" } });
-  if (!r.ok) throw new Error("img " + r.status);
-  const b = Buffer.from(await r.arrayBuffer());
-  const path = `${tmpdir()}/gesso-vis-${i}-orig`;
-  writeFileSync(path, b);
-  return path;
+  // G-03: SSRF-vetted, decoded, EXIF-stripped, capped derivative via the hardened broker. render() then transforms
+  // this ALREADY-SANITIZED local file with sips (arg-array, no shell) — no untrusted bytes bypass the broker.
+  const res = await broker.fetchImageToModelFile(url, TMPDIR, { userAgent: "GessoVisionPoC/1.0 (kathryn.swint@gmail.com)", referer: true });
+  if (!res.ok) throw new Error("img " + res.reason);
+  return res.savedPath;
 }
 
 // render one rung's image via `sips` (always emit jpeg). flip/rotate preserve all content; crop takes an off-centre

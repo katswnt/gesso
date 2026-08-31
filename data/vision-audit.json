@@ -1,6 +1,7 @@
 {
  "version": 1,
  "note": "Works that have had a genuine IMAGE-GROUNDED notes/pins pass (Sonnet-grade). Distinct from manifest-done, which only means the curate pipeline touched a work (possibly text-only). This is the source of truth for real vision coverage.",
+ "legacyPass": "legacy/pre-g03",
  "ids": [
   "aic100026",
   "aic100191",

@@ -1,9 +1,5 @@
-// Merge a hotspots JSON ({id:[{n,x,y}...]}) into data/hotspots.js.
-// Usage: node scripts/save-hotspots.mjs [/tmp/hot/out.json]
-import { readFileSync, writeFileSync } from "node:fs";
-const add = JSON.parse(readFileSync(process.argv[2]||"/tmp/hot/out.json","utf8"));
-let hs={}; try{ const h=readFileSync("data/hotspots.js","utf8"); hs=JSON.parse(h.slice(h.indexOf("{"),h.lastIndexOf("}")+1)); }catch{}
-let n=0; for(const id in add){ hs[id]=add[id]; n++; }
-writeFileSync("data/hotspots.js","window.ARTEFACTUM_HOTSPOTS = "+JSON.stringify(hs)+";\n");
-const pool = JSON.parse(readFileSync("data/pool.js","utf8").replace("window.ARTEFACTUM_POOL = ","").replace(/;\s*$/,""));
-console.log(`saved ${n} | total ${Object.keys(hs).length}/${pool.length} | remaining ${pool.filter(p=>!hs[p.id]).length}`);
+// RETIRED (G-03, fail-closed tombstone). This replaced hotspots.js entries from an arbitrary hotspots JSON (the
+// retired hotspot-codex flow) WITHOUT approval/provenance. Pins now reach hotspots.js only via human review →
+// scripts/curate-merge.mjs --run (approval- + hash-bound).
+console.error('❌ save-hotspots.mjs is RETIRED (G-03). Pins reach hotspots.js only via scripts/curate-merge.mjs --run <runDir> (human-approved).');
+process.exit(1);

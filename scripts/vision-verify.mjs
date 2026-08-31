@@ -9,7 +9,11 @@
 //   dailies = distinct works in the next 21 days of dailies
 //   both    = union of the two   ·   all = every playable work (big/$$)
 // Output: data/incoming/image-mismatch.json (verdicts, worst first).
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import broker from "./lib/img-broker.mjs";
+const TMPDIR = mkdtempSync(join(tmpdir(), "vverify-"));
 
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) { console.error("Missing ANTHROPIC_API_KEY."); process.exit(1); }
@@ -35,19 +39,13 @@ works = [...new Map(works.map(p => [p.id, p])).values()];
 console.log(`image-consistency check · model=${MODEL} · scope=${SCOPE} · ${works.length} works (real pixels, no tools)\n`);
 
 const BROWSER = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
+// G-03: all corpus-image bytes go through the hardened broker (SSRF-vetted, decoded, EXIF-stripped, capped) before
+// they ever reach the (tool-less) model. Broker owns the derivative filename inside a fresh run dir.
 async function grab(url, t = 0) {
-  // 640px is plenty to spot a gross wrong-image (modern photo vs ceramic); keeps image tokens (and cost) ~4x lower
-  let u = url; if (/Special:FilePath/i.test(u) && !/[?&]width=/.test(u)) u += (u.includes("?") ? "&" : "?") + "width=640";
-  try {
-    const r = await fetch(u, { headers: { "User-Agent": BROWSER } });
-    if ([403, 429, 500, 502, 503, 504].includes(r.status) && t < 3) { r.body?.cancel?.(); await sleep(3500 * (t + 1)); return grab(url, t + 1); }
-    if (!r.ok) return { err: "img " + r.status };
-    let media = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
-    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(media)) media = "image/jpeg";
-    const b = Buffer.from(await r.arrayBuffer());
-    if (b.length > 4.8 * 1024 * 1024) return { err: "too big" };
-    return { media, data: b.toString("base64") };
-  } catch (e) { if (t < 3) { await sleep(2500); return grab(url, t + 1); } return { err: "fetch " + String(e.message || "").slice(0, 20) }; }
+  const res = await broker.fetchImageToModelFile(url, TMPDIR, { userAgent: BROWSER, referer: true });
+  if (res.ok) return { media: res.mime, data: readFileSync(res.savedPath).toString("base64") };
+  if (["timeout", "network-error", "http-status"].includes(res.reason) && t < 3) { await sleep(3500 * (t + 1)); return grab(url, t + 1); }
+  return { err: res.reason };
 }
 async function ask(img, facts) {
   const prompt = `You are shown an image and the catalog facts a museum database holds for it. Judge ONLY whether the IMAGE is plausibly consistent with those facts — you are checking for a wrong/mismatched image, not grading a guess.
