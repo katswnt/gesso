@@ -59,9 +59,9 @@ prospective revisions before registration. Neither document authorizes data coll
 A famous work can be highly recognizable but visually hard to infer once blinded. The
 metrics are orthogonal and must remain separately stored.
 
-### Required method
+### Historical operational probe (VSD-003)
 
-The transformation ladder remains multi-rung and adaptive:
+The existing low-cost operational probe remains multi-rung and adaptive:
 
 `full → flip → flip+rotate → crop60 → crop45 → future stronger rungs`
 
@@ -83,6 +83,30 @@ If recognition survives the final rung, the work is right-censored. Do not treat
 terminal record as a clean guessability read or conflate it with a work that broke at
 the same rung. Preserve an explicit `survived` value and leave blinded `G` null/censored
 until a stronger rung obtains a clean read.
+
+This adaptive path is historical/operational evidence and may remain useful for cheap
+corpus triage. It is not the registered v2 experimental method.
+
+### Registered research exception (VSD-016)
+
+The owner-approved v2 research program uses two prospective registrations and a separate,
+append-only ledger:
+
+1. a 36-work pilot protocol frozen and externally registered before pilot collection;
+2. a later main-study preregistration using only prespecified pilot nuisance estimates.
+
+Its registered method uses a complete repeated-measures panel rather than adaptive stopping:
+one ordered nested crop family plus separate mirror, rotation, and grayscale diagnostic
+branches; separate fresh-context exact-identification and facet calls; a randomized
+same-image supplied-identity experiment as the sole causal primary; and a small full-view
+alternate-source robustness arm. It preserves non-monotonic recognition vectors and
+right-censors meaningful terminal survivors. The frozen v2 protocol controls literal cue
+disclosure, response stability, retries, grading, cost, model identity, and publication.
+
+The registered pilot remains unbuilt and unauthorized until its prompts, schemas, graders,
+recognition keys, manifest, transformations, synthetic tests, cost gate, analysis code, and
+deviations log are frozen. This exception does not alter historical results, production data,
+daily schedules, or tiers.
 
 Pass A deliberately uses the paid API because its blindness must be auditable: no web,
 no filename/title metadata, no tools, and no agent wrapper. Raw results and every rung
@@ -322,8 +346,9 @@ summary, and never log tokens, cookies, API keys, or raw authorization errors.
 | Pass B subscription-backed zero-tool image process | Capability prototype PASSED WITH CONSTRAINT 2026-08-31 — headless `--tools ""` local-image attach + pixel read confirmed, but the attachment path is model-visible; production harness must use a neutral relative SHA filename and is not yet built |
 | Pass B separate no-image research and conditional second look | Planned, not implemented |
 | Pass B component coverage/staleness ledger | Planned; current ledger is narrower |
-| Pass A adaptive ladder | Historical code/data exist |
-| Pass A survivor/censoring semantics and per-rung checkpoints | Needs correction |
+| Pass A adaptive ladder | Historical code/data exist; retained as the VSD-003 low-cost operational probe, not the registered v2 method |
+| Pass A registered v2 pilot | Owner design decisions approved under VSD-016; pilot specification/artifacts unbuilt, not registered, and no collection authorized |
+| Pass A survivor/censoring semantics and per-rung checkpoints | Registered v2 semantics specified; implementation and gates not built |
 | Pass A automatic tier use | Intentionally disabled/not implemented |
 | Unattended `launchd` supervisor and budget controller | Planned, not implemented |
 
@@ -392,7 +417,7 @@ It does **not** prove the whole Pass B architecture.
 |---|---|---|---|
 | VSD-001 | 2026-08-31 | Maintain independent `visionDifficultyProbe` and `contentVisionEnrichment` passes and ledgers. | Approved |
 | VSD-002 | 2026-08-31 | Pass A measures model recognition and blinded guessability separately; fame/player-recognition remain separately named. | Approved |
-| VSD-003 | 2026-08-31 | Preserve Pass A's adaptive multi-rung blind API method; terminal survivors are censored, and outputs do not yet drive tiers. | Approved |
+| VSD-003 | 2026-08-31 | Preserve Pass A's adaptive multi-rung blind API method; terminal survivors are censored, and outputs do not yet drive tiers. | Approved for historical/operational probe; scoped by VSD-016 for registered research |
 | VSD-004 | 2026-08-31 | Prefer subscription-backed Pass B only if a zero-tool headless image prototype proves the security boundary; otherwise use the tool-less API for image viewing. | Approved; attachment capability PASSED WITH CONSTRAINT 2026-08-31 (see Prototype evidence) |
 | VSD-005 | 2026-08-31 | Pass B order is image-first, separate no-image research second, conditional targeted second look, then synthesis. | Approved |
 | VSD-006 | 2026-08-31 | Rich historical fields, study guides, and plentiful ranked hotspots are first-class outputs, not discarded experiments. | Approved |
@@ -405,6 +430,7 @@ It does **not** prove the whole Pass B architecture.
 | VSD-013 | 2026-08-31 | Protect subscription capacity 09:00–22:00 Pacific; run unattended overnight, starting at a 50% conservative budget. | Approved; supervisor unimplemented |
 | VSD-014 | 2026-08-31 | Do not add a universal hard daily-completion gate until audited coverage is sufficient. | Approved |
 | VSD-015 | 2026-08-31 | Subscription image attachments use a neutral relative SHA-only path because Claude Code exposes the `@<path>` string as model text; usage budgets count internal turns, not only process launches. | Approved from prototype evidence |
+| VSD-016 | 2026-08-31 | Registered Pass A research uses separate pilot/main freezes, a complete repeated-measures view panel, separate identification/facet calls, and a randomized supplied-identity causal primary; it remains append-only and cannot change tiers. | Approved; pilot artifacts unbuilt and collection unauthorized |
 
 ## Maintenance protocol
 

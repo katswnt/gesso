@@ -66,7 +66,7 @@ for every cell:
 - self-reported recognition;
 - request/model/image/prompt provenance.
 
-Primary registered-secondary estimand:
+Prominent registered-secondary estimand:
 
 > At an adjacent rung transition, is the facet-accuracy change larger for works that lose exact
 > identification than for works already unidentified across that same transition?
@@ -79,7 +79,9 @@ For each transition `r → r+1`:
 
 Compare work-level score changes with rung transition and facet explicit in the model; cluster or
 bootstrap by work. Call the result recognition-associated, not definitive proof of internal
-retrieval.
+retrieval. Identification and facet predictions come from independent fresh-context calls, so the
+identification result measures separately probed **work-view identifiability**; it does not establish
+that the facet call occupied the same latent recognition state.
 
 Study A also supports recognition curves, non-monotonic transitions, confabulation location,
 fame/region analyses, and response stability.
@@ -87,7 +89,8 @@ fame/region analyses, and response stability.
 ### Study B — randomized same-image supplied-identity experiment
 
 This is the sole causal primary study. Independent calls receive identical image bytes and differ
-only in randomized information condition. Primary arms:
+only in randomized information condition. Every work receives all three conditions in a seeded,
+interleaved within-work complete block. Primary arms:
 
 1. no cue;
 2. opaque/noninformative sham cue;
@@ -99,13 +102,22 @@ to uncued exact identification and must be named honestly. A precommitted work×
 only facets directly disclosed by the actual cue; all individual outputs remain stored, and artist
 remains eligible whenever the cue does not state it.
 
-Study B can run on a prespecified subset/rung set rather than every work×rung cell. It replaces the
-weak note-only arm if the budget requires a choice.
+Primary contrast: correct cue versus sham. Secondary total-effect contrast: correct cue versus no
+cue. Manipulation diagnostic: sham versus no cue. The same cue-derived eligibility mask applies to
+all three arms. The single sham intentionally does not decompose “any text” from text format; that
+question is out of scope. The note-only arm is retired from this study.
+
+Compute one eligible-facet mean per work, then weight works equally so a work with five eligible
+facets does not count five times more than one with two. The all-eligible-facet aggregate is primary;
+a leave-artist-out aggregate is a mandatory sensitivity analysis, and artist alone is a named
+secondary. Report eligible counts, mask rates, and contributing work sets by facet, cue type, and
+fame band; do not compare facet effect sizes as if their work sets were identical.
 
 ### Study C — alternate source-view robustness
 
 For owner-confirmed alternate photographs/scans of the same physical object, compare canonical and
-alternate full views. Call outcomes:
+alternate full views. Repeat every canonical and alternate identification call so response
+instability cannot masquerade as source-view dependence. Call outcomes:
 
 - source-view-dependent exact identification; or
 - source-view-robust exact identification.
@@ -124,9 +136,11 @@ Only validated infrastructure crosses the boundary; conclusions and ledgers do n
   before the study manifest. Keep `usable`, `repair`, `blocked`, and valid-but-unplayable distinct.
 - Use Pass B-style format, condition, viewpoint, photographic-artifact, medium, region, and object-
   type descriptors as prespecified sampling/matching covariates where validated.
-- Use visible-evidence boxes/pins to estimate which diagnostic features survive each deterministic
-  crop. This can measure transform-induced information loss directly and improve the Study A
-  transition adjustment.
+- On a prespecified 12-work methodological subset, obtain two independent pre-outcome image-only
+  annotations of visible diagnostic regions and estimate which features survive each deterministic
+  crop. Measure annotation agreement. Boxes are covariates only, never crop-placement inputs. If
+  reliability or feasibility fails, omit this optional adjustment; Study B and the rest of the pilot
+  continue unchanged.
 - Use the same machinery to describe canonical/alternate view differences in Study C.
 - Never send Pass B title, artist, date, place, research, filename, guide, or source text to a blind
   Pass A call. All model-facing filenames remain neutral SHA-only names.
@@ -165,7 +179,7 @@ These findings prevent accidental reliance on a false “lossless” inventory:
 
 ## 6. Decision worksheet
 
-Each answer should become a dated row in §7 before v2 prose is finalized.
+Each answer should become a dated row in §8 before v2 prose is finalized.
 
 ### A. Claim and causal interpretation
 
@@ -177,9 +191,13 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
    qualifier only where required to identify a generic, anonymous, copied, or multiply titled work.
    Store `cueType`, the exact cue, and a work×facet `disclosedFacets`/`eligibleFacets` mask. All facet
    outputs remain stored, but directly disclosed facets do not enter that work's primary aggregate.
+   “Directly disclosed” is literal, not semantic: after frozen normalization, a complete accepted
+   answer or alias must appear as a complete word/phrase in the cue. Apply the resulting mask
+   identically to correct-cue, sham, and no-cue arms.
 3. **DECIDED A3 — Controls.** Use three primary information conditions: no cue, an opaque/
-   noninformative sham cue, and the correct identity cue. The exact sham wording and the exact
-   content of the correct cue remain coupled to DECIDED A2 and must be frozen in the pilot manifest.
+   noninformative sham cue matched to the identity-label format and approximate length, and the
+   correct identity cue. The exact sham wording and correct cues must be frozen in the pilot
+   manifest. Decomposing “any text” from text format is explicitly out of scope.
 4. **DECIDED A4 — Wrong cue.** Omit the plausible wrong-title arm from the pilot and first
    confirmatory study. Treat suggestibility/confabulation under false identity information as a
    separately designed follow-up rather than spending or complicating the primary experiment.
@@ -189,7 +207,8 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
 6. **DECIDED A6 — Artist outcome.** Artist remains eligible whenever the actual cue does not directly
    disclose the artist. As with every facet, a pre-outcome work×facet leakage mask excludes cells
    directly answered by that work's cue. Store artist separately even when it is excluded from an
-   aggregate.
+   aggregate. The all-eligible-facet aggregate is primary, with a mandatory leave-artist-out
+   sensitivity aggregate and an artist-only named secondary.
 
 ### B. Identification and prompt behavior
 
@@ -210,7 +229,9 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
     exists only where that contextual contamination is the randomized treatment being measured.
 12. **DECIDED B6 — Reliability.** Repeat a seeded random 10% of cells. Preserve the first valid
     response as primary; additional boundary-cell repeats, if any, are exploratory rather than
-    replacements.
+    replacements. Repeat every Study C identification cell. If pilot exact-identification agreement
+    is below 85%, the main-study preregistration must either repeat identification broadly or model
+    identification probability instead of treating one response as a stable binary state.
 
 ### C. Transform design
 
@@ -222,11 +243,12 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
     center and off-center positions; nest every severity for that work around the same anchor. Do
     not use Pass B features to place the primary crop.
 16. **DECIDED C4 — Diagnostic-feature retention pilot.** Do not wait for the full Pass B rebuild.
-    Before any Pass A outcomes in the excluded pilot, create and freeze a research-only inventory of
+    On a prespecified 12-work subset, obtain two independent pre-outcome image-only inventories of
     roughly 3–8 visible diagnostic regions per work, covering applicable recognition, artist/style,
-    date/place, and medium evidence. Use boxes only to measure crop retention, never to place crops.
-    The pilot decides whether reliability and analytical value justify scaling boxes to the main
-    study; the main-study dependency remains conditional until that evidence is reviewed.
+    date/place, and medium evidence. Freeze them before Pass A outcomes, measure annotation agreement,
+    and use boxes only to measure crop retention, never to place crops. If reliability or feasibility
+    fails, omit the optional adjustment without blocking Study B or the remaining pilot. Scaling to
+    the main study remains conditional on reviewed pilot evidence.
 17. **DECIDED C5 — Image normalization.** Generate every study view from the same broker-sanitized
     canonical raster under a frozen maximum dimension (currently 1,568px), colour profile, format,
     encoder quality, orientation, interpolation, crop rounding, and transform implementation. Record
@@ -242,8 +264,11 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
 ### D. Facet outcomes and grading
 
 20. **DECIDED D1 — Primary outcome structure.** The primary aggregate uses every facet not directly
-    disclosed by that work's cue. Preserve and publish every individual facet score in all cases;
-    individual-facet analyses remain prespecified secondary outcomes with multiplicity control.
+    disclosed by that work's cue, under the same frozen mask in every Study B arm. Average eligible
+    facets within each work, then weight works equally. Preserve and publish every individual facet
+    score; individual-facet analyses are prespecified secondary outcomes with multiplicity control
+    and their actual contributing-work sets. Require a leave-artist-out sensitivity aggregate and an
+    artist-only named secondary.
 21. **DECIDED D2 — Research scoring and raw evidence.** Preserve the model's exact raw response and
     structured values for every facet. Score a copy with frozen research-specific rubrics; never
     replace, silently normalize, or discard the original guess. Do not reuse the game's forgiving
@@ -262,17 +287,19 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
 25. **DECIDED D6 — Movement/style/tradition.** Reuse and freeze the site's existing taxonomy at the
     manifest commit: authoritative pool `style`/`styleKind`, `MOVEMENTS`, canonical aliases, family
     relations, and curated related labels across movement, culture, period, school, tradition, and
-    genre. Do not invent a parallel vocabulary. Preserve raw guesses; map aliases deterministically
-    to frozen canonical labels. Freeze a research credit rule separately from the live game's
-    forgiving near-match score, and use `notApplicable` where the site records no applicable style.
+    genre. Normalize/deduplicate known near-duplicate labels before hashing the research snapshot;
+    do not invent a parallel vocabulary. Preserve raw guesses; map aliases deterministically to
+    frozen canonical labels. Freeze a research credit rule separately from the live game's forgiving
+    near-match score, and use `notApplicable` where the site records no applicable style.
 26. **DECIDED D7 — Artist attribution.** Precommit rules for named artist/collective, workshop,
     circle, follower, attributed-to, culture-made, and anonymous/unrecorded works. Award full credit
     for an accepted named maker or collective, frozen partial credit for truth-consistent
     workshop/circle/attributed relationships, and `notApplicable` where individual authorship does
     not genuinely apply. Preserve the exact raw guess.
 27. **DECIDED D8 — Confidence.** Require and preserve a separate 0–100 probability for exact
-    identification and every facet. Score calibration under a frozen rule (including Brier score and
-    registered bins); never replace the raw confidence value.
+    identification and every facet. Each number means “probability that this answer receives full
+    credit under the frozen research grader.” Score calibration under a frozen rule (including Brier
+    score and registered bins); never replace the raw confidence value.
 28. **DECIDED D9 — Ambiguous grading.** Apply deterministic frozen aliases/taxonomies first, then
     route genuinely ambiguous prose to a reviewer blinded to rung, cue condition, fame, region,
     prediction, and analysis arm. A model grader cannot enter the confirmatory path without separate
@@ -297,38 +324,49 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
     artist birthplace for the work's origin.
 33. **DECIDED E5 — Matching covariates.** In addition to isolated fame measures and region, balance
     or adjust broad era, object type, medium family, pre-outcome image fitness, and source host.
-    Handle artist/series/source dependence under E6 rather than mistaking object-type imbalance for
-    a regional effect.
+    Use frozen fame-band terms in the primary Study B model, report mask attrition by band, and model
+    eligible-facet attrition in power simulations. Handle artist/series/source dependence under E6
+    rather than mistaking object-type imbalance for a regional effect.
 34. **DECIDED E6 — Dependence.** Exclude duplicate corpus records and identical images from the
     primary sample. Retain canonical/alternate pairs only in Study C. Record artist, series/work
     family, source institution, and image-source clusters; cluster or otherwise account for retained
     dependence rather than treating related observations as independent.
 35. **DECIDED E7 — Power and final sample.** Do not preserve v1's `n=800` by inertia. Set final `n`
-    only after the excluded pilot supplies variance, reliability, usable-transition, failure-rate,
-    and measured-cost inputs for a prespecified simulation.
+    only after the excluded pilot supplies conservative nuisance inputs: paired variance,
+    reliability, missingness, usable-transition rate, mask attrition, and measured cost. The owner
+    must approve a smallest effect of interest plus fixed alpha/power before the main simulation.
+    Never choose main `n` from the observed pilot treatment effect.
 36. **DECIDED E8 — Pilot.** Draw **36 unique works**, excluded from the main manifest and balanced
-    across five fame bands; European/non-European creation or culture-region; broad object type;
-    distinctive/generic titles; current playable/borderline states; existing content richness; and
-    eligibility for several alternate-source pairs. Planned calls, subject to frozen schemas:
+    under hard quotas for five fame bands × European/non-European creation or culture-region. Use
+    seeded soft optimization for broad object type, medium family, distinctive/generic titles,
+    current playable/borderline state, documentation, existing content richness, alternate-source
+    eligibility, and source host; publish the objective and deterministic tie-breaker rather than
+    claiming perfect balance across every dimension. Planned base calls, subject to frozen schemas:
     - Study A: seven views per work (full, three nested crops, mirror, rotation, grayscale), with
       separate fresh-context identification and facet calls: `36 × 7 × 2 = 504`;
     - Study B: sham and correct-identity facet calls at full view: `72`; reuse Study A's full-view
       facet call as the no-cue condition rather than paying for a duplicate;
-    - prompt-induced retrieval: a prespecified 12-work subset;
+    - prompt-induced retrieval: one identity-first call for each work in a prespecified 12-work
+      subset, reusing its existing facets-only call: `12`;
     - Study C: six eligible alternate-source works at full view, with separate identity/facet calls:
       `12` additional calls;
-    - reliability: repeat a seeded random 10% of eligible cells, keeping first valid responses
-      primary.
-    Expected total is roughly 650 calls after exact schema accounting. A conservative preflight cost
-    estimator must refuse to launch above the hard **$15** pilot ceiling. The pilot may freeze
-    transforms, grading, operations, and main-study power inputs; it may not tune hypotheses after
-    outcomes. Main-study sample and budget remain open.
+    - Study C stability: repeat all 12 canonical/alternate identification cells: `12`;
+    - general reliability: repeat 59 seeded cells from the remaining 588 base cells (at least 10%),
+      keeping first valid responses primary.
+    The frozen call manifest therefore contains **671 planned calls** before transport retries. A
+    conservative estimator over that exact manifest plus a frozen retry reserve—not an
+    approximation—must refuse launch above the hard **$15** pilot ceiling. The runtime ledger refuses
+    any new attempt whose conservative per-call cap could exceed the remaining authorized dollars.
+    The pilot may freeze transforms, grading, operations, and conservative main-study nuisance
+    inputs; it may not tune hypotheses or main `n` from the observed treatment effect. Main-study
+    sample and budget remain open.
 
 ### F. Controls and operational protocol
 
 37. **DECIDED F1 — Alternate images.** Pilot six works with one verified alternate source view each,
-    full view only. Target roughly 40 such works in the first main study, also full view only.
-    Cropped/transformed alternate-view experiments are a separately justified follow-up.
+    full view only, repeating identification for both source views. Target roughly 40 such works in
+    the first main study, also full view only. Cropped/transformed alternate-view experiments are a
+    separately justified follow-up.
 38. **DECIDED F2 — Alternate sourcing.** A no-image research process may find candidates, but an
     alternate is eligible only when authoritative records establish that it is the same physical
     object—not another edition, copy, cast, or related work. Record accession/QID, institution,
@@ -353,8 +391,11 @@ Each answer should become a dated row in §7 before v2 prose is finalized.
     missing—never rerun because an answer is surprising or wrong. Scheduled repeats are labeled
     replicates, not retries.
 44. **DECIDED F8 — Pilot cost.** Compute a conservative upper bound from the exact call manifest and
-    refuse launch above `$15`; record actual tokens and cost per call. The pilot measures richer
-    schema and 1,568px-derivative costs. No main-study ceiling is approved yet.
+    refuse launch above `$15`; record actual tokens and cost per call. The current approved manifest
+    has 671 planned calls before transport retries, but the gate reads the frozen artifact, includes
+    a retry reserve, and enforces remaining authorization before every attempt rather than trusting
+    this prose. The pilot measures richer schema and 1,568px-derivative costs. No main-study ceiling
+    is approved yet.
 45. **DECIDED F9 — Publication.** Publish regardless of outcome: frozen preregistration and deviations,
     manifests/seeds, safety-reviewed raw responses, prompts/schemas, grading/analysis code,
     exclusions/failures, hashes, and deterministic transforms. Publish transformed images only where
@@ -373,7 +414,26 @@ playability, fame, daily assignments, or tiers. Those legacy signals may be comp
 collection, but they never enter a blind model payload. No pilot result is an authoritative game
 sink or an automatic tier input.
 
-## 7. Study decision log
+## 7. Two-freeze registration sequence
+
+This program has two prospective freezes, not one document that remains mutable through collection:
+
+1. **Pilot registration.** Before any pilot image annotation or model response, freeze the 36-work
+   pilot protocol, exact call manifest, selection objective, recognition keys, literal-disclosure
+   masks, prompts/schemas, graders and synthetic fixtures, transformations/golden hashes, retry and
+   reliability rules, model configuration, `$15` gate, deviations log, and analysis code. Mark and
+   externally register that artifact explicitly as `PILOT REGISTERED BEFORE COLLECTION`.
+2. **Main-study registration.** After the excluded pilot, write and independently freeze the main
+   preregistration. It may use only prespecified nuisance evidence: variance, reliability,
+   missingness, feasible transform floor, usable-transition rate, mask attrition, annotation
+   reliability, and measured cost. It may not select hypotheses, effect direction, scoring rules, or
+   main `n` from the observed pilot treatment effect. The owner separately approves the smallest
+   effect of interest, alpha/power, sample, and budget before main collection.
+
+The evidence-box method is optional and nonblocking. Study B remains independently runnable if the
+12-work annotation subset is unreliable, infeasible, or late.
+
+## 8. Study decision log
 
 | ID | Date | Decision | Status | Rationale/evidence |
 |---|---|---|---|---|
@@ -386,7 +446,7 @@ sink or an automatic tier input.
 | RSD-007 | 2026-08-31 | Primary aggregation includes only cue-undisclosed facets, but every facet remains stored and reported; artist remains eligible when not disclosed. | Approved | Owner confirmation; avoids discarding facet-level evidence |
 | RSD-008 | 2026-08-31 | Use nested, seeded-anchor crops for resistance and separate mirror/rotation/grayscale diagnostic branches. | Approved | Owner preferred outcome-independent balanced anchors |
 | RSD-009 | 2026-08-31 | Repeat a seeded random 10% of cells and retain the first valid response as primary. | Approved | Measures instability without outcome-driven replacement |
-| RSD-010 | 2026-08-31 | Include a small first-wave alternate-source arm of roughly 40 eligible pairs. | Approved in scope; exact view protocol open | Owner confirmation |
+| RSD-010 | 2026-08-31 | Include a small first-wave alternate-source arm of roughly 40 eligible pairs. | Approved; full-view protocol resolved by RSD-027 | Owner confirmation |
 | RSD-011 | 2026-08-31 | Use a separate 30–40-work pilot with a $15 hard ceiling; defer final sample size and main budget until pilot evidence. | Approved | Owner confirmation |
 | RSD-012 | 2026-08-31 | Permit asynchronous Message Batches after pilot equivalence/checkpoint verification; register through both a frozen repository commit and an immutable external registration. | Approved | Owner confirmation |
 | RSD-013 | 2026-08-31 | Give each work a minimal disambiguating identity label and precommit its directly disclosed versus eligible facet mask. | Approved | Preserves generic/anonymous/non-Western objects without counting answers stated by the cue |
@@ -400,7 +460,7 @@ sink or an automatic tier input.
 | RSD-021 | 2026-08-31 | Keep fame components and new multilingual measures isolated; preserve the historical fame composite unchanged and make no tier/data migration from the pilot. | Approved | Owner wants additive research followed by comparison with prior notes, vision, playability, fame, and tiers |
 | RSD-022 | 2026-08-31 | Define region from creation place with an explicit culture-region fallback, and balance era/object type/medium/image fitness/source host in regional comparisons. | Approved | Avoids artist-birthplace and corpus-composition confounds |
 | RSD-023 | 2026-08-31 | Pilot outputs are append-only research artifacts; existing authoritative content and scheduling remain unchanged, and legacy signals stay out of blind prompts. | Approved | Owner confirmation; Pass A remains research-only |
-| RSD-024 | 2026-08-31 | Pilot 36 unique balanced works across a roughly 650-call A/B/C/reliability plan; reuse the Study A no-cue cell and fail closed above a conservative $15 preflight estimate. | Approved | Owner confirmation; narrows the pilot before any collection |
+| RSD-024 | 2026-08-31 | Pilot 36 unique balanced works across a roughly 650-call A/B/C/reliability plan; reuse the Study A no-cue cell and fail closed above a conservative $15 preflight estimate. | Superseded in call accounting by RSD-037 | Owner confirmation; narrowed the pilot before final cell accounting |
 | RSD-025 | 2026-08-31 | Freeze ten-language, 12-complete-month multilingual fame fields for pilot works while keeping every component isolated and existing fame unchanged. | Approved | Owner approved the complete remaining design package |
 | RSD-026 | 2026-08-31 | Deduplicate primary records/images and explicitly account for artist/series/institution/source dependence. | Approved | Prevents duplicated or related observations from masquerading as independent evidence |
 | RSD-027 | 2026-08-31 | Study C uses owner-verified same-object alternate views at full view only: six pilot works and roughly 40 first-main-study works. | Approved | Keeps source-view robustness interpretable and affordable |
@@ -408,20 +468,36 @@ sink or an automatic tier input.
 | RSD-029 | 2026-08-31 | Freeze Sonnet 4.6 request identity, interleave collection in one bounded window, and fail closed on model drift. | Approved | Preserves temporal and model comparability |
 | RSD-030 | 2026-08-31 | Retry only no-response transport failures; preserve all attempts, do not outcome-retry, and distinguish scheduled replicates. | Approved | Prevents silent response replacement and selection bias |
 | RSD-031 | 2026-08-31 | Publish preregistration, raw evidence, code, failures, and reproducibility artifacts regardless of outcome; publish transformed images only where rights permit. | Approved | Owner approved repository plus immutable external registration and rights-aware publication |
+| RSD-032 | 2026-08-31 | Define cue disclosure by literal frozen answer-alias occurrence and apply one work×facet mask identically across all Study B arms. | Approved | Prevents post-outcome semantic masking while retaining identity-enabled retrieval as the estimand |
+| RSD-033 | 2026-08-31 | Weight eligible facets within work and works equally; report mask attrition/contributing sets by fame/cue/facet, with all-facet primary plus mandatory no-artist sensitivity. | Approved | Prevents generic-title and famous-work cue differences from silently reweighting the result |
+| RSD-034 | 2026-08-31 | Use correct-cue versus sham as Study B primary, correct versus no-cue as secondary, and sham versus no-cue as a manipulation diagnostic in a within-work complete block. | Approved | Names one exact causal contrast and makes the single-sham simplification explicit |
+| RSD-035 | 2026-08-31 | Treat Study A identification as independently probed work-view identifiability; repeat all Study C identifications and require a main-study fallback if pilot agreement is below 85%. | Approved | Separate contexts prevent direct contamination but do not prove a shared latent recognition state |
+| RSD-036 | 2026-08-31 | Use hard fame-band×broad-region pilot quotas plus seeded soft optimization; power the main study from a smallest effect of interest and conservative nuisance estimates, never the pilot treatment effect. | Approved | Makes 36-work balance and post-pilot power choices prospective and honest |
+| RSD-037 | 2026-08-31 | Freeze an exact 671-call pilot manifest: 600 base calls, 12 mandatory Study C identification repeats, and 59 general reliability repeats. | Approved | Replaces approximate call accounting; the cost gate reads the artifact, not prose |
+| RSD-038 | 2026-08-31 | Limit diagnostic evidence boxes to a two-annotation 12-work methodological subset and make them nonblocking for Study B. | Approved | Preserves the adjustment experiment without turning unfinished Pass B machinery into a causal-study dependency |
+| RSD-039 | 2026-08-31 | Normalize/deduplicate the frozen style taxonomy and define confidence as probability of full research credit. | Approved | Makes style grading and Brier outcomes operationally definable |
+| RSD-040 | 2026-08-31 | Use separate prospective pilot and main-study registrations; pilot outcomes may inform only prespecified nuisance inputs. | Approved | Prevents a mutable pilot document and noisy pilot effect from silently determining the confirmatory main study |
 
-## 8. Required artifacts before registration
+## 9. Required artifacts before pilot registration
 
 - completed v2 preregistration with no unresolved primary-design questions;
 - deviations log seeded before pilot;
-- exact-work recognition key and ambiguous-title policy;
+- exact-work recognition key, minimal identity cues, frozen alias-normalization/literal-disclosure
+  rule, identical three-arm eligibility masks, and ambiguous-title policy;
 - deterministic transformation code + golden image hashes;
 - synthetic grading fixtures and grader tests;
-- research-specific facet scoring specification;
+- research-specific facet formulas, aggregation weights, `notApplicable` handling, confidence event,
+  normalized style-taxonomy snapshot/hash, and synthetic mask/partial-credit fixtures;
 - pre-outcome image-fitness and source-view protocol;
+- optional 12-work/two-annotation evidence-box protocol and agreement rule;
 - fame-language/time-window computation and both matching manifests;
-- sampling/power simulation and unique-work accounting;
+- hard/soft sampling objective, deterministic tie-breaker, unique-work accounting, and pilot
+  diagnostic report plan;
+- main-study power-simulation specification with a placeholder for the later owner-approved smallest
+  effect of interest; pilot treatment effect is not an input;
 - exact model/request configuration and randomized collection order;
+- frozen 85% identification-stability threshold and main-study fallback rule;
 - manifest containing work ids, arm memberships, pair ids, covariates, pool commit, image SHA,
   transformed-image SHAs, prompt/schema hashes, and seed;
-- explicit budget and approval gate;
+- exact 671-call manifest, explicit budget and approval gate;
 - statement that Pass A outputs remain research-only until a separate tier decision.
