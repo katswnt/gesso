@@ -22,6 +22,7 @@ if (!runDir) { console.error("usage: curate-merge.mjs --run <runDir>  — applie
 // ledger / applied-run updates). Released on exit.
 const LOCK = "data/incoming/vision/.curate-merge.lock";
 mkdirSync("data/incoming/vision", { recursive: true });
+mkdirSync("data/incoming/curate", { recursive: true });   // review-queue dir — data/incoming/ is gitignored, so a clean checkout lacks it
 if (!acquireLock(LOCK)) { console.error(`❌ curate-merge REJECT — another merge holds ${LOCK} (concurrent merge in progress). If none is running, remove that file.`); process.exit(1); }
 process.on("exit", () => releaseLock(LOCK));
 process.on("SIGINT", () => { releaseLock(LOCK); process.exit(1); });
@@ -162,6 +163,17 @@ for (const w of out) {
   }
 }
 
+// ACCUMULATE the review queue across batches (dedupe by id+type) so bulk triage sees everything.
+// ORDER: the queue is fully populated by the loop above, so it is prepared and COMMITTED HERE — BEFORE the first
+// authoritative write below. A failure preparing or writing it therefore aborts non-zero with every authoritative
+// file untouched, instead of throwing after pool/teach/hotspots/evidence/ledger have already been written (the
+// ENOENT-on-clean-checkout defect: data/incoming/ is gitignored, so data/incoming/curate/ did not exist). The write
+// is deliberately UNGUARDED — a queue failure must abort the merge, never be swallowed.
+let priorQ = []; try { priorQ = JSON.parse(readFileSync("data/incoming/curate/review-queue.json", "utf8")); } catch {}
+const qseen = new Set(); const mergedQ = [];
+for (const q of [...priorQ, ...queue]) { const k = q.id + "|" + q.type; if (qseen.has(k)) continue; qseen.add(k); mergedQ.push(q); }
+writeFileSync("data/incoming/curate/review-queue.json", JSON.stringify(mergedQ, null, 1));
+
 // insert any new MOVEMENTS entries right after the opening brace (idempotent — movKeys already deduped)
 if (newMovements.length) {
   const anchor = "const MOVEMENTS={";
@@ -220,10 +232,5 @@ led.ids = [...ids];
   writeFileSync("data/vision-evidence.json", JSON.stringify(evStore, null, 1) + "\n"); }   // ← evidence committed BEFORE the ledger (evStore validated up-front under the lock)
 writeFileSync("data/vision-audit.json", JSON.stringify(led, null, 1) + "\n");
 console.error(`curate-merge: audited-ledger +${ledStat.complete} complete, +${ledStat.unplayable} unplayable, ${ledStat.blocked} blocked (needs-image), ${ledStat.invalidated} re-audit-invalidated — all in tracked data/vision-audit.json`);
-// ACCUMULATE the review queue across batches (dedupe by id+type) so bulk triage sees everything.
-let priorQ = []; try { priorQ = JSON.parse(readFileSync("data/incoming/curate/review-queue.json", "utf8")); } catch {}
-const qseen = new Set(); const mergedQ = [];
-for (const q of [...priorQ, ...queue]) { const k = q.id + "|" + q.type; if (qseen.has(k)) continue; qseen.add(k); mergedQ.push(q); }
-writeFileSync("data/incoming/curate/review-queue.json", JSON.stringify(mergedQ, null, 1));
 console.error(`curate-merge: ${out.length} works | style ${stat.style} (+${stat.movAdded} new movements) | medium ${stat.medium} | notes+pins ${stat.notesPins} | style-queued ${stat.styleQueued} | unplayable ${stat.unplayable} | medium-hidden ${stat.mediumHidden} | risky queued ${queue.length}`);
 if (newMovements.length) console.error("  new MOVEMENTS:", newMovements.map(m => m.key).join(", "));
