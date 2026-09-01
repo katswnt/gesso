@@ -1,0 +1,3370 @@
+{
+  "version": "recognition-multilingual-fame/1",
+  "languages": [
+    "en",
+    "ja",
+    "zh",
+    "es",
+    "fr",
+    "de",
+    "ar",
+    "hi",
+    "ru",
+    "pt"
+  ],
+  "window": {
+    "start": "2025080100",
+    "end": "2026073100"
+  },
+  "rows": [
+    {
+      "id": "http://www.wikidata.org/entity/Q3605549",
+      "qid": "Q3605549",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Adoration of the Shepherds (Lorenzo di Credi)",
+          "canonicalTitle": "Adoration of the Shepherds (Lorenzo di Credi)",
+          "views": 626,
+          "missing": false,
+          "articleCreatedAt": "2011-05-12T10:08:16Z",
+          "pilotPercentile": 0.4117647058823529
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": "L'Adoration des bergers (Credi)",
+          "canonicalTitle": "L'Adoration des bergers (Credi)",
+          "views": 50,
+          "missing": false,
+          "articleCreatedAt": "2026-07-08T09:17:59Z",
+          "pilotPercentile": 0.35294117647058826
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 676,
+      "languageBalancedPilot": 0.5470588235294118
+    },
+    {
+      "id": "wikidata:Q18339646",
+      "qid": "Q18339646",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": "Hercule vainqueur de Cacus",
+          "canonicalTitle": "Hercule vainqueur de Cacus",
+          "views": 303,
+          "missing": false,
+          "articleCreatedAt": "2022-11-19T13:53:56Z",
+          "pilotPercentile": 0.47058823529411764
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 303,
+      "languageBalancedPilot": 0.5529411764705883
+    },
+    {
+      "id": "wikidata:Q12108230",
+      "qid": "Q12108230",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": "Cheminée décorative Volga Sviatoslavitch et Mikoula Selianinovitch",
+          "canonicalTitle": "Cheminée décorative Volga Sviatoslavitch et Mikoula Selianinovitch",
+          "views": 307,
+          "missing": false,
+          "articleCreatedAt": "2018-06-08T19:56:34Z",
+          "pilotPercentile": 0.5294117647058824
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 307,
+      "languageBalancedPilot": 0.5588235294117647
+    },
+    {
+      "id": "met39668",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q19900792",
+      "qid": "Q19900792",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.23529411764705882
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 0,
+      "languageBalancedPilot": 0.5294117647058824
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q48881485",
+      "qid": "Q48881485",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": "青瓷劃花三魚小碗",
+          "canonicalTitle": "青瓷劃花三魚小碗",
+          "views": 558,
+          "missing": false,
+          "articleCreatedAt": "2017-05-08T21:38:33Z",
+          "pilotPercentile": 0.5882352941176471
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.23529411764705882
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 558,
+      "languageBalancedPilot": 0.5411764705882354
+    },
+    {
+      "id": "harvard280367",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "aic51545",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "harvard288279",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q11433080",
+      "qid": "Q11433080",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": "大包平",
+          "canonicalTitle": "大包平",
+          "views": 31688,
+          "missing": false,
+          "articleCreatedAt": "2008-01-11T16:04:31Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "zh": {
+          "title": "大包平",
+          "canonicalTitle": "大包平",
+          "views": 455,
+          "missing": false,
+          "articleCreatedAt": "2026-03-31T12:40:15Z",
+          "pilotPercentile": 0.5294117647058824
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.23529411764705882
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 32143,
+      "languageBalancedPilot": 0.5823529411764705
+    },
+    {
+      "id": "wikidata:Q2915613",
+      "qid": "Q2915613",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Ram in a Thicket",
+          "canonicalTitle": "Ram in a Thicket",
+          "views": 13371,
+          "missing": false,
+          "articleCreatedAt": "2008-01-12T22:24:39Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "ja": {
+          "title": "牡山羊の像",
+          "canonicalTitle": "牡山羊の像",
+          "views": 1917,
+          "missing": false,
+          "articleCreatedAt": "2012-02-22T10:30:59Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "zh": {
+          "title": "灌木叢中的公羊",
+          "canonicalTitle": "灌木叢中的公羊",
+          "views": 797,
+          "missing": false,
+          "articleCreatedAt": "2023-07-12T18:47:43Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "es": {
+          "title": "Cabra ramoneando un matorral",
+          "canonicalTitle": "Cabra ramoneando un matorral",
+          "views": 1214,
+          "missing": false,
+          "articleCreatedAt": "2012-10-02T12:39:10Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "fr": {
+          "title": "Bélier dans un fourré",
+          "canonicalTitle": "Bélier dans un fourré",
+          "views": 324,
+          "missing": false,
+          "articleCreatedAt": "2024-05-07T23:00:41Z",
+          "pilotPercentile": 0.5882352941176471
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": "كبش في دغل",
+          "canonicalTitle": "كبش في دغل",
+          "views": 242,
+          "missing": false,
+          "articleCreatedAt": "2017-05-21T12:45:42Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 17865,
+      "languageBalancedPilot": 0.6882352941176471
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q12588609",
+      "qid": "Q12588609",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": "阮堂歳寒図",
+          "canonicalTitle": "阮堂歳寒図",
+          "views": 101,
+          "missing": false,
+          "articleCreatedAt": "2026-01-06T02:13:14Z",
+          "pilotPercentile": 0.47058823529411764
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": "Paysage d'hiver (Kim Jeong-hui)",
+          "canonicalTitle": "Paysage d'hiver (Kim Jeong-hui)",
+          "views": 179,
+          "missing": false,
+          "articleCreatedAt": "2020-04-11T21:50:47Z",
+          "pilotPercentile": 0.4117647058823529
+        },
+        "de": {
+          "title": "Sehando",
+          "canonicalTitle": "Sehando",
+          "views": 73,
+          "missing": false,
+          "articleCreatedAt": "2021-06-30T13:39:27Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 353,
+      "languageBalancedPilot": 0.5588235294117647
+    },
+    {
+      "id": "wd:Q18210019",
+      "qid": "Q18210019",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Three Beauties of the Present Day",
+          "canonicalTitle": "Three Beauties of the Present Day",
+          "views": 12471,
+          "missing": false,
+          "articleCreatedAt": "2014-07-08T06:08:12Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ja": {
+          "title": "寛政三美人",
+          "canonicalTitle": "寛政三美人",
+          "views": 19433,
+          "missing": false,
+          "articleCreatedAt": "2020-11-28T23:59:47Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "zh": {
+          "title": "寬政三美人",
+          "canonicalTitle": "寬政三美人",
+          "views": 25625,
+          "missing": false,
+          "articleCreatedAt": "2025-07-25T10:26:19Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "es": {
+          "title": "Tres bellezas de nuestros días",
+          "canonicalTitle": "Tres bellezas de nuestros días",
+          "views": 963,
+          "missing": false,
+          "articleCreatedAt": "2015-09-24T22:36:37Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "fr": {
+          "title": "Trois beautés de notre temps",
+          "canonicalTitle": "Trois beautés de notre temps",
+          "views": 958,
+          "missing": false,
+          "articleCreatedAt": "2014-12-17T11:57:57Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": "ثلاث حسناوات من العصر الحديث",
+          "canonicalTitle": "ثلاث حسناوات من العصر الحديث",
+          "views": 193,
+          "missing": false,
+          "articleCreatedAt": "2018-04-27T21:49:00Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": "Três Belezas dos Nossos Dias",
+          "canonicalTitle": "Três Belezas dos Nossos Dias",
+          "views": 265,
+          "missing": false,
+          "articleCreatedAt": "2016-05-03T20:09:38Z",
+          "pilotPercentile": 0.7647058823529411
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 59908,
+      "languageBalancedPilot": 0.7411764705882353
+    },
+    {
+      "id": "vaO248613",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "met250944",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "vaO78856",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "cleveland136510",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q517408",
+      "qid": "Q517408",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Psyche Revived by Cupid's Kiss",
+          "canonicalTitle": "Psyche Revived by Cupid's Kiss",
+          "views": 70907,
+          "missing": false,
+          "articleCreatedAt": "2006-10-09T16:46:16Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": "普西莎与爱神",
+          "canonicalTitle": "普西莎与爱神",
+          "views": 3338,
+          "missing": false,
+          "articleCreatedAt": "2017-07-12T03:44:34Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "es": {
+          "title": "Psique reanimada por el beso del amor",
+          "canonicalTitle": "Psique reanimada por el beso del amor",
+          "views": 23284,
+          "missing": false,
+          "articleCreatedAt": "2008-10-30T16:28:15Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "fr": {
+          "title": "Psyché ranimée par le baiser de l'Amour",
+          "canonicalTitle": "Psyché ranimée par le baiser de l'Amour",
+          "views": 23679,
+          "missing": false,
+          "articleCreatedAt": "2007-12-28T19:55:31Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": "إحياء النفس من قبلة كيوبيد",
+          "canonicalTitle": "إحياء النفس من قبلة كيوبيد",
+          "views": 357,
+          "missing": false,
+          "articleCreatedAt": "2022-01-30T13:14:55Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Амур и Психея (Канова)",
+          "canonicalTitle": "Амур и Психея (Канова)",
+          "views": 13820,
+          "missing": false,
+          "articleCreatedAt": "2009-07-16T14:00:16Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "pt": {
+          "title": "Psiquê revivida por um beijo do Amor",
+          "canonicalTitle": "Psiquê revivida por um beijo do Amor",
+          "views": 2985,
+          "missing": false,
+          "articleCreatedAt": "2025-10-16T14:20:44Z",
+          "pilotPercentile": 0.8823529411764706
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 138370,
+      "languageBalancedPilot": 0.7941176470588236
+    },
+    {
+      "id": "wd:Q1126741",
+      "qid": "Q1126741",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Mask of Agamemnon",
+          "canonicalTitle": "Mask of Agamemnon",
+          "views": 111275,
+          "missing": false,
+          "articleCreatedAt": "2005-07-16T22:54:53Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ja": {
+          "title": "アガメムノンのマスク",
+          "canonicalTitle": "アガメムノンのマスク",
+          "views": 6391,
+          "missing": false,
+          "articleCreatedAt": "2007-01-20T15:23:20Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "zh": {
+          "title": "阿伽门农的面具",
+          "canonicalTitle": "阿伽门农的面具",
+          "views": 4319,
+          "missing": false,
+          "articleCreatedAt": "2010-08-03T23:01:31Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "es": {
+          "title": "Máscara de Agamenón",
+          "canonicalTitle": "Máscara de Agamenón",
+          "views": 16332,
+          "missing": false,
+          "articleCreatedAt": "2007-03-29T18:36:24Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "fr": {
+          "title": "Masque d'Agamemnon",
+          "canonicalTitle": "Masque d'Agamemnon",
+          "views": 13382,
+          "missing": false,
+          "articleCreatedAt": "2006-01-10T11:13:49Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "de": {
+          "title": "Goldmaske des Agamemnon",
+          "canonicalTitle": "Goldmaske des Agamemnon",
+          "views": 14085,
+          "missing": false,
+          "articleCreatedAt": "2004-07-14T10:53:51Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "ar": {
+          "title": "قناع أغاميمنون",
+          "canonicalTitle": "قناع أغاميمنون",
+          "views": 770,
+          "missing": false,
+          "articleCreatedAt": "2018-08-06T19:47:42Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Маска Агамемнона",
+          "canonicalTitle": "Маска Агамемнона",
+          "views": 14310,
+          "missing": false,
+          "articleCreatedAt": "2009-11-12T14:20:38Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "pt": {
+          "title": "Máscara de Agamémnon",
+          "canonicalTitle": "Máscara de Agamémnon",
+          "views": 2555,
+          "missing": false,
+          "articleCreatedAt": "2008-01-14T21:44:59Z",
+          "pilotPercentile": 0.8235294117647058
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 183419,
+      "languageBalancedPilot": 0.8529411764705884
+    },
+    {
+      "id": "wikidata:Q14515330",
+      "qid": "Q14515330",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Proserpina",
+          "canonicalTitle": "Proserpina",
+          "views": 100925,
+          "missing": false,
+          "articleCreatedAt": "2002-02-12T11:26:04Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "ja": {
+          "title": "プロセルピナ",
+          "canonicalTitle": "プロセルピナ",
+          "views": 15572,
+          "missing": false,
+          "articleCreatedAt": "2007-03-18T04:13:58Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "zh": {
+          "title": "普洛塞庇娜",
+          "canonicalTitle": "普洛塞庇娜",
+          "views": 5154,
+          "missing": false,
+          "articleCreatedAt": "2012-10-09T02:16:51Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "es": {
+          "title": "Proserpina",
+          "canonicalTitle": "Proserpina",
+          "views": 22273,
+          "missing": false,
+          "articleCreatedAt": "2005-04-05T21:26:49Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "fr": {
+          "title": "Proserpine",
+          "canonicalTitle": "Proserpine",
+          "views": 17472,
+          "missing": false,
+          "articleCreatedAt": "2007-02-25T14:13:35Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "de": {
+          "title": "Proserpina",
+          "canonicalTitle": "Proserpina",
+          "views": 15963,
+          "missing": false,
+          "articleCreatedAt": "2003-10-03T08:41:47Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ar": {
+          "title": "بروسربينا",
+          "canonicalTitle": "بروسربينا",
+          "views": 564,
+          "missing": false,
+          "articleCreatedAt": "2016-05-19T23:10:53Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Прозерпина",
+          "canonicalTitle": "Прозерпина",
+          "views": 18089,
+          "missing": false,
+          "articleCreatedAt": "2006-05-04T06:57:59Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "pt": {
+          "title": "Proserpina",
+          "canonicalTitle": "Proserpina",
+          "views": 6248,
+          "missing": false,
+          "articleCreatedAt": "2005-06-14T23:04:20Z",
+          "pilotPercentile": 0.9411764705882353
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 202260,
+      "languageBalancedPilot": 0.8882352941176471
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q5227835",
+      "qid": "Q5227835",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "The Gallant Conversation",
+          "canonicalTitle": "The Gallant Conversation",
+          "views": 3004,
+          "missing": false,
+          "articleCreatedAt": "2007-10-18T11:25:02Z",
+          "pilotPercentile": 0.5882352941176471
+        },
+        "ja": {
+          "title": "意味ありげな会話",
+          "canonicalTitle": "意味ありげな会話",
+          "views": 725,
+          "missing": false,
+          "articleCreatedAt": "2023-04-19T02:40:40Z",
+          "pilotPercentile": 0.5882352941176471
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": "Conversación galante",
+          "canonicalTitle": "Conversación galante",
+          "views": 364,
+          "missing": false,
+          "articleCreatedAt": "2009-06-08T22:43:05Z",
+          "pilotPercentile": 0.5882352941176471
+        },
+        "fr": {
+          "title": "La Remontrance paternelle",
+          "canonicalTitle": "La Remontrance paternelle",
+          "views": 492,
+          "missing": false,
+          "articleCreatedAt": "2025-10-20T05:42:25Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "de": {
+          "title": "Galante Konversation",
+          "canonicalTitle": "Galante Konversation",
+          "views": 644,
+          "missing": false,
+          "articleCreatedAt": "2020-07-30T17:50:44Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Галантная беседа",
+          "canonicalTitle": "Галантная беседа",
+          "views": 931,
+          "missing": false,
+          "articleCreatedAt": "2022-10-24T08:45:03Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 6160,
+      "languageBalancedPilot": 0.6470588235294119
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q3630726",
+      "qid": "Q3630726",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Self-portrait (Hans Holbein the Younger)",
+          "canonicalTitle": "Self-portrait (Hans Holbein the Younger)",
+          "views": 1347,
+          "missing": false,
+          "articleCreatedAt": "2011-09-20T07:04:34Z",
+          "pilotPercentile": 0.47058823529411764
+        },
+        "ja": {
+          "title": "自画像 (ホルバイン)",
+          "canonicalTitle": "自画像 (ホルバイン)",
+          "views": 104,
+          "missing": false,
+          "articleCreatedAt": "2023-08-23T03:21:05Z",
+          "pilotPercentile": 0.5294117647058824
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": "Autorretrato (Hans Holbein el Joven)",
+          "canonicalTitle": "Autorretrato (Hans Holbein el Joven)",
+          "views": 9,
+          "missing": false,
+          "articleCreatedAt": "2026-06-14T20:24:16Z",
+          "pilotPercentile": 0.47058823529411764
+        },
+        "fr": {
+          "title": "Autoportrait (Holbein)",
+          "canonicalTitle": "Autoportrait (Holbein)",
+          "views": 8,
+          "missing": false,
+          "articleCreatedAt": "2017-12-14T09:47:38Z",
+          "pilotPercentile": 0.29411764705882354
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": "Autorretrato (Hans Holbein, o jovem)",
+          "canonicalTitle": "Autorretrato (Hans Holbein, o jovem)",
+          "views": 49,
+          "missing": false,
+          "articleCreatedAt": "2025-04-24T02:56:00Z",
+          "pilotPercentile": 0.7058823529411765
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 1517,
+      "languageBalancedPilot": 0.5705882352941176
+    },
+    {
+      "id": "vaO70263",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "harvard230571",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "cleveland159061",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "vaO79376",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "cleveland160134",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "aic70386",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "aic20338",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "wikidata:Q28792214",
+      "qid": "Q28792214",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.35294117647058826
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.23529411764705882
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 0,
+      "languageBalancedPilot": 0.5294117647058824
+    },
+    {
+      "id": "wikidata:Q113297896",
+      "qid": "Q113297896",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Inverted Swan",
+          "canonicalTitle": "Inverted Swan",
+          "views": 1524,
+          "missing": false,
+          "articleCreatedAt": "2004-01-05T18:40:13Z",
+          "pilotPercentile": 0.5294117647058824
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.4117647058823529
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.47058823529411764
+        },
+        "es": {
+          "title": "Cisne invertido",
+          "canonicalTitle": "Cisne invertido",
+          "views": 103,
+          "missing": false,
+          "articleCreatedAt": "2009-02-21T13:06:46Z",
+          "pilotPercentile": 0.5294117647058824
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.23529411764705882
+        },
+        "de": {
+          "title": "Inverted Swan",
+          "canonicalTitle": "Inverted Swan",
+          "views": 13880,
+          "missing": false,
+          "articleCreatedAt": "2026-06-07T18:20:30Z",
+          "pilotPercentile": 0.8235294117647058
+        },
+        "ar": {
+          "title": "بجعة مقلوبة",
+          "canonicalTitle": "بجعة مقلوبة",
+          "views": 46,
+          "missing": false,
+          "articleCreatedAt": "2025-06-09T14:13:04Z",
+          "pilotPercentile": 0.6470588235294118
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Перевёрнутый лебедь",
+          "canonicalTitle": "Перевёрнутый лебедь",
+          "views": 954,
+          "missing": false,
+          "articleCreatedAt": "2007-08-08T12:07:16Z",
+          "pilotPercentile": 0.7058823529411765
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 16507,
+      "languageBalancedPilot": 0.5941176470588235
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q736832",
+      "qid": "Q736832",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Chōjū-jinbutsu-giga",
+          "canonicalTitle": "Chōjū-jinbutsu-giga",
+          "views": 36113,
+          "missing": false,
+          "articleCreatedAt": "2007-05-16T17:42:29Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "ja": {
+          "title": "鳥獣人物戯画",
+          "canonicalTitle": "鳥獣人物戯画",
+          "views": 100101,
+          "missing": false,
+          "articleCreatedAt": "2004-11-26T03:52:42Z",
+          "pilotPercentile": 1
+        },
+        "zh": {
+          "title": "鳥獸戲畫",
+          "canonicalTitle": "鳥獸戲畫",
+          "views": 8211,
+          "missing": false,
+          "articleCreatedAt": "2012-04-16T05:20:06Z",
+          "pilotPercentile": 0.8823529411764706
+        },
+        "es": {
+          "title": "Chōjugiga",
+          "canonicalTitle": "Chōjugiga",
+          "views": 1628,
+          "missing": false,
+          "articleCreatedAt": "2009-06-03T22:35:18Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "fr": {
+          "title": "Chōjū-giga",
+          "canonicalTitle": "Chōjū-giga",
+          "views": 2659,
+          "missing": false,
+          "articleCreatedAt": "2008-01-20T18:31:26Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.5882352941176471
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.9411764705882353
+        },
+        "ru": {
+          "title": "Тёдзюгига",
+          "canonicalTitle": "Тёдзюгига",
+          "views": 2270,
+          "missing": false,
+          "articleCreatedAt": "2009-07-20T04:04:19Z",
+          "pilotPercentile": 0.7647058823529411
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": 0,
+          "missing": true,
+          "articleCreatedAt": null,
+          "pilotPercentile": 0.6470588235294118
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 150982,
+      "languageBalancedPilot": 0.7764705882352941
+    },
+    {
+      "id": "wikidata:Q47672",
+      "qid": "Q47672",
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": "Terracotta Army",
+          "canonicalTitle": "Terracotta Army",
+          "views": 813044,
+          "missing": false,
+          "articleCreatedAt": "2002-11-18T15:13:26Z",
+          "pilotPercentile": 1
+        },
+        "ja": {
+          "title": "兵馬俑",
+          "canonicalTitle": "兵馬俑",
+          "views": 86425,
+          "missing": false,
+          "articleCreatedAt": "2004-05-31T04:47:00Z",
+          "pilotPercentile": 0.9411764705882353
+        },
+        "zh": {
+          "title": "秦始皇兵马俑",
+          "canonicalTitle": "秦始皇兵马俑",
+          "views": 101006,
+          "missing": false,
+          "articleCreatedAt": "2004-03-22T14:27:43Z",
+          "pilotPercentile": 1
+        },
+        "es": {
+          "title": "Guerreros de terracota",
+          "canonicalTitle": "Guerreros de terracota",
+          "views": 102353,
+          "missing": false,
+          "articleCreatedAt": "2004-11-08T04:05:03Z",
+          "pilotPercentile": 1
+        },
+        "fr": {
+          "title": "Armée de terre cuite",
+          "canonicalTitle": "Armée de terre cuite",
+          "views": 87622,
+          "missing": false,
+          "articleCreatedAt": "2006-01-04T10:14:46Z",
+          "pilotPercentile": 1
+        },
+        "de": {
+          "title": "Terrakotta-Armee",
+          "canonicalTitle": "Mausoleum Qin Shihuangdis",
+          "views": 76373,
+          "missing": false,
+          "articleCreatedAt": "2004-01-30T12:22:34Z",
+          "pilotPercentile": 1
+        },
+        "ar": {
+          "title": "ضريح الإمبراطور الأول تشين",
+          "canonicalTitle": "ضريح الإمبراطور الأول تشين",
+          "views": 7751,
+          "missing": false,
+          "articleCreatedAt": "2010-04-29T18:50:13Z",
+          "pilotPercentile": 1
+        },
+        "hi": {
+          "title": "टेराकोटा सेना",
+          "canonicalTitle": "टेराकोटा सेना",
+          "views": 354,
+          "missing": false,
+          "articleCreatedAt": "2015-05-14T10:57:37Z",
+          "pilotPercentile": 1
+        },
+        "ru": {
+          "title": "Терракотовая армия",
+          "canonicalTitle": "Терракотовая армия",
+          "views": 253459,
+          "missing": false,
+          "articleCreatedAt": "2007-01-07T04:30:59Z",
+          "pilotPercentile": 1
+        },
+        "pt": {
+          "title": "Exército de terracota",
+          "canonicalTitle": "Exército de terracota",
+          "views": 30156,
+          "missing": false,
+          "articleCreatedAt": "2006-09-09T04:38:07Z",
+          "pilotPercentile": 1
+        }
+      },
+      "missingQid": false,
+      "rawTotal": 1558543,
+      "languageBalancedPilot": 0.9941176470588236
+    },
+    {
+      "id": "harvard300021",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "harvard303417",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    },
+    {
+      "id": "harvard200407",
+      "qid": null,
+      "window": {
+        "start": "2025080100",
+        "end": "2026073100"
+      },
+      "languages": {
+        "en": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ja": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "zh": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "es": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "fr": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "de": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ar": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "hi": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "ru": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        },
+        "pt": {
+          "title": null,
+          "canonicalTitle": null,
+          "views": null,
+          "missing": true,
+          "unlinked": true,
+          "articleCreatedAt": null
+        }
+      },
+      "missingQid": true,
+      "rawTotal": null,
+      "languageBalancedPilot": null
+    }
+  ],
+  "sha256": "52bbfc76a33a6ec259439093ff88c503253427128b8a78e0f360de8fcebc4a02"
+}

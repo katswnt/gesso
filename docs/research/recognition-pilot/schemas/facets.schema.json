@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gesso.katswint.com/research/recognition-pilot/facets.schema.json",
+  "title": "Recognition pilot facet inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["date", "place", "medium", "style", "artist"],
+  "$defs": {
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "basis": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "guess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guess", "confidence", "visualBasis"],
+      "properties": {
+        "guess": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "visualBasis": { "$ref": "#/$defs/basis" }
+      }
+    }
+  },
+  "properties": {
+    "date": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bestYear", "confidence", "visualBasis"],
+      "properties": {
+        "bestYear": { "type": "integer", "minimum": -100000, "maximum": 3000 },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "visualBasis": { "$ref": "#/$defs/basis" }
+      }
+    },
+    "place": {
+      "type": "object", "additionalProperties": false,
+      "required": ["topGuess", "alternatives", "confidence", "visualBasis"],
+      "properties": {
+        "topGuess": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "alternatives": { "type": "array", "maxItems": 3, "items": { "type": "string", "minLength": 1, "maxLength": 300 } },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "visualBasis": { "$ref": "#/$defs/basis" }
+      }
+    },
+    "medium": { "$ref": "#/$defs/guess" },
+    "style": { "$ref": "#/$defs/guess" },
+    "artist": { "$ref": "#/$defs/guess" }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "sharpVersion": "0.35.3",
+  "vipsVersion": "8.18.3",
+  "policy": {
+    "version": "recognition-image/2",
+    "maxSide": 1568,
+    "patchSize": 28,
+    "maxVisualTokens": 1568,
+    "format": "jpeg",
+    "quality": 90,
+    "chromaSubsampling": "4:4:4",
+    "interpolation": "lanczos3",
+    "cropRounding": "round-half-up",
+    "background": "#ffffff"
+  },
+  "sourceSha256": "7911085b3e43b466b62bf78430d007dfd5d3bd584056f24eb529eb7c4f5b6e0a",
+  "anchor": "northwest",
+  "views": [
+    { "view": "full", "sha256": "9c2cfae59ad4af8d29028e645abd368e260dd6c43204d0ba4b5d73a899fc28dd", "width": 96, "height": 64, "mime": "image/jpeg" },
+    { "view": "crop70", "sha256": "3229707c556cef7eecd101ffceb32fed051d4170425591e2c9c74e46f056d729", "width": 96, "height": 64, "mime": "image/jpeg" },
+    { "view": "crop45", "sha256": "3bdce2a9e5ad71ba84c63d0555e5062f6cb94b4126dffef57e3d31ee4772bdcf", "width": 96, "height": 64, "mime": "image/jpeg" },
+    { "view": "crop25", "sha256": "ade7720a5bf7784824997fcb17fc46ffa8d26b5878d8d5cdac28ac7a1ab7ce6f", "width": 96, "height": 64, "mime": "image/jpeg" },
+    { "view": "mirror", "sha256": "56611da0283c84194b40f7af3c9c34700b35f2467eb3ec32e53f53c928574ccd", "width": 96, "height": 64, "mime": "image/jpeg" },
+    { "view": "rotate90", "sha256": "cdf67010387ba3eba6f84dfc45e4b273bfde75929ce19508bb15dddec0376f3d", "width": 64, "height": 96, "mime": "image/jpeg" },
+    { "view": "grayscale", "sha256": "d1b3a45db88f14e444fc3fd5979f1fa4a7be6d417645c9b943d21169e304f692", "width": 96, "height": 64, "mime": "image/jpeg" }
+  ]
+}

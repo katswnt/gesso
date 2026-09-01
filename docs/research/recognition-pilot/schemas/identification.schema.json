@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gesso.katswint.com/research/recognition-pilot/identification.schema.json",
+  "title": "Recognition pilot exact-work identification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workTitleGuess", "specificWorkClaim", "distinguishingQualifierGuess", "artistGuess", "seriesOrTraditionGuess", "selfRecognized", "confidence", "visualBasis"],
+  "properties": {
+    "workTitleGuess": { "type": ["string", "null"], "minLength": 1, "maxLength": 300 },
+    "specificWorkClaim": { "type": "boolean", "description": "True only when workTitleGuess asserts one specific catalog identity, not a generic visual description." },
+    "distinguishingQualifierGuess": { "type": ["string", "null"], "minLength": 1, "maxLength": 300, "description": "Optional disambiguator for a generic or duplicated title: the holding institution, accession/inventory number, or version that pins the exact work. Put it here rather than crammed into workTitleGuess." },
+    "artistGuess": { "type": ["string", "null"], "minLength": 1, "maxLength": 300 },
+    "seriesOrTraditionGuess": { "type": ["string", "null"], "minLength": 1, "maxLength": 300 },
+    "selfRecognized": { "type": "boolean" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "visualBasis": { "type": "string", "minLength": 1, "maxLength": 600 }
+  }
+}

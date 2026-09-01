@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gesso.katswint.com/research/recognition-pilot/identity-first.schema.json",
+  "title": "Recognition pilot identity-first protocol",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["identification", "facets"],
+  "properties": {
+    "identification": { "$ref": "identification.schema.json" },
+    "facets": { "$ref": "facets.schema.json" }
+  }
+}
