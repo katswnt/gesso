@@ -1,0 +1,3901 @@
+{
+  "version": "recognition-studyb-manifest/2-draft",
+  "status": "STUDYB_DRAFT_NOT_FROZEN",
+  "protocolId": "gesso-recognition-studyb-2026-09-01-v1",
+  "note": "Corrected Study-B-only mini-pilot (prompt-level JSON, leak fixed). Independent identity.",
+  "instrument": {
+    "method": "prompt-level-json",
+    "model": "claude-sonnet-4-6",
+    "facetsMaxTokens": 1800,
+    "temperature": 0,
+    "toolsOmitted": true,
+    "outputConfigUsed": false
+  },
+  "reuseBindings": {
+    "sourcePilotFreezeId": "gesso-recognition-pilot-2026-08-31-v1",
+    "sourcePilotManifestSha256": "399afb113df3b16afc367c1afdc9a020825933b337968506efd79588b9c273a8",
+    "researchSchemaSha256": "801bb638942e54acdd28a603447d775f660867593b39e5f60c70b1e973453d1f",
+    "promptSchemaSha256": "f0521d425e8ff065fac3babc6dcc3174266874bd4749bb3df3e9d2acbdea6a6a",
+    "promptFacetsSha256": "ad2d8271d8c38d2b6c691ae814e8056da415410aea4d8f8d0db77318973839ae",
+    "promptFacetsCuedSha256": "12a0db9710993ec8c68f679deb4cea5797815d9b28083b74bba4529ee26d93c5",
+    "styleTaxonomySha256": "79f70ce7f64cfe10020e2ef72fbdeb0c957b3e79ed58a30cfb14a14a18ecd2e2"
+  },
+  "budgetUsd": 10,
+  "conservativePerCallUsd": 0.040611,
+  "arms": [
+    "no-cue",
+    "sham",
+    "correct-cue"
+  ],
+  "works": [
+    {
+      "id": "http://www.wikidata.org/entity/Q3605549",
+      "cue": {
+        "correct": "Adoration of the Shepherds (Uffizi Gallery, inv. 8399)",
+        "sham": "3DTNJXDT8 GQ RGJ NSFDGQTGK (6MKT7Q MBQ3DTN, JXD. T8GQ)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1510",
+            "c. 1510"
+          ],
+          "place": [
+            "Italy",
+            "Florence",
+            "Europe"
+          ],
+          "medium": [
+            "Oil on panel",
+            "oil on wood",
+            "oil paint"
+          ],
+          "style": [
+            "Italian Renaissance",
+            "High Renaissance",
+            "Early Italian Renaissance"
+          ],
+          "artist": [
+            "Lorenzo di Credi",
+            "Lorenzo d'Andrea d'Oderigo",
+            "Credi"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1510,
+          "hi": 1510
+        },
+        "place": {
+          "exact": [
+            "Italy",
+            "Florence"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Oil on panel",
+            "oil on wood"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Italian Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "High Renaissance",
+            "Early Italian Renaissance"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Lorenzo di Credi"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 560.8,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "b87150044baaa9d275abf4e1816f825b01cae1b319717f477831fe9fee1e874c",
+        "width": 1033,
+        "height": 1176,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "fec5516774ac485452b463d7b06beefbc9250fd82f566596be4198a3814c0c26"
+      }
+    },
+    {
+      "id": "wikidata:Q18339646",
+      "cue": {
+        "correct": "The Great Hercules (Hercules Conquering Cacus)",
+        "sham": "SP7 PNHCY MC9CGFZG (RJYNJBF9 PCNH33M6SP 7PNHC)",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1496",
+            "c. 1496"
+          ],
+          "place": [
+            "Germany",
+            "Nuremberg",
+            "Europe"
+          ],
+          "medium": [
+            "Woodcut",
+            "woodcut on paper",
+            "print"
+          ],
+          "style": [
+            "German Renaissance",
+            "Northern Renaissance"
+          ],
+          "artist": [
+            "Albrecht Dürer",
+            "Dürer",
+            "Albrecht Duerer",
+            "Albrecht Durer"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1496,
+          "hi": 1496
+        },
+        "place": {
+          "exact": [
+            "Germany",
+            "Nuremberg"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Woodcut",
+            "woodcut on paper"
+          ],
+          "family": [
+            "print"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "German Renaissance"
+          ],
+          "family": [
+            "Northern Renaissance"
+          ],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "Albrecht Dürer"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 385,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "56beea22ca9e87d02b2e02c8b2d3fbbbb421c92891af9f98a89f59181a2c3abb",
+        "width": 937,
+        "height": 1288,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "9e7ace85fe9ba7ccc00e007b4f063c4d908649c57f98bd18500041a2eeefef91"
+      }
+    },
+    {
+      "id": "wikidata:Q12108230",
+      "cue": {
+        "correct": "Volga and Mikula fireplace",
+        "sham": "VVF35 WRC 6KB7TX 85CVW4SJF",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1899",
+            "1898",
+            "1900",
+            "c. 1899"
+          ],
+          "place": [
+            "Russia",
+            "Europe"
+          ],
+          "medium": [
+            "Majolica",
+            "glazed majolica",
+            "glazed ceramic",
+            "ceramic",
+            "faience"
+          ],
+          "style": [
+            "Art Nouveau",
+            "Symbolism",
+            "Russian Symbolism"
+          ],
+          "artist": [
+            "Mikhail Vrubel",
+            "Vrubel",
+            "Mikhail Aleksandrovich Vrubel"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1899,
+          "hi": 1899
+        },
+        "place": {
+          "exact": [
+            "Russia"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Majolica (glazed ceramic)",
+            "glazed majolica",
+            "faience"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Art Nouveau"
+          ],
+          "family": [],
+          "related": [
+            "Symbolism",
+            "Russian Symbolism"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Mikhail Vrubel"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 351.1,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "fb77112068d22042b02e247d00ddc2d1262684504b0c7e1cf2150e3d4491c059",
+        "width": 1148,
+        "height": 1046,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "b2e7fcc3e115ad3e95454d2301e272b4969232b8f5254de283f345b7d5fc77ff"
+      }
+    },
+    {
+      "id": "met39668",
+      "cue": {
+        "correct": "Old Trees, Level Distance",
+        "sham": "ZDS YNBHP, QD5Z7 5PDLRVFJ",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1080",
+            "c. 1080",
+            "ca. 1080",
+            "1070",
+            "1090"
+          ],
+          "place": [
+            "China",
+            "Asia"
+          ],
+          "medium": [
+            "ink and color on silk",
+            "handscroll",
+            "ink on silk",
+            "ink"
+          ],
+          "style": [
+            "Northern Song landscape painting",
+            "Northern Song dynasty",
+            "Song dynasty"
+          ],
+          "artist": [
+            "Guo Xi",
+            "Kuo Hsi"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1070,
+          "hi": 1090
+        },
+        "place": {
+          "exact": [
+            "China"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "ink and color on silk",
+            "handscroll"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Northern Song landscape painting"
+          ],
+          "family": [
+            "Northern Song dynasty"
+          ],
+          "related": [
+            "Northern Song monumental landscape",
+            "Chinese literati painting"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Guo Xi"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 598.5,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "691df3d8bcae3a641942e8dfa4558d8b57180bdbbce9af778838108066330205",
+        "width": 1512,
+        "height": 807,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "9c9606b5528dafce5a55c2bcb0671e9968b133a28205da60ca6681c45d8afb47"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q19900792",
+      "cue": {
+        "correct": "Niagara Falls (Fine Arts Museums of San Francisco, 1979.7.13)",
+        "sham": "3R2WN7Y 3FNQD (H36W BKBZ FNMCH4R 84 GP3 3R2WN7Y3F, NQDH.3.6W)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1869"
+          ],
+          "place": [
+            "United States of America",
+            "United States",
+            "USA",
+            "North America"
+          ],
+          "medium": [
+            "Oil on canvas",
+            "oil paint",
+            "canvas"
+          ],
+          "style": [
+            "Hudson River School",
+            "American Romanticism"
+          ],
+          "artist": [
+            "Albert Bierstadt",
+            "Bierstadt"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1869,
+          "hi": 1869
+        },
+        "place": {
+          "exact": [
+            "United States of America",
+            "United States"
+          ],
+          "parent": [
+            "North America"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Oil on canvas",
+            "oil paint"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Hudson River School"
+          ],
+          "family": [],
+          "related": [
+            "American Romanticism"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Albert Bierstadt"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 137.4,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "c3662c24eeae8f91696938bfa88d80ba6f91a6783f419bb145fe1a8b3de3e122",
+        "width": 1288,
+        "height": 935,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "0054e86671a7618032e90194bf71fac375a7e43bf9ce77fb2fc126136f1df087"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q48881485",
+      "cue": {
+        "correct": "Bowl with incised three-fish decoration (National Palace Museum, 故瓷001165)",
+        "sham": "64B6 VRWB 4T6X4BV WHNHN-VBBR RGVKNCQ964 (B6VRWB4T 6X4BVW HNHNVB, BRRGVKNC)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "960",
+            "1127",
+            "Northern Song",
+            "10th century",
+            "11th century",
+            "12th century"
+          ],
+          "place": [
+            "China",
+            "Asia"
+          ],
+          "medium": [
+            "Ceramic",
+            "celadon",
+            "green-glazed stoneware",
+            "green glaze",
+            "green-glazed",
+            "Yaozhou ware",
+            "stoneware",
+            "porcelain"
+          ],
+          "style": [
+            "Song dynasty",
+            "Northern Song dynasty"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 960,
+          "hi": 1127
+        },
+        "place": {
+          "exact": [
+            "China"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Celadon (green-glazed stoneware)",
+            "Yaozhou ware",
+            "incised celadon"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Northern Song dynasty"
+          ],
+          "family": [
+            "Song dynasty"
+          ],
+          "related": []
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f3",
+        "fameHistoricalComposite": 460.1,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "1288acdf5c9d2595eb4907630b12f09ab4667614c7d5f204079c1a5ba1746bad",
+        "width": 1092,
+        "height": 1092,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "3cc2361c4b70e51f5c50e76b0afde2b65e28f1e455c32fc2369f08d615a21b14"
+      }
+    },
+    {
+      "id": "harvard280367",
+      "cue": {
+        "correct": "Knucklebone (Harvard Art Museums, object no. 1978.495.46)",
+        "sham": "2V4JB3FQHQS (ZYLBSD8 WR3 L9NVXTT, MKZG2V 4J. B3FQ.HQS.ZY)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-500",
+            "-499",
+            "-250",
+            "-100",
+            "-1",
+            "5th century BCE",
+            "1st century BCE"
+          ],
+          "place": [
+            "Italy",
+            "Rome",
+            "Greece",
+            "Mediterranean",
+            "Europe"
+          ],
+          "medium": [
+            "Bronze",
+            "Copper alloy",
+            "cast bronze",
+            "cast"
+          ],
+          "style": [
+            "Hellenistic art",
+            "Graeco-Roman",
+            "Ancient Greece",
+            "Ancient Roman"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -500,
+          "hi": -1
+        },
+        "place": {
+          "exact": [
+            "Greece",
+            "Rome",
+            "Italy",
+            "Mediterranean"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Copper alloy",
+            "Bronze",
+            "cast"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": [
+            "metalwork",
+            "small bronze / gaming piece"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Graeco-Roman"
+          ],
+          "family": [
+            "Hellenistic art"
+          ],
+          "related": [
+            "Ancient Greece",
+            "Ancient Roman"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "europe",
+        "regionSource": "culture-region-fallback",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "93e1f2badd99d7b3ea7bd380ca73f723a686b0a00d50f9f727a3bb8a49108af5",
+        "width": 1176,
+        "height": 1035,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "e934b7ca212d3061303c4b5d96824e96e1fb0276ada2a67d794f365db36c0247"
+      }
+    },
+    {
+      "id": "aic51545",
+      "cue": {
+        "correct": "Infantryman (Art Institute of Chicago, ref. no. 1927.6303)",
+        "sham": "F32KCJKW7N5 (5JG WXJR5YC8P MK GDL3WKB, F32. KC. JKW7.N55J)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1915"
+          ],
+          "place": [
+            "France",
+            "Europe"
+          ],
+          "medium": [
+            "Lithograph",
+            "lithograph in black with scraping",
+            "print"
+          ],
+          "artist": [
+            "Théophile-Alexandre Steinlen",
+            "Theophile-Alexandre Steinlen",
+            "Théophile Steinlen",
+            "Steinlen"
+          ],
+          "style": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1915,
+          "hi": 1915
+        },
+        "place": {
+          "exact": [
+            "France"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Lithograph in black with scraping on stone over fawn tint on thick off-white wove paper",
+            "Lithograph"
+          ],
+          "family": [
+            "print"
+          ],
+          "broad": []
+        },
+        "style": {
+          "notApplicable": true
+        },
+        "artist": {
+          "exact": [
+            "Théophile-Alexandre Steinlen"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "da1ea16c755daf9704ff2fd987e5d7ef8530eba3b0eaafac7a6c825216a3c823",
+        "width": 843,
+        "height": 1144,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "04a147e4c2bc08401ea28b3cdced483e20abfbbdf7757d07afaeb3afd0c1c04a"
+      }
+    },
+    {
+      "id": "harvard288279",
+      "cue": {
+        "correct": "Cuff Band: Knot Motif",
+        "sham": "PGD7 C6BK: LWPT RFGHN",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "600",
+            "6th century",
+            "7th century"
+          ],
+          "place": [
+            "Egypt",
+            "Africa",
+            "Byzantine Egypt"
+          ],
+          "medium": [
+            "Textile",
+            "linen and wool",
+            "tapestry weave",
+            "plain weave"
+          ],
+          "style": [
+            "Byzantine"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 500,
+          "hi": 699
+        },
+        "place": {
+          "exact": [
+            "Egypt"
+          ],
+          "parent": [
+            "Africa"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Linen and wool, tapestry and plain weave",
+            "linen",
+            "wool"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Byzantine"
+          ],
+          "family": [],
+          "related": [
+            "Roman Egypt"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "96dda14f95035f1652f5c8dc6f6905f08af2ad868dd69e80775ee76822f3adb2",
+        "width": 1232,
+        "height": 974,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "d06e0e2252dc7bacb82fc88094cbbd096ca5a1d609cc0c26e29139d1fa194478"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q11433080",
+      "cue": {
+        "correct": "Ō-Kanehira (Tokyo National Museum)",
+        "sham": "3-F9LPZJN6 (QJMX6 72P6DMYD Q4QBJ3)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style"
+        ],
+        "disclosedFacets": [
+          "artist"
+        ],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1100",
+            "1150",
+            "1199",
+            "1200",
+            "12th century",
+            "late Heian"
+          ],
+          "place": [
+            "Japan",
+            "Bizen Province",
+            "Okayama",
+            "Asia"
+          ],
+          "medium": [
+            "Forged steel",
+            "steel",
+            "tamahagane"
+          ],
+          "style": [
+            "Heian period",
+            "Kamakura period"
+          ],
+          "artist": [
+            "Kanehira",
+            "Ko-Bizen Kanehira",
+            "Bizen Kanehira",
+            "Kanehira of Bizen"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1100,
+          "hi": 1199
+        },
+        "place": {
+          "exact": [
+            "Japan",
+            "Bizen Province"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Forged steel",
+            "steel",
+            "tamahagane"
+          ],
+          "family": [
+            "other"
+          ],
+          "broad": [
+            "sword / arms and armour",
+            "metalwork"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Heian period"
+          ],
+          "family": [],
+          "related": [
+            "Kamakura period"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Kanehira"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 968.3,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "d7e43049118bc8b2024e0fd3144bfc1126d9a138f55b4148f991cb807581f3e4",
+        "width": 1349,
+        "height": 896,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "b673ade548588bbff12b7d425629ba8ecff4dc255d415f0aba4d4b2b6badb734"
+      }
+    },
+    {
+      "id": "wikidata:Q2915613",
+      "cue": {
+        "correct": "Ram in a Thicket (British Museum)",
+        "sham": "HDG L8 9 JW29W2R (2KRMZRR 8CGM3B)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-2600",
+            "-2500",
+            "-2400",
+            "2600 BC",
+            "2500 BC",
+            "2400 BC"
+          ],
+          "place": [
+            "Iraq",
+            "Ur",
+            "Mesopotamia",
+            "Sumer",
+            "Asia"
+          ],
+          "medium": [
+            "Gold, silver, lapis lazuli, shell, red limestone, copper, bitumen, and wood",
+            "gold",
+            "lapis lazuli",
+            "copper",
+            "shell"
+          ],
+          "style": [
+            "Sumerian",
+            "Early Dynastic Sumerian",
+            "Ancient Near Eastern"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -2600,
+          "hi": -2400
+        },
+        "place": {
+          "exact": [
+            "Iraq",
+            "Ur",
+            "Mesopotamia",
+            "Sumer"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Gold, silver, lapis lazuli, shell, red limestone, copper, bitumen, and wood",
+            "gold leaf over wood core",
+            "copper",
+            "lapis lazuli",
+            "shell",
+            "red limestone"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": [
+            "figurine / composite statuette"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Sumerian"
+          ],
+          "family": [
+            "Ancient Near Eastern"
+          ],
+          "related": [
+            "Early Dynastic Sumerian",
+            "Mesopotamia / Iraq"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 760,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "f40858a77b26614dec26939186c7fd9bddf196c15246e61d10e398c2d0fb803e",
+        "width": 812,
+        "height": 1459,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "41dae45fb5a2e78a3d73deeb1abb258a89ba258737957f3a7de2b139e78ac388"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q12588609",
+      "cue": {
+        "correct": "Sehando",
+        "sham": "F9CG9MP",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1844"
+          ],
+          "place": [
+            "Korea",
+            "South Korea",
+            "Joseon",
+            "Joseon Korea",
+            "Asia",
+            "East Asia"
+          ],
+          "medium": [
+            "ink on paper",
+            "ink",
+            "ink wash painting",
+            "brush and ink",
+            "ink and light color on paper"
+          ],
+          "style": [
+            "Joseon dynasty literati painting",
+            "Joseon Korean",
+            "Joseon dynasty",
+            "literati painting",
+            "Korean literati painting"
+          ],
+          "artist": [
+            "Kim Jeong-hui",
+            "Kim Jong-hui",
+            "Gim Jeong-hui",
+            "Chusa",
+            "Wandang"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1844,
+          "hi": 1844
+        },
+        "place": {
+          "exact": [
+            "Korea",
+            "Joseon Korea",
+            "South Korea"
+          ],
+          "parent": [
+            "Asia",
+            "East Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "ink on paper",
+            "ink wash painting"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": [
+            "drawing"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Joseon dynasty literati painting"
+          ],
+          "family": [
+            "Joseon Korean",
+            "Joseon dynasty"
+          ],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "Kim Jeong-hui"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 717.6,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "6e9d2208d7ac9383872ed46fb7466098aedb311414a6ba6ac11e4d5ec322ff8e",
+        "width": 1568,
+        "height": 420,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "70ff6c157d5c9e718f0f84391ad32b4d3fbd42a41a1d084e18641714a03384ea"
+      }
+    },
+    {
+      "id": "wd:Q18210019",
+      "cue": {
+        "correct": "Three Beauties of the Present Day",
+        "sham": "P4245 G5SPZ8FP F7 G8K HKKY8ZG 8YD",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1793",
+            "1792",
+            "c. 1793",
+            "Kansei 5"
+          ],
+          "place": [
+            "Japan",
+            "Edo",
+            "Asia",
+            "East Asia"
+          ],
+          "medium": [
+            "woodblock print",
+            "nishiki-e",
+            "ink and color on paper",
+            "colour woodblock print",
+            "polychrome woodblock print",
+            "ink, color and mica on paper"
+          ],
+          "style": [
+            "Ukiyo-e",
+            "ukiyo-e",
+            "bijin-ga"
+          ],
+          "artist": [
+            "Kitagawa Utamaro",
+            "Utamaro"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1793,
+          "hi": 1793
+        },
+        "place": {
+          "exact": [
+            "Japan"
+          ],
+          "parent": [
+            "Asia",
+            "East Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "woodblock print (nishiki-e)",
+            "ink and color on paper"
+          ],
+          "family": [
+            "print"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Ukiyo-e"
+          ],
+          "family": [],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "Kitagawa Utamaro"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 938.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "d3c22e9e932b31b46c5aa6d33c61e2ecb3af35aff34fea6c96709cef03a2d03f",
+        "width": 896,
+        "height": 1316,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "ff43811e1326bb5be67fb9e3e74ef27efa9e1658cf29505a938ada79a1dee998"
+      }
+    },
+    {
+      "id": "vaO248613",
+      "cue": {
+        "correct": "Wreath (Victoria and Albert Museum, museum no. E.501-1919)",
+        "sham": "DT5PM5 (37BX3RH2 CF7 ZBX2QF JVQD56, DCRDT5 PM. 5.37B-X3RH)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1876"
+          ],
+          "place": [
+            "United Kingdom",
+            "England",
+            "Britain",
+            "Great Britain",
+            "Europe"
+          ],
+          "medium": [
+            "block-printed wallpaper",
+            "wallpaper",
+            "block print on paper",
+            "distemper wallpaper",
+            "woodblock-printed wallpaper"
+          ],
+          "style": [
+            "Arts and Crafts",
+            "Arts and Crafts movement"
+          ],
+          "artist": [
+            "William Morris",
+            "Morris",
+            "Morris & Co."
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1876,
+          "hi": 1876
+        },
+        "place": {
+          "exact": [
+            "England",
+            "United Kingdom",
+            "Britain"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "block-printed wallpaper",
+            "block print on paper (distemper)"
+          ],
+          "family": [
+            "print"
+          ],
+          "broad": [
+            "wallpaper"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "William Morris"
+          ],
+          "workshop": [
+            "Morris & Co.",
+            "Jeffrey & Co."
+          ],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "f329112e50e1de1303ddb5d96a533c690f1de65dd7da6adc79a472b6b9c5c444",
+        "width": 843,
+        "height": 1079,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "02d9b79bfb41525b52c2dc93e52bd591181c805143f33e89559a6cee351e6c3a"
+      }
+    },
+    {
+      "id": "met250944",
+      "cue": {
+        "correct": "Candelabrum from the imperial villa at Boscotrecase (Metropolitan Museum of Art, accession 20.192.15)",
+        "sham": "DV87VD68N2K VGJ2 38N QSGB98K2 DCSRC HD V87VD68N2KVG (J238NQSGB98K 2DCSRC HD V87, VD68N2KVG J2.38N.QS)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-10",
+            "-1",
+            "10 BCE",
+            "1 BCE",
+            "late 1st century BCE",
+            "1st century BC"
+          ],
+          "place": [
+            "Italy",
+            "Rome",
+            "Roman Empire",
+            "Ancient Rome",
+            "Europe"
+          ],
+          "medium": [
+            "fresco",
+            "wall painting",
+            "mural",
+            "buon fresco"
+          ],
+          "style": [
+            "Roman Third Style",
+            "Third Style",
+            "Pompeian Roman",
+            "Ancient Roman"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -10,
+          "hi": -1
+        },
+        "place": {
+          "exact": [
+            "Italy",
+            "Rome"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "fresco"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": [
+            "wall painting"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Roman Third Style"
+          ],
+          "family": [
+            "Ancient Roman"
+          ],
+          "related": [
+            "Pompeian Roman",
+            "Roman Second Style",
+            "Roman Imperial"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.4,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "971e5a0df6a35a7428c36bd7a06b4870e58d7c69a0872564ecc1d2d6b7591f14",
+        "width": 464,
+        "height": 1568,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "d61d9b6db043468e8a0a302b6cbec39409527e4e04a1491faad83c77aa0e5c4f"
+      }
+    },
+    {
+      "id": "vaO78856",
+      "cue": {
+        "correct": "Wandle (Victoria and Albert Museum, museum no. T.425-1934)",
+        "sham": "SPZZNQ (3JYYR44F YDZ WJG66C B9B3XX, Z9HSPZ ZN. Q.3JY-YR44)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1884"
+          ],
+          "place": [
+            "United Kingdom",
+            "England",
+            "Britain",
+            "Great Britain",
+            "Europe"
+          ],
+          "medium": [
+            "textile",
+            "furnishing fabric",
+            "printed cotton",
+            "block-printed cotton",
+            "indigo-discharged and block-printed cotton",
+            "printed textile"
+          ],
+          "style": [
+            "Arts and Crafts",
+            "Arts and Crafts movement"
+          ],
+          "artist": [
+            "William Morris",
+            "Morris",
+            "Morris & Co."
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1884,
+          "hi": 1884
+        },
+        "place": {
+          "exact": [
+            "England",
+            "United Kingdom",
+            "Britain"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "indigo-discharged and block-printed cotton",
+            "block-printed cotton"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": [
+            "furnishing fabric"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "William Morris"
+          ],
+          "workshop": [
+            "Morris & Co."
+          ],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "d2b0a1d3a75816e4c6d10b0caea5c247e21698281572776f3aad8dfec0e1a597",
+        "width": 843,
+        "height": 1320,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "c4cbc55a2b43e9e4f41e3268e79cbca3b15f82de1b695fa19ea35f948d521103"
+      }
+    },
+    {
+      "id": "cleveland136510",
+      "cue": {
+        "correct": "Water Lilies (Agapanthus) (Cleveland Museum of Art, 1960.81)",
+        "sham": "8R7XG FL6VHN (V6F2BSMXFS) (DX3ZBFC4L 998R7X GF L6V, HNV6.F2)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1915",
+            "1926",
+            "c. 1915-26",
+            "1915-1926"
+          ],
+          "place": [
+            "France",
+            "Giverny",
+            "Europe"
+          ],
+          "medium": [
+            "oil on canvas",
+            "oil paint",
+            "oil"
+          ],
+          "style": [
+            "Impressionism",
+            "Impressionist"
+          ],
+          "artist": [
+            "Claude Monet",
+            "Monet"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1915,
+          "hi": 1926
+        },
+        "place": {
+          "exact": [
+            "France"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Impressionism"
+          ],
+          "family": [],
+          "related": [
+            "Post-Impressionism"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Claude Monet"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 2061.1,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "2cf12c8ac56330283e635ca050f5dd3af9b2b81fb36a1a3d5c9909fd7c4bafad",
+        "width": 1568,
+        "height": 729,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "8910746e3e0d887cdf550b4f13cb0095782abd8386ce7658742637caaf1f1259"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q517408",
+      "cue": {
+        "correct": "Psyche Revived by Cupid's Kiss",
+        "sham": "WNR93M SBP5JD4 MX XGGQ9'D 8T39",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1787",
+            "1788",
+            "1793",
+            "1794"
+          ],
+          "place": [
+            "Italy",
+            "Rome",
+            "Rome, Italy",
+            "Europe"
+          ],
+          "medium": [
+            "Marble",
+            "marble"
+          ],
+          "style": [
+            "Neoclassicism",
+            "Neoclassical"
+          ],
+          "artist": [
+            "Antonio Canova",
+            "Canova"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1787,
+          "hi": 1793
+        },
+        "place": {
+          "exact": [
+            "Rome, Italy",
+            "Italy"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Marble"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Neoclassicism"
+          ],
+          "family": [],
+          "related": [
+            "Romanticism"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Antonio Canova"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 1162.3,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "515f4fa6f667e51c5440faccc54263169c6a14c3c9a27cf427836bd93d0d5a63",
+        "width": 1304,
+        "height": 924,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "572087d2275228713087e21c3fd0e791c960cb715bebb17ba54bbcae5d9b1656"
+      }
+    },
+    {
+      "id": "wd:Q1126741",
+      "cue": {
+        "correct": "Mask of Agamemnon",
+        "sham": "ZVS4 TS YK7N5B6VM",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-1550",
+            "-1500",
+            "1550 BCE",
+            "1500 BCE",
+            "16th century BCE",
+            "c. 1550 BC"
+          ],
+          "place": [
+            "Greece",
+            "Mycenae",
+            "Greece (Mycenae)",
+            "Mycenae, Greece",
+            "Europe"
+          ],
+          "medium": [
+            "Gold",
+            "Beaten gold",
+            "gold repoussé"
+          ],
+          "style": [
+            "Mycenaean",
+            "Mycenaean Greece"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -1550,
+          "hi": -1500
+        },
+        "place": {
+          "exact": [
+            "Greece",
+            "Mycenae, Greece"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Gold",
+            "Beaten gold (repoussé)"
+          ],
+          "family": [
+            "other"
+          ],
+          "broad": [
+            "metalwork",
+            "goldwork"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Mycenaean"
+          ],
+          "family": [],
+          "related": [
+            "Minoan",
+            "Cycladic"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 1337.5,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "0937a62ea3a87a4a9735d179bc093e0445e0a9b6630e543fe6e724c3f17e922d",
+        "width": 1092,
+        "height": 1092,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "e0808408f141c709cbf94721b84112a34495608987c75cc227a4057fc82381e5"
+      }
+    },
+    {
+      "id": "wikidata:Q14515330",
+      "cue": {
+        "correct": "Proserpine (Tate, N05064)",
+        "sham": "JCQ44W8Y4H (8QYM, T2KC9J)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1874"
+          ],
+          "place": [
+            "United Kingdom",
+            "England",
+            "Britain",
+            "Great Britain",
+            "Europe"
+          ],
+          "medium": [
+            "Oil paint",
+            "Oil on canvas",
+            "oil"
+          ],
+          "style": [
+            "Pre-Raphaelite",
+            "Pre-Raphaelite Brotherhood"
+          ],
+          "artist": [
+            "Dante Gabriel Rossetti",
+            "Rossetti"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1874,
+          "hi": 1874
+        },
+        "place": {
+          "exact": [
+            "United Kingdom",
+            "England",
+            "Britain"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Oil paint",
+            "Oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Pre-Raphaelite"
+          ],
+          "family": [],
+          "related": [
+            "Aestheticism"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Dante Gabriel Rossetti"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 3206.6,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "9d6bf2eadc47bc165de92620f53614d9e9ea169334e8c5f38f67ab98c88884cc",
+        "width": 849,
+        "height": 1400,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "565a71ae7ad135e6e54563daf644d28fe789df333938a89810c42d16e95ff19c"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q5227835",
+      "cue": {
+        "correct": "The Gallant Conversation (Rijksmuseum, SK-A-404)",
+        "sham": "3XG DMLPSVN 4GVQMJZFPSV3 (6KM7KMDD4Z3, XG-D-MLP)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1654",
+            "1655",
+            "c. 1654",
+            "c. 1655",
+            "1654–1655",
+            "c. 1654–c. 1655"
+          ],
+          "place": [
+            "Netherlands",
+            "the Netherlands",
+            "Dutch Republic",
+            "Holland",
+            "Deventer",
+            "Europe"
+          ],
+          "medium": [
+            "oil on canvas",
+            "oil",
+            "canvas",
+            "painting"
+          ],
+          "style": [
+            "Dutch Golden Age",
+            "Baroque",
+            "Dutch Baroque",
+            "Dutch genre painting",
+            "genre painting",
+            "genre scene"
+          ],
+          "artist": [
+            "Gerard ter Borch",
+            "Gerard ter Borch the Younger",
+            "Gerard ter Borch (II)",
+            "Gerard ter Borch de Jonge",
+            "Gerard Terborch",
+            "Gerard ter Borgh"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1654,
+          "hi": 1655
+        },
+        "place": {
+          "exact": [
+            "Netherlands",
+            "Dutch Republic"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Dutch Golden Age"
+          ],
+          "family": [
+            "Baroque"
+          ],
+          "related": [
+            "Dutch Baroque",
+            "Dutch genre painting"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Gerard ter Borch",
+            "Gerard ter Borch the Younger",
+            "Gerard ter Borch (II)"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 891.3,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "6d6377da938cf352b5f978a318fa6ecabeb12f588d71a1f9c1f5fccac3955afc",
+        "width": 1120,
+        "height": 1073,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "5f1e75e9aee22b08bcf228114bcc467ff747404376c6930d42d2d1da3f3c0b46"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q3630726",
+      "cue": {
+        "correct": "Self-portrait (Uffizi Gallery, inv. 1890 no. 1630)",
+        "sham": "JJDD-R5H3598K (TL46ZM DBBRBCB, HH7. 67TD JJ. DDR5)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1542",
+            "1543",
+            "c. 1542",
+            "1540"
+          ],
+          "place": [
+            "United Kingdom",
+            "England",
+            "London",
+            "Europe"
+          ],
+          "medium": [
+            "Chalk and ink on paper",
+            "coloured chalk",
+            "pastel on paper",
+            "chalk"
+          ],
+          "style": [
+            "Northern Renaissance",
+            "German Renaissance"
+          ],
+          "artist": [
+            "Hans Holbein the Younger",
+            "Hans Holbein",
+            "Holbein"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1542,
+          "hi": 1543
+        },
+        "place": {
+          "exact": [
+            "England",
+            "United Kingdom",
+            "London"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Coloured chalk and ink (pen) on paper, gold ground added later"
+          ],
+          "family": [
+            "drawing"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Northern Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "German Renaissance"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Hans Holbein the Younger"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 622.8,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "c53835eaaab8e2a11db6284ff1629d917654f303374d70b6ceb8e944e2449996",
+        "width": 943,
+        "height": 1288,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "bf71b322e30e55eb87c0fc6b022d07194ebdb4e627fae2720e33e44a22590866"
+      }
+    },
+    {
+      "id": "vaO70263",
+      "cue": {
+        "correct": "The Virgin with the Laughing Child",
+        "sham": "CBV FXB677 XVR2 JC6 8JLNXZDQ JMFDL",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1460",
+            "1475",
+            "c. 1465",
+            "1460-75"
+          ],
+          "place": [
+            "Florence",
+            "Italy",
+            "Florence, Italy",
+            "Europe"
+          ],
+          "medium": [
+            "Terracotta",
+            "terracotta"
+          ],
+          "style": [
+            "Early Renaissance",
+            "Italian Renaissance",
+            "Early Italian Renaissance"
+          ],
+          "artist": [
+            "Antonio Rossellino",
+            "Desiderio da Settignano",
+            "Leonardo da Vinci",
+            "Andrea del Verrocchio"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1460,
+          "hi": 1475
+        },
+        "place": {
+          "exact": [
+            "Florence, Italy",
+            "Italy"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Terracotta"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": [
+            "ceramic"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Early Renaissance"
+          ],
+          "family": [
+            "Italian Renaissance"
+          ],
+          "related": [
+            "Early Italian Renaissance"
+          ]
+        },
+        "artist": {
+          "exact": [],
+          "workshop": [],
+          "circle": [],
+          "attributed": [
+            "Antonio Rossellino",
+            "Desiderio da Settignano",
+            "Leonardo da Vinci",
+            "Andrea del Verrocchio"
+          ],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 623.7,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "efcd49d63844a7ef586705763b560fe6a7f4737c9ba6b69a9aa6c5bfcd63ea07",
+        "width": 843,
+        "height": 1371,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "e5f81de0402328b3aa173a458f0f250d1e433fc55495e80653869b476824be18"
+      }
+    },
+    {
+      "id": "harvard230571",
+      "cue": {
+        "correct": "Angel with the Superscription (Harvard Art Museums, 1937.67)",
+        "sham": "5LFXT YRWB QLD HHZ73HGQV9VY9Z (85KMMZ5 LFX TYRWBQL, DHHZ.73)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1667",
+            "1668",
+            "c. 1667",
+            "1667–1668"
+          ],
+          "place": [
+            "Italy",
+            "Rome",
+            "Europe"
+          ],
+          "medium": [
+            "Terracotta",
+            "terracotta",
+            "fired clay"
+          ],
+          "style": [
+            "Baroque",
+            "Italian Baroque"
+          ],
+          "artist": [
+            "Gian Lorenzo Bernini",
+            "Gianlorenzo Bernini",
+            "Bernini"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1667,
+          "hi": 1668
+        },
+        "place": {
+          "exact": [
+            "Italy",
+            "Rome"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Terracotta"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": [
+            "sculpture",
+            "bozzetto"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Italian Baroque"
+          ],
+          "family": [
+            "Baroque"
+          ],
+          "related": []
+        },
+        "artist": {
+          "exact": [
+            "Gian Lorenzo Bernini"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f4",
+        "fameHistoricalComposite": 646.5,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "520c2cfb2156d9e2b0a0fe16abc366f4d3d9e4faab59d64ec31e73fb837f07d9",
+        "width": 896,
+        "height": 1350,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "8186e67ca27150c7f634b3c594cd72bd786fee2fa5c905212c5ed1b81bb52c03"
+      }
+    },
+    {
+      "id": "cleveland159061",
+      "cue": {
+        "correct": "Alabastron (Cleveland Museum of Art, 1995.262)",
+        "sham": "3FJF29V8Q4 (YM8J5GQPP QDSBLF N4 VPS, K93F.JF2)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-305",
+            "-263",
+            "-222",
+            "305 BCE",
+            "222 BCE",
+            "3rd century BCE"
+          ],
+          "place": [
+            "Egypt",
+            "Africa"
+          ],
+          "medium": [
+            "Travertine",
+            "Calcite",
+            "Egyptian alabaster",
+            "alabaster",
+            "stone"
+          ],
+          "style": [
+            "Ptolemaic Egypt",
+            "Ptolemaic",
+            "Ancient Egypt"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -305,
+          "hi": -222
+        },
+        "place": {
+          "exact": [
+            "Egypt"
+          ],
+          "parent": [
+            "Africa"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Travertine",
+            "Calcite (alabaster)",
+            "Egyptian alabaster"
+          ],
+          "family": [
+            "other"
+          ],
+          "broad": [
+            "stone",
+            "vessel"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Ptolemaic Egypt"
+          ],
+          "family": [],
+          "related": [
+            "Ancient Egypt",
+            "Hellenistic art"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "af0e1a5a16f2288295275b026d50151b0fe0f5b785a0b88fcf59455b0bfc5532",
+        "width": 812,
+        "height": 1464,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "9eb9bd411469aff9d62254b1279912d534530b0c88138f3f17d88c8dcd1f58f5"
+      }
+    },
+    {
+      "id": "vaO79376",
+      "cue": {
+        "correct": "Rasp (Victoria and Albert Museum, museum no. 443-1874)",
+        "sham": "JFJ3 (YF5PHJ8Y LGC 6RZGNH JWXLWW, L4QFZJ FJ. 3YF-5PHJ)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1690",
+            "1705",
+            "1720",
+            "1690–1720",
+            "18th century"
+          ],
+          "place": [
+            "Iran",
+            "Persia",
+            "Asia"
+          ],
+          "medium": [
+            "Fritware",
+            "stonepaste",
+            "ceramic",
+            "underglaze painted"
+          ],
+          "style": [
+            "Safavid",
+            "Persian Islamic pottery",
+            "Islamic art"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1690,
+          "hi": 1720
+        },
+        "place": {
+          "exact": [
+            "Iran",
+            "Persia"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Fritware, underglaze painted in blue",
+            "Fritware",
+            "stonepaste"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Safavid"
+          ],
+          "family": [],
+          "related": [
+            "Persian Islamic pottery",
+            "Islamic art"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "85882874d65ca5592f50f46963d95e9a59ea6750aef87562195a5538234dfc8d",
+        "width": 1345,
+        "height": 896,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "b3facb074f2fb94c5d2938ca4e192dbade369bd59c98478523c9bdd6b09c2ce6"
+      }
+    },
+    {
+      "id": "cleveland160134",
+      "cue": {
+        "correct": "Buddha's Conversion of Five Bhiksu (Cleveland Museum of Art, 1997.92)",
+        "sham": "6HQZ86'V HD8SBXHQST 9C 67KL B7VZ64 (R4L6HQZ86 VHD8SB XH QST, 9C67.KL)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1340",
+            "1355",
+            "1370",
+            "1340–1370",
+            "mid-14th century"
+          ],
+          "place": [
+            "China",
+            "Asia"
+          ],
+          "medium": [
+            "Ink on paper",
+            "handscroll",
+            "ink and paper"
+          ],
+          "style": [
+            "Yuan dynasty",
+            "Chinese Buddhist devotional art"
+          ],
+          "artist": [
+            "Li Sheng"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1340,
+          "hi": 1370
+        },
+        "place": {
+          "exact": [
+            "China"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Ink on paper",
+            "Handscroll; ink on paper"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": [
+            "handscroll"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Yuan dynasty"
+          ],
+          "family": [],
+          "related": [
+            "Chinese Buddhist devotional art",
+            "Chinese literati painting"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Li Sheng"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "e01a6b4e0a92dd5f6e1b238c1df804e81e4f381f008d18914bdd87b71d7cdfff",
+        "width": 1263,
+        "height": 90,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "b69d14674172c6d85584d58405ca468ea086a4acd3d7ce3c58718a76dc1e6ef0"
+      }
+    },
+    {
+      "id": "aic70386",
+      "cue": {
+        "correct": "Fragment (Art Institute of Chicago, 1914.700)",
+        "sham": "PSQ2VHP7 (66R 8YWGJX2D9 L8 9RTCFHM, HSTP.SQ2)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1",
+            "251",
+            "500",
+            "1st–5th century",
+            "3rd century"
+          ],
+          "place": [
+            "Egypt",
+            "Africa"
+          ],
+          "medium": [
+            "Linen and wool, tapestry weave",
+            "wool and linen",
+            "textile",
+            "tapestry weave"
+          ],
+          "style": [
+            "Coptic art",
+            "Coptic",
+            "Roman Egypt",
+            "Graeco-Roman"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1,
+          "hi": 500
+        },
+        "place": {
+          "exact": [
+            "Egypt"
+          ],
+          "parent": [
+            "Africa"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Linen and wool, tapestry weave"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Coptic art"
+          ],
+          "family": [
+            "Roman Egypt"
+          ],
+          "related": [
+            "Graeco-Roman"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "443169a6f6e62e2929293ef83e662750f35d648b08dc9ede0f8fa4a0e83beaba",
+        "width": 924,
+        "height": 1315,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "e940e6de9a82f0838fdfab3d3f03d942fa22366edf2bb12c50bbdaa8b185f815"
+      }
+    },
+    {
+      "id": "aic20338",
+      "cue": {
+        "correct": "Aileen Flannery",
+        "sham": "W7KWMP WV7D9ZZY",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1902"
+          ],
+          "place": [
+            "United States",
+            "United States of America",
+            "USA",
+            "North America"
+          ],
+          "medium": [
+            "Platinum print",
+            "platinotype",
+            "photograph",
+            "photography"
+          ],
+          "style": [
+            "Pictorialism"
+          ],
+          "artist": [
+            "Alfred Stieglitz",
+            "Stieglitz"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1902,
+          "hi": 1902
+        },
+        "place": {
+          "exact": [
+            "United States",
+            "United States of America"
+          ],
+          "parent": [
+            "North America"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Platinum print",
+            "platinotype"
+          ],
+          "family": [
+            "photograph"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Pictorialism"
+          ],
+          "family": [],
+          "related": [
+            "Straight photography"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Alfred Stieglitz"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "9a55651cfffd731b17bc7f508476fb8195f6352d109ca0adf9b0d7b49c51f474",
+        "width": 843,
+        "height": 1078,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "e0e133c4127ccf3a260311a9b2ce9d21725a505d2d793d769e96f3dac3a07e79"
+      }
+    },
+    {
+      "id": "wikidata:Q28792214",
+      "cue": {
+        "correct": "Moai (Musée du quai Branly, inv. 71.1935.61.1)",
+        "sham": "RZBD (MLPHF 25 RCDD VGJRSK, YWY. NF.RK7V.F3.R)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1250",
+            "1500",
+            "c. 1250-1500",
+            "13th century",
+            "14th century",
+            "15th century"
+          ],
+          "place": [
+            "Rapa Nui",
+            "Rapa Nui (Easter Island), Chile",
+            "Easter Island",
+            "Chile",
+            "Oceania",
+            "Polynesia"
+          ],
+          "medium": [
+            "Stone",
+            "tuff",
+            "andesite",
+            "volcanic rock",
+            "basalt"
+          ],
+          "style": [
+            "Rapa Nui people",
+            "Rapa Nui"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1250,
+          "hi": 1500
+        },
+        "place": {
+          "exact": [
+            "Rapa Nui (Easter Island), Chile",
+            "Easter Island"
+          ],
+          "parent": [
+            "Oceania"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Stone (volcanic tuff / andesite)"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Rapa Nui people"
+          ],
+          "family": [
+            "Rapa Nui"
+          ],
+          "related": []
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 2005.5,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "a98270c383336379a99803b08ddd67badb877c093c7768e0b91116481387fe80",
+        "width": 952,
+        "height": 1265,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "889ce656cefe6647eff9999ca7b141b08162e79f080c725914496cf8cf690497"
+      }
+    },
+    {
+      "id": "wikidata:Q113297896",
+      "cue": {
+        "correct": "Inverted Swan stamp",
+        "sham": "J4ZBYR57 K33D 8PSY5",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1855"
+          ],
+          "place": [
+            "Australia",
+            "Western Australia",
+            "Perth",
+            "Oceania"
+          ],
+          "medium": [
+            "Lithograph",
+            "lithography",
+            "postage stamp",
+            "print"
+          ],
+          "style": [],
+          "artist": [
+            "Horace Samson",
+            "Alfred Hillman"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1855,
+          "hi": 1855
+        },
+        "place": {
+          "exact": [
+            "Australia",
+            "Western Australia"
+          ],
+          "parent": [
+            "Oceania"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Lithograph",
+            "postage stamp"
+          ],
+          "family": [
+            "print"
+          ],
+          "broad": []
+        },
+        "style": {
+          "notApplicable": true
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 1160.4,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "d1b12f5ec07bb7cfe019e07c7b01348dced9d24d7bfdd4ab06b8d3c311741d94",
+        "width": 1182,
+        "height": 1000,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "5fbc10874973f8a6f4ebdd1cd40c621dc070315cca6fe29e2fd5139734883a99"
+      }
+    },
+    {
+      "id": "http://www.wikidata.org/entity/Q736832",
+      "cue": {
+        "correct": "Chōjū-jinbutsu-giga",
+        "sham": "X464X-67RTXDFT-JWFM",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1150",
+            "12th century",
+            "12th-13th century",
+            "1250"
+          ],
+          "place": [
+            "Japan",
+            "Asia"
+          ],
+          "medium": [
+            "Ink on paper",
+            "ink",
+            "paper",
+            "handscroll",
+            "emakimono"
+          ],
+          "style": [
+            "Yamato-e"
+          ],
+          "artist": [
+            "Toba Sōjō",
+            "Kakuyū"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1150,
+          "hi": 1250
+        },
+        "place": {
+          "exact": [
+            "Japan"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Ink on paper",
+            "ink-line handscroll (hakubyō)"
+          ],
+          "family": [
+            "drawing",
+            "painting"
+          ],
+          "broad": [
+            "emakimono",
+            "handscroll"
+          ]
+        },
+        "style": {
+          "exact": [
+            "Yamato-e"
+          ],
+          "family": [],
+          "related": []
+        },
+        "artist": {
+          "exact": [],
+          "workshop": [],
+          "circle": [],
+          "attributed": [
+            "Toba Sōjō",
+            "Kakuyū"
+          ],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 1129.6,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "2cba1b3aebe736852d00105043fa25c9d06447c28eaeed0209810943781b0386",
+        "width": 1568,
+        "height": 228,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "b4248f1a0b3ba596b0ff6586bf838425c7c2748098c6dfd51432ec810788275d"
+      }
+    },
+    {
+      "id": "wikidata:Q47672",
+      "cue": {
+        "correct": "Terracotta Army",
+        "sham": "YTCVFG97XG HXKF",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [
+          "medium"
+        ],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "-246",
+            "-210",
+            "-208",
+            "3rd century BCE",
+            "210 BCE",
+            "246 BCE"
+          ],
+          "place": [
+            "China",
+            "Xi'an",
+            "Asia"
+          ],
+          "medium": [
+            "Terracotta (fired clay)",
+            "terracotta",
+            "fired clay",
+            "ceramic"
+          ],
+          "style": [
+            "Qin dynasty",
+            "Qin"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": -246,
+          "hi": -208
+        },
+        "place": {
+          "exact": [
+            "China",
+            "Xi'an"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Terracotta (fired clay)"
+          ],
+          "family": [
+            "sculpture",
+            "ceramic"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Qin dynasty"
+          ],
+          "family": [],
+          "related": []
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f5",
+        "fameHistoricalComposite": 3348.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "29fe7ce674062b42e0778633434d563bc1e92e0143ce12a2e0f7f465bdb1a104",
+        "width": 1345,
+        "height": 896,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "618392e572b966e57e0259573a55d48310cf5d22b2437c4fbcb24dea1aa6b735"
+      }
+    },
+    {
+      "id": "harvard300021",
+      "cue": {
+        "correct": "Friar Angelo Ferretti as Saint Peter Martyr",
+        "sham": "CLFPC SHXPY3 W2HZKQM8 ML HSTBM 8K6SY VCLFPC",
+        "cueType": "title-only",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1549",
+            "16th century",
+            "mid-16th century",
+            "1540s"
+          ],
+          "place": [
+            "Italy",
+            "Marche",
+            "Ancona",
+            "Italian",
+            "Europe"
+          ],
+          "medium": [
+            "Oil on canvas",
+            "oil",
+            "oil paint",
+            "oil painting",
+            "canvas",
+            "painting"
+          ],
+          "style": [
+            "Italian Late Renaissance",
+            "Late Renaissance",
+            "Renaissance",
+            "Italian Renaissance",
+            "Cinquecento"
+          ],
+          "artist": [
+            "Lorenzo Lotto",
+            "Lotto"
+          ]
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1549,
+          "hi": 1549
+        },
+        "place": {
+          "exact": [
+            "Italy"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Italian Late Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "Renaissance",
+            "Italian Renaissance"
+          ]
+        },
+        "artist": {
+          "exact": [
+            "Lorenzo Lotto"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "896650ac655102be998b65dbdf6899ad1677e5457dcb60a1da0c822f6edc3c4f",
+        "width": 952,
+        "height": 1252,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "ec04f29e0fe233f183aa36004072d75ee4cde475845b48b58e9d0204d8e0757b"
+      }
+    },
+    {
+      "id": "harvard303417",
+      "cue": {
+        "correct": "Standing Buddha (Harvard Art Museums, object no. 1988.427)",
+        "sham": "8ZYMC7Y4 KSPHPF (Z56KNWK 93L W7ZR9SZ, B8ZYMC 7Y. 4KSP.HPF)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "700",
+            "601",
+            "800",
+            "7th century",
+            "8th century",
+            "7th–8th century",
+            "c. 700"
+          ],
+          "place": [
+            "Thailand",
+            "Dvaravati",
+            "Mon",
+            "Central Thailand",
+            "Southeast Asia",
+            "Asia"
+          ],
+          "medium": [
+            "Limestone",
+            "greenstone",
+            "stone",
+            "light gray limestone",
+            "sculpture"
+          ],
+          "style": [
+            "Dvaravati",
+            "Mon-Gupta",
+            "Mon-Dvaravati",
+            "Gupta"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 601,
+          "hi": 800
+        },
+        "place": {
+          "exact": [
+            "Thailand"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Limestone"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Dvaravati"
+          ],
+          "family": [],
+          "related": [
+            "Mon-Gupta",
+            "Gupta"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f1",
+        "fameHistoricalComposite": 0,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": true
+      },
+      "image": {
+        "fullViewSha256": "9c2661ccd162c6d00e648db7dcd017675e4ae4b0f9ab7aae09e9c2a396222d16",
+        "width": 952,
+        "height": 1269,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "16f85a66a5181ca2b3ed1d4634ece9dadfb38f8b22ff35576fc62e85987fc231"
+      }
+    },
+    {
+      "id": "harvard200407",
+      "cue": {
+        "correct": "Seated Bodhisattva Târâ in her “Green Manifestation” (Harvard Art Museums, object no. 1992.289)",
+        "sham": "MX8YJB C24K4RJN987 PQG7 VN 75L “5FB5X XMX8YJBC24K4R” (JN987PQ G7V N75L5FB, 5XXMX8 YJ. BC24.K4R)",
+        "cueType": "title-plus-qualifier",
+        "eligibleFacets": [
+          "date",
+          "place",
+          "medium",
+          "style",
+          "artist"
+        ],
+        "disclosedFacets": [],
+        "acceptedAliasesByFacet": {
+          "date": [
+            "1450",
+            "1403",
+            "1424",
+            "15th century",
+            "early 15th century",
+            "Yongle",
+            "Ming dynasty"
+          ],
+          "place": [
+            "China",
+            "Ming China",
+            "Tibeto-Chinese",
+            "Sino-Tibetan",
+            "Asia"
+          ],
+          "medium": [
+            "Gilt bronze",
+            "gilt copper alloy",
+            "bronze",
+            "gilded bronze",
+            "sculpture"
+          ],
+          "style": [
+            "Sino-Tibetan Buddhist",
+            "Tibeto-Chinese",
+            "Yongle",
+            "Ming"
+          ],
+          "artist": []
+        }
+      },
+      "primaryApplicable": [
+        "date",
+        "place",
+        "medium",
+        "style",
+        "artist"
+      ],
+      "truth": {
+        "date": {
+          "lo": 1403,
+          "hi": 1424
+        },
+        "place": {
+          "exact": [
+            "China"
+          ],
+          "parent": [
+            "Asia"
+          ]
+        },
+        "medium": {
+          "exact": [
+            "Gilt bronze"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        },
+        "style": {
+          "exact": [
+            "Sino-Tibetan Buddhist"
+          ],
+          "family": [],
+          "related": [
+            "Tibeto-Chinese",
+            "Ming"
+          ]
+        },
+        "artist": {
+          "notApplicable": true
+        }
+      },
+      "strata": {
+        "fameBand": "f2",
+        "fameHistoricalComposite": 26.7,
+        "regionGroup": "non-europe",
+        "regionSource": "creation-place",
+        "lowDocumentationStress": false
+      },
+      "image": {
+        "fullViewSha256": "1fb157628334f333f78ae41df58c73991e444e25b55dcc7533a913006d120617",
+        "width": 897,
+        "height": 1316,
+        "mime": "image/jpeg",
+        "sourceCanonicalSha256": "796bc3602ba3efe068c13a25d6feaa76ba6a1b48713bb9fc78e2e0fc196d5341"
+      }
+    }
+  ],
+  "callManifest": {
+    "seed": "gesso-recognition-studyb-calls-2026-09-01-v1",
+    "counts": {
+      "works": 36,
+      "base": 108,
+      "repeats": 11,
+      "total": 119,
+      "byArm": {
+        "no-cue": 36,
+        "sham": 36,
+        "correct-cue": 36
+      }
+    },
+    "sha256": "7b587923d5f47a810d33ad5d5a9e9d931b843acb94d61d4e66878be8003716fa"
+  },
+  "sha256": "4be1f91dce218613141992b63a07393e930887ebc27fa616939738076df1e74f"
+}

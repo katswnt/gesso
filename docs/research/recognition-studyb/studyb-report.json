@@ -1,0 +1,118 @@
+{
+  "version": "recognition-studyb-report/1",
+  "protocolId": "gesso-recognition-studyb-2026-09-01-v1",
+  "completion": {
+    "planned": 119,
+    "resultsPresent": 119
+  },
+  "validity": {
+    "armStats": {
+      "no-cue": {
+        "planned": 36,
+        "valid": 34,
+        "invalid": 2,
+        "errorsByCat": {
+          "not-json": 2
+        },
+        "stopReasons": {
+          "end_turn": 36
+        }
+      },
+      "sham": {
+        "planned": 36,
+        "valid": 35,
+        "invalid": 1,
+        "errorsByCat": {
+          "not-json": 1
+        },
+        "stopReasons": {
+          "end_turn": 36
+        }
+      },
+      "correct-cue": {
+        "planned": 36,
+        "valid": 36,
+        "invalid": 0,
+        "errorsByCat": {},
+        "stopReasons": {
+          "end_turn": 36
+        }
+      }
+    },
+    "armValidRates": {
+      "no-cue": 0.9444444444444444,
+      "sham": 0.9722222222222222,
+      "correct-cue": 1
+    },
+    "worstArmRate": 0.9444444444444444,
+    "completeTriplets": 33,
+    "totalWorks": 36,
+    "droppedWorks": [
+      {
+        "workId": "http://www.wikidata.org/entity/Q5227835",
+        "missingArms": [
+          "no-cue"
+        ]
+      },
+      {
+        "workId": "http://www.wikidata.org/entity/Q3630726",
+        "missingArms": [
+          "sham"
+        ]
+      },
+      {
+        "workId": "cleveland136510",
+        "missingArms": [
+          "no-cue"
+        ]
+      }
+    ],
+    "refusals": 0,
+    "localConstraintFailures": 0,
+    "gates": {
+      "minArmValidRate": 0.9,
+      "minCompleteTriplets": 30,
+      "totalWorks": 36
+    },
+    "gatesPass": true,
+    "causalHeadlineSuppressed": false,
+    "status": "studyb-interpretable"
+  },
+  "effects": {
+    "contributingWorks": 33,
+    "correctMinusSham_workWeighted": 0.043305442424242425,
+    "correctMinusNoCue_workWeighted": 0.06407159898989899,
+    "shamMinusNoCue_workWeighted": 0.020766156565656557,
+    "pairedVariance_correctMinusSham": 0.020135323536465483,
+    "leaveArtistOut_correctMinusSham": 0.03611313636363637,
+    "perFacetEffect": {
+      "date": {
+        "contributingWorks": 33,
+        "meanCorrectMinusSham": 0.09040881818181816
+      },
+      "place": {
+        "contributingWorks": 33,
+        "meanCorrectMinusSham": 0.030303030303030304
+      },
+      "medium": {
+        "contributingWorks": 32,
+        "meanCorrectMinusSham": -0.0078125
+      },
+      "style": {
+        "contributingWorks": 31,
+        "meanCorrectMinusSham": 0.03225806451612903
+      },
+      "artist": {
+        "contributingWorks": 18,
+        "meanCorrectMinusSham": 0.1111111111111111
+      }
+    },
+    "repeatReliability": {
+      "pairsFacetLevel": 51,
+      "meanAbsCreditDiff": 0.02647058823529412,
+      "exactCreditAgreement": 0.9607843137254902
+    }
+  },
+  "causalReportable": true,
+  "suppressionReason": null
+}
