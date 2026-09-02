@@ -161,3 +161,74 @@ human field-level review (`scripts/vision-review.mjs`) + the hash-bound merge (`
   (`scripts/eval-auditor.mjs` → blind agents → `scripts/eval-score.mjs`).
 - **Pin placement:** spot-checked at ~83% on-target / 15% within a few % / 2% off on the audited
   set (v1, pre-feature-anchoring). New pins should land tighter.
+
+---
+
+## Rich Pass B consolidation baseline (VSD-001/006/007/014)
+
+The rich B1/B2/B3/synthesis runner is not built yet. Its implemented offline baseline is
+`contentVisionCoverage/1`: one row for each current pool work, legacy content kept as
+evidence (never current completion), Pass A flags reported separately, and scheduling
+priorities computed without imposing a universal daily hard gate.
+
+```bash
+# Read-only snapshot for today (America/Los_Angeles) or a reproducible date:
+node scripts/vision-inventory.mjs
+node scripts/vision-inventory.mjs --as-of 2026-09-02
+
+# Refresh the tracked matrix deliberately after reviewing stdout:
+node scripts/vision-inventory.mjs --as-of 2026-09-02 --write
+
+# Offline contract gates:
+node tests/vision-legacy.test.mjs      # every one of the 202 rich records reconstructs
+node tests/vision-inventory.test.mjs   # completion separation, queues, collisions, states
+node scripts/check-vision-inventory.mjs # tracked matrix must exactly regenerate
+```
+
+The generator reads only tracked pool/teaching/hotspot/vision/ledger/evidence/daily and
+Pass-A artifacts. It performs no fetch and no model call. `data/vision.js` remains intact;
+`scripts/lib/vision-legacy.mjs` retains exact raw copies (record- and item-level) and proves
+every record round-trips losslessly through its normalized envelope. This is a lossless
+round-trip, not a full shape-aware migration: `palette`/`figures` are rebuilt from decomposed
+parts, while `evidence`/`pins`/`delights` and the remaining fields still lean on the retained
+raw copies. Historical alias collisions and orphan rows are emitted under diagnostics and are
+never silently resolved.
+
+Current limitation: `data/vision-coverage.json` is a measurement/queue artifact, not the
+authoritative rich content ledger. No B1/B2/B3/B4 completion can be written until those
+strict schemas, stage captures, synthesis route, component approvals, and guarded merge
+are implemented and calibrated.
+
+---
+
+## Recognition-inference pilot (Pass A, VSD-016/018) — completed 2026-09-01
+
+Separate, append-only research pipeline; **git-freeze-only, not a registration** (VSD-018). It never
+writes game data (pool/teach/hotspots/vision/daily/tiers). The pilot froze at `5ea28c8`, its
+collection was sealed at `9bcd580`, and corrected Study B closed at `6a555af`. Results are in
+`docs/research/recognition-pilot-results-note.md`. The commands below document reproduction;
+they do not authorize another paid run or a main study.
+
+Safe offline commands (no fetch/model/collection):
+
+```bash
+node scripts/recognition-pilot-prepare.mjs          # deterministic 36-work DRAFT (refuses to overwrite curation)
+node scripts/recognition-pilot-seal-curation.mjs --seal   # after curator edits: recompute masks/shams/calls/hashes + regenerate the worksheet
+node scripts/check-recognition-pilot.mjs            # offline structural gate (must PASS; lists protocol-freeze blockers)
+node tests/recognition-pilot.test.mjs              # pure-contract unit tests (grading, validators, analysis, adjudication)
+```
+
+Freeze / run (still fail-closed here):
+
+```bash
+node scripts/recognition-pilot-freeze.mjs --finalize   # builds *.frozen.json only after image/multilingual evidence + all curator checks + no unresolved blocking issues
+node scripts/recognition-pilot-run.mjs                 # DRY unless --live and RECOGNITION_PILOT_LIVE=1; derives+verifies the freeze commit before any paid call; enforces the 24h window before every attempt; model drift is fatal
+node scripts/recognition-pilot-seal-collection.mjs     # after the run: verifies every call from raw bytes (refuses on tamper/window/drift/non-terminal/unmeasurable-usage), writes collection-evidence.<sha>.json — then COMMIT it alone with subject "PILOT COLLECTION SEALED: <id>" (a dedicated commit that descends from the freeze)
+node scripts/analyze-recognition-pilot.mjs             # FINAL diagnostics; refuses until the run is complete, collection evidence is sealed+committed (descended from the freeze), no model drift, cost fully measured, and adjudications resolved (else --interim writes diagnostics-interim.<sha>.json)
+```
+
+Where the rules live: `scripts/lib/recognition-pilot.mjs` (grading, exact-recognition unit, cue mask,
+validators, style dedup, pure `analyzePilot`), `scripts/lib/recognition-pilot-runtime.mjs`
+(checkpoint/freeze-verify), `docs/research/recognition-pilot/` (manifest/calls/taxonomy/protocol/
+prompts/schemas/deviations). The frozen collection and corrected Study-B mini-pilot are closed;
+do not append new responses to either.

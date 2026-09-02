@@ -42,7 +42,7 @@ Research-design history is preserved separately: the
 [`2026-08-27 v1 pre-registration`](research/recognition-inference-preregistration-v1-2026-08-27.md)
 is frozen, and the
 [`v2 working design`](research/recognition-inference-preregistration-v2-working.md) records
-prospective revisions before registration. Neither document authorizes data collection by itself.
+prospective revisions before the protocol freeze. Neither document authorizes data collection by itself.
 
 ### The measurements are distinct
 
@@ -85,17 +85,17 @@ the same rung. Preserve an explicit `survived` value and leave blinded `G` null/
 until a stronger rung obtains a clean read.
 
 This adaptive path is historical/operational evidence and may remain useful for cheap
-corpus triage. It is not the registered v2 experimental method.
+corpus triage. It is not the frozen v2 experimental method.
 
-### Registered research exception (VSD-016)
+### Frozen research exception (VSD-016; naming updated by VSD-018)
 
-The owner-approved v2 research program uses two prospective registrations and a separate,
+The owner-approved v2 research program uses two prospective protocol freezes and a separate,
 append-only ledger:
 
-1. a 36-work pilot protocol frozen and externally registered before pilot collection;
-2. a later main-study preregistration using only prespecified pilot nuisance estimates.
+1. a 36-work pilot protocol frozen in a dedicated git commit before pilot collection;
+2. a later main-study protocol freeze using only prespecified pilot nuisance estimates.
 
-Its registered method uses a complete repeated-measures panel rather than adaptive stopping:
+Its frozen method uses a complete repeated-measures panel rather than adaptive stopping:
 one ordered nested crop family plus separate mirror, rotation, and grayscale diagnostic
 branches; separate fresh-context exact-identification and facet calls; a randomized
 same-image supplied-identity experiment as the sole causal primary; and a small full-view
@@ -103,10 +103,11 @@ alternate-source robustness arm. It preserves non-monotonic recognition vectors 
 right-censors meaningful terminal survivors. The frozen v2 protocol controls literal cue
 disclosure, response stability, retries, grading, cost, model identity, and publication.
 
-The registered pilot remains unbuilt and unauthorized until its prompts, schemas, graders,
-recognition keys, manifest, transformations, synthetic tests, cost gate, analysis code, and
-deviations log are frozen. This exception does not alter historical results, production data,
-daily schedules, or tiers.
+The 36-work pilot protocol was frozen at `5ea28c8`, collected, and externally sealed at
+`9bcd580`; the corrected, separate Study-B mini-pilot closed at `6a555af`. Results and
+caveats live in `docs/research/recognition-pilot-results-note.md`. The work remains
+research-only and did not alter production data, daily schedules, or tiers. Any later main
+study requires its own prospective protocol freeze; the completed pilot does not authorize it.
 
 Pass A deliberately uses the paid API because its blindness must be auditable: no web,
 no filename/title metadata, no tools, and no agent wrapper. Raw results and every rung
@@ -284,6 +285,14 @@ Staleness must be detected when an image, prompt, schema, model policy, source/c
 fact, or relevant authoritative field changes. Rerun only affected components where the
 dependency graph supports that safely; otherwise fail toward a broader rerun.
 
+The offline `contentVisionCoverage/1` inventory is the baseline measurement layer. It
+derives exactly one row per current pool work from tracked artifacts, reports Pass A
+coverage separately, labels historical material as legacy evidence, and never promotes
+legacy IDs or good-looking old prose to current completion. Its 202-record rich-history
+adapter must reconstruct every legacy value from explicit normalized projections; an
+opaque raw rollback copy alone does not satisfy the no-discard check. Alias collisions and
+orphaned historical rows are reported, not silently merged or discarded.
+
 Pass B scheduling priority:
 
 1. works scheduled in the next 7 days;
@@ -336,19 +345,20 @@ first missing unit; it does not repeat completed paid calls or double-merge resu
 Store runtime state under `data/incoming/vision-ops/`, publish a compact tracked coverage
 summary, and never log tokens, cookies, API keys, or raw authorization errors.
 
-## Implementation status as of 2026-08-31
+## Implementation status as of 2026-09-02
 
 | Capability | State |
 |---|---|
 | G-03 hardened broker, tool-less paid runner, hash/evidence-bound guarded merge | Implemented on feature branch `g-03-image-agent-boundary` at `2186a00`; preview-built, not production |
 | Current Pass B schema | Implemented only for the narrower notes/pins + image-QA flow; rich schema is not yet rebuilt |
+| Pass B offline coverage inventory + rich legacy adapter | Implemented 2026-09-02: deterministic 6,557-row `contentVisionCoverage/1` generator; all 202 `vision.js` records verified as a **lossless round-trip via retained record- and item-level raw copies** (`palette`/`figures` are decomposed; other fields are whole-value projections) — a full shape-aware migration that drops the raw copies is **not** yet built; rich authoritative component ledger is still unbuilt |
 | Current approval | Human select-only; auto-policy and labeled human corrections are not implemented |
 | Pass B subscription-backed zero-tool image process | Capability prototype PASSED WITH CONSTRAINT 2026-08-31 — headless `--tools ""` local-image attach + pixel read confirmed, but the attachment path is model-visible; production harness must use a neutral relative SHA filename and is not yet built |
 | Pass B separate no-image research and conditional second look | Planned, not implemented |
-| Pass B component coverage/staleness ledger | Planned; current ledger is narrower |
-| Pass A adaptive ladder | Historical code/data exist; retained as the VSD-003 low-cost operational probe, not the registered v2 method |
-| Pass A registered v2 pilot | Owner design decisions approved under VSD-016; pilot specification/artifacts unbuilt, not registered, and no collection authorized |
-| Pass A survivor/censoring semantics and per-rung checkpoints | Registered v2 semantics specified; implementation and gates not built |
+| Pass B component coverage/staleness ledger | Offline baseline inventory implemented; authoritative component writes, approvals, and staleness transitions remain planned; current live ledger is narrower |
+| Pass A adaptive ladder | Historical code/data exist; retained as the VSD-003 low-cost operational probe, not the frozen v2 method |
+| Pass A recognition-inference pilot | Completed 2026-09-01: protocol freeze `5ea28c8`, sealed collection `9bcd580`, corrected Study-B closure `6a555af`; results are research-only and do not drive tiers |
+| Pass A survivor/censoring semantics and per-call checkpoints | Implemented and exercised in the completed pilot; raw responses remain append-only/hash-bound and non-monotonic vectors/censoring are preserved |
 | Pass A automatic tier use | Intentionally disabled/not implemented |
 | Unattended `launchd` supervisor and budget controller | Planned, not implemented |
 
@@ -430,7 +440,9 @@ It does **not** prove the whole Pass B architecture.
 | VSD-013 | 2026-08-31 | Protect subscription capacity 09:00–22:00 Pacific; run unattended overnight, starting at a 50% conservative budget. | Approved; supervisor unimplemented |
 | VSD-014 | 2026-08-31 | Do not add a universal hard daily-completion gate until audited coverage is sufficient. | Approved |
 | VSD-015 | 2026-08-31 | Subscription image attachments use a neutral relative SHA-only path because Claude Code exposes the `@<path>` string as model text; usage budgets count internal turns, not only process launches. | Approved from prototype evidence |
-| VSD-016 | 2026-08-31 | Registered Pass A research uses separate pilot/main freezes, a complete repeated-measures view panel, separate identification/facet calls, and a randomized supplied-identity causal primary; it remains append-only and cannot change tiers. | Approved; pilot artifacts unbuilt and collection unauthorized |
+| VSD-016 | 2026-08-31 | Registered Pass A research uses separate pilot/main freezes, a complete repeated-measures view panel, separate identification/facet calls, and a randomized supplied-identity causal primary; it remains append-only and cannot change tiers. | Approved; pilot completed 2026-09-01; main study not authorized |
+| VSD-017 | 2026-08-31 | Use a dedicated frozen git commit as the pilot preregistration record; no OSF/external-registration dependency. Freeze a stable registration id and artifact hashes, then have the runner derive and verify the commit before the first response (the commit cannot self-embed its own hash). | Approved; supersedes only VSD-016's external-registration venue wording; naming superseded by VSD-018 |
+| VSD-018 | 2026-08-31 | The active pilot contract is a **git-freeze-only protocol freeze, not a "registration."** It keeps VSD-017's identical git-integrity mechanism (dedicated commit whose subject names a stable id; the runner derives and verifies the commit before the first call) but renames the vocabulary throughout the runner, artifacts, statuses, evidence, gate assertions, and commit subject: DRAFT status `DRAFT_NOT_FROZEN_NO_COLLECTION`, frozen status `PILOT_PROTOCOL_FROZEN_BEFORE_COLLECTION`, artifacts `*.frozen.json` / `pilot-protocol.frozen.md`, evidence `protocol-freeze-evidence.json`, commit subject `PILOT PROTOCOL FROZEN BEFORE COLLECTION: <id>`. Historical v1 "preregistration" references remain historical. | Approved; pilot mechanism exercised and closed 2026-09-01 |
 
 ## Maintenance protocol
 
