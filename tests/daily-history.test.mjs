@@ -140,23 +140,32 @@ function mkFixture({ order, history }) {
 const runCLI = (dir, args) => spawnSync(process.execPath, [CLI, ...args], { cwd: dir, encoding: 'utf8' });
 
 console.log('\nCLI (temp fixtures only)');
+// CLOCK-RELATIVE FIXTURES. These previously hard-coded 2026-09-01/02, which silently became invalid the
+// moment the calendar rolled: reconciliation runs through servedThroughDate(), so a fixture whose schedule
+// stops before that date is a legitimate unrecoverable gap and the CLI correctly fails closed. Deriving the
+// dates from the clock keeps the fixtures meaningful on every future day without weakening any assertion.
+const shiftDate = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+const T_THRU = servedThroughDate();          // the date reconciliation runs through, right now
+const T_PREV = shiftDate(T_THRU, -1);        // the day before it
+
 { // 16. --check reports and does not write
-  const dir = mkFixture({ order: { '2026-09-01': rec(1), '2026-09-02': rec(2) }, history: { '2026-09-01': rec(1) } });
+  const dir = mkFixture({ order: { [T_PREV]: rec(1), [T_THRU]: rec(2) }, history: { [T_PREV]: rec(1) } });
   const before = sha(join(dir, 'data/daily-history.js'));
   const r = runCLI(dir, ['--check']);
   ok('--check exits nonzero when reconciliation is needed', r.status !== 0);
-  ok('--check names the exact missing date', /2026-09-02/.test(r.stderr || ''));
+  ok(`--check names the exact missing date (${T_THRU})`, new RegExp(T_THRU).test(r.stderr || ''));
   ok('--check points at npm run ledger:record', /ledger:record/.test(r.stderr || ''));
   ok('--check wrote nothing', sha(join(dir, 'data/daily-history.js')) === before);
   rmSync(dir, { recursive: true, force: true });
 }
 { // 17. --write modifies only daily-history
-  const dir = mkFixture({ order: { '2026-09-01': rec(1), '2026-09-02': rec(2) }, history: { '2026-09-01': rec(1) } });
+  const dir = mkFixture({ order: { [T_PREV]: rec(1), [T_THRU]: rec(2) }, history: { [T_PREV]: rec(1) } });
   const orderBefore = sha(join(dir, 'data/daily-order.js'));
   const w = runCLI(dir, ['--write']);
   ok('--write exits 0', w.status === 0);
   const h = parse(join(dir, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY');
-  ok('--write appended the missing date', !!h['2026-09-02']);
+  ok('--write appended the missing date', !!h[T_THRU]);
+  ok('--write appended it verbatim from daily-order', JSON.stringify(h[T_THRU]) === JSON.stringify(rec(2)));
   ok('--write left daily-order.js byte-identical', sha(join(dir, 'data/daily-order.js')) === orderBefore);
   const histAfter = sha(join(dir, 'data/daily-history.js'));
   const w2 = runCLI(dir, ['--write']);
@@ -167,7 +176,7 @@ console.log('\nCLI (temp fixtures only)');
 }
 { // drift must fail closed at the CLI with every file byte-identical
   const drift = { ...rec(1), easy: ['x1', 'x2', 'x3', 'x4', 'x5'] };
-  const dir = mkFixture({ order: { '2026-09-01': drift }, history: { '2026-09-01': rec(1) } });
+  const dir = mkFixture({ order: { [T_THRU]: drift }, history: { [T_THRU]: rec(1) } });
   const hb = sha(join(dir, 'data/daily-history.js')), ob = sha(join(dir, 'data/daily-order.js'));
   const r = runCLI(dir, ['--write']);
   ok('CLI --write refuses on drift', r.status !== 0);
@@ -281,56 +290,56 @@ console.log('\nMALFORMED SOURCES FAIL CLOSED (freeze / check-pool / CLI)');
   }
 }
 
-console.log('\nFREEZE INTEGRATION (real corpus, disposable fixtures)');
+console.log('\nFREEZE CONTRACT (real corpus, disposable fixtures)');
+// HISTORY-INDEPENDENT BY DESIGN. An earlier revision of this suite extracted the pre-fix freeze with
+// `git show HEAD:scripts/freeze-daily.mjs` and asserted that it LOST a served date. That reproduction did
+// its job during review, but it was self-invalidating: the moment the fix was committed, HEAD stopped
+// containing the broken code and the assertions inverted. Pinning to an ancestor SHA would fail too —
+// GitHub Actions uses a shallow checkout, so the ancestor object is not guaranteed to exist in CI.
+// The permanent suite therefore enforces the CURRENT contract against the CURRENT freeze only, and
+// requires no Git history whatsoever.
 {
   const through = servedThroughDate();
   const realOrder = parse(join(REPO, 'data/daily-order.js'), 'ARTEFACTUM_DAILY');
   const realHist  = parse(join(REPO, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY');
+  const runFreeze = dir => spawnSync(process.execPath, [FREEZE], { cwd: dir, encoding: 'utf8', timeout: 180000 });
 
-  // Extract the PRE-CHANGE freeze from HEAD into a disposable dir with its own lib symlink.
-  const oldDir = mkdtempSync('/private/tmp/gesso-oldfreeze-');
-  mkdirSync(join(oldDir, 'scripts'));
-  const oldSrc = spawnSync('git', ['show', 'HEAD:scripts/freeze-daily.mjs'], { cwd: REPO, encoding: 'utf8', maxBuffer: 1 << 26 }).stdout;
-  writeFileSync(join(oldDir, 'scripts/freeze-daily.mjs'), oldSrc);
-  symlinkSync(join(REPO, 'scripts/lib'), join(oldDir, 'scripts/lib'));
-  const OLD_FREEZE = join(oldDir, 'scripts/freeze-daily.mjs');
-  ok('HEAD freeze extracted and differs from the working copy', oldSrc.length > 0 && oldSrc !== readFileSync(join(REPO, 'scripts/freeze-daily.mjs'), 'utf8'));
+  // ---- PRESERVATION: a served date older than the regenerated today-3 window must survive a freeze.
+  // This is the behaviour whose absence was the original defect; it is asserted directly, not by
+  // comparison against a historical script.
+  const staleDate = Object.keys(realOrder).filter(d => realHist[d] && d <= through).sort()[0];
+  const holed = { ...realHist }; delete holed[staleDate];
+  ok(`selected a served date older than the regenerated window: ${staleDate}`, !!staleDate && !!realOrder[staleDate]);
 
-  const runFreeze = (dir, script) => spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8', timeout: 180000 });
+  const dPres = mkFixture({ order: realOrder, history: holed });
+  const rPres = runFreeze(dPres);
+  const hPres = rPres.status === 0 ? parse(join(dPres, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY') : {};
+  ok('freeze runs clean against a stale ledger', rPres.status === 0);
+  ok(`freeze PRESERVES ${staleDate} into the ledger before the window is trimmed`, !!hPres[staleDate]);
+  ok('the preserved record is verbatim equal to daily-order', JSON.stringify(hPres[staleDate]) === JSON.stringify(realOrder[staleDate]));
+  ok(`${staleDate} is absent from the regenerated daily-order window (so the ledger is its only home)`,
+     !parse(join(dPres, 'data/daily-order.js'), 'ARTEFACTUM_DAILY')[staleDate]);
 
-  // ---- 14 + OLD-CODE REGRESSION: a served date OLDER than today-3 must be preserved before trimming.
-  const oldServed = Object.keys(realOrder).filter(d => realHist[d] && d <= through).sort()[0];
-  const holed = { ...realHist }; delete holed[oldServed];
-  ok(`chose an already-served date older than the regenerated window: ${oldServed}`, !!oldServed && !!realOrder[oldServed]);
-
-  const dNew = mkFixture({ order: realOrder, history: holed });
-  const rNew = runFreeze(dNew, FREEZE);
-  const hNew = rNew.status === 0 ? parse(join(dNew, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY') : {};
-  ok('NEW freeze runs clean with a stale ledger', rNew.status === 0);
-  ok(`NEW freeze PRESERVES ${oldServed} into the ledger before trimming`, !!hNew[oldServed]);
-  ok('NEW freeze preserved it verbatim', JSON.stringify(hNew[oldServed]) === JSON.stringify(realOrder[oldServed]));
-
-  const dOld = mkFixture({ order: realOrder, history: holed });
-  const rOld = runFreeze(dOld, OLD_FREEZE);
-  const hOld = rOld.status === 0 ? parse(join(dOld, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY') : {};
-  ok('OLD freeze also exits 0 (it does not know it lost data)', rOld.status === 0);
-  ok(`REGRESSION PROVEN: OLD freeze LOSES ${oldServed} (appends only from the today-3 window)`, !hOld[oldServed]);
-
-  // ---- 15: scheduler output unchanged when the ledger needs no reconciliation.
+  // ---- DETERMINISM: two byte-identical fixtures must freeze to byte-identical outputs, and an
+  // already-current ledger must not be semantically disturbed.
   const current = reconcile({ order: realOrder, history: realHist, throughDate: through });
-  ok('built an already-current ledger for the parity fixture', current.ok);
+  ok('built an already-reconciled ledger for the determinism fixtures', current.ok);
   const dA = mkFixture({ order: realOrder, history: current.value });
   const dB = mkFixture({ order: realOrder, history: current.value });
-  const rA = runFreeze(dA, OLD_FREEZE), rB = runFreeze(dB, FREEZE);
-  ok('parity: OLD freeze exits 0', rA.status === 0);
-  ok('parity: NEW freeze exits 0', rB.status === 0);
-  ok('SCHEDULER PRESERVED: daily-order.js byte-identical between OLD and NEW freeze',
+  ok('the two fixtures start byte-identical',
+     sha(join(dA, 'data/daily-order.js'))   === sha(join(dB, 'data/daily-order.js')) &&
+     sha(join(dA, 'data/daily-history.js')) === sha(join(dB, 'data/daily-history.js')));
+  const rA = runFreeze(dA), rB = runFreeze(dB);
+  ok('determinism: first freeze exits 0', rA.status === 0);
+  ok('determinism: second freeze exits 0', rB.status === 0);
+  ok('determinism: resulting daily-order.js files are byte-identical',
      sha(join(dA, 'data/daily-order.js')) === sha(join(dB, 'data/daily-order.js')));
-  ok('NEW freeze left the already-current ledger byte-identical',
-     sha(join(dB, 'data/daily-history.js')) === sha(join(dA, 'data/daily-history.js')) ||
-     JSON.stringify(parse(join(dB, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY')) === JSON.stringify(current.value));
+  ok('determinism: resulting daily-history.js files are byte-identical',
+     sha(join(dA, 'data/daily-history.js')) === sha(join(dB, 'data/daily-history.js')));
+  ok('an already-current ledger is not semantically changed by a freeze',
+     JSON.stringify(parse(join(dA, 'data/daily-history.js'), 'ARTEFACTUM_DAILY_HISTORY')) === JSON.stringify(current.value));
 
-  for (const d of [dNew, dOld, dA, dB, oldDir]) rmSync(d, { recursive: true, force: true });
+  for (const d of [dPres, dA, dB]) rmSync(d, { recursive: true, force: true });
 }
 
 console.log(`\n${fail ? '❌' : '✅'} daily-history: ${pass} passed, ${fail} failed`);
