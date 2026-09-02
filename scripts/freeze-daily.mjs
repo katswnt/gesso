@@ -3,6 +3,8 @@
 // into a fixed rotation. Re-run only when you deliberately want to reset the rotation.
 // Run: node scripts/freeze-daily.mjs
 import { readFileSync, writeFileSync } from "node:fs";
+import { reconcile, servedThroughDate, serializeHistory, byDateOf } from "./lib/daily-history.mjs";
+import { writeAtomic, readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium } from "./lib/domain.mjs";
 import { baselineDim, classifyRes } from "./lib/img-dimensions.mjs";
 // never schedule remains, or works the vision audit judged unplayable (featureless), or works whose
@@ -133,11 +135,30 @@ out.meta = {
 
 // --- PER-DATE LOCK: preserve already-served days, (re)generate only future dates from the new order ---
 // so adding works / re-freezing never disturbs today or the past. byDate[YYYY-MM-DD][tier] = [5 ids].
-{ let prior={}; try{ const s=readFileSync("data/daily-order.js","utf8"); prior=(JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1)).byDate)||{}; }catch{}
+{ // FAIL-CLOSED SOURCE READS. Previously both files were parsed inside `try{...}catch{}` and silently
+  // substituted {} on any error — so a corrupt daily-history.js made freeze exit 0 while OVERWRITING the
+  // ledger with a near-empty one. A read/parse/shape failure must abort BEFORE any authoritative write.
+  const readByDate=(file,globalName)=>{
+    let mod; try{ mod=readGlobal(file,globalName); }
+    catch(e){ console.error(`❌ freeze: cannot read/parse ${file}: ${e.message}`); process.exit(1); }
+    const v=byDateOf(mod,globalName,file);
+    if(!v.ok){ console.error(`❌ freeze: ${v.error}`); process.exit(1); }
+    return v.byDate;
+  };
+  const prior=readByDate("data/daily-order.js","ARTEFACTUM_DAILY");
   // PERSISTENT LEDGER (append-only): the authoritative record of every day ever served. It is NEVER reshuffled
   // or truncated — served days are copied from it verbatim, and the anti-repeat windows below seed from its full
   // tail (not just the 3 days daily-order keeps). This is what kills cross-refreeze repeats.
-  let ledger={}; try{ const s=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(s.slice(s.indexOf("{"),s.lastIndexOf("}")+1)).byDate)||{}; }catch{}
+  let ledger=readByDate("data/daily-history.js","ARTEFACTUM_DAILY_HISTORY");
+  // PRESERVE BEFORE TRIMMING: the output window below starts at today-3, so any served day older than that
+  // would vanish from daily-order forever. Reconcile the COMPLETE prior schedule into the append-only ledger
+  // FIRST, using the same player-local UTC-12…UTC+14 "served" model as check-daily-flip. Fail closed here,
+  // before any authoritative write, on drift / malformed input / an unrecoverable gap.
+  const _through = servedThroughDate();
+  const _rec = reconcile({ order: prior, history: ledger, throughDate: _through });
+  if(!_rec.ok){ console.error(`❌ freeze: refusing to run — ledger reconciliation failed through ${_through}:`); for(const e of _rec.errors) console.error("  - "+e); process.exit(1); }
+  const _ledgerChanged = _rec.changed, _ledgerAdded = _rec.addedDates;
+  ledger = _rec.value;   // every later use (served, anti-repeat seed, ledger write) sees the RECONCILED ledger
   const RND=5, TRS=["easy","medium","hard","impossible"];
   const tk2=p=>String(p&&p.title||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const ak2=p=>{const a=String(p&&p.artist||"").trim().toLowerCase();return (a&&!/^(unknown|anon|unidentified)/.test(a))?a:"";};
@@ -240,11 +261,15 @@ out.meta = {
     recCL.push({day:d,keys:clustersOf(allIds)}); // one global cluster window entry per day across all tiers
   }
   out.byDate=byDate;
-  // APPEND newly-served days into the ledger (grow-only; an existing entry is NEVER overwritten or dropped).
-  const newLedger={...ledger}; let added=0;
-  for(const [k,rec] of Object.entries(byDate)){ if(dayNumOf(k)<=todayNum && !newLedger[k]){ newLedger[k]=rec; added++; } }
-  writeFileSync("data/daily-history.js","window.ARTEFACTUM_DAILY_HISTORY="+JSON.stringify({byDate:newLedger})+";\n");
-  console.log(`ledger: ${Object.keys(newLedger).length} served days recorded (+${added} new)`);
+  // The ledger was already reconciled from the COMPLETE prior schedule above (grow-only; an existing entry is
+  // NEVER overwritten, dropped or reordered). Write it BEFORE data/daily-order.js so a crash between the two
+  // can only ever leave MORE history than schedule — never a served day that exists nowhere.
+  if(_ledgerChanged){
+    writeAtomic("data/daily-history.js", serializeHistory(ledger));
+    console.log(`ledger: ${Object.keys(ledger).length} served days recorded (+${_ledgerAdded.length} new: ${_ledgerAdded.join(", ")})`);
+  } else {
+    console.log(`ledger: ${Object.keys(ledger).length} served days recorded (already current through ${_through}; file untouched)`);
+  }
 }
 writeFileSync("data/daily-order.js","window.ARTEFACTUM_DAILY="+JSON.stringify(out)+";\n");
 console.log(`froze: easy ${easy.length} (T1 ${T1s.length} icons + T2 ${T2q.length}, 4+1/day) / medium ${out.medium.length} / hard ${out.hard.length} / impossible ${out.impossible.length}`);

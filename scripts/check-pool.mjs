@@ -6,6 +6,7 @@ import { readGlobal } from "./lib/static-module.mjs";
 import { simplifyMedium, BAD_STYLE, isInCopyright, styleSignature } from "./lib/domain.mjs";
 import { isPlaceCanonical, canonicalizePlace, continentOf } from "./lib/places.mjs";
 import { auditedOracle } from "./lib/vision-ledger.mjs";   // dependency-free ledger contract (no sharp/network)
+import { servedThroughDate, byDateOf, isIsoDate, validateRecord } from "./lib/daily-history.mjs";   // shared player-local UTC-12…UTC+14 served model
 import { scanLanguage } from "./check-language.mjs";
 
 const CONTINENTS = new Set(["Europe","Asia","Africa","North America","South America","Oceania"]);
@@ -288,9 +289,34 @@ for(const p of pool){
       if(byId[id]?.play===false && date>today) hard.push(`[unplayable-in-daily] ${date}/${k}: ${(byId[id]?.title||id).slice(0,40)} — vision-judged featureless, must not be scheduled`); } }
   // LEDGER IMMUTABILITY: a served day (<= today) in daily-order MUST match the append-only ledger verbatim.
   // If it differs, a refreeze silently altered a day a player already saw — fail loudly.
-  { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
-    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ (date<today?hard:warn).push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
-      for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } }
+  // "Served" here uses the shared player-local UTC-12…UTC+14 model (servedThroughDate), NOT UTC or Pacific
+  // midnight — a date is live for someone up to 14h before UTC midnight. `today` above is left alone because
+  // unrelated checks in this file depend on its existing semantics.
+  // FAIL-CLOSED for this block: a corrupt ledger previously parsed to {}, turning every served date into a
+  // benign ledger-missing WARNING and letting check-pool print "PASS" over an unreadable ledger. Read BOTH
+  // sources strictly here; `daily` above is left alone because unrelated checks depend on its semantics.
+  { let ledger=null, ordr=null, ledgerBroken=false;
+    for(const [file,globalName,set] of [["data/daily-order.js","ARTEFACTUM_DAILY",o=>ordr=o],["data/daily-history.js","ARTEFACTUM_DAILY_HISTORY",o=>ledger=o]]){
+      let mod=null, err=null;
+      try{ mod=readGlobal(file,globalName); }catch(e){ err=`${file}: unreadable or invalid JavaScript (${e.message})`; }
+      if(!err){ const v=byDateOf(mod,globalName,file); if(!v.ok) err=v.error; else set(v.byDate); }
+      if(err){ hard.push(`[ledger-invalid] ${err} — the ledger cannot be verified; fix the file before trusting any daily check`); ledgerBroken=true; }
+    }
+    if(!ledgerBroken){
+    // RECORD VALIDITY: a syntactically valid ledger can still be structurally wrong. Malformed date keys and
+    // malformed day records are HARD — an unverifiable served day is not a warning.
+    for(const [date,rec] of Object.entries(ledger)){
+      if(!isIsoDate(date)){ hard.push(`[ledger-invalid] "${date}" is not a real YYYY-MM-DD calendar date`); continue; }
+      for(const e of validateRecord(rec,`ledger ${date}`)) hard.push(`[ledger-invalid] ${e}`);
+    }
+    const servedThrough=servedThroughDate();
+    for(const [date,day] of Object.entries(ordr)){ if(date>servedThrough) continue; const led=ledger[date];
+      // MISSING but RECOVERABLE (the assignment is still pinned in daily-order) is a WARNING: time passing alone
+      // must not hard-fail an unrelated build. It becomes unrecoverable only once daily-order is trimmed, which is
+      // why reconciliation is mandatory BEFORE changing or trimming daily-order.
+      if(!led){ warn.push(`[ledger-missing] ${date} served but absent from daily-history.js — run \`npm run ledger:record\` before changing or trimming daily-order`); continue; }
+      // DRIFT stays HARD: a served day that a player already saw was altered.
+      for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } } }
   // VISION-AUDIT COVERAGE: how many works scheduled in the next VIS_WIN days have NOT had a genuine image-grounded
   // notes/pins pass (data/vision-audit.json). WARN only — this is the rollout gauge that keeps the audit ahead of
   // what players see. When it reaches 0, upcoming dailies are fully vision-verified.

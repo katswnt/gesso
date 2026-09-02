@@ -49,6 +49,40 @@ The schedule is not five random rows from a database. `scripts/freeze-daily.mjs`
 7. **Keep every scorecard useful.** A repair pass targets at least two works with movement/culture answers, one with an attributable artist, and two with medium answers. The deliberately low artist floor avoids pushing anonymous—and disproportionately non-Western—work out of the schedule.
 8. **Freeze history.** An append-only ledger makes every served daily immutable. By default, re-running the scheduler preserves already frozen future dates too and only extends the horizon; an explicit flag is required to regenerate the future, and served dates still cannot change.
 
+### Schedule generation and ledger bookkeeping are separate jobs
+
+`npm run freeze` is **occasional schedule generation** — it regenerates the rotation and runs a networked
+image audit. It is not daily bookkeeping.
+
+The append-only ledger (`data/daily-history.js`) is maintained on its own, offline:
+
+| Command | Effect |
+|---|---|
+| `npm run ledger:check` | **Read-only.** Exits non-zero and names the missing dates if reconciliation is needed. Never writes. |
+| `npm run ledger:record` | **History-only append.** Copies already-served assignments into the ledger, atomically. Never touches `data/daily-order.js`. |
+
+A few things follow from this split:
+
+- **"Served" means player-local.** The app keys each daily on the player's own calendar date, so at any instant
+  "today" spans **UTC-12 … UTC+14**. Neither UTC nor Pacific midnight is the boundary — a date is already live
+  in Kiritimati 14 hours before UTC midnight.
+- **The ledger may lag safely.** While an assignment is still pinned in `daily-order.byDate`, an unrecorded
+  served date is recoverable, so `check-pool` reports it as a *warning*. Time passing alone never hard-fails a
+  build.
+- **Reconcile before changing or trimming `daily-order`.** `daily-order` keeps only a short window. Once a
+  served date is trimmed from it and was never recorded, the assignment is gone for good — which is why
+  `freeze-daily.mjs` reconciles the complete prior schedule into the ledger *before* it writes anything.
+- **Existing ledger entries are immutable.** They are never overwritten, deleted or reordered. Drift between
+  `daily-order` and the ledger remains a **hard** failure: it means a day a player already saw was altered.
+- **What reconciliation does and does not guarantee.** It guarantees *completeness across the recoverable
+  window*: every served assignment still present in `daily-order.js` is recorded. It does **not** repair
+  history that predates that window — the ledger has four known holes (`2026-07-16`, `2026-07-29`,
+  `2026-07-30`, `2026-07-31`) whose assignments survive in neither file and therefore cannot be
+  reconstructed. Those gaps are preserved as known history and **no missing assignment is ever fabricated**.
+- **A corrupt or wrong-shaped source is never treated as empty.** `freeze`, `ledger:check`/`ledger:record`
+  and `check-pool` all read `daily-order.js` and `daily-history.js` fail-closed: an unreadable, invalid,
+  wrong-global or malformed-`byDate` file is a hard error before any write, never a silent `{}`.
+
 ### The intentional Easy-tier tradeoff
 
 Easy skews European because the best available recognizability proxy inherits the Western canon and the digitization choices behind it. That is a known tradeoff, not an accidental output. Forcing geographic parity after setting the tier would break the promise that Easy feels recognizable to the intended beginner.

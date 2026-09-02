@@ -9,17 +9,16 @@
 // distinct date in [now-12h, now+14h]. Fails CLOSED on network / parse / missing-date / malformed-tier.
 //   node scripts/check-daily-flip.mjs   (optional: PROD_ORIGIN=https://gesso.katswint.com)
 import { readFileSync } from 'node:fs';
+import { liveDateSet } from './lib/daily-history.mjs';   // SHARED UTC-12…UTC+14 model — single source of truth
 
 const ORIGIN = (process.env.PROD_ORIGIN || 'https://gesso.katswint.com').replace(/\/$/, '');
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const fail = m => { console.error('❌ FAIL — daily-flip guard: ' + m); process.exit(1); };
 
-// distinct UTC dates covering every player-local "today" (UTC-12 … UTC+14)
-function todaySet() {
-  const now = Date.now(), out = new Set();
-  for (let h = -12; h <= 14; h++) out.add(new Date(now + h * 3600000).toISOString().slice(0, 10));
-  return [...out].sort();
-}
+// distinct UTC dates covering every player-local "today" (UTC-12 … UTC+14).
+// Behaviour-preserving: this is now the shared liveDateSet() so the ledger reconciler and this guard can
+// never disagree about which dates are live.
+const todaySet = () => liveDateSet();
 const parseByDate = (text, label) => {
   let o; try { o = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)); } catch { fail(`could not parse ${label} daily-order.js`); }
   if (!o || typeof o.byDate !== 'object' || !o.byDate) fail(`${label} daily-order.js has no byDate`);
