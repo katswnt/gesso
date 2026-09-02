@@ -4,7 +4,7 @@
 // completed pilot.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, sha256, estimateCost, REQUEST_POLICY } from './lib/recognition-pilot.mjs';
+import { canonicalJson, sha256, estimateCost, REQUEST_POLICY, applicableEligibleFacets } from './lib/recognition-pilot.mjs';
 import {
   STUDYB_PROTOCOL_ID, STUDYB_CALL_SEED, STUDYB_ARMS, STUDYB_REQUEST_POLICY,
   renderPromptSchema, buildStudyBPrompt, buildStudyBCallManifest, maxSerializedValidFacetResponse,
@@ -37,11 +37,16 @@ const works = frozenManifest.works.map(w => {
   if (!cue.correct || !cue.sham) throw new Error(`missing cue/sham: ${w.id}`);
   if (!Array.isArray(cue.eligibleFacets)) throw new Error(`missing applicable-facet mask: ${w.id}`);
   if (!w.truth || typeof w.truth !== 'object') throw new Error(`missing truth: ${w.id}`);
+  // ONE identical applicable-facet mask across all three arms, computed by the FROZEN rule:
+  // cue-eligible facets, minus truth.notApplicable, minus owner primaryApplicable:false. (F1 fix — the
+  // previous code used raw cue.eligibleFacets, which wrongly re-included excluded facets on 17/36 works.)
+  const applicableMask = applicableEligibleFacets(w);
+  if (!applicableMask.length) throw new Error(`no applicable Study-B primary facet: ${w.id}`);
   return {
     id: w.id,
     cue: { correct: cue.correct, sham: cue.sham, cueType: cue.cueType, eligibleFacets: cue.eligibleFacets, disclosedFacets: cue.disclosedFacets || [], acceptedAliasesByFacet: cue.acceptedAliasesByFacet },
-    // ONE identical applicable-facet mask across all three arms = facets the CORRECT cue does not disclose.
-    primaryApplicable: cue.eligibleFacets,
+    applicableMask,
+    frozenPrimaryApplicable: w.primaryApplicable || null,
     truth: w.truth,
     strata: w.strata,
     image: { fullViewSha256: full.sha256, width: full.width, height: full.height, mime: full.mime, sourceCanonicalSha256: canon.sha256 },

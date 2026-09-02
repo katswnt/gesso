@@ -27,10 +27,15 @@ The frozen pilot's data was **never altered**. The corrected run is a new experi
 - **Recognition and inference are separable and both measurable.** The model frequently gets the
   tradition right while missing the specific work (right school, wrong hand), which is the middle band
   the design was built to capture.
-- **Supplying the true identity helps inference a little, mostly for dating and attribution** — a
-  small, real anchoring effect, not a large one.
-- **The model is honest and reliable.** It self-reports non-recognition rather than bluffing, and
-  repeat agreement is high (0.92 identification, 0.96 graded-facet).
+- **Supplying the true identity gives a small anchoring effect** on facet inference (correct−sham
+  +0.070 graded credit after independent adjudication), concentrated in style, attribution, and dating.
+  The ~95% interval marginally excludes zero ([+0.011, +0.129]), so the effect is *weakly*
+  distinguishable from zero — but it is small, adjudicator-dependent, and **Codex-adjudicated rather
+  than human-adjudicated** (see Study B).
+- **Repeat agreement is high** (0.92 identification; 0.951 graded-facet in the adjudicated analysis).
+  The model also tended to
+  self-report non-recognition rather than bluff, though "honest" is a stronger claim than this pilot's
+  evidence establishes.
 
 ## Study A — recognition (frozen pilot)
 
@@ -49,8 +54,9 @@ recognized. Concrete cases: Rossetti's _Proserpina_ was named with confidence 97
 Ō-Kanehira sword (a famous named blade) was described accurately as a signed tachi but never
 recognized as the specific work. Recognition of a distinctive image is not the same as renown.
 
-**Robustness.** Recognition degrades monotonically as the image is cropped: full 8/28 → crop70 7/32 →
-crop45 3/27 → crop25 2/34. Mirror, grayscale, and rotation were kept as separate branches, not folded
+**Robustness.** Recognition declines as the image is cropped: full 8/28 → crop70 7/32 → crop45 3/27 →
+crop25 2/34. This is monotonic **in the aggregate rates, not for every individual work** (one work's
+sequence is non-monotonic). Mirror, grayscale, and rotation were kept as separate branches, not folded
 into a single degradation axis.
 
 **Reliability.** Identification exact agreement 0.92 across 25 repeat pairs (above the frozen
@@ -59,9 +65,10 @@ threshold). The recognition signal is stable, not lucky draws.
 ## Study C — same-object recognition is fragile
 
 Six objects were each shown from a genuinely different second photograph. Mean alternate-minus-canonical
-exact recognition was −0.17, driven almost entirely by one work (the British Museum ram, recognized in
-the canonical photo, lost in the alternate). Only the Mask of Agamemnon was recognized in both. A
-different photo of the same object often breaks recognition.
+exact recognition was −0.17, but this rests on **one of six works** showing source-view dependence (the
+British Museum ram, recognized in the canonical photo, lost in the alternate); the Mask of Agamemnon was
+recognized in both and the other four in neither. The pilot shows one clear case of a different photo
+breaking recognition, not that it "often" does — n is far too small for a rate claim.
 
 ## Prompt-order — negligible
 
@@ -91,7 +98,8 @@ A separate run fixed the instrument and re-collected Study B only:
   applicable-facet mask across all three arms.
 
 **Run:** 119 calls (36 no-cue + 36 sham + 36 correct-cue + 11 seeded repeats), all Sonnet 4.6, temp 0,
-20 minutes, **$1.52**. **Zero title/type echoes.**
+20 minutes, verified cost **$1.518306** (anchored post-hoc; see caveats). **Zero title/type echoes,
+zero transport retries, three `end_turn` non-JSON failures.**
 
 **Validity by arm** (vs the frozen pilot's 90 / 79 / 23%):
 
@@ -101,30 +109,47 @@ A separate run fixed the instrument and re-collected Study B only:
 | sham | 35 | 97.2% |
 | correct-cue | 36 | 100% |
 
-Near-uniform, **no differential dropout**. **33 of 36 complete triplets** (frozen pilot had 7). Both
-interpretability gates pass (≥90% per arm, ≥30 triplets), so the causal result is reportable.
+Near-uniform, **no severe differential dropout observed**. The three invalids split 2 no-cue / 1 sham /
+0 correct-cue — no severe arm concentration, but three failures cannot prove missingness is
+non-differential. **33 of 36 complete triplets** (frozen pilot had 7). Both interpretability gates pass
+(≥90% per arm, ≥30 triplets).
 
-### Causal result (graded facet credit, work-weighted, 33 works)
+### Causal estimate — final (Codex-adjudicated)
 
-| Contrast | Effect |
+Under the frozen protocol, a confident (≥60) but deterministically-unmatched place/medium/style/artist
+answer goes to blinded adjudication rather than being auto-scored zero. **82 such in-mask facet cells**
+(correct-cue 29 / no-cue 27 / sham 26, mostly style) were resolved by an **independent model
+adjudicator (Codex)** — blinded to condition, work, and arm. This is a deliberate, labeled deviation
+from the protocol's *human* adjudication step. The analyzer verified all 82 rulings SHA-bound before
+finalizing.
+
+| Contrast (Codex-adjudicated) | Estimate |
 |----------|--------|
-| correct-cue − sham | **+0.043** |
-| correct-cue − no-cue | +0.064 |
-| sham − no-cue | +0.021 |
-| leave-artist-out (correct − sham) | +0.036 |
-| paired variance (correct − sham) | 0.020 |
+| **correct-cue − sham** | **+0.070** |
+| correct-cue − no-cue | +0.076 |
+| sham − no-cue | +0.006 |
+| leave-artist-out (correct − sham) | +0.066 |
+| paired variance (correct − sham) | 0.030 |
+| ~95% CI (correct − sham) | **[+0.011, +0.129]** |
 
-Per-facet correct-minus-sham: **date +0.090**, **artist +0.111** (18 works), style +0.032,
-place +0.030, **medium −0.008**.
+Per-facet correct-minus-sham: **style +0.150**, **artist +0.125** (16 works), **date +0.090**,
+place +0.030, medium 0.000.
 
-**Reading.** Supplying the correct identity gives a small, positive lift to inference, concentrated
-exactly where identity should help — dating and attribution — while medium (read straight from pixels)
-is unmoved and a false label is nearly inert (sham − no-cue ≈ 0). The effect survives dropping the
-artist facet, so it is not artist-only. It is the same direction as the frozen pilot's discarded
-estimate but smaller, and now trustworthy because there is no differential missingness inflating it.
+**Reading.** The anchoring effect is small and positive, concentrated where identity should help
+(style, attribution, dating), with medium unmoved (read straight from pixels) and a false label nearly
+inert (sham − no-cue ≈ +0.006). Adjudication mattered: crediting near-misses moved correct−sham from the
+deterministic +0.043 to +0.070, and the ~95% interval now *marginally* excludes zero — so the effect is
+weakly distinguishable from zero. Three caveats keep this honest: it is **Codex-adjudicated, not
+human-adjudicated**; the lower bound (+0.011) sits just above zero on n=33 with a normal approximation,
+so it is **suggestive, not robust**; and it is **sensitive to the adjudicator's partial-credit
+generosity** (Codex assigned full credit to 51 of 82 and zero to only 6 — a stricter adjudicator would
+pull the estimate back toward zero).
 
-**Reliability.** 51 repeat facet-pairs: exact graded-credit agreement 0.96, mean absolute credit
-difference 0.026.
+**Reliability.** In the final adjudicated analysis, **41 directly-comparable scored repeat facet-pairs**
+give exact graded-credit agreement **0.951** and mean absolute credit difference **0.033**. (10
+otherwise-eligible repeat pairs are omitted because their repeat-side answers were ambiguous and not
+adjudicated on the repeat leg.) As a pre-adjudication sensitivity check, the deterministic scorer over
+all **51 pairs** gives agreement 0.961 and mean absolute difference 0.026 — consistent, and both high.
 
 ## Honesty caveats
 
@@ -133,22 +158,41 @@ difference 0.026.
 - The corrected instrument is a **different generation regime** than the frozen pilot (fixed prompt,
   higher cap), so the Study B numbers are not drop-in comparable to the frozen pilot's other arms.
 - A parser regression was introduced and caught during the corrected run (the cued arms wrap valid JSON
-  in a code fence; the first attempt used a stricter parser). It was fixed at 13 calls / $0.17 by
-  restoring the original fence-tolerant, truncation-strict parser, and the run re-done clean.
-- 3 of 119 corrected calls returned non-JSON the parser could not salvage (2 no-cue, 1 sham). This is
-  not the old bug, is non-differential, and is within the 90%-per-arm gate.
+  in a code fence; the first attempt used a stricter parser). It was fixed by restoring the original
+  fence-tolerant, truncation-strict parser, and the run re-done clean. **Only the clean 119-call
+  collection is preserved and independently verifiable at $1.518306.** The discarded first attempt
+  (~13 calls, disclosed at ~$0.17) is not preserved locally, so the ~$1.69 inclusive figure is a
+  disclosure, not an independently verifiable number.
+- 3 of 119 corrected calls returned non-JSON the parser could not salvage (2 no-cue, 1 sham), all
+  `end_turn` (one trailing quote, one prose preamble, one trailing `</s>`). This is not the old bug and
+  shows no severe arm concentration, but three failures cannot prove missingness is non-differential.
+- The corrected run's raw responses are gitignored; they are anchored post-hoc by
+  `docs/research/recognition-studyb/collection-evidence.json` (an after-collection preservation anchor
+  that did not exist before or during collection), not by an at-collection seal.
 
 ## What a full study would need
 
 This is a pilot for calibration and instrument shakedown, not a powered confirmatory study. A real
 Study B would pre-register the effect size from independent data (not from this excluded pilot),
-power the sample accordingly, and treat the +0.043 here as a nuisance estimate only. Study A would
-benefit from more works per fame×region cell before any bias claim is made.
+power the sample accordingly, and treat the estimate here (correct−sham +0.070, Codex-adjudicated,
+interval marginally excluding zero) as a nuisance estimate only. Study A would benefit from more works
+per fame×region cell before any bias claim is made.
+
+## Closure (complete)
+
+The **82 blinded facet adjudications** were resolved by an independent model adjudicator (Codex),
+blinded to condition/work/arm, and verified SHA-bound before the analyzer emitted `status: studyb-final`.
+Artifacts: `blinded-review-packet.json`, `adjudication-controller.private.json`, `adjudications.json`
+(rulings, reviewer "Codex (independent model adjudicator)"), and `collection-evidence.json` (the
+after-collection anchor). A future run wanting a *human*-adjudicated number can refill the rulings
+template against the same packet SHA.
 
 ## Cost and reproducibility
 
 - Frozen pilot: 671 calls, $7.75, ~2 hours.
-- Corrected Study B: 119 calls, $1.52, 20 minutes ($1.69 including the caught-and-fixed first attempt).
-- Corrected instrument: `scripts/lib/recognition-studyb.mjs`, `scripts/recognition-studyb-{prepare,run}.mjs`,
+- Corrected Study B: 119 calls, verified **$1.518306**, 20 minutes. A discarded first attempt (~$0.17)
+  is disclosed but not preserved/verifiable.
+- Corrected instrument: `scripts/lib/recognition-studyb.mjs`, `scripts/recognition-studyb-{prepare,run,evidence}.mjs`,
   `scripts/analyze-recognition-studyb.mjs`, tests in `tests/recognition-studyb.test.mjs`. Draft
-  artifacts and the machine-readable report under `docs/research/recognition-studyb/`.
+  artifacts, the collection-evidence anchor, and the machine-readable report under
+  `docs/research/recognition-studyb/`.

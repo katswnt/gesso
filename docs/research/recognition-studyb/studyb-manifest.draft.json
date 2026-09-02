@@ -69,13 +69,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1510,
@@ -176,13 +177,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1496,
@@ -285,13 +287,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1899,
@@ -394,13 +397,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1070,
@@ -500,13 +504,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1869,
@@ -609,13 +614,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 960,
@@ -714,13 +719,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -500,
@@ -818,13 +823,13 @@
           "style": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1915,
@@ -913,13 +918,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 500,
@@ -1019,12 +1024,13 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1100,
@@ -1132,13 +1138,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -2600,
@@ -1251,13 +1257,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1844,
@@ -1367,13 +1374,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1793,
@@ -1473,13 +1481,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1876,
@@ -1587,13 +1596,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -10,
@@ -1695,13 +1704,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1884,
@@ -1804,13 +1814,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1915,
@@ -1908,13 +1919,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1787,
@@ -2014,13 +2026,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -1550,
@@ -2117,13 +2129,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1874,
@@ -2238,13 +2251,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1654,
@@ -2351,13 +2365,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1542,
@@ -2460,13 +2475,15 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": {
+        "artist": false
+      },
       "truth": {
         "date": {
           "lo": 1460,
@@ -2573,13 +2590,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1667,
@@ -2682,13 +2700,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -305,
@@ -2786,13 +2804,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1690,
@@ -2887,13 +2905,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1340,
@@ -2995,13 +3014,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1,
@@ -3093,13 +3112,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1902,
@@ -3203,13 +3223,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1250,
@@ -3298,13 +3318,12 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
-        "medium",
-        "style",
-        "artist"
+        "medium"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1855,
@@ -3392,13 +3411,15 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": {
+        "artist": false
+      },
       "truth": {
         "date": {
           "lo": 1150,
@@ -3501,12 +3522,12 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": -246,
@@ -3606,13 +3627,14 @@
           ]
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
         "style",
         "artist"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1549,
@@ -3718,13 +3740,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 601,
@@ -3823,13 +3845,13 @@
           "artist": []
         }
       },
-      "primaryApplicable": [
+      "applicableMask": [
         "date",
         "place",
         "medium",
-        "style",
-        "artist"
+        "style"
       ],
+      "frozenPrimaryApplicable": null,
       "truth": {
         "date": {
           "lo": 1403,
@@ -3897,5 +3919,5 @@
     },
     "sha256": "7b587923d5f47a810d33ad5d5a9e9d931b843acb94d61d4e66878be8003716fa"
   },
-  "sha256": "4be1f91dce218613141992b63a07393e930887ebc27fa616939738076df1e74f"
+  "sha256": "8a88c51e004cab20b4396bf5e3a8b4e101cf822bcf732217de8500c7bce07799"
 }

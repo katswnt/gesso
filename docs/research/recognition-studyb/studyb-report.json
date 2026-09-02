@@ -1,9 +1,11 @@
 {
-  "version": "recognition-studyb-report/1",
+  "version": "recognition-studyb-report/2",
   "protocolId": "gesso-recognition-studyb-2026-09-01-v1",
+  "collectionEvidenceSha256": "dcc2311cec8cf1bddb562001aac71a05423490ac7ba8b9125f839e4ca54d5b3d",
   "completion": {
     "planned": 119,
-    "resultsPresent": 119
+    "resultsPresent": 119,
+    "verifiedCostUsd": 1.518306
   },
   "validity": {
     "armStats": {
@@ -78,13 +80,31 @@
     "causalHeadlineSuppressed": false,
     "status": "studyb-interpretable"
   },
+  "adjudication": {
+    "required": 82,
+    "resolved": 82,
+    "unresolved": 0,
+    "armDistribution": {
+      "no-cue": 27,
+      "sham": 26,
+      "correct-cue": 29
+    },
+    "facetDistribution": {
+      "place": 3,
+      "style": 56,
+      "medium": 21,
+      "artist": 2
+    },
+    "packetSha256": "d9d0121bcb8d9ce8b584fdae7ab633e9a817284311bd64d114ba485a2d2f24b8",
+    "rulingErrors": []
+  },
   "effects": {
     "contributingWorks": 33,
-    "correctMinusSham_workWeighted": 0.043305442424242425,
-    "correctMinusNoCue_workWeighted": 0.06407159898989899,
-    "shamMinusNoCue_workWeighted": 0.020766156565656557,
-    "pairedVariance_correctMinusSham": 0.020135323536465483,
-    "leaveArtistOut_correctMinusSham": 0.03611313636363637,
+    "correctMinusSham_workWeighted": 0.07035089696969697,
+    "correctMinusNoCue_workWeighted": 0.07596553838383838,
+    "shamMinusNoCue_workWeighted": 0.005614641414141407,
+    "pairedVariance_correctMinusSham": 0.02982824003930639,
+    "leaveArtistOut_correctMinusSham": 0.06565859090909092,
     "perFacetEffect": {
       "date": {
         "contributingWorks": 33,
@@ -96,23 +116,24 @@
       },
       "medium": {
         "contributingWorks": 32,
-        "meanCorrectMinusSham": -0.0078125
+        "meanCorrectMinusSham": 0
       },
       "style": {
         "contributingWorks": 31,
-        "meanCorrectMinusSham": 0.03225806451612903
+        "meanCorrectMinusSham": 0.15000000000000002
       },
       "artist": {
-        "contributingWorks": 18,
-        "meanCorrectMinusSham": 0.1111111111111111
+        "contributingWorks": 16,
+        "meanCorrectMinusSham": 0.125
       }
     },
     "repeatReliability": {
-      "pairsFacetLevel": 51,
-      "meanAbsCreditDiff": 0.02647058823529412,
-      "exactCreditAgreement": 0.9607843137254902
+      "pairsFacetLevel": 41,
+      "meanAbsCreditDiff": 0.032926829268292684,
+      "exactCreditAgreement": 0.9512195121951219
     }
   },
   "causalReportable": true,
+  "status": "studyb-final",
   "suppressionReason": null
 }

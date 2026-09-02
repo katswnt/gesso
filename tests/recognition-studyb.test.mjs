@@ -160,4 +160,107 @@ t('original frozen collection artifacts remain byte-unchanged', () => {
   for (const [p, expected] of Object.entries(m.freeze.artifactHashes)) assert.equal(sha256(readFileSync(p)), expected, `changed: ${p}`);
 });
 
+// ===================== CLOSURE-ROUND REGRESSIONS =====================
+import { existsSync, readdirSync } from 'node:fs';
+import { applicableEligibleFacets, gradeStyle, styleDedupFromSnapshot } from '../scripts/lib/recognition-pilot.mjs';
+import { facetAmbiguous, validateStudyBFacets, studyBFinalizable } from '../scripts/lib/recognition-studyb.mjs';
+import { deterministicJsonParse as djp } from '../scripts/lib/recognition-pilot-runtime.mjs';
+
+const fm = JSON.parse(readFileSync(join(FROZEN, 'pilot-manifest.frozen.json'), 'utf8'));
+const frozenById = new Map(fm.works.map(w => [w.id, w]));
+
+// F1 — mask correctness, no 17-drift recurrence
+t('CLOSURE F1: all 36 applicable masks equal the frozen applicableEligibleFacets', () => {
+  let drift = 0;
+  for (const w of draft.works) {
+    const correct = applicableEligibleFacets(frozenById.get(w.id));
+    assert.deepEqual(w.applicableMask, correct, `mask wrong for ${w.id}`);
+    if (JSON.stringify(w.applicableMask) !== JSON.stringify(w.cue.eligibleFacets)) drift++;
+  }
+  assert(drift > 0, 'expected some works where applicable != raw eligible (proves the fix is active)');
+});
+
+// F6 — bestYear research bound enforced locally
+t('CLOSURE F6: validateStudyBFacets enforces bestYear bounds [-100000,3000]', () => {
+  const base = () => ({ date: { bestYear: 1500, confidence: 80, visualBasis: 'x' }, place: { topGuess: 'Italy', alternatives: [], confidence: 70, visualBasis: 'x' }, medium: { guess: 'oil', confidence: 60, visualBasis: 'x' }, style: { guess: 'R', confidence: 60, visualBasis: 'x' }, artist: { guess: 'a', confidence: 40, visualBasis: 'x' } });
+  assert(validateStudyBFacets(base()).ok);
+  const hi = base(); hi.date.bestYear = 999999; assert(!validateStudyBFacets(hi).ok);
+  const lo = base(); lo.date.bestYear = -100001; assert(!validateStudyBFacets(lo).ok);
+});
+
+// frozen ambiguity rule behaves as specified
+t('CLOSURE: facetAmbiguous flags confident unmatched, not matched or low-confidence', () => {
+  const rows0 = { style: { ok: true, credit: 0 } }, rows1 = { style: { ok: true, credit: 1 } };
+  assert(facetAmbiguous('style', { style: { guess: 'Some School', confidence: 85 } }, rows0) === true);
+  assert(facetAmbiguous('style', { style: { guess: 'Some School', confidence: 85 } }, rows1) === false, 'matched must not adjudicate');
+  assert(facetAmbiguous('style', { style: { guess: 'Some School', confidence: 40 } }, rows0) === false, 'low-conf must not adjudicate');
+  assert(facetAmbiguous('style', { style: { guess: 'unknown', confidence: 90 } }, rows0) === false, 'unknown guess must not adjudicate');
+  assert(facetAmbiguous('date', { date: { bestYear: 1 } }, rows0) === false, 'date is never facet-adjudicated');
+});
+
+// finalization gate: zero-adjudication clean run finalizes; unresolved stays pending
+t('CLOSURE: a healthy run with ZERO required adjudications can finalize', () => {
+  assert.equal(studyBFinalizable({ gatesPass: true, unresolved: 0, rulingErrors: [] }), true, 'zero-ambiguity clean run must finalize');
+  assert.equal(studyBFinalizable({ gatesPass: true, unresolved: 5, rulingErrors: [] }), false, 'unresolved rulings must stay pending');
+  assert.equal(studyBFinalizable({ gatesPass: false, unresolved: 0, rulingErrors: [] }), false, 'failed validity gates cannot finalize');
+  assert.equal(studyBFinalizable({ gatesPass: true, unresolved: 0, rulingErrors: ['x'] }), false, 'ruling errors block finalization');
+});
+
+// F3 — evidence anchor integrity + tamper detection (logic-level)
+if (existsSync(join(OUT, 'collection-evidence.json'))) {
+  const ev = JSON.parse(readFileSync(join(OUT, 'collection-evidence.json'), 'utf8'));
+  t('CLOSURE F3: evidence anchor self-hash verifies and detects mutation', () => {
+    assert.equal(ev.sha256, sha256(canonicalJson({ ...ev, sha256: undefined })));
+    assert.equal(ev.totals.calls, 119);
+    const tampered = JSON.parse(JSON.stringify(ev)); tampered.calls[0].responseSha256 = 'deadbeef';
+    assert.notEqual(ev.sha256, sha256(canonicalJson({ ...tampered, sha256: undefined })), 'mutation must change the hash');
+  });
+}
+
+// all 119 collected responses satisfy the bestYear bound (so F6 changes no collected outcome)
+if (existsSync(join('data/incoming/recognition-studyb', draft.protocolId, 'attempts'))) {
+  t('CLOSURE: every valid collected response satisfies the research bestYear bound', () => {
+    const A = join('data/incoming/recognition-studyb', draft.protocolId, 'attempts');
+    let checked = 0;
+    for (const cid of readdirSync(A)) {
+      const p = join(A, cid, 'attempt-1.result.json'); if (!existsSync(p)) continue;
+      const r = JSON.parse(readFileSync(p, 'utf8')); if (r.outcome !== 'valid') continue;
+      const env = JSON.parse(r.rawResponse); const txt = (env.content || []).map(c => c.type === 'text' ? c.text : '').join('');
+      const pj = djp(txt); if (!pj.ok) continue;
+      assert(validateStudyBFacets(pj.value).ok, `collected response ${cid} violates a research constraint`);
+      checked++;
+    }
+    assert(checked > 100, `expected ~117 valid, checked ${checked}`);
+  });
+}
+
+// F2/F4 — blinded packet + refuse-final
+if (existsSync(join(OUT, 'blinded-review-packet.json'))) {
+  t('CLOSURE F2: blinded packet leaks no condition/work/call identity; controller binds SHA', () => {
+    const pkt = JSON.parse(readFileSync(join(OUT, 'blinded-review-packet.json'), 'utf8'));
+    for (const cell of pkt.cells) {
+      const keys = Object.keys(cell);
+      assert(!keys.some(k => /condition|arm|workId|callId|view|fame|region|image/.test(k)), 'packet leaks identity');
+      assert('adjudicationId' in cell && 'response' in cell && 'groundTruth' in cell && 'responseSha256' in cell);
+    }
+    const ctrl = JSON.parse(readFileSync(join(OUT, 'adjudication-controller.private.json'), 'utf8'));
+    assert(ctrl.cells.every(c => c.callId && c.facet && /^[0-9a-f]{64}$/.test(c.responseSha256)));
+  });
+  t('CLOSURE F2: analyzer gates final on adjudication (pending without rulings, final only when all resolved)', () => {
+    const rep = JSON.parse(readFileSync(join(OUT, 'studyb-report.json'), 'utf8'));
+    assert(rep.adjudication.required >= 80, 'expected ~82 required adjudications');
+    if (existsSync(join(OUT, 'adjudications.json'))) {
+      // rulings present -> final ONLY if every required cell resolved with no ruling errors
+      assert.equal(rep.causalReportable, rep.adjudication.unresolved === 0 && rep.adjudication.rulingErrors.length === 0);
+      if (rep.causalReportable) { assert.equal(rep.status, 'studyb-final'); assert(rep.effects && typeof rep.effects.correctMinusSham_workWeighted === 'number'); }
+    } else {
+      // no rulings -> must refuse to finalize
+      assert.equal(rep.causalReportable, false);
+      assert.equal(rep.effects, null);
+      assert.equal(rep.status, 'studyb-pending-adjudication');
+      assert.equal(rep.adjudication.unresolved, rep.adjudication.required);
+    }
+  });
+}
+
 console.log(`\n${pass} checks passed`);

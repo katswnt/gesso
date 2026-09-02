@@ -1,0 +1,1780 @@
+{
+  "version": "recognition-blinded-review/2",
+  "freezeId": "gesso-recognition-studyb-2026-09-01-v1",
+  "cells": [
+    {
+      "adjudicationId": "007d6f9606b2ae03a95bf1b54f7527b5",
+      "kind": "facet",
+      "responseSha256": "0747e6253ac90f98f77412beafe86d1c485beb746a4d49e13b649d068e05287b",
+      "response": {
+        "guess": "Chinese Qin Dynasty imperial funerary sculpture",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Qin dynasty"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "0089d0c3042754c05253c7d5b8b8291a",
+      "kind": "facet",
+      "responseSha256": "8929a23abccb74a179fbb2130e6e2c67d62a679f80f9a0a87385213ae2713186",
+      "response": {
+        "guess": "Pre-Raphaelite Brotherhood",
+        "confidence": 90
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Pre-Raphaelite"
+          ],
+          "family": [],
+          "related": [
+            "Aestheticism"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "00b9f9cb2242c25b4b156bcf8bab198d",
+      "kind": "facet",
+      "responseSha256": "fa668eb7eae2a75cd17bdb77c8b1d9b87ae7c713d413fdd62d653b0fae5e31eb",
+      "response": {
+        "guess": "Rapa Nui moai tradition",
+        "confidence": 96
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Rapa Nui people"
+          ],
+          "family": [
+            "Rapa Nui"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "00e69f0ab6c98bbfcefcc970dc833d07",
+      "kind": "facet",
+      "responseSha256": "54f1b06bff7511f8858e8302b16bf882ce98d9b4d3b4ab42a1e9628e4e0c1fd9",
+      "response": {
+        "guess": "Qin Dynasty imperial funerary sculpture",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Qin dynasty"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "01b4f7b03a04b00f1ef431b93e3ab791",
+      "kind": "facet",
+      "responseSha256": "aad4994d692cfc9d12f99fda422a517fc71abfcaa7fc3469ea867bfaf5916462",
+      "response": {
+        "guess": "Coptic",
+        "confidence": 75
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Coptic art"
+          ],
+          "family": [
+            "Roman Egypt"
+          ],
+          "related": [
+            "Graeco-Roman"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "06a9bbabb2fbcecdfe0f3bd2cab0c2bb",
+      "kind": "facet",
+      "responseSha256": "f163214edcc2f39627c00103f1048685d5400d64d09f4b1ba080241f20fdad63",
+      "response": {
+        "guess": "Alabaster (calcite)",
+        "confidence": 85
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Travertine",
+            "Calcite (alabaster)",
+            "Egyptian alabaster"
+          ],
+          "family": [
+            "other"
+          ],
+          "broad": [
+            "stone",
+            "vessel"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "0c8a1957f7f41845b6a7cf74d8757fe7",
+      "kind": "facet",
+      "responseSha256": "d8e560e7c16270ea9cdb9a1829bb6e0c78d62ce3b8107b955295a0e9ea6ba89b",
+      "response": {
+        "guess": "Ink on silk",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "ink and color on silk",
+            "handscroll"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "0fb39569acde3f482e0c6b9a308cab8d",
+      "kind": "facet",
+      "responseSha256": "f4f4b7ce276a4292bd7b373ee54341ee61cff00d12cde40eb5c367118e246484",
+      "response": {
+        "guess": "Arts and Crafts Movement",
+        "confidence": 90
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "150cafd78e18167053e6e1b5d7e402e3",
+      "kind": "facet",
+      "responseSha256": "7295c1e1ff063e48b866fe632e0e1f79c4941237d833409c06d6d3fb8daea97c",
+      "response": {
+        "guess": "Mycenaean (Late Helladic I–IIA)",
+        "confidence": 88
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Mycenaean"
+          ],
+          "family": [],
+          "related": [
+            "Minoan",
+            "Cycladic"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "154c4bcd0fdce35a8d58d6c125f34cb9",
+      "kind": "facet",
+      "responseSha256": "eef13b801e984c10005f8525f32f8f933373f95823cecb47db8f3d060fddd2cd",
+      "response": {
+        "guess": "Italian High Baroque",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Baroque"
+          ],
+          "family": [
+            "Baroque"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "18830adbd2fa5cb7cb10f5ea80da383f",
+      "kind": "facet",
+      "responseSha256": "e0c6f6e8e0536a3d158c4775893b05661950948edf2a18fd4e1ede239afa8206",
+      "response": {
+        "guess": "Dutch Golden Age / Genre painting",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Dutch Golden Age"
+          ],
+          "family": [
+            "Baroque"
+          ],
+          "related": [
+            "Dutch Baroque",
+            "Dutch genre painting"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "1acb835dd1651cf4874e00588ca8b2ee",
+      "kind": "facet",
+      "responseSha256": "392916937a124d2562864e3dbdc9f966b1887060b2f5a7921658323177f9769d",
+      "response": {
+        "guess": "Chinese literati landscape painting (wenrenhua), Northern Song tradition",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Northern Song landscape painting"
+          ],
+          "family": [
+            "Northern Song dynasty"
+          ],
+          "related": [
+            "Northern Song monumental landscape",
+            "Chinese literati painting"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "1c2d55342a50a2343222caf9903ad6ce",
+      "kind": "facet",
+      "responseSha256": "85cc0c51ec728b0c201e01cb11cfe229c093b42479e7e05b7d4fc4d29a47a262",
+      "response": {
+        "guess": "Stoneware with celadon (iron-reduction) glaze, molded and combed decoration",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Celadon (green-glazed stoneware)",
+            "Yaozhou ware",
+            "incised celadon"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "2590d84bb9463fbb56d9bfe9a7bacf2a",
+      "kind": "facet",
+      "responseSha256": "e1ac5c86f74f91295f26bbf5b88f4d756347ad2ed11f0bf02789aeca5239394b",
+      "response": {
+        "guess": "Arts and Crafts movement",
+        "confidence": 92
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "2e6fd938635a2db30c5e4522fe26a3a5",
+      "kind": "facet",
+      "responseSha256": "6993b33d9b23e202b7d398139b10b4277443a567b7d0a90fa9bb2505e6157d0d",
+      "response": {
+        "guess": "Himalayan Buddhist sculpture, Tibeto-Nepalese tradition, bodhisattva iconography (Green Tara)",
+        "confidence": 65
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Sino-Tibetan Buddhist"
+          ],
+          "family": [],
+          "related": [
+            "Tibeto-Chinese",
+            "Ming"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "2f992614548c339d5bbd50698de7e94e",
+      "kind": "facet",
+      "responseSha256": "e2eea4124d0b2fce3902824ba4ecf6513f1a1b1e600f49bb739380e0b4596661",
+      "response": {
+        "guess": "Joseon literati painting (muninhwa), influenced by Chinese Nanga/Southern School",
+        "confidence": 85
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Joseon dynasty literati painting"
+          ],
+          "family": [
+            "Joseon Korean",
+            "Joseon dynasty"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "31f7244600b0e33f1860c4d32ccbd473",
+      "kind": "facet",
+      "responseSha256": "63b922ea0c4431ee0a08be73f16b478c632fddd8d9d3bc580c57375755e1f377",
+      "response": {
+        "guess": "Blue-and-white delftware",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Safavid"
+          ],
+          "family": [],
+          "related": [
+            "Persian Islamic pottery",
+            "Islamic art"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "326cc66a874dfaebddb00ba1998a5a42",
+      "kind": "facet",
+      "responseSha256": "b62842d00df69e9f199ddf3d9140c0a076402285bbdce9221fdf8f3de4bbc61c",
+      "response": {
+        "guess": "Rapa Nui ancestral monumental sculpture (moai tradition)",
+        "confidence": 97
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Rapa Nui people"
+          ],
+          "family": [
+            "Rapa Nui"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "32f6e95ab8714998e198968542037055",
+      "kind": "facet",
+      "responseSha256": "3b0a97ebe2f198194c714e825194413d7e2a24b552e60068dc7e72e2eb70237c",
+      "response": {
+        "guess": "German Renaissance printmaking",
+        "confidence": 88
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "German Renaissance"
+          ],
+          "family": [
+            "Northern Renaissance"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "3956a9e245f13185e7f85d6ecc8a7b5b",
+      "kind": "facet",
+      "responseSha256": "8529cd40f1455bc4da4784455715196516f390e9986590d20c6bb9b538853ba2",
+      "response": {
+        "guess": "Arts and Crafts movement",
+        "confidence": 82
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "3ba630a48d63ea0b904dc9b2afe363b0",
+      "kind": "facet",
+      "responseSha256": "1f587f506ba1dd2b84113a71cc8021fc8a011244e46ade644be87c1e9ef5646d",
+      "response": {
+        "guess": "Italian Renaissance, Florentine Quattrocento",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Early Renaissance"
+          ],
+          "family": [
+            "Italian Renaissance"
+          ],
+          "related": [
+            "Early Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "40b6b5bfef520e12ac3e7a2e348b1664",
+      "kind": "facet",
+      "responseSha256": "0611ed7129ef119aa10ea5ec52fefad56d53ac1c4789ac26420ac384483d589b",
+      "response": {
+        "guess": "Italian Renaissance, Umbrian School",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "High Renaissance",
+            "Early Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "41abd10224edaed57b588d704c1714cf",
+      "kind": "facet",
+      "responseSha256": "e22380942a56d8595cb9d07fedd2e943fb61625faecd7f188bf28dc2ce3411d7",
+      "response": {
+        "guess": "Bizen-den (Bizen tradition), Heian-period tachi",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Heian period"
+          ],
+          "family": [],
+          "related": [
+            "Kamakura period"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "42a3cd5245f1ded8b9efd4f6a35f8acc",
+      "kind": "facet",
+      "responseSha256": "a2646effcb655986299b021749e3365713fc49e3e0a397ffb1810a947502ebe7",
+      "response": {
+        "guess": "Ukiyo-e, bijin-ga (pictures of beautiful women)",
+        "confidence": 97
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Ukiyo-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "479e7c6f0a2b297b89f796a9b566870b",
+      "kind": "facet",
+      "responseSha256": "714c82c799b8655ed272758adbaed4514f9c301c3d9aae43a05146f6785574bf",
+      "response": {
+        "guess": "German-speaking Switzerland or Upper Rhine region",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "place",
+        "truth": {
+          "exact": [
+            "England",
+            "United Kingdom",
+            "London"
+          ],
+          "parent": [
+            "Europe"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "4871774f33f4f0bd9394caad1de26ce7",
+      "kind": "facet",
+      "responseSha256": "756e2483319a0122791c058c4dfe452762d7c32588e20536cacbe3a76712451c",
+      "response": {
+        "guess": "Qin Dynasty imperial funerary sculpture",
+        "confidence": 96
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Qin dynasty"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "4d0f69457399578a7d08966187753403",
+      "kind": "facet",
+      "responseSha256": "cf99a4f93776844ec2ffed73f6ba93987eeed5a50d1e942f9bcdbca90ab86145",
+      "response": {
+        "guess": "China",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "place",
+        "truth": {
+          "exact": [
+            "Korea",
+            "Joseon Korea",
+            "South Korea"
+          ],
+          "parent": [
+            "Asia",
+            "East Asia"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "560bbc768e6faaa91154b5b657d5cde1",
+      "kind": "facet",
+      "responseSha256": "9a19d4f16527dd3743dea60d0c52b4160f913c4f32312472b82dc4c5aee0c464",
+      "response": {
+        "guess": "Volcanic tuff (basalt or compressed volcanic ash), carved by stone adze",
+        "confidence": 88
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Stone (volcanic tuff / andesite)"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "5fb6ee65502509619e9a35a57261a963",
+      "kind": "facet",
+      "responseSha256": "ce6368c63ffc073b1fb952e59ce84b3a1082a2febc551cd265d23f7050a31d2a",
+      "response": {
+        "guess": "Japanese emaki caricature scroll, Toba-e or choju-jinbutsu-giga tradition",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Yamato-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "6380d39138370b64a9b8a53ef15def27",
+      "kind": "facet",
+      "responseSha256": "8df9472722add2fa14af398999d7b2a407ab18e24826363c960cbc29bd5e1746",
+      "response": {
+        "guess": "Mycenaean (Late Helladic Bronze Age)",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Mycenaean"
+          ],
+          "family": [],
+          "related": [
+            "Minoan",
+            "Cycladic"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "63e615b2de5e279f0b6334870b5d5ecd",
+      "kind": "facet",
+      "responseSha256": "1a75a106eab569781230472efbdf681d2b74b36c42b672cf818dc6b6277f15c5",
+      "response": {
+        "guess": "Roman Third Style wall painting (Pompeian)",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Roman Third Style"
+          ],
+          "family": [
+            "Ancient Roman"
+          ],
+          "related": [
+            "Pompeian Roman",
+            "Roman Second Style",
+            "Roman Imperial"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "645ec12b97ffd13dc86188263da234d9",
+      "kind": "facet",
+      "responseSha256": "4699af15905909566523125ec736e223ff801010a0ac90de8857aa97e931a96d",
+      "response": {
+        "guess": "Mycenaean Late Bronze Age funerary art, circa 16th–15th century BCE",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Mycenaean"
+          ],
+          "family": [],
+          "related": [
+            "Minoan",
+            "Cycladic"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "64f3bfe0c02fc839d81de2d19e584b3a",
+      "kind": "facet",
+      "responseSha256": "d8e560e7c16270ea9cdb9a1829bb6e0c78d62ce3b8107b955295a0e9ea6ba89b",
+      "response": {
+        "guess": "Chinese literati/court landscape painting (shan shui)",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Northern Song landscape painting"
+          ],
+          "family": [
+            "Northern Song dynasty"
+          ],
+          "related": [
+            "Northern Song monumental landscape",
+            "Chinese literati painting"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "677c7f5045f77884ab796b824a98e675",
+      "kind": "facet",
+      "responseSha256": "714c82c799b8655ed272758adbaed4514f9c301c3d9aae43a05146f6785574bf",
+      "response": {
+        "guess": "Northern Renaissance, German-Swiss school",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Northern Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "German Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "6bb7af8fa39f151e3e67ad579bb06de1",
+      "kind": "facet",
+      "responseSha256": "984937eb29c0bb317cd53c72d63ebb062d3c028eb18808d2e744af57055229cf",
+      "response": {
+        "guess": "Roman Third Style wall painting (Augustan period)",
+        "confidence": 82
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Roman Third Style"
+          ],
+          "family": [
+            "Ancient Roman"
+          ],
+          "related": [
+            "Pompeian Roman",
+            "Roman Second Style",
+            "Roman Imperial"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "6c1950d9fd3f8a6d68b2e6605fbb48a4",
+      "kind": "facet",
+      "responseSha256": "f4f4b7ce276a4292bd7b373ee54341ee61cff00d12cde40eb5c367118e246484",
+      "response": {
+        "guess": "Block-printed or roller-printed cotton fabric",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "indigo-discharged and block-printed cotton",
+            "block-printed cotton"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": [
+            "furnishing fabric"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "6d9b2a8c42c6aea10880ef193a10da22",
+      "kind": "facet",
+      "responseSha256": "b560c5e05919df5478b10ecf6973302e5e050eafc8bd8f0c33e536153e92aff4",
+      "response": {
+        "guess": "Ukiyo-e bijin-ga (pictures of beautiful women), Edo period",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Ukiyo-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "6f854c9002f0d7dfa8d8d1da25cadf77",
+      "kind": "facet",
+      "responseSha256": "520fceabc8f61d4b862621e3261a702a9082446b36d63c5b1b5ed6ec137d2535",
+      "response": {
+        "guess": "Roman Third Style wall painting (Pompeian Third Style)",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Roman Third Style"
+          ],
+          "family": [
+            "Ancient Roman"
+          ],
+          "related": [
+            "Pompeian Roman",
+            "Roman Second Style",
+            "Roman Imperial"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "7850db3cff9c47c4f47bbb92a3b6e28a",
+      "kind": "facet",
+      "responseSha256": "51f86fdc8aef2450a761f30256f488f688a2ed6cd6e6d50627deef1349ccb729",
+      "response": {
+        "guess": "Early Dynastic Sumerian, circa 2600–2400 BCE",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Sumerian"
+          ],
+          "family": [
+            "Ancient Near Eastern"
+          ],
+          "related": [
+            "Early Dynastic Sumerian",
+            "Mesopotamia / Iraq"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "7b0ee42664296e5ad2d81e4d55199226",
+      "kind": "facet",
+      "responseSha256": "43125ead017b744ae3be57a8ed03781a772a1ab26bcff9db19fe4628ef284e24",
+      "response": {
+        "guess": "Yamato-e / Heian-Kamakura emakimono tradition",
+        "confidence": 85
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Yamato-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "80f7888e77cfc43deefa343d53a34339",
+      "kind": "facet",
+      "responseSha256": "17d43a63dbdc079e68674d93039b7a0cd7406324725f2d5de848e01481002e7a",
+      "response": {
+        "guess": "American Luminism / Hudson River School",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Hudson River School"
+          ],
+          "family": [],
+          "related": [
+            "American Romanticism"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "82b90a0febb0f1c89bf9fd73092b899f",
+      "kind": "facet",
+      "responseSha256": "a06ac742c29fa30f60952cc4a16ff303392e980f5680d885162102b08755e971",
+      "response": {
+        "guess": "Tin-glazed earthenware (delftware), hand-modeled and painted in cobalt blue underglaze",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Fritware, underglaze painted in blue",
+            "Fritware",
+            "stonepaste"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "88b67d0f1ae7043f2a4f68843a2a419a",
+      "kind": "facet",
+      "responseSha256": "4f8a7948e07b4003d3e77a5a358a5f76266d0f96eb92d1cb7725305ad6793ea1",
+      "response": {
+        "guess": "Gilt copper alloy (brass or bronze)",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Gilt bronze"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "899abe2b524b0142d24c1e0b1e06870b",
+      "kind": "facet",
+      "responseSha256": "6301b734d752364d085d33af6d628f664d642dbf8ba0c2b5741bf7f551870959",
+      "response": {
+        "guess": "Tin-glazed earthenware (faience/Delftware)",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Fritware, underglaze painted in blue",
+            "Fritware",
+            "stonepaste"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "8a1654a88f7f2822910e2ea030c2ca4d",
+      "kind": "facet",
+      "responseSha256": "4f8a7948e07b4003d3e77a5a358a5f76266d0f96eb92d1cb7725305ad6793ea1",
+      "response": {
+        "guess": "Newar Buddhist sculptural tradition (Vajrayana / Tibeto-Nepali)",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Sino-Tibetan Buddhist"
+          ],
+          "family": [],
+          "related": [
+            "Tibeto-Chinese",
+            "Ming"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "8d3f50527425025cad50061460df3eaf",
+      "kind": "facet",
+      "responseSha256": "ca8c5f086f3abbce2dd5b27712f9d569fc0f58c5c4dad9bf3a8613e5606acd8d",
+      "response": {
+        "guess": "Pietro Perugino",
+        "confidence": 62
+      },
+      "groundTruth": {
+        "facet": "artist",
+        "truth": {
+          "exact": [
+            "Lorenzo di Credi"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "92057d76764ee98f628bb4bf668d2159",
+      "kind": "facet",
+      "responseSha256": "6e741ab16ba5bc8069f53f2d85e3d6967816450955bf8dbaaf4bfe68cffc611f",
+      "response": {
+        "guess": "Japanese nihonto tradition; classical sword-smithing school (koto or shinto period)",
+        "confidence": 75
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Heian period"
+          ],
+          "family": [],
+          "related": [
+            "Kamakura period"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "947c94b3b83363496465ff25a74c7866",
+      "kind": "facet",
+      "responseSha256": "402e62122512ee779aac5babe8dc9d000e5b275c5cd5b43e19c6fac539a85788",
+      "response": {
+        "guess": "Ukiyo-e, bijin-ga (okubi-e bust portrait format)",
+        "confidence": 97
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Ukiyo-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "970c10fe15ff09202e76ca175fd1ac23",
+      "kind": "facet",
+      "responseSha256": "fa668eb7eae2a75cd17bdb77c8b1d9b87ae7c713d413fdd62d653b0fae5e31eb",
+      "response": {
+        "guess": "Volcanic tuff (basalt/tuff stone), carved",
+        "confidence": 88
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Stone (volcanic tuff / andesite)"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "982582809f9a2d15e4c1ce1851549758",
+      "kind": "facet",
+      "responseSha256": "a36d4d53b85910a9121f893dd34d03fc9210c9a22ac1a9784ac5d5a4c6df0f0d",
+      "response": {
+        "guess": "Pictorialist photography",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Pictorialism"
+          ],
+          "family": [],
+          "related": [
+            "Straight photography"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "9ae40d031029f4a63ec6eb6831b7cbb1",
+      "kind": "facet",
+      "responseSha256": "e1ac5c86f74f91295f26bbf5b88f4d756347ad2ed11f0bf02789aeca5239394b",
+      "response": {
+        "guess": "Printed cotton (block-printed)",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "indigo-discharged and block-printed cotton",
+            "block-printed cotton"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": [
+            "furnishing fabric"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "9f461538368bcf38d39ccbf09907e719",
+      "kind": "facet",
+      "responseSha256": "f8a0b63684a833ad12b1baea520f73f8d42b10cdc93d098f549eeca0f8e1fdda",
+      "response": {
+        "guess": "Italian Renaissance, Umbrian School",
+        "confidence": 75
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "High Renaissance",
+            "Early Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "a24c6f27b60378099f18c6f86ea209f8",
+      "kind": "facet",
+      "responseSha256": "e0c6f6e8e0536a3d158c4775893b05661950948edf2a18fd4e1ede239afa8206",
+      "response": {
+        "guess": "Oil on panel",
+        "confidence": 75
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "a4fb80913bad4efd042735aa5a31116d",
+      "kind": "facet",
+      "responseSha256": "77a2e348f276b81172996e4411b49f29a5bd756eed891a39f68af4efc0ecbb40",
+      "response": {
+        "guess": "Porcelaneous stoneware with celadon (qingci) glaze, incised and molded decoration",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Celadon (green-glazed stoneware)",
+            "Yaozhou ware",
+            "incised celadon"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "a51596e540be527be4c6f167751411c4",
+      "kind": "facet",
+      "responseSha256": "b62842d00df69e9f199ddf3d9140c0a076402285bbdce9221fdf8f3de4bbc61c",
+      "response": {
+        "guess": "Volcanic tuff (basalt/trachyte) stone, carved",
+        "confidence": 85
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Stone (volcanic tuff / andesite)"
+          ],
+          "family": [
+            "sculpture"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "a5690f5b0f05123be760d8ea0f42c822",
+      "kind": "facet",
+      "responseSha256": "5d51fd8b2fb9f2998662f6d4a07d171d3f4c890b006f2ec2133045c18055a82c",
+      "response": {
+        "guess": "Russian Revival / Neo-Russian Style (with Art Nouveau influence)",
+        "confidence": 75
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Art Nouveau"
+          ],
+          "family": [],
+          "related": [
+            "Symbolism",
+            "Russian Symbolism"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "a64fc583466afd7567744cd437580ce4",
+      "kind": "facet",
+      "responseSha256": "ca8c5f086f3abbce2dd5b27712f9d569fc0f58c5c4dad9bf3a8613e5606acd8d",
+      "response": {
+        "guess": "Italian Renaissance (Umbrian School)",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "High Renaissance",
+            "Early Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "afc678b1b4c39d404dee61216c8a277b",
+      "kind": "facet",
+      "responseSha256": "392916937a124d2562864e3dbdc9f966b1887060b2f5a7921658323177f9769d",
+      "response": {
+        "guess": "Ink on silk",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "ink and color on silk",
+            "handscroll"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "b06d9adb488c6b78d4e418f3dd66186f",
+      "kind": "facet",
+      "responseSha256": "44bb320bb14f9f1d7a472dee6c3099fae385f0150e92e8a7507f7de59474c0e7",
+      "response": {
+        "guess": "China",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "place",
+        "truth": {
+          "exact": [
+            "Korea",
+            "Joseon Korea",
+            "South Korea"
+          ],
+          "parent": [
+            "Asia",
+            "East Asia"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "b3761c5f0bccc75e83898a0b5bad0190",
+      "kind": "facet",
+      "responseSha256": "9a19d4f16527dd3743dea60d0c52b4160f913c4f32312472b82dc4c5aee0c464",
+      "response": {
+        "guess": "Rapa Nui monumental ancestor figure (moai) tradition",
+        "confidence": 95
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Rapa Nui people"
+          ],
+          "family": [
+            "Rapa Nui"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "b39da6e356e83d6386cd8bfaea722d4f",
+      "kind": "facet",
+      "responseSha256": "61aad29543948d9fb460c78fd604e1f7fe1456d9dad0a3de72b95a7a556714cd",
+      "response": {
+        "guess": "Oil on panel",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "oil on canvas"
+          ],
+          "family": [
+            "painting"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "b7307b1fc92f32631ddd6986b0b9acd6",
+      "kind": "facet",
+      "responseSha256": "ceea0ee9b6790a8247430a9882adfc8a39d97c5c5584d1a8aedd3ed8c6c89d73",
+      "response": {
+        "guess": "Tibeto-Nepalese Buddhist sculptural tradition (Vajrayana iconography)",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Sino-Tibetan Buddhist"
+          ],
+          "family": [],
+          "related": [
+            "Tibeto-Chinese",
+            "Ming"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "b7cbf4876a742ffe0b4e32f657ee8f57",
+      "kind": "facet",
+      "responseSha256": "2718e850b3af924ef78431250daff4b29f759a9516dd67838941a4908ecc7da4",
+      "response": {
+        "guess": "Yamato-e / Chōjū-giga tradition (Japanese narrative handscroll painting)",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Yamato-e"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "b85ae444933fd4aa42fae2e3a1e46377",
+      "kind": "facet",
+      "responseSha256": "1b8f5c1a8a95b086fac14a9b488543f275f05f4857e1dde88e32f176cca7c4c4",
+      "response": {
+        "guess": "Italian Baroque",
+        "confidence": 70
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Late Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "Renaissance",
+            "Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "bc9e8fbaedfa796f0129b2bb6ea0f77c",
+      "kind": "facet",
+      "responseSha256": "09bb2825550f70249689458ff1f091c870240b6abecccdaadacb69e029380c70",
+      "response": {
+        "guess": "Arts and Crafts movement",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "c01cac509213e61b84cdcece50db2ed8",
+      "kind": "facet",
+      "responseSha256": "aad4994d692cfc9d12f99fda422a517fc71abfcaa7fc3469ea867bfaf5916462",
+      "response": {
+        "guess": "Tapestry-woven wool and linen",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Linen and wool, tapestry weave"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "ccabd0d1e737cccf599161275eece224",
+      "kind": "facet",
+      "responseSha256": "55cbf70c5b38b1c91334e19e7706d5fc089e0e91e5137bcaf7c1d34ce9bb1138",
+      "response": {
+        "guess": "Russian Art Nouveau (Stil Modern) with Neo-Russian / Abramtsevo folk-revival influences",
+        "confidence": 65
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Art Nouveau"
+          ],
+          "family": [],
+          "related": [
+            "Symbolism",
+            "Russian Symbolism"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "cf735509868c9e220b0cce631cdd36ca",
+      "kind": "facet",
+      "responseSha256": "0611ed7129ef119aa10ea5ec52fefad56d53ac1c4789ac26420ac384483d589b",
+      "response": {
+        "guess": "Pietro Perugino",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "artist",
+        "truth": {
+          "exact": [
+            "Lorenzo di Credi"
+          ],
+          "workshop": [],
+          "circle": [],
+          "attributed": [],
+          "follower": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "d09c991dd6c6be50b7649123855c07af",
+      "kind": "facet",
+      "responseSha256": "44bb320bb14f9f1d7a472dee6c3099fae385f0150e92e8a7507f7de59474c0e7",
+      "response": {
+        "guess": "Chinese literati ink painting (wenrenhua), sparse landscape with pine trees in the manner of Song-Yuan monochrome tradition",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Joseon dynasty literati painting"
+          ],
+          "family": [
+            "Joseon Korean",
+            "Joseon dynasty"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "d8ac3f557379f5168a51a34a74bded1f",
+      "kind": "facet",
+      "responseSha256": "8b62c68667f90506b0b76f729936640f7ab0b730d39a7614517a3ab87f65dd25",
+      "response": {
+        "guess": "Italian Baroque, Caravaggesque",
+        "confidence": 65
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Late Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "Renaissance",
+            "Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "dfa69a9f2b27592336b6e9efb11f54a2",
+      "kind": "facet",
+      "responseSha256": "77a2e348f276b81172996e4411b49f29a5bd756eed891a39f68af4efc0ecbb40",
+      "response": {
+        "guess": "Chinese celadon ware, Song–Yuan dynasty Longquan tradition",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Northern Song dynasty"
+          ],
+          "family": [
+            "Song dynasty"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "dfea7b99816e84d0e76c5a9e5856e58f",
+      "kind": "facet",
+      "responseSha256": "714c82c799b8655ed272758adbaed4514f9c301c3d9aae43a05146f6785574bf",
+      "response": {
+        "guess": "Colored chalks and watercolor or gouache on paper",
+        "confidence": 62
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Coloured chalk and ink (pen) on paper, gold ground added later"
+          ],
+          "family": [
+            "drawing"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "e1d4aacb7b750fccc909031f99951d13",
+      "kind": "facet",
+      "responseSha256": "cf99a4f93776844ec2ffed73f6ba93987eeed5a50d1e942f9bcdbca90ab86145",
+      "response": {
+        "guess": "Chinese literati painting (wenrenhua), Song–Yuan ink landscape tradition",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Joseon dynasty literati painting"
+          ],
+          "family": [
+            "Joseon Korean",
+            "Joseon dynasty"
+          ],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "e26d39190aae60ca629ad8549003daae",
+      "kind": "facet",
+      "responseSha256": "01d0c47a6b4c89f2c5992e9faa59361c56449965019b4edcbbafc333da06728a",
+      "response": {
+        "guess": "Shinogi-zukuri katana, Japanese sword tradition (nihonto)",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Heian period"
+          ],
+          "family": [],
+          "related": [
+            "Kamakura period"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "e659f922497b357260b62f1ac97ec951",
+      "kind": "facet",
+      "responseSha256": "9123e2bfd9fe8347ce98ac3578a2377375f08e992a7c4084ca0e66a01699a19a",
+      "response": {
+        "guess": "Chalk and watercolour on paper (or mixed media on vellum/panel)",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Coloured chalk and ink (pen) on paper, gold ground added later"
+          ],
+          "family": [
+            "drawing"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "ecebb43d4a6603b7209c9b858c195331",
+      "kind": "facet",
+      "responseSha256": "a3cf48c15483c6b2448b97b45a76ea100163a11135f7399cc128640914eac0a3",
+      "response": {
+        "guess": "Arts and Crafts Movement",
+        "confidence": 90
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Arts and Crafts"
+          ],
+          "family": [],
+          "related": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "ee66c71a44f8a6bad6017c969d59cbee",
+      "kind": "facet",
+      "responseSha256": "d8a6bf5bb4d7645480efd2f146baa70c55380c7e8fc6cb1185237d29afb402bb",
+      "response": {
+        "guess": "Stoneware with celadon (iron-reduction) glaze; wheel-thrown bowl with molded and combed interior decoration",
+        "confidence": 78
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Celadon (green-glazed stoneware)",
+            "Yaozhou ware",
+            "incised celadon"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "f5baa4c0cfa3fffac44ae9141905b8f0",
+      "kind": "facet",
+      "responseSha256": "ddd7cf501177a1f0580ca8bc92e975ca0cd2434aebbeb6be91b591bc5e97e990",
+      "response": {
+        "guess": "Tapestry-woven wool and linen (weft-faced tabby weave)",
+        "confidence": 65
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Linen and wool, tapestry weave"
+          ],
+          "family": [
+            "textile"
+          ],
+          "broad": []
+        }
+      }
+    },
+    {
+      "adjudicationId": "f5cc50448bf92de7f6f1178ab0459d4a",
+      "kind": "facet",
+      "responseSha256": "33a02f75d29981b928147c25642fa506245dacba1c6472e85ad8ea23e07b7672",
+      "response": {
+        "guess": "Russian Neo-Nationalist / Art Nouveau (Mir Iskusstva era)",
+        "confidence": 80
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Art Nouveau"
+          ],
+          "family": [],
+          "related": [
+            "Symbolism",
+            "Russian Symbolism"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "f62e5b50e33d7eb965a1a7aa075dedee",
+      "kind": "facet",
+      "responseSha256": "61aad29543948d9fb460c78fd604e1f7fe1456d9dad0a3de72b95a7a556714cd",
+      "response": {
+        "guess": "Dutch Golden Age genre painting",
+        "confidence": 92
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Dutch Golden Age"
+          ],
+          "family": [
+            "Baroque"
+          ],
+          "related": [
+            "Dutch Baroque",
+            "Dutch genre painting"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "f6c6de0fb97029be95d66916f5bd1843",
+      "kind": "facet",
+      "responseSha256": "39b9f78f5b32b51ec231a81cd2aef4ea5405b7bedb83f65b9ab127e97c902a72",
+      "response": {
+        "guess": "Italian Baroque (Caravaggesque)",
+        "confidence": 60
+      },
+      "groundTruth": {
+        "facet": "style",
+        "truth": {
+          "exact": [
+            "Italian Late Renaissance"
+          ],
+          "family": [],
+          "related": [
+            "Renaissance",
+            "Italian Renaissance"
+          ]
+        }
+      }
+    },
+    {
+      "adjudicationId": "f7d68d170c7f16f0255784efce8c85fa",
+      "kind": "facet",
+      "responseSha256": "63b922ea0c4431ee0a08be73f16b478c632fddd8d9d3bc580c57375755e1f377",
+      "response": {
+        "guess": "Tin-glazed earthenware (delftware)",
+        "confidence": 72
+      },
+      "groundTruth": {
+        "facet": "medium",
+        "truth": {
+          "exact": [
+            "Fritware, underglaze painted in blue",
+            "Fritware",
+            "stonepaste"
+          ],
+          "family": [
+            "ceramic"
+          ],
+          "broad": []
+        }
+      }
+    }
+  ]
+}

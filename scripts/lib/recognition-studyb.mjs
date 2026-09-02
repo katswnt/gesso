@@ -11,6 +11,36 @@
 // truncated responses. Cap raised to 1800.
 import { canonicalJson, sha256, validateFacets } from './recognition-pilot.mjs';
 
+// Exact copies of the frozen helpers so the Study-B ambiguity rule is byte-faithful to the frozen one.
+const shortText = (v, max = 600) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v);
+
+// Frozen facet-ambiguity rule (recognition-pilot.mjs facetAmbiguous): a substantive, confidence>=60,
+// deterministically-unmatched place/medium/style/artist answer must go to blinded adjudication (null),
+// NOT be auto-scored zero. `rows` are the deterministic grade results per facet.
+export function facetAmbiguous(facet, parsed, rows) {
+  if (facet === 'date' || rows[facet]?.ok === false || rows[facet]?.notApplicable || rows[facet]?.credit !== 0) return false;
+  const guess = facet === 'place' ? parsed.place?.topGuess : parsed[facet]?.guess;
+  const conf = parsed[facet]?.confidence;
+  return shortText(guess || '', 300) && !/^(unknown|unsure|none|n\/a)$/i.test(String(guess).trim()) && Number.isInteger(conf) && conf >= 60;
+}
+
+// Study-B strict validation = frozen validateFacets PLUS the research-schema numeric bounds the frozen
+// hand-validator does not check (bestYear −100000..3000). Enforces removed wire-schema constraints locally.
+// Finalization gate: a run finalizes when validity gates pass, no required ruling is unresolved, and no
+// ruling error stands. A clean run with ZERO ambiguous facets (nothing to adjudicate) finalizes; a run
+// with any unresolved required ruling stays pending.
+export function studyBFinalizable({ gatesPass, unresolved, rulingErrors }) {
+  return !!gatesPass && unresolved === 0 && (rulingErrors?.length || 0) === 0;
+}
+
+export function validateStudyBFacets(parsed) {
+  const base = validateFacets(parsed);
+  const errors = [...base.errors];
+  const y = parsed?.date?.bestYear;
+  if (!(Number.isInteger(y) && y >= -100000 && y <= 3000)) errors.push('date.bestYear out of research bounds [-100000,3000]');
+  return { ok: errors.length === 0, errors };
+}
+
 export const STUDYB_PROTOCOL_ID = 'gesso-recognition-studyb-2026-09-01-v1';
 export const STUDYB_CALL_SEED = 'gesso-recognition-studyb-calls-2026-09-01-v1';
 export const STUDYB_ARMS = Object.freeze(['no-cue', 'sham', 'correct-cue']);
