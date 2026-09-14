@@ -588,7 +588,9 @@ const freezeEvidenceOf = (over = {}) => ({ version: 'recognition-protocol-freeze
 const mkCeRun = (intentEv, fe = null) => {
   const d = MK();
   atomicJson(join(d, 'attempts', ceCall.callId, 'attempt-1.intent.json'), { version: 'recognition-attempt/1', callId: ceCall.callId, attempt: 1, callSha256: sha256(canonicalJson(ceCall)), conservativeUsd: EXP.conservativeUsd, requestEvidence: intentEv, startedAt: '2026-09-01T00:00:05.000Z', status: 'started-before-network' });
-  finishAttempt(d, ceCall.callId, 1, { status: 'valid-response', requestId: 'req-abc', rawResponse: validEnv, responseSha256: sha256(validEnv) });
+  // Keep the synthetic result inside the synthetic frozen collection window. Using
+  // finishAttempt's real current clock makes this stable fixture expire over time.
+  finishAttempt(d, ceCall.callId, 1, { status: 'valid-response', requestId: 'req-abc', rawResponse: validEnv, responseSha256: sha256(validEnv), finishedAt: '2026-09-01T00:00:10.000Z' });
   if (fe) atomicJson(join(d, 'protocol-freeze-evidence.json'), fe);
   return d;
 };

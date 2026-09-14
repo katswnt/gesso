@@ -221,6 +221,7 @@ led.ids = [...ids];
 writeFileSync("data/vision-audit.json", JSON.stringify(led, null, 1) + "\n");
 console.error(`curate-merge: audited-ledger +${ledStat.complete} complete, +${ledStat.unplayable} unplayable, ${ledStat.blocked} blocked (needs-image), ${ledStat.invalidated} re-audit-invalidated — all in tracked data/vision-audit.json`);
 // ACCUMULATE the review queue across batches (dedupe by id+type) so bulk triage sees everything.
+mkdirSync("data/incoming/curate", { recursive: true });   // ensure the triage-queue dir exists (gitignored → absent on a clean checkout; live-smoke finding)
 let priorQ = []; try { priorQ = JSON.parse(readFileSync("data/incoming/curate/review-queue.json", "utf8")); } catch {}
 const qseen = new Set(); const mergedQ = [];
 for (const q of [...priorQ, ...queue]) { const k = q.id + "|" + q.type; if (qseen.has(k)) continue; qseen.add(k); mergedQ.push(q); }

@@ -401,8 +401,10 @@ Each answer should become a dated row in §8 before v2 prose is finalized.
     exclusions/failures, hashes, and deterministic transforms. Publish transformed images only where
     source-photograph rights permit; otherwise publish source/license metadata, derivative hashes,
     and reproduction scripts.
-46. **DECIDED F10 — Preregistration venue.** Use both a frozen repository commit and an immutable
-    OSF-style registration.
+46. **DECIDED F10 — Preregistration venue.** Use a dedicated frozen git commit. Freeze every
+    artifact hash and a stable registration id before the first model response; at execution,
+    derive and record the commit hash and verify all registered paths remain byte-identical. (A file
+    cannot self-embed the hash of its containing commit.) No OSF/external registration is required.
 
 **DECIDED operationally:** the main collection may use the asynchronous Message Batches API if the
 excluded pilot verifies equivalent request/response semantics, provenance, failure handling, and
@@ -422,7 +424,7 @@ This program has two prospective freezes, not one document that remains mutable 
    pilot protocol, exact call manifest, selection objective, recognition keys, literal-disclosure
    masks, prompts/schemas, graders and synthetic fixtures, transformations/golden hashes, retry and
    reliability rules, model configuration, `$15` gate, deviations log, and analysis code. Mark and
-   externally register that artifact explicitly as `PILOT REGISTERED BEFORE COLLECTION`.
+   freeze that artifact in a dedicated git commit explicitly marked `PILOT REGISTERED BEFORE COLLECTION`.
 2. **Main-study registration.** After the excluded pilot, write and independently freeze the main
    preregistration. It may use only prespecified nuisance evidence: variance, reliability,
    missingness, feasible transform floor, usable-transition rate, mask attrition, annotation
@@ -448,7 +450,7 @@ The evidence-box method is optional and nonblocking. Study B remains independent
 | RSD-009 | 2026-08-31 | Repeat a seeded random 10% of cells and retain the first valid response as primary. | Approved | Measures instability without outcome-driven replacement |
 | RSD-010 | 2026-08-31 | Include a small first-wave alternate-source arm of roughly 40 eligible pairs. | Approved; full-view protocol resolved by RSD-027 | Owner confirmation |
 | RSD-011 | 2026-08-31 | Use a separate 30–40-work pilot with a $15 hard ceiling; defer final sample size and main budget until pilot evidence. | Approved | Owner confirmation |
-| RSD-012 | 2026-08-31 | Permit asynchronous Message Batches after pilot equivalence/checkpoint verification; register through both a frozen repository commit and an immutable external registration. | Approved | Owner confirmation |
+| RSD-012 | 2026-08-31 | Permit asynchronous Message Batches after pilot equivalence/checkpoint verification; originally required both git and external registration. | Partly superseded by RSD-041 | Batch decision stands; registration venue changed |
 | RSD-013 | 2026-08-31 | Give each work a minimal disambiguating identity label and precommit its directly disclosed versus eligible facet mask. | Approved | Preserves generic/anonymous/non-Western objects without counting answers stated by the cue |
 | RSD-014 | 2026-08-31 | Pilot frozen research-only diagnostic evidence boxes without waiting for the full Pass B rebuild; scale them only if the pilot establishes reliability and value. | Approved for pilot; main-study use conditional | Owner chose the hybrid dependency approach |
 | RSD-015 | 2026-08-31 | Omit wrong-title cues from the first confirmatory study and use precise identity-information wording for its registered title/claim. | Approved | Keeps suggestibility as a separate follow-up and prevents the title from overstating the causal estimand |
@@ -467,7 +469,7 @@ The evidence-box method is optional and nonblocking. Study B remains independent
 | RSD-028 | 2026-08-31 | Include a six-work low-documentation pilot stratum and retire the note-only arm in favor of prompt-order/reliability controls. | Approved | Zero documentation is a stress condition, not proof of training absence |
 | RSD-029 | 2026-08-31 | Freeze Sonnet 4.6 request identity, interleave collection in one bounded window, and fail closed on model drift. | Approved | Preserves temporal and model comparability |
 | RSD-030 | 2026-08-31 | Retry only no-response transport failures; preserve all attempts, do not outcome-retry, and distinguish scheduled replicates. | Approved | Prevents silent response replacement and selection bias |
-| RSD-031 | 2026-08-31 | Publish preregistration, raw evidence, code, failures, and reproducibility artifacts regardless of outcome; publish transformed images only where rights permit. | Approved | Owner approved repository plus immutable external registration and rights-aware publication |
+| RSD-031 | 2026-08-31 | Publish preregistration, raw evidence, code, failures, and reproducibility artifacts regardless of outcome; publish transformed images only where rights permit. | Approved | Publication promise stands; external venue is no longer required |
 | RSD-032 | 2026-08-31 | Define cue disclosure by literal frozen answer-alias occurrence and apply one work×facet mask identically across all Study B arms. | Approved | Prevents post-outcome semantic masking while retaining identity-enabled retrieval as the estimand |
 | RSD-033 | 2026-08-31 | Weight eligible facets within work and works equally; report mask attrition/contributing sets by fame/cue/facet, with all-facet primary plus mandatory no-artist sensitivity. | Approved | Prevents generic-title and famous-work cue differences from silently reweighting the result |
 | RSD-034 | 2026-08-31 | Use correct-cue versus sham as Study B primary, correct versus no-cue as secondary, and sham versus no-cue as a manipulation diagnostic in a within-work complete block. | Approved | Names one exact causal contrast and makes the single-sham simplification explicit |
@@ -477,6 +479,7 @@ The evidence-box method is optional and nonblocking. Study B remains independent
 | RSD-038 | 2026-08-31 | Limit diagnostic evidence boxes to a two-annotation 12-work methodological subset and make them nonblocking for Study B. | Approved | Preserves the adjustment experiment without turning unfinished Pass B machinery into a causal-study dependency |
 | RSD-039 | 2026-08-31 | Normalize/deduplicate the frozen style taxonomy and define confidence as probability of full research credit. | Approved | Makes style grading and Brier outcomes operationally definable |
 | RSD-040 | 2026-08-31 | Use separate prospective pilot and main-study registrations; pilot outcomes may inform only prespecified nuisance inputs. | Approved | Prevents a mutable pilot document and noisy pilot effect from silently determining the confirmatory main study |
+| RSD-041 | 2026-08-31 | Use a dedicated frozen git commit, not OSF, as the pilot preregistration record. Freeze artifact hashes and a stable id; derive and record the commit hash before the first response. | Approved | Owner chose lower-friction prospective freezing; supersedes the external-registration portion of RSD-012/F10; avoids an impossible self-referential hash |
 
 ## 9. Required artifacts before pilot registration
 

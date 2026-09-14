@@ -11,9 +11,13 @@ overview; this is the internal how-to.)
 
 ---
 
-## The 6 stages
+## Authoritative narrow G-03 path (six stages)
 
-SECURITY (G-03): corpus images are untrusted, so the pass is **tool-less** end to end. Images are fetched by a
+This section documents the older narrow notes/pins + image-QA path whose reviewed merge is
+the only authoritative writer today. It is distinct from the richer Pass B calibration
+controller documented below; calibration output is quarantined and cannot use this sink.
+
+SECURITY (G-03): in this narrow path, corpus images are untrusted, so the model call is **tool-less**. Images are fetched by a
 hardened broker (SSRF-vetted, decoded, EXIF-stripped, size-capped) into a run dir; the model call has **no tools,
 no shell, no filesystem, no network** and sees only the sanitized image + text metadata (never a URL); its JSON is
 **quarantined** and reaches the game only after a **human field-level review**, hash-bound to the exact run/image/
@@ -143,14 +147,15 @@ git commit && git push
 
 ---
 
-## One engine (G-03)
+## One authoritative merge path (G-03)
 
-There is now exactly **one** authoritative path: the **tool-less multimodal completion** in
+There is exactly **one authoritative path** into current game data: the **tool-less multimodal completion** in
 `scripts/vision-audit-run.mjs` — no `tools`, no agent wrapper, no shell/fs/net; the model sees only the
 broker-sanitized derivative + text metadata (never a URL). The old tool-capable engines are **retired**: the
 Sonnet Task-agent-per-batch flow and the `curate-codex.mjs` autonomous loop both handed corpus images to a
 tool-capable agent and fed an authoritative merge — the exact P0 G-03 closed. A tool-capable agent (Codex or a
-subagent) may **explore** an image but may **never** feed `curate-merge`. Output reaches the corpus only through
+subagent) may **explore** an image but may **never** feed `curate-merge`. The richer Pass B calibration uses a
+proportionate confined Read-tool image process, but its output has no route to this merge. Narrow-path output reaches the corpus only through
 human field-level review (`scripts/vision-review.mjs`) + the hash-bound merge (`curate-merge.mjs --run`).
 
 ---
@@ -164,12 +169,28 @@ human field-level review (`scripts/vision-review.mjs`) + the hash-bound merge (`
 
 ---
 
-## Rich Pass B consolidation baseline (VSD-001/006/007/014)
+## Rich Pass B calibration (VSD-001/005/006/007/011/019/021)
 
-The rich B1/B2/B3/synthesis runner is not built yet. Its implemented offline baseline is
-`contentVisionCoverage/1`: one row for each current pool work, legacy content kept as
-evidence (never current completion), Pass A flags reported separately, and scheduling
-priorities computed without imposing a universal daily hard gate.
+The rich calibration controller is implemented in current feature-branch calibration code
+and has been exercised live. It is **not shipped production infrastructure** and
+has no authoritative writer. Its current sequence is:
+
+1. B0 broker-fetches, decodes, strips, hashes, and snapshots legacy content.
+2. B1 sees only the confined SHA-named image through the Read tool and inventories visible evidence.
+3. Conditional B2 sees no image, receives bounded signals/catalog/legacy content, and uses only WebSearch/WebFetch.
+4. Conditional B3 sees only the confined image plus B2's targeted visual questions.
+5. B4 receives validated B1–B3 projections plus legacy content and emits a compact editorial **delta** (per-item keep/revise/replace/add/remove, replacement text, references to existing B1/B2 ids, corrections/conflicts/uncertainty) without image or tools. The controller deterministically hydrates the authoritative B1 evidence/delight and B2 source/catalog registries, assigns ids/ranks, carries B1 coordinates, and runs the unchanged strict `validateB4` (VSD-022).
+
+The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
+events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
+lanes, and renders a quarantined before/after review packet. A complete Julius Caesar canary exercised
+B0–B4 successfully, and the fixed 50-work calibration has banked real B1–B3 checkpoints. No output has
+been approved or merged into game data.
+
+The offline `contentVisionCoverage/1` baseline remains the corpus inventory: one row for each
+current pool work, legacy content kept as evidence (never current completion), Pass A flags
+reported separately, and scheduling priorities computed without imposing a universal daily
+hard gate.
 
 ```bash
 # Read-only snapshot for today (America/Los_Angeles) or a reproducible date:
@@ -194,10 +215,69 @@ parts, while `evidence`/`pins`/`delights` and the remaining fields still lean on
 raw copies. Historical alias collisions and orphan rows are emitted under diagnostics and are
 never silently resolved.
 
-Current limitation: `data/vision-coverage.json` is a measurement/queue artifact, not the
-authoritative rich content ledger. No B1/B2/B3/B4 completion can be written until those
-strict schemas, stage captures, synthesis route, component approvals, and guarded merge
-are implemented and calibrated.
+B4's proposed player-facing study guide is written to the authoritative editorial reference
+[`docs/vision-study-guide-style.md`](vision-study-guide-style.md) (VSD-020): it shapes question
+selection and answer voice only; every fact still comes from that work's own validated legacy
+content and its B1–B3 evidence/research. Changing that standard is a B4-prompt-only change (the
+B4 prompt hash changes; B0–B3 stay reusable, but a B4-prompt change currently forks the run id, so
+reuse requires migrating B0–B3 checkpoints into the new run dir).
+
+Current limitations:
+
+- `data/vision-coverage.json` is a measurement/queue artifact, not an authoritative rich-content ledger.
+- The compact editorial-delta B4 + deterministic hydration is implemented, tested, and live-compared
+  on the 3 old-B4 baselines (~2x faster, ~44% fewer tokens, strict-valid, teaching preserved); the
+  prior full-record B4 is retired (VSD-022). Not yet run at scale.
+- B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
+  count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
+  host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
+  offline. The B2 web gate counts only genuinely-retrieved pages (a 4xx/redirect envelope is not a
+  retrieval). A live 5-work v1-vs-v2 comparison ran 2026-09-03 (5/5 strict-valid; research volume collapsed;
+  over-refutations corrected) and passed Codex adversarial review with corrections applied. Strict-valid
+  means shape + reference integrity, not factual entailment — human review is the factual gate (VSD-022).
+- There is no rich component approval artifact, auto-policy, guarded Pass B merge, or production
+  staleness transition. Calibration output cannot be published.
+- The deterministic `launchd` subscription supervisor remains unbuilt; `--foreground` is supervised
+  manual operation only.
+
+### Calibration commands
+
+Use Node 24 (`/opt/homebrew/bin/node`); the machine's default Node may be too old.
+
+```bash
+# Offline synthetic capture/render only; no model call.
+/opt/homebrew/bin/node scripts/pass-b-calibration.mjs --fixture
+
+# Dry preparation/packet refresh. B0 may fetch missing images through the hardened broker;
+# it makes no model call and never writes authoritative data.
+/opt/homebrew/bin/node scripts/pass-b-calibration.mjs
+
+# Supervised subscription collection through B3, five independent lanes; B4 intentionally skipped.
+# Resume reuses every verified checkpoint.
+PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
+  --live --foreground --lanes 5 --through-b3
+
+# One-work full-chain calibration/canary. B4 is the compact-delta + hydration design (VSD-022); not yet run at scale.
+PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
+  --live --foreground --only-work <work-id>
+```
+
+Artifacts remain under `data/incoming/vision-calibration/` (gitignored). A prompt/schema/transport
+change creates a new run identity. Reusing prior stage work requires explicit migration followed by
+normal checkpoint verification; never copy an unverified completion or overwrite an old run.
+
+Relevant files:
+
+| File | Controls |
+|---|---|
+| `scripts/pass-b-calibration.mjs` | B0 preparation, subscription process execution, lanes, checkpoint resume, packet write |
+| `scripts/lib/pass-b-calibration.mjs` | call plan, boundaries, command construction, compact inputs, B1→B4 control flow |
+| `scripts/lib/pass-b-prompts.mjs` | version-bound B1–B4 prompts |
+| `scripts/lib/pass-b-wire-schema.mjs` | provider-facing structure-only schemas |
+| `scripts/lib/vision-content-schema.mjs` | strict local B1–B4 semantic and cross-reference validation |
+| `scripts/lib/vision-content-capture.mjs` | hash-bound stage capture and resume verification |
+| `scripts/lib/pass-b-review-packet.mjs` | quarantined comparison packet; applies nothing |
+| `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---
 

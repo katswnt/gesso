@@ -1,0 +1,1344 @@
+{
+ "model": "claude-sonnet-4-6",
+ "ladder": [
+  "full",
+  "flip",
+  "flip+rot",
+  "flip+rot+crop60",
+  "flip+rot+crop45"
+ ],
+ "works": [
+  {
+   "id": "wd:Q7738501",
+   "title": "The Gulf Stream",
+   "stopRung": 4,
+   "stopLabel": "flip+rot+crop45",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": true
+    },
+    {
+     "rung": 4,
+     "label": "flip+rot+crop45",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1899,
+    "place": "United States of America",
+    "region": "North America",
+    "medium": "Oil on canvas",
+    "style": "American Realism",
+    "artist": "Winslow Homer"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1900,
+     "confidence": 0.45,
+     "cues": "Loose expressive brushwork, dark dramatic palette, turbulent handling suggest late 19th–early 20th century; not fully modern abstraction but beyond academic finish"
+    },
+    "where": {
+     "country": "France or Germany",
+     "confidence": 0.35,
+     "cues": "Painterly expressionistic handling with symbolic/allegorical elements; could fit French Symbolism or German Expressionist precursors; costume details ambiguous"
+    },
+    "medium": {
+     "guess": "Oil on canvas",
+     "confidence": 0.82,
+     "cues": "Thick impasto visible in highlights, fluid blending in blue-grey passages, layered glazing in darker tones; canvas texture apparent"
+    },
+    "style": {
+     "guess": "Symbolism",
+     "confidence": 0.5,
+     "cues": "Dramatic chiaroscuro, mysterious atmospheric blues, partially visible figures with what appear to be decorative/ancient costume elements, moody narrative atmosphere"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "Partial crop with rotated orientation prevents reliable attribution; brushwork has Böcklin or Stuck qualities but insufficient evidence to name confidently"
+    }
+   }
+  },
+  {
+   "id": "wd:Q897474",
+   "title": "Victory Stele of Naram-Sin",
+   "stopRung": 2,
+   "stopLabel": "flip+rot",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": -2250,
+    "place": "Sippar, Iraq",
+    "region": "Asia",
+    "medium": "Pinkish sandstone",
+    "style": "Akkadian",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": -2300,
+     "confidence": 0.45,
+     "cues": "Stele form, cuneiform-like inscriptions visible upper right, registers of small figures in combat/procession, relief carving style consistent with Early Dynastic to Akkadian period Mesopotamia"
+    },
+    "where": {
+     "country": "Iraq (ancient Mesopotamia)",
+     "confidence": 0.55,
+     "cues": "Pink/reddish stone, pointed stele shape typical of Mesopotamian victory steles, cuneiform script visible, register-based figurative relief with warriors and fallen enemies"
+    },
+    "medium": {
+     "guess": "Pink limestone or sandstone relief stele",
+     "confidence": 0.65,
+     "cues": "Pinkish-red stone color, carved relief figures, visible inscription lines, weathered and eroded surface with pale mineral deposits"
+    },
+    "style": {
+     "guess": "Ancient Mesopotamian, possibly Akkadian or Early Dynastic victory stele",
+     "confidence": 0.5,
+     "cues": "Pointed stele form, hierarchical scale figures, diagonal composition of fallen enemies, celestial symbol (star/sun rosette) at tip, cuneiform inscription panel"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "Anonymous ancient craft production; no individual artist attribution possible for this period and genre"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q91239334",
+   "title": "Haniwa Armored Man",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 500,
+    "place": "Japan",
+    "region": "Asia",
+    "medium": "Terracotta",
+    "style": "Kofun period",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 500,
+     "confidence": 0.6,
+     "cues": "Cylindrical hollow-construction terracotta, full armor with lamellar plates and visored helmet typical of Kofun-period haniwa warrior figures, roughly 3rd–6th century CE Japan"
+    },
+    "where": {
+     "country": "Japan",
+     "confidence": 0.85,
+     "cues": "Haniwa-style hollow clay cylinder base, segmented lamellar armor, cheek-guard helmet, and stylized facial features are hallmarks of Japanese Kofun funerary sculpture"
+    },
+    "medium": {
+     "guess": "Terracotta (unglazed fired clay)",
+     "confidence": 0.9,
+     "cues": "Warm ochre-buff surface, visible coil/slab construction seams, no glaze, weathering and surface spalling consistent with earthenware"
+    },
+    "style": {
+     "guess": "Kofun-period haniwa",
+     "confidence": 0.85,
+     "cues": "Cylindrical pedestal base integral to figure, simplified geometric body, hollow construction, armor rendered in incised lines indicating lamellar or scale plates"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 1,
+     "cues": "Haniwa are anonymous workshop products placed in burial mounds; no individual artist attribution is possible or conventional"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q137836",
+   "title": "William the Hippopotamus",
+   "stopRung": 3,
+   "stopLabel": "flip+rot+crop60",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": -1920,
+    "place": "Egypt",
+    "region": "Africa",
+    "medium": "Egyptian faience",
+    "style": "Middle Kingdom",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": -1200,
+     "confidence": 0.45,
+     "cues": "Turquoise faience glaze, fish and lotus motifs drawn in black manganese outline — hallmarks of Egyptian New Kingdom faience production; could also be later Persian or Phoenician work"
+    },
+    "where": {
+     "country": "Egypt",
+     "confidence": 0.55,
+     "cues": "Intense turquoise copper-silicate glaze typical of Egyptian faience; fish and aquatic plant iconography strongly associated with Nile imagery; vessel form consistent with Egyptian ewer shapes"
+    },
+    "medium": {
+     "guess": "Egyptian faience (glazed quartz-frit ceramic)",
+     "confidence": 0.8,
+     "cues": "Vivid uniform turquoise surface with slight vitreous sheen, visible crazing and brown clay body exposed at cracks, characteristic of faience glaze over quartz-frit core; not a true clay ceramic"
+    },
+    "style": {
+     "guess": "Ancient Egyptian faience ware, likely New Kingdom",
+     "confidence": 0.55,
+     "cues": "Black-outlined fish with dotted body scales, lotus/plant motifs, registers of swimming fish — classic New Kingdom decorative program on faience vessels; comparable to Amarna-period polychrome faience"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "Anonymous workshop production; individual artists not identified for ancient Egyptian faience vessels"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q28797768",
+   "title": "Beauty Looking Back",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1690,
+    "place": "Japan",
+    "region": "Asia",
+    "medium": "Ink and color on silk",
+    "style": "Ukiyo-e",
+    "artist": "Hishikawa Moronobu"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1700,
+     "confidence": 0.6,
+     "cues": "Loose flowing hair and trailing kimono style suggest late 17th to early 18th century Edo period; bijin-ga conventions visible; calligraphic inscription style consistent with that era"
+    },
+    "where": {
+     "country": "Japan",
+     "confidence": 0.97,
+     "cues": "Kimono with chrysanthemum and sakura patterns, Japanese calligraphic signature with seal, hanging scroll format, gold-tan silk ground, traditional Japanese bijin subject"
+    },
+    "medium": {
+     "guess": "Ink and pigment on silk hanging scroll",
+     "confidence": 0.85,
+     "cues": "Warm tan ground with woven texture consistent with silk; opaque mineral pigments for vivid red, green, white; smooth brushwork; mounted as kakejiku (hanging scroll) with gold border"
+    },
+    "style": {
+     "guess": "Early Edo bijin-ga (Kaigetsudō school or related)",
+     "confidence": 0.65,
+     "cues": "Large bold figure filling vertical format, trailing outer robe, loose flowing hair, three-quarter back view, minimal background — hallmarks of Kaigetsudō-style bijin painting"
+    },
+    "artist": {
+     "guess": "Kaigetsudō school (possibly Kaigetsudō Doshin or associate)",
+     "confidence": 0.4,
+     "cues": "Signature in lower right with two-character artist name and seal; bold monumental figure style, trailing hem composition, and loose hair treatment are strongly associated with Kaigetsudō lineage artists"
+    }
+   }
+  },
+  {
+   "id": "wd:Q3924909",
+   "title": "The Horse in Motion",
+   "stopRung": 4,
+   "stopLabel": "flip+rot+crop45",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": true
+    },
+    {
+     "rung": 4,
+     "label": "flip+rot+crop45",
+     "recognized": true
+    }
+   ],
+   "truth": {
+    "y": 1878,
+    "place": "United States of America (Palo Alto)",
+    "region": "North America",
+    "medium": "Albumen silver prints on card mount",
+    "style": "Chronophotography",
+    "artist": "Eadweard Muybridge"
+   },
+   "vision": {
+    "recognized": true,
+    "when": {
+     "year": 1887,
+     "confidence": 0.85,
+     "cues": "Sequential photographic frames arranged in grid format characteristic of Muybridge's motion studies; albumen or gelatin silver print aesthetic; late 19th century photographic quality and mounting style"
+    },
+    "where": {
+     "country": "United States",
+     "confidence": 0.8,
+     "cues": "Muybridge conducted his motion photography studies at the University of Pennsylvania in Philadelphia; grid/frame numbering system visible on edges matches his published plates"
+    },
+    "medium": {
+     "guess": "Sequential photography (albumen or collotype print)",
+     "confidence": 0.85,
+     "cues": "Multiple frames arranged in grid showing sequential motion; sepia tones; matte surface quality; numbered frame borders visible; mounted on dark board"
+    },
+    "style": {
+     "guess": "Scientific/chronophotography, motion study photography",
+     "confidence": 0.9,
+     "cues": "Four-panel grid layout showing progression of movement; figure with large wheel (penny-farthing bicycle); sequential decomposition of motion; numbered scale markers on frame edges"
+    },
+    "artist": {
+     "guess": "Eadweard Muybridge",
+     "confidence": 0.85,
+     "cues": "Distinctive multi-frame grid layout; numbered border scales on each frame; subject appears to be human figure interacting with large-wheeled bicycle; sepia toned photographic plates mounted on dark backing — all hallmarks of Muybridge's 'Animal Locomotion' series"
+    }
+   }
+  },
+  {
+   "id": "wd:Q18210019",
+   "title": "Three Beauties of the Present Day",
+   "stopRung": 2,
+   "stopLabel": "flip+rot",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1793,
+    "place": "Japan",
+    "region": "Asia",
+    "medium": "Woodblock print; ink, color, and mica on paper",
+    "style": "Ukiyo-e",
+    "artist": "Kitagawa Utamaro"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1800,
+     "confidence": 0.72,
+     "cues": "Ukiyo-e woodblock style with close-cropped bust compositions typical of late 18th to early 19th century; fine hair-line printing and mica-like background suggest refined late Edo technique"
+    },
+    "where": {
+     "country": "Japan",
+     "confidence": 0.98,
+     "cues": "Japanese script (kanji/kana) inscriptions, elaborate shimada hairstyles with kanzashi hairpins, kimono with typical Edo-period patterns, fan motif"
+    },
+    "medium": {
+     "guess": "Woodblock print (ukiyo-e nishiki-e, polychrome)",
+     "confidence": 0.95,
+     "cues": "Flat color areas with visible registration, fine black key-block outlines, subtle grey bokashi gradation in background, paper support visible at edges"
+    },
+    "style": {
+     "guess": "Edo-period ukiyo-e bijin-ga (beautiful women genre)",
+     "confidence": 0.95,
+     "cues": "Close-up bust portraits of multiple women (okubi-e style), idealized oval faces with small red lips, elaborate coiffures, patterned kimono — hallmarks of bijin-ga"
+    },
+    "artist": {
+     "guess": "Kitagawa Utamaro",
+     "confidence": 0.6,
+     "cues": "Okubi-e multi-figure composition, characteristic elongated necks, subtle facial modeling with fine shading around eyes and jaw, cartouche seal visible lower right — all consistent with Utamaro's mature style, though Eishi or Choki also possible"
+    }
+   }
+  },
+  {
+   "id": "aic77625",
+   "title": "Baby Talk",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1908,
+    "place": "United States of America",
+    "region": "North America",
+    "medium": "Color woodblock print",
+    "style": "Japonisme",
+    "artist": "Helen Hyde"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1900,
+     "confidence": 0.55,
+     "cues": "Japonisme-era aesthetic, oval vignette framing common in late 19th/early 20th century Western prints inspired by Japan; wisteria, iris garden setting; soft lithographic or etching palette typical of 1890-1910"
+    },
+    "where": {
+     "country": "France or Japan",
+     "confidence": 0.45,
+     "cues": "Subject and iconography are distinctly Japanese (kimono, tatami, byobu-style garden view, traditional hairstyle), but oval cartouche framing and certain compositional choices suggest possible Western artist working in Japonisme style; small text at lower left appears Latin-script"
+    },
+    "medium": {
+     "guess": "Color lithograph or etching with hand coloring",
+     "confidence": 0.6,
+     "cues": "Smooth, even color areas with fine line work; delicate tonal gradations; cream paper visible outside oval; characteristic of relief or intaglio printing with added color washes"
+    },
+    "style": {
+     "guess": "Japonisme / Western Japonisme",
+     "confidence": 0.65,
+     "cues": "Flat color areas, emphasis on line, Japanese subject matter and costumes, garden with wisteria and iris, mother-and-child theme common in Meiji-era and Japonisme prints; oval vignette is more Western convention"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.1,
+     "cues": "Small inscription visible at lower left but illegible at this resolution; oval format and style vaguely suggest artists like Raphael Kirchner or Western Japonisme printmakers, but insufficient evidence to name confidently"
+    }
+   }
+  },
+  {
+   "id": "wd:Q921351",
+   "title": "Admonitions Scroll",
+   "stopRung": 2,
+   "stopLabel": "flip+rot",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 700,
+    "place": "China",
+    "region": "Asia",
+    "medium": "Ink and color on silk",
+    "style": "Tang dynasty",
+    "artist": "Gu Kaizhi"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1050,
+     "confidence": 0.45,
+     "cues": "Warm ochre/gold ground, figural scenes with courtly dress, archaic brushwork style, script columns suggesting classical Chinese literary hand; consistent with Song or late Tang period handscroll format"
+    },
+    "where": {
+     "country": "China",
+     "confidence": 0.85,
+     "cues": "Vertical handscroll format, Chinese calligraphic columns between scenes, figures in Han/Tang-style robes, architectural elements typical of classical Chinese painting, warm yellow silk or paper ground"
+    },
+    "medium": {
+     "guess": "Ink and mineral pigments on silk",
+     "confidence": 0.7,
+     "cues": "Warm yellowed ground consistent with aged silk, translucent washes of orange-red and black, fine linear brushwork, muted but preserved color patches typical of mineral pigments on silk"
+    },
+    "style": {
+     "guess": "Classical Chinese narrative handscroll painting (Tang–Song court style)",
+     "confidence": 0.65,
+     "cues": "Sequential narrative vignettes separated by text columns, figure proportions and costume details echo Tang/early Song court painting conventions, restrained palette with iron-red and black accents"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "No signature or seal legible at this resolution; style is consistent with court atelier work rather than a single identifiable master"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q766212",
+   "title": "Swimming",
+   "stopRung": 2,
+   "stopLabel": "flip+rot",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1885,
+    "place": "United States of America",
+    "region": "North America",
+    "medium": "Oil on canvas",
+    "style": "American Realism",
+    "artist": "Thomas Eakins"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1885,
+     "confidence": 0.62,
+     "cues": "Academic realist handling of nude male figures in outdoor setting, loose impressionistic background foliage, naturalistic flesh tones suggest late 19th-century European academic painting circa 1870-1900"
+    },
+    "where": {
+     "country": "France",
+     "confidence": 0.55,
+     "cues": "Style consistent with French academic tradition; lush green landscape reminiscent of French countryside; treatment of figures echoes École des Beaux-Arts conventions"
+    },
+    "medium": {
+     "guess": "Oil on canvas",
+     "confidence": 0.9,
+     "cues": "Visible layered brushwork, impasto highlights on rocks and water, blended tonal transitions in flesh; canvas texture apparent in foliage areas"
+    },
+    "style": {
+     "guess": "Academic Realism / Naturalism",
+     "confidence": 0.72,
+     "cues": "Anatomically precise nude figures, classical subject of bathers on rocks, naturalistic landscape background with loose impressionist foliage treatment, strong chiaroscuro modelling"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.2,
+     "cues": "Figures recall Thomas Eakins or Kenyon Cox in musculature and naturalism, but loose background brushwork and European landscape lean toward a French academician; insufficient distinctive markers to name confidently"
+    }
+   }
+  },
+  {
+   "id": "aic13742",
+   "title": "Herself",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1913,
+    "place": "United States of America",
+    "region": "North America",
+    "medium": "Oil paint",
+    "style": "Ashcan School",
+    "artist": "Robert Henri"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1905,
+     "confidence": 0.6,
+     "cues": "Loose, bravura brushwork, dark tonal ground, realist character study suggest late 19th to early 20th century; broad impasto handling points away from academic finish toward post-1880s painterly realism"
+    },
+    "where": {
+     "country": "United States or Ireland",
+     "confidence": 0.5,
+     "cues": "Subject's headscarf, shawl, and ruddy complexion evoke Irish or northern European working-class woman; American Ashcan-school aesthetic plausible; framing and wall label typography suggest US museum context"
+    },
+    "medium": {
+     "guess": "Oil on canvas",
+     "confidence": 0.95,
+     "cues": "Visible impasto ridges, layered wet-on-wet passages, canvas texture showing through thin areas, opaque highlights consistent with oil paint on woven support"
+    },
+    "style": {
+     "guess": "American Realism / Ashcan School",
+     "confidence": 0.65,
+     "cues": "Unsentimental working-class subject, loose gestural brushwork, dark background, warm flesh tones built up boldly, preference for ordinary figure over idealized type — hallmarks of early 20th-century American social realism"
+    },
+    "artist": {
+     "guess": "Robert Henri",
+     "confidence": 0.55,
+     "cues": "Bravura alla prima technique, dark tonal ground, empathetic but unpolished character portraiture of humble subject, broad confident strokes in face and hands all align with Henri's known approach; partially legible wall label visible at right edge"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q15409979",
+   "title": "Bronze Head from Ife",
+   "stopRung": 3,
+   "stopLabel": "flip+rot+crop60",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1300,
+    "place": "Nigeria",
+    "region": "Africa",
+    "medium": "Copper alloy",
+    "style": "Yoruba",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1550,
+     "confidence": 0.45,
+     "cues": "Lost-wax cast bronze with heavy patination and red cuprite layer suggesting significant age; intricate surface detailing consistent with 14th–17th century West African or South/Southeast Asian court metalwork"
+    },
+    "where": {
+     "country": "Nigeria (Benin Kingdom) or possibly India",
+     "confidence": 0.5,
+     "cues": "Heavily textured braided armlet, coral-bead-like wristband, and distinctive knuckle rendering closely resemble Benin bronze corpus; twisted scepter element also consistent; alternatively could be South Asian"
+    },
+    "medium": {
+     "guess": "Bronze (lost-wax cast, cire perdue)",
+     "confidence": 0.9,
+     "cues": "Dark metallic surface with green verdigris and red cuprite patination; sharply defined cast detail in rings, braiding, and spherical pommel; characteristic weight and texture of cast bronze"
+    },
+    "style": {
+     "guess": "Benin Kingdom court bronze",
+     "confidence": 0.55,
+     "cues": "Coral-bead wristbands, striated textile rendering, bulbous pommel with concentric ring decoration, and highly stylized hand anatomy are hallmarks of Benin royal bronze sculpture"
+    },
+    "artist": {
+     "guess": "unknown (guild caster, Igun Eronmwon brass-casters guild)",
+     "confidence": 0.3,
+     "cues": "Benin bronzes were produced by hereditary guild casters rather than individually named artists; no identifying signature visible"
+    }
+   }
+  },
+  {
+   "id": "wd:Q112971367",
+   "title": "A Thousand Li of Rivers and Mountains",
+   "stopRung": 3,
+   "stopLabel": "flip+rot+crop60",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1113,
+    "place": "China",
+    "region": "Asia",
+    "medium": "Ink and color on silk",
+    "style": "Northern Song dynasty",
+    "artist": "Wang Ximeng"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1150,
+     "confidence": 0.45,
+     "cues": "Blue-green mineral pigments on silk, landscape treatment with layered rocky formations suggest Chinese Tang–Song blue-green (qinglu) landscape tradition, likely 10th–13th century"
+    },
+    "where": {
+     "country": "China",
+     "confidence": 0.85,
+     "cues": "Characteristic azurite blue and malachite green mineral pigments applied in bands over gold/ochre ground; rock formations rendered with outlined, filled shapes typical of Chinese court landscape painting; silk support"
+    },
+    "medium": {
+     "guess": "Mineral pigment (azurite, malachite) on silk handscroll",
+     "confidence": 0.75,
+     "cues": "Vivid saturated blues and greens with visible granular texture characteristic of ground mineral pigments; warm yellowish-tan ground consistent with aged silk; format is very tall and narrow suggesting handscroll or section thereof"
+    },
+    "style": {
+     "guess": "Chinese blue-and-green (qinglu shanshui) landscape painting, Tang–Song court tradition",
+     "confidence": 0.78,
+     "cues": "Stylized mountain outlines filled with flat mineral color, no ink-wash atmosphere, gold/ochre earth tones, densely packed blue-green peaks without negative space—hallmarks of the Li Sixun/Li Zhaodao lineage"
+    },
+    "artist": {
+     "guess": "unknown (possibly Song dynasty court painter in Tang blue-green tradition)",
+     "confidence": 0.2,
+     "cues": "Style consistent with followers of Li Sixun or early Song court imitators; insufficient detail to assign specific hand"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q7717746",
+   "title": "The Big Picture",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1903,
+    "place": "Australia",
+    "region": "Oceania",
+    "medium": "Textile",
+    "style": "Heidelberg School",
+    "artist": "Tom Roberts"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1901,
+     "confidence": 0.72,
+     "cues": "Dress uniforms, top hats, Victorian/Edwardian formal attire; women in black mourning dress suggesting recent royal bereavement; Union Jacks and colonial flags; architectural style of a late Victorian public hall; photographic realism typical of 1890s-1910s academic painting"
+    },
+    "where": {
+     "country": "Australia or Canada",
+     "confidence": 0.65,
+     "cues": "Union Jacks prominently displayed alongside what appear to be colonial/dominion flags; the wide-brimmed hat (slouch hat) on the central military figure suggests Australian troops; large ceremonial hall with British imperial iconography; the gathering suggests a colonial federation or parliament opening ceremony"
+    },
+    "medium": {
+     "guess": "Oil paint on canvas",
+     "confidence": 0.93,
+     "cues": "Large-scale work with visible impasto in crowd areas, blended tonal gradations in architecture, warm glazed highlights on uniforms, the scale and technique consistent with monumental oil painting"
+    },
+    "style": {
+     "guess": "Victorian Academic / Salon Realism",
+     "confidence": 0.88,
+     "cues": "Highly detailed figurative rendering, documentary compositional approach, theatrical use of light from above, muted but dignified palette with red ceremonial accents, consistent with late 19th-century academic history painting"
+    },
+    "artist": {
+     "guess": "Tom Roberts",
+     "confidence": 0.45,
+     "cues": "The subject matter (appears to be an Australian federal ceremony), the handling of large crowds with individual portraiture, and the academic realist style are consistent with Australian late 19th/early 20th-century painters; Roberts painted the Australian Federation ceremony"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q11531476",
+   "title": "Pine Trees",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1575,
+    "place": "Japan",
+    "region": "Asia",
+    "medium": "Ink on paper",
+    "style": "Hasegawa school",
+    "artist": "Hasegawa Tōhaku"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1600,
+     "confidence": 0.45,
+     "cues": "Six-panel folding screen format, ink wash technique, and compositional sparseness consistent with Momoyama to early Edo period Japan, roughly late 16th to early 17th century"
+    },
+    "where": {
+     "country": "Japan",
+     "confidence": 0.95,
+     "cues": "Six-panel byobu screen format with lacquered red-and-gold border, ink wash pine trees rendered in sumi style, empty negative space as compositional element — all strongly characteristic of Japanese screen painting"
+    },
+    "medium": {
+     "guess": "Ink (sumi) on paper mounted on folding screen (byobu)",
+     "confidence": 0.9,
+     "cues": "Monochromatic gray-black tonal washes with no visible color pigments, paper ground with visible panel seams, mounted format with fabric border strips typical of Japanese screen construction"
+    },
+    "style": {
+     "guess": "Japanese ink painting (suiboku-ga) in the Zen-influenced or Kano school tradition",
+     "confidence": 0.75,
+     "cues": "Diluted ink washes creating atmospheric mist, bold abbreviated brushwork for pine trunks and foliage, heavy use of ma (negative space), pine trees as classical motif — hallmarks of either Zen ink tradition or Kano school screen painting"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.2,
+     "cues": "Two small red seals visible on left panel suggesting an artist's signature seal, but scale and style are consistent with multiple major painters of the Momoyama period (e.g., Hasegawa Tohaku or Kano school masters); cannot distinguish without reading seals"
+    }
+   }
+  },
+  {
+   "id": "sinmafa_82-3-59",
+   "title": "Weight",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1560,
+    "place": "Ghana",
+    "region": "Africa",
+    "medium": "Bronze",
+    "style": "Akan",
+    "artist": "Akan artist"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1300,
+     "confidence": 0.35,
+     "cues": "Geometric interlocking star form, patination and wear consistent with medieval period; copper plug repair suggests long use as functional object"
+    },
+    "where": {
+     "country": "Islamic world (Iran, Iraq, or Egypt)",
+     "confidence": 0.45,
+     "cues": "Eight-pointed star geometry is hallmark of Islamic decorative arts; bronze alloy and form consistent with Islamic metalwork traditions"
+    },
+    "medium": {
+     "guess": "Bronze (cast)",
+     "confidence": 0.8,
+     "cues": "Olive-green to dark patina typical of aged bronze/brass alloy; visible casting seams and surface texture; copper-colored circular repair plug at center"
+    },
+    "style": {
+     "guess": "Islamic geometric metalwork",
+     "confidence": 0.45,
+     "cues": "Eight-pointed star silhouette with interlocking square projections at corners strongly echoes Islamic geometric patterns; could also be a trade weight"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.95,
+     "cues": "No inscription, signature, or distinguishing maker's mark visible; appears to be a functional or votive object rather than attributed fine art"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q185392",
+   "title": "Borghese Gladiator",
+   "stopRung": 3,
+   "stopLabel": "flip+rot+crop60",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": -100,
+    "place": "Ephesus, Asia Minor",
+    "region": "Asia",
+    "medium": "Pentelic marble",
+    "style": "Hellenistic art",
+    "artist": "Agasias of Ephesus"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": -440,
+     "confidence": 0.55,
+     "cues": "Highly naturalistic musculature with idealized anatomy, surface weathering and discoloration consistent with ancient marble; style suggests Classical Greek period roughly 5th–4th century BCE"
+    },
+    "where": {
+     "country": "Greece (or Roman copy)",
+     "confidence": 0.6,
+     "cues": "White marble with characteristic aging patina, sculptural tradition of athletic figure groups strongly associated with ancient Greek or Greco-Roman production"
+    },
+    "medium": {
+     "guess": "Marble",
+     "confidence": 0.97,
+     "cues": "Pale cream-white stone with brown mineral staining, crystalline surface texture visible in rougher areas, clearly carved and not cast"
+    },
+    "style": {
+     "guess": "Classical Greek or Hellenistic",
+     "confidence": 0.65,
+     "cues": "Dynamic pose with outstretched limb, tense musculature rendered with anatomical precision, contrapposto energy; consistent with high Classical or early Hellenistic Greek sculpture"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.1,
+     "cues": "Quality of carving suggests a skilled workshop master; detail too cropped and partial to attribute to a named sculptor with any confidence"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q847274",
+   "title": "Suda Hachiman Shrine Mirror",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 443,
+    "place": "Japan",
+    "region": "Asia",
+    "medium": "Bronze",
+    "style": "Kofun period",
+    "artist": "Imasuri"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 700,
+     "confidence": 0.45,
+     "cues": "Chinese bronze mirror style with densely packed figural and cosmological relief decoration, circular banded layout with central boss, consistent with Tang dynasty (618-907 CE) or possibly late Han to Six Dynasties period"
+    },
+    "where": {
+     "country": "China",
+     "confidence": 0.92,
+     "cues": "Circular bronze mirror with central hemispherical boss (knob), concentric decorative bands with Chinese characters around outer rim, figural iconography including what appear to be immortals or deities, all hallmarks of Chinese bronze mirror tradition"
+    },
+    "medium": {
+     "guess": "Cast bronze",
+     "confidence": 0.95,
+     "cues": "Dark greenish-gray patina consistent with aged bronze, high relief casting visible in figures and decorative bands, uniform metallic surface with oxidation"
+    },
+    "style": {
+     "guess": "Chinese Tang dynasty bronze mirror",
+     "confidence": 0.5,
+     "cues": "Dense figural scenes with mythological figures/immortals arranged radially, multiple concentric bands including inscribed text band, dotted background texture, central boss — features common to Tang but also possible late Han or Three Kingdoms period mirrors"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "Bronze mirrors of this type were workshop-produced; individual artists are not identifiable from visual inspection alone"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q3235403",
+   "title": "Two Tahitian Women",
+   "stopRung": 3,
+   "stopLabel": "flip+rot+crop60",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1899,
+    "place": "French Polynesia (Tahiti)",
+    "region": "Oceania",
+    "medium": "Oil on canvas",
+    "style": "Post-Impressionism",
+    "artist": "Paul Gauguin"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1960,
+     "confidence": 0.45,
+     "cues": "Flat simplified forms, bold color blocking, figurative distortion suggest mid-20th century; palette and handling reminiscent of 1950s-70s Latin American or Eastern European painting"
+    },
+    "where": {
+     "country": "Colombia or Mexico",
+     "confidence": 0.35,
+     "cues": "Rounded, voluminous figure with yellowish skin tone, dark background, visceral imagery evoke Latin American figurative tradition; Botero-adjacent corpulence"
+    },
+    "medium": {
+     "guess": "Oil on canvas or panel",
+     "confidence": 0.75,
+     "cues": "Visible brushwork, matte surface texture, blended transitions in flesh tones, slightly craquelure-like texture suggesting oil on a rigid or semi-rigid support"
+    },
+    "style": {
+     "guess": "Latin American Figurativism / Magic Realism",
+     "confidence": 0.4,
+     "cues": "Exaggerated corpulent body, flat deep-blue and teal background, bold simplified forms, visceral wound imagery with knife; combines realism and symbolic distortion"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0.15,
+     "cues": "Botero-like volumetric body but the violent wound and knife motif plus color palette feel distinct; possibly a lesser-known Latin American or Eastern European figurative painter; cannot confidently attribute"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3501413",
+   "title": "Baal with Thunderbolt",
+   "stopRung": 0,
+   "stopLabel": "full",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": -1499,
+    "place": "Ugarit, Syria",
+    "region": "Asia",
+    "medium": "Limestone relief stele",
+    "style": "Ugaritic",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": -900,
+     "confidence": 0.45,
+     "cues": "Relief style blends Egyptian iconography (horned crown, striding warrior pose, small captive figure underfoot) with Levantine/Syro-Canaanite conventions suggesting Late Bronze Age to early Iron Age, roughly 1200–700 BCE"
+    },
+    "where": {
+     "country": "Syria/Lebanon (ancient Levant)",
+     "confidence": 0.55,
+     "cues": "Iconography shows storm-god figure with raised weapon, horned helmet, and small figure at feet — strongly characteristic of Syro-Canaanite Baal stelae; Egyptian influence visible but secondary, pointing to Levantine coast rather than Egypt proper"
+    },
+    "medium": {
+     "guess": "Limestone relief stele",
+     "confidence": 0.85,
+     "cues": "Pale beige/cream stone with flat carved relief, visible weathering pits, granular texture consistent with limestone; arched top typical of votive stele format"
+    },
+    "style": {
+     "guess": "Syro-Canaanite / Late Bronze–Iron Age Levantine",
+     "confidence": 0.6,
+     "cues": "Striding warrior-deity pose, horned crown, upraised arm with weapon, small subsidiary figure, wave/mountain register at base — hallmarks of Baal smiting stelae from Ugarit and coastal Levant"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 1,
+     "cues": "Anonymous ancient craftsman; no signature or identifying inscription visible"
+    }
+   }
+  },
+  {
+   "id": "wikidata:Q7742839",
+   "title": "The Jack Pine",
+   "stopRung": 4,
+   "stopLabel": "flip+rot+crop45",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": true
+    },
+    {
+     "rung": 4,
+     "label": "flip+rot+crop45",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1916,
+    "place": "Canada",
+    "region": "North America",
+    "medium": "Oil on canvas",
+    "style": "Canadian Modernism",
+    "artist": "Tom Thomson"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1910,
+     "confidence": 0.55,
+     "cues": "Bold mosaic-like color patches, visible impasto, non-naturalistic color suggest Post-Impressionist or early Expressionist period roughly 1900-1920"
+    },
+    "where": {
+     "country": "Canada or Northern Europe",
+     "confidence": 0.45,
+     "cues": "Dark tree silhouettes against luminous yellow-gold sky with deep purples and earth tones evoke northern landscape painting tradition; palette reminiscent of Canadian Group of Seven or Scandinavian painters"
+    },
+    "medium": {
+     "guess": "Oil paint on canvas",
+     "confidence": 0.85,
+     "cues": "Thick impasto brushstrokes clearly visible, textured surface with directional paint application, canvas weave apparent in thinner passages"
+    },
+    "style": {
+     "guess": "Post-Impressionist / early Modernist landscape",
+     "confidence": 0.6,
+     "cues": "Fragmented mosaic-like color blocks, non-naturalistic heightened palette, bold dark outlines between color areas, flattened forms suggest Post-Impressionist influence moving toward Expressionism"
+    },
+    "artist": {
+     "guess": "Tom Thomson",
+     "confidence": 0.4,
+     "cues": "Northern wilderness subject, dramatic gold-yellow sky against dark silhouetted trees, bold color contrasts, thick paint handling, and overall feel strongly resemble Thomson's Ontario landscape sketches circa 1914-1917"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q18385381",
+   "title": "Benin Pendant Masks",
+   "stopRung": 4,
+   "stopLabel": "flip+rot+crop45",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": true
+    },
+    {
+     "rung": 3,
+     "label": "flip+rot+crop60",
+     "recognized": true
+    },
+    {
+     "rung": 4,
+     "label": "flip+rot+crop45",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1550,
+    "place": "Benin City, Kingdom of Benin (present-day Nigeria)",
+    "region": "Africa",
+    "medium": "Elephant ivory, iron, and copper alloy inlay",
+    "style": "Benin Court Art",
+    "artist": ""
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": -650,
+     "confidence": 0.45,
+     "cues": "Ivory or bone carving with gold fittings, black inlaid eye of almond shape, small figurines in gold along edge suggest ancient Near Eastern or Archaic Mediterranean craftsmanship; style consistent with 8th–6th century BCE"
+    },
+    "where": {
+     "country": "Iraq/Iran or Eastern Mediterranean (Assyria/Phoenicia)",
+     "confidence": 0.45,
+     "cues": "Textured surface with fine cross-hatching resembling Assyrian or Phoenician ivory carving conventions; gold-capped border figures with striated robes recall Nimrud ivories or similar Near Eastern luxury goods"
+    },
+    "medium": {
+     "guess": "Carved ivory with gold and dark stone/glass inlay",
+     "confidence": 0.75,
+     "cues": "Pale cream surface with fine linear texture typical of elephant ivory; black almond-shaped inlaid eye (obsidian or glass); gold-worked decorative border with figural elements"
+    },
+    "style": {
+     "guess": "Ancient Near Eastern luxury ivory carving (Phoenician or Assyrian, Nimrud-type)",
+     "confidence": 0.5,
+     "cues": "Combination of fine hatched ivory surface, inlaid eye, small gold figurines with striated drapery matches known traditions of 9th–7th century BCE palatial ivories"
+    },
+    "artist": {
+     "guess": "unknown",
+     "confidence": 0,
+     "cues": "Anonymous workshop production typical of ancient luxury craft; no signature or distinctive personal style identifiable"
+    }
+   }
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q17512050",
+   "title": "The Architect's Dream",
+   "stopRung": 2,
+   "stopLabel": "flip+rot",
+   "recognizedTrace": [
+    {
+     "rung": 0,
+     "label": "full",
+     "recognized": true
+    },
+    {
+     "rung": 1,
+     "label": "flip",
+     "recognized": true
+    },
+    {
+     "rung": 2,
+     "label": "flip+rot",
+     "recognized": false
+    }
+   ],
+   "truth": {
+    "y": 1840,
+    "place": "United States of America",
+    "region": "North America",
+    "medium": "Oil on canvas",
+    "style": "Hudson River School",
+    "artist": "Thomas Cole"
+   },
+   "vision": {
+    "recognized": false,
+    "when": {
+     "year": 1840,
+     "confidence": 0.65,
+     "cues": "Neoclassical and Gothic architectural juxtaposition, Romantic-era panoramic ambition, equestrian figure in early 19th-century dress, warm luminous atmospheric haze typical of 1820s–1850s painting"
+    },
+    "where": {
+     "country": "United States or United Kingdom",
+     "confidence": 0.55,
+     "cues": "Gothic spires resemble English Gothic Revival church architecture; Neoclassical colonnaded building suggests American or British public architecture; green theatrical drapery framing device used by both American Hudson River painters and British academic painters"
+    },
+    "medium": {
+     "guess": "Oil on canvas",
+     "confidence": 0.88,
+     "cues": "Rich impasto highlights on drapery, smooth blended sky transitions, warm glazed mid-tones on stonework, canvas texture implied by surface sheen and brushwork variation"
+    },
+    "style": {
+     "guess": "American Romantic / Hudson River School allegory",
+     "confidence": 0.6,
+     "cues": "Grandiose architectural capriccio combining classical and Gothic elements, luminous atmospheric recession, theatrical framing with draped curtains, idealized civic subject matter consistent with Thomas Cole-era allegorical painting"
+    },
+    "artist": {
+     "guess": "Thomas Cole",
+     "confidence": 0.42,
+     "cues": "Architectural capriccio with mixed classical-Gothic motifs, allegorical framing device of curtains and pedestal, luminous misty distance, and moralistic civic iconography strongly recall Cole's 'Architect's Dream' or similar works; equestrian monument and scroll also fit his allegorical vocabulary"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+  "note": "Immutable old/full-B4 baselines preserved for the VSD-022 compact-delta B4 comparison. Never overwrite or relabel these.",
+  "recordedAt": "2026-09-03",
+  "baselines": [
+    {"workId": "cleveland167459", "run": "cal50-ddaca9f7698c", "notes": 6, "guide": 7},
+    {"workId": "wikidata:Q105870850", "run": "cal50-ddaca9f7698c", "notes": 5, "guide": 7},
+    {"workId": "met57329", "run": "cal50-ddaca9f7698c", "notes": 6, "guide": 6}
+  ],
+  "b1b3CheckpointSource": "cal50-3445a229789f (B1=38 B2=31 B3=30)"
+}

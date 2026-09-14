@@ -1,7 +1,7 @@
 # Vision system: canonical decisions and operating contract
 
 **Authority:** owner-approved product and operating intent
-**Last owner confirmation:** 2026-08-31
+**Last owner confirmation:** 2026-09-03
 **Implementation status:** partially implemented; see [PIPELINE.md](PIPELINE.md) for what runs today
 **Planning detail:** [vision-consolidation-plan.md](../tasks/vision-consolidation-plan.md)
 
@@ -170,26 +170,79 @@ claims instead of noticing what is actually visible. Research can still motivate
 targeted second look in stage 3. Broker derivatives use content-addressed filenames, so
 titles do not leak through filenames.
 
+**Current calibration scope (VSD-019, superseded in part by VSD-021):** the initial lean
+controller deliberately stopped after B1/conditional B2. Live canaries then justified restoring
+the intended VSD-005 sequence for the fixed 50-work calibration: B0 sanitize, B1 image-first
+inventory, conditional B2 no-image research, conditional B3 targeted image verification, and B4
+no-tool synthesis. The current feature-branch controller implements that sequence with strict
+stage validation, transcript-bound evidence, resumable checkpoints, five independent lanes, and
+a quarantined comparison packet. A complete Julius Caesar canary exercised B0–B4 successfully;
+the broader calibration has banked real B1–B3 checkpoints. Nothing from this controller can merge
+or publish to the game.
+
+B4 no longer asks the model to reproduce a complete rich record. Under VSD-022 the model emits a
+compact editorial **delta** (per-item keep/revise/replace/add/remove actions, replacement text,
+references to existing B1/B2 ids, and corrections/conflicts/uncertainty); the controller
+deterministically hydrates the authoritative B1 evidence and delight registries and the B2 source
+and catalog registries, assigns its own ids and ranks, carries B1 coordinates, then runs the
+**unchanged** strict `validateB4`. This was proven end-to-end on the three works that carried
+old-B4 baselines: roughly 2x faster and ~44% fewer tokens, all well under the six-minute gate,
+with teaching richness preserved (see the old-vs-new comparison card). Legacy content is treated
+as unverified editorial material, never as factual evidence, throughout.
+
+B2 has separately been narrowed (VSD-022, Phase 2, offline) toward targeted, teaching-relevant,
+atomic fact-checking for a strong non-specialist reader, with a small default research budget
+(1–2 searches, 2–4 fetches, up to ~4 useful sources, at most 2 targeted B3 requests) and an
+explicit source-priority ladder (holding museum record first; Wikipedia may orient but cannot be
+the sole authority for a consequential correction). The verdict scheme now includes
+`qualified`/`partlySupported` so true-but-imprecise claims are qualified rather than over-refuted,
+`refuted` is reserved for a demonstrably false central proposition, high-confidence refutations
+require at least one corroborating source outside Wikipedia and known UGC/blog hosts
+(host-parsed, so encoded-dot evasions are rejected and a museum URL is not; this guarantees
+non-Wikipedia/non-UGC corroboration, NOT yet a positive museum/scholarly allowlist — that
+tightening is a pending owner decision), and attribution is distinguished from
+prototype/influence/workshop/lineage (the Clouet lesson). The B2-v2 prompt, schema, validator,
+and regressions are implemented and pass offline; a fixed five-work v1-vs-v2 comparison is
+**proposed and awaiting owner authorization** before any live B2-v2 call.
+
 ### Security model
 
-The preferred low-cost execution is subscription-backed Claude Code, but only if a
-prototype proves that a headless image call can run with **zero tools**. The image
-process must have no web, bash, filesystem-write, agent-spawn, or MCP capability and no
-authoritative write access. Its network egress is limited to the Claude service endpoints
-required by the installed client. A separate no-image research process gets web access.
-The deterministic controller alone assembles provenance-bound records.
+The preferred low-cost execution is subscription-backed Claude Code. The image process runs
+under a **proportionate, minimal-capability boundary** (VSD-019): the hardened broker
+sanitizes and re-encodes the external image; the controller places that single SHA-named
+derivative alone in a fresh per-call temporary directory; Claude is invoked with **only the
+Read tool** (`--tools Read --allowedTools Read`), `--restricted`, `--safe-mode`, an empty MCP
+configuration, no Chrome, no session persistence, and with `ANTHROPIC_API_KEY` /
+`ANTHROPIC_AUTH_TOKEN` stripped. It has no Bash, write/edit, web, MCP, browser, repository,
+additional-directory, or authoritative-write capability. The image process's network egress
+is limited to the Claude service endpoints the client requires. A separate no-image research
+process gets web (WebSearch/WebFetch) and never sees the image. The deterministic controller
+alone stores the returned output; it stays quarantined and cannot merge automatically.
+
+This proportionate boundary is owner-approved for Pass B because Pass B is a manually
+initiated backend process whose outputs are human-reviewed before any authoritative merge:
+visible prompt injection through an image remains possible, but it cannot act (no tools that
+touch the network, filesystem, or repo beyond reading the one confined image) and cannot
+reach the game without human approval.
 
 The G-03 broker, decode/re-encode, path confinement, schema checks, evidence store,
 single-use runs, base-state drift check, and structural writer inventory remain mandatory.
-No subagent writes into authoritative data directories. If subscription-backed zero-tool
-image attachment cannot be proven, use the paid tool-less API for that image stage rather
-than weakening the boundary.
+No subagent writes into authoritative data directories.
 
-Claude Code surfaces the local `@<path>` reference as model text even with zero tools.
-Therefore the production wrapper must attach from a neutral per-call working directory
-using a relative, content-addressed filename such as `@<sha256>.png`. Never put a title,
-catalog identifier, repository path, home-directory path, or other answer-bearing text in
-the attachment path.
+**Transport history (VSD-004 → VSD-019):** the earlier plan attached the image with a
+zero-tool `@<sha256>.png` mention in the prompt. A 2026-08-31 canary suggested this worked,
+but the 2026-09-02 lean calibration controller proved it does **not** deliver image bytes in
+its headless `-p --output-format` invocation: across three fresh B1 runs bound to the same
+correct marble-relief derivative, the model received no image and hallucinated three
+different works (a tavern painting, a dark oil portrait, a Liberty coin). The `@<path>`/
+base64 transport is therefore abandoned for the calibration; the Read-tool confined-directory
+transport above replaced it and was verified (the Read `tool_result` returns an image content
+block, and the model then reported the true object). Execution is proven from the raw
+`stream-json` transcript, not from prose: a B1 completion is accepted only when the transcript
+shows a successful Read of the exact SHA image inside the confined dir, and a B2 completion
+only when it shows genuine WebSearch **and** WebFetch tool-use events (never the
+`usage.server_tool_use` aggregate counters, which stay 0 for these client tools). Filenames
+stay content-addressed so no title/catalog/repo/home path ever reaches the model.
 
 ### Teaching content and hotspots
 
@@ -208,6 +261,11 @@ the attachment path.
 - One pinned observation is the source for both concise and deep presentations. Do not
   generate two contradictory accounts of the same detail.
 - Source links remain internal initially.
+- The player-facing study guide follows the authoritative editorial reference
+  [`docs/vision-study-guide-style.md`](vision-study-guide-style.md) (VSD-020): question
+  selection and answer style only — facts always come from the work's own validated
+  legacy + B1–B3 evidence/research, and the golden example is a voice illustration, not a
+  fact or structure template.
 
 ### Playability and image disposition
 
@@ -350,11 +408,13 @@ summary, and never log tokens, cookies, API keys, or raw authorization errors.
 | Capability | State |
 |---|---|
 | G-03 hardened broker, tool-less paid runner, hash/evidence-bound guarded merge | Implemented on feature branch `g-03-image-agent-boundary` at `2186a00`; preview-built, not production |
-| Current Pass B schema | Implemented only for the narrower notes/pins + image-QA flow; rich schema is not yet rebuilt |
+| Current Pass B schema | Strict B1–B4 calibration schemas, structure-only wire schemas, cross-reference validation, and hash-bound stage capture are implemented and exercised in feature-branch calibration code; they are not frozen or connected to production. The full-record B4 output contract has been **replaced by the compact-delta wire + deterministic hydration** (VSD-022); the strict `validateB4` record schema is unchanged and still the acceptance gate |
 | Pass B offline coverage inventory + rich legacy adapter | Implemented 2026-09-02: deterministic 6,557-row `contentVisionCoverage/1` generator; all 202 `vision.js` records verified as a **lossless round-trip via retained record- and item-level raw copies** (`palette`/`figures` are decomposed; other fields are whole-value projections) — a full shape-aware migration that drops the raw copies is **not** yet built; rich authoritative component ledger is still unbuilt |
 | Current approval | Human select-only; auto-policy and labeled human corrections are not implemented |
-| Pass B subscription-backed zero-tool image process | Capability prototype PASSED WITH CONSTRAINT 2026-08-31 — headless `--tools ""` local-image attach + pixel read confirmed, but the attachment path is model-visible; production harness must use a neutral relative SHA filename and is not yet built |
-| Pass B separate no-image research and conditional second look | Planned, not implemented |
+| Pass B subscription-backed image process | Transport CORRECTED 2026-09-02 (VSD-019): the zero-tool `@<sha>.png`/base64 attach was proven NOT to deliver image bytes in the lean controller's headless invocation (3 fresh B1 runs hallucinated 3 different works from one correct derivative). Replaced by a **Read-tool confined-directory** transport (`--tools Read`, one SHA image in a fresh temp dir), verified via a real Read `tool_result` image block; execution is proven from the raw `stream-json` transcript |
+| Pass B calibration controller (B0–B4) | Implemented and live-exercised in feature-branch calibration code by 2026-09-03: Read-tool image transport; transcript-verified B1/B3 image reads and B2 WebSearch+WebFetch; strict stage capture bound to work/image/prompt/model/transport/transcript; resumable checkpoints; five independent lanes; and a deterministic before/after review packet. A Julius B0–B4 canary completed. **The full fixed 50-work calibration ran end-to-end with the accepted v2 pipeline: 50/50 fully complete B1→B4 (2026-09-09)** across staged/resumed batches (run `cal50-0a47b6f7f332`). Subscription-window capacity fast-fails (~4s, model=none) were the main transient and all recovered on resume; the B2 web gate counts only genuinely-retrieved pages. Fixes that landed, all validator/resume-only and runId-stable (no re-run of banked work): internal free-text caps relaxed (B1 `uncertainty`→2000, B2 `catalog.mediumFull`→800, B3 note→2000); B4 player-copy caps raised with owner authorization (`why`→700, published-note `body`→700); `loadCompletion` treats a stale `promptHash` as re-run-not-fatal and removes the stale completion so re-capture doesn't EEXIST. Calibration output remains quarantined and has no authoritative sink; human review → approval → merge is the deliberate next phase |
+| Pass B separate no-image research and conditional second look | B2 no-image research and conditional B3 targeted image verification are implemented and live-exercised. The VSD-022 teaching-target/source-budget revision (B2-v2) is **implemented and passing offline** 2026-09-03: SAT-caliber non-specialist reader; conditional research; budget (1–2 searches, 2–4 fetches, ≤4 sources); source-priority ladder; atomic claims; `qualified`/`partlySupported` verdicts; high-confidence refutations require a corroborating non-Wikipedia/non-UGC source (host-parsed; a positive museum/scholarly allowlist is a pending owner decision); attribution distinguished from prototype/lineage (Clouet). B3 requests capped at 2 with the dropped count surfaced (status.b3Dropped). The B2 web-research gate now counts only genuinely-retrieved pages (a 4xx/redirect envelope is not a retrieval). A live 5-work v1-vs-v2 comparison ran 2026-09-03 (5/5 strict-valid; research collapsed; over-refutations corrected) and passed Codex adversarial review with corrections applied; results quarantined, nothing merged. Strict-valid = shape + reference integrity, not factual entailment — human review remains the factual gate |
+| Pass B synthesis | **Compact editorial-delta B4 + deterministic hydration is implemented, tested, and live-compared** (VSD-022, 2026-09-03). The model emits only a delta; the controller hydrates the authoritative B1/B2 registries, assigns ids/ranks, carries B1 coordinates, and runs the unchanged strict `validateB4`. Proven on the 3 old-B4 baselines: ~2x faster, ~44% fewer tokens, strict-valid, teaching preserved (old-vs-new card generated). The prior full-record B4 is retired. Not yet run at scale or connected to any production sink |
 | Pass B component coverage/staleness ledger | Offline baseline inventory implemented; authoritative component writes, approvals, and staleness transitions remain planned; current live ledger is narrower |
 | Pass A adaptive ladder | Historical code/data exist; retained as the VSD-003 low-cost operational probe, not the frozen v2 method |
 | Pass A recognition-inference pilot | Completed 2026-09-01: protocol freeze `5ea28c8`, sealed collection `9bcd580`, corrected Study-B closure `6a555af`; results are research-only and do not drive tiers |
@@ -369,13 +429,14 @@ decision, then append the result below.
 
 1. Can the installed subscription-backed Claude Code client attach a local image in
    headless mode while `--tools ""` is enforced, without leaking filename/path metadata?
-   → **Resolved 2026-08-31 — attachment PASS, path-opacity FAIL with an accepted
-   mitigation.** Headless `claude -p` with `--tools ""` attached the
-   local image via `@<path>` and correctly read a pixel-only canary code, with
-   subscription/OAuth auth and valid structured output. Caveat: the `@<path>` string is
-   surfaced to the model as **text context**, so the filename must be content-addressed —
-   the SHA-named canary leaked no answer, but a title/catalog filename would. See
-   *Prototype evidence* below.
+   → **Superseded 2026-09-02 (VSD-019).** The 2026-08-31 canary suggested a zero-tool
+   `@<path>` attach worked, but the lean calibration controller proved it does NOT deliver
+   image bytes in its headless `-p --output-format` invocation (3 fresh B1 runs hallucinated
+   3 different works from one correct derivative). Resolution: attach via the **Read tool**
+   with the image alone in a confined per-call directory (no other tools), and verify a real
+   Read image `tool_result` from the `stream-json` transcript. The subscription/zero-web-for-
+   the-image-stage intent stands; only the byte-transport mechanism changed. The historical
+   *Prototype evidence* below is retained but is not evidence for the calibration transport.
 2. What observable usage/reset signal can safely drive the 50→70→75% subscription budget?
 3. What stronger Pass A rungs best break recognition while retaining useful visual signal?
 4. Should predicted-player recognition remain a model output, and how will it be calibrated?
@@ -428,7 +489,7 @@ It does **not** prove the whole Pass B architecture.
 | VSD-001 | 2026-08-31 | Maintain independent `visionDifficultyProbe` and `contentVisionEnrichment` passes and ledgers. | Approved |
 | VSD-002 | 2026-08-31 | Pass A measures model recognition and blinded guessability separately; fame/player-recognition remain separately named. | Approved |
 | VSD-003 | 2026-08-31 | Preserve Pass A's adaptive multi-rung blind API method; terminal survivors are censored, and outputs do not yet drive tiers. | Approved for historical/operational probe; scoped by VSD-016 for registered research |
-| VSD-004 | 2026-08-31 | Prefer subscription-backed Pass B only if a zero-tool headless image prototype proves the security boundary; otherwise use the tool-less API for image viewing. | Approved; attachment capability PASSED WITH CONSTRAINT 2026-08-31 (see Prototype evidence) |
+| VSD-004 | 2026-08-31 | Prefer subscription-backed Pass B only if a zero-tool headless image prototype proves the security boundary; otherwise use the tool-less API for image viewing. | Approved; the subscription preference stands, but the zero-tool `@<path>` image TRANSPORT is superseded by VSD-019 (Read-tool + confined dir) after it failed to deliver image bytes in the lean controller |
 | VSD-005 | 2026-08-31 | Pass B order is image-first, separate no-image research second, conditional targeted second look, then synthesis. | Approved |
 | VSD-006 | 2026-08-31 | Rich historical fields, study guides, and plentiful ranked hotspots are first-class outputs, not discarded experiments. | Approved |
 | VSD-007 | 2026-08-31 | Existing content is audited component-by-component, not preserved by default; prior versions remain legacy evidence. | Approved |
@@ -439,10 +500,21 @@ It does **not** prove the whole Pass B architecture.
 | VSD-012 | 2026-08-31 | Keep source links internal initially; preserve current contextual sensitivity behavior and human-remains exclusion. | Approved |
 | VSD-013 | 2026-08-31 | Protect subscription capacity 09:00–22:00 Pacific; run unattended overnight, starting at a 50% conservative budget. | Approved; supervisor unimplemented |
 | VSD-014 | 2026-08-31 | Do not add a universal hard daily-completion gate until audited coverage is sufficient. | Approved |
-| VSD-015 | 2026-08-31 | Subscription image attachments use a neutral relative SHA-only path because Claude Code exposes the `@<path>` string as model text; usage budgets count internal turns, not only process launches. | Approved from prototype evidence |
+| VSD-015 | 2026-08-31 | Subscription image attachments use a neutral relative SHA-only path because Claude Code exposes the `@<path>` string as model text; usage budgets count internal turns, not only process launches. | Attachment MECHANISM superseded by VSD-019 (the `@<path>` transport did not deliver image bytes in the lean controller; now Read-tool + confined dir). The content-addressed-filename and turn-counting requirements STAND |
 | VSD-016 | 2026-08-31 | Registered Pass A research uses separate pilot/main freezes, a complete repeated-measures view panel, separate identification/facet calls, and a randomized supplied-identity causal primary; it remains append-only and cannot change tiers. | Approved; pilot completed 2026-09-01; main study not authorized |
 | VSD-017 | 2026-08-31 | Use a dedicated frozen git commit as the pilot preregistration record; no OSF/external-registration dependency. Freeze a stable registration id and artifact hashes, then have the runner derive and verify the commit before the first response (the commit cannot self-embed its own hash). | Approved; supersedes only VSD-016's external-registration venue wording; naming superseded by VSD-018 |
 | VSD-018 | 2026-08-31 | The active pilot contract is a **git-freeze-only protocol freeze, not a "registration."** It keeps VSD-017's identical git-integrity mechanism (dedicated commit whose subject names a stable id; the runner derives and verifies the commit before the first call) but renames the vocabulary throughout the runner, artifacts, statuses, evidence, gate assertions, and commit subject: DRAFT status `DRAFT_NOT_FROZEN_NO_COLLECTION`, frozen status `PILOT_PROTOCOL_FROZEN_BEFORE_COLLECTION`, artifacts `*.frozen.json` / `pilot-protocol.frozen.md`, evidence `protocol-freeze-evidence.json`, commit subject `PILOT PROTOCOL FROZEN BEFORE COLLECTION: <id>`. Historical v1 "preregistration" references remain historical. | Approved; pilot mechanism exercised and closed 2026-09-01 |
+| VSD-019 | 2026-09-02 | **Pass B image transport = Read-tool in a confined directory; initial calibration scope = B0/B1 + conditional B2.** The zero-tool `@<path>`/base64 attach (VSD-004/VSD-015) does not deliver image bytes in the lean controller's headless invocation and is abandoned for Pass B: the image is placed alone in a fresh per-call temp dir and Claude opens it with ONLY the Read tool (`--tools Read`, `--restricted`, `--safe-mode`, empty MCP, no session persistence, API keys stripped); B2 gets ONLY WebSearch/WebFetch and never the image. This proportionate boundary is accepted because Pass B is manually initiated and human-reviewed before any merge. Execution is verified from the raw `stream-json` transcript (B1 must Read the exact SHA image inside the confined dir; B2 must show real WebSearch AND WebFetch tool-use events — not `usage.server_tool_use` counters), and attempts/completions bind work id + image SHA + prompt hash + model + image-transport version + transcript SHA (a transport change forces a fresh run identity). The initial lean calibration removed B3/B4 from the call plan while B1/B2 value was tested. Prior invalid B1/B3 runs (no image received) are diagnostic evidence only and are never resumed. | Approved; transport remains current. Initial no-B3/B4 calibration scope superseded by VSD-021 |
+| VSD-020 | 2026-09-02 | **`docs/vision-study-guide-style.md` is the authoritative editorial reference for B4's proposed player-facing study guide.** It governs question SELECTION and answer STYLE only, never facts: every fact still derives exclusively from that work's validated legacy content and its own B1–B3 evidence/research (never reuse the Julius example's facts). B4 selects the strongest 5–7 genuinely illuminating questions that teach interesting content AND how to read the visible evidence to infer date/artist/medium/place/movement (transferable skill), preserves strong legacy questions, avoids self-evident/redundant-with-hotspot/routine-provenance/acquisition/incidental-biography questions and source-heavy player copy, keeps citations in internal `sourceRefs`, and treats examples as voice illustrations only, not templates. A B4-prompt change currently forks the whole run identity, so reusing existing B0–B3 checkpoints requires migrating them into the new run dir (the controller cannot yet invalidate B4 independently). | Approved; initial prompt implementation tested 2026-09-02; owner-selected legacy north stars added 2026-09-03 |
+| VSD-021 | 2026-09-03 | **Restore the intended VSD-005 B0–B4 sequence for the fixed calibration after the lean B1/B2 canary demonstrated value.** B3 is conditional and sees only targeted questions plus the confined sanitized image; B4 is no-image/no-tool synthesis. All outputs remain quarantined, checkpointed, and review-only, with no production sink. Five independent lanes may collect work checkpoints concurrently. | Approved; controller implemented and live-exercised, including one complete B0–B4 canary; no production merge |
+| VSD-022 | 2026-09-03 | **Make calibration synthesis and research proportionate before scale-up.** Replace model-generated full-record B4 with a compact editorial delta deterministically hydrated and strictly validated by the controller; treat legacy content as unverified editorial material rather than factual evidence. Narrow B2 toward teaching-relevant, atomic fact-checking for a strong non-specialist reader, normally using 1–2 searches, 2–4 fetches, up to 4 useful sources, and at most 2 targeted B3 requests; preserve qualified/partly-supported claims instead of over-refuting. Existing completed artifacts remain immutable comparison evidence. | **Phase 1 (compact-delta B4) implemented, tested, and live-compared on the 3 old-B4 baselines: ~2x faster, ~44% fewer tokens, strict-valid, teaching preserved. Phase 2 (B2-v2) implemented + passing offline; live 5-work v1-vs-v2 comparison proposed, awaiting owner authorization.** |
+| VSD-023 | 2026-09-09 | **Bounded integrity repair after Codex review of the 50/50 run.** (1) Add `VALIDATION_CONTRACT_VERSION` to the run-identity contractHash (covers validation rules, wire schema, B4 hydration, execution-evidence policy) so future runs fork identity when acceptance rules change; `cal50-0a47b6f7f332` is the completed legacy run, accepted via an offline acceptance report bound to the new version (not relabelled, not rerun). (2) Resume now re-verifies execution evidence (raw+transcript SHA, model, apiKeySource, B1/B3 Read, B2 search+genuine fetch, B4 delta→body rehydration); a fabricated transcript SHA fails. (3) STALE (input changed, old artifact still verifies) → atomically archived to `stale/` and re-run; CORRUPT/unreadable/missing-promptHash → preserved and failed loudly (never `rmSync`). (4) Tool-evidence hardened: Read needs a nonempty id + matching non-error image result; WebSearch needs a matching non-error result; WebFetch success uses head+tail (not first-600) so a late 4xx/redirect/no-content marker can't evade. (5) Source-host denylist normalizes (decode/lowercase/strip terminal dots); still no positive museum allowlist (owner decision, VSD unchanged). (6) Player-copy caps RESTORED to `proposedWhy`=500 and note `body`=600 via one shared constant across delta validator, full validator, and assembler, with the accept-then-truncate slices removed (reject, never silently slice). (7) CLI version captured from the transcript init event; a fully-complete no-op resume no longer rewrites manifest/packet. | Implemented + tested offline (66 + 49 checks); acceptance report `acceptance-report.json` = 200/200 raw/body/transcript/model/apiKeySource, 150/150 tool-evidence, 48/50 B4 hydration-equal (+2 pending manual why-trim), 0 integrity failures; the 50 works were NOT rerun or altered. No merge/commit/push/production write. **Follow-on (authorized): a smallest Pass-B guarded approval/apply tool** (`scripts/lib/pass-b-approval.mjs` + `scripts/pass-b-apply-approval.mjs`, 9 regressions) — one work at a time, explicit field-level approval + documented owner edits, bound to runId/workId/imgSha/B4-completion-sha/validation-contract version, reopens+re-verifies evidence, strict-validates the edited record, detects concurrent file changes, atomic write, dry-run by default, never infers approval, never mutates evidence. A PENDING (ownerApproved:false) one-work approval + review card exist for the canary `cleveland170810`; its card flags that the B4 notes/guide still carry internal-production-language leaks ("B3 visual verification…", present in ~20/50 works) that must be edited or a leak-free canary chosen before approval. Nothing approved or merged |
+
+| VSD-024 | 2026-09-09 | **B4 content-quality calibration before any merge (schema-valid ≠ editorially approved).** Owner declined cleveland170810 and forbade switching to another unreviewed canary just for being leak-free. (1) New deterministic **player-copy language gate** (`scripts/lib/public-output-leak.mjs` + `scripts/check-teach-language.mjs`, 6 regressions incl. the real cleveland170810 "B3 visual verification" leak and the historical Neck Amphora "the prompt" leak) with narrow, context-anchored patterns (title/record used as content stay legal); wired into the guarded merge (rejects `player-copy-leak`). Audit of current production found **63 pre-existing leaky works** — flagged, not fixed (no broad audit authorized); gate not yet wired into `test:ci`. (2) **B4 editorial-prompt correction**: hard PLAYER-COPY PURITY rule (never name B1–B4/verification/prompt/model/metadata/pipeline in prose; grounding only via structured refs), guide answers 2–4 sentences, 5–7 questions with the majority teaching how visible evidence infers date/place/maker-or-tradition/movement/medium, no routine biography/provenance/catalog-mechanics/terminology unless transformative, no appearance-only material ID without B2 technical evidence, and an included Julius-Caesar **voice example** (voice/depth only — the earlier fact-free-B4-prompt rule is relaxed for this labeled example; B1/B2/B3 stay fact-free). The 50 existing B4 outputs are unchanged calibration evidence. (3) Prepared a **B4-only 3-work comparison** (cleveland170810, cleveland120847, harvard303416) reusing the exact verified B1/B2/B3 completions — fresh identity `b4v2-8b596dfbcdf9` bound to those completion SHAs + the new B4 prompt hash + validation-contract version, separate dir, B0–B3 never rerun. | Implemented + tested offline (66/49/10/6 checks). Comparison is PLAN-only — no model calls yet; owner-gated run command reported. No merge/commit/push/production write |
+
+| VSD-025 | 2026-09-09 | **B4 guide contract enforced in the validators (prompt-only rules were treated as optional).** Objectively-measurable parts are now hard-validated for a PLAYABLE record: guide has exactly 5–7 items; a STRICT majority are `kind:"image"`; every `kind:"image"` item carries a non-null `evidenceRef` resolving to the evidence/delight namespace; every guide answer ≤ 700 chars (note bodies ≤ 600, why ≤ 500 unchanged). Shared constants `GUIDE_MIN/GUIDE_MAX/GUIDE_ANSWER_MAX` used by the delta validator, the hydrated `validateB4`, and tests; no silent truncation (reject, never slice); no automated biography/"interestingness" classifier. B4 prompt states these enforceable limits plainly (no new section/exemplar). Leak gate widened for "in the catalog(ue)" (excluding "catalogue raisonné") and catalog/record data-source verbs incl. says/calls, preserving "the title suggests", "the model wears", "the historical record of…" (focused +/- regressions). Comparison harness now preserves bounded attempt evidence (raw transcript + attempted delta on failure) and reports duration, model usage, transcript SHA, resolved model, apiKeySource (no secrets). `VALIDATION_CONTRACT_VERSION` bumped 1→2 (rules changed → forks run identity). | Implemented + tested offline (74/50/10/8). Fresh B4-only comparison identity `b4v2-8fcec8cba7a9` bound to the same B1/B2/B3 SHAs + new B4 prompt hash + passBValidation/2. **Awaiting owner authorization for the 3 model calls** — no model run yet; original 50-work run untouched. Decisive test: if guides still read as encyclopedia entries despite passing these gates, stop tuning Sonnet and change B4 strategy |
+
+| VSD-026 | 2026-09-09 | **Accept the Sonnet B4 approach; ship it to the full cohort.** Editorial verdict (owner + Codex): the enforced B4 guide contract (VSD-025) works — Hydria (harvard303416) hits target quality; Door Plaque/Calligraphy are materially improved but still need ordinary human review; a lone 577-char why is a quarantined per-work miss, not grounds for more rules. Do NOT add further B4 prompt/schema rules or raise the 500 why cap. One integrity fix landed: the player-copy leak gate now catches museum-as-source phrasing ("the museum record indicates/states/lists/gives", "the museum explicitly leaves open", museum catalogue/label data-verbs) while preserving ordinary "the plaque entered the museum", "the museum acquired", "the historical record of…", "the title suggests", "the model wears" (exact Door-Plaque-phrase regressions; `VALIDATION_CONTRACT_VERSION` 2→3). **B4-v2 continuation prepared** (`scripts/pass-b-b4-continuation.mjs`): B4-only across the fixed 50 reusing the frozen verified B1/B2/B3 (no B0-B3), 5 resumable lanes, one attempt per work, failed→quarantine+continue, no auto-retry/owner-edits, strict validation + corrected leak gate, evidence preserved, nothing merged; reuse of an existing B4-v2 output only if it independently re-passes the final contract + evidence. Final identity `b4c-f45fac18da2e`; 1 reusable (harvard303416), **49 B4 calls required**, ~40 min at 5 lanes. | Leak fix implemented + tested (74/50/10/10). Continuation is PLAN-only — **awaiting owner authorization** for the 49 model calls; no run yet; frozen 50-work evidence untouched |
 
 ## Maintenance protocol
 

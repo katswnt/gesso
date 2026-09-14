@@ -1,0 +1,88 @@
+{
+  "version": "passBCalibrationSelection/1",
+  "status": "draft-selected-for-controller-preflight",
+  "selectedAt": "2026-09-02",
+  "purpose": "First end-to-end qualitative calibration of the complete B0-B4 vision/content pipeline. Compare preservation of strong legacy content with improvement of thin or missing content. No automatic merge.",
+  "selectionPolicy": {
+    "totalWorks": 50,
+    "cohorts": { "strongLegacy": 25, "thinLegacy": 25 },
+    "fameBands": {
+      "f1": { "min": 0, "max": 0, "works": 10 },
+      "f2": { "minExclusive": 0, "max": 100, "works": 10 },
+      "f3": { "minExclusive": 100, "max": 612, "works": 10 },
+      "f4": { "minExclusive": 612, "max": 1000, "works": 10 },
+      "f5": { "minExclusive": 1000, "works": 10 }
+    },
+    "regionGroups": { "europe": 25, "non-europe": 25 },
+    "thinComposition": { "missing": 12, "templateThin": 13 },
+    "strongDefinition": "legacyCandidate guide plus legacy notes, why, cues, canonical audit marker, and positioned hotspot evidence; still unreviewed under the new standard",
+    "thinDefinition": "guide classified missing or templateThin under contentVisionCoverage/1",
+    "exclusions": [
+      "works in the completed recognition pilot",
+      "direct www.artic.edu image URLs while the AIC migration is blocked",
+      "missing or non-HTTPS image URLs"
+    ],
+    "diversityNote": "Selection intentionally spans paintings, sculpture/objects, ceramics, drawings, prints, textiles, photography, and unusual formats. It includes several difficult catalog/image cases so B1 can demonstrate that it notices problems rather than merely generating prose."
+  },
+  "works": [
+    { "id": "cleveland167459", "title": "Julius Caesar", "cohort": "strongLegacy", "fameBand": "f1", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "met247010", "title": "Wall painting from Room H of the Villa of P. Fannius Synistor at Boscoreale", "cohort": "strongLegacy", "fameBand": "f1", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q105870850", "title": "Manelys", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wikidata:Q114769532", "title": "Mars, Venus and Cupid with Vulcan at his forge (the Mantuan Roundel)", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "aic124043", "title": "Versailles, Vase", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "met57329", "title": "Painting", "cohort": "strongLegacy", "fameBand": "f1", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "cleveland125571", "title": "Youth Seated by a Willow; Single Page Illustration", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "cleveland120847", "title": "Door Plaque with the Head of a Saint", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "cleveland170810", "title": "Calligraphy from a Ghazal of Badr al-Din Hilali Jaghata’i (Persian, active c. 1500)", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wikidata:Q1616056", "title": "Hestia Tapestry", "cohort": "thinLegacy", "fameBand": "f1", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "harvard303416", "title": "Hydria (water jar): The Ransom of Hector", "cohort": "strongLegacy", "fameBand": "f2", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "wikidata:Q116259603", "title": "Stickerei-Fragment mit Greifen und Flügelpferden", "cohort": "strongLegacy", "fameBand": "f2", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "poussin-seasons-spring", "title": "Spring (The Earthly Paradise)", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "met256169", "title": "Terracotta kantharos (drinking cup with two high handles)", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+    { "id": "harvard230527", "title": "Virgin and Child in Majesty (Seat of Divine Wisdom)", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "met451717", "title": "Bowl with Eagle", "cohort": "strongLegacy", "fameBand": "f2", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "met450509", "title": "The Emperor's Carpet", "cohort": "strongLegacy", "fameBand": "f2", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "http://www.wikidata.org/entity/Q63247474", "title": "Head of a statue of a god-MAHG Eg 4", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false },
+    { "id": "met308527", "title": "Portrait Head Bottle", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false },
+    { "id": "harvard216218", "title": "Portrait of Francis I, King of France (after J. Clouet)", "cohort": "thinLegacy", "fameBand": "f2", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "wikidata:Q16467705", "title": "La Gloire tirant Auguste de Villiers de l'Isle-Adam de son sommeil éternel", "cohort": "strongLegacy", "fameBand": "f3", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "wikidata:Q110776566", "title": "The Bat Woman", "cohort": "strongLegacy", "fameBand": "f3", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q97455775", "title": "Relief bust of a girl", "cohort": "strongLegacy", "fameBand": "f3", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q15880874", "title": "Portrait of Marguerite Khnopff", "cohort": "thinLegacy", "fameBand": "f3", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wikidata:Q1211814", "title": "The Penance of St. John Chrysostom", "cohort": "thinLegacy", "fameBand": "f3", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "wikidata:Q48881623", "title": "Zong-shaped vase with cobalt blue glaze", "cohort": "strongLegacy", "fameBand": "f3", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "http://www.wikidata.org/entity/Q15788627", "title": "Painting of Lady Tjepu", "cohort": "strongLegacy", "fameBand": "f3", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q59296885", "title": "Drowned Land", "cohort": "thinLegacy", "fameBand": "f3", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wikidata:Q4950181", "title": "Bourke Street", "cohort": "thinLegacy", "fameBand": "f3", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wikidata:Q18173418", "title": "The Kazusa sea route", "cohort": "thinLegacy", "fameBand": "f3", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "http://www.wikidata.org/entity/Q1190706", "title": "Castor and Pollux", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "wikidata:Q2454480", "title": "The Triumphal Chariot of Maximilian I", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q2287821", "title": "Wendingen", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q56825917", "title": "Mourning Parents", "cohort": "thinLegacy", "fameBand": "f4", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "http://www.wikidata.org/entity/Q3829346", "title": "Leda and the Swan", "cohort": "thinLegacy", "fameBand": "f4", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "wikidata:Q15284134", "title": "Lion of Knidos", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "wikidata:Q17021261", "title": "Statue of Ashurnasirpal II", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wd:Q7166365", "title": "Pepper No. 30", "cohort": "strongLegacy", "fameBand": "f4", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q2412563", "title": "The London Group", "cohort": "thinLegacy", "fameBand": "f4", "regionGroup": "non-europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "http://www.wikidata.org/entity/Q28092249", "title": "Night-Shining White", "cohort": "thinLegacy", "fameBand": "f4", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": true },
+
+    { "id": "http://www.wikidata.org/entity/Q586035", "title": "The Little Street", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "http://www.wikidata.org/entity/Q1755464", "title": "Knight, Death, and the Devil", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "http://www.wikidata.org/entity/Q405814", "title": "Ship of Fools", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q537640", "title": "Angelus Novus", "cohort": "thinLegacy", "fameBand": "f5", "regionGroup": "europe", "guideStatus": "missing", "legacyRich": false },
+    { "id": "wd:Q616159", "title": "View from the Window at Le Gras", "cohort": "thinLegacy", "fameBand": "f5", "regionGroup": "europe", "guideStatus": "templateThin", "legacyRich": false },
+
+    { "id": "wikidata:Q279559", "title": "Babylonian Map of the World", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "wikidata:Q7678417", "title": "Takiyasha the Witch and the Skeleton Specter", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "wikidata:Q21585351", "title": "Complaint tablet to Ea-nāṣir", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": true },
+    { "id": "http://www.wikidata.org/entity/Q1128599", "title": "Piri Reis map", "cohort": "strongLegacy", "fameBand": "f5", "regionGroup": "non-europe", "guideStatus": "legacyCandidate", "legacyRich": false },
+    { "id": "http://www.wikidata.org/entity/Q11180645", "title": "Tibetan Dragon Sutra", "cohort": "thinLegacy", "fameBand": "f5", "regionGroup": "non-europe", "guideStatus": "templateThin", "legacyRich": false }
+  ]
+}
