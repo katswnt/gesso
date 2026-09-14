@@ -187,6 +187,12 @@ lanes, and renders a quarantined before/after review packet. The fixed calibrati
 50 works; the accepted B4-v2 continuation produced 44 strict-valid/leak-clean records and quarantined
 6 first-attempt misses. No output has been approved or merged into game data.
 
+The full-cohort packet is interactive but still non-authoritative (VSD-028). Each P/S hotspot label is
+defined beside the image; the reviewer can record a work decision, write notes, keep/move/drop a hotspot,
+or click the image to place it. Browser-local state auto-saves and can be downloaded/copied as a JSON
+handoff bound to the run and evidence-manifest hash. That export is review input, not `approved.json`, and
+has no path to production until it is deliberately converted into a separately verified approval.
+
 The offline `contentVisionCoverage/1` baseline remains the corpus inventory: one row for each
 current pool work, legacy content kept as evidence (never current completion), Pass A flags
 reported separately, and scheduling priorities computed without imposing a universal daily
@@ -286,7 +292,8 @@ Relevant files:
 | `scripts/lib/vision-content-capture.mjs` | hash-bound stage capture and resume verification |
 | `scripts/lib/pass-b-review-packet.mjs` | quarantined comparison packet; applies nothing |
 | `scripts/pass-b-b4-offline-repair.mjs` | immutable-source offline rehydration + evidence manifest/report |
-| `scripts/pass-b-b4-review-packet.mjs` | full-cohort editorial packet with literal lineage and hotspot-attention reporting |
+| `scripts/lib/pass-b-editorial-review.mjs` | pure hotspot-review descriptions and stable P/S review rows |
+| `scripts/pass-b-b4-review-packet.mjs` | interactive full-cohort packet: literal lineage, explained pins, work notes/decisions, click-to-place, JSON export |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---

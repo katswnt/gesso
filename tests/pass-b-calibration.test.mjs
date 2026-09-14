@@ -19,6 +19,7 @@ import { buildB1Prompt, buildB2Prompt, buildB3Prompt, buildB4Prompt, promptHashe
 import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, WIRE_B4_FULL } from '../scripts/lib/pass-b-wire-schema.mjs';
 import { compactB4DeltaInput } from '../scripts/lib/pass-b-calibration.mjs';
 import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLineageMetrics, HOTSPOT_MAX_BBOX_AREA } from '../scripts/lib/pass-b-b4-delta.mjs';
+import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass-b-editorial-review.mjs';
 
 const tests = []; const t = (n, fn) => tests.push({ n, fn });
 
@@ -27,6 +28,7 @@ const w = {}; new Function('window', readFileSync('data/pool.js', 'utf8'))(w);
 const poolIds = new Set(w.ARTEFACTUM_POOL.map(x => x.id));
 const controllerSrc = readFileSync('scripts/pass-b-calibration.mjs', 'utf8').replace(/\/\/.*$/gm, '');
 const libSrc = readFileSync('scripts/lib/pass-b-calibration.mjs', 'utf8');
+const fullPacketSrc = readFileSync('scripts/pass-b-b4-review-packet.mjs', 'utf8');
 const SHA = 'a'.repeat(64);
 
 // ---- stream-json transcript fixtures ----
@@ -520,6 +522,27 @@ t('B4 hotspot hydration suppresses broad/missing anchors and duplicates without 
   assert(r.body.hotspots.every(h => h.region === null && Number.isFinite(h.x) && Number.isFinite(h.y)), 'no fake whole-image region is emitted');
   assert.deepEqual(r.hydration.hotspots.suppressed.map(x => x.reason), ['duplicate-evidence-ref', 'near-full-frame-bbox', 'missing-localized-anchor']);
   assert.equal(HOTSPOT_MAX_BBOX_AREA, 0.65);
+});
+
+t('editorial packet identifies every hotspot and preserves enough information for click-to-place review', () => {
+  const fx = syntheticFixture();
+  const b1 = JSON.parse(JSON.stringify(fx.bodies.B1));
+  b1.evidence.format[0].bbox = [0, 0, 1, 1];
+  const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
+  const base = delta.hotspots[0];
+  delta.hotspots = [
+    { ...base, ref: 'legacy-h1', pinRef: 'n1', evidenceRef: 'ev_medium' },
+    { ...base, ref: 'legacy-h2', pinRef: null, evidenceRef: 'ev_format' },
+  ];
+  const assembled = assembleAndValidateB4({ delta, b1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
+  assert(assembled.ok, (assembled.errors || []).join('; '));
+  const rows = hotspotReviewRows({ delta, body: assembled.body, hydration: assembled.hydration });
+  assert.deepEqual(rows.map(row => [row.label, row.state, row.evidenceRef]), [['P1', 'published', 'ev_medium'], ['S1', 'suppressed', 'ev_format']]);
+  assert(rows.every(row => row.title && row.description && row.statusText), 'each marker must explain what it describes and why it is/is not placed');
+  assert.equal(EDITORIAL_REVIEW_VERSION, 'passBEditorialReview/1');
+  for (const required of ['data-work-decision', 'data-work-note', 'data-hotspot-action', 'getBoundingClientRect', 'localStorage', 'Download review JSON', 'Copy review JSON']) {
+    assert(fullPacketSrc.includes(required), `full packet must contain ${required}`);
+  }
 });
 
 t('B4 delta rejects an invented/mismatched explicit pinRef', () => {

@@ -1,7 +1,8 @@
-// Offline editorial-review packet for a B4-v2 continuation run (VSD-026). READ-ONLY: no model calls, edits,
-// approvals, or merges. Renders one self-contained, browser-viewable HTML covering all completed records + a
+// Offline editorial-review packet for a B4-v2 continuation run (VSD-026/028). EVIDENCE READ-ONLY: no model
+// calls, evidence edits, approvals, or merges. Renders one self-contained, browser-viewable HTML covering all completed records + a
 // quarantined section, with old-vs-proposed content, hotspot overlays, per-guide action/kind/grounding,
-// conflicts/corrections/uncertainty, char counts, cohort, client-side filters, and a nominated first-10 set.
+// conflicts/corrections/uncertainty, char counts, cohort, client-side filters, review notes/decisions,
+// click-to-place hotspot corrections, JSON export, and a nominated first-10 set.
 // Usage: node scripts/pass-b-b4-review-packet.mjs [<b4c-run-dir>]
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -9,6 +10,7 @@ import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { projectToProduction } from './lib/pass-b-approval.mjs';
 import { b4Lineage, guideLineageMetrics } from './lib/pass-b-b4-delta.mjs';
+import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from './lib/pass-b-editorial-review.mjs';
 
 const RUN = process.argv[2] || 'data/incoming/vision-calibration/b4c-f45fac18da2e';
 const ROOT = 'data/incoming/vision-calibration';
@@ -49,7 +51,8 @@ function collect(id) {
   const entryType = teach[id] ? 'overwrite' : 'new';
   const needsAttention = conflicts.length > 0 || cons.length > 0 || overwriteStrong || (guideMetrics.legacyTotal > 0 && guideMetrics.legacyDerived === 0) || maxAns >= 660 || (rec.hydration?.hotspots?.suppressed || []).length > 0;
   const changeScore = [...guide, ...notes].filter((x) => x.action !== 'keep').length;
-  return { id, meta: m, catalog: b0.trustedCatalog, image: b0.image, legacy, oldHot, body, guide, notes, proj, guideMetrics, lineage, hotspotQuality: rec.hydration?.hotspots || null, overwriteStrong, cons, conflicts, uncertainty: body.uncertainty || '', srcDep, maxAns, entryType, needsAttention, changeScore, evidence: rec.evidence, reused: !!rec.reused };
+  const hotspotReview = hotspotReviewRows({ delta: rd, body, hydration: rec.hydration });
+  return { id, meta: m, catalog: b0.trustedCatalog, image: b0.image, legacy, oldHot, body, guide, notes, proj, guideMetrics, lineage, hotspotQuality: rec.hydration?.hotspots || null, hotspotReview, overwriteStrong, cons, conflicts, uncertainty: body.uncertainty || '', srcDep, maxAns, entryType, needsAttention, changeScore, evidence: rec.evidence, reused: !!rec.reused };
 }
 
 const files = readdirSync(join(RUN, 'works')).filter((f) => f.endsWith('.b4.json'));
@@ -68,6 +71,19 @@ const hotspotSummary = completed.reduce((s, w) => {
   s.suppressed += w.hotspotQuality?.suppressed?.length || 0;
   return s;
 }, { proposed: 0, published: 0, suppressed: 0 });
+const packetRunManifest = existsSync(join(RUN, 'run-manifest.json')) ? JSON.parse(readFileSync(join(RUN, 'run-manifest.json'), 'utf8')) : {};
+const packetRunId = RUN.split('/').pop();
+const reviewMetadata = {
+  version: EDITORIAL_REVIEW_VERSION,
+  runId: packetRunId,
+  evidenceManifestSha256: packetRunManifest.evidenceManifestSha256 || null,
+  sourceRun: packetRunManifest.sourceRun || null,
+  works: [
+    ...completed.map(w => ({ workId: w.id, title: w.catalog.title || w.id, kind: 'completed', imageSha256: w.image?.imgSha256 || null, hotspots: w.hotspotReview })),
+    ...quarantined.map(w => ({ workId: w.id, title: w.id, kind: 'quarantined', imageSha256: null, hotspots: [] })),
+  ],
+};
+const reviewMetadataJson = JSON.stringify(reviewMetadata).replaceAll('<', '\\u003c');
 
 // ---- nominate first-10: 5 strongLegacy + 5 thin/missing, include harvard303416, diverse culture/medium/fame/change ----
 function nominate() {
@@ -110,10 +126,10 @@ function overlay(w) {
   const src = uriCache.get(w.image?.imgSha256) || '';
   const point = p => Number.isFinite(p?.x) && Number.isFinite(p?.y);
   const oldM = w.oldHot.filter(point).map((p) => `<span class="pin old" style="left:${p.x}%;top:${p.y}%">${p.n}</span>`).join('');
-  const newM = (w.body.hotspots || []).filter(point).map((h) => `<span class="pin proposed" style="left:${h.x}%;top:${h.y}%">${h.rank}</span>`).join('');
+  const newM = w.hotspotReview.map((h) => `<button type="button" class="pin proposed review-pin${h.state === 'suppressed' ? ' is-hidden' : ''}" data-hotspot-key="${esc(h.key)}" aria-label="${esc(`${h.label}: ${h.title}. Select to move`)}"${point(h) ? ` style="left:${h.x}%;top:${h.y}%"` : ''}>${esc(h.label)}</button>`).join('');
   const regions = (w.body.hotspots || []).filter(h => h?.region && [h.region.x, h.region.y, h.region.w, h.region.h].every(Number.isFinite)).map(h => `<span class="region proposed" style="left:${h.region.x}%;top:${h.region.y}%;width:${h.region.w}%;height:${h.region.h}%">${h.rank}</span>`).join('');
   const suppressed = w.hotspotQuality?.suppressed?.length || 0;
-  return `<div class="ov"><div class="ovlabel"><span class="dot old"></span> OLD (${w.oldHot.length}) &nbsp; <span class="dot proposed"></span> PUBLISHED PROPOSED (${(w.body.hotspots || []).length})${suppressed ? ` &nbsp; <span class="warn">${suppressed} unlocalized/duplicate proposal${suppressed === 1 ? '' : 's'} retained for review</span>` : ''}</div>${src ? `<div class="imgwrap"><img loading="lazy" src="${src}" alt="">${oldM}${newM}${regions}</div>` : '<div class="noimg">image unavailable</div>'}</div>`;
+  return `<div class="ov"><div class="ovlabel"><span class="dot old"></span> OLD (${w.oldHot.length}) &nbsp; <span class="dot proposed"></span> PUBLISHED PROPOSED (${(w.body.hotspots || []).length})${suppressed ? ` &nbsp; <span class="warn">${suppressed} unlocalized/duplicate proposal${suppressed === 1 ? '' : 's'} retained for review</span>` : ''}</div>${src ? `<div class="imgwrap" data-image-wrap><img class="review-image" loading="lazy" src="${src}" alt="${esc(w.catalog.title || w.id)}. Select Move or Place below, then click the desired location on this image.">${oldM}${newM}${regions}</div>` : '<div class="noimg">image unavailable</div>'}</div>`;
 }
 const cn = (t) => `<span class="cn">${(t || '').length}</span>`;
 const actionBadge = (a) => `<span class="act a-${a}">${a}</span>`;
@@ -129,12 +145,33 @@ function guideBlock(w) {
   const old = oldQ.length ? `<details class="oldg"><summary>OLD legacy guide (${oldQ.length}) — final lineage: ${m.verbatim} verbatim · ${m.reworked} revised/replaced · ${m.removed} removed (${m.removedExplicit} explicit, ${m.removedImplicit} omitted) · ${m.added} new${m.invalidLegacyRefs ? ` · ${m.invalidLegacyRefs} mismatched legacy refs treated as new` : ''}</summary>${oldQ.map((q) => `<div class="qa old"><div class="q">${esc(q.q)}</div><div class="a">${esc(q.a)}</div></div>`).join('')}</details>` : '<p class="muted">no legacy guide (new entry)</p>';
   return `<h4>Proposed guide (${w.guide.length})</h4>${rows}${old}`;
 }
+function hotspotReviewBlock(w) {
+  const rows = w.hotspotReview.map((h) => {
+    const buttons = h.state === 'published'
+      ? `<button type="button" data-hotspot-action="keep">Keep here</button><button type="button" data-hotspot-action="move">Move</button><button type="button" data-hotspot-action="drop">Drop</button>`
+      : `<button type="button" data-hotspot-action="drop">Leave out</button><button type="button" data-hotspot-action="move">Place on image</button>`;
+    return `<div class="hotrow" data-hotspot-key="${esc(h.key)}" data-original-x="${h.x ?? ''}" data-original-y="${h.y ?? ''}">
+      <div class="hotlabel ${h.state}">${esc(h.label)}</div>
+      <div class="hotcopy"><div><b>${esc(h.title)}</b> <span class="kind k-image">${esc(h.evidenceAxis || 'image')}→${esc(h.evidenceRef)}</span></div><div>${esc(h.description)}</div><div class="hotstatus">${esc(h.statusText)}</div><div class="hotchoice" aria-live="polite"></div></div>
+      <div class="hotactions" role="group" aria-label="Review ${esc(h.label)}">${buttons}</div>
+    </div>`;
+  }).join('');
+  return `<section class="hotreview"><h4>Hotspot placement review (${w.hotspotReview.length})</h4><p class="reviewhelp">The P-numbers match orange markers on the image. S-numbers were withheld because their old location was missing, too broad, or duplicative. Choose <b>Move</b> or <b>Place on image</b>, then click the exact feature.</p>${rows}</section>`;
+}
+function workReviewBlock({ quarantined = false } = {}) {
+  const buttons = quarantined
+    ? `<button type="button" data-work-decision="retry">Retry B4</button><button type="button" data-work-decision="manual_edit">Edit manually</button><button type="button" data-work-decision="skip">Skip</button>`
+    : `<button type="button" data-work-decision="looks_good">Looks good</button><button type="button" data-work-decision="needs_changes">Needs changes</button><button type="button" data-work-decision="do_not_use">Do not use</button>`;
+  return `<section class="reviewbox"><div class="reviewchoice"><b>Your review</b> <span>Saved in this browser only; this is not production approval.</span><div class="decisionbuttons" role="group" aria-label="Work decision">${buttons}</div></div><label class="notelabel">Notes for this work<textarea data-work-note rows="3" placeholder="What should change? What do you want Claude or Codex to know?"></textarea></label><div class="worksave" aria-live="polite"></div></section>`;
+}
 function workCard(w) {
   const flags = [w.overwriteStrong ? 'overwrite-strong' : '', w.conflicts.length ? 'conflicts' : '', w.cons.length ? 'corrections' : '', (w.guideMetrics.legacyTotal > 0 && w.guideMetrics.legacyDerived === 0) ? 'zero-legacy-derived' : '', (w.hotspotQuality?.suppressed || []).length ? 'hotspot-attention' : '', w.needsAttention ? 'needs-attention' : ''].filter(Boolean);
-  return `<section class="work" data-cohort="${w.meta.cohort}" data-entry="${w.entryType}" data-flags="${flags.join(' ')}" data-maxans="${w.maxAns}" data-id="${esc(w.id)}">
+  return `<section class="work" data-cohort="${w.meta.cohort}" data-entry="${w.entryType}" data-flags="${flags.join(' ')}" data-maxans="${w.maxAns}" data-id="${esc(w.id)}" data-review-kind="completed" data-reviewed="false">
   <h3>${esc(w.catalog.title || w.id)} <span class="wid">${esc(w.id)}</span></h3>
   <div class="meta">${w.meta.cohort} · ${w.meta.fameBand} · ${esc(w.meta.regionGroup)} · ${esc(w.catalog.medium)} · <b>${w.entryType}</b>${w.reused ? ' · <span class="reused">reused</span>' : ''}${flags.map((f) => `<span class="flag">${f}</span>`).join('')}</div>
+  ${workReviewBlock()}
   ${overlay(w)}
+  ${hotspotReviewBlock(w)}
   <div class="grid2">
     <div><h4>OLD why</h4><div class="why old">${esc(w.legacy.why) || '<span class=muted>—</span>'}</div>
       <h4>OLD cues</h4><ul>${(w.legacy.cues || []).map((c) => `<li>${esc(c)}</li>`).join('') || '<li class=muted>—</li>'}</ul></div>
@@ -153,7 +190,8 @@ function workCard(w) {
 function quarCard(r) {
   const rd = r.rawDelta || {};
   const g = (rd.guide || []).map((q) => `<div class="qa"><div class="q">${q.action || ''} ${esc(q.q)}</div><div class="a">${esc(q.a)}</div></div>`).join('') || '<p class=muted>no guide in attempt</p>';
-  return `<section class="work quar" data-id="${esc(r.id)}"><h3>${esc(r.id)} <span class="bad">QUARANTINED</span></h3>
+  return `<section class="work quar" data-id="${esc(r.id)}" data-review-kind="quarantined" data-reviewed="false"><h3>${esc(r.id)} <span class="bad">QUARANTINED</span></h3>
+  ${workReviewBlock({ quarantined: true })}
   <div class="box conf"><b>Exact rejection:</b> ${esc(r.why)}</div>
   <h4>Attempted why ${rd.why ? cn(rd.why.text) : ''}</h4><div class="why">${esc(rd.why?.text) || '<span class=muted>—</span>'}</div>
   <h4>Attempted cues</h4><ul>${(rd.cues?.items || []).map((c) => `<li>${esc(c)}</li>`).join('') || '<li class=muted>—</li>'}</ul>
@@ -169,7 +207,7 @@ body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif
 header{position:sticky;top:0;background:#fff;border-bottom:1px solid #e4e0d8;padding:12px 18px;z-index:10}
 h1{font-size:18px;margin:0 0 6px}h3{font-size:16px;margin:20px 0 2px}h4{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b665e;margin:12px 0 3px}
 main{max-width:1100px;margin:0 auto;padding:14px 18px}
-.work{border-top:2px solid #e4e0d8;padding-top:14px;margin-top:18px}.wid{color:#9a8f7e;font-size:11px;font-weight:400}
+.work{border-top:2px solid #e4e0d8;padding-top:14px;margin-top:18px;scroll-margin-top:150px}.wid{color:#9a8f7e;font-size:11px;font-weight:400}
 .meta{color:#6b665e;font-size:12px;margin:2px 0 8px}.flag{background:#f3 e;background:#f6efe6;color:#8a5a12;border-radius:4px;padding:1px 6px;margin-left:6px;font-size:11px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
 .why{background:#fff;border:1px solid #e4e0d8;border-radius:6px;padding:8px 10px}.why.old{background:#f3f1ec;color:#555}
@@ -180,17 +218,22 @@ main{max-width:1100px;margin:0 auto;padding:14px 18px}
 .kind{font-size:10px;border-radius:3px;padding:0 4px;margin-right:4px}.k-image{background:#e4ecf7;color:#2a5aa0}.k-context{background:#f0ece6;color:#7a6f5e}
 .disp{font-size:10px;color:#9a6a12}.reused{color:#2f7d4f;font-weight:600}
 .box{border-radius:6px;padding:8px 10px;margin:8px 0;font-size:13px}.corr{background:#fdf6e8;border:1px solid #e6cf96}.conf{background:#fdeaea;border:1px solid #e2a5a5}.unc{background:#f2f0ff;border:1px solid #c9c3e8}
-.ov{}.imgwrap{position:relative;display:inline-block;max-width:100%}.imgwrap img{max-width:100%;border:1px solid #ddd;border-radius:6px;display:block}
-.pin{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
-.pin.old{background:#8a8a8a;opacity:.85}.pin.proposed{background:#c9822b}.ovlabel{font-size:11px;color:#6b665e;margin-bottom:3px}.noimg{color:#b23b3b;font-size:12px}
+.ov{}.imgwrap{position:relative;display:inline-block;max-width:100%}.imgwrap img{max-width:100%;border:1px solid #ddd;border-radius:6px;display:block}.imgwrap.placing img{cursor:crosshair;outline:3px solid #c9822b;outline-offset:2px}
+.pin{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;border:0;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;padding:0}
+.pin.old{background:#8a8a8a;opacity:.85;width:20px;height:20px}.pin.proposed{background:#c9822b;cursor:pointer}.pin.proposed:focus-visible{outline:3px solid #111;outline-offset:2px}.pin.proposed.armed{background:#111}.pin.proposed.dropped{opacity:.35;text-decoration:line-through}.pin.is-hidden{display:none}.ovlabel{font-size:11px;color:#6b665e;margin-bottom:3px}.noimg{color:#b23b3b;font-size:12px}
 .region{position:absolute;border:2px solid #c9822b;background:#c9822b22;color:#7f4b0c;font-size:11px;font-weight:700;box-sizing:border-box}.warn{color:#a4601a;font-weight:600}.pinq{background:#fff8ee;border:1px solid #e6cf96}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}.dot.old{background:#8a8a8a}.dot.proposed{background:#c9822b}.imgwrap{max-width:520px}
 .bad{color:#b23b3b;font-weight:700;font-size:12px}
 button.f{margin:2px 4px 2px 0;padding:3px 9px;border:1px solid #cfc7ba;background:#fff;border-radius:14px;cursor:pointer;font-size:12px}button.f.on{background:#1c1a17;color:#fff;border-color:#1c1a17}
 .first10{background:#fff8ee;border:1px solid #e6cf96;border-radius:8px;padding:10px 14px;margin:10px 0}.first10 a{color:#8a5a12}
+.reviewbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}.reviewbar button,.decisionbuttons button,.hotactions button{border:1px solid #bdb4a6;background:#fff;color:#1c1a17;border-radius:5px;padding:6px 10px;cursor:pointer;font:inherit}.reviewbar button:hover,.decisionbuttons button:hover,.hotactions button:hover{border-color:#6b665e}.reviewbar button:focus-visible,.decisionbuttons button:focus-visible,.hotactions button:focus-visible,textarea:focus-visible{outline:3px solid #2a5aa0;outline-offset:2px}.reviewbar button.primary{background:#1c1a17;color:#fff;border-color:#1c1a17}.progress{font-variant-numeric:tabular-nums;font-weight:600}.savestate{color:#6b665e;font-size:12px}
+.reviewbox{background:#f4f7fa;border:1px solid #c8d6e5;border-radius:7px;padding:10px 12px;margin:10px 0}.reviewchoice>span{color:#59636d;font-size:12px;margin-left:6px}.decisionbuttons{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}.decisionbuttons button.selected,.hotactions button.selected{background:#1c1a17;color:#fff;border-color:#1c1a17}.notelabel{display:block;font-weight:600;margin-top:9px}.notelabel textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:1px solid #b8c1ca;border-radius:5px;padding:8px;font:inherit;resize:vertical;background:#fff}.worksave{color:#59636d;font-size:11px;min-height:1em;margin-top:4px}
+.hotreview{margin:10px 0 16px}.reviewhelp{max-width:760px;color:#59636d;margin:0 0 8px}.hotrow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:9px;align-items:start;border:1px solid #ddd6ca;background:#fff;border-radius:7px;padding:9px;margin:6px 0}.hotrow.armed{border-color:#c9822b;background:#fff8ee}.hotrow.reviewed{border-left:5px solid #2f7d4f}.hotlabel{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:#c9822b;font-size:11px;font-weight:700}.hotlabel.suppressed{background:#786b5b}.hotcopy{min-width:0}.hotstatus{color:#6b665e;font-size:12px;margin-top:3px}.hotchoice{color:#2f5d42;font-weight:600;font-size:12px;margin-top:3px;min-height:1em}.hotactions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}@media(max-width:720px){.hotrow{grid-template-columns:36px 1fr}.hotactions{grid-column:1/-1;justify-content:flex-start}}
+.reviewnotice{background:#eef5fb;border:1px solid #b9d0e5;border-radius:7px;padding:9px 12px;margin:9px 0}.reviewnotice b{display:block}.exportstatus{font-size:12px;color:#2f5d42;min-height:1em}
 </style>
 <header>
 <h1>Pass B — B4-v2 editorial review (${completed.length} completed · ${quarantined.length} quarantined) · run ${esc(RUN.split('/').pop())}</h1>
+<div class="reviewbar"><span class="progress" id="review-progress">0/${completed.length + quarantined.length} works decided</span><button type="button" class="primary" id="download-review">Download review JSON</button><button type="button" id="copy-review">Copy review JSON</button><span class="savestate" id="save-state" aria-live="polite">Loading saved review…</span><span class="exportstatus" id="export-status" aria-live="polite"></span></div>
 <div>Filter:
  <button class="f on" data-f="all">all</button>
  <button class="f" data-f="strongLegacy">strongLegacy</button>
@@ -201,9 +244,12 @@ button.f{margin:2px 4px 2px 0;padding:3px 9px;border:1px solid #cfc7ba;backgroun
  <button class="f" data-f="zero-legacy-derived">zero legacy-derived</button>
  <button class="f" data-f="hotspot-attention">hotspot attention</button>
  <button class="f" data-f="needs-attention">needs attention</button>
+ <button class="f" data-f="unreviewed">unreviewed</button>
+ <button class="f" data-f="reviewed">reviewed/touched</button>
  <button class="f" data-f="longest">longest answers</button>
 </div></header>
 <main>
+<div class="reviewnotice"><b>This packet now records your review.</b> Choose a work decision, write notes, and review hotspot locations. Your input auto-saves in this browser; download the JSON before handing it to Claude or Codex. Nothing here changes the site or constitutes production approval.</div>
 <div class="first10"><b>Corrected audit metrics</b> — hotspot proposals ${hotspotSummary.proposed}: ${hotspotSummary.published} published, ${hotspotSummary.suppressed} retained as duplicate/unlocalized attention items. Of ${lineageSummary.legacyTotal} old guide questions across ${lineageSummary.legacyWorks} works: ${lineageSummary.verbatim} survive verbatim, ${lineageSummary.reworked} survive revised/replaced, and ${lineageSummary.removed} do not survive (${lineageSummary.removedExplicit} explicit removals, ${lineageSummary.removedImplicit} omitted); ${lineageSummary.added} final questions are new. ${lineageSummary.zeroLegacyDerived} works retain no legacy-derived final question.${lineageSummary.invalidLegacyRefs ? ` ${lineageSummary.invalidLegacyRefs} cross-component legacy refs are conservatively counted as new.` : ''}</div>
 <div class="first10"><b>Recommended first-review set (10)</b> — 5 strongLegacy + 5 thin/missing, harvard303416 included, diverse culture/medium/fame/change:<br>${first10.map((id) => `<a href="#${esc(id)}">${esc(id)}</a>`).join(' · ')}</div>
 <h2>Completed (${completed.length})</h2>
@@ -212,23 +258,123 @@ ${completed.map((w) => `<a name="${esc(w.id)}"></a>${workCard(w)}`).join('\n')}
 ${quarantined.map(quarCard).join('\n')}
 </main>
 <script>
-const works=[...document.querySelectorAll('.work:not(.quar)')];
-document.querySelectorAll('button.f').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('button.f').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  const f=b.dataset.f;let vis=works.slice();
-  if(f==='longest'){vis.sort((a,c)=>c.dataset.maxans-a.dataset.maxans);const main=works[0]?.parentNode;vis.forEach(w=>main.insertBefore(w,document.querySelector('h2+*')?null:null));}
-  works.forEach(w=>{let show=true;
-    if(f==='strongLegacy')show=w.dataset.cohort==='strongLegacy';
-    else if(f==='thin')show=w.dataset.cohort!=='strongLegacy';
-    else if(f==='new')show=w.dataset.entry==='new';
-    else if(f==='overwrite')show=w.dataset.entry==='overwrite';
-    else if(f==='conflicts')show=/conflicts|corrections/.test(w.dataset.flags);
-    else if(f==='zero-legacy-derived')show=/zero-legacy-derived/.test(w.dataset.flags);
-    else if(f==='hotspot-attention')show=/hotspot-attention/.test(w.dataset.flags);
-    else if(f==='needs-attention')show=/needs-attention/.test(w.dataset.flags);
-    else if(f==='longest')show=Number(w.dataset.maxans)>=550;
-    w.style.display=show?'':'none';});
+const REVIEW_META=${reviewMetadataJson};
+const STORAGE_KEY='gesso:'+REVIEW_META.version+':'+REVIEW_META.runId+':'+(REVIEW_META.evidenceManifestSha256||'unbound');
+const sections=[...document.querySelectorAll('.work')];
+const metaById=new Map(REVIEW_META.works.map(w=>[w.workId,w]));
+let activePlacement=null;
+let reviewState={version:REVIEW_META.version,runId:REVIEW_META.runId,evidenceManifestSha256:REVIEW_META.evidenceManifestSha256,works:{}};
+const saveLabel=document.getElementById('save-state');
+try{
+  const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+  if(saved&&saved.version===REVIEW_META.version&&saved.runId===REVIEW_META.runId&&saved.evidenceManifestSha256===REVIEW_META.evidenceManifestSha256)reviewState=saved;
+  saveLabel.textContent='Saved locally in this browser';
+}catch(error){saveLabel.textContent='Browser storage unavailable — download JSON before closing';}
+
+function stateFor(id){
+  if(!reviewState.works[id])reviewState.works[id]={decision:null,note:'',hotspots:{}};
+  if(!reviewState.works[id].hotspots)reviewState.works[id].hotspots={};
+  return reviewState.works[id];
+}
+function isTouched(state){return !!(state.decision||(state.note||'').trim()||Object.keys(state.hotspots||{}).length);}
+function sectionFor(id){return sections.find(section=>section.dataset.id===id);}
+function persist(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(reviewState));saveLabel.textContent='Saved in this browser at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}
+  catch(error){saveLabel.textContent='Could not save locally — download JSON now';}
+  updateProgress();
+}
+function updateProgress(){
+  const decided=REVIEW_META.works.filter(meta=>stateFor(meta.workId).decision).length;
+  const touched=REVIEW_META.works.filter(meta=>isTouched(stateFor(meta.workId))).length;
+  document.getElementById('review-progress').textContent=decided+'/'+REVIEW_META.works.length+' works decided · '+touched+' touched';
+}
+function setActive(workId,key){activePlacement={workId,key};refreshAll();const row=sectionFor(workId)?.querySelector('.hotrow[data-hotspot-key="'+key+'"]');row?.scrollIntoView({block:'nearest'});}
+function refreshSection(section){
+  const id=section.dataset.id;const state=stateFor(id);section.dataset.reviewed=isTouched(state)?'true':'false';
+  section.querySelectorAll('[data-work-decision]').forEach(button=>{const on=button.dataset.workDecision===state.decision;button.classList.toggle('selected',on);button.setAttribute('aria-pressed',String(on));});
+  const note=section.querySelector('[data-work-note]');if(note&&document.activeElement!==note)note.value=state.note||'';
+  const save=section.querySelector('.worksave');if(save)save.textContent=isTouched(state)?'Review input saved locally.':'';
+  section.querySelectorAll('.hotrow').forEach(row=>{
+    const key=row.dataset.hotspotKey;const choice=state.hotspots[key]||null;const isActive=activePlacement&&activePlacement.workId===id&&activePlacement.key===key;
+    row.classList.toggle('armed',!!isActive);row.classList.toggle('reviewed',!!choice);
+    row.querySelectorAll('[data-hotspot-action]').forEach(button=>{const on=choice&&button.dataset.hotspotAction===choice.decision;button.classList.toggle('selected',!!on);button.setAttribute('aria-pressed',String(!!on));});
+    const marker=section.querySelector('.review-pin[data-hotspot-key="'+key+'"]');
+    const hasOriginal=row.dataset.originalX!==''&&row.dataset.originalY!=='';
+    const x=choice?.decision==='move'?choice.x:(hasOriginal?Number(row.dataset.originalX):null);
+    const y=choice?.decision==='move'?choice.y:(hasOriginal?Number(row.dataset.originalY):null);
+    if(marker){
+      const visible=Number.isFinite(x)&&Number.isFinite(y)&&(choice?.decision!=='drop'||hasOriginal);
+      marker.classList.toggle('is-hidden',!visible);marker.classList.toggle('dropped',choice?.decision==='drop');marker.classList.toggle('armed',!!isActive);
+      if(visible){marker.style.left=x+'%';marker.style.top=y+'%';}else{marker.style.removeProperty('left');marker.style.removeProperty('top');}
+    }
+    const out=row.querySelector('.hotchoice');
+    if(isActive)out.textContent='Click the image where this hotspot belongs.';
+    else if(choice?.decision==='move')out.textContent='Your choice: place at '+choice.x.toFixed(1)+'%, '+choice.y.toFixed(1)+'%.';
+    else if(choice?.decision==='keep')out.textContent='Your choice: keep the current location.';
+    else if(choice?.decision==='drop')out.textContent=hasOriginal?'Your choice: drop this hotspot.':'Your choice: leave this proposal unpublished.';
+    else out.textContent='';
+  });
+  section.querySelectorAll('[data-image-wrap]').forEach(wrap=>wrap.classList.toggle('placing',!!activePlacement&&activePlacement.workId===id));
+}
+function refreshAll(){sections.forEach(refreshSection);updateProgress();}
+
+sections.forEach(section=>{
+  const id=section.dataset.id;
+  section.querySelectorAll('[data-work-decision]').forEach(button=>button.addEventListener('click',()=>{stateFor(id).decision=button.dataset.workDecision;persist();refreshSection(section);}));
+  const note=section.querySelector('[data-work-note]');if(note)note.addEventListener('input',()=>{stateFor(id).note=note.value;persist();section.dataset.reviewed='true';});
+  section.querySelectorAll('[data-hotspot-action]').forEach(button=>button.addEventListener('click',()=>{
+    const row=button.closest('.hotrow');const key=row.dataset.hotspotKey;const action=button.dataset.hotspotAction;
+    if(action==='move'){setActive(id,key);return;}
+    const prior=stateFor(id).hotspots[key]||{};stateFor(id).hotspots[key]={...prior,decision:action};
+    if(activePlacement&&activePlacement.workId===id&&activePlacement.key===key)activePlacement=null;
+    persist();refreshSection(section);
+  }));
+  section.querySelectorAll('.review-pin').forEach(marker=>marker.addEventListener('click',()=>setActive(id,marker.dataset.hotspotKey)));
+  const image=section.querySelector('.review-image');if(image)image.addEventListener('click',event=>{
+    if(!activePlacement||activePlacement.workId!==id)return;
+    const rect=image.getBoundingClientRect();
+    const x=Math.max(0,Math.min(100,(event.clientX-rect.left)/rect.width*100));
+    const y=Math.max(0,Math.min(100,(event.clientY-rect.top)/rect.height*100));
+    const key=activePlacement.key;const meta=(metaById.get(id)?.hotspots||[]).find(h=>h.key===key)||{};
+    stateFor(id).hotspots[key]={decision:'move',x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),deltaIndex:meta.deltaIndex,evidenceRef:meta.evidenceRef};
+    activePlacement=null;persist();refreshSection(section);
+  });
 });
+
+function exportPayload(){
+  return {...REVIEW_META,exportedAt:new Date().toISOString(),works:REVIEW_META.works.map(meta=>{
+    const state=stateFor(meta.workId);
+    return {...meta,decision:state.decision||null,note:state.note||'',hotspots:(meta.hotspots||[]).map(h=>({...h,review:state.hotspots[h.key]||null}))};
+  })};
+}
+function exportText(){return JSON.stringify(exportPayload(),null,2)+'\\n';}
+document.getElementById('download-review').addEventListener('click',()=>{
+  const blob=new Blob([exportText()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='pass-b-editorial-review-'+REVIEW_META.runId+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);document.getElementById('export-status').textContent='Downloaded review JSON.';
+});
+document.getElementById('copy-review').addEventListener('click',async()=>{
+  const text=exportText();let copied=false;
+  try{await navigator.clipboard.writeText(text);copied=true;}catch(error){const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.left='-9999px';document.body.appendChild(area);area.select();copied=document.execCommand('copy');area.remove();}
+  document.getElementById('export-status').textContent=copied?'Copied review JSON.':'Copy was blocked; use Download review JSON.';
+});
+
+document.querySelectorAll('button.f').forEach(button=>button.addEventListener('click',()=>{
+  document.querySelectorAll('button.f').forEach(x=>x.classList.remove('on'));button.classList.add('on');const filter=button.dataset.f;
+  sections.forEach(section=>{let show=true;
+    if(filter==='strongLegacy')show=section.dataset.cohort==='strongLegacy';
+    else if(filter==='thin')show=section.dataset.reviewKind==='completed'&&section.dataset.cohort!=='strongLegacy';
+    else if(filter==='new')show=section.dataset.entry==='new';
+    else if(filter==='overwrite')show=section.dataset.entry==='overwrite';
+    else if(filter==='conflicts')show=/conflicts|corrections/.test(section.dataset.flags||'');
+    else if(filter==='zero-legacy-derived')show=/zero-legacy-derived/.test(section.dataset.flags||'');
+    else if(filter==='hotspot-attention')show=/hotspot-attention/.test(section.dataset.flags||'');
+    else if(filter==='needs-attention')show=/needs-attention/.test(section.dataset.flags||'')||section.dataset.reviewKind==='quarantined';
+    else if(filter==='unreviewed')show=section.dataset.reviewed!=='true';
+    else if(filter==='reviewed')show=section.dataset.reviewed==='true';
+    else if(filter==='longest')show=Number(section.dataset.maxans)>=550;
+    section.style.display=show?'':'none';
+  });
+}));
+refreshAll();
 </script>`;
 
 const out = join(RUN, 'editorial-review-packet.html');
