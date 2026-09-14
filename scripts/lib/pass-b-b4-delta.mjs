@@ -6,13 +6,14 @@
 // NOT reproduce any registry (evidence, delights, sources, catalog, coordinates, provenance).
 //
 // The deterministic controller then HYDRATES the complete rich record from the exact validated B1/B2/B3
-// rows + legacy content, assigns controller-owned ids, carries B1/B3 coordinates verbatim, and finally runs
-// the UNCHANGED strict full-record validator (validateStageBody('B4', ...)). The strict validator is never
-// weakened to accommodate the delta.
+// rows + legacy content, assigns controller-owned ids, resolves publishable hotspot coordinates, and finally
+// runs the version-bound strict full-record validator (validateStageBody('B4', ...)).
 import { sha256, stableJson } from './vision-legacy.mjs';
-import { EVIDENCE_AXES, ROLES, IMAGE_STATES, validateStageBody, PLAYER_WHY_MAX, PLAYER_NOTE_HEAD_MAX, PLAYER_NOTE_BODY_MAX, GUIDE_ANSWER_MAX } from './vision-content-schema.mjs';
+import { EVIDENCE_AXES, ROLES, IMAGE_STATES, validateStageBody, PLAYER_WHY_MAX, PLAYER_NOTE_HEAD_MAX, PLAYER_NOTE_BODY_MAX, GUIDE_ANSWER_MAX, HOTSPOT_MIN_DISTANCE, HOTSPOT_MAX_REGION_AREA } from './vision-content-schema.mjs';
 
-export const B4_DELTA_VERSION = 'contentVisionB4Delta/1';
+export const B4_DELTA_VERSION = 'contentVisionB4Delta/2';
+export { HOTSPOT_MIN_DISTANCE };
+export const HOTSPOT_MAX_BBOX_AREA = HOTSPOT_MAX_REGION_AREA / 10000;
 const ITEM_ACTIONS = ['keep', 'revise', 'replace', 'add', 'remove'];
 const COMPONENT_ACTIONS = ['keep', 'revise', 'replace'];
 
@@ -31,13 +32,86 @@ export function b1Grounding(b1) {
 }
 // A grounding id -> a point pin {x,y} in 0-100, derived from the owning B1/candidate bbox center (bbox is
 // [x,y,w,h] 0-1 fractions). Controller-owned; the model never supplies coordinates.
+const validPoint = p => p && Number.isFinite(p.x) && Number.isFinite(p.y)
+  && p.x >= 0 && p.x <= 100 && p.y >= 0 && p.y <= 100;
 function pinFor(g, ref, candidatePin) {
-  if (candidatePin && Number.isFinite(candidatePin.x) && Number.isFinite(candidatePin.y)) return { x: candidatePin.x, y: candidatePin.y };
+  if (validPoint(candidatePin)) return { x: candidatePin.x, y: candidatePin.y };
   const bbox = g.evidence.get(ref)?.bbox ?? g.delights.get(ref)?.bbox ?? null;
   if (Array.isArray(bbox) && bbox.length === 4 && bbox.every(n => Number.isFinite(n))) {
     return { x: Math.max(0, Math.min(100, (bbox[0] + bbox[2] / 2) * 100)), y: Math.max(0, Math.min(100, (bbox[1] + bbox[3] / 2) * 100)) };
   }
   return null;
+}
+
+// Hotspot location is deliberately separate from editorial ancestry (`ref`). Prefer an explicitly selected
+// B1 candidate, then a candidate named by ref, then the only pinned candidate sharing the evidenceRef. Only
+// a genuinely localized evidence/delight bbox may fall back to its center. Whole-frame properties and
+// missing boxes remain reviewable observations, but are not published as fake center pins.
+export function resolveHotspotPin(g, hotspot) {
+  const candidate = id => {
+    const c = typeof id === 'string' ? g.candidates.get(id) : null;
+    return c && c.evidenceRef === hotspot.evidenceRef && validPoint(c.pin) ? { id, value: c } : null;
+  };
+  const explicit = candidate(hotspot.pinRef);
+  if (explicit) return { ok: true, pin: { ...explicit.value.pin }, method: 'explicit-candidate', pinRef: explicit.id };
+  const ancestral = candidate(hotspot.ref);
+  if (ancestral) return { ok: true, pin: { ...ancestral.value.pin }, method: 'ancestral-candidate', pinRef: ancestral.id };
+  const matches = [...g.candidates.entries()].filter(([, c]) => c.evidenceRef === hotspot.evidenceRef && validPoint(c.pin));
+  if (matches.length === 1) return { ok: true, pin: { ...matches[0][1].pin }, method: 'unique-evidence-candidate', pinRef: matches[0][0] };
+  const bbox = g.evidence.get(hotspot.evidenceRef)?.bbox ?? g.delights.get(hotspot.evidenceRef)?.bbox ?? null;
+  if (!Array.isArray(bbox) || bbox.length !== 4 || !bbox.every(Number.isFinite)) {
+    return { ok: false, reason: 'missing-localized-anchor', pinRef: null };
+  }
+  const area = bbox[2] * bbox[3];
+  if (area >= HOTSPOT_MAX_BBOX_AREA) return { ok: false, reason: 'near-full-frame-bbox', bboxArea: area, pinRef: null };
+  return {
+    ok: true,
+    pin: { x: Math.max(0, Math.min(100, (bbox[0] + bbox[2] / 2) * 100)), y: Math.max(0, Math.min(100, (bbox[1] + bbox[3] / 2) * 100)) },
+    method: 'localized-bbox-center', bboxArea: area, pinRef: null,
+  };
+}
+
+const lineageRows = (items, legacyKind) => (items || []).map((item, deltaIndex) => {
+  const ref = item?.ref ?? null;
+  const match = new RegExp(`^legacy[-:]${legacyKind}(\\d+)$`, 'i').exec(String(ref || ''));
+  return {
+    deltaIndex, action: item?.action ?? null, ref,
+    legacyDerived: !!match,
+    legacyIndex: match ? Number(match[1]) : null,
+    legacyRefMismatch: /^legacy[-:]/i.test(String(ref || '')) && !match,
+    survives: item?.action !== 'remove',
+  };
+});
+export function b4Lineage(delta) {
+  return {
+    notes: lineageRows(delta?.notes, 'n'), hotspots: lineageRows(delta?.hotspots, 'h'), guide: lineageRows(delta?.guide, 'g'),
+  };
+}
+export function guideLineageMetrics(delta, legacyGuideCount = 0) {
+  const rows = b4Lineage(delta).guide;
+  const validLegacy = row => row.legacyDerived && row.legacyIndex >= 1 && row.legacyIndex <= legacyGuideCount;
+  const referenced = new Set(); const surviving = new Set(); const explicitlyRemoved = new Set();
+  let verbatim = 0; let reworked = 0; let duplicateLegacyRefs = 0;
+  for (const row of rows) {
+    if (!validLegacy(row)) continue;
+    if (referenced.has(row.legacyIndex)) { duplicateLegacyRefs++; continue; }
+    referenced.add(row.legacyIndex);
+    if (!row.survives) explicitlyRemoved.add(row.legacyIndex);
+    else {
+      surviving.add(row.legacyIndex);
+      if (row.action === 'keep') verbatim++;
+      else if (['revise', 'replace'].includes(row.action)) reworked++;
+    }
+  }
+  const removedExplicit = explicitlyRemoved.size;
+  const removedImplicit = Math.max(0, legacyGuideCount - referenced.size);
+  const added = rows.filter(row => row.survives && !validLegacy(row)).length;
+  return {
+    legacyTotal: legacyGuideCount, verbatim, reworked, legacyDerived: surviving.size,
+    removed: removedExplicit + removedImplicit, removedExplicit, removedImplicit, added,
+    invalidLegacyRefs: rows.filter(row => row.legacyRefMismatch || (row.legacyDerived && !validLegacy(row))).length,
+    duplicateLegacyRefs,
+  };
 }
 
 // ---- Delta validation: structure + references. Only shape/reference integrity; the strict semantic gate is
@@ -76,8 +150,17 @@ export function validateB4Delta(delta, { b1, b2 }) {
     need(h && ITEM_ACTIONS.includes(h.action), 'hotspot.action');
     if (!h || !ITEM_ACTIONS.includes(h.action)) continue;
     need(refGood(h.ref), `hotspot.ref unknown: ${h.ref}`);
+    need(h.pinRef === undefined || h.pinRef === null || typeof h.pinRef === 'string', `hotspot.pinRef: ${h.pinRef}`);
     // rank + concise/deep text are controller-owned (assigned by order / filled from the grounding evidence's feature/why).
-    if (h.action !== 'remove') { need(h.role === null || ROLES.includes(h.role), 'hotspot.role'); need(g.has(h.evidenceRef), `hotspot.evidenceRef not in B1 grounding: ${h.evidenceRef}`); need(typeof h.sourceDependent === 'boolean', 'hotspot.sourceDependent'); }
+    if (h.action !== 'remove') {
+      need(h.role === null || ROLES.includes(h.role), 'hotspot.role');
+      need(g.has(h.evidenceRef), `hotspot.evidenceRef not in B1 grounding: ${h.evidenceRef}`);
+      need(typeof h.sourceDependent === 'boolean', 'hotspot.sourceDependent');
+      if (h.pinRef != null) {
+        const c = g.candidates.get(h.pinRef);
+        need(!!c && c.evidenceRef === h.evidenceRef && validPoint(c.pin), `hotspot.pinRef must be a pinned B1 candidate for evidenceRef: ${h.pinRef}`);
+      }
+    }
   }
   // guide
   need(Array.isArray(delta.guide), 'delta.guide array');
@@ -105,8 +188,9 @@ export function validateB4Delta(delta, { b1, b2 }) {
 
 // ---- Deterministic assembler: delta + validated B1/B2/B3 + legacy -> complete rich record (then strictly
 // validated by the caller). No model-invented ids; ids assigned deterministically; coordinates carried. ----
-export function assembleB4({ delta, b1, b2, b3, legacy }) {
+function hydrateB4({ delta, b1, b2, b3, legacy }) {
   const g = b1Grounding(b1);
+  const hydration = { lineage: b4Lineage(delta), hotspots: { proposed: 0, published: 0, placements: [], suppressed: [] } };
   const legacyT = legacy?.teaching || {};
   const shortId = (prefix, key) => `${prefix}${sha256(key).slice(0, 10)}`;
   // Resolve editorial provenance refs to their source TEXT (for keep/revise that reuse legacy or candidate text).
@@ -145,21 +229,37 @@ export function assembleB4({ delta, b1, b2, b3, legacy }) {
     const pin = pinFor(g, evidenceRef, cand?.pin ?? (lg && Number.isFinite(lg.x) ? { x: lg.x, y: lg.y } : null));
     notes.push({ noteId: shortId('n_', `${ni++}|${n.ref}|${head}`), head, body, pin, role, evidenceRef, sourceRefs: n.sourceRefs || [] });
   }
-  // hotspots: from delta hotspot actions; coordinates carried from B1 candidate / evidence bbox
-  const hotspots = []; let hi = 0;
-  for (const h of (delta.hotspots || [])) {
+  // Hotspots: editorial ancestry (`ref`) and spatial anchoring (`pinRef`) are independent. Retain only
+  // player-usable locations; duplicate and unlocalized proposals stay in the hydration report for review.
+  const hotspots = []; let sourceOrdinal = 0;
+  for (const [deltaIndex, h] of (delta.hotspots || []).entries()) {
     if (h.action === 'remove') continue;
+    const ordinal = sourceOrdinal++;
+    hydration.hotspots.proposed++;
     const cand = h.ref && g.candidates.get(h.ref);
-    const pin = pinFor(g, h.evidenceRef, cand?.pin);
-    const obs = shortId('o_', `${hi}|${h.ref}`);
+    const placement = resolveHotspotPin(g, h);
+    if (!placement.ok) {
+      hydration.hotspots.suppressed.push({ deltaIndex, ref: h.ref ?? null, evidenceRef: h.evidenceRef ?? null, reason: placement.reason, bboxArea: placement.bboxArea ?? null });
+      continue;
+    }
+    const duplicate = hotspots.find(existing => existing.evidenceRef === h.evidenceRef
+      || Math.hypot(existing.x - placement.pin.x, existing.y - placement.pin.y) < HOTSPOT_MIN_DISTANCE);
+    if (duplicate) {
+      hydration.hotspots.suppressed.push({ deltaIndex, ref: h.ref ?? null, evidenceRef: h.evidenceRef ?? null, reason: duplicate.evidenceRef === h.evidenceRef ? 'duplicate-evidence-ref' : 'near-duplicate-pin', collidesWithHotspotId: duplicate.hotspotId });
+      continue;
+    }
+    const obs = shortId('o_', `${ordinal}|${h.ref}`);
     const ev = g.evidence.get(h.evidenceRef); const dl = g.delights.get(h.evidenceRef);
     // Player text: the model's, else the referenced note candidate's, else the grounding evidence's own REAL
     // B1 observation (feature/why or delight note) — never fabricated.
     const concise = (h.conciseText ?? cand?.head ?? ev?.feature ?? dl?.note ?? 'Look here').slice(0, 200);
     const deep = (h.deepText ?? cand?.body ?? ev?.why ?? dl?.note ?? 'A grounded detail worth noticing.').slice(0, 800);
-    // rank is controller-assigned by delta order (unique, valid) — the model's rank is advisory only.
-    hotspots.push({ hotspotId: shortId('h_', `${hi}|${h.ref}|${h.evidenceRef}`), observationId: obs, x: pin ? pin.x : null, y: pin ? pin.y : null, region: pin ? null : { x: 0, y: 0, w: 100, h: 100 }, rank: ++hi, role: h.role ?? cand?.role ?? 'diagnostic', conciseText: concise, deepText: deep, evidenceRef: h.evidenceRef, confidence: ev?.confidence ?? dl?.confidence ?? 0.6, sourceDependent: !!h.sourceDependent });
+    // rank is controller-assigned after suppression (unique and gap-free); original ordinal keeps ids stable.
+    const hotspotId = shortId('h_', `${ordinal}|${h.ref}|${h.evidenceRef}`);
+    hotspots.push({ hotspotId, observationId: obs, x: placement.pin.x, y: placement.pin.y, region: null, rank: hotspots.length + 1, role: h.role ?? cand?.role ?? 'diagnostic', conciseText: concise, deepText: deep, evidenceRef: h.evidenceRef, confidence: ev?.confidence ?? dl?.confidence ?? 0.6, sourceDependent: !!h.sourceDependent });
+    hydration.hotspots.placements.push({ deltaIndex, hotspotId, evidenceRef: h.evidenceRef, pinRef: placement.pinRef, method: placement.method, x: placement.pin.x, y: placement.pin.y, bboxArea: placement.bboxArea ?? null });
   }
+  hydration.hotspots.published = hotspots.length;
   // guide: keep copies legacy Q&A; revise/replace/add supply text
   const guide = [];
   let gi = 0;
@@ -193,8 +293,11 @@ export function assembleB4({ delta, b1, b2, b3, legacy }) {
     dispositions, proposedWhy, proposedCues, notes, hotspots, guide,
     richDescriptors, evidence, sources, corrections, conflicts, uncertainty: delta.uncertainty ?? '',
   };
-  return body;
+  return { body, hydration };
 }
+
+export function assembleB4(input) { return hydrateB4(input).body; }
+export function assembleB4WithReport(input) { return hydrateB4(input); }
 
 function nullCatalog() {
   return { mediumFull: { notApplicable: true, reason: 'no B2' }, anonReason: { notApplicable: true, reason: 'n/a' }, living: { notApplicable: true, reason: 'n/a' }, movementSuggestion: { notApplicable: true, reason: 'n/a' }, styleKind: { notApplicable: true, reason: 'n/a' }, provenanceNote: { notApplicable: true, reason: 'n/a' }, displacementCue: { notApplicable: true, reason: 'n/a' }, sensitivity: [] };
@@ -204,7 +307,7 @@ function nullCatalog() {
 export function assembleAndValidateB4({ delta, b1, b2, b3, legacy }) {
   const dv = validateB4Delta(delta, { b1, b2 });
   if (!dv.ok) return { ok: false, stage: 'delta', errors: dv.errors, body: null };
-  const body = assembleB4({ delta, b1, b2, b3, legacy });
+  const { body, hydration } = hydrateB4({ delta, b1, b2, b3, legacy });
   const strict = validateStageBody('B4', body);
-  return { ok: strict.ok, stage: strict.ok ? 'assembled' : 'strict', errors: strict.errors || [], body, deltaSha256: sha256(stableJson(delta)), bodySha256: sha256(stableJson(body)) };
+  return { ok: strict.ok, stage: strict.ok ? 'assembled' : 'strict', errors: strict.errors || [], body, hydration, deltaSha256: sha256(stableJson(delta)), bodySha256: sha256(stableJson(body)) };
 }

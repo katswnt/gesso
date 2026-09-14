@@ -179,13 +179,13 @@ has no authoritative writer. Its current sequence is:
 2. B1 sees only the confined SHA-named image through the Read tool and inventories visible evidence.
 3. Conditional B2 sees no image, receives bounded signals/catalog/legacy content, and uses only WebSearch/WebFetch.
 4. Conditional B3 sees only the confined image plus B2's targeted visual questions.
-5. B4 receives validated B1–B3 projections plus legacy content and emits a compact editorial **delta** (per-item keep/revise/replace/add/remove, replacement text, references to existing B1/B2 ids, corrections/conflicts/uncertainty) without image or tools. The controller deterministically hydrates the authoritative B1 evidence/delight and B2 source/catalog registries, assigns ids/ranks, carries B1 coordinates, and runs the unchanged strict `validateB4` (VSD-022).
+5. B4 receives validated B1–B3 projections plus legacy content and emits a compact editorial **delta** without image or tools. The controller hydrates the authoritative B1/B2 registries and runs strict `validateB4`. Editorial ancestry (`ref`) is separate from hotspot location (`pinRef`): a publishable pin comes from a matching B1 candidate or a localized bbox, never a missing/near-whole-image fallback. Same-evidence and <3-point overlaps are retained as review findings but not published (VSD-022/027).
 
 The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
 events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
-lanes, and renders a quarantined before/after review packet. A complete Julius Caesar canary exercised
-B0–B4 successfully, and the fixed 50-work calibration has banked real B1–B3 checkpoints. No output has
-been approved or merged into game data.
+lanes, and renders a quarantined before/after review packet. The fixed calibration completed B1–B3 for
+50 works; the accepted B4-v2 continuation produced 44 strict-valid/leak-clean records and quarantined
+6 first-attempt misses. No output has been approved or merged into game data.
 
 The offline `contentVisionCoverage/1` baseline remains the corpus inventory: one row for each
 current pool work, legacy content kept as evidence (never current completion), Pass A flags
@@ -225,9 +225,10 @@ reuse requires migrating B0–B3 checkpoints into the new run dir).
 Current limitations:
 
 - `data/vision-coverage.json` is a measurement/queue artifact, not an authoritative rich-content ledger.
-- The compact editorial-delta B4 + deterministic hydration is implemented, tested, and live-compared
-  on the 3 old-B4 baselines (~2x faster, ~44% fewer tokens, strict-valid, teaching preserved); the
-  prior full-record B4 is retired (VSD-022). Not yet run at scale.
+- The compact editorial-delta B4 + deterministic hydration ran across the fixed 50-work calibration.
+  The immutable-source VSD-027 offline rehydration produced `b4r-8f1f74ddc30f`: 44/44 strict-valid,
+  hotspot overlap pairs 45→0, 15 duplicate/unlocalized proposals retained for attention, and literal
+  legacy-lineage reporting. The prior full-record B4 is retired.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
@@ -235,8 +236,8 @@ Current limitations:
   retrieval). A live 5-work v1-vs-v2 comparison ran 2026-09-03 (5/5 strict-valid; research volume collapsed;
   over-refutations corrected) and passed Codex adversarial review with corrections applied. Strict-valid
   means shape + reference integrity, not factual entailment — human review is the factual gate (VSD-022).
-- There is no rich component approval artifact, auto-policy, guarded Pass B merge, or production
-  staleness transition. Calibration output cannot be published.
+- A one-work, hash-bound guarded Pass B approval/apply tool exists, but no calibration record is owner-
+  approved. The rich component ledger, auto-policy, and production staleness transition remain unbuilt.
 - The deterministic `launchd` subscription supervisor remains unbuilt; `--foreground` is supervised
   manual operation only.
 
@@ -257,9 +258,15 @@ Use Node 24 (`/opt/homebrew/bin/node`); the machine's default Node may be too ol
 PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
   --live --foreground --lanes 5 --through-b3
 
-# One-work full-chain calibration/canary. B4 is the compact-delta + hydration design (VSD-022); not yet run at scale.
+# One-work full-chain calibration/canary. B4 uses compact delta + deterministic hydration (VSD-022/027).
 PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
   --live --foreground --only-work <work-id>
+
+# Offline-only VSD-027 rehydration of the preserved B4-v2 cohort, then render its corrected packet.
+# Creates a new quarantined run; verifies every source evidence byte stayed unchanged.
+/opt/homebrew/bin/node scripts/pass-b-b4-offline-repair.mjs
+/opt/homebrew/bin/node scripts/pass-b-b4-review-packet.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f
 ```
 
 Artifacts remain under `data/incoming/vision-calibration/` (gitignored). A prompt/schema/transport
@@ -274,9 +281,12 @@ Relevant files:
 | `scripts/lib/pass-b-calibration.mjs` | call plan, boundaries, command construction, compact inputs, B1→B4 control flow |
 | `scripts/lib/pass-b-prompts.mjs` | version-bound B1–B4 prompts |
 | `scripts/lib/pass-b-wire-schema.mjs` | provider-facing structure-only schemas |
+| `scripts/lib/pass-b-b4-delta.mjs` | compact-delta validation, deterministic hydration, hotspot quality, lineage |
 | `scripts/lib/vision-content-schema.mjs` | strict local B1–B4 semantic and cross-reference validation |
 | `scripts/lib/vision-content-capture.mjs` | hash-bound stage capture and resume verification |
 | `scripts/lib/pass-b-review-packet.mjs` | quarantined comparison packet; applies nothing |
+| `scripts/pass-b-b4-offline-repair.mjs` | immutable-source offline rehydration + evidence manifest/report |
+| `scripts/pass-b-b4-review-packet.mjs` | full-cohort editorial packet with literal lineage and hotspot-attention reporting |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---

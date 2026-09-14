@@ -85,7 +85,7 @@ export const B4_DELTA = obj({
   why: obj({ action: enumOf('keep', 'revise', 'replace'), text: nullable(str) }),
   cues: obj({ action: enumOf('keep', 'replace'), items: arr(str) }),
   notes: arr(obj({ action: ITEM_ACTION, ref: nullable(str), head: nullable(str), body: nullable(str), role: nullable(enumOf(...ROLES)), evidenceRef: nullable(str), sourceRefs: arr(str) })),
-  hotspots: arr(obj({ action: ITEM_ACTION, ref: nullable(str), rank: nullable(int), conciseText: nullable(str), deepText: nullable(str), role: nullable(enumOf(...ROLES)), evidenceRef: nullable(str), sourceDependent: bool })),
+  hotspots: arr(obj({ action: ITEM_ACTION, ref: nullable(str), pinRef: nullable(str), rank: nullable(int), conciseText: nullable(str), deepText: nullable(str), role: nullable(enumOf(...ROLES)), evidenceRef: nullable(str), sourceDependent: bool })),
   guide: arr(obj({ action: ITEM_ACTION, ref: nullable(str), q: nullable(str), a: nullable(str), kind: nullable(enumOf('image', 'context')), evidenceRef: nullable(str), sourceRefs: arr(str) })),
   corrections: arr(obj({ field: str, from: any, to: any, evidenceRef: str, sourceRefs: arr(str), confidence: num })),
   conflicts: arr(obj({ field: str, left: str, right: str, resolution: str, status: enumOf('resolved', 'humanReview') })),

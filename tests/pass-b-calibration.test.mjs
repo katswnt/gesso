@@ -18,7 +18,7 @@ import {
 import { buildB1Prompt, buildB2Prompt, buildB3Prompt, buildB4Prompt, promptHashes } from '../scripts/lib/pass-b-prompts.mjs';
 import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, WIRE_B4_FULL } from '../scripts/lib/pass-b-wire-schema.mjs';
 import { compactB4DeltaInput } from '../scripts/lib/pass-b-calibration.mjs';
-import { validateB4Delta, assembleAndValidateB4, b1Grounding } from '../scripts/lib/pass-b-b4-delta.mjs';
+import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLineageMetrics, HOTSPOT_MAX_BBOX_AREA } from '../scripts/lib/pass-b-b4-delta.mjs';
 
 const tests = []; const t = (n, fn) => tests.push({ n, fn });
 
@@ -466,6 +466,8 @@ t('B4 compact delta + deterministic hydration (VSD-022)', () => {
   // (1) the delta wire schema exposes NO registry keys — the model cannot emit evidence/delights/sources/catalog/coords
   const props = Object.keys(B4_DELTA.properties);
   for (const forbidden of ['evidence', 'delights', 'sources', 'catalog', 'richDescriptors']) assert(!props.includes(forbidden), `delta wire must not expose ${forbidden}`);
+  assert('pinRef' in B4_DELTA.properties.hotspots.items.properties, 'B4 wire separates hotspot spatial pinRef from editorial ref');
+  assert(/ref.*EDITORIAL ancestry/i.test(buildB4Prompt()) && /pinRef.*SPATIAL anchor/i.test(buildB4Prompt()), 'B4 prompt explains the two independent references');
   assert(validateAgainstWire(B4_DELTA, { ...fx.bodies.B4Delta, evidence: {} }).length > 0, 'delta wire rejects an injected registry (additionalProperties:false)');
   // (5) the fixture delta assembles into a record that passes the UNCHANGED strict validateB4
   const r = assembleAndValidateB4({ delta: fx.bodies.B4Delta, b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
@@ -487,6 +489,63 @@ t('B4 compact delta + deterministic hydration (VSD-022)', () => {
   const inp = compactB4DeltaInput({ b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacyInput: legacyContentInput({ workId: 'w', counts: {} }) });
   assert(inp.grounding.evidence.length >= 1 && inp.b1Candidates.length >= 1, 'delta input exposes the grounding namespace + candidates');
   assert(inp.grounding.evidence.every(e => !('bbox' in e)) && inp.b1Candidates.every(c => !('pin' in c)), 'delta input must not hand the model B1 coordinates to echo');
+});
+
+t('B4 hotspot hydration separates editorial ref from spatial pinRef and uses existing B1 candidate pins', () => {
+  const fx = syntheticFixture();
+  const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
+  delta.hotspots[0] = { ...delta.hotspots[0], ref: 'legacy-h1', pinRef: null, evidenceRef: 'ev_medium' };
+  const r = assembleAndValidateB4({ delta, b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
+  assert(r.ok, (r.errors || []).join('; '));
+  assert.deepEqual({ x: r.body.hotspots[0].x, y: r.body.hotspots[0].y }, { x: 40, y: 50 });
+  assert.equal(r.hydration.hotspots.placements[0].method, 'unique-evidence-candidate');
+  assert.equal(r.hydration.hotspots.placements[0].pinRef, 'n1');
+});
+
+t('B4 hotspot hydration suppresses broad/missing anchors and duplicates without fake whole-image regions', () => {
+  const fx = syntheticFixture();
+  const b1 = JSON.parse(JSON.stringify(fx.bodies.B1));
+  b1.evidence.format[0].bbox = [0, 0, 1, 1];
+  const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
+  const base = delta.hotspots[0];
+  delta.hotspots = [
+    { ...base, ref: 'legacy-h1', pinRef: 'n1', evidenceRef: 'ev_medium' },
+    { ...base, ref: 'legacy-h2', pinRef: 'n1', evidenceRef: 'ev_medium' },
+    { ...base, ref: 'legacy-h3', pinRef: null, evidenceRef: 'ev_format' },
+    { ...base, ref: 'legacy-h4', pinRef: null, evidenceRef: 'ev_where' },
+  ];
+  const r = assembleAndValidateB4({ delta, b1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
+  assert(r.ok, (r.errors || []).join('; '));
+  assert.equal(r.body.hotspots.length, 1, 'only the genuinely localized, first unique hotspot publishes');
+  assert(r.body.hotspots.every(h => h.region === null && Number.isFinite(h.x) && Number.isFinite(h.y)), 'no fake whole-image region is emitted');
+  assert.deepEqual(r.hydration.hotspots.suppressed.map(x => x.reason), ['duplicate-evidence-ref', 'near-full-frame-bbox', 'missing-localized-anchor']);
+  assert.equal(HOTSPOT_MAX_BBOX_AREA, 0.65);
+});
+
+t('B4 delta rejects an invented/mismatched explicit pinRef', () => {
+  const fx = syntheticFixture(); const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
+  delta.hotspots[0].pinRef = 'made-up';
+  assert(!validateB4Delta(delta, { b1: fx.bodies.B1, b2: fx.bodies.B2 }).ok);
+  delta.hotspots[0].pinRef = 'n1'; delta.hotspots[0].evidenceRef = 'ev_when';
+  assert(!validateB4Delta(delta, { b1: fx.bodies.B1, b2: fx.bodies.B2 }).ok, 'pinRef must ground the same evidenceRef');
+});
+
+t('B4 lineage filters remove actions before joining and distinguishes verbatim/reworked/removed/new', () => {
+  const delta = { notes: [], hotspots: [], guide: [
+    { action: 'remove', ref: 'legacy-g1' },
+    { action: 'keep', ref: 'legacy-g2' },
+    { action: 'replace', ref: 'legacy-g3' },
+    { action: 'add', ref: null },
+  ] };
+  const surviving = b4Lineage(delta).guide.filter(x => x.survives);
+  assert.deepEqual(surviving.map(x => [x.deltaIndex, x.action, x.ref]), [[1, 'keep', 'legacy-g2'], [2, 'replace', 'legacy-g3'], [3, 'add', null]]);
+  assert.deepEqual(guideLineageMetrics(delta, 3), { legacyTotal: 3, verbatim: 1, reworked: 1, legacyDerived: 2, removed: 1, removedExplicit: 1, removedImplicit: 0, added: 1, invalidLegacyRefs: 0, duplicateLegacyRefs: 0 });
+  const incomplete = { notes: [], hotspots: [], guide: [
+    { action: 'revise', ref: 'legacy-g2' },
+    { action: 'replace', ref: 'legacy-n1' },
+    { action: 'add', ref: null },
+  ] };
+  assert.deepEqual(guideLineageMetrics(incomplete, 4), { legacyTotal: 4, verbatim: 0, reworked: 1, legacyDerived: 1, removed: 3, removedExplicit: 0, removedImplicit: 3, added: 2, invalidLegacyRefs: 1, duplicateLegacyRefs: 0 });
 });
 
 t('B2 v2 prompt: teaching audience, conditional research, research+B3 budget, source priority', () => {

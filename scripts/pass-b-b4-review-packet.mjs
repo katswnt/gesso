@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { projectToProduction } from './lib/pass-b-approval.mjs';
+import { b4Lineage, guideLineageMetrics } from './lib/pass-b-b4-delta.mjs';
 
 const RUN = process.argv[2] || 'data/incoming/vision-calibration/b4c-f45fac18da2e';
 const ROOT = 'data/incoming/vision-calibration';
@@ -30,25 +31,43 @@ function collect(id) {
   const body = rec.body || {};
   const rd = rec.rawDelta || {};
   const proj = rec.ok ? projectToProduction(body) : null;
-  // pair hydrated guide/notes with their delta action/ref (assembler preserves order)
-  const guide = (body.guide || []).map((g, i) => ({ ...g, action: rd.guide?.[i]?.action || '?', ref: rd.guide?.[i]?.ref || null }));
-  const notes = (body.notes || []).map((n, i) => ({ ...n, action: rd.notes?.[i]?.action || '?', ref: rd.notes?.[i]?.ref || null }));
-  const keptLegacyGuide = guide.filter((g) => g.action === 'keep' && /^legacy-/.test(String(g.ref || ''))).length;
-  const overwriteStrong = (m.cohort === 'strongLegacy') && [...guide, ...notes].some((x) => /^legacy-/.test(String(x.ref || '')) && ['revise', 'replace', 'remove'].includes(x.action));
+  // The assembler drops `remove` actions. Join final items to the SURVIVING lineage, never by the raw
+  // delta array index (which shifts every badge after the first removal).
+  const lineage = rec.hydration?.lineage || b4Lineage(rd);
+  const guideLineage = (lineage.guide || []).filter(x => x.survives);
+  const noteLineage = (lineage.notes || []).filter(x => x.survives);
+  if (guideLineage.length !== (body.guide || []).length) throw new Error(`${id}: guide lineage/body length mismatch`);
+  if (noteLineage.length !== (body.notes || []).length) throw new Error(`${id}: note lineage/body length mismatch`);
+  const guide = (body.guide || []).map((g, i) => ({ ...g, action: guideLineage[i]?.action || '?', ref: guideLineage[i]?.ref || null, legacyDerived: !!guideLineage[i]?.legacyDerived, deltaIndex: guideLineage[i]?.deltaIndex ?? null }));
+  const notes = (body.notes || []).map((n, i) => ({ ...n, action: noteLineage[i]?.action || '?', ref: noteLineage[i]?.ref || null, legacyDerived: !!noteLineage[i]?.legacyDerived, deltaIndex: noteLineage[i]?.deltaIndex ?? null }));
+  const guideMetrics = guideLineageMetrics(rd, (legacy.guide || []).length);
+  const overwriteStrong = (m.cohort === 'strongLegacy') && [...(lineage.guide || []), ...(lineage.notes || [])].some((x) => x.legacyDerived && ['revise', 'replace', 'remove'].includes(x.action));
   const cons = body.corrections?.consequential || [];
   const conflicts = (body.conflicts || []).filter((c) => c.status === 'humanReview');
   const srcDep = (body.hotspots || []).filter((h) => h.sourceDependent).length + guide.filter((g) => (g.sourceRefs || []).length).length + notes.filter((n) => (n.sourceRefs || []).length).length;
   const maxAns = Math.max(0, ...guide.map((g) => (g.a || '').length));
   const entryType = teach[id] ? 'overwrite' : 'new';
-  const needsAttention = conflicts.length > 0 || cons.length > 0 || overwriteStrong || (keptLegacyGuide === 0 && (legacy.guide || []).length > 0) || maxAns >= 660;
+  const needsAttention = conflicts.length > 0 || cons.length > 0 || overwriteStrong || (guideMetrics.legacyTotal > 0 && guideMetrics.legacyDerived === 0) || maxAns >= 660 || (rec.hydration?.hotspots?.suppressed || []).length > 0;
   const changeScore = [...guide, ...notes].filter((x) => x.action !== 'keep').length;
-  return { id, meta: m, catalog: b0.trustedCatalog, image: b0.image, legacy, oldHot, body, guide, notes, proj, keptLegacyGuide, hadLegacyGuide: (legacy.guide || []).length, overwriteStrong, cons, conflicts, uncertainty: body.uncertainty || '', srcDep, maxAns, entryType, needsAttention, changeScore, evidence: rec.evidence, reused: !!rec.reused };
+  return { id, meta: m, catalog: b0.trustedCatalog, image: b0.image, legacy, oldHot, body, guide, notes, proj, guideMetrics, lineage, hotspotQuality: rec.hydration?.hotspots || null, overwriteStrong, cons, conflicts, uncertainty: body.uncertainty || '', srcDep, maxAns, entryType, needsAttention, changeScore, evidence: rec.evidence, reused: !!rec.reused };
 }
 
 const files = readdirSync(join(RUN, 'works')).filter((f) => f.endsWith('.b4.json'));
 const all = files.map((f) => JSON.parse(readFileSync(join(RUN, 'works', f), 'utf8')));
 const completed = all.filter((r) => r.ok).map((r) => collect(r.id));
 const quarantined = all.filter((r) => !r.ok);
+const lineageSummary = completed.reduce((s, w) => {
+  if (w.guideMetrics.legacyTotal) s.legacyWorks++;
+  if (w.guideMetrics.legacyTotal && !w.guideMetrics.legacyDerived) s.zeroLegacyDerived++;
+  for (const k of ['legacyTotal', 'verbatim', 'reworked', 'removed', 'removedExplicit', 'removedImplicit', 'added', 'invalidLegacyRefs']) s[k] += w.guideMetrics[k];
+  return s;
+}, { legacyWorks: 0, zeroLegacyDerived: 0, legacyTotal: 0, verbatim: 0, reworked: 0, removed: 0, removedExplicit: 0, removedImplicit: 0, added: 0, invalidLegacyRefs: 0 });
+const hotspotSummary = completed.reduce((s, w) => {
+  s.proposed += w.hotspotQuality?.proposed || (w.body.hotspots || []).length;
+  s.published += (w.body.hotspots || []).length;
+  s.suppressed += w.hotspotQuality?.suppressed?.length || 0;
+  return s;
+}, { proposed: 0, published: 0, suppressed: 0 });
 
 // ---- nominate first-10: 5 strongLegacy + 5 thin/missing, include harvard303416, diverse culture/medium/fame/change ----
 function nominate() {
@@ -89,9 +108,12 @@ async function prepImages(worksList) {
 // ONE image per work carrying BOTH old (grey) and proposed (orange) hotspot markers.
 function overlay(w) {
   const src = uriCache.get(w.image?.imgSha256) || '';
-  const oldM = w.oldHot.map((p) => `<span class="pin old" style="left:${p.x}%;top:${p.y}%">${p.n}</span>`).join('');
-  const newM = (w.body.hotspots || []).map((h) => `<span class="pin proposed" style="left:${h.x}%;top:${h.y}%">${h.rank}</span>`).join('');
-  return `<div class="ov"><div class="ovlabel"><span class="dot old"></span> OLD (${w.oldHot.length}) &nbsp; <span class="dot proposed"></span> PROPOSED (${(w.body.hotspots || []).length})</div>${src ? `<div class="imgwrap"><img loading="lazy" src="${src}" alt="">${oldM}${newM}</div>` : '<div class="noimg">image unavailable</div>'}</div>`;
+  const point = p => Number.isFinite(p?.x) && Number.isFinite(p?.y);
+  const oldM = w.oldHot.filter(point).map((p) => `<span class="pin old" style="left:${p.x}%;top:${p.y}%">${p.n}</span>`).join('');
+  const newM = (w.body.hotspots || []).filter(point).map((h) => `<span class="pin proposed" style="left:${h.x}%;top:${h.y}%">${h.rank}</span>`).join('');
+  const regions = (w.body.hotspots || []).filter(h => h?.region && [h.region.x, h.region.y, h.region.w, h.region.h].every(Number.isFinite)).map(h => `<span class="region proposed" style="left:${h.region.x}%;top:${h.region.y}%;width:${h.region.w}%;height:${h.region.h}%">${h.rank}</span>`).join('');
+  const suppressed = w.hotspotQuality?.suppressed?.length || 0;
+  return `<div class="ov"><div class="ovlabel"><span class="dot old"></span> OLD (${w.oldHot.length}) &nbsp; <span class="dot proposed"></span> PUBLISHED PROPOSED (${(w.body.hotspots || []).length})${suppressed ? ` &nbsp; <span class="warn">${suppressed} unlocalized/duplicate proposal${suppressed === 1 ? '' : 's'} retained for review</span>` : ''}</div>${src ? `<div class="imgwrap"><img loading="lazy" src="${src}" alt="">${oldM}${newM}${regions}</div>` : '<div class="noimg">image unavailable</div>'}</div>`;
 }
 const cn = (t) => `<span class="cn">${(t || '').length}</span>`;
 const actionBadge = (a) => `<span class="act a-${a}">${a}</span>`;
@@ -100,14 +122,15 @@ const kindBadge = (k, ref) => `<span class="kind k-${k}">${k}${ref ? '→' + esc
 function guideBlock(w) {
   const oldQ = (w.legacy.guide || []);
   const rows = w.guide.map((g) => {
-    const overwrote = /^legacy-/.test(String(g.ref || '')) && ['revise', 'replace'].includes(g.action) && w.meta.cohort === 'strongLegacy';
+    const overwrote = g.legacyDerived && ['revise', 'replace'].includes(g.action) && w.meta.cohort === 'strongLegacy';
     return `<div class="qa ${overwrote ? 'overwrote' : ''}"><div class="q">${actionBadge(g.action)} ${kindBadge(g.kind, g.evidenceRef)} ${esc(g.q)} ${cn(g.q)}</div><div class="a">${esc(g.a)} ${cn(g.a)}</div>${overwrote ? '<div class="ow">⚑ overwrites strong legacy question</div>' : ''}</div>`;
   }).join('');
-  const old = oldQ.length ? `<details class="oldg"><summary>OLD legacy guide (${oldQ.length}) — kept: ${w.keptLegacyGuide}</summary>${oldQ.map((q) => `<div class="qa old"><div class="q">${esc(q.q)}</div><div class="a">${esc(q.a)}</div></div>`).join('')}</details>` : '<p class="muted">no legacy guide (new entry)</p>';
+  const m = w.guideMetrics;
+  const old = oldQ.length ? `<details class="oldg"><summary>OLD legacy guide (${oldQ.length}) — final lineage: ${m.verbatim} verbatim · ${m.reworked} revised/replaced · ${m.removed} removed (${m.removedExplicit} explicit, ${m.removedImplicit} omitted) · ${m.added} new${m.invalidLegacyRefs ? ` · ${m.invalidLegacyRefs} mismatched legacy refs treated as new` : ''}</summary>${oldQ.map((q) => `<div class="qa old"><div class="q">${esc(q.q)}</div><div class="a">${esc(q.a)}</div></div>`).join('')}</details>` : '<p class="muted">no legacy guide (new entry)</p>';
   return `<h4>Proposed guide (${w.guide.length})</h4>${rows}${old}`;
 }
 function workCard(w) {
-  const flags = [w.overwriteStrong ? 'overwrite-strong' : '', w.conflicts.length ? 'conflicts' : '', w.cons.length ? 'corrections' : '', (w.keptLegacyGuide === 0 && w.hadLegacyGuide) ? 'zero-legacy-kept' : '', w.needsAttention ? 'needs-attention' : ''].filter(Boolean);
+  const flags = [w.overwriteStrong ? 'overwrite-strong' : '', w.conflicts.length ? 'conflicts' : '', w.cons.length ? 'corrections' : '', (w.guideMetrics.legacyTotal > 0 && w.guideMetrics.legacyDerived === 0) ? 'zero-legacy-derived' : '', (w.hotspotQuality?.suppressed || []).length ? 'hotspot-attention' : '', w.needsAttention ? 'needs-attention' : ''].filter(Boolean);
   return `<section class="work" data-cohort="${w.meta.cohort}" data-entry="${w.entryType}" data-flags="${flags.join(' ')}" data-maxans="${w.maxAns}" data-id="${esc(w.id)}">
   <h3>${esc(w.catalog.title || w.id)} <span class="wid">${esc(w.id)}</span></h3>
   <div class="meta">${w.meta.cohort} · ${w.meta.fameBand} · ${esc(w.meta.regionGroup)} · ${esc(w.catalog.medium)} · <b>${w.entryType}</b>${w.reused ? ' · <span class="reused">reused</span>' : ''}${flags.map((f) => `<span class="flag">${f}</span>`).join('')}</div>
@@ -120,6 +143,7 @@ function workCard(w) {
   </div>
   ${guideBlock(w)}
   <h4>Proposed notes (${w.notes.length})</h4>${w.notes.map((n) => `<div class="note"><b>${actionBadge(n.action)} ${esc(n.head)}</b> ${cn(n.body)} ${n.evidenceRef ? kindBadge('image', n.evidenceRef) : ''}<div>${esc(n.body)}</div></div>`).join('')}
+  ${w.hotspotQuality?.suppressed?.length ? `<div class="box pinq"><b>Hotspot proposals retained for attention (${w.hotspotQuality.suppressed.length}):</b>${w.hotspotQuality.suppressed.map(h => `<div>delta[${h.deltaIndex}] · ${esc(h.evidenceRef)} · ${esc(h.reason)}</div>`).join('')}</div>` : ''}
   ${w.cons.length ? `<div class="box corr"><b>Consequential corrections (${w.cons.length}):</b>${w.cons.map((c) => `<div>${esc(c.field)}: ${esc(c.from)} → ${esc(c.to)} (conf ${c.confidence}${(c.sourceRefs || []).length ? ', sourced' : ''})</div>`).join('')}</div>` : ''}
   ${w.conflicts.length ? `<div class="box conf"><b>Conflicts → humanReview (${w.conflicts.length}):</b>${w.conflicts.map((c) => `<div>${esc(c.field)} — left: ${esc(c.left)} | right: ${esc(c.right)}</div>`).join('')}</div>` : ''}
   ${w.uncertainty ? `<div class="box unc"><b>Uncertainty:</b> ${esc(w.uncertainty)}</div>` : ''}
@@ -159,6 +183,7 @@ main{max-width:1100px;margin:0 auto;padding:14px 18px}
 .ov{}.imgwrap{position:relative;display:inline-block;max-width:100%}.imgwrap img{max-width:100%;border:1px solid #ddd;border-radius:6px;display:block}
 .pin{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
 .pin.old{background:#8a8a8a;opacity:.85}.pin.proposed{background:#c9822b}.ovlabel{font-size:11px;color:#6b665e;margin-bottom:3px}.noimg{color:#b23b3b;font-size:12px}
+.region{position:absolute;border:2px solid #c9822b;background:#c9822b22;color:#7f4b0c;font-size:11px;font-weight:700;box-sizing:border-box}.warn{color:#a4601a;font-weight:600}.pinq{background:#fff8ee;border:1px solid #e6cf96}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}.dot.old{background:#8a8a8a}.dot.proposed{background:#c9822b}.imgwrap{max-width:520px}
 .bad{color:#b23b3b;font-weight:700;font-size:12px}
 button.f{margin:2px 4px 2px 0;padding:3px 9px;border:1px solid #cfc7ba;background:#fff;border-radius:14px;cursor:pointer;font-size:12px}button.f.on{background:#1c1a17;color:#fff;border-color:#1c1a17}
@@ -173,11 +198,13 @@ button.f{margin:2px 4px 2px 0;padding:3px 9px;border:1px solid #cfc7ba;backgroun
  <button class="f" data-f="new">new entry</button>
  <button class="f" data-f="overwrite">overwrite</button>
  <button class="f" data-f="conflicts">conflicts/corrections</button>
- <button class="f" data-f="zero-legacy-kept">zero legacy kept</button>
+ <button class="f" data-f="zero-legacy-derived">zero legacy-derived</button>
+ <button class="f" data-f="hotspot-attention">hotspot attention</button>
  <button class="f" data-f="needs-attention">needs attention</button>
  <button class="f" data-f="longest">longest answers</button>
 </div></header>
 <main>
+<div class="first10"><b>Corrected audit metrics</b> — hotspot proposals ${hotspotSummary.proposed}: ${hotspotSummary.published} published, ${hotspotSummary.suppressed} retained as duplicate/unlocalized attention items. Of ${lineageSummary.legacyTotal} old guide questions across ${lineageSummary.legacyWorks} works: ${lineageSummary.verbatim} survive verbatim, ${lineageSummary.reworked} survive revised/replaced, and ${lineageSummary.removed} do not survive (${lineageSummary.removedExplicit} explicit removals, ${lineageSummary.removedImplicit} omitted); ${lineageSummary.added} final questions are new. ${lineageSummary.zeroLegacyDerived} works retain no legacy-derived final question.${lineageSummary.invalidLegacyRefs ? ` ${lineageSummary.invalidLegacyRefs} cross-component legacy refs are conservatively counted as new.` : ''}</div>
 <div class="first10"><b>Recommended first-review set (10)</b> — 5 strongLegacy + 5 thin/missing, harvard303416 included, diverse culture/medium/fame/change:<br>${first10.map((id) => `<a href="#${esc(id)}">${esc(id)}</a>`).join(' · ')}</div>
 <h2>Completed (${completed.length})</h2>
 ${completed.map((w) => `<a name="${esc(w.id)}"></a>${workCard(w)}`).join('\n')}
@@ -196,7 +223,8 @@ document.querySelectorAll('button.f').forEach(b=>b.onclick=()=>{
     else if(f==='new')show=w.dataset.entry==='new';
     else if(f==='overwrite')show=w.dataset.entry==='overwrite';
     else if(f==='conflicts')show=/conflicts|corrections/.test(w.dataset.flags);
-    else if(f==='zero-legacy-kept')show=/zero-legacy-kept/.test(w.dataset.flags);
+    else if(f==='zero-legacy-derived')show=/zero-legacy-derived/.test(w.dataset.flags);
+    else if(f==='hotspot-attention')show=/hotspot-attention/.test(w.dataset.flags);
     else if(f==='needs-attention')show=/needs-attention/.test(w.dataset.flags);
     else if(f==='longest')show=Number(w.dataset.maxans)>=550;
     w.style.display=show?'':'none';});
@@ -204,6 +232,7 @@ document.querySelectorAll('button.f').forEach(b=>b.onclick=()=>{
 </script>`;
 
 const out = join(RUN, 'editorial-review-packet.html');
+if (/\b(?:left|top):(null|undefined|NaN)%/.test(html)) throw new Error('refusing to render an invalid hotspot coordinate');
 writeFileSync(out, html);
 console.log(`wrote ${out}`);
 console.log(`completed ${completed.length} | quarantined ${quarantined.length}`);

@@ -6,6 +6,7 @@ import {
   CONTENT_VISION_SCHEMA, buildB2Input, buildStageCompletion, parseStageBody,
   validateStageBody, validateStageCompletion, isCorroboratingSource, sourceHost,
   PLAYER_WHY_MAX, PLAYER_NOTE_BODY_MAX, GUIDE_MIN, GUIDE_MAX, GUIDE_ANSWER_MAX,
+  HOTSPOT_MIN_DISTANCE, HOTSPOT_MAX_REGION_AREA,
 } from '../scripts/lib/vision-content-schema.mjs';
 import { captureStageCompletion, verifyCapturedStage } from '../scripts/lib/vision-content-capture.mjs';
 
@@ -160,6 +161,10 @@ ok('sourceHost strips www and lowercases', sourceHost('https://WWW.Example.ORG/x
 { const v = clone(b4); v.notes.pop(); ok('B4 rejects fewer than five notes on a playable work', !validateStageBody('B4', v).ok); }
 { const v = clone(b4); v.hotspots[0].region = { x: 1, y: 1, w: 2, h: 2 }; ok('B4 hotspot must be a point XOR a region', !validateStageBody('B4', v).ok); }
 { const v = clone(b4); v.hotspots.push({ ...clone(v.hotspots[0]), hotspotId: 'h_2' }); ok('B4 rejects duplicate hotspot ranks', !validateStageBody('B4', v).ok); }
+{ const v = clone(b4); v.hotspots[0] = { ...v.hotspots[0], x: null, y: null, region: { x: 0, y: 0, w: 100, h: 100 } }; ok('B4 rejects a fake whole-image hotspot region', !validateStageBody('B4', v).ok); }
+{ const v = clone(b4); v.hotspots.push({ ...clone(v.hotspots[0]), hotspotId: 'h_2', observationId: 'pn_2', rank: 2, x: 80, y: 80 }); ok('B4 rejects duplicate hotspot evidenceRef even at a different point', !validateStageBody('B4', v).ok); }
+{ const v = clone(b4); v.hotspots.push({ ...clone(v.hotspots[0]), hotspotId: 'h_2', observationId: 'pn_2', rank: 2, x: 21, y: 21, evidenceRef: 'd_1' }); ok('B4 rejects distinct hotspot points closer than the publishable distance', !validateStageBody('B4', v).ok); }
+ok('hotspot quality constants are 3-point separation and under 65% image area', HOTSPOT_MIN_DISTANCE === 3 && HOTSPOT_MAX_REGION_AREA === 6500);
 
 ok('strict parser accepts one bare JSON object', parseStageBody(JSON.stringify(b1), 'B1').ok);
 ok('strict parser rejects fenced model output', !parseStageBody('```json\n{}\n```', 'B1').ok);

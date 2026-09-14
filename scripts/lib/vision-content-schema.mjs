@@ -25,6 +25,8 @@ export const PLAYER_NOTE_BODY_MAX = 600;
 export const GUIDE_MIN = 5;
 export const GUIDE_MAX = 7;
 export const GUIDE_ANSWER_MAX = 700;
+export const HOTSPOT_MIN_DISTANCE = 3;
+export const HOTSPOT_MAX_REGION_AREA = 6500;
 
 const CTRL = /[\u0000-\u001f\u007f]/;
 const ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
@@ -272,7 +274,8 @@ function publishedNote(item, grounding, sourceIds) {
 function hotspot(item, grounding) {
   if (!keys(item, ['hotspotId', 'observationId', 'x', 'y', 'region', 'rank', 'role', 'conciseText', 'deepText', 'evidenceRef', 'confidence', 'sourceDependent'])) return false;
   const point = finite(item.x) && finite(item.y) && item.x >= 0 && item.x <= 100 && item.y >= 0 && item.y <= 100 && item.region === null;
-  const area = item.x === null && item.y === null && region(item.region) && item.region !== null;
+  const area = item.x === null && item.y === null && region(item.region) && item.region !== null
+    && item.region.w * item.region.h < HOTSPOT_MAX_REGION_AREA;
   return id(item.hotspotId) && id(item.observationId) && (point || area)
     && Number.isInteger(item.rank) && item.rank >= 1 && ROLES.includes(item.role)
     && text(item.conciseText, 200) && text(item.deepText, 800)
@@ -310,6 +313,9 @@ function validateB4(body) {
   e.need(list(body.hotspots, item => hotspot(item, grounding), 40), 'B4 hotspots');
   e.need(unique((body.hotspots || []).map(item => item.hotspotId)), 'duplicate hotspotId');
   e.need(unique((body.hotspots || []).map(item => item.rank)), 'duplicate hotspot rank');
+  e.need(unique((body.hotspots || []).map(item => item.evidenceRef)), 'duplicate hotspot evidenceRef');
+  const points = (body.hotspots || []).filter(item => finite(item.x) && finite(item.y));
+  e.need(points.every((a, i) => points.slice(i + 1).every(b => Math.hypot(a.x - b.x, a.y - b.y) >= HOTSPOT_MIN_DISTANCE)), `hotspot points must be at least ${HOTSPOT_MIN_DISTANCE} apart`);
   // B4 guide CONTRACT (VSD-025): shape + answer<=GUIDE_ANSWER_MAX; a kind:"image" item MUST carry a real
   // grounding evidenceRef (kind:"context" may be null-or-grounded). Count/majority checked below for playable.
   e.need(list(body.guide, item => keys(item, ['questionId', 'q', 'a', 'kind', 'evidenceRef', 'sourceRefs'])

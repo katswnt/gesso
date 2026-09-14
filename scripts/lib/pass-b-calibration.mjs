@@ -20,7 +20,7 @@ export const IMAGE_TRANSPORT_VERSION = 'readtool-confined-dir/1';
 // Run-identity binding for the ACCEPTANCE contract: validation rules, wire-schema contract, B4 delta
 // hydration, and execution-evidence policy. Bump this whenever any of those change so future runs get a
 // fresh run identity (and never silently reuse checkpoints accepted under different rules). VSD-023.
-export const VALIDATION_CONTRACT_VERSION = 'passBValidation/3'; // /3: leak gate catches museum-record/museum-as-source (VSD-026); /2: B4 guide contract + leak-gate widening (VSD-025)
+export const VALIDATION_CONTRACT_VERSION = 'passBValidation/4'; // /4: spatial pinRef + publishable-hotspot/lineage rules (VSD-027); /3: museum-source leak gate (VSD-026)
 // Pure, testable run-identity contract. The runId is 'cal50-' + contractHash(...). Every listed binding
 // participates; changing any one changes the runId.
 export function calibrationContract({ selIds, controllerVersion = CONTROLLER_VERSION, imageTransportVersion = IMAGE_TRANSPORT_VERSION, prompts, validationContractVersion = VALIDATION_CONTRACT_VERSION, schema = 'contentVisionEnrichment/1' }) {
@@ -459,7 +459,7 @@ export function syntheticFixture() {
     why: { action: 'revise', text: 'A ram-headed composite figure that rewards close looking.' },
     cues: { action: 'replace', items: ['ram head → composite deity'] },
     notes: Array.from({ length: 5 }, (_, i) => ({ action: 'add', ref: 'n1', head: `Delta note ${i + 1}`, body: 'A grounded observation of a visible feature.', role: 'diagnostic', evidenceRef: 'ev_when', sourceRefs: ['s1'] })),
-    hotspots: [{ action: 'add', ref: 'n1', rank: 1, conciseText: 'Pointed arch', deepText: 'Anchors the longer lesson.', role: 'diagnostic', evidenceRef: 'ev_when', sourceDependent: false }],
+    hotspots: [{ action: 'add', ref: 'n1', pinRef: 'n1', rank: 1, conciseText: 'Pointed arch', deepText: 'Anchors the longer lesson.', role: 'diagnostic', evidenceRef: 'ev_medium', sourceDependent: false }],
     guide: Array.from({ length: 5 }, (_, i) => ({ action: 'add', ref: null, q: `Why does detail ${i + 1} matter?`, a: 'Links visible evidence to sourced context.', kind: i < 3 ? 'image' : 'context', evidenceRef: i < 3 ? ['ev_when', 'ev_where', 'ev_medium'][i] : null, sourceRefs: ['s1'] })),
     corrections: [{ field: 'medium', from: 'oil', to: 'tempera', evidenceRef: 'ev_when', sourceRefs: ['s1'], confidence: 0.8 }],
     conflicts: [], uncertainty: '',
@@ -594,7 +594,7 @@ export function compactB4DeltaInput({ b1, b2, b3, legacyInput }) {
     counts: lg.counts ?? null,
   };
   return {
-    version: 'passBB4DeltaInput/2',
+    version: 'passBB4DeltaInput/3',
     imageState: b1?.imageFitness?.imageState ?? null, playable: b1?.playable ?? null, seen: b1?.seen ?? null,
     grounding: { evidence, delights }, b1Candidates, b2: b2c, b3: b3c, legacy,
   };
