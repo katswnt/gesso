@@ -1,0 +1,54 @@
+{
+  "version": "passBContentBlocked/1",
+  "generatedNote": "Content-blocked findings (VSD-034 item 1). Immutable + ancestry-bound (workId + rawDeltaSha256). passBContentBlocked/1.",
+  "findings": [
+    {
+      "findingId": "cb-273b4c707b9c",
+      "workId": "wikidata:Q16467705",
+      "rawDeltaSha256": "ec53c3bebb43dbb62f88378ffaa0a58e54ed160ee2e892b028e46fc40355a7a8",
+      "rawResponseSha256": "277a4bff1f909a26d7bba214ab450d4b0dce2e2e3f99bb73ed60dc51d6530893",
+      "imgSha256": "10078d0cea4d44d11bb28812c3e473c1e16aa23525cbb9b20e816bf37a3ddb0c",
+      "blockedClaims": [
+        "figure-role-inversion: player copy makes Villiers the lower/nude figure and Glory the upper/winged figure; correct binding is Glory=nude woman below, Villiers=clothed man in coffin above",
+        "invented-wings: player copy asserts wings on Glory; no wings exist (uncertainty admits no visual confirmation; catalog has no \"ailee\")",
+        "invented-skull: rich index/tags assert a skull / memento-mori / vanitas program not present in the work",
+        "wrong-medium: rich index asserts carved wood; the work is plaster"
+      ],
+      "reason": "Figure inversion + invented iconography (audit-confirmed against Musee Carnavalet record). Glory is the nude woman below; Villiers is the clothed man in the coffin above.",
+      "provenance": {
+        "sourceRuns": [
+          "b4c-f45fac18da2e",
+          "b4r-8f1f74ddc30f"
+        ],
+        "upstreamRun": "cal50-0a47b6f7f332",
+        "upstreamCompletionRawResponseSha256": "277a4bff1f909a26d7bba214ab450d4b0dce2e2e3f99bb73ed60dc51d6530893",
+        "sourceRecordSha256": "857257dc27f1f990e57cf15e3e8bc1aac8c919c31217e88f91b32c1d14f72a60",
+        "bodySha256": "b6d18e76182ae631ca8ce32e91232f52165f94ae09a398d78167a8dbdfb67386",
+        "auditRef": "VSD-034 forensic audit 2026-09-15"
+      }
+    },
+    {
+      "findingId": "cb-d4c407b953ac",
+      "workId": "wikidata:Q1211814",
+      "rawDeltaSha256": "bc427e998ce0b09924733621bf1d681e7751cf28da27e6e75b0af5294858a61d",
+      "rawResponseSha256": "a6f08e0ccdac947965072011471f5561b39567b987875913b96b4c267cedbfb6",
+      "imgSha256": "ffe7b538e8de1a9716e4eccdcaa043c9a74d1aee1c8ef2b19448536dd529d8fa",
+      "blockedClaims": [
+        "entity-aliasing: one lower-left region is assigned two incompatible identities (crawling human penitent AND crouching lion) with conflicts:[]; the figure is a crawling man"
+      ],
+      "reason": "Intra-record entity aliasing (audit-confirmed against NGA description). The lower-left crawling human penitent (St. John Chrysostom) is also described as a separate crouching lion, with no declared conflict.",
+      "provenance": {
+        "sourceRuns": [
+          "b4c-f45fac18da2e",
+          "b4r-8f1f74ddc30f"
+        ],
+        "upstreamRun": "cal50-0a47b6f7f332",
+        "upstreamCompletionRawResponseSha256": "a6f08e0ccdac947965072011471f5561b39567b987875913b96b4c267cedbfb6",
+        "sourceRecordSha256": "8f7589b1be6abee89e397bf43ca8a9157ffead8b3c49e0bfc27eaa518b85675d",
+        "bodySha256": "b7d8961b43849137b7f8851d9a080fb247114b7998fe53de95cf86a76336b6b2",
+        "auditRef": "VSD-034 forensic audit 2026-09-15"
+      }
+    }
+  ],
+  "findingsSha256": "4be9d757a07766f5d977ef92839d63496fe83d1e5eb3047e5888b6ec37f0fa24"
+}
