@@ -20,8 +20,9 @@ import {
   transcriptFinal, verifyB1ImageRead,
 } from './lib/pass-b-calibration.mjs';
 import {
-  LOCALIZATION_WIRE_SCHEMA, SPATIAL_CALIBRATION_VERSION, buildLocalizationInput, buildLocalizationPrompt,
-  pointDistance, spatialRowsForWork, validateLocalizationResult,
+  LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, SPATIAL_CALIBRATION_VERSION,
+  buildLocalizationInput, buildLocalizationPrompt, pointDistance, resolveLocalization,
+  spatialRowsForWork, summarizePointDistances, validateLocalizationResult,
 } from './lib/pass-b-spatial-policy.mjs';
 
 const execFileP = promisify(execFile);
@@ -74,9 +75,9 @@ const bindings = Object.fromEntries(selected.map(work => [work.id, {
   localizationInputSha256: sha256(stableJson(work.input)),
 }]));
 const binding = {
-  version: 'passBSpatialLocalizationCanary/1', sourceRun, sourceRunId: sourceManifest.runId,
+  version: 'passBSpatialLocalizationCanary/4', sourceRun, sourceRunId: sourceManifest.runId,
   sourceEvidenceManifestSha256: sourceManifest.evidenceManifestSha256 ?? null,
-  spatialPolicyVersion: SPATIAL_CALIBRATION_VERSION, localizationSchema: 'passBLocalizationResult/1',
+  spatialPolicyVersion: SPATIAL_CALIBRATION_VERSION, localizationSchema: LOCALIZATION_RESULT_VERSION,
   model: CALIBRATION_MODEL, mode, works: selected.map(work => work.id), bindings,
 };
 const runId = `b5c-${sha256(stableJson(binding)).slice(0, 12)}`;
@@ -134,7 +135,8 @@ function scoreAgainstOwner(results, review) {
   const reviewByWork = new Map((review?.works || []).map(work => [work.workId, work]));
   const scored = [];
   for (const work of selected) {
-    const result = results.get(work.id)?.result;
+    const response = results.get(work.id);
+    const result = response?.ok ? response.result : null;
     const decisions = new Map((result?.decisions || []).map(decision => [decision.requestId, decision]));
     const reviewed = reviewByWork.get(work.id);
     const reviewRows = new Map((reviewed?.hotspots || []).map(row => [row.deltaIndex, row.review]));
@@ -143,24 +145,53 @@ function scoreAgainstOwner(results, review) {
       const row = work.rows.find(item => item.deltaIndex === target.deltaIndex);
       const ownerPoint = owner?.decision === 'move' ? owner : owner?.decision === 'keep' ? row?.currentPoint : null;
       const decision = decisions.get(target.requestId);
-      const modelPoint = ['point', 'representative'].includes(decision?.scope) ? decision.point : null;
+      const resolution = decision ? resolveLocalization(row, decision) : null;
+      const modelPoint = resolution?.presentation === 'pin' ? resolution.point : null;
+      const currentDistance = pointDistance(ownerPoint, row?.currentPoint);
+      const candidateDistances = (target.candidates || []).map(candidate => pointDistance(ownerPoint, candidate.point)).filter(Number.isFinite);
       scored.push({
         workId: work.id, deltaIndex: target.deltaIndex, requestId: target.requestId,
         ownerDecision: owner?.decision || 'abstain', ownerPoint: ownerPoint && { x: ownerPoint.x, y: ownerPoint.y },
-        modelScope: decision?.scope ?? null, modelPoint, distance: pointDistance(ownerPoint, modelPoint),
+        modelScope: decision?.scope ?? null, modelConfidence: decision?.confidence ?? null,
+        modelSelectedCandidateId: resolution?.candidateId ?? null,
+        modelSuggestedPoint: decision?.suggestedPoint ?? null,
+        candidateAssessments: decision?.candidateAssessments ?? [],
+        resolution: resolution ? { presentation: resolution.presentation, status: resolution.status, reason: resolution.reason } : null,
+        modelPoint, distance: pointDistance(ownerPoint, modelPoint), currentDistance,
+        bestExistingCandidateDistance: candidateDistances.length ? Math.min(...candidateDistances) : null,
       });
     }
   }
-  const comparable = scored.filter(row => Number.isFinite(row.distance));
-  const distances = comparable.map(row => row.distance).sort((a, b) => a - b);
-  const q = p => distances.length ? distances[Math.min(distances.length - 1, Math.floor(distances.length * p))] : null;
+  const countBy = (values, getter) => Object.fromEntries([...values.reduce((map, value) => {
+    const key = getter(value) ?? 'none'; map.set(key, (map.get(key) || 0) + 1); return map;
+  }, new Map()).entries()].sort(([a], [b]) => a.localeCompare(b)));
+  const unique = scored.filter(row => row.modelScope === 'point' && Number.isFinite(row.distance));
+  const representative = scored.filter(row => row.modelScope === 'representative' && Number.isFinite(row.distance));
+  const assessments = scored.flatMap(row => row.candidateAssessments || []);
   return {
-    version: 'passBSpatialLocalizationScore/1', reviewVersion: review?.version ?? null,
-    reviewSha256: sha256(stableJson(review)), targets: scored.length, comparablePoints: comparable.length,
-    within3: comparable.filter(row => row.distance <= 3).length,
-    within5: comparable.filter(row => row.distance <= 5).length,
-    within10: comparable.filter(row => row.distance <= 10).length,
-    medianDistance: q(0.5), p90Distance: q(0.9), rows: scored,
+    version: 'passBSpatialLocalizationScore/2', reviewVersion: review?.version ?? null,
+    reviewSha256: sha256(stableJson(review)), targets: scored.length,
+    ownerChoices: countBy(scored, row => row.ownerDecision),
+    ownerPointLabels: scored.filter(row => row.ownerPoint).length,
+    modelScopes: countBy(scored, row => row.modelScope),
+    resolvedPresentations: countBy(scored, row => row.resolution?.presentation),
+    candidateValidation: {
+      assessments: assessments.length,
+      verdicts: countBy(assessments, assessment => assessment.verdict),
+      selectedExisting: scored.filter(row => row.modelSelectedCandidateId !== null).length,
+      suggestedNewPoints: scored.filter(row => row.modelSuggestedPoint !== null).length,
+      appliedNewPoints: scored.filter(row => row.resolution?.reason?.startsWith('new-point-')).length,
+    },
+    // Primary coordinate score: only genuinely unique point targets. Representative examples are
+    // set-valued, so their owner distance is retained as a diagnostic rather than called accuracy.
+    uniquePointDistance: summarizePointDistances(unique.map(row => row.distance)),
+    uniquePointBaselines: {
+      current: summarizePointDistances(unique.map(row => row.currentDistance)),
+      bestExistingCandidate: summarizePointDistances(unique.map(row => row.bestExistingCandidateDistance)),
+    },
+    representativeDistanceDiagnostic: summarizePointDistances(representative.map(row => row.distance)),
+    allResolvedPointDistanceDiagnostic: summarizePointDistances(scored.map(row => row.distance)),
+    rows: scored,
   };
 }
 
@@ -191,7 +222,7 @@ async function execute() {
   const ok = [...results.values()].filter(result => result.ok).length;
   writeFileSync(join(outDir, 'summary.json'), `${JSON.stringify({ runId, ok, failed: results.size - ok, score }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
   console.log(`DONE ${ok}/${results.size}; ${outDir}`);
-  if (score) console.log(`owner-blind point score: ${score.comparablePoints} comparable; within5 ${score.within5}; median ${score.medianDistance}`);
+  if (score) console.log(`owner-blind unique-point score: ${score.uniquePointDistance.comparable} comparable; within5 ${score.uniquePointDistance.within5}; median ${score.uniquePointDistance.median}`);
 }
 
 if (run) await execute(); else printPlan();

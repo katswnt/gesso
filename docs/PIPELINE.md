@@ -184,6 +184,11 @@ has no authoritative writer. Its current sequence is:
    It preserves a previous coordinate only when the image SHA is unchanged, compares it
    with B1, routes duplicates to merges and broad/distributed observations to unpinned
    notes, and sends only uncertain point placement to a bounded localization-only canary.
+   Under VSD-030 the canary validates every candidate rather than choosing a favorite free
+   point. The resolver preserves a valid current point as a no-churn tie-breaker, otherwise
+   another valid prior point; uncertainty holds, and a new suggestion is usable only after
+   every candidate is invalid. The model receives only the image, short target title, and
+   candidate points—never B1 explanatory prose, research/player copy, or owner answers.
 
 The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
 events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
@@ -250,8 +255,14 @@ Current limitations:
   Across all 143 kept/moved observations with comparable same-image legacy coordinates, the owner's selected
   point was closer to the current point 116 times, closer to legacy 23 times, and tied 4 times. The legacy
   wins all occurred among the 79 moved observations (23 legacy, 52 current, 4 ties), confirming that legacy
-  is useful evidence but not a universal winner. The localization-only canary is plan-only: zero B5 model
-  calls have run and no auto-policy threshold is yet approved.
+  is useful evidence but not a universal winner. The initial favorite-point canary
+  `b5c-bb6247e13e73` completed 10/10 but showed that raw point distance mis-scores repeated
+  features and that free localization can move already-valid candidates. VSD-030 replaced that
+  contract with independent candidate assessment and scope-aware scoring. The accepted blind
+  canary `b5c-f2020a1d8cca` completed 10/10 strict-valid with no retries (44 targets, 77 candidate
+  assessments): 23 existing candidates selected, 4 new suggestions, 12 note routes, 5 holds.
+  Its 17 comparable unique-point labels were 9/17 within 5 and 12/17 within 10 (median 2.89,
+  interpolated p90 21.84). This is diagnostic; no auto-policy threshold is yet approved.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
@@ -290,6 +301,14 @@ PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
 /opt/homebrew/bin/node scripts/pass-b-b4-offline-repair.mjs
 /opt/homebrew/bin/node scripts/pass-b-b4-review-packet.mjs \
   data/incoming/vision-calibration/b4r-8f1f74ddc30f
+
+# Plan the bounded VSD-030 candidate-validation canary (no model call).
+/opt/homebrew/bin/node scripts/pass-b-spatial-localization-canary.mjs \
+  --review /path/to/pass-b-editorial-review-b4r-8f1f74ddc30f.json
+
+# Explicit subscription-backed run. The review file is opened only after every blind image call.
+PASS_B_SPATIAL_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-spatial-localization-canary.mjs \
+  --run --review /path/to/pass-b-editorial-review-b4r-8f1f74ddc30f.json
 ```
 
 Artifacts remain under `data/incoming/vision-calibration/` (gitignored). A prompt/schema/transport

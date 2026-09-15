@@ -23,7 +23,7 @@ import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass
 import {
   SPATIAL_CALIBRATION_VERSION, LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, legacyHotspotCandidate, spatialRowsForWork,
   buildLocalizationInput, buildLocalizationPrompt, validateLocalizationResult, resolveLocalization,
-  summarizeOwnerSpatialReview,
+  quantile, summarizeOwnerSpatialReview, summarizePointDistances,
 } from '../scripts/lib/pass-b-spatial-policy.mjs';
 
 const tests = []; const t = (n, fn) => tests.push({ n, fn });
@@ -34,6 +34,7 @@ const poolIds = new Set(w.ARTEFACTUM_POOL.map(x => x.id));
 const controllerSrc = readFileSync('scripts/pass-b-calibration.mjs', 'utf8').replace(/\/\/.*$/gm, '');
 const libSrc = readFileSync('scripts/lib/pass-b-calibration.mjs', 'utf8');
 const fullPacketSrc = readFileSync('scripts/pass-b-b4-review-packet.mjs', 'utf8');
+const spatialCanarySrc = readFileSync('scripts/pass-b-spatial-localization-canary.mjs', 'utf8');
 const SHA = 'a'.repeat(64);
 
 // ---- stream-json transcript fixtures ----
@@ -571,19 +572,63 @@ t('VSD-029 keeps legacy points as candidates and routes spatial suppression with
 t('VSD-029 localization input is spatial-only, excludes human answers, and validates scope/point semantics', () => {
   const rows = [{
     deltaIndex: 2, state: 'published', target: 'Small inscription at lower right', groundingTarget: 'small mark',
-    candidates: [{ source: 'legacy', point: { x: 80, y: 90 } }, { source: 'b1', point: { x: 60, y: 60 } }],
+    candidates: [{ candidateId: 'legacy', source: 'legacy', point: { x: 80, y: 90 } }, { candidateId: 'current', source: 'b1', point: { x: 60, y: 60 } }],
     automaticRoute: { presentation: 'localize', reason: 'candidate disagreement' },
   }];
   const input = buildLocalizationInput({ workId: 'w1', imageSha256: SHA, imageExt: 'jpg', rows, mode: 'exceptions' });
   assert.equal(input.targets.length, 1);
+  const longGrounding = buildLocalizationInput({ workId: 'w1', imageSha256: SHA, imageExt: 'jpg', rows: [{ ...rows[0], groundingTarget: 'x'.repeat(161) }], mode: 'exceptions' });
+  assert(!('groundingTarget' in longGrounding.targets[0]), 'grounding/explanatory prose never enters the spatial prompt');
   assert(!JSON.stringify(input).includes('owner') && !JSON.stringify(input).includes('review'), 'owner labels never enter localization input');
   const prompt = buildLocalizationPrompt(input, `${SHA}.jpg`);
-  assert(prompt.includes('spatial-localization') && prompt.includes('notFound') && !prompt.includes('historical explanation'));
-  const good = { version: LOCALIZATION_RESULT_VERSION, decisions: [{ requestId: 'sp-2', scope: 'representative', point: { x: 79, y: 91 }, confidence: 0.9, note: 'Visible mark.' }], uncertainty: '' };
+  assert(prompt.includes('spatial-localization') && prompt.includes('notFound') && prompt.includes('only when EVERY supplied candidate is invalid') && !prompt.includes('historical explanation'));
+  const good = { version: LOCALIZATION_RESULT_VERSION, decisions: [{
+    requestId: 'sp-2', scope: 'representative',
+    candidateAssessments: [
+      { candidateId: 'legacy', verdict: 'valid', note: 'It lands on the mark.' },
+      { candidateId: 'current', verdict: 'invalid', note: 'It misses the mark.' },
+    ],
+    suggestedPoint: null, confidence: 0.9, note: 'The prior point is an honest example.',
+  }], uncertainty: '' };
   assert(validateLocalizationResult(input, good).ok);
-  assert.deepEqual(resolveLocalization(rows[0], good.decisions[0]), { presentation: 'pin', point: { x: 79, y: 91 }, status: 'auto', reason: 'spatial-scope-representative' });
-  const bad = JSON.parse(JSON.stringify(good)); bad.decisions[0].scope = 'global';
-  assert(!validateLocalizationResult(input, bad).ok, 'global scope cannot carry a point');
+  assert.deepEqual(resolveLocalization(rows[0], good.decisions[0]), { presentation: 'pin', point: { x: 80, y: 90 }, candidateId: 'legacy', status: 'auto', reason: 'validated-candidate-representative' }, 'a validated candidate preserves its exact stored coordinate');
+  const bothValid = JSON.parse(JSON.stringify(good)); bothValid.decisions[0].candidateAssessments[1].verdict = 'valid';
+  assert.deepEqual(resolveLocalization(rows[0], bothValid.decisions[0]), { presentation: 'pin', point: { x: 60, y: 60 }, candidateId: 'current', status: 'auto', reason: 'validated-candidate-representative' }, 'when both are valid, the current coordinate wins only as a no-churn tie-breaker');
+
+  const inventedDespiteValid = JSON.parse(JSON.stringify(good));
+  inventedDespiteValid.decisions[0].suggestedPoint = { x: 79, y: 91 };
+  assert(!validateLocalizationResult(input, inventedDespiteValid).ok, 'a new point is forbidden while any existing candidate is valid');
+
+  const alternative = JSON.parse(JSON.stringify(good));
+  alternative.decisions[0].candidateAssessments[0].verdict = 'invalid';
+  alternative.decisions[0].suggestedPoint = { x: 79, y: 91 };
+  assert(validateLocalizationResult(input, alternative).ok, 'a new point is allowed only after every candidate is rejected');
+  assert.deepEqual(resolveLocalization(rows[0], alternative.decisions[0]), { presentation: 'pin', point: { x: 79, y: 91 }, candidateId: null, status: 'auto', reason: 'new-point-representative' });
+
+  const uncertain = JSON.parse(JSON.stringify(alternative)); uncertain.decisions[0].candidateAssessments[0].verdict = 'uncertain';
+  assert(validateLocalizationResult(input, uncertain).ok, 'a syntactically valid fallback may accompany uncertainty without failing the whole work');
+  assert.deepEqual(resolveLocalization(rows[0], uncertain.decisions[0], { minimumConfidence: 0.75 }), { presentation: 'hold', point: null, status: 'human-review', reason: 'uncertain-existing-candidate' }, 'the controller never applies a fallback while an existing candidate remains uncertain');
+
+  const distributed = JSON.parse(JSON.stringify(alternative));
+  distributed.decisions[0].scope = 'distributed'; distributed.decisions[0].suggestedPoint = null;
+  assert(validateLocalizationResult(input, distributed).ok);
+  assert.deepEqual(resolveLocalization(rows[0], distributed.decisions[0]), { presentation: 'note', point: null, status: 'auto', reason: 'spatial-scope-distributed' });
+
+  const notFound = JSON.parse(JSON.stringify(distributed)); notFound.decisions[0].scope = 'notFound';
+  assert(validateLocalizationResult(input, notFound).ok);
+  assert.deepEqual(resolveLocalization(rows[0], notFound.decisions[0]), { presentation: 'hold', point: null, status: 'claim-review', reason: 'visual-target-not-found' });
+
+  const missingAssessment = JSON.parse(JSON.stringify(good)); missingAssessment.decisions[0].candidateAssessments.pop();
+  assert(!validateLocalizationResult(input, missingAssessment).ok, 'every candidate must receive an independent assessment');
+  assert(spatialCanarySrc.includes("const result = response?.ok ? response.result : null"), 'failed localizer output is excluded from owner scoring');
+});
+
+t('VSD-029 scope-aware score summaries use interpolated quantiles and keep representative distance diagnostic', () => {
+  assert.equal(quantile([0, 7, 12, 20], 0.5), 9.5);
+  assert.equal(quantile([0, 10, 20], 0.9), 18);
+  assert.deepEqual(summarizePointDistances([0, 2, 7, null, 12]), {
+    comparable: 4, within3: 2, within5: 2, within10: 3, median: 4.5, p90: 10.5,
+  });
 });
 
 t('VSD-029 owner-review learning treats blanks as abstentions and v1 drops as spatial-only', () => {

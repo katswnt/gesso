@@ -11,10 +11,11 @@
 import { EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { b4Lineage } from './pass-b-b4-delta.mjs';
 
-export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/1';
-export const LOCALIZATION_INPUT_VERSION = 'passBLocalizationInput/1';
-export const LOCALIZATION_RESULT_VERSION = 'passBLocalizationResult/1';
+export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/4';
+export const LOCALIZATION_INPUT_VERSION = 'passBLocalizationInput/4';
+export const LOCALIZATION_RESULT_VERSION = 'passBLocalizationResult/3';
 export const SPATIAL_SCOPES = Object.freeze(['point', 'representative', 'distributed', 'global', 'notFound', 'ambiguous']);
+export const CANDIDATE_VERDICTS = Object.freeze(['valid', 'invalid', 'uncertain']);
 export const LEGACY_AGREEMENT_DISTANCE = 5;
 export const LEGACY_DISAGREEMENT_DISTANCE = 10;
 
@@ -30,9 +31,16 @@ export const LOCALIZATION_WIRE_SCHEMA = Object.freeze({
     decisions: {
       type: 'array', items: {
         type: 'object', additionalProperties: false,
-        required: ['requestId', 'scope', 'point', 'confidence', 'note'],
+        required: ['requestId', 'scope', 'candidateAssessments', 'suggestedPoint', 'confidence', 'note'],
         properties: {
-          requestId: str, scope: { type: 'string', enum: [...SPATIAL_SCOPES] }, point: nullablePoint,
+          requestId: str, scope: { type: 'string', enum: [...SPATIAL_SCOPES] },
+          candidateAssessments: {
+            type: 'array', items: {
+              type: 'object', additionalProperties: false, required: ['candidateId', 'verdict', 'note'],
+              properties: { candidateId: str, verdict: { type: 'string', enum: [...CANDIDATE_VERDICTS] }, note: str },
+            },
+          },
+          suggestedPoint: nullablePoint,
           confidence: num, note: str,
         },
       },
@@ -125,8 +133,8 @@ export function spatialRowsForWork({ workId, imageSha256, legacyImageSha256, del
     const legacyCoordinateEligible = !!legacyCandidate && /^[0-9a-f]{64}$/.test(legacyImageSha256 || '') && legacyImageSha256 === imageSha256;
     const proposedPoint = clonePoint(published);
     const candidates = [];
-    if (legacyCoordinateEligible) candidates.push({ source: 'legacy', ref: legacyCandidate.ref, point: legacyCandidate.point });
-    if (proposedPoint) candidates.push({ source: placement?.method || 'b1', ref: placement?.pinRef ?? source.evidenceRef ?? null, point: proposedPoint });
+    if (legacyCoordinateEligible) candidates.push({ candidateId: 'legacy', source: 'legacy', ref: legacyCandidate.ref, point: legacyCandidate.point });
+    if (proposedPoint) candidates.push({ candidateId: 'current', source: placement?.method || 'b1', ref: placement?.pinRef ?? source.evidenceRef ?? null, point: proposedPoint });
     const route = automaticRoute({ action: source.action, placement, suppression, legacyCandidate, legacyCoordinateEligible, proposedPoint });
     return {
       workId, imageSha256: imageSha256 ?? null, deltaIndex: row.deltaIndex,
@@ -156,19 +164,26 @@ function shouldLocalize(row, mode) {
   return row.automaticRoute.presentation === 'localize';
 }
 
+const shortVisualLabel = value => {
+  const label = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+  if (!label) return null;
+  return label.length <= 160 ? label : `${label.slice(0, 157).trimEnd()}…`;
+};
+
 // Human answers are intentionally not accepted by this function. The returned request can be handed to a
 // spatial-only image process without leaking owner coordinates into its input.
 export function buildLocalizationInput({ workId, imageSha256, imageExt, rows, mode = 'exceptions' }) {
   if (!['exceptions', 'audit'].includes(mode)) throw new Error(`unknown localization mode: ${mode}`);
   if (!/^[0-9a-f]{64}$/.test(imageSha256 || '')) throw new Error('localization input needs image sha256');
   if (!/^[a-z0-9]{1,5}$/.test(imageExt || '')) throw new Error('localization input needs safe image extension');
-  const targets = (rows || []).filter(row => shouldLocalize(row, mode)).map(row => ({
-    requestId: `sp-${row.deltaIndex}`,
-    deltaIndex: row.deltaIndex,
-    visualTarget: row.target,
-    groundingTarget: row.groundingTarget,
-    candidates: row.candidates.map(candidate => ({ source: candidate.source, point: { ...candidate.point } })),
-  }));
+  const targets = (rows || []).filter(row => shouldLocalize(row, mode)).map(row => {
+    return {
+      requestId: `sp-${row.deltaIndex}`,
+      deltaIndex: row.deltaIndex,
+      visualTarget: shortVisualLabel(row.target) || 'Visible feature',
+      candidates: row.candidates.map(candidate => ({ candidateId: candidate.candidateId, source: candidate.source, point: { ...candidate.point } })),
+    };
+  });
   return { version: LOCALIZATION_INPUT_VERSION, workId, imageSha256, imageExt, mode, targets };
 }
 
@@ -176,10 +191,13 @@ export function buildLocalizationPrompt(input, imageFile) {
   if (input?.version !== LOCALIZATION_INPUT_VERSION) throw new Error('invalid localization input version');
   if (!/^[0-9a-f]{64}\.[a-z0-9]{1,5}$/.test(imageFile || '')) throw new Error('localization prompt needs neutral image filename');
   return [
-    'You are a spatial-localization checker. Your working directory contains exactly one sanitized artwork image. Open the named image with the Read tool. You are not researching or rewriting the artwork: your only job is to decide whether each supplied visual target can honestly be represented by one point.',
-    'For each target, choose exactly one scope: point (one exact visible detail), representative (a repeated/distributed feature for which one clearly representative visible example is honest), distributed (visible in several places and no single example adequately represents it), global (describes the whole composition or object), notFound (the claimed visible target is not present), or ambiguous (the pixels do not support a reliable decision).',
-    'For point or representative, return one x/y percentage point on the visible feature. For every other scope, point must be null. Candidate points are prior spatial proposals, not facts: inspect the pixels and choose either one of them or a better point. Do not assume a target exists merely because it was requested. Do not discuss artist, date, title, history, symbolism, or source claims.',
-    'Return one bare JSON object only, with exactly {version,decisions,uncertainty}. Echo every requestId once. Each decision is exactly {requestId,scope,point,confidence,note}; confidence is 0-1 and note briefly describes only the visible spatial basis. Set version to passBLocalizationResult/1.',
+    'You are a spatial-localization checker. Your working directory contains exactly one sanitized artwork image. Open the named image with the Read tool. You are not researching or rewriting the artwork: your only job is to decide whether each supplied visual target can honestly be represented by one point and whether any existing candidate already does so.',
+    'For each target, choose exactly one scope: point (one exact visible detail), representative (a repeated feature for which one clearly representative visible example is honest), distributed (visible in several places and no single example adequately represents it), global (describes the whole composition or object), notFound (the claimed visible target is not present), or ambiguous (the pixels do not support a reliable decision).',
+    'Judge EVERY supplied candidate independently as valid, invalid, or uncertain. Valid means that exact point lands on the requested visible target and would be an honest published pin for the chosen scope. Do not invalidate a correct candidate merely because another location is prettier or more central. Candidate source labels are provenance, not authority.',
+    'For point or representative: set suggestedPoint to null when any candidate is valid. Suggest a new point only when EVERY supplied candidate is invalid (or there are no candidates). If no candidate is valid but any candidate is uncertain, choose ambiguous and return no point. For distributed, global, notFound, or ambiguous, suggestedPoint must be null and no candidate may be marked valid.',
+    'The deterministic controller—not you—selects among valid candidates, preserving the current point when it is valid and otherwise using another valid prior point. Therefore do not choose a preferred candidate and do not relocate a valid point merely to improve centering.',
+    'Do not assume a target exists merely because it was requested. Do not discuss artist, date, title, history, symbolism, identity, or source claims. A notFound result flags the visible claim for separate review; it does not rewrite it.',
+    'Return one bare JSON object only, with exactly {version,decisions,uncertainty}. Echo every requestId once. Each decision is exactly {requestId,scope,candidateAssessments,suggestedPoint,confidence,note}. Each candidate assessment is exactly {candidateId,verdict,note}. Confidence is 0-1 and notes briefly describe only the visible spatial basis. Set version to passBLocalizationResult/3.',
     'Point coordinates use x/y percentages from 0-100, measured on the image itself.',
     `The image file is ./${imageFile}.`,
     `TARGETS:\n${JSON.stringify({ version: input.version, mode: input.mode, targets: input.targets })}`,
@@ -194,7 +212,8 @@ export function validateLocalizationResult(input, result) {
   need(result.version === LOCALIZATION_RESULT_VERSION, 'result version');
   need(Array.isArray(result.decisions), 'decisions array');
   need(typeof result.uncertainty === 'string' && result.uncertainty.length <= 1000, 'uncertainty');
-  const wanted = new Set((input?.targets || []).map(target => target.requestId));
+  const targets = new Map((input?.targets || []).map(target => [target.requestId, target]));
+  const wanted = new Set(targets.keys());
   const seen = new Set();
   for (const decision of (result.decisions || [])) {
     need(decision && typeof decision === 'object' && !Array.isArray(decision), 'decision object');
@@ -203,8 +222,28 @@ export function validateLocalizationResult(input, result) {
     need(!seen.has(decision.requestId), `duplicate requestId: ${decision.requestId}`);
     seen.add(decision.requestId);
     need(SPATIAL_SCOPES.includes(decision.scope), `scope: ${decision.scope}`);
+    const target = targets.get(decision.requestId);
+    const candidates = new Map((target?.candidates || []).map(candidate => [candidate.candidateId, candidate]));
+    need(Array.isArray(decision.candidateAssessments), `candidateAssessments: ${decision.requestId}`);
+    const assessments = new Map();
+    for (const assessment of (decision.candidateAssessments || [])) {
+      need(assessment && typeof assessment === 'object' && !Array.isArray(assessment), `candidate assessment object: ${decision.requestId}`);
+      if (!assessment || typeof assessment !== 'object') continue;
+      need(candidates.has(assessment.candidateId), `unexpected candidateId: ${decision.requestId}/${assessment.candidateId}`);
+      need(!assessments.has(assessment.candidateId), `duplicate candidateId: ${decision.requestId}/${assessment.candidateId}`);
+      assessments.set(assessment.candidateId, assessment);
+      need(CANDIDATE_VERDICTS.includes(assessment.verdict), `candidate verdict: ${decision.requestId}/${assessment.candidateId}`);
+      need(typeof assessment.note === 'string' && assessment.note.length <= 300, `candidate note: ${decision.requestId}/${assessment.candidateId}`);
+    }
+    need(assessments.size === candidates.size && [...candidates.keys()].every(id => assessments.has(id)), `one assessment per candidate: ${decision.requestId}`);
+    need(decision.suggestedPoint === null || validPoint(decision.suggestedPoint), `suggestedPoint: ${decision.requestId}`);
     const pointRequired = ['point', 'representative'].includes(decision.scope);
-    need(pointRequired ? validPoint(decision.point) : decision.point === null, `point/scope mismatch: ${decision.requestId}`);
+    if (pointRequired) {
+      need(!(validPoint(decision.suggestedPoint) && [...assessments.values()].some(value => value.verdict === 'valid')), `suggested point forbidden while a candidate is valid: ${decision.requestId}`);
+    } else {
+      need(decision.suggestedPoint === null, `nonpoint scope cannot suggest a point: ${decision.requestId}`);
+      need([...assessments.values()].every(value => value.verdict !== 'valid'), `nonpoint scope cannot validate a candidate: ${decision.requestId}`);
+    }
     need(typeof decision.confidence === 'number' && decision.confidence >= 0 && decision.confidence <= 1, `confidence: ${decision.requestId}`);
     need(typeof decision.note === 'string' && decision.note.length <= 500, `note: ${decision.requestId}`);
   }
@@ -221,14 +260,41 @@ export function resolveLocalization(row, decision, { minimumConfidence = 0.75 } 
   if (['distributed', 'global'].includes(decision.scope)) {
     return { presentation: 'note', point: null, status: 'auto', reason: `spatial-scope-${decision.scope}` };
   }
-  return { presentation: 'pin', point: clonePoint(decision.point), status: 'auto', reason: `spatial-scope-${decision.scope}` };
+  const assessments = new Map((decision.candidateAssessments || []).map(value => [value.candidateId, value.verdict]));
+  const validCandidates = (row.candidates || []).filter(candidate => assessments.get(candidate.candidateId) === 'valid');
+  if (validCandidates.length) {
+    const candidate = validCandidates.find(value => value.candidateId === 'current') || validCandidates[0];
+    return { presentation: 'pin', point: clonePoint(candidate.point), candidateId: candidate.candidateId, status: 'auto', reason: `validated-candidate-${decision.scope}` };
+  }
+  if ([...assessments.values()].some(verdict => verdict === 'uncertain')) {
+    return { presentation: 'hold', point: null, status: 'human-review', reason: 'uncertain-existing-candidate' };
+  }
+  if (validPoint(decision.suggestedPoint)) {
+    return { presentation: 'pin', point: clonePoint(decision.suggestedPoint), candidateId: null, status: 'auto', reason: `new-point-${decision.scope}` };
+  }
+  return { presentation: 'hold', point: null, status: 'human-review', reason: 'no-valid-candidate-or-new-point' };
 }
 
-const quantile = (values, q) => {
+export const quantile = (values, q) => {
   const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
   if (!sorted.length) return null;
-  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
+  if (sorted.length === 1) return sorted[0];
+  const position = Math.max(0, Math.min(1, q)) * (sorted.length - 1);
+  const lower = Math.floor(position); const upper = Math.ceil(position);
+  const fraction = position - lower;
+  return sorted[lower] + ((sorted[upper] - sorted[lower]) * fraction);
 };
+
+export function summarizePointDistances(values) {
+  const distances = values.filter(Number.isFinite);
+  return {
+    comparable: distances.length,
+    within3: distances.filter(value => value <= 3).length,
+    within5: distances.filter(value => value <= 5).length,
+    within10: distances.filter(value => value <= 10).length,
+    median: quantile(distances, 0.5), p90: quantile(distances, 0.9),
+  };
+}
 
 function ownerChoice(reviewHotspot, row) {
   const review = reviewHotspot?.review;
