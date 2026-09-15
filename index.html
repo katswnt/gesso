@@ -3329,6 +3329,71 @@ function paintBurst(host){
 // vision v2 record accessor (data/vision.js) — used by visionMarks() for the look-closer pins
 let __VISMAP=null;
 function VIS(id){ if(__VISMAP===null)__VISMAP=(typeof window!=='undefined'&&window.ARTEFACTUM_VISION)||{}; if(__VISMAP[id])return __VISMAP[id]; const m=String(id).match(/Q\d+/); if(m){ if(__VISMAP['wikidata:'+m[0]])return __VISMAP['wikidata:'+m[0]]; if(__VISMAP['http://www.wikidata.org/entity/'+m[0]])return __VISMAP['http://www.wikidata.org/entity/'+m[0]]; } return null; }
+// ---------- reveal "look closer" details ----------
+// ONE normalized detail shape across every content generation, so the marker UI does not need to know which
+// generation a work came from. Marker numbering is preserved exactly as each generation already numbered it, so
+// a marker still corresponds to its Study Notes row. Presence rules mirror the previous renderReveal markup
+// exactly (pinned v2 notes → vision pins → legacy hotspots), so no work gains or loses markers from this change.
+// Coordinates are normalized to PERCENT. Missing / nonnumeric / out-of-range coordinates are dropped silently:
+// the note itself still renders in Study Notes, it simply has no marker.
+const DETAIL_SCALE = 1.5;                 // marker-directed zoom level
+const DETAIL_MAX_SCALE = 6;               // matches the existing lightbox ceiling
+function detailCoord(v, max){ return (typeof v === 'number' && isFinite(v) && v >= 0 && v <= max) ? v : null; }
+function revealDetails(it, study){
+  study = study || {}; const out = [];
+  const push = d => { out.push(d); };
+  const notes = Array.isArray(study.notes) ? study.notes : null;
+  if(notes && notes.length){
+    notes.forEach((nt,i)=>{ const x=detailCoord(nt&&nt.x,100), y=detailCoord(nt&&nt.y,100); if(x===null||y===null)return;
+      push({index:i,n:i+1,head:String((nt&&nt.head)||`Detail ${i+1}`),body:String((nt&&nt.body)||''),x,y,source:'note'}); });
+    if(out.length) return out;
+    // v2 record with no pinned note → fall through to vision pins, then hotspots (previous visionMarks() order)
+    const v = (typeof VIS === 'function') ? VIS(it && it.id) : null;
+    const pins = (v && Array.isArray(v.pins)) ? v.pins : [];
+    pins.forEach((p,i)=>{ const fx=detailCoord(p&&p.x,1), fy=detailCoord(p&&p.y,1); if(fx===null||fy===null)return;
+      push({index:i,n:i+1,head:String((p&&p.label)||`Detail ${i+1}`),body:'',x:fx*100,y:fy*100,source:'pin'}); });
+    if(out.length) return out;
+  }
+  // legacy: HOTSPOTS[] numbered markers backed by study.cues[] — show the cue text honestly under a neutral heading
+  const hs = (typeof HOTSPOTS !== 'undefined' && HOTSPOTS[it && it.id]) || [];
+  const cues = Array.isArray(study.cues) ? study.cues : [];
+  hs.forEach(h=>{ const x=detailCoord(h&&h.x,100), y=detailCoord(h&&h.y,100); if(x===null||y===null)return;
+    const n=(h&&h.n)||(out.length+1); const cue=cues[n-1];
+    push({index:n-1,n,head:`Detail ${n}`,body:cue?String(cue):'',x,y,source:'cue'}); });
+  return out;
+}
+// ---------- per-reveal marker session ----------
+// Session-only by design: never persisted to localStorage or a backend, and rebuilt from scratch on every
+// renderReveal, so paging between rounds can never inherit a stale selection or a hidden marker.
+function newDetailSession(details){ return {details:Array.isArray(details)?details:[],allVisible:true,hidden:new Set(),selected:null}; }
+function detailVisible(s,index){ return !!s && s.allVisible && !s.hidden.has(index); }
+function toggleAllDetails(s){ s.allVisible=!s.allVisible; if(s.allVisible)s.hidden.clear(); return s.allVisible; }   // "Show all" also clears individual hides, so an individually hidden marker is always recoverable
+function toggleOneDetail(s,index){ if(s.hidden.has(index))s.hidden.delete(index); else s.hidden.add(index); return !s.hidden.has(index); }
+// Selecting the already-selected marker returns to the whole work; selecting another re-centres on it.
+function nextDetailSelection(selected,index){ return (selected!=null && selected===index) ? {selected:null,scale:1} : {selected:index,scale:DETAIL_SCALE}; }
+// ---------- viewer transform model ----------
+// The canvas (image + markers) is centred in the stage and transformed as one unit, so markers stay attached to
+// the artwork. Pan is clamped to the scaled content, so an edge marker lands against the viewport edge — visible
+// and inspectable — instead of dragging the artwork off into empty space.
+function clampDetailPan(tx,ty,baseW,baseH,stageW,stageH,scale){
+  const mx=Math.max(0,(baseW*scale-stageW)/2), my=Math.max(0,(baseH*scale-stageH)/2);
+  return {tx:Math.max(-mx,Math.min(mx,tx)), ty:Math.max(-my,Math.min(my,ty))};
+}
+function centerOnDetail(xPct,yPct,baseW,baseH,stageW,stageH,scale){
+  return clampDetailPan(-((xPct/100)-0.5)*baseW*scale, -((yPct/100)-0.5)*baseH*scale, baseW,baseH,stageW,stageH,scale);
+}
+// ---------- title-row visibility control ----------
+// Icon shows the ACTION, not the state: crossed-eye while markers are visible (the action is to hide them),
+// magnifier while they are hidden (the action is to restore them). A work with no publishable markers gets no control.
+function detailMarksHTML(details){
+  if(!details||!details.length) return '';
+  return `<div class="lookmarks">${details.map(d=>`<button type="button" class="lookmark" data-detail="${d.index}" style="top:${d.y}%;left:${d.x}%" aria-label="${esc('Detail '+d.n+(d.head?': '+d.head:''))}" title="${esc(d.head||'')}">${d.n}</button>`).join('')}</div>`;
+}
+function detailToggleHTML(count,visible){
+  if(!count) return '';
+  const noun=`${count} detail${count===1?'':'s'}`;
+  return `<div class="looktools"><button type="button" class="lookctl" aria-pressed="${visible?'true':'false'}" aria-label="${esc((visible?'Hide':'Show')+' '+count+' look-closer detail'+(count===1?'':'s'))}">${visible?LOOK_EYE_OFF:LOOK_EYE}<span>${noun}</span></button></div>`;
+}
 function visionMarks(it){ const v=VIS(it.id); if(v&&v.pins&&v.pins.length) return `<div class="lookmarks">${v.pins.map((p,i)=>`<button class="lookmark" style="top:${(p.y*100).toFixed(1)}%;left:${(p.x*100).toFixed(1)}%" title="${esc(p.label||'')}">${i+1}</button>`).join('')}</div>`; const hs=(typeof HOTSPOTS!=='undefined'&&HOTSPOTS[it.id])||[]; if(hs.length) return `<div class="lookmarks">${hs.map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%">${h.n||1}</button>`).join('')}</div>`; return ''; }
 // GENERIC follow-up stems that repeat verbatim across thousands of works (matter / how-made / who-for /
 // technique / made-of / who-is-shown …) read as a form. When a work has >=3 genuinely work-specific
@@ -3569,7 +3634,8 @@ function renderReveal(r,ri,push=true){
   const study=studyFor(it);
   // v2 unified notes (pinned items lead with the observation + carry image-pin coords); v1 falls back to cues+hotspots+guide
   const notesV2 = Array.isArray(study.notes) && study.notes.length ? study.notes : null;
-  const pinNotes = notesV2 ? study.notes.map((n,i)=>({...n,i})).filter(n=>n.x!=null&&n.y!=null) : null;
+  const RD = revealDetails(it, study);          // normalized look-closer details for this work
+  const RS = newDetailSession(RD);               // fresh marker session per render — never inherited between rounds
   const why=esc(study.why).replace(/\b(Dutch Golden Age|Renaissance|Baroque|Impressionism|Post-Impressionism|ukiyo-e)\b/,'<strong>$1</strong>'); // esc() first, then add the one trusted <strong> highlight
   const firstSentence=(()=>{ const w=(study.why||'').trim(); if(!w)return ''; const d=w.indexOf('. '); return d>-1?w.slice(0,d+1):w; })(); // teaser sentence for the below-image info panel
   const ml=masteryLine();
@@ -3583,8 +3649,8 @@ function renderReveal(r,ri,push=true){
     </div><div class="swatchrow">${banner}</div></div>
     <div class="revealgrid">
       <div>
-        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${pinNotes?(pinNotes.length?`<div class="lookmarks">${pinNotes.map(n=>`<button class="lookmark" style="top:${n.y}%;left:${n.x}%" data-note="${n.i}" title="${esc(n.head||'')}">${n.i+1}</button>`).join('')}</div>`:visionMarks(it)):((HOTSPOTS[it.id]||[]).length?`<div class="lookmarks">${HOTSPOTS[it.id].map(h=>`<button class="lookmark" style="top:${h.y}%;left:${h.x}%" data-cue="${(h.n||1)-1}" title="${esc((study.cues||[])[(h.n||1)-1]||'')}">${h.n||1}</button>`).join('')}</div>`:'')}</div>
-        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div></div>${histTitleHTML(it)}
+        <div style="position:relative" class="plate"><div class="imgloader"><i></i><i></i><i></i></div><img class="art" data-zoom="${esc(it.img)}" src="${esc(displaySrc(it.img))}" alt="${esc(it.title)}" onload="this.previousElementSibling.remove()" onerror="imgFail(this)"/><span class="filed">FILED &check;</span>${saveBtnHTML(it.id)}${detailMarksHTML(RD)}</div>
+        <div class="worktitle-row"><div class="worktitle">${esc(it.title)}</div>${detailToggleHTML(RD.length,true)}</div>${histTitleHTML(it)}
         ${firstSentence?`<div class="workblurb">${esc(firstSentence)}</div>`:''}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
           ${it.artist?`<div class="metarow"><span class="k">ARTIST</span><span class="v">${esc(artistDisplay(it))}</span></div>`:`<div class="metarow"><span class="k">ARTIST</span><span class="v" style="color:var(--muted)">Unknown / anonymous</span></div>`}
@@ -3598,6 +3664,7 @@ function renderReveal(r,ri,push=true){
         <a class="telllink" href="${sourceURL(it)}" target="_blank" rel="noopener">View the source record ${ICONS.ext}</a>
       </div>
       <div>
+        <aside class="detailcard" hidden aria-live="polite"></aside>
         <div class="kick" style="margin-bottom:4px">Scorecard</div>
         ${r.coreCats.map(scoreRow).join('')}${r.cells.artist?scoreRow('artist'):''}${!r.cells.style?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Movement</div><div class="t2">${it.cats.includes('style')?`given for this drill — ${esc(it.style)}`:'not scored — no movement on record for this work'}</div></div></div>`:''}${!r.cells.medium?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Medium</div><div class="t2">${it.cats.includes('medium')?`given for this drill — ${esc(it.medSimple||it.medium||'')}`:'not scored — medium not recorded for this work'}</div></div></div>`:''}${!r.cells.where&&it.cats.includes('where')?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">given for this drill — ${esc(it.place||'')}</div></div></div>`:''}${!r.cells.where&&!it.cats.includes('where')&&isPlaceNA(it)?`<div class="scrow"><span class="sq" style="background:var(--line-card)"></span><div class="mid"><div class="t1" style="color:var(--muted)">Place of origin</div><div class="t2">not scored — ${it.place?`the record locates this only to ${esc(it.place)}`:'no location on record for this work'}</div></div></div>`:''}
         <div style="margin-top:18px"><div class="kick" style="margin-bottom:8px">Your pin vs. truth</div>
@@ -3631,14 +3698,41 @@ function renderReveal(r,ri,push=true){
   setupReportFlow(it,study);
   declutterPlate(document.getElementById('stage')); // keep look-closer markers from stacking
   if(perfect)setTimeout(()=>paintBurst(document.getElementById('revbanner')),80);
-  // look-closer pins → v2: open+scroll the matching note row; v1: flash the matching cue
-  const smooth=(typeof settings!=='undefined'&&settings.reduceMotion)?'auto':'smooth';
-  document.querySelectorAll('.lookmark').forEach(b=>b.onclick=()=>{
-    if(b.dataset.note!=null){ const row=document.querySelector(`.agrow[data-note="${b.dataset.note}"]`); if(!row)return;
-      const q=row.querySelector('.agq'); if(q&&q.getAttribute('aria-expanded')!=='true'){q.setAttribute('aria-expanded','true');q.nextElementSibling.hidden=false;}
-      row.scrollIntoView({behavior:smooth,block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1200); return; }
-    const cue=document.querySelectorAll('.study .cue')[+b.dataset.cue];
-    if(cue){cue.scrollIntoView({behavior:smooth,block:'center'}); cue.classList.add('flash'); setTimeout(()=>cue.classList.remove('flash'),1200);}});
+  // ---- look-closer markers ----
+  // Desktop (two-column reveal): the marker's own heading and body open in a sidecar at the top of the right
+  // column, above the scorecard, and the page does NOT scroll. Stacked mobile (<=680px — the width at which
+  // .revealgrid actually collapses) opens the enlarged artwork already centred on that detail instead.
+  // Study Notes accordions keep their own independent expand/collapse behaviour either way.
+  const stackedReveal = () => !!(window.matchMedia && window.matchMedia('(max-width:680px)').matches);
+  const revealGrid = document.querySelector('.revealgrid');
+  const detailCard = revealGrid && revealGrid.querySelector('.detailcard');
+  const lookCtl = revealGrid && revealGrid.querySelector('.lookctl');
+  const cardMarks = () => revealGrid ? [...revealGrid.querySelectorAll('.lookmark[data-detail]')] : [];
+  function syncCardDetails(){
+    cardMarks().forEach(m => { const i = Number(m.dataset.detail);
+      m.hidden = !detailVisible(RS, i); m.classList.toggle('sel', RS.selected === i); });
+    if(lookCtl){
+      lookCtl.setAttribute('aria-pressed', RS.allVisible ? 'true' : 'false');
+      lookCtl.setAttribute('aria-label', `${RS.allVisible?'Hide':'Show'} ${RD.length} look-closer detail${RD.length===1?'':'s'}`);
+      lookCtl.innerHTML = `${RS.allVisible?LOOK_EYE_OFF:LOOK_EYE}<span>${RD.length} detail${RD.length===1?'':'s'}</span>`; }
+  }
+  function closeSidecar(){ RS.selected = null; if(detailCard){ detailCard.hidden = true; detailCard.innerHTML = ''; } syncCardDetails(); }
+  function showSidecar(index){ const d = RD.find(x => x.index === index); if(!d || !detailCard) return;
+    RS.selected = index;
+    detailCard.innerHTML = `<button type="button" class="detailcard-close" aria-label="Close detail">&times;</button><div class="detailcard-kicker">Detail ${d.n}</div><div class="detailcard-head">${esc(d.head||'')}</div>${d.body?`<div class="detailcard-body">${esc(d.body)}</div>`:''}`;
+    detailCard.hidden = false;
+    detailCard.querySelector('.detailcard-close').onclick = closeSidecar;
+    syncCardDetails(); }
+  function openRevealZoom(sel){ openZoom(it.img, {details:RD, session:RS, title:it.title, selectedIndex:sel, onChange:syncCardDetails}); }
+  cardMarks().forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation();
+    const i = Number(b.dataset.detail);
+    if(stackedReveal()) openRevealZoom(i); else (RS.selected === i ? closeSidecar() : showSidecar(i)); });
+  if(lookCtl) lookCtl.onclick = () => { toggleAllDetails(RS); if(!RS.allVisible) closeSidecar(); else syncCardDetails(); };
+  // The reveal artwork opens the SAME viewer, carrying this reveal's details. stopPropagation keeps the global
+  // marker-free `.art` handler from firing as well, so exactly one viewer opens.
+  { const art = revealGrid && revealGrid.querySelector('.plate img.art');
+    if(art) art.addEventListener('click', e => { e.stopPropagation(); openRevealZoom(null); }); }
+  syncCardDetails();
   // teach-me accordion (v1 .askguide + v2 .aglist): each row toggles independently
   document.querySelectorAll('.study .agq').forEach(b=>b.onclick=()=>{
     const open=b.getAttribute('aria-expanded')==='true';
@@ -3935,35 +4029,123 @@ function hiRes(src){
   if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=2400"):src+(src.includes("?")?"&":"?")+"width=2400"; // Commons larger render
   return src;                                                                              // LoC, Smithsonian, Blob — single fixed size
 }
-function openZoom(src){
-  const lb=document.createElement('div');lb.className='lightbox';
-  const img=document.createElement('img');img.src=hiRes(src);img.draggable=false;img.style.touchAction='none';
-  let scale=1,tx=0,ty=0; const MAX=6;
-  const apply=()=>{img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;img.style.cursor=scale>1?'grab':'zoom-in';};
-  const pts=new Map(); let moved=false,pinchD=0,pinchS=1,mid=null,downX=0,downY=0;
-  const D=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y), M=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
-  img.addEventListener('pointerdown',e=>{ try{img.setPointerCapture(e.pointerId);}catch{} pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    moved=false;downX=e.clientX;downY=e.clientY;
-    if(pts.size===2){const a=[...pts.values()];pinchD=D(a[0],a[1]);pinchS=scale;mid=M(a[0],a[1]);} e.preventDefault(); });
-  img.addEventListener('pointermove',e=>{ const prev=pts.get(e.pointerId); if(!prev)return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(pts.size===2){const a=[...pts.values()];const d=D(a[0],a[1]);if(pinchD){scale=Math.min(MAX,Math.max(1,pinchS*d/pinchD));}const m=M(a[0],a[1]);tx+=m.x-mid.x;ty+=m.y-mid.y;mid=m;moved=true;apply();}
-    else{if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>8)moved=true;if(scale>1){tx+=e.clientX-prev.x;ty+=e.clientY-prev.y;apply();}} });
-  // zoom toward a screen point (px,py): keep that point fixed under the cursor as scale goes s0->s1
-  const zoomTo=(px,py,s1)=>{ s1=Math.min(MAX,Math.max(1,s1)); if(s1<=1){scale=1;tx=0;ty=0;return;}
-    const r=img.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; const k=1-s1/scale;
-    tx+=(px-cx)*k; ty+=(py-cy)*k; scale=s1; };
-  const endP=e=>{const wasTap=!moved&&pts.size===1;pts.delete(e.pointerId);if(pts.size<2)pinchD=0;
-    if(wasTap){if(scale>1){scale=1;tx=0;ty=0;}else{zoomTo(downX,downY,2.5);}apply();}}; // tap zooms to where you clicked
-  img.addEventListener('pointerup',endP); img.addEventListener('pointercancel',e=>pts.delete(e.pointerId));
-  img.addEventListener('wheel',e=>{e.preventDefault();zoomTo(e.clientX,e.clientY,scale-Math.sign(e.deltaY)*0.3);apply();},{passive:false});
-  const close=()=>{lb.remove();document.removeEventListener('keydown',esc2);};
-  const esc2=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',esc2);
-  // backdrop closes ONLY on a clean tap (never after a pan); image taps are handled above
-  lb.addEventListener('pointerdown',e=>{if(e.target===lb)moved=false;});
-  lb.addEventListener('pointerup',e=>{if(e.target===lb&&!moved)close();});
-  const x=document.createElement('button');x.className='lb-close';x.textContent='✕';x.onclick=e=>{e.stopPropagation();close();};
-  const hint=document.createElement('div');hint.className='lb-hint';hint.textContent='Tap/click to zoom · drag to pan · pinch or scroll to zoom · Esc to close';
-  lb.append(img,x,hint);document.body.appendChild(lb);apply();
+// High-resolution artwork viewer. ONE zoom system for the whole app: called bare it is the plain, marker-free
+// lightbox every surface has always had; called with `details` (reveal surfaces only) it also carries the
+// look-closer markers and their study text. Gameplay and gallery images never pass details, so an unanswered
+// work can never expose a marker, a heading, a body or an answer.
+//   opts.details        normalized revealDetails() array
+//   opts.session        shared per-reveal marker session (so card + viewer agree on what is hidden)
+//   opts.title          work title for the dialog label
+//   opts.selectedIndex  detail to open already selected and centred
+//   opts.onChange       called whenever shared marker state changes, so the card can re-sync
+function openZoom(src, opts){
+  opts = opts || {};
+  const details = Array.isArray(opts.details) ? opts.details : [];
+  const hasDetails = details.length > 0;
+  const session = hasDetails ? (opts.session || newDetailSession(details)) : null;
+  const title = opts.title || '';
+  const opener = (typeof document !== 'undefined' && document.activeElement && document.activeElement !== document.body) ? document.activeElement : null;
+
+  const lb = document.createElement('div');
+  lb.className = 'lightbox' + (hasDetails ? ' lb-detailed' : '');
+  lb.setAttribute('role','dialog'); lb.setAttribute('aria-modal','true');
+  lb.setAttribute('aria-label', title ? `Enlarged artwork: ${title}` : 'Enlarged artwork');
+  lb.innerHTML = `${hasDetails?`<div class="lb-title"><small>Enlarged artwork</small><strong>${esc(title)}</strong></div>`:''}<div class="lb-stage"><div class="lb-canvas"><img alt="${esc(title)}" draggable="false"></div></div>`;
+  const stage = lb.querySelector('.lb-stage'), canvas = lb.querySelector('.lb-canvas'), img = canvas.querySelector('img');
+  const footer = hasDetails ? document.createElement('footer') : null;
+  if(footer) footer.className = 'lb-footer';
+
+  let scale = 1, tx = 0, ty = 0, baseW = 0, baseH = 0;
+  const sw = () => stage.clientWidth || 0, sh = () => stage.clientHeight || 0;
+  const apply = () => { canvas.style.setProperty('--lb-inverse', String(1/scale));
+    canvas.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    canvas.style.cursor = scale > 1 ? 'grab' : 'zoom-in'; };
+  const clamp = () => { const c = clampDetailPan(tx,ty,baseW,baseH,sw(),sh(),scale); tx = c.tx; ty = c.ty; };
+  const layout = () => { if(!img.naturalWidth || !img.naturalHeight) return;
+    const pad = hasDetails ? 28 : Math.round(Math.min(sw(),sh()) * 0.06);   // plain view keeps its old airy margin
+    const fit = Math.min((sw()-pad)/img.naturalWidth, (sh()-pad)/img.naturalHeight);
+    baseW = Math.max(1, img.naturalWidth*fit); baseH = Math.max(1, img.naturalHeight*fit);
+    canvas.style.width = baseW+'px'; canvas.style.height = baseH+'px';
+    canvas.style.left = ((sw()-baseW)/2)+'px'; canvas.style.top = ((sh()-baseH)/2)+'px';
+    clamp(); apply(); };
+
+  const syncMarkers = () => { if(!hasDetails) return;
+    canvas.querySelectorAll('.lb-marker').forEach(m => { const i = Number(m.dataset.index);
+      m.hidden = !detailVisible(session, i);
+      m.setAttribute('aria-pressed', String(session.selected === i)); }); };
+  const changed = () => { if(typeof opts.onChange === 'function') opts.onChange(); };
+
+  function renderFooter(){ if(!footer) return;
+    const d = (session && session.selected != null) ? details.find(x => x.index === session.selected) : null;
+    const allBtn = `<button type="button" data-all>${session.allVisible ? 'Hide all markers' : 'Show all markers'}</button>`;
+    if(!d){ footer.innerHTML = `<div class="lb-hintline">Tap a numbered detail to look closer &middot; drag to pan &middot; pinch or scroll to zoom &middot; tap the dark background to return</div><div class="lb-actions">${allBtn}</div>`; }
+    else { footer.innerHTML = `<div class="lb-copy"><span class="lb-num">${d.n}</span><div class="lb-copytext"><div class="lb-kicker">Detail ${d.n} &middot; tap the marker again to see the whole work</div><div class="lb-head">${esc(d.head||'')}</div>${d.body?`<div class="lb-body">${esc(d.body)}</div>`:''}</div></div><div class="lb-actions"><button type="button" data-reset>View full work</button><button type="button" data-one>${detailVisible(session,d.index)?'Hide this marker':'Show this marker'}</button>${allBtn}</div>`; }
+    const r = footer.querySelector('[data-reset]'); if(r) r.onclick = () => resetView();
+    const one = footer.querySelector('[data-one]'); if(one) one.onclick = () => { toggleOneDetail(session, session.selected); syncMarkers(); renderFooter(); changed(); };
+    const all = footer.querySelector('[data-all]'); if(all) all.onclick = () => { toggleAllDetails(session); syncMarkers(); renderFooter(); changed(); };
+  }
+  function resetView(){ if(session) session.selected = null; scale = 1; tx = 0; ty = 0; syncMarkers(); renderFooter(); apply(); changed(); }
+  function selectDetail(index){ if(!session) return; session.selected = index; scale = DETAIL_SCALE;
+    const d = details.find(x => x.index === index);
+    if(d){ const c = centerOnDetail(d.x, d.y, baseW, baseH, sw(), sh(), scale); tx = c.tx; ty = c.ty; }
+    syncMarkers(); renderFooter(); apply(); changed(); }
+  function pickDetail(index){ const nx = nextDetailSelection(session.selected, index); if(nx.selected == null) resetView(); else selectDetail(index); }
+
+  if(hasDetails){ details.forEach(d => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-marker';
+    b.dataset.index = String(d.index); b.style.left = d.x+'%'; b.style.top = d.y+'%';
+    b.setAttribute('aria-label', `Detail ${d.n}${d.head?': '+d.head:''}`); b.setAttribute('aria-pressed','false');
+    b.innerHTML = `<span>${d.n}</span>`;
+    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); pickDetail(d.index); });
+    canvas.appendChild(b); }); }
+
+  const zoomTo = (px,py,s1) => { s1 = Math.min(DETAIL_MAX_SCALE, Math.max(1, s1));
+    if(s1 <= 1){ resetView(); return; }
+    const r = canvas.getBoundingClientRect(); const cx = r.left + r.width/2, cy = r.top + r.height/2; const k = 1 - s1/scale;
+    tx += (px-cx)*k; ty += (py-cy)*k; scale = s1; };
+  const inCanvas = (x,y) => { const r = canvas.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; };
+
+  const pts = new Map(); let moved = false, pinchD = 0, pinchS = 1, mid = null, downX = 0, downY = 0;
+  const D = (a,b) => Math.hypot(a.x-b.x, a.y-b.y), M = (a,b) => ({x:(a.x+b.x)/2, y:(a.y+b.y)/2});
+  stage.addEventListener('pointerdown', e => { if(e.target.closest && e.target.closest('.lb-marker')) return;
+    try{ stage.setPointerCapture(e.pointerId); }catch{}
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved = false; downX = e.clientX; downY = e.clientY;
+    if(pts.size === 2){ const a = [...pts.values()]; pinchD = D(a[0],a[1]); pinchS = scale; mid = M(a[0],a[1]); }
+    e.preventDefault(); });
+  stage.addEventListener('pointermove', e => { const prev = pts.get(e.pointerId); if(!prev) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size === 2){ const a = [...pts.values()]; const d = D(a[0],a[1]);
+      if(pinchD){ scale = Math.min(DETAIL_MAX_SCALE, Math.max(1, pinchS*d/pinchD)); }
+      const m = M(a[0],a[1]); tx += m.x-mid.x; ty += m.y-mid.y; mid = m; moved = true; clamp(); apply(); }
+    else { if(Math.abs(e.clientX-downX) + Math.abs(e.clientY-downY) > 8) moved = true;
+      if(scale > 1){ tx += e.clientX-prev.x; ty += e.clientY-prev.y; clamp(); apply(); } } });
+  // A COMPLETED PAN IS NOT A TAP: `moved` gates both the zoom-toggle and the background close, so dragging the
+  // artwork (or dragging off it onto the dark surround) can never be misread as a background click.
+  const endP = e => { const wasTap = !moved && pts.size === 1; pts.delete(e.pointerId); if(pts.size < 2) pinchD = 0;
+    if(!wasTap) return;
+    if(!inCanvas(downX, downY)){ close(); return; }                     // clean tap on the dark surround → close
+    if(scale > 1) resetView(); else { zoomTo(downX, downY, 2.5); clamp(); apply(); } };
+  stage.addEventListener('pointerup', endP); stage.addEventListener('pointercancel', e => { pts.delete(e.pointerId); });
+  stage.addEventListener('wheel', e => { e.preventDefault(); zoomTo(e.clientX, e.clientY, scale - Math.sign(e.deltaY)*0.3); clamp(); apply(); }, {passive:false});
+
+  const onKey = e => { if(e.key === 'Escape') close(); };
+  const onResize = () => layout();
+  function close(){ lb.remove(); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize);
+    document.body.classList.remove('lb-open');
+    if(opener && typeof opener.focus === 'function'){ try{ opener.focus(); }catch{} } }
+  document.addEventListener('keydown', onKey); window.addEventListener('resize', onResize);
+
+  const x = document.createElement('button'); x.className = 'lb-close'; x.type = 'button';
+  x.setAttribute('aria-label','Close enlarged artwork'); x.textContent = '✕';
+  x.onclick = e => { e.stopPropagation(); close(); };
+  lb.appendChild(x);
+  if(footer) lb.appendChild(footer); else { const hint = document.createElement('div'); hint.className = 'lb-hint'; hint.textContent = 'Tap/click to zoom · drag to pan · pinch or scroll to zoom · Esc to close'; lb.appendChild(hint); }
+  document.body.appendChild(lb); document.body.classList.add('lb-open');
+  // Apply the SHARED session state immediately: if the card already hid markers, the viewer must open hidden too.
+  syncMarkers(); renderFooter(); apply();
+  // The high-resolution source is requested ONLY here, when the viewer opens — the reveal card never fetches it.
+  img.onload = () => { layout(); if(hasDetails && opts.selectedIndex != null) requestAnimationFrame(() => selectDetail(Number(opts.selectedIndex))); };
+  img.src = hiRes(src);
+  x.focus();
 }
 // zoom from the ORIGINAL artwork source (data-zoom), not the on-screen src — which imgFail() may have
 // swapped to a downsized proxy fallback. Falls back to src for imgs without data-zoom.

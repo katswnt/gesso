@@ -156,3 +156,71 @@ human field-level review (`scripts/vision-review.mjs`) + the hash-bound merge (`
   (`scripts/eval-auditor.mjs` → blind agents → `scripts/eval-score.mjs`).
 - **Pin placement:** spot-checked at ~83% on-target / 15% within a few % / 2% off on the audited
   set (v1, pre-feature-anchoring). New pins should land tighter.
+
+---
+
+## Player-facing hotspot presentation
+
+How already-published markers are **presented** on the post-answer reveal. This is presentation only:
+it consumes what curation published and **does not decide which candidates get published**, and it does
+not change how many markers a work has — normal marker count remains governed by the existing curation
+policy and the render-time de-clutter nudge.
+
+**Where markers appear.** Post-answer reveal surfaces only. An unanswered gameplay artwork — and the
+ordinary gallery zoom — never expose markers, cues, note headings, note bodies or answers. The viewer is
+one system parameterized with optional reveal details: the global `.art` click handler passes the source
+alone, and only `renderReveal` passes details, so there is no second zoom implementation to keep in sync.
+
+**Title-row control.** A control sits beside the work title showing only `N details`. Its icon shows the
+*action*, not the state: the crossed-eye while markers are visible (the action is to hide them), the
+magnifier while they are hidden (the action is to restore them). `aria-pressed` and a dynamic
+`aria-label` track the same state. A work with no publishable markers renders no control at all. The
+count always reports the total available, not the number currently visible.
+
+**Desktop vs stacked mobile.** The split uses the real reveal-layout breakpoint, `max-width:680px`, the
+width at which `.revealgrid` actually collapses.
+
+- **Wider than 680px** — clicking a marker opens that marker's exact heading and body in a flat sidecar
+  at the top of the right column, above the scorecard. The page does not scroll. Selecting another
+  marker reuses the same sidecar; closing it clears the marker's selected state.
+- **680px and below** — tapping a marker opens the enlarged artwork directly, already centred on that
+  marker, rather than scrolling down to the study-note row.
+
+**Persistent markers in the reveal-only zoom.** In the enlarged view the image and its markers live on a
+single transformed canvas, so markers stay attached to the artwork while it zooms and pans. Markers
+counter-scale, so their visible size and their 44×44 CSS-pixel hit target stay constant at every zoom
+level while the visible dab remains the compact ~25px Gesso mark. There are no boxes, regions,
+bounding-box outlines, arrows or leader lines.
+
+**Point-centred 1.5×.** Selecting a marker centres its point and sets the artwork to 1.5×. Translation is
+clamped to the scaled content, so an edge marker lands against the viewport edge — inspectable — instead
+of displacing the artwork into empty space. Selecting the **same** marker again returns to the whole work
+at 1×; a visible "View full work" action does the same thing discoverably. There are no
+previous/next-detail controls.
+
+**Reversible, session-only hiding.** "Hide this marker" hides one marker without touching its text or the
+underlying observation, and the tray immediately offers "Show this marker". "Show all markers" also
+clears individual hides, so a hidden marker is always recoverable. Marker visibility is a single shared
+state across the reveal card and the enlarged view — hiding on either surface is reflected on the other.
+All of it is session-only: nothing is written to `localStorage` or any backend, and re-rendering a reveal
+(including paging between rounds) always starts from a clean state.
+
+**Study notes stay independent.** The Study Notes accordions keep their existing expand/collapse
+behaviour, their desktop default-open / mobile default-collapsed rule, and their follow-up questions. A
+marker click no longer scrolls to or flashes a study-note row; it uses the sidecar or the enlarged-view
+tray instead. Clicking a study-note row never zooms, repositions or scrolls the artwork.
+
+**Legacy fallback semantics.** One normalized render-time detail shape covers every content generation,
+so marker presence is unchanged from before for every existing work:
+
+| Source | Heading | Body |
+|---|---|---|
+| Rich/v2 pinned note | the note's own heading | the note's own body |
+| Vision pin with only a label | the label | *(empty — never fabricated)* |
+| Legacy hotspot backed by `study.cues` | neutral `Detail N` | the cue text, shown honestly |
+
+Coordinates are normalized to percent; missing, nonnumeric or out-of-range coordinates are excluded
+gracefully — the note still appears in Study Notes, it simply has no marker. Marker numbering is
+preserved exactly as each generation numbered it, so a marker still corresponds to its Study Notes row.
+
+Contract tests: `tests/hotspot-ui.test.mjs`.
