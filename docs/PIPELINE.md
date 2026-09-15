@@ -199,11 +199,28 @@ at 1×; a visible "View full work" action does the same thing discoverably. Ther
 previous/next-detail controls.
 
 **Reversible, session-only hiding.** "Hide this marker" hides one marker without touching its text or the
-underlying observation, and the tray immediately offers "Show this marker". "Show all markers" also
-clears individual hides, so a hidden marker is always recoverable. Marker visibility is a single shared
-state across the reveal card and the enlarged view — hiding on either surface is reflected on the other.
-All of it is session-only: nothing is written to `localStorage` or any backend, and re-rendering a reveal
-(including paging between rounds) always starts from a clean state.
+underlying observation, and the tray immediately offers "Show this marker". While "Hide all" is in force
+the individual action is **omitted** rather than shown — it could not actually reveal a marker under the
+master switch — leaving "Show all markers" as the single honest recovery, which also clears individual
+hides. Marker visibility is a single shared state across the reveal card and the enlarged view: hiding on
+either surface is reflected on the other. All of it is session-only — nothing is written to
+`localStorage` or any backend, and re-rendering a reveal (including paging between rounds) always starts
+from a clean state.
+
+**Visibility is shared; selection is not.** The enlarged view owns its own selected detail and never reads
+or writes the card's. Clicking the artwork therefore always opens the whole-work perspective even while a
+desktop sidecar is open, selecting details inside the viewer never moves the card's selected marker or
+rewrites the sidecar, and closing the viewer returns the page to exactly the state it was in — apart from
+any visibility deliberately changed through Hide this / Hide all.
+
+**Text does not wait for pixels.** A marker-triggered viewer paints the selected detail's heading and body
+immediately from local data. Only the centring needs the image's natural dimensions, so a slow, failed or
+blocked high-resolution request delays the zoom and never the words.
+
+**Markers stay reachable.** The marker layer stacks above the card's overlay controls, so an authored
+coordinate that happens to fall under the SAVE pill is still tappable. The layer itself is
+pointer-transparent, so only the compact dabs capture input and the rest of the control keeps working;
+hiding the markers frees it completely.
 
 **Study notes stay independent.** The Study Notes accordions keep their existing expand/collapse
 behaviour, their desktop default-open / mobile default-collapsed rule, and their follow-up questions. A

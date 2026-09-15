@@ -70,7 +70,10 @@
   .cicon svg{width:16px;height:16px}
   .gicon{display:inline-flex;width:16px;height:16px;vertical-align:-3px}
   .gicon svg{width:16px;height:16px}
-  .lookmarks{position:absolute;inset:10px;pointer-events:none}
+  /* Markers sit ABOVE the SAVE pill (z-index:10) so an authored coordinate that happens to fall under a control
+     is still tappable. .lookmarks stays pointer-events:none, so only the ~25px dabs capture — every other part of
+     SAVE remains clickable, and hiding the markers frees the control completely. */
+  .lookmarks{position:absolute;inset:10px;pointer-events:none;z-index:11}
   .lookmark{position:absolute;transform:translate(-50%,-50%);width:25px;height:24px;
     border-radius:60% 40% 55% 45% / 55% 45% 60% 40%;background:var(--accent);color:#fff;border:2px solid #fff;
     font:700 12px 'Faculty Glyphic',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;

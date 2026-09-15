@@ -3365,7 +3365,7 @@ function revealDetails(it, study){
 // ---------- per-reveal marker session ----------
 // Session-only by design: never persisted to localStorage or a backend, and rebuilt from scratch on every
 // renderReveal, so paging between rounds can never inherit a stale selection or a hidden marker.
-function newDetailSession(details){ return {details:Array.isArray(details)?details:[],allVisible:true,hidden:new Set(),selected:null}; }
+function newDetailSession(details){ return {details:Array.isArray(details)?details:[],allVisible:true,hidden:new Set()}; }   // VISIBILITY ONLY — selection belongs to the surface displaying it
 function detailVisible(s,index){ return !!s && s.allVisible && !s.hidden.has(index); }
 function toggleAllDetails(s){ s.allVisible=!s.allVisible; if(s.allVisible)s.hidden.clear(); return s.allVisible; }   // "Show all" also clears individual hides, so an individually hidden marker is always recoverable
 function toggleOneDetail(s,index){ if(s.hidden.has(index))s.hidden.delete(index); else s.hidden.add(index); return !s.hidden.has(index); }
@@ -3708,17 +3708,18 @@ function renderReveal(r,ri,push=true){
   const detailCard = revealGrid && revealGrid.querySelector('.detailcard');
   const lookCtl = revealGrid && revealGrid.querySelector('.lookctl');
   const cardMarks = () => revealGrid ? [...revealGrid.querySelectorAll('.lookmark[data-detail]')] : [];
+  let cardSel = null;   // the CARD's own selection — the enlarged view keeps its own and never writes this
   function syncCardDetails(){
     cardMarks().forEach(m => { const i = Number(m.dataset.detail);
-      m.hidden = !detailVisible(RS, i); m.classList.toggle('sel', RS.selected === i); });
+      m.hidden = !detailVisible(RS, i); m.classList.toggle('sel', cardSel === i); });
     if(lookCtl){
       lookCtl.setAttribute('aria-pressed', RS.allVisible ? 'true' : 'false');
       lookCtl.setAttribute('aria-label', `${RS.allVisible?'Hide':'Show'} ${RD.length} look-closer detail${RD.length===1?'':'s'}`);
       lookCtl.innerHTML = `${RS.allVisible?LOOK_EYE_OFF:LOOK_EYE}<span>${RD.length} detail${RD.length===1?'':'s'}</span>`; }
   }
-  function closeSidecar(){ RS.selected = null; if(detailCard){ detailCard.hidden = true; detailCard.innerHTML = ''; } syncCardDetails(); }
+  function closeSidecar(){ cardSel = null; if(detailCard){ detailCard.hidden = true; detailCard.innerHTML = ''; } syncCardDetails(); }
   function showSidecar(index){ const d = RD.find(x => x.index === index); if(!d || !detailCard) return;
-    RS.selected = index;
+    cardSel = index;
     detailCard.innerHTML = `<button type="button" class="detailcard-close" aria-label="Close detail">&times;</button><div class="detailcard-kicker">Detail ${d.n}</div><div class="detailcard-head">${esc(d.head||'')}</div>${d.body?`<div class="detailcard-body">${esc(d.body)}</div>`:''}`;
     detailCard.hidden = false;
     detailCard.querySelector('.detailcard-close').onclick = closeSidecar;
@@ -3726,11 +3727,13 @@ function renderReveal(r,ri,push=true){
   function openRevealZoom(sel){ openZoom(it.img, {details:RD, session:RS, title:it.title, selectedIndex:sel, onChange:syncCardDetails}); }
   cardMarks().forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation();
     const i = Number(b.dataset.detail);
-    if(stackedReveal()) openRevealZoom(i); else (RS.selected === i ? closeSidecar() : showSidecar(i)); });
+    if(stackedReveal()) openRevealZoom(i); else (cardSel === i ? closeSidecar() : showSidecar(i)); });
   if(lookCtl) lookCtl.onclick = () => { toggleAllDetails(RS); if(!RS.allVisible) closeSidecar(); else syncCardDetails(); };
   // The reveal artwork opens the SAME viewer, carrying this reveal's details. stopPropagation keeps the global
   // marker-free `.art` handler from firing as well, so exactly one viewer opens.
   { const art = revealGrid && revealGrid.querySelector('.plate img.art');
+    // Clicking the artwork always opens the WHOLE-WORK perspective, even while a sidecar is open: the viewer's
+    // selection is its own, so the page's sidecar is left untouched and nothing contradicts anything.
     if(art) art.addEventListener('click', e => { e.stopPropagation(); openRevealZoom(null); }); }
   syncCardDetails();
   // teach-me accordion (v1 .askguide + v2 .aglist): each row toggles independently
@@ -4069,27 +4072,38 @@ function openZoom(src, opts){
     canvas.style.left = ((sw()-baseW)/2)+'px'; canvas.style.top = ((sh()-baseH)/2)+'px';
     clamp(); apply(); };
 
+  // Selection is MODAL-LOCAL: the viewer never reads or writes the card's selection, so closing it leaves the
+  // page's sidecar exactly as it was. Only marker VISIBILITY is shared, through `session`.
+  let vSel = null;
   const syncMarkers = () => { if(!hasDetails) return;
     canvas.querySelectorAll('.lb-marker').forEach(m => { const i = Number(m.dataset.index);
       m.hidden = !detailVisible(session, i);
-      m.setAttribute('aria-pressed', String(session.selected === i)); }); };
+      m.setAttribute('aria-pressed', String(vSel === i)); }); };
   const changed = () => { if(typeof opts.onChange === 'function') opts.onChange(); };
 
   function renderFooter(){ if(!footer) return;
-    const d = (session && session.selected != null) ? details.find(x => x.index === session.selected) : null;
+    const d = (vSel != null) ? details.find(x => x.index === vSel) : null;
     const allBtn = `<button type="button" data-all>${session.allVisible ? 'Hide all markers' : 'Show all markers'}</button>`;
     if(!d){ footer.innerHTML = `<div class="lb-hintline">Tap a numbered detail to look closer &middot; drag to pan &middot; pinch or scroll to zoom &middot; tap the dark background to return</div><div class="lb-actions">${allBtn}</div>`; }
-    else { footer.innerHTML = `<div class="lb-copy"><span class="lb-num">${d.n}</span><div class="lb-copytext"><div class="lb-kicker">Detail ${d.n} &middot; tap the marker again to see the whole work</div><div class="lb-head">${esc(d.head||'')}</div>${d.body?`<div class="lb-body">${esc(d.body)}</div>`:''}</div></div><div class="lb-actions"><button type="button" data-reset>View full work</button><button type="button" data-one>${detailVisible(session,d.index)?'Hide this marker':'Show this marker'}</button>${allBtn}</div>`; }
+    else {
+      // While "Hide all" is in force, an individual Show-this action could not actually reveal the marker, so it is
+      // omitted entirely and "Show all markers" is the single honest recovery.
+      const oneBtn = session.allVisible ? `<button type="button" data-one>${detailVisible(session,d.index)?'Hide this marker':'Show this marker'}</button>` : '';
+      footer.innerHTML = `<div class="lb-copy"><span class="lb-num">${d.n}</span><div class="lb-copytext"><div class="lb-kicker">Detail ${d.n} &middot; tap the marker again to see the whole work</div><div class="lb-head">${esc(d.head||'')}</div>${d.body?`<div class="lb-body">${esc(d.body)}</div>`:''}</div></div><div class="lb-actions"><button type="button" data-reset>View full work</button>${oneBtn}${allBtn}</div>`; }
     const r = footer.querySelector('[data-reset]'); if(r) r.onclick = () => resetView();
-    const one = footer.querySelector('[data-one]'); if(one) one.onclick = () => { toggleOneDetail(session, session.selected); syncMarkers(); renderFooter(); changed(); };
+    const one = footer.querySelector('[data-one]'); if(one) one.onclick = () => { if(vSel == null) return; toggleOneDetail(session, vSel); syncMarkers(); renderFooter(); changed(); };
     const all = footer.querySelector('[data-all]'); if(all) all.onclick = () => { toggleAllDetails(session); syncMarkers(); renderFooter(); changed(); };
   }
-  function resetView(){ if(session) session.selected = null; scale = 1; tx = 0; ty = 0; syncMarkers(); renderFooter(); apply(); changed(); }
-  function selectDetail(index){ if(!session) return; session.selected = index; scale = DETAIL_SCALE;
-    const d = details.find(x => x.index === index);
-    if(d){ const c = centerOnDetail(d.x, d.y, baseW, baseH, sw(), sh(), scale); tx = c.tx; ty = c.ty; }
-    syncMarkers(); renderFooter(); apply(); changed(); }
-  function pickDetail(index){ const nx = nextDetailSelection(session.selected, index); if(nx.selected == null) resetView(); else selectDetail(index); }
+  function resetView(){ vSel = null; scale = 1; tx = 0; ty = 0; syncMarkers(); renderFooter(); apply(); }
+  // Text first, geometry second. setSelection paints the heading and body straight from local data; centring
+  // needs the image's natural dimensions, so it runs separately once those exist. A slow, failed or blocked
+  // high-resolution request therefore delays only the zoom, never the words.
+  function setSelection(index){ vSel = index; syncMarkers(); renderFooter(); }
+  function centerSelection(){ if(vSel == null) return; const d = details.find(x => x.index === vSel); if(!d) return;
+    if(!baseW || !baseH) return;
+    scale = DETAIL_SCALE; const c = centerOnDetail(d.x, d.y, baseW, baseH, sw(), sh(), scale); tx = c.tx; ty = c.ty; apply(); }
+  function selectDetail(index){ setSelection(index); centerSelection(); }
+  function pickDetail(index){ const nx = nextDetailSelection(vSel, index); if(nx.selected == null) resetView(); else selectDetail(index); }
 
   if(hasDetails){ details.forEach(d => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-marker';
@@ -4141,9 +4155,11 @@ function openZoom(src, opts){
   if(footer) lb.appendChild(footer); else { const hint = document.createElement('div'); hint.className = 'lb-hint'; hint.textContent = 'Tap/click to zoom · drag to pan · pinch or scroll to zoom · Esc to close'; lb.appendChild(hint); }
   document.body.appendChild(lb); document.body.classList.add('lb-open');
   // Apply the SHARED session state immediately: if the card already hid markers, the viewer must open hidden too.
+  // A marker-triggered open also shows its text here, before any high-resolution byte has arrived.
+  if(hasDetails && opts.selectedIndex != null) vSel = Number(opts.selectedIndex);
   syncMarkers(); renderFooter(); apply();
   // The high-resolution source is requested ONLY here, when the viewer opens — the reveal card never fetches it.
-  img.onload = () => { layout(); if(hasDetails && opts.selectedIndex != null) requestAnimationFrame(() => selectDetail(Number(opts.selectedIndex))); };
+  img.onload = () => { layout(); if(vSel != null) requestAnimationFrame(centerSelection); };
   img.src = hiRes(src);
   x.focus();
 }

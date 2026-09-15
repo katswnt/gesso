@@ -124,7 +124,7 @@ console.log("\nSHARED MARKER SESSION (card ⇄ enlarged view)");
   const details = D({id:"v2-work"}, { notes:[{head:"A",body:"a",x:10,y:10},{head:"B",body:"b",x:20,y:20},{head:"C",body:"c",x:30,y:30}] });
   const s = H.newDetailSession(details);
   ok("fresh session: all markers visible", details.every(d => H.detailVisible(s, d.index)));
-  ok("fresh session: nothing selected", s.selected === null);
+  ok("session carries VISIBILITY ONLY — selection is not shared state", !("selected" in s));
   H.toggleAllDetails(s);
   ok("hide-all from EITHER surface hides every marker (one shared state)", details.every(d => !H.detailVisible(s, d.index)) && s.allVisible === false);
   H.toggleAllDetails(s);
@@ -137,7 +137,7 @@ console.log("\nSHARED MARKER SESSION (card ⇄ enlarged view)");
   H.toggleOneDetail(s, 2); H.toggleAllDetails(s); H.toggleAllDetails(s);
   ok("'Show all markers' also clears individual hides (always recoverable)", details.every(d => H.detailVisible(s, d.index)));
   const s2 = H.newDetailSession(details);
-  ok("re-rendering a reveal starts from a clean session", s2.allVisible === true && s2.selected === null && s2.hidden.size === 0);
+  ok("re-rendering a reveal starts from a clean session", s2.allVisible === true && s2.hidden.size === 0);
 }
 
 // ---------------------------------------------------------------- selection + transform
@@ -203,6 +203,43 @@ console.log("\nCARD MARKER MARKUP");
 // Regression guard for a real bug found in browser verification: the viewer built its markers but never applied
 // the shared session before first paint, so opening the enlarged view after "hide all" showed the markers again.
 // The behavioural proof lives in the browser suite; this keeps the wiring from silently disappearing.
+console.log("\nACCEPTANCE REPAIRS (structure; behaviour proved in the browser suite)");
+{
+  const src = readFileSync("index.html","utf8");
+  const start = src.indexOf("function openZoom(src, opts)");
+  const end = src.indexOf("document.addEventListener('click'", start);
+  const zoom = src.slice(start, end);
+  const reveal = src.slice(src.indexOf("function renderReveal"), src.indexOf("function renderReveal") + 40000);
+
+  // 1. selection ownership
+  ok("viewer keeps its OWN selection variable", /let vSel = null;/.test(zoom));
+  ok("viewer never reads or writes a shared selection", !/session\.selected/.test(zoom));
+  ok("card keeps its OWN selection variable", /let cardSel = null;/.test(reveal));
+  ok("card never reads or writes a shared selection", !/RS\.selected/.test(reveal));
+
+  // 2. requested text paints before the high-resolution image
+  const selAt = zoom.indexOf("if(hasDetails && opts.selectedIndex != null) vSel =");
+  const footerAt = zoom.indexOf("syncMarkers(); renderFooter(); apply();", zoom.indexOf("document.body.appendChild(lb)"));
+  const srcAt = zoom.indexOf("img.src = hiRes(src)");
+  ok("the requested detail is selected before the image src is set", selAt > -1 && srcAt > -1 && selAt < srcAt);
+  ok("the tray renders before the image src is set", footerAt > -1 && footerAt < srcAt);
+  ok("img.onload only performs centring, never text", /img\.onload = \(\) => \{ layout\(\); if\(vSel != null\) requestAnimationFrame\(centerSelection\); \};/.test(zoom));
+  ok("centring is a separate function from selection", /function setSelection\(/.test(zoom) && /function centerSelection\(/.test(zoom));
+
+  // 3. no dead Show-this while the master switch is off
+  ok("the individual marker action is omitted while all markers are hidden", /const oneBtn = session\.allVisible \? /.test(zoom));
+
+  // 4. marker hit-test priority over the SAVE pill
+  const css = readFileSync("styles.css","utf8");
+  const marks = (css.match(/\.lookmarks\{[^}]*\}/)||[""])[0];
+  const save = (css.match(/\.savebtn\{[^}]*\}/)||[""])[0];
+  const mz = Number((marks.match(/z-index:(\d+)/)||[])[1]);
+  const sz = Number((save.match(/z-index:(\d+)/)||[])[1]);
+  ok(`markers stack above the SAVE control (${mz} > ${sz})`, Number.isFinite(mz) && Number.isFinite(sz) && mz > sz);
+  ok("the marker layer stays pointer-transparent so the rest of SAVE keeps working", /pointer-events:none/.test(marks));
+  ok("hidden markers are display:none, freeing the control entirely", /\.lookmark\[hidden\]\{display:none\}/.test(css));
+}
+
 console.log("\nVIEWER APPLIES SHARED STATE ON OPEN");
 {
   const src = readFileSync("index.html","utf8");
