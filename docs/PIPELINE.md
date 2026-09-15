@@ -180,6 +180,10 @@ has no authoritative writer. Its current sequence is:
 3. Conditional B2 sees no image, receives bounded signals/catalog/legacy content, and uses only WebSearch/WebFetch.
 4. Conditional B3 sees only the confined image plus B2's targeted visual questions.
 5. B4 receives validated B1–B3 projections plus legacy content and emits a compact editorial **delta** without image or tools. The controller hydrates the authoritative B1/B2 registries and runs strict `validateB4`. Editorial ancestry (`ref`) is separate from hotspot location (`pinRef`): a publishable pin comes from a matching B1 candidate or a localized bbox, never a missing/near-whole-image fallback. Same-evidence and <3-point overlaps are retained as review findings but not published (VSD-022/027).
+6. The offline VSD-029 spatial pass separates observation retention from its presentation.
+   It preserves a previous coordinate only when the image SHA is unchanged, compares it
+   with B1, routes duplicates to merges and broad/distributed observations to unpinned
+   notes, and sends only uncertain point placement to a bounded localization-only canary.
 
 The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
 events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
@@ -187,14 +191,17 @@ lanes, and renders a quarantined before/after review packet. The fixed calibrati
 50 works; the accepted B4-v2 continuation produced 44 strict-valid/leak-clean records and quarantined
 6 first-attempt misses. No output has been approved or merged into game data.
 
-The full-cohort packet is interactive but still non-authoritative (VSD-028). Each P/S hotspot label is
-defined beside the image; the reviewer can record a work decision, write notes, keep/move/drop a hotspot,
-keep a useful non-localizable suppressed proposal as an unpinned note, or click the image to place it.
+The full-cohort packet is interactive but still non-authoritative (VSD-028/029). Each P/S hotspot label is
+defined beside the image and includes the same-image previous coordinate when available. The reviewer can
+record a work decision, write notes, keep or move a pin, retain the observation only as an unpinned note,
+discard the underlying idea explicitly, abstain, or click the image to place it.
 Browser-local state auto-saves and can be downloaded/copied as a JSON handoff bound to the run and evidence-manifest hash. Ordinary works start collapsed; placement/legacy
 blockers and quarantines start open. In an open work the image stays sticky at left while the review and
 before/after copy scroll at right. That export is review input, not `approved.json`, and has no path to
 production until it is deliberately converted into a separately verified approval. That conversion must
 deduplicate keep-as-note choices against the record's existing notes; the packet itself changes no content.
+Unanswered controls export as abstentions. Version-1 `drop` choices may be interpreted as unpinning only,
+because that UI did not distinguish a bad location from a bad observation.
 
 The offline `contentVisionCoverage/1` baseline remains the corpus inventory: one row for each
 current pool work, legacy content kept as evidence (never current completion), Pass A flags
@@ -238,6 +245,13 @@ Current limitations:
   The immutable-source VSD-027 offline rehydration produced `b4r-8f1f74ddc30f`: 44/44 strict-valid,
   hotspot overlap pairs 45→0, 15 duplicate/unlocalized proposals retained for attention, and literal
   legacy-lineage reporting. The prior full-record B4 is retired.
+- The VSD-029 offline spatial report has been implemented against the owner export without changing it:
+  210 observations route to 73 deterministic pins, 122 localization exceptions, 11 notes, and 4 merges.
+  Across all 143 kept/moved observations with comparable same-image legacy coordinates, the owner's selected
+  point was closer to the current point 116 times, closer to legacy 23 times, and tied 4 times. The legacy
+  wins all occurred among the 79 moved observations (23 legacy, 52 current, 4 ties), confirming that legacy
+  is useful evidence but not a universal winner. The localization-only canary is plan-only: zero B5 model
+  calls have run and no auto-policy threshold is yet approved.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
@@ -297,6 +311,9 @@ Relevant files:
 | `scripts/pass-b-b4-offline-repair.mjs` | immutable-source offline rehydration + evidence manifest/report |
 | `scripts/lib/pass-b-editorial-review.mjs` | pure hotspot-review descriptions and stable P/S review rows |
 | `scripts/pass-b-b4-review-packet.mjs` | interactive full-cohort packet: literal lineage, explained pins, work notes/decisions, click-to-place, JSON export |
+| `scripts/lib/pass-b-spatial-policy.mjs` | pure VSD-029 candidate comparison, note/merge routing, abstention semantics, localizer contract, and scoring |
+| `scripts/pass-b-spatial-calibration.mjs` | offline owner-review measurement and immutable spatial-input/report writer; no model calls |
+| `scripts/pass-b-spatial-localization-canary.mjs` | plan-by-default B5 image-only spatial canary; reads owner answers only after all calls complete for blind scoring |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---

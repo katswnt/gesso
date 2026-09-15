@@ -3,7 +3,7 @@
 import { EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { b4Lineage } from './pass-b-b4-delta.mjs';
 
-export const EDITORIAL_REVIEW_VERSION = 'passBEditorialReview/1';
+export const EDITORIAL_REVIEW_VERSION = 'passBEditorialReview/2';
 
 const firstSentence = text => String(text || '').split(/(?<=[.!?])\s+/)[0];
 

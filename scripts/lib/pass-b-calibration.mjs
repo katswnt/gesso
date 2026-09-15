@@ -112,10 +112,10 @@ export function priorForComponent(component, legacy) {
 }
 
 // ---- Stage tool/network policy → producer evidence (the model can never assert these). ----
-// B1/B3 image stages get ONLY the Read tool, confined to a fresh per-call directory holding one SHA image.
-// B2 gets ONLY web search/fetch. B4 (not in the calibration path) is tool-less.
-const TOOL_POLICY = { B1: 'tools:read-only-confined-dir', B2: 'tools:web-search+fetch-only', B3: 'tools:read-only-confined-dir', B4: 'tools:none' };
-const NET_POLICY = { B1: 'egress:claude-service-only', B2: 'egress:claude-service+public-web', B3: 'egress:claude-service-only', B4: 'egress:claude-service-only' };
+// B1/B3 image stages and the post-B4 B5 spatial-only canary get ONLY the Read tool, confined to a fresh
+// per-call directory holding one SHA image. B2 gets ONLY web search/fetch. B4 is tool-less.
+const TOOL_POLICY = { B1: 'tools:read-only-confined-dir', B2: 'tools:web-search+fetch-only', B3: 'tools:read-only-confined-dir', B4: 'tools:none', B5: 'tools:read-only-confined-dir-spatial-only' };
+const NET_POLICY = { B1: 'egress:claude-service-only', B2: 'egress:claude-service+public-web', B3: 'egress:claude-service-only', B4: 'egress:claude-service-only', B5: 'egress:claude-service-only' };
 export function producerEvidence(stage, { model = CALIBRATION_MODEL, runtimeVersion }) {
   const kind = 'claude-code-subscription';
   return {
@@ -317,13 +317,13 @@ export function neutralImageFile(imgSha256, ext) {
 }
 
 // ---- Subscription command builder. Built for every stage; EXECUTED only by the CLI under --live.
-// B1/B3 image stages get ONLY the Read tool confined to a fresh call dir holding one SHA image; B2 gets
-// ONLY web search/fetch and NEVER an image; B4 (not in the calibration path) is tool-less. Env strips API
+// B1/B3 image stages and B5 spatial canaries get ONLY the Read tool confined to a fresh call dir holding
+// one SHA image; B2 gets ONLY web search/fetch and NEVER an image; B4 is tool-less. Env strips API
 // keys so the intended subscription/OAuth login is used, never a paid key. Output is stream-json so the
 // controller can verify real tool-use events (Read / WebSearch / WebFetch) from the raw transcript. ----
 export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText, imageFile = null, wireSchema = null }) {
-  if (!['B1', 'B2', 'B3', 'B4'].includes(stage)) throw new Error(`unknown stage ${stage}`);
-  const imageStage = stage === 'B1' || stage === 'B3';
+  if (!['B1', 'B2', 'B3', 'B4', 'B5'].includes(stage)) throw new Error(`unknown stage ${stage}`);
+  const imageStage = stage === 'B1' || stage === 'B3' || stage === 'B5';
   if (imageStage && !imageFile) throw new Error(`${stage} requires a confined image filename`);
   if (!imageStage && imageFile) throw new Error(`${stage} must NOT receive an image`);
   if (imageFile && !/^[0-9a-f]{64}\.[a-z0-9]{1,5}$/.test(imageFile)) throw new Error('imageFile must be a bare <sha>.<ext>');
@@ -334,16 +334,16 @@ export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText
   const toolSet = imageStage ? 'Read' : (stage === 'B2' ? 'WebSearch WebFetch' : '');
   const argv = ['-p', promptText, '--model', model, '--tools', toolSet];
   if (toolSet) argv.push('--allowedTools', toolSet); // grant exactly the declared tools; never more
-  // B4 is bounded editorial reconciliation, not open-ended research: cap reasoning at low effort. B1/B2/B3
-  // keep the session default effort. (A canary showed B4 spending ~39k thinking tokens / 15 min disproportionately.)
-  if (stage === 'B4') argv.push('--effort', 'low');
+  // B4 editorial reconciliation and B5 point localization are bounded, not open-ended research: cap them
+  // at low effort. B1/B2/B3 keep the session default effort.
+  if (stage === 'B4' || stage === 'B5') argv.push('--effort', 'low');
   argv.push(
     '--json-schema', JSON.stringify(schema), '--prompt-suggestions', 'false',
     '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
     '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk',
     '--no-session-persistence', '--output-format', 'stream-json', '--verbose',
   );
-  const env = { removeKeys: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'], schemaHint: 'contentVisionEnrichment/1' };
+  const env = { removeKeys: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'], schemaHint: stage === 'B5' ? 'contentVisionLocalization/1' : 'contentVisionEnrichment/1' };
   return { bin: 'claude', argv, env, toolsEnforced: toolSet === '' ? 'none' : toolSet, imageAttached: !!imageFile, imageFile, wireSchemaSha256: sha256(stableJson(schema)) };
 }
 

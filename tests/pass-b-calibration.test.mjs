@@ -20,6 +20,11 @@ import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, WIRE_B4_FULL } from '../sc
 import { compactB4DeltaInput } from '../scripts/lib/pass-b-calibration.mjs';
 import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLineageMetrics, HOTSPOT_MAX_BBOX_AREA } from '../scripts/lib/pass-b-b4-delta.mjs';
 import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass-b-editorial-review.mjs';
+import {
+  SPATIAL_CALIBRATION_VERSION, LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, legacyHotspotCandidate, spatialRowsForWork,
+  buildLocalizationInput, buildLocalizationPrompt, validateLocalizationResult, resolveLocalization,
+  summarizeOwnerSpatialReview,
+} from '../scripts/lib/pass-b-spatial-policy.mjs';
 
 const tests = []; const t = (n, fn) => tests.push({ n, fn });
 
@@ -368,14 +373,17 @@ t('B1 prompt instructs Read-tool use and carries the coordinate convention', () 
   assert(p.includes('Bounding boxes are [x, y, width, height] normalized to 0-1 fractions'), 'coordinate convention missing');
   assert(/percentages from 0-100/.test(p), 'pin-percentage note missing');
 });
-t('B4 runs at low effort; B1/B2/B3 keep session default effort', () => {
+t('B4/B5 run at low effort; B1/B2/B3 keep session default effort', () => {
   const after = (argv, flag) => { const i = argv.indexOf(flag); return i === -1 ? null : argv[i + 1]; };
   const b4 = buildStageCommand({ stage: 'B4', promptText: 'synthesize' });
   assert.equal(after(b4.argv, '--effort'), 'low', 'B4 must run at low effort');
   const b1 = buildStageCommand({ stage: 'B1', promptText: 'x', imageFile: neutralImageFile(SHA, 'jpg') });
   const b2 = buildStageCommand({ stage: 'B2', promptText: 'x' });
   const b3 = buildStageCommand({ stage: 'B3', promptText: 'x', imageFile: neutralImageFile(SHA, 'jpg') });
+  const b5 = buildStageCommand({ stage: 'B5', promptText: 'localize', imageFile: neutralImageFile(SHA, 'jpg'), wireSchema: LOCALIZATION_WIRE_SCHEMA });
   for (const [n, c] of [['B1', b1], ['B2', b2], ['B3', b3]]) assert(!c.argv.includes('--effort'), `${n} must not pin effort`);
+  assert.equal(after(b5.argv, '--effort'), 'low');
+  assert.equal(after(b5.argv, '--tools'), 'Read');
 });
 t('B4 prompt mandates the Unicode arrow → for cues (not ASCII ->) and routes B2/B3 contradictions to humanReview', () => {
   const p = buildB4Prompt();
@@ -524,6 +532,81 @@ t('B4 hotspot hydration suppresses broad/missing anchors and duplicates without 
   assert.equal(HOTSPOT_MAX_BBOX_AREA, 0.65);
 });
 
+t('VSD-029 keeps legacy points as candidates and routes spatial suppression without deleting content', () => {
+  const fx = syntheticFixture();
+  const b1 = JSON.parse(JSON.stringify(fx.bodies.B1));
+  b1.evidence.format[0].bbox = [0, 0, 1, 1];
+  const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
+  const base = delta.hotspots[0];
+  delta.hotspots = [
+    { ...base, action: 'keep', ref: 'legacy-h1', pinRef: 'n1', evidenceRef: 'ev_medium' },
+    { ...base, action: 'revise', ref: 'legacy-h2', pinRef: null, evidenceRef: 'ev_format' },
+    { ...base, action: 'revise', ref: 'legacy-h3', pinRef: 'n1', evidenceRef: 'ev_medium' },
+  ];
+  const legacy = {
+    teaching: { notes: [
+      { head: 'Old material point', body: 'Old body.', x: 41, y: 49 },
+      { head: 'Overall format', body: 'Broad body.' },
+      { head: 'Duplicate material', body: 'Duplicate body.' },
+    ] },
+    hotspots: [{ n: 1, x: 41, y: 49 }, { n: 2, x: 50, y: 50 }, { n: 3, x: 42, y: 50 }],
+  };
+  const assembled = assembleAndValidateB4({ delta, b1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy });
+  assert(assembled.ok, (assembled.errors || []).join('; '));
+  const rows = spatialRowsForWork({ workId: 'fixture-synthetic-1', imageSha256: SHA, legacyImageSha256: SHA, delta, body: assembled.body, hydration: assembled.hydration, legacy });
+  assert.equal(rows.length, 3);
+  assert.deepEqual(legacyHotspotCandidate(legacy, 'legacy-h1').point, { x: 41, y: 49 });
+  assert.equal(legacyHotspotCandidate(legacy, 'legacy-h1').head, 'Old material point', 'hotspot n joins the associated legacy note');
+  assert.deepEqual(rows.map(row => [row.state, row.automaticRoute.presentation, row.contentDisposition]), [
+    ['published', 'pin', 'retain'],
+    ['suppressed', 'note', 'retain'],
+    ['suppressed', 'merge', 'retain'],
+  ]);
+  assert.equal(rows[0].automaticRoute.source, 'legacy', 'an unchanged feature keeps the old spatial judgment');
+  const changedImageRows = spatialRowsForWork({ workId: 'fixture-synthetic-1', imageSha256: SHA, legacyImageSha256: 'b'.repeat(64), delta, body: assembled.body, hydration: assembled.hydration, legacy });
+  assert.equal(changedImageRows[0].legacyCoordinateEligible, false);
+  assert.notEqual(changedImageRows[0].automaticRoute.source, 'legacy', 'an old coordinate cannot cross an image change');
+});
+
+t('VSD-029 localization input is spatial-only, excludes human answers, and validates scope/point semantics', () => {
+  const rows = [{
+    deltaIndex: 2, state: 'published', target: 'Small inscription at lower right', groundingTarget: 'small mark',
+    candidates: [{ source: 'legacy', point: { x: 80, y: 90 } }, { source: 'b1', point: { x: 60, y: 60 } }],
+    automaticRoute: { presentation: 'localize', reason: 'candidate disagreement' },
+  }];
+  const input = buildLocalizationInput({ workId: 'w1', imageSha256: SHA, imageExt: 'jpg', rows, mode: 'exceptions' });
+  assert.equal(input.targets.length, 1);
+  assert(!JSON.stringify(input).includes('owner') && !JSON.stringify(input).includes('review'), 'owner labels never enter localization input');
+  const prompt = buildLocalizationPrompt(input, `${SHA}.jpg`);
+  assert(prompt.includes('spatial-localization') && prompt.includes('notFound') && !prompt.includes('historical explanation'));
+  const good = { version: LOCALIZATION_RESULT_VERSION, decisions: [{ requestId: 'sp-2', scope: 'representative', point: { x: 79, y: 91 }, confidence: 0.9, note: 'Visible mark.' }], uncertainty: '' };
+  assert(validateLocalizationResult(input, good).ok);
+  assert.deepEqual(resolveLocalization(rows[0], good.decisions[0]), { presentation: 'pin', point: { x: 79, y: 91 }, status: 'auto', reason: 'spatial-scope-representative' });
+  const bad = JSON.parse(JSON.stringify(good)); bad.decisions[0].scope = 'global';
+  assert(!validateLocalizationResult(input, bad).ok, 'global scope cannot carry a point');
+});
+
+t('VSD-029 owner-review learning treats blanks as abstentions and v1 drops as spatial-only', () => {
+  const workRows = [{ workId: 'w1', rows: [
+    { deltaIndex: 0, state: 'published', currentPoint: { x: 50, y: 50 }, legacyCandidate: { point: { x: 20, y: 20 } }, placementMethod: 'unique-evidence-candidate', evidenceAxis: 'style' },
+    { deltaIndex: 1, state: 'published', currentPoint: { x: 60, y: 60 }, legacyCandidate: null, placementMethod: 'localized-bbox-center', evidenceAxis: 'format' },
+    { deltaIndex: 2, state: 'suppressed', currentPoint: null, legacyCandidate: null, placementMethod: null, evidenceAxis: 'medium' },
+  ] }];
+  const review = { version: 'passBEditorialReview/1', runId: 'r1', works: [{ workId: 'w1', kind: 'completed', hotspots: [
+    { deltaIndex: 0, review: { decision: 'move', x: 21, y: 19 } },
+    { deltaIndex: 1, review: null },
+    { deltaIndex: 2, review: { decision: 'drop' } },
+  ] }] };
+  const report = summarizeOwnerSpatialReview({ workRows, review });
+  assert.equal(report.version, SPATIAL_CALIBRATION_VERSION);
+  assert.deepEqual(report.totals.choices, { keep: 0, move: 1, note: 0, auto: 0, discard: 0, drop: 1, abstain: 1 });
+  assert.equal(report.movement.closer.legacy, 1);
+  assert.equal(report.movement.comparableLegacyPointLabels, 1);
+  assert.deepEqual(report.movement.pointLabelCloser, { legacy: 1, current: 0, tie: 0 });
+  assert.equal(report.rows[1].owner.decision, 'abstain');
+  assert.deepEqual({ spatial: report.rows[2].owner.spatialSignal, content: report.rows[2].owner.contentSignal }, { spatial: 'unpin', content: 'unknown' });
+});
+
 t('editorial packet identifies every hotspot and preserves enough information for click-to-place review', () => {
   const fx = syntheticFixture();
   const b1 = JSON.parse(JSON.stringify(fx.bodies.B1));
@@ -539,8 +622,8 @@ t('editorial packet identifies every hotspot and preserves enough information fo
   const rows = hotspotReviewRows({ delta, body: assembled.body, hydration: assembled.hydration });
   assert.deepEqual(rows.map(row => [row.label, row.state, row.evidenceRef]), [['P1', 'published', 'ev_medium'], ['S1', 'suppressed', 'ev_format']]);
   assert(rows.every(row => row.title && row.description && row.statusText), 'each marker must explain what it describes and why it is/is not placed');
-  assert.equal(EDITORIAL_REVIEW_VERSION, 'passBEditorialReview/1');
-  for (const required of ['data-work-decision', 'data-work-note', 'data-hotspot-action', 'data-hotspot-action="note"', 'Keep as note', 'keep this observation as an unpinned note', 'getBoundingClientRect', 'localStorage', 'Download review JSON', 'Copy review JSON', '<details class="workdetails', 'position:sticky', '100dvh', 'Collapse all']) {
+  assert.equal(EDITORIAL_REVIEW_VERSION, 'passBEditorialReview/2');
+  for (const required of ['data-work-decision', 'data-work-note', 'data-hotspot-action', 'data-hotspot-action="note"', 'data-hotspot-action="discard"', 'data-hotspot-action="abstain"', 'Keep as note', 'No opinion', 'keep this observation as an unpinned note', "{decision:'abstain',explicit:false}", 'getBoundingClientRect', 'localStorage', 'Download review JSON', 'Copy review JSON', '<details class="workdetails', 'position:sticky', '100dvh', 'Collapse all']) {
     assert(fullPacketSrc.includes(required), `full packet must contain ${required}`);
   }
 });

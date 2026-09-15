@@ -11,6 +11,7 @@ import sharp from 'sharp';
 import { projectToProduction } from './lib/pass-b-approval.mjs';
 import { b4Lineage, guideLineageMetrics } from './lib/pass-b-b4-delta.mjs';
 import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from './lib/pass-b-editorial-review.mjs';
+import { spatialRowsForWork } from './lib/pass-b-spatial-policy.mjs';
 
 const RUN = process.argv[2] || 'data/incoming/vision-calibration/b4c-f45fac18da2e';
 const ROOT = 'data/incoming/vision-calibration';
@@ -51,7 +52,18 @@ function collect(id) {
   const entryType = teach[id] ? 'overwrite' : 'new';
   const needsAttention = conflicts.length > 0 || cons.length > 0 || overwriteStrong || (guideMetrics.legacyTotal > 0 && guideMetrics.legacyDerived === 0) || maxAns >= 660 || (rec.hydration?.hotspots?.suppressed || []).length > 0;
   const changeScore = [...guide, ...notes].filter((x) => x.action !== 'keep').length;
-  const hotspotReview = hotspotReviewRows({ delta: rd, body, hydration: rec.hydration });
+  const spatialRows = spatialRowsForWork({ workId: id, imageSha256: b0.image?.imgSha256 ?? null, legacyImageSha256: b0.image?.imgSha256 ?? null, delta: rd, body, hydration: rec.hydration, legacy: b0.legacy });
+  const spatialByDelta = new Map(spatialRows.map(row => [row.deltaIndex, row]));
+  const hotspotReview = hotspotReviewRows({ delta: rd, body, hydration: rec.hydration }).map(row => {
+    const spatial = spatialByDelta.get(row.deltaIndex);
+    return {
+      ...row,
+      previousPoint: spatial?.legacyCandidate?.point ?? null,
+      previousTitle: spatial?.legacyCandidate?.head ?? null,
+      candidateDistance: spatial?.candidateDistance ?? null,
+      automaticRoute: spatial?.automaticRoute ?? null,
+    };
+  });
   return { id, meta: m, catalog: b0.trustedCatalog, image: b0.image, legacy, oldHot, body, guide, notes, proj, guideMetrics, lineage, hotspotQuality: rec.hydration?.hotspots || null, hotspotReview, overwriteStrong, cons, conflicts, uncertainty: body.uncertainty || '', srcDep, maxAns, entryType, needsAttention, changeScore, evidence: rec.evidence, reused: !!rec.reused };
 }
 
@@ -148,15 +160,17 @@ function guideBlock(w) {
 function hotspotReviewBlock(w) {
   const rows = w.hotspotReview.map((h) => {
     const buttons = h.state === 'published'
-      ? `<button type="button" data-hotspot-action="keep">Keep here</button><button type="button" data-hotspot-action="move">Move</button><button type="button" data-hotspot-action="drop">Drop</button>`
-      : `<button type="button" data-hotspot-action="drop">Leave out</button><button type="button" data-hotspot-action="note">Keep as note</button><button type="button" data-hotspot-action="move">Place on image</button>`;
+      ? `<button type="button" data-hotspot-action="keep">Keep pin</button><button type="button" data-hotspot-action="move">Move pin</button><button type="button" data-hotspot-action="note">Make note only</button><button type="button" data-hotspot-action="discard">Discard idea</button><button type="button" data-hotspot-action="abstain">No opinion</button>`
+      : `<button type="button" data-hotspot-action="auto">Accept auto-route</button><button type="button" data-hotspot-action="note">Keep as note</button><button type="button" data-hotspot-action="move">Place on image</button><button type="button" data-hotspot-action="discard">Discard idea</button><button type="button" data-hotspot-action="abstain">No opinion</button>`;
+    const old = h.previousPoint ? ` Previous site pin: ${h.previousPoint.x.toFixed(1)}%, ${h.previousPoint.y.toFixed(1)}%${h.previousTitle ? ` (${esc(h.previousTitle)})` : ''}.` : '';
+    const automatic = h.automaticRoute ? ` Automatic route: ${esc(h.automaticRoute.presentation)} — ${esc(h.automaticRoute.reason)}.` : '';
     return `<div class="hotrow" data-hotspot-key="${esc(h.key)}" data-original-x="${h.x ?? ''}" data-original-y="${h.y ?? ''}">
       <div class="hotlabel ${h.state}">${esc(h.label)}</div>
-      <div class="hotcopy"><div><b>${esc(h.title)}</b> <span class="kind k-image">${esc(h.evidenceAxis || 'image')}→${esc(h.evidenceRef)}</span></div><div>${esc(h.description)}</div><div class="hotstatus">${esc(h.statusText)}</div><div class="hotchoice" aria-live="polite"></div></div>
+      <div class="hotcopy"><div><b>${esc(h.title)}</b> <span class="kind k-image">${esc(h.evidenceAxis || 'image')}→${esc(h.evidenceRef)}</span></div><div>${esc(h.description)}</div><div class="hotstatus">${esc(h.statusText)}${old}${automatic}</div><div class="hotchoice" aria-live="polite"></div></div>
       <div class="hotactions" role="group" aria-label="Review ${esc(h.label)}">${buttons}</div>
     </div>`;
   }).join('');
-  return `<section class="hotreview"><h4>Hotspot placement review (${w.hotspotReview.length})</h4><p class="reviewhelp">The P-numbers match orange markers on the image. S-numbers were withheld because their old location was missing, too broad, or duplicative. If an S-point is useful but has no honest single location, choose <b>Keep as note</b>. To localize one, choose <b>Move</b> or <b>Place on image</b>, then click the exact feature.</p>${rows}</section>`;
+  return `<section class="hotreview"><h4>Hotspot placement review (${w.hotspotReview.length})</h4><p class="reviewhelp">Content usefulness and spatial presentation are separate. The P-numbers match orange markers; grey numbers are previous site pins and remain spatial candidates. S-items were withheld as pins, but default to an automatic note-or-merge route rather than deletion. Use <b>Discard idea</b> only when the observation itself should go. <b>No opinion</b> is an abstention and is never treated as approval or training data.</p>${rows}</section>`;
 }
 function workReviewBlock({ quarantined = false } = {}) {
   const buttons = quarantined
@@ -310,8 +324,9 @@ function refreshSection(section){
     const x=choice?.decision==='move'?choice.x:(hasOriginal?Number(row.dataset.originalX):null);
     const y=choice?.decision==='move'?choice.y:(hasOriginal?Number(row.dataset.originalY):null);
     if(marker){
-      const visible=Number.isFinite(x)&&Number.isFinite(y)&&(choice?.decision!=='drop'||hasOriginal);
-      marker.classList.toggle('is-hidden',!visible);marker.classList.toggle('dropped',choice?.decision==='drop');marker.classList.toggle('armed',!!isActive);
+      const unpinned=['drop','discard','note','auto'].includes(choice?.decision);
+      const visible=Number.isFinite(x)&&Number.isFinite(y)&&!unpinned;
+      marker.classList.toggle('is-hidden',!visible);marker.classList.toggle('dropped',['drop','discard'].includes(choice?.decision));marker.classList.toggle('armed',!!isActive);
       if(visible){marker.style.left=x+'%';marker.style.top=y+'%';}else{marker.style.removeProperty('left');marker.style.removeProperty('top');}
     }
     const out=row.querySelector('.hotchoice');
@@ -319,7 +334,10 @@ function refreshSection(section){
     else if(choice?.decision==='move')out.textContent='Your choice: place at '+choice.x.toFixed(1)+'%, '+choice.y.toFixed(1)+'%.';
     else if(choice?.decision==='keep')out.textContent='Your choice: keep the current location.';
     else if(choice?.decision==='note')out.textContent='Your choice: keep this observation as an unpinned note.';
-    else if(choice?.decision==='drop')out.textContent=hasOriginal?'Your choice: drop this hotspot.':'Your choice: leave this proposal unpublished.';
+    else if(choice?.decision==='auto')out.textContent='Your choice: accept the automatic note/merge route.';
+    else if(choice?.decision==='discard')out.textContent='Your choice: discard the observation itself.';
+    else if(choice?.decision==='abstain')out.textContent='Your choice: no opinion; excluded from approval and learning.';
+    else if(choice?.decision==='drop')out.textContent='Legacy v1 choice: unpin only; content meaning remains unknown.';
     else out.textContent='';
   });
   section.querySelectorAll('[data-image-wrap]').forEach(wrap=>wrap.classList.toggle('placing',!!activePlacement&&activePlacement.workId===id));
@@ -333,7 +351,7 @@ sections.forEach(section=>{
   section.querySelectorAll('[data-hotspot-action]').forEach(button=>button.addEventListener('click',()=>{
     const row=button.closest('.hotrow');const key=row.dataset.hotspotKey;const action=button.dataset.hotspotAction;
     if(action==='move'){setActive(id,key);return;}
-    const prior=stateFor(id).hotspots[key]||{};stateFor(id).hotspots[key]={...prior,decision:action};
+    const prior=stateFor(id).hotspots[key]||{};stateFor(id).hotspots[key]={...prior,decision:action,explicit:true};
     if(activePlacement&&activePlacement.workId===id&&activePlacement.key===key)activePlacement=null;
     persist();refreshSection(section);
   }));
@@ -352,7 +370,7 @@ sections.forEach(section=>{
 function exportPayload(){
   return {...REVIEW_META,exportedAt:new Date().toISOString(),works:REVIEW_META.works.map(meta=>{
     const state=stateFor(meta.workId);
-    return {...meta,decision:state.decision||null,note:state.note||'',hotspots:(meta.hotspots||[]).map(h=>({...h,review:state.hotspots[h.key]||null}))};
+    return {...meta,decision:state.decision||null,note:state.note||'',hotspots:(meta.hotspots||[]).map(h=>({...h,review:state.hotspots[h.key]||{decision:'abstain',explicit:false}}))};
   })};
 }
 function exportText(){return JSON.stringify(exportPayload(),null,2)+'\\n';}
