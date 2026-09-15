@@ -1,4 +1,4 @@
-// VSD-029 Pass-B spatial presentation policy.
+// VSD-029/030/031 Pass-B spatial presentation and confirmation policy.
 //
 // This module keeps three decisions independent:
 //   1. whether an observation is editorially useful;
@@ -11,13 +11,16 @@
 import { EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { b4Lineage } from './pass-b-b4-delta.mjs';
 
-export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/4';
+export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/5';
 export const LOCALIZATION_INPUT_VERSION = 'passBLocalizationInput/4';
 export const LOCALIZATION_RESULT_VERSION = 'passBLocalizationResult/3';
+export const CONFIRMATION_INPUT_VERSION = 'passBSpatialConfirmationInput/1';
+export const CONFIRMATION_RESULT_VERSION = 'passBSpatialConfirmationResult/1';
 export const SPATIAL_SCOPES = Object.freeze(['point', 'representative', 'distributed', 'global', 'notFound', 'ambiguous']);
 export const CANDIDATE_VERDICTS = Object.freeze(['valid', 'invalid', 'uncertain']);
 export const LEGACY_AGREEMENT_DISTANCE = 5;
 export const LEGACY_DISAGREEMENT_DISTANCE = 10;
+export const NEW_POINT_CONFIRMATION_DISTANCE = 5;
 
 const str = { type: 'string' }; const num = { type: 'number' };
 const nullablePoint = { anyOf: [
@@ -42,6 +45,23 @@ export const LOCALIZATION_WIRE_SCHEMA = Object.freeze({
           },
           suggestedPoint: nullablePoint,
           confidence: num, note: str,
+        },
+      },
+    },
+    uncertainty: str,
+  },
+});
+export const CONFIRMATION_WIRE_SCHEMA = Object.freeze({
+  type: 'object', additionalProperties: false, required: ['version', 'decisions', 'uncertainty'],
+  properties: {
+    version: { type: 'string', enum: [CONFIRMATION_RESULT_VERSION] },
+    decisions: {
+      type: 'array', items: {
+        type: 'object', additionalProperties: false,
+        required: ['requestId', 'scope', 'point', 'confidence', 'note'],
+        properties: {
+          requestId: str, scope: { type: 'string', enum: [...SPATIAL_SCOPES] },
+          point: nullablePoint, confidence: num, note: str,
         },
       },
     },
@@ -251,28 +271,122 @@ export function validateLocalizationResult(input, result) {
   return { ok: errors.length === 0, errors };
 }
 
-export function resolveLocalization(row, decision, { minimumConfidence = 0.75 } = {}) {
-  if (!decision) return { presentation: row.automaticRoute.presentation, point: null, status: 'not-run', reason: row.automaticRoute.reason };
-  if (decision.confidence < minimumConfidence || decision.scope === 'ambiguous') {
-    return { presentation: 'hold', point: null, status: 'human-review', reason: 'low-confidence-or-ambiguous-localization' };
+// A confirmation request is derived from a strict-valid first pass but deliberately omits its candidate
+// points, suggested point, and reasoning. The second fresh-context image call must locate the feature
+// independently; deterministic code compares the two answers afterward.
+export function buildConfirmationInput({ localizationInput, localizationResult, minimumConfidence = 0.75 }) {
+  if (localizationInput?.version !== LOCALIZATION_INPUT_VERSION) throw new Error('confirmation needs a current localization input');
+  const primaryValidation = validateLocalizationResult(localizationInput, localizationResult);
+  if (!primaryValidation.ok) throw new Error(`confirmation needs a valid localization result: ${primaryValidation.errors.join('; ')}`);
+  const decisions = new Map(localizationResult.decisions.map(decision => [decision.requestId, decision]));
+  const targets = localizationInput.targets.flatMap(target => {
+    const decision = decisions.get(target.requestId);
+    const allCandidatesInvalid = decision.candidateAssessments.every(assessment => assessment.verdict === 'invalid');
+    const needsConfirmation = ['point', 'representative'].includes(decision.scope)
+      && decision.confidence >= minimumConfidence && allCandidatesInvalid && validPoint(decision.suggestedPoint);
+    if (!needsConfirmation) return [];
+    return [{ requestId: target.requestId, deltaIndex: target.deltaIndex, visualTarget: target.visualTarget }];
+  });
+  return {
+    version: CONFIRMATION_INPUT_VERSION,
+    workId: localizationInput.workId,
+    imageSha256: localizationInput.imageSha256,
+    imageExt: localizationInput.imageExt,
+    targets,
+  };
+}
+
+export function buildConfirmationPrompt(input, imageFile) {
+  if (input?.version !== CONFIRMATION_INPUT_VERSION) throw new Error('invalid confirmation input version');
+  if (!/^[0-9a-f]{64}\.[a-z0-9]{1,5}$/.test(imageFile || '')) throw new Error('confirmation prompt needs neutral image filename');
+  return [
+    'You are the independent second spatial checker. Your working directory contains exactly one sanitized artwork image. Open the named image with the Read tool. For each short visual target, decide from the pixels alone whether it has one honest point location.',
+    'You have not been given any earlier candidate or suggested coordinates. Locate the target independently; do not infer or discuss what another checker may have answered.',
+    'Choose exactly one scope: point (one exact visible detail), representative (a repeated feature for which one clearly representative visible example is honest), distributed (visible in several places and no single example adequately represents it), global (describes the whole composition or object), notFound (the claimed visible target is not present), or ambiguous (the pixels do not support a reliable decision).',
+    'For point or representative, return one x/y percentage point on the visible feature. For every other scope, point must be null. Do not assume a target exists merely because it was requested. Do not discuss artist, date, title, history, symbolism, identity, sources, or player-facing wording.',
+    'Return one bare JSON object only, with exactly {version,decisions,uncertainty}. Echo every requestId once. Each decision is exactly {requestId,scope,point,confidence,note}; confidence is 0-1 and note briefly describes only the visible spatial basis. Set version to passBSpatialConfirmationResult/1.',
+    'Point coordinates use x/y percentages from 0-100, measured on the image itself.',
+    `The image file is ./${imageFile}.`,
+    `TARGETS:\n${JSON.stringify({ version: input.version, targets: input.targets })}`,
+  ].join('\n\n');
+}
+
+export function validateConfirmationResult(input, result) {
+  const errors = [];
+  const need = (condition, message) => { if (!condition) errors.push(message); };
+  need(input?.version === CONFIRMATION_INPUT_VERSION, 'confirmation input version');
+  need(result && typeof result === 'object' && !Array.isArray(result), 'result object');
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return { ok: false, errors };
+  need(result.version === CONFIRMATION_RESULT_VERSION, 'result version');
+  need(Array.isArray(result.decisions), 'decisions array');
+  need(typeof result.uncertainty === 'string' && result.uncertainty.length <= 1000, 'uncertainty');
+  const wanted = new Set((input?.targets || []).map(target => target.requestId));
+  const seen = new Set();
+  for (const decision of (result.decisions || [])) {
+    need(decision && typeof decision === 'object' && !Array.isArray(decision), 'decision object');
+    if (!decision || typeof decision !== 'object') continue;
+    need(wanted.has(decision.requestId), `unexpected requestId: ${decision.requestId}`);
+    need(!seen.has(decision.requestId), `duplicate requestId: ${decision.requestId}`);
+    seen.add(decision.requestId);
+    need(SPATIAL_SCOPES.includes(decision.scope), `scope: ${decision.requestId}`);
+    const pointRequired = ['point', 'representative'].includes(decision.scope);
+    need(pointRequired ? validPoint(decision.point) : decision.point === null, `point/scope mismatch: ${decision.requestId}`);
+    need(typeof decision.confidence === 'number' && decision.confidence >= 0 && decision.confidence <= 1, `confidence: ${decision.requestId}`);
+    need(typeof decision.note === 'string' && decision.note.length <= 500, `note: ${decision.requestId}`);
   }
-  if (decision.scope === 'notFound') return { presentation: 'hold', point: null, status: 'claim-review', reason: 'visual-target-not-found' };
+  need(seen.size === wanted.size && [...wanted].every(id => seen.has(id)), 'one decision per requested target');
+  return { ok: errors.length === 0, errors };
+}
+
+export function resolveLocalization(row, decision, { minimumConfidence = 0.75 } = {}) {
+  if (!decision) return { presentation: row.automaticRoute.presentation, point: null, status: 'not-run', trustTier: 'unresolved', reason: row.automaticRoute.reason };
+  if (decision.confidence < minimumConfidence || decision.scope === 'ambiguous') {
+    return { presentation: 'hold', point: null, status: 'human-review', trustTier: 'review-required', reason: 'low-confidence-or-ambiguous-localization' };
+  }
+  if (decision.scope === 'notFound') return { presentation: 'hold', point: null, status: 'claim-review', trustTier: 'review-required', reason: 'visual-target-not-found' };
   if (['distributed', 'global'].includes(decision.scope)) {
-    return { presentation: 'note', point: null, status: 'auto', reason: `spatial-scope-${decision.scope}` };
+    return { presentation: 'note', point: null, status: 'auto', trustTier: 'validated-note-scope', reason: `spatial-scope-${decision.scope}` };
   }
   const assessments = new Map((decision.candidateAssessments || []).map(value => [value.candidateId, value.verdict]));
   const validCandidates = (row.candidates || []).filter(candidate => assessments.get(candidate.candidateId) === 'valid');
   if (validCandidates.length) {
     const candidate = validCandidates.find(value => value.candidateId === 'current') || validCandidates[0];
-    return { presentation: 'pin', point: clonePoint(candidate.point), candidateId: candidate.candidateId, status: 'auto', reason: `validated-candidate-${decision.scope}` };
+    return { presentation: 'pin', point: clonePoint(candidate.point), candidateId: candidate.candidateId, status: 'auto', trustTier: 'validated-existing-candidate', reason: `validated-candidate-${decision.scope}` };
   }
   if ([...assessments.values()].some(verdict => verdict === 'uncertain')) {
-    return { presentation: 'hold', point: null, status: 'human-review', reason: 'uncertain-existing-candidate' };
+    return { presentation: 'hold', point: null, status: 'human-review', trustTier: 'review-required', reason: 'uncertain-existing-candidate' };
   }
   if (validPoint(decision.suggestedPoint)) {
-    return { presentation: 'pin', point: clonePoint(decision.suggestedPoint), candidateId: null, status: 'auto', reason: `new-point-${decision.scope}` };
+    return { presentation: 'hold', point: null, proposedPoint: clonePoint(decision.suggestedPoint), candidateId: null, status: 'confirmation-required', trustTier: 'unconfirmed-new-point', reason: `new-point-needs-confirmation-${decision.scope}` };
   }
-  return { presentation: 'hold', point: null, status: 'human-review', reason: 'no-valid-candidate-or-new-point' };
+  return { presentation: 'hold', point: null, status: 'human-review', trustTier: 'review-required', reason: 'no-valid-candidate-or-new-point' };
+}
+
+export function resolveConfirmedLocalization(row, primaryDecision, confirmationDecision, {
+  minimumConfidence = 0.75,
+  maximumDistance = NEW_POINT_CONFIRMATION_DISTANCE,
+} = {}) {
+  const primary = resolveLocalization(row, primaryDecision, { minimumConfidence });
+  if (primary.trustTier !== 'unconfirmed-new-point') return primary;
+  if (!confirmationDecision) return primary;
+  if (confirmationDecision.confidence < minimumConfidence || confirmationDecision.scope === 'ambiguous') {
+    return { ...primary, status: 'human-review', trustTier: 'review-required', reason: 'low-confidence-or-ambiguous-confirmation' };
+  }
+  if (confirmationDecision.scope === 'notFound') {
+    return { ...primary, status: 'claim-review', trustTier: 'review-required', reason: 'confirmation-target-not-found' };
+  }
+  if (confirmationDecision.scope !== primaryDecision.scope || !['point', 'representative'].includes(confirmationDecision.scope)) {
+    return { ...primary, status: 'human-review', trustTier: 'review-required', reason: 'blind-confirmation-scope-disagreement' };
+  }
+  const confirmationDistance = distance(primary.proposedPoint, confirmationDecision.point);
+  if (!Number.isFinite(confirmationDistance) || confirmationDistance > maximumDistance) {
+    return { ...primary, confirmationDistance, status: 'human-review', trustTier: 'review-required', reason: 'blind-confirmation-point-disagreement' };
+  }
+  return {
+    presentation: 'pin', point: clonePoint(primary.proposedPoint), proposedPoint: clonePoint(primary.proposedPoint),
+    confirmationPoint: clonePoint(confirmationDecision.point), confirmationDistance, candidateId: null,
+    status: 'auto', trustTier: 'blind-confirmed-new-point', reason: `blind-confirmed-new-point-${primaryDecision.scope}`,
+  };
 }
 
 export const quantile = (values, q) => {

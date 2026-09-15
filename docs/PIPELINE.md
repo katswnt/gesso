@@ -186,9 +186,13 @@ has no authoritative writer. Its current sequence is:
    notes, and sends only uncertain point placement to a bounded localization-only canary.
    Under VSD-030 the canary validates every candidate rather than choosing a favorite free
    point. The resolver preserves a valid current point as a no-churn tie-breaker, otherwise
-   another valid prior point; uncertainty holds, and a new suggestion is usable only after
-   every candidate is invalid. The model receives only the image, short target title, and
-   candidate points—never B1 explanatory prose, research/player copy, or owner answers.
+   another valid prior point; uncertainty holds, and a first-pass new suggestion is possible
+   only after every candidate is invalid. Under VSD-031 that new point remains held until a
+   separate fresh-context checker—shown no earlier coordinate or reasoning—matches the same
+   scope and lands within 5 points at confidence ≥0.75. The first model receives only the
+   image, short target title, and candidate points; the confirmer receives only the image and
+   short target title. Neither receives B1 explanatory prose, research/player copy, or owner
+   answers.
 
 The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
 events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
@@ -262,7 +266,12 @@ Current limitations:
   canary `b5c-f2020a1d8cca` completed 10/10 strict-valid with no retries (44 targets, 77 candidate
   assessments): 23 existing candidates selected, 4 new suggestions, 12 note routes, 5 holds.
   Its 17 comparable unique-point labels were 9/17 within 5 and 12/17 within 10 (median 2.89,
-  interpolated p90 21.84). This is diagnostic; no auto-policy threshold is yet approved.
+  interpolated p90 21.84). VSD-031 re-resolves its 4 new suggestions as confirmation-required,
+  so the same output now yields 23 validated existing pins, 12 notes, and 9 holds. The separate
+  confirmation canary `b5k-9e3a46a675ae` completed 4/4 strict-valid with no retries and
+  confirmed 0 automatically: 2 point-distance disagreements, 1 scope disagreement, and 1
+  low-confidence/scope mismatch all remained held. This is diagnostic; no corpus-scale
+  auto-policy threshold is yet approved.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
@@ -309,6 +318,16 @@ PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
 # Explicit subscription-backed run. The review file is opened only after every blind image call.
 PASS_B_SPATIAL_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-spatial-localization-canary.mjs \
   --run --review /path/to/pass-b-editorial-review-b4r-8f1f74ddc30f.json
+
+# Plan VSD-031's isolated second opinions for first-pass new coordinates (no model call).
+/opt/homebrew/bin/node scripts/pass-b-spatial-confirmation-canary.mjs \
+  --primary data/incoming/vision-calibration/b5c-f2020a1d8cca
+
+# Explicit subscription-backed confirmation run. First-pass points/reasoning and owner answers
+# are withheld from every image call; owner review is opened only afterward for blind scoring.
+PASS_B_SPATIAL_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-spatial-confirmation-canary.mjs \
+  --run --primary data/incoming/vision-calibration/b5c-f2020a1d8cca \
+  --review /path/to/pass-b-editorial-review-b4r-8f1f74ddc30f.json
 ```
 
 Artifacts remain under `data/incoming/vision-calibration/` (gitignored). A prompt/schema/transport
@@ -333,6 +352,7 @@ Relevant files:
 | `scripts/lib/pass-b-spatial-policy.mjs` | pure VSD-029 candidate comparison, note/merge routing, abstention semantics, localizer contract, and scoring |
 | `scripts/pass-b-spatial-calibration.mjs` | offline owner-review measurement and immutable spatial-input/report writer; no model calls |
 | `scripts/pass-b-spatial-localization-canary.mjs` | plan-by-default B5 image-only spatial canary; reads owner answers only after all calls complete for blind scoring |
+| `scripts/pass-b-spatial-confirmation-canary.mjs` | plan-by-default independent B5 confirmation for first-pass new points; re-verifies the primary run, withholds all earlier points/reasoning, and requires deterministic scope + ≤5-point agreement |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---

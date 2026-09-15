@@ -1,4 +1,4 @@
-// Subscription-backed, spatial-only Pass-B canary (VSD-029).
+// Subscription-backed, spatial-only Pass-B candidate-validation canary (VSD-029/030/031).
 //
 // Default is PLAN ONLY. The model sees one SHA-named image plus neutral visual target phrases and prior/B1
 // candidate points. It never receives player explanations, research sources, catalog identity, owner notes,
@@ -75,7 +75,7 @@ const bindings = Object.fromEntries(selected.map(work => [work.id, {
   localizationInputSha256: sha256(stableJson(work.input)),
 }]));
 const binding = {
-  version: 'passBSpatialLocalizationCanary/4', sourceRun, sourceRunId: sourceManifest.runId,
+  version: 'passBSpatialLocalizationCanary/5', sourceRun, sourceRunId: sourceManifest.runId,
   sourceEvidenceManifestSha256: sourceManifest.evidenceManifestSha256 ?? null,
   spatialPolicyVersion: SPATIAL_CALIBRATION_VERSION, localizationSchema: LOCALIZATION_RESULT_VERSION,
   model: CALIBRATION_MODEL, mode, works: selected.map(work => work.id), bindings,
@@ -156,7 +156,7 @@ function scoreAgainstOwner(results, review) {
         modelSelectedCandidateId: resolution?.candidateId ?? null,
         modelSuggestedPoint: decision?.suggestedPoint ?? null,
         candidateAssessments: decision?.candidateAssessments ?? [],
-        resolution: resolution ? { presentation: resolution.presentation, status: resolution.status, reason: resolution.reason } : null,
+        resolution: resolution ? { presentation: resolution.presentation, status: resolution.status, trustTier: resolution.trustTier, reason: resolution.reason } : null,
         modelPoint, distance: pointDistance(ownerPoint, modelPoint), currentDistance,
         bestExistingCandidateDistance: candidateDistances.length ? Math.min(...candidateDistances) : null,
       });
@@ -180,7 +180,8 @@ function scoreAgainstOwner(results, review) {
       verdicts: countBy(assessments, assessment => assessment.verdict),
       selectedExisting: scored.filter(row => row.modelSelectedCandidateId !== null).length,
       suggestedNewPoints: scored.filter(row => row.modelSuggestedPoint !== null).length,
-      appliedNewPoints: scored.filter(row => row.resolution?.reason?.startsWith('new-point-')).length,
+      confirmationRequired: scored.filter(row => row.resolution?.trustTier === 'unconfirmed-new-point').length,
+      autoAppliedWithoutConfirmation: scored.filter(row => row.resolution?.reason?.startsWith('new-point-') && row.resolution?.status === 'auto').length,
     },
     // Primary coordinate score: only genuinely unique point targets. Representative examples are
     // set-valued, so their owner distance is retained as a diagnostic rather than called accuracy.
