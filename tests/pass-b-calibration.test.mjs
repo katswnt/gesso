@@ -540,7 +540,7 @@ t('editorial packet identifies every hotspot and preserves enough information fo
   assert.deepEqual(rows.map(row => [row.label, row.state, row.evidenceRef]), [['P1', 'published', 'ev_medium'], ['S1', 'suppressed', 'ev_format']]);
   assert(rows.every(row => row.title && row.description && row.statusText), 'each marker must explain what it describes and why it is/is not placed');
   assert.equal(EDITORIAL_REVIEW_VERSION, 'passBEditorialReview/1');
-  for (const required of ['data-work-decision', 'data-work-note', 'data-hotspot-action', 'getBoundingClientRect', 'localStorage', 'Download review JSON', 'Copy review JSON']) {
+  for (const required of ['data-work-decision', 'data-work-note', 'data-hotspot-action', 'getBoundingClientRect', 'localStorage', 'Download review JSON', 'Copy review JSON', '<details class="workdetails', 'position:sticky', '100dvh', 'Collapse all']) {
     assert(fullPacketSrc.includes(required), `full packet must contain ${required}`);
   }
 });

@@ -166,11 +166,15 @@ function workReviewBlock({ quarantined = false } = {}) {
 }
 function workCard(w) {
   const flags = [w.overwriteStrong ? 'overwrite-strong' : '', w.conflicts.length ? 'conflicts' : '', w.cons.length ? 'corrections' : '', (w.guideMetrics.legacyTotal > 0 && w.guideMetrics.legacyDerived === 0) ? 'zero-legacy-derived' : '', (w.hotspotQuality?.suppressed || []).length ? 'hotspot-attention' : '', w.needsAttention ? 'needs-attention' : ''].filter(Boolean);
+  const openReasons = [(w.hotspotQuality?.suppressed || []).length ? 'hotspots need placement' : '', (w.guideMetrics.legacyTotal > 0 && w.guideMetrics.legacyDerived === 0) ? 'no legacy question retained' : ''].filter(Boolean);
+  const openNow = openReasons.length > 0;
   return `<section class="work" data-cohort="${w.meta.cohort}" data-entry="${w.entryType}" data-flags="${flags.join(' ')}" data-maxans="${w.maxAns}" data-id="${esc(w.id)}" data-review-kind="completed" data-reviewed="false">
-  <h3>${esc(w.catalog.title || w.id)} <span class="wid">${esc(w.id)}</span></h3>
-  <div class="meta">${w.meta.cohort} · ${w.meta.fameBand} · ${esc(w.meta.regionGroup)} · ${esc(w.catalog.medium)} · <b>${w.entryType}</b>${w.reused ? ' · <span class="reused">reused</span>' : ''}${flags.map((f) => `<span class="flag">${f}</span>`).join('')}</div>
+  <details class="workdetails${openNow ? ' attention-now' : ''}"${openNow ? ' open' : ''}>
+  <summary><span class="summarytitle">${esc(w.catalog.title || w.id)}</span> <span class="wid">${esc(w.id)}</span><span class="summarymeta">${w.meta.cohort} · ${w.meta.fameBand} · ${esc(w.meta.regionGroup)} · ${esc(w.catalog.medium)} · ${w.entryType}</span>${openReasons.map(reason => `<span class="flag review-now">${esc(reason)}</span>`).join('')}${flags.filter(flag => !['hotspot-attention', 'zero-legacy-derived', 'needs-attention'].includes(flag)).map(flag => `<span class="flag">${flag}</span>`).join('')}</summary>
+  <div class="worklayout">
+  <aside class="visualcolumn">${overlay(w)}</aside>
+  <div class="textcolumn">
   ${workReviewBlock()}
-  ${overlay(w)}
   ${hotspotReviewBlock(w)}
   <div class="grid2">
     <div><h4>OLD why</h4><div class="why old">${esc(w.legacy.why) || '<span class=muted>—</span>'}</div>
@@ -185,19 +189,20 @@ function workCard(w) {
   ${w.conflicts.length ? `<div class="box conf"><b>Conflicts → humanReview (${w.conflicts.length}):</b>${w.conflicts.map((c) => `<div>${esc(c.field)} — left: ${esc(c.left)} | right: ${esc(c.right)}</div>`).join('')}</div>` : ''}
   ${w.uncertainty ? `<div class="box unc"><b>Uncertainty:</b> ${esc(w.uncertainty)}</div>` : ''}
   <div class="muted small">source-dependent claims: ${w.srcDep} · max answer ${w.maxAns} · change score ${w.changeScore} · ${w.evidence ? Math.round((w.evidence.durationMs || 0) / 1000) + 's' : ''}</div>
+  </div></div></details>
   </section>`;
 }
 function quarCard(r) {
   const rd = r.rawDelta || {};
   const g = (rd.guide || []).map((q) => `<div class="qa"><div class="q">${q.action || ''} ${esc(q.q)}</div><div class="a">${esc(q.a)}</div></div>`).join('') || '<p class=muted>no guide in attempt</p>';
-  return `<section class="work quar" data-id="${esc(r.id)}" data-review-kind="quarantined" data-reviewed="false"><h3>${esc(r.id)} <span class="bad">QUARANTINED</span></h3>
+  return `<section class="work quar" data-id="${esc(r.id)}" data-review-kind="quarantined" data-reviewed="false"><details class="workdetails attention-now" open><summary><span class="summarytitle">${esc(r.id)}</span> <span class="bad">QUARANTINED — needs a decision</span></summary><div class="quarbody">
   ${workReviewBlock({ quarantined: true })}
   <div class="box conf"><b>Exact rejection:</b> ${esc(r.why)}</div>
   <h4>Attempted why ${rd.why ? cn(rd.why.text) : ''}</h4><div class="why">${esc(rd.why?.text) || '<span class=muted>—</span>'}</div>
   <h4>Attempted cues</h4><ul>${(rd.cues?.items || []).map((c) => `<li>${esc(c)}</li>`).join('') || '<li class=muted>—</li>'}</ul>
   <h4>Attempted guide</h4>${g}
   <h4>Attempted notes</h4>${(rd.notes || []).map((n) => `<div class="note"><b>${n.action || ''} ${esc(n.head)}</b> ${n.body ? cn(n.body) : ''}<div>${esc(n.body)}</div></div>`).join('') || '<p class=muted>—</p>'}
-  </section>`;
+  </div></details></section>`;
 }
 
 await prepImages(completed); // downscale + embed images before rendering
@@ -206,8 +211,10 @@ const html = `<!doctype html><meta charset="utf-8"><title>B4-v2 editorial review
 body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;color:#1c1a17;background:#faf9f7}
 header{position:sticky;top:0;background:#fff;border-bottom:1px solid #e4e0d8;padding:12px 18px;z-index:10}
 h1{font-size:18px;margin:0 0 6px}h3{font-size:16px;margin:20px 0 2px}h4{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b665e;margin:12px 0 3px}
-main{max-width:1100px;margin:0 auto;padding:14px 18px}
-.work{border-top:2px solid #e4e0d8;padding-top:14px;margin-top:18px;scroll-margin-top:150px}.wid{color:#9a8f7e;font-size:11px;font-weight:400}
+main{max-width:1500px;margin:0 auto;padding:14px 18px}
+.work{border-top:2px solid #e4e0d8;margin-top:14px;scroll-margin-top:150px}.wid{color:#9a8f7e;font-size:11px;font-weight:400}
+.workdetails>summary{cursor:pointer;padding:12px 10px;list-style-position:outside;background:#fff;border-radius:6px}.workdetails>summary:focus-visible{outline:3px solid #2a5aa0;outline-offset:2px}.workdetails[open]>summary{border-bottom:1px solid #e4e0d8;border-radius:6px 6px 0 0}.workdetails.attention-now>summary{background:#fff8ee}.summarytitle{font-size:16px;font-weight:700}.summarymeta{display:block;color:#6b665e;font-size:12px;margin:2px 0 0 18px}.review-now{background:#f8ddbb;color:#7a4708}.worklayout{display:grid;grid-template-columns:minmax(300px,44%) minmax(0,1fr);gap:22px;align-items:start;padding:12px 0}.visualcolumn{position:sticky;top:calc(env(safe-area-inset-top) + 126px);align-self:start}.visualcolumn .imgwrap img{max-height:calc(100dvh - 155px);width:auto;object-fit:contain}.textcolumn{min-width:0}.quarbody{max-width:900px;padding:10px}
+@media(max-width:900px){.worklayout{grid-template-columns:1fr}.visualcolumn{position:static}.visualcolumn .imgwrap img{max-height:none}}
 .meta{color:#6b665e;font-size:12px;margin:2px 0 8px}.flag{background:#f3 e;background:#f6efe6;color:#8a5a12;border-radius:4px;padding:1px 6px;margin-left:6px;font-size:11px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
 .why{background:#fff;border:1px solid #e4e0d8;border-radius:6px;padding:8px 10px}.why.old{background:#f3f1ec;color:#555}
@@ -233,7 +240,7 @@ button.f{margin:2px 4px 2px 0;padding:3px 9px;border:1px solid #cfc7ba;backgroun
 </style>
 <header>
 <h1>Pass B — B4-v2 editorial review (${completed.length} completed · ${quarantined.length} quarantined) · run ${esc(RUN.split('/').pop())}</h1>
-<div class="reviewbar"><span class="progress" id="review-progress">0/${completed.length + quarantined.length} works decided</span><button type="button" class="primary" id="download-review">Download review JSON</button><button type="button" id="copy-review">Copy review JSON</button><span class="savestate" id="save-state" aria-live="polite">Loading saved review…</span><span class="exportstatus" id="export-status" aria-live="polite"></span></div>
+<div class="reviewbar"><span class="progress" id="review-progress">0/${completed.length + quarantined.length} works decided</span><button type="button" class="primary" id="download-review">Download review JSON</button><button type="button" id="copy-review">Copy review JSON</button><button type="button" id="open-attention">Open attention</button><button type="button" id="collapse-all">Collapse all</button><span class="savestate" id="save-state" aria-live="polite">Loading saved review…</span><span class="exportstatus" id="export-status" aria-live="polite"></span></div>
 <div>Filter:
  <button class="f on" data-f="all">all</button>
  <button class="f" data-f="strongLegacy">strongLegacy</button>
@@ -356,6 +363,8 @@ document.getElementById('copy-review').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(text);copied=true;}catch(error){const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.left='-9999px';document.body.appendChild(area);area.select();copied=document.execCommand('copy');area.remove();}
   document.getElementById('export-status').textContent=copied?'Copied review JSON.':'Copy was blocked; use Download review JSON.';
 });
+document.getElementById('open-attention').addEventListener('click',()=>sections.forEach(section=>{const details=section.querySelector('.workdetails');if(details?.classList.contains('attention-now'))details.open=true;}));
+document.getElementById('collapse-all').addEventListener('click',()=>sections.forEach(section=>{const details=section.querySelector('.workdetails');if(details)details.open=false;}));
 
 document.querySelectorAll('button.f').forEach(button=>button.addEventListener('click',()=>{
   document.querySelectorAll('button.f').forEach(x=>x.classList.remove('on'));button.classList.add('on');const filter=button.dataset.f;

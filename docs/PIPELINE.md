@@ -190,8 +190,10 @@ lanes, and renders a quarantined before/after review packet. The fixed calibrati
 The full-cohort packet is interactive but still non-authoritative (VSD-028). Each P/S hotspot label is
 defined beside the image; the reviewer can record a work decision, write notes, keep/move/drop a hotspot,
 or click the image to place it. Browser-local state auto-saves and can be downloaded/copied as a JSON
-handoff bound to the run and evidence-manifest hash. That export is review input, not `approved.json`, and
-has no path to production until it is deliberately converted into a separately verified approval.
+handoff bound to the run and evidence-manifest hash. Ordinary works start collapsed; placement/legacy
+blockers and quarantines start open. In an open work the image stays sticky at left while the review and
+before/after copy scroll at right. That export is review input, not `approved.json`, and has no path to
+production until it is deliberately converted into a separately verified approval.
 
 The offline `contentVisionCoverage/1` baseline remains the corpus inventory: one row for each
 current pool work, legacy content kept as evidence (never current completion), Pass A flags
