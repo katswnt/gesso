@@ -149,14 +149,14 @@ function hotspotReviewBlock(w) {
   const rows = w.hotspotReview.map((h) => {
     const buttons = h.state === 'published'
       ? `<button type="button" data-hotspot-action="keep">Keep here</button><button type="button" data-hotspot-action="move">Move</button><button type="button" data-hotspot-action="drop">Drop</button>`
-      : `<button type="button" data-hotspot-action="drop">Leave out</button><button type="button" data-hotspot-action="move">Place on image</button>`;
+      : `<button type="button" data-hotspot-action="drop">Leave out</button><button type="button" data-hotspot-action="note">Keep as note</button><button type="button" data-hotspot-action="move">Place on image</button>`;
     return `<div class="hotrow" data-hotspot-key="${esc(h.key)}" data-original-x="${h.x ?? ''}" data-original-y="${h.y ?? ''}">
       <div class="hotlabel ${h.state}">${esc(h.label)}</div>
       <div class="hotcopy"><div><b>${esc(h.title)}</b> <span class="kind k-image">${esc(h.evidenceAxis || 'image')}→${esc(h.evidenceRef)}</span></div><div>${esc(h.description)}</div><div class="hotstatus">${esc(h.statusText)}</div><div class="hotchoice" aria-live="polite"></div></div>
       <div class="hotactions" role="group" aria-label="Review ${esc(h.label)}">${buttons}</div>
     </div>`;
   }).join('');
-  return `<section class="hotreview"><h4>Hotspot placement review (${w.hotspotReview.length})</h4><p class="reviewhelp">The P-numbers match orange markers on the image. S-numbers were withheld because their old location was missing, too broad, or duplicative. Choose <b>Move</b> or <b>Place on image</b>, then click the exact feature.</p>${rows}</section>`;
+  return `<section class="hotreview"><h4>Hotspot placement review (${w.hotspotReview.length})</h4><p class="reviewhelp">The P-numbers match orange markers on the image. S-numbers were withheld because their old location was missing, too broad, or duplicative. If an S-point is useful but has no honest single location, choose <b>Keep as note</b>. To localize one, choose <b>Move</b> or <b>Place on image</b>, then click the exact feature.</p>${rows}</section>`;
 }
 function workReviewBlock({ quarantined = false } = {}) {
   const buttons = quarantined
@@ -318,6 +318,7 @@ function refreshSection(section){
     if(isActive)out.textContent='Click the image where this hotspot belongs.';
     else if(choice?.decision==='move')out.textContent='Your choice: place at '+choice.x.toFixed(1)+'%, '+choice.y.toFixed(1)+'%.';
     else if(choice?.decision==='keep')out.textContent='Your choice: keep the current location.';
+    else if(choice?.decision==='note')out.textContent='Your choice: keep this observation as an unpinned note.';
     else if(choice?.decision==='drop')out.textContent=hasOriginal?'Your choice: drop this hotspot.':'Your choice: leave this proposal unpublished.';
     else out.textContent='';
   });
