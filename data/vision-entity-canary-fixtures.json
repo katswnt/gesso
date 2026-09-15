@@ -1,14 +1,15 @@
 {
-  "version": "passBEntityCanaryFixtures/1",
+  "version": "passBEntityCanaryFixtures/2",
   "contractVersion": "contentVisionEntityGraph/1",
-  "policyVersion": "passBEntityController/1",
-  "provenanceNote": "Canonical regressions are audit-confirmed. Controls and holdout are authoritative-source-seeded with schematic geometry; holdout-derived recall/precision is PROVISIONAL pending owner ratification (owner pixel-labeling replaces these). Labels are self-consistent with the controller policy.",
+  "policyVersion": "passBEntityController/2",
+  "provenanceNote": "Canonical regressions are audit-confirmed; controls and holdout are authoritative-source-seeded with schematic, NON-EXHAUSTIVE geometry. Gold scenes contain only real entities. There are ZERO gold alias positives (real scenes contain no aliases; aliases are model errors), so alias RECALL is undefined here and must not be reported until owner pixel-labeling supplies positives; alias detection is regression-tested synthetically. Holdout accuracy/recall are descriptive-pilot only pending owner ratification.",
   "fixtures": [
     {
       "set": "canonicalRegressions",
       "workId": "wikidata:Q16467705",
       "labelSource": "audit-confirmed",
-      "note": "Glory=nude woman below, Villiers=clothed man in coffin above (Musee Carnavalet). Two humans (not an entity alias); the false wings and skull are entities the copy asserts but the image lacks -> unbound claims. Documents the LIMIT: the entity controller does not catch figure-identity inversion (that is the claim layer), but does catch absent-entity claims.",
+      "exhaustive": false,
+      "note": "GOLD real scene: two humans (Villiers clothed above in the coffin, Glory nude below) + the plaster slab (object). No alias in the true scene. The false wings and skull are entities the copy asserts but the image lacks -> unbound claims. Documents the LIMIT: the entity controller does not test figure-identity inversion (claim layer, unbuilt).",
       "label": {
         "version": "contentVisionEntityGraph/1",
         "regions": [
@@ -35,7 +36,7 @@
             "confidence": 0.9
           },
           {
-            "regionId": "r_coffin",
+            "regionId": "r_slab",
             "geometry": {
               "x": 40,
               "y": 5,
@@ -66,9 +67,7 @@
             "entityType": "human",
             "partOf": null,
             "sameAs": null,
-            "distinctFrom": [
-              "e_coffin"
-            ],
+            "distinctFrom": [],
             "confidence": 0.9
           },
           {
@@ -83,9 +82,9 @@
             "confidence": 0.9
           },
           {
-            "entityId": "e_coffin",
+            "entityId": "e_slab",
             "regionRefs": [
-              "r_coffin"
+              "r_slab"
             ],
             "entityType": "object",
             "partOf": null,
@@ -94,7 +93,7 @@
             "confidence": 0.9
           }
         ],
-        "uncertainty": "upper clothed figure and lower nude figure both human; slab behind is a distinct object"
+        "uncertainty": "upper clothed figure and lower nude figure both human; slab behind is an object"
       },
       "claims": [
         {
@@ -116,20 +115,10 @@
             "w": 6,
             "h": 6
           }
-        },
-        {
-          "claimId": "coffin",
-          "requiredType": "object",
-          "region": {
-            "x": 40,
-            "y": 5,
-            "w": 22,
-            "h": 55
-          }
         }
       ],
       "expected": {
-        "possibleAlias": 0,
+        "aliasPairs": [],
         "unbound": [
           "wings",
           "skull"
@@ -140,7 +129,8 @@
       "set": "canonicalRegressions",
       "workId": "wikidata:Q1211814",
       "labelSource": "audit-confirmed",
-      "note": "Lower-left is a crawling HUMAN penitent (St. John Chrysostom, per NGA); the audit found it also described as a separate crouching lion at the same region with conflicts:[]. Two overlapping incompatible-type entities, no declared relation -> possibleAlias (the canonical positive).",
+      "exhaustive": false,
+      "note": "GOLD real scene: the crawling penitent (St. John Chrysostom, per NGA) is HUMAN, plus a seated woman and a child, all human. There is NO lion in the real work — the audit found the pipeline hallucinated one. The true scene therefore has NO alias; the alias-DETECTION positive is a SYNTHETIC controller test, not the gold. penitent-human claim binds to the real human.",
       "label": {
         "version": "contentVisionEntityGraph/1",
         "regions": [
@@ -148,31 +138,20 @@
             "regionId": "r_saint",
             "geometry": {
               "x": 5,
-              "y": 60,
-              "w": 26,
-              "h": 32
-            },
-            "scope": "area",
-            "confidence": 0.9
-          },
-          {
-            "regionId": "r_lion",
-            "geometry": {
-              "x": 8,
               "y": 62,
-              "w": 24,
-              "h": 28
+              "w": 22,
+              "h": 26
             },
             "scope": "area",
             "confidence": 0.9
           },
           {
-            "regionId": "r_mother",
+            "regionId": "r_woman",
             "geometry": {
               "x": 40,
-              "y": 25,
-              "w": 18,
-              "h": 45
+              "y": 28,
+              "w": 20,
+              "h": 46
             },
             "scope": "area",
             "confidence": 0.9
@@ -180,10 +159,10 @@
           {
             "regionId": "r_child",
             "geometry": {
-              "x": 46,
-              "y": 40,
+              "x": 47,
+              "y": 46,
               "w": 12,
-              "h": 28
+              "h": 24
             },
             "scope": "area",
             "confidence": 0.9
@@ -202,20 +181,9 @@
             "confidence": 0.9
           },
           {
-            "entityId": "e_lion",
+            "entityId": "e_woman",
             "regionRefs": [
-              "r_lion"
-            ],
-            "entityType": "animal",
-            "partOf": null,
-            "sameAs": null,
-            "distinctFrom": [],
-            "confidence": 0.9
-          },
-          {
-            "entityId": "e_mother",
-            "regionRefs": [
-              "r_mother"
+              "r_woman"
             ],
             "entityType": "human",
             "partOf": null,
@@ -235,7 +203,7 @@
             "confidence": 0.9
           }
         ],
-        "uncertainty": "lower-left crawling figure"
+        "uncertainty": "small crawling figure lower-left; seated woman with a child at right"
       },
       "claims": [
         {
@@ -243,14 +211,14 @@
           "requiredType": "human",
           "region": {
             "x": 5,
-            "y": 60,
-            "w": 26,
-            "h": 32
+            "y": 62,
+            "w": 22,
+            "h": 26
           }
         }
       ],
       "expected": {
-        "possibleAlias": 1,
+        "aliasPairs": [],
         "unbound": []
       }
     },
@@ -258,28 +226,51 @@
       "set": "legitimateOverlapControls",
       "workId": "http://www.wikidata.org/entity/Q1190706",
       "labelSource": "authoritative-source-seeded",
-      "note": "Castor and Pollux (the Dioscuri) with horses. Human+animal legitimately overlap; the model DECLARES them distinct -> suppressed (tests the declared-relation escape). Provisional geometry.",
+      "exhaustive": false,
+      "note": "Castor and Pollux: per the actual image (Codex pixel check) two youths, an altar/torch, and a small draped attendant — NO horse (the earlier fixture invented one, the mythology-over-pixels prior). Humans same-type + human/object(altar) compatible -> no alias. Provisional geometry.",
       "label": {
         "version": "contentVisionEntityGraph/1",
         "regions": [
           {
-            "regionId": "r_man",
+            "regionId": "r_y1",
             "geometry": {
-              "x": 20,
+              "x": 18,
               "y": 18,
-              "w": 22,
-              "h": 52
+              "w": 20,
+              "h": 55
             },
             "scope": "area",
             "confidence": 0.9
           },
           {
-            "regionId": "r_horse",
+            "regionId": "r_y2",
             "geometry": {
-              "x": 22,
-              "y": 24,
-              "w": 24,
-              "h": 50
+              "x": 42,
+              "y": 16,
+              "w": 20,
+              "h": 57
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_altar",
+            "geometry": {
+              "x": 30,
+              "y": 60,
+              "w": 22,
+              "h": 24
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_att",
+            "geometry": {
+              "x": 60,
+              "y": 40,
+              "w": 12,
+              "h": 34
             },
             "scope": "area",
             "confidence": 0.9
@@ -287,35 +278,55 @@
         ],
         "entities": [
           {
-            "entityId": "e_man",
+            "entityId": "e_y1",
             "regionRefs": [
-              "r_man"
+              "r_y1"
             ],
             "entityType": "human",
             "partOf": null,
             "sameAs": null,
-            "distinctFrom": [
-              "e_horse"
-            ],
+            "distinctFrom": [],
             "confidence": 0.9
           },
           {
-            "entityId": "e_horse",
+            "entityId": "e_y2",
             "regionRefs": [
-              "r_horse"
+              "r_y2"
             ],
-            "entityType": "animal",
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_altar",
+            "regionRefs": [
+              "r_altar"
+            ],
+            "entityType": "object",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_att",
+            "regionRefs": [
+              "r_att"
+            ],
+            "entityType": "human",
             "partOf": null,
             "sameAs": null,
             "distinctFrom": [],
             "confidence": 0.9
           }
         ],
-        "uncertainty": "youth beside a horse, overlapping but distinct"
+        "uncertainty": "two youths, an altar/torch between them, a small attendant at right"
       },
       "claims": [],
       "expected": {
-        "possibleAlias": 0,
+        "aliasPairs": [],
         "unbound": []
       }
     },
@@ -323,6 +334,7 @@
       "set": "legitimateOverlapControls",
       "workId": "met247010",
       "labelSource": "authoritative-source-seeded",
+      "exhaustive": false,
       "note": "Boscoreale two-figure dyad. Both human -> same-type overlap is not an alias signal. Provisional geometry.",
       "label": {
         "version": "contentVisionEntityGraph/1",
@@ -378,7 +390,7 @@
       },
       "claims": [],
       "expected": {
-        "possibleAlias": 0,
+        "aliasPairs": [],
         "unbound": []
       }
     },
@@ -386,7 +398,8 @@
       "set": "holdout",
       "workId": "met450509",
       "labelSource": "authoritative-source-seeded",
-      "note": "Emperor's Carpet: many animals across the field, all type animal -> overlaps among same type are not alias signals. Precision negative. Provisional geometry.",
+      "exhaustive": false,
+      "note": "Emperor's Carpet: many animals in the field, all type animal -> same-type overlaps are not alias signals. Precision negative. Non-exhaustive. Provisional geometry.",
       "label": {
         "version": "contentVisionEntityGraph/1",
         "regions": [
@@ -463,7 +476,7 @@
       },
       "claims": [],
       "expected": {
-        "possibleAlias": 0,
+        "aliasPairs": [],
         "unbound": []
       }
     },
@@ -471,7 +484,8 @@
       "set": "holdout",
       "workId": "harvard216218",
       "labelSource": "authoritative-source-seeded",
-      "note": "Francis I: single human portrait bust. Precision negative. Provisional geometry.",
+      "exhaustive": false,
+      "note": "Francis I portrait bust. Precision negative. Non-exhaustive (inscription/framing not labeled; extras must not be penalised). Provisional geometry.",
       "label": {
         "version": "contentVisionEntityGraph/1",
         "regions": [
@@ -504,11 +518,11 @@
       },
       "claims": [],
       "expected": {
-        "possibleAlias": 0,
+        "aliasPairs": [],
         "unbound": []
       }
     }
   ],
-  "holdoutSealSha256": "a97c8abcebe9467cbc6a3f06ece62127da81926452e8356bb894d75cf1ede732",
-  "fixturesSha256": "a87cd1387a404cf9ffd0518fb8159e5e5fe8695ab4f98093ecdee88848de1643"
+  "holdoutSealSha256": "a1fc98bbff405854e95e535e92455eaffef4b2bfdcd123897c76e14579a35e25",
+  "fixturesSha256": "8b06fa6c52990bfe15e1b7189bbf373d471dcd3f9c7e5d210961e88828ec65ff"
 }

@@ -5,28 +5,27 @@
 // operation before writing on any failure. Not a batch merge; not a generalized platform.
 import { readFileSync, existsSync, writeFileSync, renameSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { sha256 } from './vision-legacy.mjs';
+import { sha256, stableJson } from './vision-legacy.mjs';
 import { validateStageBody } from './vision-content-schema.mjs';
 import { completionKey } from './vision-content-capture.mjs';
 import { verifyStageEvidence, VALIDATION_CONTRACT_VERSION } from './pass-b-calibration.mjs';
 import { scanTeachEntry } from './public-output-leak.mjs';
-import { verifyFindingsArtifact, evaluateApproval } from './pass-b-blocked-findings.mjs';
+import { loadCanonicalFindings, evaluateApproval } from './pass-b-blocked-findings.mjs';
 
 export const APPROVAL_VERSION = 'passBApproval/1';
 export const APPROVABLE_FIELDS = Object.freeze(['why', 'cues', 'guide', 'notes', 'hotspots']);
 const TEACH_ANCHOR = 'window.ARTEFACTUM_CUES.work=';
 const HOTSPOTS_ANCHOR = 'window.ARTEFACTUM_HOTSPOTS = ';
-export const CONTENT_BLOCKED_PATH = 'data/vision-content-blocked.json';
 
 export const fileSha = (p) => sha256(readFileSync(p, 'utf8'));
 
-// Load + integrity-verify the sealed content-blocked findings (VSD-034 item 1). Absent artifact = no
-// findings; a PRESENT-but-tampered artifact throws (fail-closed: never silently drop the block set).
-function loadContentBlocked(path) {
-  if (!path || !existsSync(path)) return [];
-  const v = verifyFindingsArtifact(JSON.parse(readFileSync(path, 'utf8')));
-  if (!v.ok) throw new Error(`content-blocked artifact invalid: ${v.error}`);
-  return v.findings;
+// Content-block candidate keyed by BOTH available hash-bases: rawResponseSha256 (cal50 completion) and, when
+// the completion carries a parsed delta (b4r-style), rawDeltaSha256 — so both the source completion and its
+// rehydrated descendants match. workId-level blocking (see evaluateApproval) is the standing guarantee.
+function contentBlockCandidate(workId, completion) {
+  const c = { workId, rawResponseSha256: completion.rawResponseSha256 ?? null };
+  if (completion.rawDelta != null) c.rawDeltaSha256 = sha256(stableJson(completion.rawDelta));
+  return c;
 }
 
 // Deterministic B4 -> production projection. Owner edits override the named fields in the OUTPUT only.
@@ -49,12 +48,13 @@ function stageBody(runDir, workId, stage) {
 
 // Build a PENDING approval bound to the run + completion + files. ownerApproved starts false — a human must
 // flip it after inspecting the card. Approval is never inferred from schema readiness.
-export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIELDS.slice(), ownerEdits = {}, teachPath, hotspotsPath, createdAt = null, resolution = null, contentBlockedPath = CONTENT_BLOCKED_PATH }) {
+export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIELDS.slice(), ownerEdits = {}, teachPath, hotspotsPath, createdAt = null, findings = loadCanonicalFindings() }) {
   const cpath = b4CompletionPath(runDir, workId);
   const raw = readFileSync(cpath, 'utf8');
   const completion = JSON.parse(raw);
-  // VSD-034 item 1: never stage an approval for a content-blocked work or its exact blocked content.
-  const dec = evaluateApproval({ findings: loadContentBlocked(contentBlockedPath), candidate: { workId, rawResponseSha256: completion.rawResponseSha256 ?? null }, resolution });
+  // VSD-034 item 1: never stage an approval for a content-blocked work. No resolution is accepted here —
+  // blocked works are intentionally uncleared until a bound owner-resolution artifact exists (overblock, never under).
+  const dec = evaluateApproval({ findings, candidate: contentBlockCandidate(workId, completion), resolution: null });
   if (!dec.allowed) throw new Error(`content-blocked: refusing to build approval for ${workId} (${dec.reason}${dec.findingId ? `, ${dec.findingId}` : ''})`);
   const b0 = JSON.parse(readFileSync(join(runDir, 'works', sha256(workId).slice(0, 24), 'b0-prep.json'), 'utf8'));
   const manifest = JSON.parse(readFileSync(join(runDir, 'run-manifest.json'), 'utf8'));
@@ -106,7 +106,7 @@ export function upsertEntryText(fileText, anchor, id, value) {
 
 // The guarded apply. Returns { ok, errors, dryRun, wrote, diff }. Rejects the WHOLE op before any write on any
 // binding/schema/evidence/concurrency failure. apply=false (default) never writes.
-export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply = false, contentBlockedPath = CONTENT_BLOCKED_PATH }) {
+export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply = false, findings = loadCanonicalFindings() }) {
   const errors = [];
   const rej = (e) => { errors.push(e); return { ok: false, errors, dryRun: !apply, wrote: false }; };
   if (!approval || approval.version !== APPROVAL_VERSION) return rej('bad-approval-version');
@@ -122,8 +122,9 @@ export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply
   if (sha256(rawC) !== approval.b4CompletionSha256) return rej('binding:completion-sha');
   const completion = JSON.parse(rawC);
   if (completion.workId !== approval.workId) return rej('binding:workId');
-  // 3b. VSD-034 item 1: reject a content-blocked work / its exact blocked content before any evidence work or write.
-  const cb = evaluateApproval({ findings: loadContentBlocked(contentBlockedPath), candidate: { workId: approval.workId, rawResponseSha256: completion.rawResponseSha256 ?? null }, resolution: approval.resolution ?? null });
+  // 3b. VSD-034 item 1: reject a content-blocked work / its exact blocked content before any evidence work or
+  // write. No resolution is accepted — blocked works stay uncleared (overblock, never under).
+  const cb = evaluateApproval({ findings, candidate: contentBlockCandidate(approval.workId, completion), resolution: null });
   if (!cb.allowed) return rej(`content-blocked:${cb.findingId || ''}:${cb.reason}`);
   if (completion.imgSha256 !== approval.imgSha256) return rej('binding:imgSha256');
   if (approval.validationContractVersion !== VALIDATION_CONTRACT_VERSION) return rej('binding:validationContractVersion');

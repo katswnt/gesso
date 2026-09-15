@@ -300,6 +300,36 @@ Current limitations:
 - The deterministic `launchd` subscription supervisor remains unbuilt; `--foreground` is supervised
   manual operation only.
 
+### Content-correctness enforcement + entity canary (VSD-034, offline)
+
+Two content failures found by the forensic audit are sealed as immutable, ancestry-bound
+`content-blocked` findings in the tracked `data/vision-content-blocked.json` (bound to
+`{workId, rawDeltaSha256, rawResponseSha256}` so the source completion and every rehydrated
+descendant match — the delta hash is byte-stable across rehydration). The guarded Pass B
+approval path (`scripts/lib/pass-b-approval.mjs`) loads these findings from a **mandatory,
+cwd-independent, fail-closed** path and refuses to stage (`buildApproval`) or apply
+(`applyApproval`) a blocked work before any evidence work or write. Blocked works are
+**intentionally uncleared** (no resolution artifact is wired yet — overblock, never under).
+
+The experimental entity-emission contract (`contentVisionEntityGraph/1`, quarantined — no
+production sink, not in `passBValidation`) plus its evaluator and the `possibleAlias` /
+`unboundEntityClaim` controller (`passBEntityController/2`) are the substrate for measuring
+whether models can emit region-bound typed entities and whether the controller's routing
+holds. Seeded, sealed canary fixtures live in `data/vision-entity-canary-fixtures.json`;
+their GOLD scenes contain only real entities (zero gold aliases — aliases are model errors,
+detected synthetically), the holdout is authoritative-source-seeded/precision-only pending
+owner pixel-labeling, and real-image labels are non-exhaustive.
+
+```bash
+node scripts/pass-b-content-blocked-findings.mjs        # regenerate the sealed findings (refuses to change a seal)
+node scripts/pass-b-content-blocked-findings.mjs --check # gate: verify the sealed findings artifact
+node scripts/pass-b-entity-canary-fixtures.mjs --check   # gate: verify the sealed canary fixtures
+```
+
+The item-4 bounded model canary (emit entity graphs on the fixture works' existing sanitized
+derivatives, score against labels, write the VSD-034 measurement report) is **not yet run** —
+no model calls have been made.
+
 ### Calibration commands
 
 Use Node 24 (`/opt/homebrew/bin/node`); the machine's default Node may be too old.

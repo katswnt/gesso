@@ -1,57 +1,87 @@
-// VSD-034 item 3: controller logic over the experimental entity graph. Pure/deterministic, no model.
-// possibleAlias: substantial region overlap + different KNOWN entity types + NO declared relation
-//   (partOf/sameAs/distinctFrom) -> route to a neutral targeted reread. NEVER auto-merges entities.
-//   A declared relation (incl. distinctFrom) is the model asserting "these overlap but are genuinely
-//   separate" (rider-on-horse, figure-on-chair) and suppresses the flag. Same-type overlap (mother+child)
-//   is not an alias signal. This catches St. John (human + animal, one region, no relation).
-// unboundEntityClaim: a consequential identity claim whose required entity type is not present (optionally
-//   at its region) cannot bind -> route to a neutral reread. This catches the St. John collapse case where
-//   B1 emitted only an animal and the sourced "penitent human" claim has nothing to bind to.
-// Thresholds are versioned/calibratable; item 4's canary measures their precision/recall before any use.
-import { iou, unionBox } from './pass-b-entity-eval.mjs';
+// VSD-034 item 3 (repaired): controller logic over the experimental entity graph. Pure/deterministic.
+//
+// possibleAlias fires on: substantial region overlap (max IoU over region pairs — NOT a union bounding box,
+// which would invent overlap between disjoint parts) AND an EXPLICIT type-incompatibility (both types are
+// mutually-exclusive "subject" kinds: human/animal/architecture/vehicle/plant). Compatible overlaps
+// (human+object holding, inscription+object, motif+vessel, animal+ground) never fire. Same-type never fires.
+//
+// Model-declared relations (partOf/sameAs/distinctFrom) are PROPOSALS that annotate/reprioritise a referral
+// but NEVER suppress it (a model that mis-declares must not be able to dismiss a real conflict). sameAs
+// between incompatible types is a STRONGER conflict signal (raises priority), not grounds to dismiss.
+// Every possibleAlias routes to a neutral targeted reread; the controller NEVER auto-merges.
+//
+// unboundEntityClaim: a required entity type absent (optionally at its region, matched by max region IoU) ->
+// neutral reread. Thresholds/incompatibility are versioned; item 4's canary calibrates them before any use.
+import { iou } from './pass-b-entity-eval.mjs';
 
-export const CONTROLLER_POLICY_VERSION = 'passBEntityController/1';
-export const OVERLAP_IOU_MIN = 0.25; // "substantial" region overlap (calibratable via the canary)
+export const CONTROLLER_POLICY_VERSION = 'passBEntityController/2';
+export const OVERLAP_IOU_MIN = 0.25; // "substantial" region overlap (calibratable)
+// Mutually-exclusive subject kinds: one image region cannot legitimately be two of these at once.
+export const SUBJECT_TYPES = Object.freeze(['human', 'animal', 'architecture', 'vehicle', 'plant']);
 
 function regionsMap(graph) { return new Map((graph.regions || []).map((r) => [r.regionId, r])); }
-function typesDifferentKnown(a, b) { return a.entityType !== 'unknown' && b.entityType !== 'unknown' && a.entityType !== b.entityType; }
-function hasDeclaredRelation(a, b) {
-  return a.partOf === b.entityId || b.partOf === a.entityId || a.sameAs === b.entityId || b.sameAs === a.entityId
-    || (a.distinctFrom || []).includes(b.entityId) || (b.distinctFrom || []).includes(a.entityId);
+export function typesIncompatible(a, b) { return a !== b && SUBJECT_TYPES.includes(a) && SUBJECT_TYPES.includes(b); }
+// Overlap between two entities = the MAX IoU over any pair of their regions (avoids the phantom-rectangle
+// artifact of bounding disjoint regions into one box).
+function entityOverlap(a, b, rById) {
+  let best = 0;
+  for (const ra of a.regionRefs) for (const rb of b.regionRefs) {
+    const ga = rById.get(ra)?.geometry, gb = rById.get(rb)?.geometry;
+    if (ga && gb) best = Math.max(best, iou(ga, gb));
+  }
+  return best;
+}
+function declaredRelation(a, b) {
+  if (a.sameAs === b.entityId || b.sameAs === a.entityId) return 'sameAs';
+  if (a.partOf === b.entityId || b.partOf === a.entityId) return 'partOf';
+  if ((a.distinctFrom || []).includes(b.entityId) || (b.distinctFrom || []).includes(a.entityId)) return 'distinctFrom';
+  return 'none';
+}
+// A model relation reprioritises but never removes a referral.
+function priorityFor(relation) {
+  if (relation === 'sameAs') return 'high'; // incompatible types declared identical => stronger conflict
+  if (relation === 'distinctFrom' || relation === 'partOf') return 'low'; // model asserts separate; still confirm
+  return 'medium';
 }
 
-// Return the possibleAlias pairs. Each is a routing recommendation (neutral reread), never a merge.
+// possibleAlias pairs, each a neutral-reread referral (never a merge/suppression).
 export function possibleAliases(graph, { overlapMin = OVERLAP_IOU_MIN } = {}) {
   const rById = regionsMap(graph);
-  const ents = (graph.entities || []).map((t) => ({ t, box: unionBox(t, rById) }));
+  const ents = graph.entities || [];
   const out = [];
   for (let i = 0; i < ents.length; i++) {
     for (let j = i + 1; j < ents.length; j++) {
       const A = ents[i], B = ents[j];
-      if (!A.box || !B.box) continue;
-      if (!typesDifferentKnown(A.t, B.t)) continue;
-      if (hasDeclaredRelation(A.t, B.t)) continue;
-      const ov = iou(A.box, B.box);
-      if (ov >= overlapMin) out.push({ entityA: A.t.entityId, entityB: B.t.entityId, iou: ov, types: [A.t.entityType, B.t.entityType], route: 'neutral-reread', reason: 'possible-alias' });
+      if (!typesIncompatible(A.entityType, B.entityType)) continue;
+      const ov = entityOverlap(A, B, rById);
+      if (ov < overlapMin) continue;
+      const relation = declaredRelation(A, B);
+      out.push({ entityA: A.entityId, entityB: B.entityId, iou: ov, types: [A.entityType, B.entityType], declaredRelation: relation, priority: priorityFor(relation), route: 'neutral-reread', reason: 'possible-alias' });
     }
   }
   return out;
 }
 
-// claims: [{ claimId, requiredType, region?:{x,y,w,h} }]. A claim binds if an entity of requiredType exists
-// (and, when a region is given, overlaps it at >= overlapMin). Unbound claims route to a neutral reread.
+// Normalized unordered pair keys, for set comparison in fixtures/tests (order-independent).
+export function aliasPairKeys(aliases) {
+  return aliases.map((a) => [a.entityA, a.entityB].sort().join('::')).sort();
+}
+
+// claims: [{ claimId, requiredType, region?:{x,y,w,h} }]. Binds if an entity of requiredType exists (and,
+// when a region is given, some region of it overlaps at >= overlapMin). Unbound -> neutral reread.
 export function detectUnboundClaims(graph, claims = [], { overlapMin = OVERLAP_IOU_MIN } = {}) {
   const rById = regionsMap(graph);
-  const ents = (graph.entities || []).map((t) => ({ t, box: unionBox(t, rById) }));
+  const ents = graph.entities || [];
   const out = [];
   for (const c of claims) {
-    const bound = ents.some(({ t, box }) => t.entityType === c.requiredType && (!c.region || (box && iou(box, c.region) >= overlapMin)));
+    const bound = ents.some((t) => t.entityType === c.requiredType && (!c.region || t.regionRefs.some((rid) => {
+      const g = rById.get(rid)?.geometry; return g && iou(g, c.region) >= overlapMin;
+    })));
     if (!bound) out.push({ claimId: c.claimId, requiredType: c.requiredType, route: 'neutral-reread', reason: 'unbound-entity-claim' });
   }
   return out;
 }
 
-// Convenience: full controller pass over a graph + optional claims.
 export function runController(graph, claims = [], opts = {}) {
   return { policyVersion: CONTROLLER_POLICY_VERSION, possibleAlias: possibleAliases(graph, opts), unbound: detectUnboundClaims(graph, claims, opts) };
 }

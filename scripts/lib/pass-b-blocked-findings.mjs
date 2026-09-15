@@ -12,9 +12,26 @@
 // fresh run) is not a descendant, but a blocked work still requires a resolution artifact that explicitly
 // resolves every blocked claim and attests a fresh run under the corrected contract (VSD-034). This is
 // pure/deterministic; it makes no model call and reads no image.
+import { readFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { sha256, stableJson } from './vision-legacy.mjs';
 
 export const CONTENT_BLOCKED_VERSION = 'passBContentBlocked/1';
+
+// The canonical enforcement artifact resolved from the MODULE location (repo root), independent of cwd, so
+// enforcement cannot be bypassed by running from a different directory or passing a bogus path.
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const CANONICAL_FINDINGS_PATH = join(REPO_ROOT, 'data', 'vision-content-blocked.json');
+
+// Load + integrity-verify the canonical findings. MANDATORY and fail-closed: a missing or tampered artifact
+// THROWS (never returns an empty block set). This is the only loader the approval path uses in production.
+export function loadCanonicalFindings() {
+  if (!existsSync(CANONICAL_FINDINGS_PATH)) throw new Error(`content-blocked findings artifact missing (fail-closed): ${CANONICAL_FINDINGS_PATH}`);
+  const v = verifyFindingsArtifact(JSON.parse(readFileSync(CANONICAL_FINDINGS_PATH, 'utf8')));
+  if (!v.ok) throw new Error(`content-blocked findings artifact invalid (fail-closed): ${v.error}`);
+  return v.findings;
+}
 
 // The stable content fingerprint of a B4 record (b4c-style or b4r-style; both carry rawDelta verbatim).
 export function contentFingerprint(record) {
@@ -35,17 +52,17 @@ export function buildFinding({ workId, rawDeltaSha256, rawResponseSha256 = null,
   return { findingId: `cb-${sha256(stableJson(core)).slice(0, 12)}`, ...core, provenance: provenance ?? null };
 }
 
-// Wrap findings in a self-hashed, immutable artifact. findingsSha256 is over the ordered findings cores.
+// Wrap findings in a self-hashed, immutable artifact. The seal covers the COMPLETE findings array (every
+// field: findingId, both content hashes, imgSha256, blockedClaims, reason, provenance) so ANY mutation is
+// detected — not just a subset.
 export function sealFindings(findings, note = '') {
-  const cores = findings.map((f) => ({ workId: f.workId, rawDeltaSha256: f.rawDeltaSha256, rawResponseSha256: f.rawResponseSha256 ?? null, blockedClaims: f.blockedClaims }));
-  return { version: CONTENT_BLOCKED_VERSION, generatedNote: note, findings, findingsSha256: sha256(stableJson(cores)) };
+  return { version: CONTENT_BLOCKED_VERSION, generatedNote: note, findings, findingsSha256: sha256(stableJson(findings)) };
 }
 
-// Verify the artifact has not been tampered with (immutability check on load).
+// Verify the artifact has not been tampered with (immutability check on load). Recomputes over the full findings.
 export function verifyFindingsArtifact(artifact) {
   if (!artifact || artifact.version !== CONTENT_BLOCKED_VERSION) return { ok: false, error: 'bad-version' };
-  const cores = (artifact.findings || []).map((f) => ({ workId: f.workId, rawDeltaSha256: f.rawDeltaSha256, rawResponseSha256: f.rawResponseSha256 ?? null, blockedClaims: f.blockedClaims }));
-  if (sha256(stableJson(cores)) !== artifact.findingsSha256) return { ok: false, error: 'findings-sha-mismatch' };
+  if (sha256(stableJson(artifact.findings || [])) !== artifact.findingsSha256) return { ok: false, error: 'findings-sha-mismatch' };
   return { ok: true, findings: artifact.findings };
 }
 
@@ -59,9 +76,13 @@ export function findingsForWork(findings, workId) {
   return (findings || []).filter((f) => f.workId === workId);
 }
 
-// A resolution artifact clears a finding only if it targets that finding, is owner/authoritative-source
-// authored, attests a fresh run, resolves EVERY blocked claim, and the candidate content is NOT the blocked
-// content (neither hash-base matches the finding's). Never self-inferred; a mere new record hash never clears.
+// SPECIFIED CONTRACT, NOT WIRED INTO THE APPROVAL PATH (VSD-034: blocked works are intentionally left
+// uncleared until a bound owner-resolution artifact is implemented). The approval path never passes a
+// resolution, so blocked works cannot be cleared today — they overblock, never underblock. This function
+// defines the future clearing rule and is unit-tested in isolation; `authority` here is a placeholder that a
+// real implementation must replace with a verified owner/authoritative artifact reference, not a bare string.
+// A resolution clears a finding only if it targets that finding, attests a fresh run, resolves EVERY blocked
+// claim, and the candidate content is NOT the blocked content. Never self-inferred; a new record hash never clears.
 export function resolutionClears(finding, resolution, candidate) {
   if (!resolution || resolution.findingId !== finding.findingId) return false;
   if (resolution.authority !== 'owner' && resolution.authority !== 'authoritative-source') return false;

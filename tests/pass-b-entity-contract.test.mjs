@@ -1,7 +1,7 @@
-// VSD-034 item 2 regressions: experimental entity-emission contract + evaluator.
+// VSD-034 item 2 regressions (repaired): entity-emission contract + evaluator.
 import assert from 'node:assert';
 import { validateEntityGraph, ENTITY_GRAPH_VERSION, ENTITY_GRAPH_WIRE_SCHEMA } from '../scripts/lib/pass-b-entity-contract.mjs';
-import { scoreEmission, aggregateEmission, iou } from '../scripts/lib/pass-b-entity-eval.mjs';
+import { scoreEmission, aggregateEmission, aliasPrecisionRecall, iou } from '../scripts/lib/pass-b-entity-eval.mjs';
 
 let n = 0;
 const ok = (c, m) => { assert(c, m); n++; };
@@ -20,11 +20,9 @@ const G = {
   uncertainty: '',
 };
 
-// ---- validator: valid ----
+// ---- validator ----
 ok(validateEntityGraph(G).ok, 'valid graph passes');
 ok(ENTITY_GRAPH_WIRE_SCHEMA.properties.version.enum[0] === ENTITY_GRAPH_VERSION, 'wire schema version pinned');
-
-// ---- validator: malformations rejected ----
 const breaks = {
   'dup region id': (g) => { g.regions[1].regionId = 'r1'; },
   'dangling regionRef': (g) => { g.entities[0].regionRefs = ['rX']; },
@@ -40,43 +38,54 @@ const breaks = {
   'partOf cycle': (g) => { g.entities[0].partOf = 'e2'; g.entities[1].partOf = 'e1'; },
   'bad version': (g) => { g.version = 'nope'; },
 };
-for (const [name, mutate] of Object.entries(breaks)) {
-  const g = clone(G); mutate(g);
-  ok(!validateEntityGraph(g).ok, `rejected: ${name}`);
-}
+for (const [name, mutate] of Object.entries(breaks)) { const g = clone(G); mutate(g); ok(!validateEntityGraph(g).ok, `rejected: ${name}`); }
 
-// ---- evaluator: iou sanity ----
+// ---- iou ----
 ok(iou({ x: 0, y: 0, w: 10, h: 10 }, { x: 0, y: 0, w: 10, h: 10 }) === 1, 'iou identical = 1');
 ok(iou({ x: 0, y: 0, w: 10, h: 10 }, { x: 50, y: 50, w: 10, h: 10 }) === 0, 'iou disjoint = 0');
 
-// ---- evaluator: perfect emission ----
+// ---- evaluator: perfect ----
 const perfect = scoreEmission(clone(G), G);
-ok(perfect.schemaValid && perfect.regionRecall === 1 && perfect.entityRecall === 1 && perfect.typeAccuracy === 1, 'perfect emission scores 100%');
+ok(perfect.schemaValid && perfect.regionRecall === 1 && perfect.entityRecall === 1 && perfect.typeAccuracy === 1 && perfect.typeAccuracyOverLabeled === 1, 'perfect emission scores 100%');
 
-// ---- evaluator: type error (St. John shape: a human emitted as animal) ----
+// ---- evaluator: type error ----
 const typeErr = clone(G); typeErr.entities[1].entityType = 'human';
 const st = scoreEmission(typeErr, G);
-ok(st.schemaValid && st.entityRecall === 1 && st.typeAccuracy === 0.5, 'one type error halves type accuracy');
+ok(st.schemaValid && st.entityRecall === 1 && st.typeAccuracy === 0.5 && st.typeAccuracyOverLabeled === 0.5, 'one type error halves type accuracy');
 
 // ---- evaluator: missed entity ----
 const missed = clone(G); missed.entities.pop(); missed.regions.pop();
 const ms = scoreEmission(missed, G);
-ok(ms.entityRecall === 0.5 && ms.entities.missed === 1 && ms.entities.extras === 0, 'dropped entity lowers recall');
+ok(ms.entityRecall === 0.5 && ms.entities.missed === 1, 'dropped entity lowers recall; typeAccuracyOverLabeled counts the miss');
+ok(ms.typeAccuracyOverLabeled === 0.5, 'typeAccuracyOverLabeled penalises the missed hard entity');
 
-// ---- evaluator: hallucinated extra entity ----
+// ---- evaluator: extra emitted entity, exhaustive vs non-exhaustive ----
 const extra = clone(G);
 extra.regions.push({ regionId: 'r3', geometry: { x: 5, y: 80, w: 10, h: 10 }, scope: 'area', confidence: 0.4 });
 extra.entities.push({ entityId: 'e3', regionRefs: ['r3'], entityType: 'object', partOf: null, sameAs: null, distinctFrom: [], confidence: 0.4 });
-const ex = scoreEmission(extra, G);
-ok(ex.entityRecall === 1 && ex.entities.extras === 1, 'hallucinated entity counted as extra, recall intact');
+ok(scoreEmission(extra, G, { exhaustive: true }).entities.extras === 1, 'exhaustive label: extra counted as hallucination');
+const ne = scoreEmission(extra, G, { exhaustive: false });
+ok(ne.entities.extras === 0 && ne.entities.unlabeledEmitted === 1, 'non-exhaustive label: extra reported unlabeled, NOT penalised');
 
-// ---- evaluator: schema-invalid emission does not throw; reports schemaValid:false ----
+// ---- evaluator: INVALID emission gets ZERO downstream (repair) ----
 const bad = clone(G); bad.entities[0].regionRefs = ['rX'];
 const bs = scoreEmission(bad, G);
-ok(bs.schemaValid === false && Array.isArray(bs.errors) && bs.errors.length > 0, 'invalid emission scored, not thrown');
+ok(bs.schemaValid === false && bs.regionRecall === 0 && bs.entityRecall === 0 && bs.typeAccuracy === 0, 'invalid emission scores ZERO downstream (cannot inflate metrics)');
 
-// ---- aggregate ----
-const agg = aggregateEmission([perfect, st]);
-ok(agg.schemaConformanceRate === 1 && agg.meanTypeAccuracy === 0.75, 'aggregate emission metrics');
+// ---- evaluator: global matching is order-independent ----
+const shuffled = clone(G); shuffled.entities.reverse(); shuffled.regions.reverse();
+ok(scoreEmission(shuffled, G).entityRecall === 1, 'reordered emission matches identically (global assignment)');
+
+// ---- aggregate: schema rate over all; accuracy over valid only; macro + micro ----
+const agg = aggregateEmission([perfect, st, bs]);
+ok(Math.abs(agg.schemaConformanceRate - 2 / 3) < 1e-9, 'schemaConformanceRate over ALL works (2/3)');
+ok(agg.validWorks === 2 && agg.macro.typeAccuracy === 0.75, 'macro typeAccuracy over valid only');
+ok(agg.micro.typeAccuracyOverLabeled !== null, 'micro pooled metric present');
+
+// ---- alias precision/recall ----
+const pr1 = aliasPrecisionRecall(['a::b', 'c::d'], ['a::b']);
+ok(pr1.tp === 1 && pr1.fp === 1 && pr1.precision === 0.5 && pr1.recall === 1, 'precision/recall computed');
+ok(aliasPrecisionRecall([], []).recall === null, 'recall null when no gold positives (holdout case)');
+ok(aliasPrecisionRecall([], ['a::b']).precision === null, 'precision null when nothing predicted');
 
 console.log(`ok - pass-b entity contract + evaluator: ${n} checks passed`);

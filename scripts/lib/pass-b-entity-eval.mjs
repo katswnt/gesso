@@ -1,9 +1,11 @@
-// VSD-034 item 2: evaluator for the experimental entity-emission contract. Scores an emitted entity graph
-// against a labeled fixture graph: schema conformance + region-binding accuracy + entity-type accuracy.
-// Pure/deterministic; no model, no image. Alias precision/recall (controller logic) is scored in item 3.
+// VSD-034 item 2/3 (repaired): evaluator for the experimental entity-emission contract. Scores an emitted
+// graph against a labeled fixture: schema conformance + region-binding + entity/type accuracy + alias
+// precision/recall. Pure/deterministic. Key repairs: invalid emissions score ZERO downstream (and are tracked
+// separately); matching is a global IoU-descending assignment (order-independent); entity overlap is the MAX
+// IoU over region pairs (no phantom bounding rectangle); non-exhaustive labels do not penalise extra emitted
+// entities (reported as unlabeled, not hallucinations); alias precision/recall is real.
 import { validateEntityGraph } from './pass-b-entity-contract.mjs';
 
-// Intersection-over-union of two {x,y,w,h} boxes.
 export function iou(a, b) {
   const ix = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
   const iy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
@@ -12,69 +14,89 @@ export function iou(a, b) {
   return uni <= 0 ? 0 : inter / uni;
 }
 
-// Bounding box covering all of an entity's referenced regions.
-export function unionBox(entity, regionsById) {
-  const boxes = entity.regionRefs.map((id) => regionsById.get(id)?.geometry).filter(Boolean);
-  if (!boxes.length) return null;
-  const x1 = Math.min(...boxes.map((b) => b.x)), y1 = Math.min(...boxes.map((b) => b.y));
-  const x2 = Math.max(...boxes.map((b) => b.x + b.w)), y2 = Math.max(...boxes.map((b) => b.y + b.h));
-  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
-}
-
-// Greedy best-IoU matching of labeled -> emitted (each emitted used at most once).
-function greedyMatch(labeledBoxes, emittedBoxes, thr) {
-  const used = new Set(); const pairs = [];
-  for (let li = 0; li < labeledBoxes.length; li++) {
-    let best = -1, bestIoU = thr;
-    for (let ei = 0; ei < emittedBoxes.length; ei++) {
-      if (used.has(ei) || !labeledBoxes[li] || !emittedBoxes[ei]) continue;
-      const v = iou(labeledBoxes[li], emittedBoxes[ei]);
-      if (v >= bestIoU) { bestIoU = v; best = ei; }
-    }
-    if (best >= 0) { used.add(best); pairs.push({ li, ei: best, iou: bestIoU }); }
+// Max IoU over any region pair between two entities (avoids phantom overlap from a union bounding box).
+function entityMaxIoU(la, ea, labRegById, emRegById) {
+  let best = 0;
+  for (const ra of la.regionRefs) for (const rb of ea.regionRefs) {
+    const ga = labRegById.get(ra)?.geometry, gb = emRegById.get(rb)?.geometry;
+    if (ga && gb) best = Math.max(best, iou(ga, gb));
   }
-  return { pairs, matchedEmitted: used };
+  return best;
 }
 
-// Score one emitted graph against its labeled fixture. iouThreshold governs region/entity spatial matching.
-export function scoreEmission(emitted, labeled, { iouThreshold = 0.3 } = {}) {
+// Global assignment: score all candidate pairs, sort by score desc (ties by index for determinism), assign
+// greedily so each side is used once. Order-independent, unlike per-item greedy.
+function globalMatch(scores) {
+  const cands = [];
+  for (let li = 0; li < scores.length; li++) for (let ei = 0; ei < (scores[li] || []).length; ei++) {
+    if (scores[li][ei] > 0) cands.push({ li, ei, s: scores[li][ei] });
+  }
+  cands.sort((a, b) => (b.s - a.s) || (a.li - b.li) || (a.ei - b.ei));
+  const usedL = new Set(), usedE = new Set(), pairs = [];
+  for (const c of cands) { if (usedL.has(c.li) || usedE.has(c.ei)) continue; usedL.add(c.li); usedE.add(c.ei); pairs.push(c); }
+  return pairs;
+}
+
+// Score one emitted graph against its labeled fixture. exhaustive=false => extra emitted entities are NOT
+// penalised (label does not enumerate every entity), only reported as unlabeledEmitted.
+export function scoreEmission(emitted, labeled, { iouThreshold = 0.3, exhaustive = true } = {}) {
   const v = validateEntityGraph(emitted);
+  const labEnt = labeled.entities || [];
+  if (!v.ok) {
+    // Invalid emissions receive zero downstream credit and are tracked separately from valid ones.
+    return { schemaValid: false, errors: v.errors, regions: { labeled: (labeled.regions || []).length, emitted: 0, matched: 0 }, entities: { labeled: labEnt.length, emitted: 0, matched: 0, typeCorrect: 0, unlabeledEmitted: 0, missed: labEnt.length, extras: 0 }, regionRecall: 0, entityRecall: 0, typeAccuracy: 0, typeAccuracyOverLabeled: 0 };
+  }
   const labRegById = new Map((labeled.regions || []).map((r) => [r.regionId, r]));
-  const emRegById = new Map((emitted?.regions || []).map((r) => [r.regionId, r]));
+  const emRegById = new Map((emitted.regions || []).map((r) => [r.regionId, r]));
+  const emEnt = emitted.entities || [];
 
-  // Region matching.
-  const rPairs = greedyMatch((labeled.regions || []).map((r) => r.geometry), (emitted?.regions || []).map((r) => r.geometry), iouThreshold);
-  const regionRecall = (labeled.regions || []).length ? rPairs.pairs.length / labeled.regions.length : 1;
+  // Region matching (global, IoU-descending).
+  const rScores = (labeled.regions || []).map((lr) => (emitted.regions || []).map((er) => { const s = iou(lr.geometry, er.geometry); return s >= iouThreshold ? s : 0; }));
+  const rPairs = globalMatch(rScores);
+  const regionRecall = (labeled.regions || []).length ? rPairs.length / labeled.regions.length : 1;
 
-  // Entity matching by union-box IoU; type accuracy over matched pairs.
-  const labEnt = (labeled.entities || []); const emEnt = (emitted?.entities || []);
-  const labBoxes = labEnt.map((t) => unionBox(t, labRegById));
-  const emBoxes = emEnt.map((t) => unionBox(t, emRegById));
-  const ePairs = greedyMatch(labBoxes, emBoxes, iouThreshold);
+  // Entity matching (global, max-region-IoU).
+  const eScores = labEnt.map((le) => emEnt.map((ee) => { const s = entityMaxIoU(le, ee, labRegById, emRegById); return s >= iouThreshold ? s : 0; }));
+  const ePairs = globalMatch(eScores);
   let typeCorrect = 0;
-  for (const p of ePairs.pairs) if (labEnt[p.li].entityType === emEnt[p.ei].entityType) typeCorrect++;
-  const entityRecall = labEnt.length ? ePairs.pairs.length / labEnt.length : 1;
-  const typeAccuracy = ePairs.pairs.length ? typeCorrect / ePairs.pairs.length : (labEnt.length ? 0 : 1);
+  for (const p of ePairs) if (labEnt[p.li].entityType === emEnt[p.ei].entityType) typeCorrect++;
+  const matched = ePairs.length;
+  const entityRecall = labEnt.length ? matched / labEnt.length : 1;
+  const typeAccuracy = matched ? typeCorrect / matched : (labEnt.length ? 0 : 1);
+  const typeAccuracyOverLabeled = labEnt.length ? typeCorrect / labEnt.length : 1;
+  const surplus = emEnt.length - matched;
 
   return {
-    schemaValid: v.ok, errors: v.errors,
-    regions: { labeled: (labeled.regions || []).length, emitted: (emitted?.regions || []).length, matched: rPairs.pairs.length },
-    entities: { labeled: labEnt.length, emitted: emEnt.length, matched: ePairs.pairs.length, typeCorrect, extras: emEnt.length - ePairs.pairs.length, missed: labEnt.length - ePairs.pairs.length },
-    regionRecall, entityRecall, typeAccuracy,
+    schemaValid: true, errors: [],
+    regions: { labeled: (labeled.regions || []).length, emitted: (emitted.regions || []).length, matched: rPairs.length },
+    entities: { labeled: labEnt.length, emitted: emEnt.length, matched, typeCorrect, missed: labEnt.length - matched, extras: exhaustive ? surplus : 0, unlabeledEmitted: exhaustive ? 0 : surplus },
+    regionRecall, entityRecall, typeAccuracy, typeAccuracyOverLabeled,
   };
 }
 
-// Aggregate per-work scores into canary emission metrics.
+// Alias precision/recall over normalized pair-key sets. precision null when nothing predicted; recall null
+// when no gold positives (so a holdout with zero gold aliases yields recall:null, never a fake number).
+export function aliasPrecisionRecall(predictedKeys, goldKeys) {
+  const gold = new Set(goldKeys), pred = new Set(predictedKeys);
+  let tp = 0; for (const k of pred) if (gold.has(k)) tp++;
+  const fp = pred.size - tp, fn = gold.size - tp;
+  return { tp, fp, fn, precision: pred.size ? tp / pred.size : null, recall: gold.size ? tp / gold.size : null };
+}
+
+// Aggregate per-work emission scores. schemaConformanceRate over ALL; accuracy means over VALID ONLY, both
+// macro (per-work mean) and micro (pooled counts) so a dense scene is not down-weighted to a portrait.
 export function aggregateEmission(scores) {
-  const n = scores.length || 1;
-  const mean = (f) => scores.reduce((s, x) => s + f(x), 0) / n;
+  const all = scores.length || 1;
+  const valid = scores.filter((x) => x.schemaValid);
+  const vn = valid.length || 1;
+  const macro = (f) => valid.reduce((s, x) => s + f(x), 0) / vn;
+  const sum = (f) => valid.reduce((s, x) => s + f(x), 0);
+  const labeledTotal = sum((x) => x.entities.labeled);
   return {
-    works: scores.length,
-    schemaConformanceRate: mean((x) => (x.schemaValid ? 1 : 0)),
-    meanRegionRecall: mean((x) => x.regionRecall),
-    meanEntityRecall: mean((x) => x.entityRecall),
-    meanTypeAccuracy: mean((x) => x.typeAccuracy),
-    totalExtras: scores.reduce((s, x) => s + x.entities.extras, 0),
-    totalMissed: scores.reduce((s, x) => s + x.entities.missed, 0),
+    works: scores.length, validWorks: valid.length,
+    schemaConformanceRate: scores.reduce((s, x) => s + (x.schemaValid ? 1 : 0), 0) / all,
+    macro: { regionRecall: macro((x) => x.regionRecall), entityRecall: macro((x) => x.entityRecall), typeAccuracy: macro((x) => x.typeAccuracy), typeAccuracyOverLabeled: macro((x) => x.typeAccuracyOverLabeled) },
+    micro: { entityRecall: labeledTotal ? sum((x) => x.entities.matched) / labeledTotal : null, typeAccuracyOverLabeled: labeledTotal ? sum((x) => x.entities.typeCorrect) / labeledTotal : null },
+    totalUnlabeledEmitted: sum((x) => x.entities.unlabeledEmitted), totalExtras: sum((x) => x.entities.extras), totalMissed: sum((x) => x.entities.missed),
   };
 }
