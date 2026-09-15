@@ -38,6 +38,7 @@ const libSrc = readFileSync('scripts/lib/pass-b-calibration.mjs', 'utf8');
 const fullPacketSrc = readFileSync('scripts/pass-b-b4-review-packet.mjs', 'utf8');
 const spatialCanarySrc = readFileSync('scripts/pass-b-spatial-localization-canary.mjs', 'utf8');
 const confirmationCanarySrc = readFileSync('scripts/pass-b-spatial-confirmation-canary.mjs', 'utf8');
+const spatialResolutionPacketSrc = readFileSync('scripts/pass-b-spatial-resolution-packet.mjs', 'utf8');
 const SHA = 'a'.repeat(64);
 
 // ---- stream-json transcript fixtures ----
@@ -626,7 +627,7 @@ t('VSD-029 localization input is spatial-only, excludes human answers, and valid
   assert(spatialCanarySrc.includes("const result = response?.ok ? response.result : null"), 'failed localizer output is excluded from owner scoring');
 });
 
-t('VSD-031 independently confirms new points and never exposes the first point to the second checker', () => {
+t('VSD-031/032 independently confirms new points and never exposes the first point to the second checker', () => {
   const rows = [{
     deltaIndex: 2, state: 'published', target: 'Small inscription at lower right',
     candidates: [{ candidateId: 'legacy', source: 'legacy', point: { x: 80, y: 90 } }, { candidateId: 'current', source: 'b1', point: { x: 60, y: 60 } }],
@@ -664,6 +665,19 @@ t('VSD-031 independently confirms new points and never exposes the first point t
   const farResolution = resolveConfirmedLocalization(rows[0], primary.decisions[0], far.decisions[0]);
   assert.equal(farResolution.presentation, 'hold'); assert.equal(farResolution.reason, 'blind-confirmation-point-disagreement');
 
+  const representativePrimary = JSON.parse(JSON.stringify(primary.decisions[0])); representativePrimary.scope = 'representative';
+  const representativeFar = JSON.parse(JSON.stringify(far.decisions[0])); representativeFar.scope = 'representative';
+  assert.deepEqual(resolveConfirmedLocalization(rows[0], representativePrimary, representativeFar), {
+    presentation: 'note', point: null, confirmationDistance: Math.hypot(59, 71),
+    status: 'auto', trustTier: 'validated-note-scope', reason: 'independent-representatives-diverge',
+  }, 'two honest but distant representative examples retain the observation as a note');
+
+  const distributedConfirmation = JSON.parse(JSON.stringify(agreed.decisions[0]));
+  distributedConfirmation.scope = 'distributed'; distributedConfirmation.point = null;
+  assert.deepEqual(resolveConfirmedLocalization(rows[0], primary.decisions[0], distributedConfirmation), {
+    presentation: 'note', point: null, status: 'auto', trustTier: 'validated-note-scope', reason: 'confirmation-scope-distributed',
+  }, 'a high-confidence second look can safely downgrade a compound target to an unpinned note');
+
   const scopeMismatch = JSON.parse(JSON.stringify(agreed)); scopeMismatch.decisions[0].scope = 'representative';
   assert.equal(resolveConfirmedLocalization(rows[0], primary.decisions[0], scopeMismatch.decisions[0]).reason, 'blind-confirmation-scope-disagreement');
 
@@ -675,6 +689,33 @@ t('VSD-031 independently confirms new points and never exposes the first point t
   assert(!validateConfirmationResult(confirmationInput, malformed).ok, 'point scope requires a point');
   assert(confirmationCanarySrc.includes('const review = JSON.parse(readFileSync(resolve(reviewPath)') && confirmationCanarySrc.indexOf('const review = JSON.parse(readFileSync(resolve(reviewPath)') > confirmationCanarySrc.indexOf('for (const work of selected) {\n    const response = await callConfirmer(work);'), 'owner review is opened only after every second-pass call');
   assert(confirmationCanarySrc.includes("transcript.init?.apiKeySource !== 'none'") && confirmationCanarySrc.includes('validateLocalizationResult(input, response.result)'), 'primary evidence and subscription provenance are re-verified before confirmation');
+});
+
+t('VSD-032 resolves safe spatial evidence offline and renders only held exceptions', () => {
+  for (const required of [
+    'resolveConfirmedLocalization(row, primaryDecision, confirmationDecision)',
+    "target.resolution.presentation === 'hold'",
+    "transcript.init?.apiKeySource !== 'none'",
+    'verifyB1ImageRead(transcript',
+    'validateLocalizationResult(input, response.result)',
+    'validateConfirmationResult(input, response.result)',
+    'primaryManifestSha256',
+    'confirmationManifestSha256',
+    'compoundSpatialSignal',
+    'Keep as unpinned note',
+    'Split or rewrite',
+    'Discard this idea',
+    'Place manually',
+    'getBoundingClientRect',
+    'localStorage',
+    'Copy review JSON',
+    'Download review JSON',
+    'position:sticky',
+    '100dvh',
+  ]) assert(spatialResolutionPacketSrc.includes(required), `spatial exception packet must contain ${required}`);
+  assert(!/from ['"].*pass-b-approval/.test(spatialResolutionPacketSrc), 'resolver must not reach approval/merge code');
+  assert(!/child_process|execFile|spawn\(/.test(spatialResolutionPacketSrc), 'offline resolver must have no model/process execution path');
+  assert(spatialResolutionPacketSrc.indexOf("filter(target => target.resolution.presentation === 'hold')") < spatialResolutionPacketSrc.indexOf('const workHtml = exceptionWorks.map'), 'packet data is exception-filtered before rendering');
 });
 
 t('VSD-029 scope-aware score summaries use interpolated quantiles and keep representative distance diagnostic', () => {

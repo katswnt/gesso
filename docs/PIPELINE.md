@@ -188,8 +188,10 @@ has no authoritative writer. Its current sequence is:
    point. The resolver preserves a valid current point as a no-churn tie-breaker, otherwise
    another valid prior point; uncertainty holds, and a first-pass new suggestion is possible
    only after every candidate is invalid. Under VSD-031 that new point remains held until a
-   separate fresh-context checker—shown no earlier coordinate or reasoning—matches the same
-   scope and lands within 5 points at confidence ≥0.75. The first model receives only the
+   separate fresh-context checker—shown no earlier coordinate or reasoning—provides compatible
+   high-confidence spatial evidence. Under VSD-032 matching unique points must land within 5
+   points; distant representative examples and a confirmation-classified distributed/global
+   target become unpinned notes, while a distant unique point holds. The first model receives only the
    image, short target title, and candidate points; the confirmer receives only the image and
    short target title. Neither receives B1 explanatory prose, research/player copy, or owner
    answers.
@@ -267,11 +269,13 @@ Current limitations:
   assessments): 23 existing candidates selected, 4 new suggestions, 12 note routes, 5 holds.
   Its 17 comparable unique-point labels were 9/17 within 5 and 12/17 within 10 (median 2.89,
   interpolated p90 21.84). VSD-031 re-resolves its 4 new suggestions as confirmation-required,
-  so the same output now yields 23 validated existing pins, 12 notes, and 9 holds. The separate
+  so the same output initially yielded 23 validated existing pins, 12 notes, and 9 holds. The separate
   confirmation canary `b5k-9e3a46a675ae` completed 4/4 strict-valid with no retries and
-  confirmed 0 automatically: 2 point-distance disagreements, 1 scope disagreement, and 1
-  low-confidence/scope mismatch all remained held. This is diagnostic; no corpus-scale
-  auto-policy threshold is yet approved.
+  confirmed 0 new pins. VSD-032's offline resolver `b5r-3a5ea5ed593f` re-verifies both runs and
+  distinguishes a bad coordinate from a useful nonlocal observation: the La Gloire compound
+  base/top and Drowned Land's divergent representative trunks become notes. Final canary routes
+  are 23 pins, 14 notes, and 7 holds across 6 works; only those 7 appear in the owner packet.
+  This is diagnostic; no corpus-scale auto-policy threshold is yet approved.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing
@@ -328,6 +332,16 @@ PASS_B_SPATIAL_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-spatial-localization
 PASS_B_SPATIAL_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-spatial-confirmation-canary.mjs \
   --run --primary data/incoming/vision-calibration/b5c-f2020a1d8cca \
   --review /path/to/pass-b-editorial-review-b4r-8f1f74ddc30f.json
+
+# Plan VSD-032's offline, hash-bound resolution (no model calls or writes).
+/opt/homebrew/bin/node scripts/pass-b-spatial-resolution-packet.mjs \
+  --primary data/incoming/vision-calibration/b5c-f2020a1d8cca \
+  --confirmation data/incoming/vision-calibration/b5k-9e3a46a675ae
+
+# Write a new quarantined machine report + self-contained packet containing only holds.
+/opt/homebrew/bin/node scripts/pass-b-spatial-resolution-packet.mjs --write \
+  --primary data/incoming/vision-calibration/b5c-f2020a1d8cca \
+  --confirmation data/incoming/vision-calibration/b5k-9e3a46a675ae
 ```
 
 Artifacts remain under `data/incoming/vision-calibration/` (gitignored). A prompt/schema/transport
@@ -349,10 +363,11 @@ Relevant files:
 | `scripts/pass-b-b4-offline-repair.mjs` | immutable-source offline rehydration + evidence manifest/report |
 | `scripts/lib/pass-b-editorial-review.mjs` | pure hotspot-review descriptions and stable P/S review rows |
 | `scripts/pass-b-b4-review-packet.mjs` | interactive full-cohort packet: literal lineage, explained pins, work notes/decisions, click-to-place, JSON export |
-| `scripts/lib/pass-b-spatial-policy.mjs` | pure VSD-029 candidate comparison, note/merge routing, abstention semantics, localizer contract, and scoring |
+| `scripts/lib/pass-b-spatial-policy.mjs` | pure VSD-029–032 candidate comparison, note/merge routing, abstention semantics, two-checker resolution, and scoring |
 | `scripts/pass-b-spatial-calibration.mjs` | offline owner-review measurement and immutable spatial-input/report writer; no model calls |
 | `scripts/pass-b-spatial-localization-canary.mjs` | plan-by-default B5 image-only spatial canary; reads owner answers only after all calls complete for blind scoring |
 | `scripts/pass-b-spatial-confirmation-canary.mjs` | plan-by-default independent B5 confirmation for first-pass new points; re-verifies the primary run, withholds all earlier points/reasoning, and requires deterministic scope + ≤5-point agreement |
+| `scripts/pass-b-spatial-resolution-packet.mjs` | offline VSD-032 resolver; re-verifies both spatial evidence chains, writes the machine resolution, and renders only held exceptions with owner controls |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
 
 ---

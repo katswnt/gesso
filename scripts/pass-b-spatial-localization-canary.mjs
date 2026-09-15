@@ -75,7 +75,7 @@ const bindings = Object.fromEntries(selected.map(work => [work.id, {
   localizationInputSha256: sha256(stableJson(work.input)),
 }]));
 const binding = {
-  version: 'passBSpatialLocalizationCanary/5', sourceRun, sourceRunId: sourceManifest.runId,
+  version: 'passBSpatialLocalizationCanary/6', sourceRun, sourceRunId: sourceManifest.runId,
   sourceEvidenceManifestSha256: sourceManifest.evidenceManifestSha256 ?? null,
   spatialPolicyVersion: SPATIAL_CALIBRATION_VERSION, localizationSchema: LOCALIZATION_RESULT_VERSION,
   model: CALIBRATION_MODEL, mode, works: selected.map(work => work.id), bindings,

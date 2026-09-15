@@ -118,7 +118,7 @@ const bindings = Object.fromEntries(selected.map(work => [work.id, {
   confirmationInputSha256: sha256(stableJson(work.confirmationInput)),
 }]));
 const binding = {
-  version: 'passBSpatialConfirmationCanary/1',
+  version: 'passBSpatialConfirmationCanary/2',
   primaryRun, primaryRunId: primaryManifest.runId, primaryManifestSha256: fileSha(primaryManifestPath),
   primarySpatialPolicyVersion: primaryManifest.spatialPolicyVersion,
   sourceRun, sourceRunId: sourceManifest.runId,

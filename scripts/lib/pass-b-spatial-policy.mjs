@@ -1,4 +1,4 @@
-// VSD-029/030/031 Pass-B spatial presentation and confirmation policy.
+// VSD-029/030/031/032 Pass-B spatial presentation and confirmation policy.
 //
 // This module keeps three decisions independent:
 //   1. whether an observation is editorially useful;
@@ -11,7 +11,7 @@
 import { EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { b4Lineage } from './pass-b-b4-delta.mjs';
 
-export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/5';
+export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/6';
 export const LOCALIZATION_INPUT_VERSION = 'passBLocalizationInput/4';
 export const LOCALIZATION_RESULT_VERSION = 'passBLocalizationResult/3';
 export const CONFIRMATION_INPUT_VERSION = 'passBSpatialConfirmationInput/1';
@@ -375,11 +375,17 @@ export function resolveConfirmedLocalization(row, primaryDecision, confirmationD
   if (confirmationDecision.scope === 'notFound') {
     return { ...primary, status: 'claim-review', trustTier: 'review-required', reason: 'confirmation-target-not-found' };
   }
+  if (['distributed', 'global'].includes(confirmationDecision.scope)) {
+    return { presentation: 'note', point: null, status: 'auto', trustTier: 'validated-note-scope', reason: `confirmation-scope-${confirmationDecision.scope}` };
+  }
   if (confirmationDecision.scope !== primaryDecision.scope || !['point', 'representative'].includes(confirmationDecision.scope)) {
     return { ...primary, status: 'human-review', trustTier: 'review-required', reason: 'blind-confirmation-scope-disagreement' };
   }
   const confirmationDistance = distance(primary.proposedPoint, confirmationDecision.point);
   if (!Number.isFinite(confirmationDistance) || confirmationDistance > maximumDistance) {
+    if (primaryDecision.scope === 'representative' && Number.isFinite(confirmationDistance)) {
+      return { presentation: 'note', point: null, confirmationDistance, status: 'auto', trustTier: 'validated-note-scope', reason: 'independent-representatives-diverge' };
+    }
     return { ...primary, confirmationDistance, status: 'human-review', trustTier: 'review-required', reason: 'blind-confirmation-point-disagreement' };
   }
   return {
