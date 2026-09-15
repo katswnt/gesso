@@ -58,6 +58,8 @@ if (existsSync(CANONICAL_FINDINGS_PATH)) {
 
   // buildApproval refuses a blocked work using the MANDATORY canonical set (no path/injection bypass).
   assert.throws(() => buildApproval({ runDir, workId: blocked, teachPath, hotspotsPath }), /content-blocked/, 'buildApproval refuses blocked via canonical'); n++;
+  // findings:[] as an extra prop cannot bypass — the exported API ignores caller-supplied findings entirely.
+  assert.throws(() => buildApproval({ runDir, workId: blocked, teachPath, hotspotsPath, findings: [] }), /content-blocked/, 'findings:[] cannot bypass La Gloire'); n++;
 
   // A non-blocked work is NOT rejected by the content-block guard (guard does not over-block).
   try { buildApproval({ runDir, workId: 'harvard303416', teachPath, hotspotsPath }); ok(true, 'non-blocked work not content-blocked'); }

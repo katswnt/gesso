@@ -48,13 +48,14 @@ function stageBody(runDir, workId, stage) {
 
 // Build a PENDING approval bound to the run + completion + files. ownerApproved starts false — a human must
 // flip it after inspecting the card. Approval is never inferred from schema readiness.
-export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIELDS.slice(), ownerEdits = {}, teachPath, hotspotsPath, createdAt = null, findings = loadCanonicalFindings() }) {
+export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIELDS.slice(), ownerEdits = {}, teachPath, hotspotsPath, createdAt = null }) {
   const cpath = b4CompletionPath(runDir, workId);
   const raw = readFileSync(cpath, 'utf8');
   const completion = JSON.parse(raw);
-  // VSD-034 item 1: never stage an approval for a content-blocked work. No resolution is accepted here —
-  // blocked works are intentionally uncleared until a bound owner-resolution artifact exists (overblock, never under).
-  const dec = evaluateApproval({ findings, candidate: contentBlockCandidate(workId, completion), resolution: null });
+  // VSD-034 item 1: never stage an approval for a content-blocked work. Findings are ALWAYS loaded from the
+  // canonical sealed artifact internally — no caller-supplied findings, so `findings:[]` cannot bypass. No
+  // resolution is accepted here (blocked works are intentionally uncleared; overblock, never under).
+  const dec = evaluateApproval({ findings: loadCanonicalFindings(), candidate: contentBlockCandidate(workId, completion), resolution: null });
   if (!dec.allowed) throw new Error(`content-blocked: refusing to build approval for ${workId} (${dec.reason}${dec.findingId ? `, ${dec.findingId}` : ''})`);
   const b0 = JSON.parse(readFileSync(join(runDir, 'works', sha256(workId).slice(0, 24), 'b0-prep.json'), 'utf8'));
   const manifest = JSON.parse(readFileSync(join(runDir, 'run-manifest.json'), 'utf8'));
@@ -106,7 +107,7 @@ export function upsertEntryText(fileText, anchor, id, value) {
 
 // The guarded apply. Returns { ok, errors, dryRun, wrote, diff }. Rejects the WHOLE op before any write on any
 // binding/schema/evidence/concurrency failure. apply=false (default) never writes.
-export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply = false, findings = loadCanonicalFindings() }) {
+export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply = false }) {
   const errors = [];
   const rej = (e) => { errors.push(e); return { ok: false, errors, dryRun: !apply, wrote: false }; };
   if (!approval || approval.version !== APPROVAL_VERSION) return rej('bad-approval-version');
@@ -123,8 +124,8 @@ export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply
   const completion = JSON.parse(rawC);
   if (completion.workId !== approval.workId) return rej('binding:workId');
   // 3b. VSD-034 item 1: reject a content-blocked work / its exact blocked content before any evidence work or
-  // write. No resolution is accepted — blocked works stay uncleared (overblock, never under).
-  const cb = evaluateApproval({ findings, candidate: contentBlockCandidate(approval.workId, completion), resolution: null });
+  // write. Findings ALWAYS loaded canonically (no caller injection). No resolution accepted (uncleared).
+  const cb = evaluateApproval({ findings: loadCanonicalFindings(), candidate: contentBlockCandidate(approval.workId, completion), resolution: null });
   if (!cb.allowed) return rej(`content-blocked:${cb.findingId || ''}:${cb.reason}`);
   if (completion.imgSha256 !== approval.imgSha256) return rej('binding:imgSha256');
   if (approval.validationContractVersion !== VALIDATION_CONTRACT_VERSION) return rej('binding:validationContractVersion');

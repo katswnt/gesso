@@ -66,11 +66,27 @@ export function validateEntityGraph(graph) {
     need(conf(t?.confidence), `entity confidence: ${t?.entityId}`);
     need(Array.isArray(t?.distinctFrom), `distinctFrom array: ${t?.entityId}`);
   }
-  // Relations resolve to OTHER existing entities (checked after all ids known).
+  // Relations resolve to OTHER existing entities, and must be internally consistent (no contradictions or
+  // duplicates): distinctFrom has no dups; a target is not BOTH sameAs and distinctFrom, nor BOTH partOf and
+  // distinctFrom; sameAs and partOf are not the same target (identical-to vs component-of contradict).
+  const byId = new Map(graph.entities.map((t) => [t?.entityId, t]));
   for (const t of graph.entities) {
     if (t?.partOf != null) need(entIds.has(t.partOf) && t.partOf !== t.entityId, `partOf resolves/non-self: ${t.entityId}`);
     if (t?.sameAs != null) need(entIds.has(t.sameAs) && t.sameAs !== t.entityId, `sameAs resolves/non-self: ${t.entityId}`);
-    for (const d of (t?.distinctFrom || [])) need(entIds.has(d) && d !== t.entityId, `distinctFrom resolves/non-self: ${t.entityId}->${d}`);
+    const df = t?.distinctFrom || [];
+    for (const d of df) need(entIds.has(d) && d !== t.entityId, `distinctFrom resolves/non-self: ${t.entityId}->${d}`);
+    need(new Set(df).size === df.length, `distinctFrom no duplicates: ${t?.entityId}`);
+    if (t?.sameAs != null) need(!df.includes(t.sameAs), `sameAs and distinctFrom conflict: ${t.entityId}->${t.sameAs}`);
+    if (t?.partOf != null) need(!df.includes(t.partOf), `partOf and distinctFrom conflict: ${t.entityId}->${t.partOf}`);
+    if (t?.sameAs != null && t?.partOf != null) need(t.sameAs !== t.partOf, `sameAs and partOf same target: ${t.entityId}`);
+  }
+  // Cross-entity contradiction: A declared the same as B while either declares them distinct.
+  for (const t of graph.entities) {
+    if (t?.sameAs != null) {
+      const other = byId.get(t.sameAs);
+      need(!(t.distinctFrom || []).includes(t.sameAs), `sameAs/distinctFrom pair conflict: ${t.entityId}`);
+      if (other) need(!(other.distinctFrom || []).includes(t.entityId), `mutual sameAs/distinctFrom conflict: ${t.entityId}<->${t.sameAs}`);
+    }
   }
   // No partOf cycles.
   const parent = new Map(graph.entities.filter((t) => t?.partOf != null).map((t) => [t.entityId, t.partOf]));
