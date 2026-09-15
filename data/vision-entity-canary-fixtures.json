@@ -1,0 +1,514 @@
+{
+  "version": "passBEntityCanaryFixtures/1",
+  "contractVersion": "contentVisionEntityGraph/1",
+  "policyVersion": "passBEntityController/1",
+  "provenanceNote": "Canonical regressions are audit-confirmed. Controls and holdout are authoritative-source-seeded with schematic geometry; holdout-derived recall/precision is PROVISIONAL pending owner ratification (owner pixel-labeling replaces these). Labels are self-consistent with the controller policy.",
+  "fixtures": [
+    {
+      "set": "canonicalRegressions",
+      "workId": "wikidata:Q16467705",
+      "labelSource": "audit-confirmed",
+      "note": "Glory=nude woman below, Villiers=clothed man in coffin above (Musee Carnavalet). Two humans (not an entity alias); the false wings and skull are entities the copy asserts but the image lacks -> unbound claims. Documents the LIMIT: the entity controller does not catch figure-identity inversion (that is the claim layer), but does catch absent-entity claims.",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_upper",
+            "geometry": {
+              "x": 38,
+              "y": 12,
+              "w": 24,
+              "h": 40
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_lower",
+            "geometry": {
+              "x": 28,
+              "y": 45,
+              "w": 26,
+              "h": 45
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_coffin",
+            "geometry": {
+              "x": 40,
+              "y": 5,
+              "w": 22,
+              "h": 55
+            },
+            "scope": "area",
+            "confidence": 0.85
+          },
+          {
+            "regionId": "r_hand",
+            "geometry": {
+              "x": 30,
+              "y": 48,
+              "w": 6,
+              "h": 6
+            },
+            "scope": "point",
+            "confidence": 0.6
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_villiers",
+            "regionRefs": [
+              "r_upper"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [
+              "e_coffin"
+            ],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_glory",
+            "regionRefs": [
+              "r_lower"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_coffin",
+            "regionRefs": [
+              "r_coffin"
+            ],
+            "entityType": "object",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "upper clothed figure and lower nude figure both human; slab behind is a distinct object"
+      },
+      "claims": [
+        {
+          "claimId": "wings",
+          "requiredType": "decorative-motif",
+          "region": {
+            "x": 40,
+            "y": 10,
+            "w": 24,
+            "h": 30
+          }
+        },
+        {
+          "claimId": "skull",
+          "requiredType": "object",
+          "region": {
+            "x": 30,
+            "y": 48,
+            "w": 6,
+            "h": 6
+          }
+        },
+        {
+          "claimId": "coffin",
+          "requiredType": "object",
+          "region": {
+            "x": 40,
+            "y": 5,
+            "w": 22,
+            "h": 55
+          }
+        }
+      ],
+      "expected": {
+        "possibleAlias": 0,
+        "unbound": [
+          "wings",
+          "skull"
+        ]
+      }
+    },
+    {
+      "set": "canonicalRegressions",
+      "workId": "wikidata:Q1211814",
+      "labelSource": "audit-confirmed",
+      "note": "Lower-left is a crawling HUMAN penitent (St. John Chrysostom, per NGA); the audit found it also described as a separate crouching lion at the same region with conflicts:[]. Two overlapping incompatible-type entities, no declared relation -> possibleAlias (the canonical positive).",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_saint",
+            "geometry": {
+              "x": 5,
+              "y": 60,
+              "w": 26,
+              "h": 32
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_lion",
+            "geometry": {
+              "x": 8,
+              "y": 62,
+              "w": 24,
+              "h": 28
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_mother",
+            "geometry": {
+              "x": 40,
+              "y": 25,
+              "w": 18,
+              "h": 45
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_child",
+            "geometry": {
+              "x": 46,
+              "y": 40,
+              "w": 12,
+              "h": 28
+            },
+            "scope": "area",
+            "confidence": 0.9
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_saint",
+            "regionRefs": [
+              "r_saint"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_lion",
+            "regionRefs": [
+              "r_lion"
+            ],
+            "entityType": "animal",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_mother",
+            "regionRefs": [
+              "r_mother"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_child",
+            "regionRefs": [
+              "r_child"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "lower-left crawling figure"
+      },
+      "claims": [
+        {
+          "claimId": "penitent-human",
+          "requiredType": "human",
+          "region": {
+            "x": 5,
+            "y": 60,
+            "w": 26,
+            "h": 32
+          }
+        }
+      ],
+      "expected": {
+        "possibleAlias": 1,
+        "unbound": []
+      }
+    },
+    {
+      "set": "legitimateOverlapControls",
+      "workId": "http://www.wikidata.org/entity/Q1190706",
+      "labelSource": "authoritative-source-seeded",
+      "note": "Castor and Pollux (the Dioscuri) with horses. Human+animal legitimately overlap; the model DECLARES them distinct -> suppressed (tests the declared-relation escape). Provisional geometry.",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_man",
+            "geometry": {
+              "x": 20,
+              "y": 18,
+              "w": 22,
+              "h": 52
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_horse",
+            "geometry": {
+              "x": 22,
+              "y": 24,
+              "w": 24,
+              "h": 50
+            },
+            "scope": "area",
+            "confidence": 0.9
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_man",
+            "regionRefs": [
+              "r_man"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [
+              "e_horse"
+            ],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_horse",
+            "regionRefs": [
+              "r_horse"
+            ],
+            "entityType": "animal",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "youth beside a horse, overlapping but distinct"
+      },
+      "claims": [],
+      "expected": {
+        "possibleAlias": 0,
+        "unbound": []
+      }
+    },
+    {
+      "set": "legitimateOverlapControls",
+      "workId": "met247010",
+      "labelSource": "authoritative-source-seeded",
+      "note": "Boscoreale two-figure dyad. Both human -> same-type overlap is not an alias signal. Provisional geometry.",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_a",
+            "geometry": {
+              "x": 30,
+              "y": 18,
+              "w": 20,
+              "h": 60
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_b",
+            "geometry": {
+              "x": 40,
+              "y": 20,
+              "w": 20,
+              "h": 58
+            },
+            "scope": "area",
+            "confidence": 0.9
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_a",
+            "regionRefs": [
+              "r_a"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_b",
+            "regionRefs": [
+              "r_b"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "two overlapping human figures"
+      },
+      "claims": [],
+      "expected": {
+        "possibleAlias": 0,
+        "unbound": []
+      }
+    },
+    {
+      "set": "holdout",
+      "workId": "met450509",
+      "labelSource": "authoritative-source-seeded",
+      "note": "Emperor's Carpet: many animals across the field, all type animal -> overlaps among same type are not alias signals. Precision negative. Provisional geometry.",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_a1",
+            "geometry": {
+              "x": 20,
+              "y": 20,
+              "w": 14,
+              "h": 14
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_a2",
+            "geometry": {
+              "x": 26,
+              "y": 24,
+              "w": 14,
+              "h": 14
+            },
+            "scope": "area",
+            "confidence": 0.9
+          },
+          {
+            "regionId": "r_a3",
+            "geometry": {
+              "x": 55,
+              "y": 55,
+              "w": 14,
+              "h": 14
+            },
+            "scope": "area",
+            "confidence": 0.9
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_a1",
+            "regionRefs": [
+              "r_a1"
+            ],
+            "entityType": "animal",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_a2",
+            "regionRefs": [
+              "r_a2"
+            ],
+            "entityType": "animal",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          },
+          {
+            "entityId": "e_a3",
+            "regionRefs": [
+              "r_a3"
+            ],
+            "entityType": "animal",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "stylized animals in the field"
+      },
+      "claims": [],
+      "expected": {
+        "possibleAlias": 0,
+        "unbound": []
+      }
+    },
+    {
+      "set": "holdout",
+      "workId": "harvard216218",
+      "labelSource": "authoritative-source-seeded",
+      "note": "Francis I: single human portrait bust. Precision negative. Provisional geometry.",
+      "label": {
+        "version": "contentVisionEntityGraph/1",
+        "regions": [
+          {
+            "regionId": "r_f",
+            "geometry": {
+              "x": 30,
+              "y": 15,
+              "w": 40,
+              "h": 70
+            },
+            "scope": "area",
+            "confidence": 0.9
+          }
+        ],
+        "entities": [
+          {
+            "entityId": "e_f",
+            "regionRefs": [
+              "r_f"
+            ],
+            "entityType": "human",
+            "partOf": null,
+            "sameAs": null,
+            "distinctFrom": [],
+            "confidence": 0.9
+          }
+        ],
+        "uncertainty": "single portrait figure"
+      },
+      "claims": [],
+      "expected": {
+        "possibleAlias": 0,
+        "unbound": []
+      }
+    }
+  ],
+  "holdoutSealSha256": "a97c8abcebe9467cbc6a3f06ece62127da81926452e8356bb894d75cf1ede732",
+  "fixturesSha256": "a87cd1387a404cf9ffd0518fb8159e5e5fe8695ab4f98093ecdee88848de1643"
+}

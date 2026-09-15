@@ -13,7 +13,7 @@ export function iou(a, b) {
 }
 
 // Bounding box covering all of an entity's referenced regions.
-function unionBox(entity, regionsById) {
+export function unionBox(entity, regionsById) {
   const boxes = entity.regionRefs.map((id) => regionsById.get(id)?.geometry).filter(Boolean);
   if (!boxes.length) return null;
   const x1 = Math.min(...boxes.map((b) => b.x)), y1 = Math.min(...boxes.map((b) => b.y));
