@@ -181,7 +181,8 @@ has no authoritative writer. Its current sequence is:
 4. Conditional B3 sees only the confined image plus B2's targeted visual questions.
 5. B4 receives validated B1–B3 projections plus legacy content and emits a compact editorial **delta** without image or tools. The controller hydrates the authoritative B1/B2 registries and runs strict `validateB4`. Editorial ancestry (`ref`) is separate from hotspot location (`pinRef`): a publishable pin comes from a matching B1 candidate or a localized bbox, never a missing/near-whole-image fallback. Same-evidence and <3-point overlaps are retained as review findings but not published (VSD-022/027).
 6. The offline VSD-029 spatial pass separates observation retention from its presentation.
-   It preserves a previous coordinate only when the image SHA is unchanged, compares it
+   It preserves a previous coordinate only when a separate historical-image receipt proves
+   that the image SHA is unchanged, compares it
    with B1, routes duplicates to merges and broad/distributed observations to unpinned
    notes, and sends only uncertain point placement to a bounded localization-only canary.
    Under VSD-030 the canary validates every candidate rather than choosing a favorite free
@@ -194,7 +195,10 @@ has no authoritative writer. Its current sequence is:
    target become unpinned notes, while a distant unique point holds. The first model receives only the
    image, short target title, and candidate points; the confirmer receives only the image and
    short target title. Neither receives B1 explanatory prose, research/player copy, or owner
-   answers.
+   answers. Missing historical-image provenance fails closed: the current B0 image SHA is
+   never substituted for the legacy SHA. An old point may remain visible to the owner as an
+   unverified reference, but selecting it creates an owner-authored point on the current
+   image. Spatial resolution never implies factual/content approval.
 
 The controller strictly validates and hash-binds stage completions, verifies image Read and web-tool
 events from raw `stream-json` transcripts, resumes verified checkpoints, supports five independent
@@ -202,8 +206,9 @@ lanes, and renders a quarantined before/after review packet. The fixed calibrati
 50 works; the accepted B4-v2 continuation produced 44 strict-valid/leak-clean records and quarantined
 6 first-attempt misses. No output has been approved or merged into game data.
 
-The full-cohort packet is interactive but still non-authoritative (VSD-028/029). Each P/S hotspot label is
-defined beside the image and includes the same-image previous coordinate when available. The reviewer can
+The full-cohort packet is interactive but still non-authoritative (VSD-028/029/033). Each P/S hotspot label is
+defined beside the image and may show a previous coordinate as a historical reference; only a separate
+matching historical-image receipt makes that point an automatic same-image candidate. The reviewer can
 record a work decision, write notes, keep or move a pin, retain the observation only as an unpinned note,
 discard the underlying idea explicitly, abstain, or click the image to place it.
 Browser-local state auto-saves and can be downloaded/copied as a JSON handoff bound to the run and evidence-manifest hash. Ordinary works start collapsed; placement/legacy
@@ -256,7 +261,7 @@ Current limitations:
   The immutable-source VSD-027 offline rehydration produced `b4r-8f1f74ddc30f`: 44/44 strict-valid,
   hotspot overlap pairs 45→0, 15 duplicate/unlocalized proposals retained for attention, and literal
   legacy-lineage reporting. The prior full-record B4 is retired.
-- The VSD-029 offline spatial report has been implemented against the owner export without changing it:
+- The VSD-029 offline spatial report was implemented against the owner export without changing it:
   210 observations route to 73 deterministic pins, 122 localization exceptions, 11 notes, and 4 merges.
   Across all 143 kept/moved observations with comparable same-image legacy coordinates, the owner's selected
   point was closer to the current point 116 times, closer to legacy 23 times, and tied 4 times. The legacy
@@ -273,9 +278,16 @@ Current limitations:
   confirmation canary `b5k-9e3a46a675ae` completed 4/4 strict-valid with no retries and
   confirmed 0 new pins. VSD-032's offline resolver `b5r-3a5ea5ed593f` re-verifies both runs and
   distinguishes a bad coordinate from a useful nonlocal observation: the La Gloire compound
-  base/top and Drowned Land's divergent representative trunks become notes. Final canary routes
-  are 23 pins, 14 notes, and 7 holds across 6 works; only those 7 appear in the owner packet.
-  This is diagnostic; no corpus-scale auto-policy threshold is yet approved.
+  base/top and Drowned Land's divergent representative trunks become notes. Final historical
+  canary routes were 23 pins, 14 notes, and 7 holds across 6 works; only those 7 appeared in
+  the owner packet. A 2026-09-15 forensic audit found that all five callers had supplied the
+  current B0 image SHA as the legacy SHA, making the nominal same-image test tautological.
+  VSD-033 / `passBSpatialCalibration/7` now accepts only a separate historical-image receipt
+  and rejects older primary runs as stale. The prior owner-vs-legacy statistics and B5
+  resolutions are therefore preserved diagnostic history, not valid current-policy
+  measurements. No replacement canary has run. Packet v3 labels work decisions as spatial
+  only and records any selected point as owner-selected on the current image. No corpus-scale
+  auto-policy threshold is approved.
 - B2-v2 (targeted teaching research, source budget, qualified verdicts, ≤2 B3 requests with the dropped
   count surfaced, and a corroborating-source rule for high-confidence refutations — non-Wikipedia/non-UGC,
   host-parsed; a positive museum/scholarly allowlist is a pending owner decision) is implemented and passing

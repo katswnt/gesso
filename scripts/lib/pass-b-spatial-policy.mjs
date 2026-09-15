@@ -11,7 +11,7 @@
 import { EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { b4Lineage } from './pass-b-b4-delta.mjs';
 
-export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/6';
+export const SPATIAL_CALIBRATION_VERSION = 'passBSpatialCalibration/7';
 export const LOCALIZATION_INPUT_VERSION = 'passBLocalizationInput/4';
 export const LOCALIZATION_RESULT_VERSION = 'passBLocalizationResult/3';
 export const CONFIRMATION_INPUT_VERSION = 'passBSpatialConfirmationInput/1';
@@ -75,6 +75,17 @@ const validPoint = point => point && Number.isFinite(point.x) && Number.isFinite
 const clonePoint = point => validPoint(point) ? { x: point.x, y: point.y } : null;
 const distance = (left, right) => validPoint(left) && validPoint(right)
   ? Math.hypot(left.x - right.x, left.y - right.y) : null;
+
+// A legacy coordinate is eligible only when B0 carries a separately captured historical-image
+// receipt. Never infer this value from the current B0 image: doing so makes the equality test
+// tautological and silently lets coordinates cross image changes. Existing calibration B0 records
+// have no such receipt, so they correctly return null until provenance is reconstructed and stored.
+export function legacyImageSha256FromB0(b0) {
+  const receipt = b0?.legacyImageReceipt;
+  if (receipt?.version !== 'passBLegacyImageReceipt/1') return null;
+  if (!['captured-at-generation', 'verified-immutable-artifact'].includes(receipt.basis)) return null;
+  return /^[0-9a-f]{64}$/.test(receipt.imgSha256 || '') ? receipt.imgSha256 : null;
+}
 
 function legacyIndex(ref) {
   const match = /^legacy[-:]h(\d+)$/i.exec(String(ref || ''));

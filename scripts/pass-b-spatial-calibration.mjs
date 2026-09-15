@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from 'node:path';
 import { sha256 } from './lib/vision-legacy.mjs';
 import {
-  SPATIAL_CALIBRATION_VERSION, buildLocalizationInput, spatialRowsForWork, summarizeOwnerSpatialReview,
+  SPATIAL_CALIBRATION_VERSION, buildLocalizationInput, legacyImageSha256FromB0, spatialRowsForWork, summarizeOwnerSpatialReview,
 } from './lib/pass-b-spatial-policy.mjs';
 
 const args = process.argv.slice(2);
@@ -40,7 +40,7 @@ for (const file of readdirSync(workDir).filter(file => file.endsWith('.b4.json')
   const b0 = JSON.parse(readFileSync(b0Path(record.id), 'utf8'));
   const rows = spatialRowsForWork({
     workId: record.id, imageSha256: b0.image?.imgSha256 ?? null,
-    legacyImageSha256: b0.image?.imgSha256 ?? null,
+    legacyImageSha256: legacyImageSha256FromB0(b0),
     delta: record.rawDelta, body: record.body, hydration: record.hydration, legacy: b0.legacy,
   });
   const localizationInput = buildLocalizationInput({

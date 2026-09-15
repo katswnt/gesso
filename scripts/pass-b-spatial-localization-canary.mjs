@@ -21,7 +21,7 @@ import {
 } from './lib/pass-b-calibration.mjs';
 import {
   LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, SPATIAL_CALIBRATION_VERSION,
-  buildLocalizationInput, buildLocalizationPrompt, pointDistance, resolveLocalization,
+  buildLocalizationInput, buildLocalizationPrompt, legacyImageSha256FromB0, pointDistance, resolveLocalization,
   spatialRowsForWork, summarizePointDistances, validateLocalizationResult,
 } from './lib/pass-b-spatial-policy.mjs';
 
@@ -58,7 +58,7 @@ function loadWork(file) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   if (!record.ok) return null;
   const b0 = JSON.parse(readFileSync(b0Path(record.id), 'utf8'));
-  const rows = spatialRowsForWork({ workId: record.id, imageSha256: b0.image.imgSha256, legacyImageSha256: b0.image.imgSha256, delta: record.rawDelta, body: record.body, hydration: record.hydration, legacy: b0.legacy });
+  const rows = spatialRowsForWork({ workId: record.id, imageSha256: b0.image.imgSha256, legacyImageSha256: legacyImageSha256FromB0(b0), delta: record.rawDelta, body: record.body, hydration: record.hydration, legacy: b0.legacy });
   const input = buildLocalizationInput({ workId: record.id, imageSha256: b0.image.imgSha256, imageExt: b0.image.ext, rows, mode });
   return { id: record.id, recordPath, b0, rows, input };
 }

@@ -27,7 +27,7 @@ import {
   CONFIRMATION_INPUT_VERSION, CONFIRMATION_RESULT_VERSION, CONFIRMATION_WIRE_SCHEMA,
   LOCALIZATION_RESULT_VERSION, NEW_POINT_CONFIRMATION_DISTANCE, SPATIAL_CALIBRATION_VERSION,
   buildConfirmationInput, buildConfirmationPrompt, pointDistance, resolveConfirmedLocalization,
-  spatialRowsForWork, summarizePointDistances, validateConfirmationResult, validateLocalizationResult,
+  legacyImageSha256FromB0, spatialRowsForWork, summarizePointDistances, validateConfirmationResult, validateLocalizationResult,
 } from './lib/pass-b-spatial-policy.mjs';
 
 const execFileP = promisify(execFile);
@@ -39,8 +39,7 @@ const primaryRun = resolve(valueAfter('--primary') || 'data/incoming/vision-cali
 const primaryManifestPath = join(primaryRun, 'run-manifest.json');
 if (!existsSync(primaryManifestPath)) throw new Error(`missing primary manifest: ${primaryManifestPath}`);
 const primaryManifest = JSON.parse(readFileSync(primaryManifestPath, 'utf8'));
-const acceptedPrimaryPolicies = new Set(['passBSpatialCalibration/4', SPATIAL_CALIBRATION_VERSION]);
-if (!acceptedPrimaryPolicies.has(primaryManifest.spatialPolicyVersion)) throw new Error(`unsupported primary spatial policy: ${primaryManifest.spatialPolicyVersion}`);
+if (primaryManifest.spatialPolicyVersion !== SPATIAL_CALIBRATION_VERSION) throw new Error(`stale primary spatial policy: ${primaryManifest.spatialPolicyVersion}; expected ${SPATIAL_CALIBRATION_VERSION}`);
 if (primaryManifest.localizationSchema !== LOCALIZATION_RESULT_VERSION) throw new Error(`unsupported primary localization schema: ${primaryManifest.localizationSchema}`);
 if (primaryManifest.model !== CALIBRATION_MODEL) throw new Error(`primary model mismatch: ${primaryManifest.model}`);
 
@@ -99,7 +98,7 @@ function loadPrimaryWork(id) {
   const b0 = JSON.parse(readFileSync(b0Path(id), 'utf8'));
   if (b0.image.imgSha256 !== input.imageSha256 || b0.image.ext !== input.imageExt) throw new Error(`${id}: B0 image mismatch`);
   const rows = spatialRowsForWork({
-    workId: id, imageSha256: b0.image.imgSha256, legacyImageSha256: b0.image.imgSha256,
+    workId: id, imageSha256: b0.image.imgSha256, legacyImageSha256: legacyImageSha256FromB0(b0),
     delta: source.value.rawDelta, body: source.value.body, hydration: source.value.hydration, legacy: b0.legacy,
   });
   const confirmationInput = buildConfirmationInput({ localizationInput: input, localizationResult: response.result });

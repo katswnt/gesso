@@ -22,7 +22,7 @@ import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLi
 import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass-b-editorial-review.mjs';
 import {
   CONFIRMATION_RESULT_VERSION, CONFIRMATION_WIRE_SCHEMA, NEW_POINT_CONFIRMATION_DISTANCE,
-  SPATIAL_CALIBRATION_VERSION, LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, legacyHotspotCandidate, spatialRowsForWork,
+  SPATIAL_CALIBRATION_VERSION, LOCALIZATION_RESULT_VERSION, LOCALIZATION_WIRE_SCHEMA, legacyHotspotCandidate, legacyImageSha256FromB0, spatialRowsForWork,
   buildConfirmationInput, buildConfirmationPrompt, buildLocalizationInput, buildLocalizationPrompt,
   validateConfirmationResult, validateLocalizationResult, resolveConfirmedLocalization, resolveLocalization,
   quantile, summarizeOwnerSpatialReview, summarizePointDistances,
@@ -37,6 +37,7 @@ const controllerSrc = readFileSync('scripts/pass-b-calibration.mjs', 'utf8').rep
 const libSrc = readFileSync('scripts/lib/pass-b-calibration.mjs', 'utf8');
 const fullPacketSrc = readFileSync('scripts/pass-b-b4-review-packet.mjs', 'utf8');
 const spatialCanarySrc = readFileSync('scripts/pass-b-spatial-localization-canary.mjs', 'utf8');
+const spatialCalibrationSrc = readFileSync('scripts/pass-b-spatial-calibration.mjs', 'utf8');
 const confirmationCanarySrc = readFileSync('scripts/pass-b-spatial-confirmation-canary.mjs', 'utf8');
 const spatialResolutionPacketSrc = readFileSync('scripts/pass-b-spatial-resolution-packet.mjs', 'utf8');
 const SHA = 'a'.repeat(64);
@@ -571,6 +572,24 @@ t('VSD-029 keeps legacy points as candidates and routes spatial suppression with
   const changedImageRows = spatialRowsForWork({ workId: 'fixture-synthetic-1', imageSha256: SHA, legacyImageSha256: 'b'.repeat(64), delta, body: assembled.body, hydration: assembled.hydration, legacy });
   assert.equal(changedImageRows[0].legacyCoordinateEligible, false);
   assert.notEqual(changedImageRows[0].automaticRoute.source, 'legacy', 'an old coordinate cannot cross an image change');
+});
+
+t('legacy spatial candidates require an explicit historical-image receipt, never the current B0 SHA', () => {
+  assert.equal(legacyImageSha256FromB0({ image: { imgSha256: SHA } }), null, 'the current image is not proof of the historical image');
+  assert.equal(legacyImageSha256FromB0({ legacyImageReceipt: { version: 'passBLegacyImageReceipt/1', basis: 'captured-at-generation', imgSha256: 'bad' } }), null);
+  assert.equal(legacyImageSha256FromB0({ legacyImageReceipt: { version: 'passBLegacyImageReceipt/1', basis: 'unverified-url-inference', imgSha256: SHA } }), null);
+  assert.equal(legacyImageSha256FromB0({ legacyImageReceipt: { version: 'passBLegacyImageReceipt/1', basis: 'captured-at-generation', imgSha256: SHA } }), SHA);
+  assert.equal(legacyImageSha256FromB0({ legacyImageReceipt: { version: 'passBLegacyImageReceipt/1', basis: 'verified-immutable-artifact', imgSha256: SHA } }), SHA);
+  for (const [name, source] of [
+    ['review packet', fullPacketSrc],
+    ['spatial calibration', spatialCalibrationSrc],
+    ['localization canary', spatialCanarySrc],
+    ['confirmation canary', confirmationCanarySrc],
+    ['resolution packet', spatialResolutionPacketSrc],
+  ]) {
+    assert(!source.includes('legacyImageSha256: b0.image'), `${name} must not fabricate historical-image equality from the current B0 image`);
+    assert(source.includes('legacyImageSha256FromB0'), `${name} must use the fail-closed provenance reader`);
+  }
 });
 
 t('VSD-029 localization input is spatial-only, excludes human answers, and validates scope/point semantics', () => {
