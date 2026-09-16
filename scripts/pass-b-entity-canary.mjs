@@ -27,7 +27,7 @@ const UPSTREAM = 'data/incoming/vision-calibration/cal50-0a47b6f7f332';
 const CAL_ROOT = 'data/incoming/vision-calibration';
 export const ENTITY_PROMPT_VERSION = 'contentVisionEntityPrompt/2'; // /2: relation guidance tightened (intentional)
 export const ENTITY_TRANSPORT_VERSION = 'entityReadConfinedDir/1';
-export const CANARY_CONTRACT_VERSION = 'passBEntityCanary/2'; // /2: complete-command binding + transcript-sourced resume
+export const CANARY_CONTRACT_VERSION = 'passBEntityCanary/3'; // /3: execution evidence binds the confined-dir transport receipt
 const fileRawSha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex'); // raw bytes (broker naming)
 const safeId = (id) => id.replace(/[^a-z0-9]+/gi, '_');
 const runIdFromBinding = (binding) => `b6c-${sha256(stableJson(binding)).slice(0, 12)}`;
@@ -84,24 +84,30 @@ export function computeRunId(fixturesArtifact, plans) {
   return { runId: runIdFromBinding(binding), binding };
 }
 
-// Real per-call executor: runs the command, returns ONLY the raw transcript + exitCode (no parsing/derivation).
+// Real per-call executor: runs the command, returns the raw transcript + exitCode + the controller-owned
+// TRANSPORT receipt (the exact confined callDir + expected absolute image path). The receipt is captured
+// before the temp dir is deleted so image-Read confinement can be verified from the recorded directory
+// (never a null callDir, which would accept the right filename read from OUTSIDE the confined dir).
 export async function callEntity(plan) {
-  if (!plan.command || !plan.img.receiptOk) return { transcript: '', exitCode: 97 };
+  if (!plan.command || !plan.img.receiptOk) return { transcript: '', exitCode: 97, transport: null };
   const callDir = mkdtempSync(join(tmpdir(), 'pass-b-entity-'));
+  const transport = { callDir, imageFile: plan.img.file, imageAbsPath: join(callDir, plan.img.file) };
   try {
-    copyFileSync(plan.img.path, join(callDir, plan.img.file));
+    copyFileSync(plan.img.path, transport.imageAbsPath);
     const env = { ...process.env }; for (const k of plan.command.env.removeKeys) delete env[k];
-    try { const { stdout } = await execFileP(plan.command.bin, plan.command.argv, { cwd: callDir, env, maxBuffer: 32 * 1024 * 1024 }); return { transcript: stdout, exitCode: 0 }; }
-    catch (e) { return { transcript: e.stdout || '', exitCode: e.code ?? 1 }; }
+    try { const { stdout } = await execFileP(plan.command.bin, plan.command.argv, { cwd: callDir, env, maxBuffer: 32 * 1024 * 1024 }); return { transcript: stdout, exitCode: 0, transport }; }
+    catch (e) { return { transcript: e.stdout || '', exitCode: e.code ?? 1, transport }; }
   } finally { rmSync(callDir, { recursive: true, force: true }); }
 }
 
-// SINGLE derivation path (forward AND resume): parse the raw transcript and re-verify everything from it.
-export function deriveAttempt(plan, transcript, exitCode) {
+// SINGLE derivation path (forward AND resume): parse the raw transcript and re-verify everything from it,
+// using the recorded confined callDir so the image Read must target the EXACT confined path (basename alone
+// is not sufficient). A missing callDir fails closed.
+export function deriveAttempt(plan, transcript, exitCode, callDir) {
   const t = parseStreamTranscript(transcript);
   const final = transcriptFinal(t);
   const graph = final?.structured_output ?? null;
-  const receipt = verifyB1ImageRead(t, { callDir: null, imageBasename: plan.img.file });
+  const receipt = callDir ? verifyB1ImageRead(t, { callDir, imageBasename: plan.img.file }) : { ok: false, reason: 'no transport callDir' };
   const validation = graph ? validateEntityGraph(graph) : { ok: false, errors: ['no structured output'] };
   const resolvedModel = primaryModelFromEnvelope(final);
   const errors = [];
@@ -153,12 +159,17 @@ export async function runCanary({ fixtures, plans, runId, binding, outDir, callF
       // re-derive + re-verify from it, RECOMPUTE score/controller, and require agreement. Fail closed otherwise.
       const acc = JSON.parse(readFileSync(acceptedPath, 'utf8'));
       if (acc.imgSha256 !== p.img.imgSha256 || acc.promptHash !== p.promptHash || acc.commandPolicySha256 !== p.commandPolicySha256) throw new Error(`resume: checkpoint binding mismatch for ${p.workId}`);
-      const tPath = join(wdir, `attempt-${acc.attempt}.transcript.jsonl`), rPath = join(wdir, `attempt-${acc.attempt}.result.json`), sPath = join(wdir, `attempt-${acc.attempt}.score.json`);
+      const trPath = join(wdir, `attempt-${acc.attempt}.transport.json`), tPath = join(wdir, `attempt-${acc.attempt}.transcript.jsonl`), rPath = join(wdir, `attempt-${acc.attempt}.result.json`), sPath = join(wdir, `attempt-${acc.attempt}.score.json`);
+      // Verify the transport receipt hash + binding FIRST, then use its recorded callDir for exact-dir Read verification.
+      const trText = readFileSync(trPath, 'utf8');
+      if (sha256(trText) !== acc.transportSha256) throw new Error(`resume: transport receipt tampered for ${p.workId}`);
+      const transport = JSON.parse(trText);
+      if (!transport || transport.imageFile !== p.img.file || !transport.callDir) throw new Error(`resume: transport binding mismatch for ${p.workId}`);
       const tText = readFileSync(tPath, 'utf8');
       if (sha256(tText) !== acc.transcriptSha256) throw new Error(`resume: transcript tampered for ${p.workId}`);
       if (sha256(readFileSync(rPath, 'utf8')) !== acc.resultSha256) throw new Error(`resume: result evidence tampered for ${p.workId}`);
       if (sha256(readFileSync(sPath, 'utf8')) !== acc.scoreSha256) throw new Error(`resume: score tampered for ${p.workId}`);
-      const att = deriveAttempt(p, tText, 0);
+      const att = deriveAttempt(p, tText, 0, transport.callDir);
       if (!att.ok) throw new Error(`resume: re-verification failed for ${p.workId}: ${att.errors.join('|')}`);
       if (att.evidence.apiKeySource !== 'none') throw new Error(`resume: apiKeySource not none for ${p.workId}`);
       const re = scoreAttempt(att, f);
@@ -168,18 +179,19 @@ export async function runCanary({ fixtures, plans, runId, binding, outDir, callF
 
     // Fresh attempt (append-only evidence).
     const k = readdirSync(wdir).filter((x) => /^attempt-\d+\.result\.json$/.test(x)).length + 1;
-    const raw = await call(p); // {transcript, exitCode}
-    const att = deriveAttempt(p, raw.transcript, raw.exitCode);
+    const raw = await call(p); // {transcript, exitCode, transport}
+    const att = deriveAttempt(p, raw.transcript, raw.exitCode, raw.transport?.callDir ?? null);
     const { score, controller, unbound } = scoreAttempt(att, f);
     const result = { workId: p.workId, ok: att.ok, errors: att.errors, evidence: att.evidence, controller: { possibleAliasPairs: aliasPairKeys(controller.possibleAlias), unbound: controller.unbound.map((u) => u.claimId) } };
-    const tStr = raw.transcript || '', rStr = `${JSON.stringify(result, null, 2)}\n`, sStr = `${JSON.stringify(score, null, 2)}\n`;
+    const tStr = raw.transcript || '', rStr = `${JSON.stringify(result, null, 2)}\n`, sStr = `${JSON.stringify(score, null, 2)}\n`, trStr = `${JSON.stringify(raw.transport ?? null, null, 2)}\n`;
     writeFileSync(join(wdir, `attempt-${k}.transcript.jsonl`), tStr, { flag: 'wx', mode: 0o600 });
+    writeFileSync(join(wdir, `attempt-${k}.transport.json`), trStr, { flag: 'wx', mode: 0o600 }); // controller-owned transport evidence
     writeFileSync(join(wdir, `attempt-${k}.result.json`), rStr, { flag: 'wx', mode: 0o600 });
     writeFileSync(join(wdir, `attempt-${k}.score.json`), sStr, { flag: 'wx', mode: 0o600 });
     // Item 1: FATAL apiKeySource — preserve this attempt, then abort all remaining calls.
     if (att.evidence.apiKeySource !== 'none') { aborted = { workId: p.workId, apiKeySource: att.evidence.apiKeySource ?? null, attempt: k, reason: 'apiKeySource must be "none" — aborting so API credits cannot be consumed silently' }; break; }
     scores.push(score); unboundPerWork.push(unbound);
-    if (att.ok) writeFileSync(acceptedPath, `${JSON.stringify({ workId: p.workId, imgSha256: p.img.imgSha256, promptHash: p.promptHash, commandPolicySha256: p.commandPolicySha256, apiKeySource: 'none', attempt: k, transcriptSha256: sha256(tStr), resultSha256: sha256(rStr), scoreSha256: sha256(sStr) }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    if (att.ok) writeFileSync(acceptedPath, `${JSON.stringify({ workId: p.workId, imgSha256: p.img.imgSha256, promptHash: p.promptHash, commandPolicySha256: p.commandPolicySha256, apiKeySource: 'none', attempt: k, transportSha256: sha256(trStr), transcriptSha256: sha256(tStr), resultSha256: sha256(rStr), scoreSha256: sha256(sStr) }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
   }
   const totalClaims = unboundPerWork.reduce((s, u) => s + u.claims, 0);
   const totalUnbound = unboundPerWork.reduce((s, u) => s + u.unbound, 0);
@@ -237,7 +249,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   console.log(`    contract: ${CANARY_CONTRACT_VERSION}   runId: ${runId}   output: ${join(CAL_ROOT, runId)}/   (immutable run-manifest.json written before the first call)`);
   console.log(`    model: ${CALIBRATION_MODEL}   prompt: ${ENTITY_PROMPT_VERSION}   wireSchema: ${ENTITY_GRAPH_VERSION} (sha ${binding.wireSchemaSha256.slice(0, 12)})`);
   console.log(`    transport: ${ENTITY_TRANSPORT_VERSION} — Read-tool confined temp dir, --tools Read, API keys stripped; apiKeySource:none is FATAL per-call (abort-on-fail).`);
-  console.log('    resumable: transcript is the source of truth — resume reopens preserved evidence, re-verifies + recomputes, fails closed on any disagreement.');
+  console.log('    resumable: transcript + controller-owned transport receipt are the source of truth — image Read is verified against the EXACT confined dir');
+  console.log('               (not the basename alone); resume reopens preserved evidence, re-verifies + recomputes, fails closed on any disagreement.');
   console.log(`    calls: ${plans.length} (one per fixture work), each bound to its verified image receipt + complete command policy:`);
   for (const p of plans) console.log(`      - ${p.workId} [${p.set}] img=${p.img.imgSha256.slice(0, 12)} receipt=${p.img.receiptOk ? 'OK' : 'MISSING'} promptHash=${p.promptHash.slice(0, 12)} cmdPolicy=${p.commandPolicySha256.slice(0, 12)}`);
   console.log('    report: kind=schema-emission-smoke, measurementReadiness=blocked, unbound rate (hand-authored/provisional), NO real-scene alias precision.');
