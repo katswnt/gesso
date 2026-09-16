@@ -358,10 +358,14 @@ VSD-035 adds the actual deterministic reconciliation layer:
   evidence-manifest membership of source/upstream manifests and B0–B3/source-B4 bytes, the
   manifest-bound source-B4 delta and transcript hash, recorded current-image SHA, and exact
   projected production content. This layer does not freshly hash the current image bytes.
-- `passBApproval/2` requires and re-verifies reconciliation when staging and applying. Final
+- `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
-  empty/duplicate/unknown field sets fail closed.
+  empty/duplicate/unknown field sets fail closed. It also (VSD-037) enforces a one-way
+  notes→hotspots approval coupling (changing notes requires re-approving hotspots; hotspots-only is
+  allowed) and structurally validates the final production projection (why/cues/guide/notes/hotspots
+  shapes, 0–100 coordinates, unique hotspot ranks each referencing an existing note) since strict B4
+  validation re-applies only the `why` owner edit.
 
 ```bash
 # Whole-cohort audit; no writes/model/network/production. Current b4r result:

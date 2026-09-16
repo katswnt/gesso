@@ -9,7 +9,7 @@ import { sha256, stableJson } from '../scripts/lib/vision-legacy.mjs';
 import { completionKey } from '../scripts/lib/vision-content-capture.mjs';
 import { syntheticFixture } from '../scripts/lib/pass-b-calibration.mjs';
 import { assembleAndValidateB4 } from '../scripts/lib/pass-b-b4-delta.mjs';
-import { buildApproval, applyApproval, projectToProduction, APPROVABLE_FIELDS } from '../scripts/lib/pass-b-approval.mjs';
+import { buildApproval, applyApproval, projectToProduction, validateProductionProjection, surfaceCouplingViolation, APPROVABLE_FIELDS, APPROVAL_VERSION } from '../scripts/lib/pass-b-approval.mjs';
 import {
   loadReconciliationSources, buildClaimBundle, buildDecisionArtifact, auditReconciliation,
   claimBundleSha256, reconciliationPaths, reconciliationSetPaths, buildReconciliationActivation,
@@ -275,6 +275,33 @@ t('leaky player copy is rejected by the guarded merge (player-copy-leak), nothin
   const res = applyApproval({ approval: mkApproval(runDir, teachPath, hotspotsPath), runDir, teachPath, hotspotsPath, apply: true });
   assert.ok(!res.ok && res.errors.some((e) => e.startsWith('player-copy-leak')) && !res.wrote, 'leaky copy rejected');
   assert.equal(readFileSync(teachPath, 'utf8'), before, 'no write on leak');
+});
+
+// VSD-037 one-way coupling: notes-without-hotspots rejected; hotspots-only allowed; both allowed.
+t('surfaceCouplingViolation is one-way (notes→hotspots)', () => {
+  assert.strictEqual(surfaceCouplingViolation(['notes']), 'notes-approval-requires-hotspots');
+  assert.strictEqual(surfaceCouplingViolation(['notes', 'hotspots']), null);
+  assert.strictEqual(surfaceCouplingViolation(['hotspots']), null); // coordinate-only review allowed
+  assert.strictEqual(surfaceCouplingViolation(['why', 'cues', 'guide']), null);
+});
+t('buildApproval rejects notes without hotspots (early, before disk)', () => {
+  assert.throws(() => buildApproval({ runDir: '/nonexistent', workId: 'wikidata:Q1', approvedFields: ['notes'], teachPath: 'x', hotspotsPath: 'y' }), /notes-approval-requires-hotspots/);
+});
+t('applyApproval rejects notes without hotspots', () => {
+  const r = applyApproval({ approval: { version: APPROVAL_VERSION, ownerApproved: true, approvedFields: ['notes'], ownerEdits: {} }, runDir: '/nonexistent', teachPath: 'x', hotspotsPath: 'y', apply: false });
+  assert.ok(!r.ok && /notes-approval-requires-hotspots/.test((r.errors || []).join('|')), 'coupling rejection expected');
+});
+t('validateProductionProjection catches malformed / out-of-range / orphan / duplicate hotspots and bad shapes', () => {
+  const base = { teach: { why: 'w', cues: ['c'], guide: [{ q: 'q', a: 'a' }], notes: [{ head: 'h', body: 'b', x: null, y: null }] } };
+  assert.ok(validateProductionProjection({ ...base, hotspots: [] }).ok, 'empty hotspots is a valid shape');
+  assert.ok(validateProductionProjection({ ...base, hotspots: [{ n: 1, x: 10, y: 20 }] }).ok, 'valid hotspot referencing note 1');
+  assert.ok(!validateProductionProjection({ ...base, hotspots: [{ n: 1, x: 120, y: 20 }] }).ok, 'out-of-range coordinate rejected');
+  assert.ok(!validateProductionProjection({ ...base, hotspots: [{ n: 2, x: 10, y: 20 }] }).ok, 'orphan rank (no such note) rejected');
+  assert.ok(!validateProductionProjection({ ...base, hotspots: [{ n: 1.5, x: 10, y: 20 }] }).ok, 'non-integer rank rejected');
+  assert.ok(!validateProductionProjection({ ...base, hotspots: [{ n: 1, x: 10, y: 20 }, { n: 1, x: 5, y: 5 }] }).ok, 'duplicate rank rejected');
+  assert.ok(!validateProductionProjection({ teach: { why: 5, cues: [], guide: [], notes: [] }, hotspots: [] }).ok, 'non-string why rejected');
+  assert.ok(!validateProductionProjection({ teach: { why: 'w', cues: [1], guide: [], notes: [] }, hotspots: [] }).ok, 'non-string cue rejected');
+  assert.ok(!validateProductionProjection({ teach: { why: 'w', cues: [], guide: [], notes: [{ head: 'h', body: 'b', x: 150, y: 0 }] }, hotspots: [] }).ok, 'note coord out of range rejected');
 });
 
 let pass = 0;

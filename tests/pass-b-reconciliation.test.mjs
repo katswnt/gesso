@@ -128,4 +128,32 @@ ok(!verifyClaimBundleAgainstSources(omittedCorrection, sourcesWithSeams, project
 const omittedUncertainty = structuredClone(seamBundle); omittedUncertainty.openClaims = [];
 ok(!verifyClaimBundleAgainstSources(omittedUncertainty, sourcesWithSeams, projected).ok, 'B4 uncertainty omission fails source verification');
 
+// ---- VSD-037: owner-approved empty collection surface (via the existing *-set:empty component) + coupling ----
+const { surfaceCouplingViolation } = await import('../scripts/lib/pass-b-approval.mjs');
+const projectedNoHot = { teach: projected.teach, hotspots: [] };
+const bundleNoHot = buildClaimBundle({ sources, projectedRecord: projectedNoHot });
+const emptyHotComp = bundleNoHot.components.find(c => c.surface === 'hotspots').componentId;
+ok(emptyHotComp === 'hotspot-set:empty', 'an empty hotspots surface is represented by a stable hotspot-set:empty component');
+const noteComp = bundleNoHot.components.find(c => c.surface === 'notes').componentId;
+const acc = (id, tid) => ({ decisionId: id, targetKind: 'component', targetId: tid, effectiveState: 'accepted', authority: 'owner', artifactRef: 'owner-review candidate', resolvesConflictIds: [], supersedesDecisionId: null });
+
+// (a) replacing notes + clearing hotspots to [] succeeds after REAL owner approval (accept note + accept the empty hotspot set)
+const approved = buildDecisionArtifact({ workId: 'w1', claimBundleSha256: claimBundleSha256(bundleNoHot), decisions: [acc('own-note', noteComp), acc('own-emptyhot', emptyHotComp)] });
+ok(validateDecisionArtifact(approved, bundleNoHot).ok, 'owner decisions incl. empty-set acceptance validate');
+const repA = auditReconciliation(bundleNoHot, approved).report;
+ok(repA.componentReadiness.find(c => c.componentId === emptyHotComp).contentReadiness === 'eligible', 'owner-accepted empty hotspot set is eligible');
+ok(ineligibleApprovedComponents(repA, ['notes', 'hotspots']).length === 0, 'replacing notes + owner-cleared empty hotspots is fully approvable');
+ok(surfaceCouplingViolation(['notes', 'hotspots']) === null, 'notes+hotspots approved together satisfies coupling');
+
+// (b) ONE-WAY coupling: changing notes without hotspots is rejected; approving hotspots alone is allowed
+ok(surfaceCouplingViolation(['notes']) === 'notes-approval-requires-hotspots', 'notes without hotspots is rejected (one-way coupling)');
+ok(surfaceCouplingViolation(['hotspots']) === null, 'hotspots-only is allowed (coordinate-only review while notes unchanged)');
+ok(surfaceCouplingViolation(['why', 'cues', 'guide']) === null, 'unrelated surfaces are unaffected by coupling');
+
+// (c) no empty surface becomes eligible automatically — without the explicit owner-accept the empty set is not eligible
+const noAccept = buildDecisionArtifact({ workId: 'w1', claimBundleSha256: claimBundleSha256(bundleNoHot), decisions: [acc('own-note', noteComp)] });
+const repC = auditReconciliation(bundleNoHot, noAccept).report;
+ok(repC.componentReadiness.find(c => c.componentId === emptyHotComp).contentReadiness !== 'eligible', 'an empty surface is never eligible without an explicit owner acceptance');
+ok(ineligibleApprovedComponents(repC, ['notes', 'hotspots']).some(r => r.componentId === emptyHotComp), 'the un-accepted empty hotspot set blocks approval of the hotspots surface');
+
 console.log(`ok - pass-b reconciliation: ${n} checks passed`);

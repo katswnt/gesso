@@ -14,8 +14,40 @@ import {
   eligibleComponentIds, RECONCILIATION_POLICY_VERSION,
 } from './pass-b-reconciliation.mjs';
 
-export const APPROVAL_VERSION = 'passBApproval/2';
+export const APPROVAL_VERSION = 'passBApproval/3';
 export const APPROVABLE_FIELDS = Object.freeze(['why', 'cues', 'guide', 'notes', 'hotspots']);
+// VSD-037: notes carry pins and hotspots are pins over the same notes. Coupling is ONE-WAY — changing notes
+// without also approving hotspots can leave pins pointing at changed/removed notes, so it is rejected;
+// approving hotspots alone is allowed (coordinate-only review while notes stay unchanged).
+export function surfaceCouplingViolation(approvedFields) {
+  const s = new Set(approvedFields || []);
+  return s.has('notes') && !s.has('hotspots') ? 'notes-approval-requires-hotspots' : null;
+}
+// Structurally validate the FINAL production projection (teach + hotspots) — the actual bytes that would be
+// written — since strict B4 validation only re-applies the `why` owner edit and never structurally checks
+// edited cues/guide/notes/hotspots. Coordinates are nullable on notes (unpinned) but required on hotspots,
+// and every hotspot rank `n` must reference an existing projected note.
+export function validateProductionProjection(projected) {
+  const errors = []; const need = (v, m) => { if (!v) errors.push(m); };
+  const coord = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100;
+  const t = projected?.teach || {};
+  need(typeof t.why === 'string', 'why must be a string');
+  need(Array.isArray(t.cues) && t.cues.every((c) => typeof c === 'string'), 'cues must be an array of strings');
+  need(Array.isArray(t.guide) && t.guide.every((g) => g && typeof g.q === 'string' && typeof g.a === 'string'), 'guide must be an array of {q,a} strings');
+  const notes = t.notes;
+  need(Array.isArray(notes) && notes.every((n) => n && typeof n.head === 'string' && typeof n.body === 'string' && (n.x === null || coord(n.x)) && (n.y === null || coord(n.y))), 'notes must be {head,body,x,y} with null or 0-100 coordinates');
+  const noteCount = Array.isArray(notes) ? notes.length : 0;
+  const hotspots = projected?.hotspots;
+  if (!Array.isArray(hotspots)) { need(false, 'hotspots must be an array'); return { ok: errors.length === 0, errors }; }
+  const seen = new Set();
+  for (const h of hotspots) {
+    need(h && Number.isInteger(h.n) && coord(h.x) && coord(h.y), 'hotspot must be {n:integer, x,y in 0-100}');
+    if (!h || !Number.isInteger(h.n)) continue;
+    need(!seen.has(h.n), `duplicate hotspot n:${h.n}`); seen.add(h.n);
+    need(h.n >= 1 && h.n <= noteCount, `hotspot n:${h.n} does not reference an existing projected note (1..${noteCount})`);
+  }
+  return { ok: errors.length === 0, errors };
+}
 const TEACH_ANCHOR = 'window.ARTEFACTUM_CUES.work=';
 const HOTSPOTS_ANCHOR = 'window.ARTEFACTUM_HOTSPOTS = ';
 
@@ -51,6 +83,7 @@ export function projectToProduction(b4, ownerEdits = {}) {
 // flip it after inspecting the card. Approval is never inferred from schema readiness.
 export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIELDS.slice(), ownerEdits = {}, teachPath, hotspotsPath, createdAt = null }) {
   if (!Array.isArray(approvedFields) || !approvedFields.length || new Set(approvedFields).size !== approvedFields.length || approvedFields.some(f => !APPROVABLE_FIELDS.includes(f))) throw new Error('approvedFields must be a nonempty unique subset of the allowlist');
+  { const cpl = surfaceCouplingViolation(approvedFields); if (cpl) throw new Error(cpl); }
   if (Object.keys(ownerEdits || {}).some(f => !approvedFields.includes(f))) throw new Error('ownerEdits may target approved fields only');
   const sources = loadReconciliationSources(runDir, workId);
   const raw = sources.b4Raw;
@@ -66,6 +99,7 @@ export function buildApproval({ runDir, workId, approvedFields = APPROVABLE_FIEL
   const b0 = sources.b0;
   const manifest = sources.manifest;
   const approvedRecord = projectToProduction(sources.b4, ownerEdits);
+  { const pv = validateProductionProjection(approvedRecord); if (!pv.ok) throw new Error(`invalid-projection:${pv.errors.join('|')}`); }
   // VSD-035: structural validity + owner intent are not content readiness. Reopen the full B0-B4 bundle,
   // verify the immutable reconciliation artifacts, and refuse to stage any selected component that is not
   // eligible. Model-proposed verdicts and model-resolved conflicts never satisfy this gate.
@@ -143,6 +177,7 @@ export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply
   // 2. approvedFields must be a subset of the allowlist; ownerEdits only for approved fields.
   if (!Array.isArray(approval.approvedFields) || !approval.approvedFields.length || new Set(approval.approvedFields).size !== approval.approvedFields.length) return rej('invalid-approved-fields');
   for (const f of approval.approvedFields) if (!APPROVABLE_FIELDS.includes(f)) return rej(`unauthorized-field:${f}`);
+  { const cpl = surfaceCouplingViolation(approval.approvedFields); if (cpl) return rej(cpl); }
   for (const f of Object.keys(approval.ownerEdits || {})) if (!(approval.approvedFields || []).includes(f)) return rej(`edit-not-approved:${f}`);
   // 3. Reopen the source completion + verify all bindings.
   let sources;
@@ -171,6 +206,7 @@ export function applyApproval({ approval, runDir, teachPath, hotspotsPath, apply
   if (!ev.ok) return rej(`evidence:${ev.errors.join('|')}`);
   // 5. Re-project from the reopened completion; verbatim approved fields must match the approval exactly.
   const reProjected = projectToProduction(sources.b4, approval.ownerEdits);
+  { const pv = validateProductionProjection(reProjected); if (!pv.ok) return rej(`invalid-projection:${pv.errors.join('|')}`); }
   // 5a. Reopen/recompute reconciliation against the exact projected output. A stale report, changed source,
   // changed owner edit, tampered decision, or newly held component rejects the whole operation.
   const rec = loadAndVerifyReconciliation({ sources, projectedRecord: reProjected });

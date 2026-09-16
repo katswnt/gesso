@@ -361,6 +361,10 @@ export function validateClaimBundle(bundle) {
   return { ok: errors.length === 0, errors };
 }
 
+// An intentionally-empty collection surface is NOT a special case: componentRows emits a stable
+// `<surface>-set:empty` component for it, which is review-required by default and becomes publishable ONLY via
+// an explicit owner component-accept on that componentId (never automatically). No separate empty-surface
+// concept is needed. See the VSD-037 coupling rule in pass-b-approval (notes+hotspots approved together).
 export function buildDecisionArtifact({ workId, claimBundleSha256, decisions = [], blockedFindingResolutions = [] }) {
   return { version: CLAIM_DECISIONS_VERSION, workId, claimBundleSha256, decisions, blockedFindingResolutions };
 }
