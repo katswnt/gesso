@@ -67,6 +67,10 @@ export function aliasPairKeys(aliases) {
   return aliases.map((a) => [a.entityA, a.entityB].sort().join('::')).sort();
 }
 
+// An unbound claim means BINDING NOT ESTABLISHED — route to a neutral reread. It is NEVER a factual verdict:
+// not "absent", not "false", not "refuted", not "rejected". (La Gloire's skull came back unbound purely from
+// coarse type/geometry binding while the emission said "possibly a skull" — that is a reread, not a rejection.)
+export const UNBOUND_DISPOSITION = 'binding-not-established';
 // claims: [{ claimId, requiredType, region?:{x,y,w,h} }]. Binds if an entity of requiredType exists (and,
 // when a region is given, some region of it overlaps at >= overlapMin). Unbound -> neutral reread.
 export function detectUnboundClaims(graph, claims = [], { overlapMin = OVERLAP_IOU_MIN } = {}) {
@@ -77,7 +81,7 @@ export function detectUnboundClaims(graph, claims = [], { overlapMin = OVERLAP_I
     const bound = ents.some((t) => t.entityType === c.requiredType && (!c.region || t.regionRefs.some((rid) => {
       const g = rById.get(rid)?.geometry; return g && iou(g, c.region) >= overlapMin;
     })));
-    if (!bound) out.push({ claimId: c.claimId, requiredType: c.requiredType, route: 'neutral-reread', reason: 'unbound-entity-claim' });
+    if (!bound) out.push({ claimId: c.claimId, requiredType: c.requiredType, disposition: UNBOUND_DISPOSITION, route: 'neutral-reread', reason: 'unbound-entity-claim' });
   }
   return out;
 }

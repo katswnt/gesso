@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { readFileSync, existsSync } from 'node:fs';
 import { ENTITY_GRAPH_VERSION, validateEntityGraph } from '../scripts/lib/pass-b-entity-contract.mjs';
-import { possibleAliases, detectUnboundClaims, runController, aliasPairKeys, typesIncompatible } from '../scripts/lib/pass-b-entity-controller.mjs';
+import { possibleAliases, detectUnboundClaims, runController, aliasPairKeys, typesIncompatible, UNBOUND_DISPOSITION } from '../scripts/lib/pass-b-entity-controller.mjs';
 import { verifyFixturesArtifact } from '../scripts/pass-b-entity-canary-fixtures.mjs';
 
 let n = 0;
@@ -49,6 +49,11 @@ ok(JSON.stringify(aliasPairKeys([{ entityA: 'b', entityB: 'a' }])) === JSON.stri
 ok(detectUnboundClaims(G([rA], [E('e1', ['rA'], 'animal')]), [{ claimId: 'p', requiredType: 'human' }]).length === 1, 'human claim over animal-only -> unbound');
 ok(detectUnboundClaims(G([rA], [E('e1', ['rA'], 'human')]), [{ claimId: 'p', requiredType: 'human' }]).length === 0, 'human claim binds to human');
 ok(detectUnboundClaims(G([rA], [E('e1', ['rA'], 'human')]), [{ claimId: 'p', requiredType: 'human', region: { x: 70, y: 70, w: 20, h: 20 } }]).length === 1, 'right type wrong region -> unbound');
+// unbound means BINDING NOT ESTABLISHED (route to reread), NEVER refuted/absent/false/rejected.
+const ub = detectUnboundClaims(G([rA], [E('e1', ['rA'], 'animal')]), [{ claimId: 'p', requiredType: 'human' }]);
+ok(ub[0].disposition === UNBOUND_DISPOSITION && ub[0].disposition === 'binding-not-established', 'unbound disposition = binding-not-established');
+ok(ub[0].route === 'neutral-reread' && ub[0].reason === 'unbound-entity-claim', 'unbound routes to neutral reread');
+ok(!/refuted|absent|false|rejected/i.test(JSON.stringify(ub)), 'unbound never carries refuted/absent/false/rejected semantics');
 
 // ---- seeded fixtures: integrity + self-consistency (gold scenes have ZERO aliases) ----
 const OUT = 'data/vision-entity-canary-fixtures.json';

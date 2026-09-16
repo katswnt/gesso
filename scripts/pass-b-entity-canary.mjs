@@ -182,7 +182,9 @@ export async function runCanary({ fixtures, plans, runId, binding, outDir, callF
     const raw = await call(p); // {transcript, exitCode, transport}
     const att = deriveAttempt(p, raw.transcript, raw.exitCode, raw.transport?.callDir ?? null);
     const { score, controller, unbound } = scoreAttempt(att, f);
-    const result = { workId: p.workId, ok: att.ok, errors: att.errors, evidence: att.evidence, controller: { possibleAliasPairs: aliasPairKeys(controller.possibleAlias), unbound: controller.unbound.map((u) => u.claimId) } };
+    // Preserve FULL alias-referral detail (types, IoU, declaredRelation, priority) and full unbound objects
+    // (disposition/route/reason) as diagnostic evidence — not reduced to pair/claim IDs.
+    const result = { workId: p.workId, ok: att.ok, errors: att.errors, evidence: att.evidence, controller: { possibleAlias: controller.possibleAlias, aliasPairKeys: aliasPairKeys(controller.possibleAlias), unbound: controller.unbound } };
     const tStr = raw.transcript || '', rStr = `${JSON.stringify(result, null, 2)}\n`, sStr = `${JSON.stringify(score, null, 2)}\n`, trStr = `${JSON.stringify(raw.transport ?? null, null, 2)}\n`;
     writeFileSync(join(wdir, `attempt-${k}.transcript.jsonl`), tStr, { flag: 'wx', mode: 0o600 });
     writeFileSync(join(wdir, `attempt-${k}.transport.json`), trStr, { flag: 'wx', mode: 0o600 }); // controller-owned transport evidence
