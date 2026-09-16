@@ -300,16 +300,16 @@ Current limitations:
 - The deterministic `launchd` subscription supervisor remains unbuilt; `--foreground` is supervised
   manual operation only.
 
-### Content-correctness enforcement + entity canary (VSD-034, offline)
+### Content-correctness reconciliation + entity canary (VSD-034/035, offline)
 
 Two content failures found by the forensic audit are sealed as immutable, ancestry-bound
 `content-blocked` findings in the tracked `data/vision-content-blocked.json` (bound to
 `{workId, rawDeltaSha256, rawResponseSha256}` so the source completion and every rehydrated
 descendant match — the delta hash is byte-stable across rehydration). The guarded Pass B
 approval path (`scripts/lib/pass-b-approval.mjs`) loads these findings from a **mandatory,
-cwd-independent, fail-closed** path and refuses to stage (`buildApproval`) or apply
-(`applyApproval`) a blocked work before any evidence work or write. Blocked works are
-**intentionally uncleared** (no resolution artifact is wired yet — overblock, never under).
+cwd-independent, fail-closed** path. Exact blocked content is never clearable. A genuinely
+fresh completion of the same work can proceed only when its bound reconciliation decision
+artifact resolves every named blocked claim; a new record hash alone does nothing.
 
 The experimental entity-emission contract (`contentVisionEntityGraph/1`, quarantined — no
 production sink, not in `passBValidation`) plus its evaluator and the `possibleAlias` /
@@ -326,9 +326,75 @@ node scripts/pass-b-content-blocked-findings.mjs --check # gate: verify the seal
 node scripts/pass-b-entity-canary-fixtures.mjs --check   # gate: verify the sealed canary fixtures
 ```
 
-The item-4 bounded model canary (emit entity graphs on the fixture works' existing sanitized
-derivatives, score against labels, write the VSD-034 measurement report) is **not yet run** —
-no model calls have been made.
+The bounded schema-emission smoke ran as `b6c-aafea89438d0`: 6/6 subscription calls,
+`apiKeySource:none`, exact confined-directory image receipts, and 6/6 schema-valid emissions.
+Its report remains `kind:"schema-emission-smoke"` and `measurementReadiness:"blocked"`.
+Seeded-label region/entity/type scores are diagnostic only; real-scene alias precision/recall
+and correctness remain unmeasured pending frozen owner-labeled pixel ground truth.
+
+VSD-035 adds the actual deterministic reconciliation layer:
+
+- `passBClaimBundle/1` preserves and binds B1/B3 observations, B2 claims, B4 correction
+  proposals, B4 conflicts/uncertainty, optional source spans/entity graph, and stable hashes of
+  every projected `why`/cue/note/hotspot/guide component.
+- `passBClaimDecisions/2` separates ordered owner/source/controller decisions from model
+  proposals. Lower authority cannot supersede a higher-authority decision. The controller cannot
+  accept semantic truth; source authority needs a stored span record and cannot directly approve
+  player copy. Retrieval-byte/excerpt entailment verification is not yet implemented.
+- Grounding authority is separate too: a synthesis-model `claimRef` is `model-proposal`, not an
+  effective link. The schema reserves claim-based eligibility for a future owner/controller grounding
+  artifact, but VSD-036 forbids post-hoc grounding edits in the source-derived bundle; that mechanism
+  is not built. Today an exact owner component decision is the only release path.
+- `passBReconciliationReport/1` computes claim/component readiness. Missing, stale, or tampered
+  bundle/decisions/report artifacts fail closed. Model-self-resolved conflicts remain blocked;
+  free-text uncertainty cannot silently coexist with eligible unreviewed copy.
+- Reconciliation history is versioned: each content-addressed, write-once-by-tool set lives under
+  `reconciliation/.../sets/<reportSha>/`; `active.json` selects one set, and every activation is
+  also preserved and verified under `activations/`. Changing the active set invalidates any older
+  approval. This is tamper-evident inside the trusted local-filesystem boundary, not a signature
+  scheme for a hostile local writer.
+- The loader supports standard completion runs and the real repaired ancestry
+  `b4r-8f1f74ddc30f → b4c-f45fac18da2e → cal50-0a47b6f7f332`, verifying the derivative record,
+  evidence-manifest membership of source/upstream manifests and B0–B3/source-B4 bytes, the
+  manifest-bound source-B4 delta and transcript hash, recorded current-image SHA, and exact
+  projected production content. This layer does not freshly hash the current image bytes.
+- `passBApproval/2` requires and re-verifies reconciliation when staging and applying. Final
+  `ownerApproved:true` remains a separate authorized publication act. The writer updates only
+  the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
+  empty/duplicate/unknown field sets fail closed.
+
+```bash
+# Whole-cohort audit; no writes/model/network/production. Current b4r result:
+# 50 works = 0 eligible, 8 review-required, 36 blocked, 6 quarantined, 0 errors.
+/opt/homebrew/bin/node scripts/pass-b-reconcile-run.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f
+
+# Standing integrity gate: require and reopen all 44 playable active sets.
+/opt/homebrew/bin/node scripts/pass-b-reconcile-run.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f --check
+
+# Write content-addressed baseline bundle/empty-decisions/report artifacts for the cohort.
+/opt/homebrew/bin/node scripts/pass-b-reconcile-run.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f --write
+
+# One work: inspect, create a pending owner-decision template, then write a report bound to
+# the reviewed decisions. Generating the template approves nothing.
+/opt/homebrew/bin/node scripts/pass-b-reconcile.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f harvard303416 --template
+/opt/homebrew/bin/node scripts/pass-b-reconcile.mjs \
+  data/incoming/vision-calibration/b4r-8f1f74ddc30f harvard303416 \
+  --write --decisions /path/to/reviewed-decisions.json
+
+# Owner edits must be included while building reconciliation so the component hashes bind
+# exactly what approval would ship.
+/opt/homebrew/bin/node scripts/pass-b-reconcile.mjs <run> <work> \
+  --owner-edits /path/to/owner-edits.json --write --decisions /path/to/reviewed-decisions.json
+```
+
+These commands never mutate B0–B4 evidence and never publish. `--write` creates a content-addressed
+set with exclusive-create writes and atomically advances the separately hash-bound active pointer;
+the tool refuses to overwrite a different prior set or activation. Auto-policy and the curated
+index remain unauthorized.
 
 ### Calibration commands
 

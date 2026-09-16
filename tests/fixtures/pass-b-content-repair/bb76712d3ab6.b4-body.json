@@ -1,0 +1,596 @@
+{
+ "runId": "cr2-af3d6ed79c1c",
+ "workId": "wikidata:Q1211814",
+ "name": "St. John Chrysostom",
+ "b4Body": {
+  "imageState": "usable",
+  "playable": true,
+  "playableReason": "Firmly attributed copper engraving by Albrecht Dürer (Bartsch 63, Meder 54), c. 1497; monogram confirmed by targeted verification; figure composition and landscape clearly readable.",
+  "catsAdjustments": {
+   "removeMedium": false
+  },
+  "dispositions": [
+   {
+    "component": "why",
+    "disposition": "replace",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "cues",
+    "disposition": "replace",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "notes",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "hotspots",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "guide",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "imageState",
+    "disposition": "keep",
+    "reason": "controller-owned image state"
+   },
+   {
+    "component": "playability",
+    "disposition": "keep",
+    "reason": "controller-owned playability"
+   }
+  ],
+  "proposedWhy": "Dürer's engraving of a medieval wilderness-hermit legend — a saint who breaks his vow, commits violence, then atones by crawling as an animal until miraculously absolved — becomes a showcase for his most ambitious figure and landscape work of the 1490s. He foregrounds the mother and child rather than the shamed penitent, shifting the print's moral weight toward redemption. Every line was incised directly into copper with a burin, a skill rooted in his goldsmith training.",
+  "proposedCues": [
+   "AD ligature monogram at lower center → Dürer's personal authentication mark, introduced c. 1494",
+   "Dense burin cross-hatching building smooth tonal gradation → intaglio engraving on copper, not etching or woodcut",
+   "Semi-nude female figure with infant in rocky wilderness → legendary narrative subject, not historical portraiture",
+   "Botanically specific ferns crowning the rock formation → Northern Renaissance empirical observation of the natural world",
+   "Fortified castle receding into distant mountains → atmospheric depth achieved through line density alone, no color or wash"
+  ],
+  "notes": [
+   {
+    "noteId": "n_cf3564fa90",
+    "head": "The AD Ligature Monogram",
+    "body": "At the bottom center of the print, a combined A and D monogram is prominently placed within the image area. In Northern Renaissance printmaking, artists embedded such marks directly into the plate as a signature, distinguishing their work in a competitive market of prints sold across Europe. The precise form of this ligature is a primary clue for attribution and places this impression within the documented Dürer catalog.",
+    "pin": {
+     "x": 48.5,
+     "y": 95.5
+    },
+    "role": "diagnostic",
+    "evidenceRef": "art-01",
+    "sourceRefs": [
+     "src-01",
+     "src-02"
+    ]
+   },
+   {
+    "noteId": "n_7d65f26588",
+    "head": "Reading Engraving Lines",
+    "body": "The lines in this print are uniformly precise, smoothly tapered at their ends, and build tone by crossing in grids of increasing density — hallmarks of burin engraving on a metal plate. Etching lines tend to have more spontaneous variation from the acid bite; woodcut lines are broader and more angular. This distinction is readable directly from the image surface, without needing catalog information.",
+    "pin": {
+     "x": 71.00000000000001,
+     "y": 59.00000000000001
+    },
+    "role": "technique",
+    "evidenceRef": "med-01",
+    "sourceRefs": [
+     "src-03"
+    ]
+   },
+   {
+    "noteId": "n_590b1e7ded",
+    "head": "Penitent, Wild Woman, or Saint?",
+    "body": "The semi-nude female with long hair covering her body, seated in a wilderness with a large quadruped at lower left, is iconographically layered. Flowing hair covering nudity is a visual code for the penitent Mary Magdalene; a lion-like animal is associated with desert penitence and hermit saints. In Northern Renaissance secular imagery, wild people with flowing hair also appear in wilderness settings. The small figure she cradles adds further interpretive complexity.",
+    "pin": {
+     "x": 46.5,
+     "y": 61.5
+    },
+    "role": "narrative",
+    "evidenceRef": "sty-03",
+    "sourceRefs": [
+     "src-01"
+    ]
+   },
+   {
+    "noteId": "n_c59c0fd6f6",
+    "head": "Botanical Precision in a Secondary Detail",
+    "body": "The ferns and grasses crowning the rock formation are rendered with the specificity of botanical illustration: individual fronds are differentiated in form, size, and direction. This attention to detail in a compositionally minor area reflects a characteristically Northern Renaissance delight in the natural world observed closely for its own sake, not merely as backdrop.",
+    "pin": {
+     "x": 55.00000000000001,
+     "y": 8
+    },
+    "role": "delight",
+    "evidenceRef": "del-01",
+    "sourceRefs": [
+     "src-01"
+    ]
+   },
+   {
+    "noteId": "n_9cbef7afad",
+    "head": "Collector and Inventory Marks in the Margins",
+    "body": "Two marks appear at the bottom of the sheet outside the main image: a stylized glyph combining a cross and S-like element at lower left, and an alphanumeric notation at lower right. Such additions are common on prints that passed through collections and auction houses over centuries. Distinguishing plate-original marks from collector additions is important evidence for dating individual impressions and identifying which printing generation they belong to.",
+    "pin": {
+     "x": 50,
+     "y": 95
+    },
+    "role": "diagnostic",
+    "evidenceRef": "fmt-02",
+    "sourceRefs": [
+     "src-02"
+    ]
+   }
+  ],
+  "hotspots": [
+   {
+    "hotspotId": "h_0f51b51fd0",
+    "observationId": "o_a50943d48b",
+    "x": 48,
+    "y": 96,
+    "region": null,
+    "rank": 1,
+    "role": "diagnostic",
+    "conciseText": "Dürer's AD monogram — his personal authentication mark",
+    "deepText": "The interlocked A and D at lower center are cut directly into the copper plate, making this a primary physical act of authorship rather than a later addition. Dürer introduced this device around 1494 and pursued copyists who used it without authorization. Its presence here, combined with this work's appearance as Bartsch 63 and Meder 54, places attribution beyond reasonable doubt.",
+    "evidenceRef": "art-01",
+    "confidence": 0.92,
+    "sourceDependent": true
+   },
+   {
+    "hotspotId": "h_db54b4cdbf",
+    "observationId": "o_f3110c9801",
+    "x": 46,
+    "y": 60,
+    "region": null,
+    "rank": 2,
+    "role": "narrative",
+    "conciseText": "A semi-nude female figure cradles an infant in a rocky wilderness",
+    "deepText": "The flowing-haired figure holding a child in a rocky grotto is the compositional and narrative center of the print. Dürer foregrounds this grouping — activating Marian associations — rather than the shamed crawling penitent saint who gives the work its title. The choice reflects both his ambition with the female nude and a deliberate moral emphasis on redemption over shame.",
+    "evidenceRef": "sty-03",
+    "confidence": 0.75,
+    "sourceDependent": true
+   },
+   {
+    "hotspotId": "h_1a52aedb1d",
+    "observationId": "o_88072eeeef",
+    "x": 52,
+    "y": 7,
+    "region": null,
+    "rank": 3,
+    "role": "delight",
+    "conciseText": "Botanically precise ferns crown the rock formation",
+    "deepText": "Even in this minor compositional zone, Dürer individually characterizes each frond in form, size, and direction — a hallmark of Northern Renaissance empirical observation. The same close attention to plants and animals connects his printmaking to the precise nature studies he made throughout the 1490s.",
+    "evidenceRef": "del-01",
+    "confidence": 0.88,
+    "sourceDependent": false
+   },
+   {
+    "hotspotId": "h_9bdc6fc839",
+    "observationId": "o_6532738c46",
+    "x": 18,
+    "y": 48,
+    "region": null,
+    "rank": 4,
+    "role": "technique",
+    "conciseText": "A fortified castle recedes through trees to distant mountains",
+    "deepText": "The background landscape achieves convincing atmospheric recession entirely through variation in line density: dense marks in the foreground rock give way to lighter strokes in mid-ground tree clusters and nearly blank paper for the distant mountains. No color or wash assists the recession — the entire spatial illusion is built from burin control alone.",
+    "evidenceRef": "del-03",
+    "confidence": 0.87,
+    "sourceDependent": false
+   },
+   {
+    "hotspotId": "h_7658ed79ba",
+    "observationId": "o_144e22a6d3",
+    "x": 80,
+    "y": 97,
+    "region": null,
+    "rank": 5,
+    "role": "diagnostic",
+    "conciseText": "Collector and inventory marks at the sheet margin",
+    "deepText": "The marks at the sheet's lower edge — a stylized cross-and-S glyph at left and an alphanumeric notation at right — are characteristic of prints that moved through multiple collections and auction houses over centuries. Distinguishing plate-original marks from collector additions helps establish which printing generation an impression belongs to.",
+    "evidenceRef": "fmt-02",
+    "confidence": 0.78,
+    "sourceDependent": true
+   }
+  ],
+  "guide": [
+   {
+    "questionId": "q_320fb9bc35",
+    "q": "How do we know this engraving is by Dürer, and what does his monogram signal about authorship?",
+    "a": "The interlocked AD monogram at lower center is cut directly into the copper plate — a primary physical act of attribution, not a later addition. Dürer introduced this device around 1494 with The Holy Family with a Dragonfly, one of the earliest designed signature-marks in Western printmaking, and he pursued copyists who used it without authorization. Its presence here, combined with this work's appearance as Bartsch 63 and Meder 54 in every major Dürer catalog, places attribution beyond reasonable doubt.",
+    "kind": "image",
+    "evidenceRef": "art-01",
+    "sourceRefs": [
+     "src-01",
+     "src-02"
+    ]
+   },
+   {
+    "questionId": "q_192dd60b9d",
+    "q": "What do the visible line patterns reveal about the printing technique, and how does this differ from etching or woodcut?",
+    "a": "The lines are uniformly precise, taper smoothly at both ends, and build tone by crossing in grids of increasing density — the signature marks of burin engraving on copper. Etching lines show more spontaneous variation from the acid bite; woodcut lines are broader and more angular. Recognizing these patterns lets you distinguish printmaking techniques from the image surface alone, independent of catalog information.",
+    "kind": "image",
+    "evidenceRef": "med-01",
+    "sourceRefs": [
+     "src-03"
+    ]
+   },
+   {
+    "questionId": "q_45528941eb",
+    "q": "How does the background landscape achieve a convincing sense of depth without color or wash?",
+    "a": "The landscape moves from heavily textured foreground rock through progressively lighter mid-ground tree clusters to near-blank paper for the distant mountains — atmospheric recession built entirely through burin line density. No color, wash, or tone plate assists; the entire spatial illusion comes from varied ink pressure and line spacing alone. This is among the most demanding demonstrations of pure engraving control in Dürer's 1490s output.",
+    "kind": "image",
+    "evidenceRef": "del-03",
+    "sourceRefs": [
+     "src-01"
+    ]
+   },
+   {
+    "questionId": "q_51b4e08803",
+    "q": "What visual signals in the central figure suggest a sacred or legendary rather than secular subject?",
+    "a": "Flowing unbound hair partially covering a nude body is a visual code in Northern Renaissance iconography for the penitent Mary Magdalene and related wilderness-saint subjects. The rocky grotto setting, the cradled infant, and the large quadruped at lower left each reinforce a sacred or legendary reading, since these attributes cluster around hermit saints associated with desert penitence. The combination points toward a specific narrative rather than a genre scene or allegory.",
+    "kind": "image",
+    "evidenceRef": "sty-03",
+    "sourceRefs": [
+     "src-01"
+    ]
+   },
+   {
+    "questionId": "q_30185fbe4f",
+    "q": "Who is the depicted saint, and why is Dürer's compositional choice significant?",
+    "a": "The title borrows the name of the historical Archbishop John Chrysostom, but the figure is a distinct medieval legendary hermit who breaks his chastity vow, throws the sheltered woman from a cliff in guilt, then performs years of animal penance until she is found miraculously alive with her child and he is absolved. Most depictions centered the shamed crawling penitent, but Dürer foregrounds the mother and child instead. Scholars read this as either a showcase for his skill with the female nude or a deliberate moral pivot toward redemptive grace.",
+    "kind": "context",
+    "evidenceRef": "sty-03",
+    "sourceRefs": [
+     "src-01"
+    ]
+   },
+   {
+    "questionId": "q_ff23e68c13",
+    "q": "What does copper engraving require technically, and why was Dürer particularly well-suited to it?",
+    "a": "Engraving is an intaglio process: the artist cuts lines into a copper plate with a burin — a hardened steel rod with a lozenge tip — forces ink into the grooves, wipes the surface clean, and presses damp paper to pull ink from the cuts. Every printed line corresponds to a groove personally incised, with no matrix between intention and mark. Dürer trained as a goldsmith's apprentice, giving him exceptional control over metal surfaces before he ever made a print — a background that explains why his 1490s engravings outpaced contemporaries technically.",
+    "kind": "context",
+    "evidenceRef": "med-01",
+    "sourceRefs": [
+     "src-01",
+     "src-02",
+     "src-03"
+    ]
+   }
+  ],
+  "richDescriptors": {
+   "visual": {
+    "subject": "Semi-nude female figure with long flowing hair seated against a rocky grotto, cradling a small child or infant; a lion reclines at lower left; background shows a detailed landscape with a distant fortified castle, mountains, and varied trees.",
+    "figures": [
+     {
+      "who": "Female figure, semi-nude with long wavy hair, seated",
+      "role": "primary subject"
+     },
+     {
+      "who": "Small child or infant",
+      "role": "secondary figure held to the chest of the primary figure"
+     },
+     {
+      "who": "Lion",
+      "role": "iconographic attribute, resting at lower left"
+     }
+    ],
+    "pose": "Primary figure seated on rocky ground, head inclined downward toward the child she holds against her chest; legs bent, feet bare and resting on stone.",
+    "gesture": "Arms wrapped around and supporting a small figure held close to the chest; fingers gently cradling.",
+    "gaze": "Downward, directed at the small figure she cradles; expression contemplative or tender.",
+    "bodyOrientation": "Facing mostly toward the viewer with a slight three-quarter turn to the right.",
+    "relationships": "The female figure cradles the small child in close physical contact suggesting nurture or protection; the lion is spatially separate, resting at lower left, calm and unengaged with the human figures.",
+    "composition": "Pyramidal figure composition centered against the rocky grotto; the rock formation fills the upper right quadrant; landscape opens to the left middle ground; lion anchors the lower left; AD monogram and marginal marks anchor the bottom edge.",
+    "viewpoint": "Roughly eye-level, slightly below the seated figure.",
+    "format": "Single-sheet vertical print; composition fills the sheet with narrow even margins on all sides.",
+    "lighting": "diffuse",
+    "tone": "High contrast black and cream with continuous tonal gradation achieved through hatching density; tonal range from bright cream of unworked paper through varied mid-gray hatched passages to dense black shadows in deepest rock crevices.",
+    "palette": {
+     "colors": [
+      "black",
+      "cream",
+      "warm off-white"
+     ],
+     "character": "Monochrome; all tonal variation created by density and direction of engraved lines on cream paper with no added color."
+    },
+    "iconography": [
+     "Semi-nude female with flowing hair covering body, penitent or wild woman motif",
+     "Lion as attribute, associated with desert penitence and hermit saints",
+     "Rocky grotto or wilderness setting associated with penitence or solitary retreat",
+     "Distant fortified town contrasting civilization with wilderness",
+     "Botanically specific ferns and grasses at summit of rock formation",
+     "AD ligature monogram as maker's mark"
+    ],
+    "technique": "Intaglio engraving: fine burin-cut lines in parallel hatching and cross-hatching building continuous tonal gradation across the entire image; no visible plate tone suggesting a cleanly wiped impression.",
+    "material": "Black printing ink on cream laid or wove paper.",
+    "surface": "Paper; smooth enough to receive fine engraved lines without surface texture disrupting the impression.",
+    "condition": "Good overall; ink impression strong and complete; paper shows mild warm yellowing at edges consistent with age; no visible tears, foxing, or major losses apparent in the reproduction.",
+    "damage": "No significant damage visible; slight tonal shift at paper edges from aging.",
+    "signature": "AD ligature monogram at lower center, within the plate area.",
+    "inscriptions": "Lower left: a mark combining a cross or arrow symbol with the letter S, possibly a collector stamp. Lower right: letters Ag followed by what appear to be two numerals, possibly an inventory or auction lot notation.",
+    "photoArtifacts": "None apparent; reproduction is clean with no reflections, color casts, or distortions.",
+    "objectFunction": "Independent single-sheet print, likely produced for private devotion, collection, or the open print market.",
+    "delights": [
+     {
+      "delightId": "del-01",
+      "note": "The botanically specific ferns and grasses crowning the rock formation show individually characterized fronds, reflecting the Northern Renaissance commitment to close natural observation even in minor compositional areas.",
+      "bbox": [
+       0.25,
+       0,
+       0.6,
+       0.16
+      ],
+      "confidence": 0.88
+     },
+     {
+      "delightId": "del-02",
+      "note": "The lion at lower left is rendered with calm, almost domestic repose, its symbolic weight softened by a naturalistic posture that integrates it into the landscape rather than presenting it as a threatening or heraldic symbol.",
+      "bbox": [
+       0,
+       0.6,
+       0.22,
+       0.28
+      ],
+      "confidence": 0.85
+     },
+     {
+      "delightId": "del-03",
+      "note": "The background landscape at left achieves a convincing atmospheric recession solely through line density variation, moving from textured foreground rock through mid-ground tree clusters to faint distant mountains with no color or wash to assist.",
+      "bbox": [
+       0,
+       0.25,
+       0.36,
+       0.46
+      ],
+      "confidence": 0.87
+     }
+    ]
+   },
+   "catalog": {
+    "mediumFull": "Copper engraving (intaglio); burin on copper plate, printed on paper; platemark 18.2 × 11.8 cm",
+    "anonReason": {
+     "notApplicable": true,
+     "reason": "Work is firmly attributed to Albrecht Dürer and carries his AD monogram; catalogued as Bartsch 63, Meder 54"
+    },
+    "living": false,
+    "movementSuggestion": "German Renaissance",
+    "styleKind": "movement",
+    "provenanceNote": "Plate made in Nuremberg c. 1497; impressions in National Gallery of Art (1943.3.3460), Cleveland Museum of Art (1934.339), Metropolitan Museum, British Museum, Rijksmuseum, and others",
+    "displacementCue": "AD monogram (art-01, lower center) confirms Nuremberg workshop origin; the full-width bottom strip (fmt-02) may carry collector marks or a later inscription beyond the monogram",
+    "sensitivity": [
+     "Legend: sexual assault — hermit breaks chastity vow with sheltered woman",
+     "Legend: attempted murder — saint throws woman off a cliff",
+     "Depicts a female nude figure"
+    ]
+   },
+   "tags": {
+    "controlled": [
+     "prints",
+     "engravings",
+     "intaglio",
+     "Northern Renaissance",
+     "female figure",
+     "landscape",
+     "monogram",
+     "religious iconography"
+    ],
+    "free": [
+     "penitent figure",
+     "wild woman",
+     "lion attribute",
+     "rocky grotto",
+     "AD monogram",
+     "flowing hair",
+     "infant",
+     "distant castle",
+     "ferns",
+     "cross-hatching",
+     "cream paper",
+     "collector mark",
+     "German print",
+     "wilderness setting"
+    ]
+   }
+  },
+  "evidence": {
+   "when": [
+    {
+     "evidenceId": "when-01",
+     "feature": "Dense burin cross-hatching building smooth tonal gradation",
+     "why": "Controlled parallel and crossed hatching lines creating full tonal range are characteristic of Northern European intaglio printmaking of the late 15th to early 16th century.",
+     "bbox": [
+      0.55,
+      0.4,
+      0.32,
+      0.38
+     ],
+     "confidence": 0.75
+    },
+    {
+     "evidenceId": "when-02",
+     "feature": "Detailed background landscape integrated with figure composition",
+     "why": "The combination of a complex spatial recession showing fortified town, varied trees, and mountains behind a figure in a foreground setting is characteristic of Northern Renaissance print conventions of the late 15th to early 16th century.",
+     "bbox": [
+      0,
+      0.25,
+      0.37,
+      0.48
+     ],
+     "confidence": 0.72
+    }
+   ],
+   "where": [
+    {
+     "evidenceId": "where-01",
+     "feature": "Fortified castle with towers in background landscape",
+     "why": "The architectural form of the distant castle with massed towers is consistent with Central European, particularly German or Netherlandish, architectural depictions of this period.",
+     "bbox": [
+      0.08,
+      0.3,
+      0.2,
+      0.2
+     ],
+     "confidence": 0.6
+    }
+   ],
+   "medium": [
+    {
+     "evidenceId": "med-01",
+     "feature": "Fine parallel hatching and cross-hatching with smoothly tapered line ends",
+     "why": "Precisely controlled, uniformly thin lines with clean taper are diagnostic of burin engraving on a metal plate; etching produces more spontaneous bitten line textures; woodcut produces broader, more irregular strokes.",
+     "bbox": [
+      0.55,
+      0.4,
+      0.32,
+      0.38
+     ],
+     "confidence": 0.9
+    },
+    {
+     "evidenceId": "med-02",
+     "feature": "Cream paper sheet with visible margins and warm edge yellowing",
+     "why": "The off-white laid or wove paper support with aged warm toning at edges confirms a paper-based print impression rather than a drawing or painting.",
+     "bbox": [
+      0,
+      0,
+      1,
+      1
+     ],
+     "confidence": 0.95
+    },
+    {
+     "evidenceId": "med-03",
+     "feature": "Monochrome black ink impression with no color",
+     "why": "The print uses only black ink on cream paper; combined with the fine line quality this confirms intaglio printmaking.",
+     "bbox": null,
+     "confidence": 0.95
+    }
+   ],
+   "style": [
+    {
+     "evidenceId": "sty-01",
+     "feature": "Botanically specific ferns and grasses with individually characterized fronds",
+     "why": "Detailed naturalistic rendering of secondary botanical elements reflects Northern Renaissance attentiveness to the natural world, a hallmark of German printmaking of this period.",
+     "bbox": [
+      0.25,
+      0,
+      0.62,
+      0.17
+     ],
+     "confidence": 0.85
+    },
+    {
+     "evidenceId": "sty-02",
+     "feature": "Unified pictorial space combining foreground figure with deep landscape recession",
+     "why": "The coherent spatial integration of figure, rocky foreground, and atmospheric background landscape is a compositional approach associated with Northern Renaissance printmaking.",
+     "bbox": [
+      0,
+      0,
+      1,
+      1
+     ],
+     "confidence": 0.8
+    },
+    {
+     "evidenceId": "sty-03",
+     "feature": "Idealized female figure with softly modeled anatomy and flowing hair",
+     "why": "The figure shows both Italianate idealization of bodily form and Northern attention to hair and tactile detail, consistent with a German Renaissance printmaker aware of Italian figure conventions.",
+     "bbox": [
+      0.25,
+      0.3,
+      0.43,
+      0.63
+     ],
+     "confidence": 0.75
+    }
+   ],
+   "artist": [
+    {
+     "evidenceId": "art-01",
+     "feature": "AD ligature monogram at lower center within the plate",
+     "why": "A combined A and D monogram in a distinctive ligature is prominently placed within the image area at bottom center, serving as a maker's mark in the tradition of 15th to 16th century print signatures.",
+     "bbox": [
+      0.42,
+      0.93,
+      0.13,
+      0.05
+     ],
+     "confidence": 0.92
+    },
+    {
+     "evidenceId": "art-02",
+     "feature": "Exceptional technical mastery of burin in tonal gradation across figure, rock, and landscape",
+     "why": "The consistent control of hatching to achieve smooth tonal transitions across varied subjects indicates a printmaker working at the highest level of the craft.",
+     "bbox": null,
+     "confidence": 0.8
+    }
+   ],
+   "format": [
+    {
+     "evidenceId": "fmt-01",
+     "feature": "Vertical portrait-oriented single sheet with even margins visible on all sides",
+     "why": "The composition fills a taller-than-wide rectangle with narrow even margins, consistent with an independent single-sheet print.",
+     "bbox": [
+      0,
+      0,
+      1,
+      1
+     ],
+     "confidence": 0.95
+    },
+    {
+     "evidenceId": "fmt-02",
+     "feature": "Marginal marks at lower left and lower right outside or at the plate edge",
+     "why": "A cross or arrow combined with S at lower left and an alphanumeric notation at lower right appear to be later additions to the paper, consistent with collector stamps or auction and inventory notations applied after the print left the workshop.",
+     "bbox": [
+      0,
+      0.9,
+      1,
+      0.1
+     ],
+     "confidence": 0.78
+    }
+   ]
+  },
+  "sources": [
+   {
+    "sourceId": "src-01",
+    "url": "https://www.clevelandart.org/art/1934.339",
+    "title": "The Penance of St. John Chrysostom — Cleveland Museum of Art",
+    "retrievedAt": "2026-09-16"
+   },
+   {
+    "sourceId": "src-02",
+    "url": "https://www.wikidata.org/wiki/Q1211814",
+    "title": "The Penance of St. John Chrysostom — Wikidata Q1211814",
+    "retrievedAt": "2026-09-16"
+   },
+   {
+    "sourceId": "src-03",
+    "url": "https://www.nationalgallery.org.uk/exhibitions/past/durers-journeys-travels-of-a-renaissance-artist/durer-the-printmaker",
+    "title": "Dürer the Printmaker — National Gallery, London",
+    "retrievedAt": "2026-09-16"
+   }
+  ],
+  "corrections": {
+   "consequential": []
+  },
+  "conflicts": [
+   {
+    "field": "animal at lower left",
+    "left": "B1 visual inventory and seen description identify the quadruped as a lion (del-02, 'The lion at lower left')",
+    "right": "B3 targeted verification reports a medium-to-large quadruped at approximately x=0.10–0.22, y=0.58–0.70, but states its species cannot be confirmed from posture alone",
+    "resolution": "",
+    "status": "humanReview"
+   }
+  ],
+  "uncertainty": "The species of the quadruped at lower left is visible but unconfirmed; player copy uses 'large quadruped' rather than 'lion' pending direct examination. B3 did not identify a crawling human figure in the central composition bounds, which may affect the iconographic reading — the penitent saint crawling as an animal is central to the legend but was not visually confirmed in this impression. The bottom-margin alphanumeric notation read approximately as 'A 9. 35' or similar; whether this is a plate-original date, an inventory number, or a collector's inscription cannot be resolved without direct examination."
+ },
+ "note": "content-repair FAILURE: fresh run re-introduced the sealed false claims (see disputedAxes/removedFalseClaims). Preserved as regression fixture."
+}

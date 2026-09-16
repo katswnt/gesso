@@ -1,0 +1,553 @@
+{
+ "runId": "cr2-af3d6ed79c1c",
+ "workId": "wikidata:Q16467705",
+ "name": "La Gloire",
+ "b4Body": {
+  "imageState": "usable",
+  "playable": true,
+  "playableReason": "Usable studio photograph of a sculptural composition with clear compositional, iconographic, and material interest supporting a full study experience.",
+  "catsAdjustments": {
+   "removeMedium": false
+  },
+  "dispositions": [
+   {
+    "component": "why",
+    "disposition": "replace",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "cues",
+    "disposition": "replace",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "notes",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "hotspots",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "guide",
+    "disposition": "revise",
+    "reason": "per editorial delta"
+   },
+   {
+    "component": "imageState",
+    "disposition": "keep",
+    "reason": "controller-owned image state"
+   },
+   {
+    "component": "playability",
+    "disposition": "keep",
+    "reason": "controller-owned playability"
+   }
+  ],
+  "proposedWhy": "In 1906, French sculptor Frédéric Brou created this maquette for a funerary monument honouring the Symbolist writer Villiers de l'Isle-Adam. The composition pairs a transi — an emaciated figure drawn from the medieval tradition of cadaver effigies — with a nude allegorical Glory who tears open a coffin to raise the writer into posthumous fame. Intended for Père-Lachaise Cemetery, the monument was never executed; only plaster models survive.",
+  "proposedCues": [
+   "Emaciated anatomy with taut skin over angular bones → transi tradition; a medieval funerary convention showing the body at or after death",
+   "Skull raised aloft by the lower figure → memento mori iconography; death presented as evidence to be overcome rather than merely displayed",
+   "Raw splintered edges on backing element vs. carefully modelled figures → deliberate material contrast that argues the difference between brute death and recalled life",
+   "Smooth uniform finish on figure limbs alongside coarse grain on the backing panel → possible mixed-media construction combining actual wood with plaster-modelled figures",
+   "No signature or inscription visible on any surface → attribution rests entirely on documentary sources, not the object itself"
+  ],
+  "notes": [
+   {
+    "noteId": "n_672ef0b579",
+    "head": "The Transi: Sculpting Death's Body",
+    "body": "The gaunt upper figure with closed eyes and skin stretched over angular bones draws on the transi tradition — cadaver effigies prominent in Northern European funerary art from roughly 1380 to 1560. Here Brou revives the convention not to assert death's dominion but to make it the precondition for a resurrection narrative. The more fully the viewer registers the figure as dead, the more forceful Glory's act of raising becomes.",
+    "pin": {
+     "x": 49,
+     "y": 30
+    },
+    "role": "narrative",
+    "evidenceRef": "transi-type",
+    "sourceRefs": [
+     "src-enwiki",
+     "src-frwiki"
+    ]
+   },
+   {
+    "noteId": "n_80a0d73535",
+    "head": "Skull Raised Aloft: Memento Mori in Motion",
+    "body": "The lower figure holds a skull — rounded cranial form with hollow orbits — upward toward the death figure above. Raising the skull inverts the usual Vanitas arrangement where the object rests inert beside the living or the dead. Here it is presented as testimony: death has been real, and it is being overcome. The gesture drives the eye upward and ties the composition's resurrection argument directly to physical evidence of mortality.",
+    "pin": {
+     "x": 21.000000000000004,
+     "y": 42
+    },
+    "role": "narrative",
+    "evidenceRef": "skull-held",
+    "sourceRefs": []
+   },
+   {
+    "noteId": "n_302c4bfaf5",
+    "head": "Wood, Plaster, or Both? A Material Question",
+    "body": "Close inspection suggests the backing panel may be actual carved wood — showing linear grain striations, split fibrous edges, and rough breaks — while the figures display a smoother, more uniform surface consistent with plaster or plaster over armature. If this is a mixed-media construction, it complicates the catalog description of the work as pure plaster. The question of material remains under review and should not be resolved from appearance alone.",
+    "pin": {
+     "x": 48,
+     "y": 14.000000000000002
+    },
+    "role": "diagnostic",
+    "evidenceRef": "wood-grain",
+    "sourceRefs": [
+     "src-frwiki"
+    ]
+   },
+   {
+    "noteId": "n_dfc23d2262",
+    "head": "Rough and Refined: A Calculated Contrast",
+    "body": "From raw splintered backing to carefully worked faces and limbs, the sculptor spans extreme levels of finish within a single object. The crude, broken element — the coffin — stands for the brute fact of material death; the polished figures stand for life, aspiration, and artistic form. That a single composition holds both extremes makes the work's argument visible in its very texture.",
+    "pin": {
+     "x": 49.5,
+     "y": 45
+    },
+    "role": "delight",
+    "evidenceRef": "rough-refined-contrast",
+    "sourceRefs": []
+   },
+   {
+    "noteId": "n_b9422d979b",
+    "head": "No Signature: Attribution Through Documents",
+    "body": "No signature, inscription, or maker's mark is visible on any surface of the sculpture or its base. The attribution to Frédéric Brou rests on documentary evidence — Salon records, Léon Bloy's 1906 publication, and museum catalog entries — rather than any mark on the object itself. This is standard for monumental preparatory models, where the work's function as a commission record made authorship self-evident to contemporary parties.",
+    "pin": null,
+    "role": "diagnostic",
+    "evidenceRef": "no-signature",
+    "sourceRefs": [
+     "src-enwiki"
+    ]
+   }
+  ],
+  "hotspots": [
+   {
+    "hotspotId": "h_733905f581",
+    "observationId": "o_a50943d48b",
+    "x": 44,
+    "y": 16,
+    "region": null,
+    "rank": 1,
+    "role": "narrative",
+    "conciseText": "Transi figure: emaciated anatomy marking death",
+    "deepText": "The gaunt upper figure — closed eyes, skin over angular bones, loose drapery — is a transi, drawn from a medieval cadaver-effigy tradition. Brou uses its full visual vocabulary as the starting condition for a resurrection narrative: the mortality must read as complete for Glory's act of raising to carry weight.",
+    "evidenceRef": "transi-type",
+    "confidence": 0.55,
+    "sourceDependent": false
+   },
+   {
+    "hotspotId": "h_dff45f06d3",
+    "observationId": "o_f3110c9801",
+    "x": 21,
+    "y": 42,
+    "region": null,
+    "rank": 2,
+    "role": "diagnostic",
+    "conciseText": "Skull raised aloft: memento mori as active gesture",
+    "deepText": "The lower figure raises a skull upward toward the death figure — a confirmed detail with rounded cranial form and empty orbital hollows. Rather than resting inert as a standard Vanitas emblem, the skull is presented in motion, transforming a static symbol into a dynamic argument that propels the eye through the composition.",
+    "evidenceRef": "skull-held",
+    "confidence": 0.75,
+    "sourceDependent": false
+   },
+   {
+    "hotspotId": "h_1831246656",
+    "observationId": "o_88072eeeef",
+    "x": 50,
+    "y": 28,
+    "region": null,
+    "rank": 3,
+    "role": "narrative",
+    "conciseText": "Backing element: open coffin or raw material?",
+    "deepText": "The rough rectangular surround with splintered top edges frames the upper figure. Whether read as an open coffin being torn apart, a threshold between life and death, or an artistic statement about unworked matter, its deliberate coarseness contrasts sharply with the modelled figures it encloses — and may itself be actual wood rather than plaster.",
+    "evidenceRef": "coffin-backing",
+    "confidence": 0.52,
+    "sourceDependent": false
+   },
+   {
+    "hotspotId": "h_bd2d09f337",
+    "observationId": "o_6532738c46",
+    "x": 38,
+    "y": 50,
+    "region": null,
+    "rank": 4,
+    "role": "delight",
+    "conciseText": "Surface contrast: raw backing meets refined flesh",
+    "deepText": "Within a single object, finish ranges from raw splinters to carefully worked skin and drapery. The sculptor argues through texture: broken, unworked material belongs to death's domain; refined, modelled form belongs to life recalled. The eye is meant to feel the gap between the two registers as part of the work's meaning.",
+    "evidenceRef": "rough-refined-contrast",
+    "confidence": 0.85,
+    "sourceDependent": false
+   }
+  ],
+  "guide": [
+   {
+    "questionId": "q_9af33a9b92",
+    "q": "Who are the two figures in this composition and what roles do they play?",
+    "a": "The lower nude figure is Glory — simultaneously all of Villiers' major fictional heroines: Tullia Fabriana, Claire Lenoir, Ellen, Morgane, Sara, and Akédysséril. She actively draws the writer upward from death. The upper emaciated figure is Villiers de l'Isle-Adam himself, depicted waking from eternal sleep. Death is not a separate sculpted presence but is embodied by the coffin — the confining structure Glory is breaking open.",
+    "kind": "image",
+    "evidenceRef": "two-figures",
+    "sourceRefs": [
+     "src-enwiki"
+    ]
+   },
+   {
+    "questionId": "q_e06fa3c520",
+    "q": "What role does the skull raised by the lower figure play in the composition?",
+    "a": "The lower figure lifts a skull — a rounded cranial form with hollow orbits — toward the death figure above. As a memento mori it is the physical proof of mortality that Glory's act of resurrection must overcome. Raising it upward rather than letting it rest inert inverts the Vanitas convention: here death is not a static emblem but evidence being actively confronted and transcended.",
+    "kind": "image",
+    "evidenceRef": "skull-held",
+    "sourceRefs": []
+   },
+   {
+    "questionId": "q_61936049f1",
+    "q": "How does the upper figure's physical form communicate that this work concerns death?",
+    "a": "The figure's taut skin stretched over sharply angular bone, visible ribcage, and closed eyes read immediately as a body at the boundary of death — the visual language of the transi, a medieval tomb tradition. Brou renders the emaciation with expressive intensity rather than clinical accuracy, making mortality visceral rather than diagrammatic. This deliberately uncomfortable image is necessary: Glory must be shown raising someone genuinely in death's grip.",
+    "kind": "image",
+    "evidenceRef": "transi-type",
+    "sourceRefs": [
+     "src-enwiki"
+    ]
+   },
+   {
+    "questionId": "q_6bcd58f81a",
+    "q": "What does the contrast between the raw backing element and the refined figure surfaces suggest about the sculptor's intentions?",
+    "a": "The backing panel's splintered edges and coarse grain sit directly against carefully modelled flesh and drapery. This is a deliberate compositional argument: unworked, broken material stands for the brute fact of death, while refined figures stand for life and artistic aspiration. The range of finish is not inconsistency but rhetoric — the viewer is meant to feel the difference between raw matter and animated form as central to the work's meaning.",
+    "kind": "image",
+    "evidenceRef": "rough-refined-contrast",
+    "sourceRefs": []
+   },
+   {
+    "questionId": "q_feffe65b9e",
+    "q": "How does Brou invoke the medieval transi tradition, and how does this work subvert it?",
+    "a": "A transi is a Gothic and Renaissance tomb effigy showing the deceased as a desiccated corpse — a memento mori insisting on death's dominion over flesh, typically the final word. This work invokes all the transi's attributes — emaciated anatomy, coffin, skull — but reverses the conclusion: Glory breaks the coffin open and pulls the figure upward, transforming a monument to death into a narrative of resurrection. Brou in 1906 consciously cites the medieval convention while investing it with Symbolist theology.",
+    "kind": "context",
+    "evidenceRef": "transi-type",
+    "sourceRefs": [
+     "src-enwiki",
+     "src-frwiki"
+    ]
+   },
+   {
+    "questionId": "q_9e0d8a78f1",
+    "q": "This work survives only as a plaster model — what was it made for and why was the project never completed?",
+    "a": "It is a maquette for a funerary monument planned for Père-Lachaise Cemetery (Division 79), where Villiers was reinterred in December 1895. Two plaster versions survive: a one-third-scale model at Musée Carnavalet and a full-scale model at Musée d'art et d'histoire de Saint-Brieuc. After the 1907 Salon, critical reception divided sharply between admiration and dismissal; funding collapsed and the project was abandoned around 1910. Villiers' actual tomb remains a simple inclined granite slab.",
+    "kind": "context",
+    "evidenceRef": "rubble-base",
+    "sourceRefs": [
+     "src-enwiki",
+     "src-perelachaise"
+    ]
+   },
+   {
+    "questionId": "q_f6fdac9561",
+    "q": "Who was Villiers de l'Isle-Adam, and why does he merit such elaborate funerary allegory?",
+    "a": "Villiers (1838–1889) was a founding figure of French literary Symbolism whose works include L'Ève future — which coined the word 'android' — and the closet drama Axël. He died nearly destitute after years of refusing commercial compromise, making him in Symbolist and Catholic circles a type of martyred artist-mystic. The post-1889 effort to secure him a monument commensurate with his growing posthumous stature was itself an act of cultural canonization.",
+    "kind": "context",
+    "evidenceRef": null,
+    "sourceRefs": [
+     "src-enwiki",
+     "src-frwiki"
+    ]
+   }
+  ],
+  "richDescriptors": {
+   "visual": {
+    "pose": "Larger figure stands upright within the backing element, head tilted slightly forward with closed eyes, arms partially obscured by drapery; smaller figure crouches in a dynamic pose with one knee raised and one arm extended upward",
+    "gesture": "The smaller figure raises one arm upward toward the larger figure while holding what appears to be a skull; the larger figure's arms are passive and hang or rest in the drapery",
+    "gaze": "The larger figure has closed eyes directed inward or downward; the smaller figure appears to look upward toward the object it holds or toward the larger figure above",
+    "bodyOrientation": "Larger figure faces roughly toward the viewer in a frontal-to-slight-three-quarter orientation; smaller figure is turned in a more dynamic three-quarter pose facing left-center",
+    "relationships": "The smaller figure appears to be presenting or offering the skull upward to the larger figure; the vertical spatial arrangement creates a dialogue between the two figures",
+    "tone": "Solemn, austere, and allegorical; the subject matter of death and mortality is treated with expressive gravity",
+    "format": "Freestanding three-dimensional sculpture photographed from a three-quarter angle, showing the full work from base to top against a neutral backdrop",
+    "composition": "Strongly vertical composition; the rough rectangular backing creates a dominant vertical axis; the larger figure occupies the upper two-thirds; the smaller figure anchors the lower foreground; the skull creates a focal point at the visual center-left",
+    "viewpoint": "Approximately eye-level to slightly below the sculptural midpoint; three-quarter view revealing depth and both faces of the composition",
+    "subject": "Two-figure allegorical sculpture; the larger gaunt figure with closed eyes and emaciated form likely represents Death or mortality; the smaller nude crouching figure holding a skull may represent a living figure confronting or presenting death",
+    "objectFunction": "Likely a funerary, devotional, or allegorical sculptural work; memento mori iconography suggests it was intended for contemplation of mortality",
+    "material": "Appears to be carved wood throughout; warm honey-brown color, visible grain in backing, and tool marks on surfaces all point to wood as the medium",
+    "surface": "Rough-hewn and expressive surfaces with visible tool marks; figure faces and bodies are more carefully modeled than the backing element; natural wood color with no obvious polychrome remaining; warm honey-brown throughout with darker tones in deep recesses",
+    "technique": "Sculpture in the round carved from wood; subtractive carving technique with both rough and refined passages; the backing element retains a deliberately raw unworked quality contrasting with the modeled figures",
+    "condition": "Appears generally intact with no obvious major losses; the rough edges at the top of the backing may be original intent or may represent old damage; surface patina appears consistent throughout",
+    "damage": "No obvious cracks or losses in the main figures; the top of the backing element has broken or very rough edges but it is unclear from visual evidence whether this is intentional or the result of damage",
+    "signature": {
+     "notApplicable": true,
+     "reason": "No signature or maker's mark visible on any surface of the sculpture or base"
+    },
+    "inscriptions": {
+     "notApplicable": true,
+     "reason": "No inscriptions visible anywhere on the sculpture or base"
+    },
+    "photoArtifacts": "Slight cast shadow on the grey background to the lower right of the sculpture; otherwise a clean well-executed studio photograph with no significant technical artifacts",
+    "figures": [
+     {
+      "who": "gaunt emaciated adult figure with closed eyes and loosely draped clothing, positioned within a coffin-like backing",
+      "role": "primary dominant figure, likely representing Death or mortality"
+     },
+     {
+      "who": "smaller nude figure crouching with raised knee, holding a skull-like object aloft",
+      "role": "secondary foreground figure, possibly representing the living or Youth"
+     }
+    ],
+    "palette": {
+     "colors": [
+      "warm honey-brown",
+      "tan",
+      "cream-white (lighter areas of figures)",
+      "dark brown (deep recesses)",
+      "cool neutral grey (background)"
+     ],
+     "character": "Monochromatic warm earth tones throughout the sculpture suggesting natural unpolychromed wood; the neutral cool grey background creates contrast and isolates the work"
+    },
+    "lighting": "diffuse",
+    "iconography": [
+     "skull / death's head",
+     "emaciated cadaver figure (transi)",
+     "rough coffin or funerary niche",
+     "memento mori",
+     "youth and death pairing",
+     "nude figure presenting skull upward"
+    ],
+    "delights": [
+     {
+      "delightId": "rough-refined-contrast",
+      "note": "The sculptor deliberately contrasts the raw splintered roughness of the backing element against the more carefully modeled human figures, creating a visual tension between unworked natural material and refined artistic form that heightens the meditation on mortality",
+      "bbox": [
+       0.22,
+       0,
+       0.55,
+       0.9
+      ],
+      "confidence": 0.85
+     },
+     {
+      "delightId": "crouch-dynamic",
+      "note": "The small nude figure's dynamic crouching pose with raised knee and upward-extended arm introduces energy into what would otherwise be a static vertical composition, directing the viewer's eye upward toward the skull and the death figure above",
+      "bbox": [
+       0.14,
+       0.4,
+       0.38,
+       0.48
+      ],
+      "confidence": 0.87
+     }
+    ]
+   },
+   "catalog": {
+    "mediumFull": "Plaster. Two versions survive: a one-third-scale maquette (Musée Carnavalet, Paris) and a full-scale model (Musée d'art et d'histoire de Saint-Brieuc). Both are preparatory models for a funerary monument that was never executed in permanent material.",
+    "anonReason": {
+     "notApplicable": true,
+     "reason": "Artist Frédéric Brou is documented in multiple sources."
+    },
+    "living": false,
+    "movementSuggestion": "Academic art classification fits the technique and Salon context; however, the iconographic program is distinctly Symbolist — Glory is a composite of all of Villiers' fictional heroines, and the resurrection narrative draws on Catholic martyrology. Consider noting Symbolism alongside Academism.",
+    "styleKind": "movement",
+    "provenanceNote": "Designed as a funerary monument for Père-Lachaise Cemetery (Division 79, where Villiers was reinterred December 1895). Project abandoned circa 1910 after divided critical reception at the 1907 Salon des artistes français. Villiers' actual tomb remains a plain inclined granite slab.",
+    "displacementCue": "The wood-grain texture visible in the coffin area almost certainly depicts rendered wooden coffin planks within the plaster composition — a textural subject, not the actual material of the object.",
+    "sensitivity": [
+     "Death and funerary imagery: open coffin, figure rising from grave",
+     "Partially nude female allegorical figure"
+    ]
+   },
+   "tags": {
+    "controlled": [
+     "sculpture",
+     "wood carving",
+     "memento mori",
+     "allegory",
+     "figure sculpture",
+     "funerary art",
+     "two-figure composition",
+     "Northern European art"
+    ],
+    "free": [
+     "transi",
+     "death figure",
+     "skull",
+     "emaciated figure",
+     "nude figure",
+     "coffin",
+     "rough-hewn",
+     "studio photograph",
+     "warm tones",
+     "allegorical program",
+     "mortality",
+     "expressive carving",
+     "dance of death"
+    ]
+   }
+  },
+  "evidence": {
+   "when": [
+    {
+     "evidenceId": "transi-type",
+     "feature": "Emaciated transi-style figure with closed eyes and skin-over-bone anatomy",
+     "why": "The transi cadaver effigy type was prominent in Northern European funerary sculpture roughly 1380-1560; this expressive rough-hewn treatment could also place the work in the 19th-century Gothic Revival, leaving the date ambiguous from visual evidence alone",
+     "bbox": [
+      0.3,
+      0.04,
+      0.38,
+      0.52
+     ],
+     "confidence": 0.55
+    }
+   ],
+   "where": [
+    {
+     "evidenceId": "coffin-backing",
+     "feature": "Rough-hewn rectangular surround with raw wood edges framing the larger figure",
+     "why": "This type of expressive wood carving with structural backing elements is consistent with Central or Northern European workshop tradition, particularly German or Flemish, in the late medieval and early modern period",
+     "bbox": [
+      0.22,
+      0,
+      0.52,
+      0.57
+     ],
+     "confidence": 0.52
+    }
+   ],
+   "medium": [
+    {
+     "evidenceId": "wood-grain",
+     "feature": "Visible linear wood grain running vertically in the rough backing element",
+     "why": "Linear grain pattern is consistent with carved wood, not terracotta or stone; warm honey-brown color is consistent with natural limewood or similar",
+     "bbox": [
+      0.22,
+      0,
+      0.52,
+      0.28
+     ],
+     "confidence": 0.82
+    },
+    {
+     "evidenceId": "splinter-edges",
+     "feature": "Splintered and broken raw edges at the top of the backing element",
+     "why": "The fibrous splintered character of the fractures at the top of the surround is characteristic of wood fracture, not ceramic or stone fracture",
+     "bbox": [
+      0.27,
+      0,
+      0.42,
+      0.1
+     ],
+     "confidence": 0.8
+    },
+    {
+     "evidenceId": "chisel-marks",
+     "feature": "Faceted and striated tool marks and gouge textures on figure body and drapery surfaces",
+     "why": "Visible faceted passages on the larger figure body and drapery are consistent with woodcarving chisels and gouges rather than modeling tools",
+     "bbox": [
+      0.3,
+      0.3,
+      0.38,
+      0.3
+     ],
+     "confidence": 0.72
+    }
+   ],
+   "style": [
+    {
+     "evidenceId": "skull-held",
+     "feature": "Skull or skull-like object raised aloft by the smaller figure",
+     "why": "The skull is a canonical memento mori symbol; its use in a two-figure allegorical composition points to a devotional or allegorical program rather than a narrative scene",
+     "bbox": [
+      0.14,
+      0.36,
+      0.14,
+      0.12
+     ],
+     "confidence": 0.75
+    },
+    {
+     "evidenceId": "two-figures",
+     "feature": "Two-figure composition pairing an aged emaciated figure with a younger nude figure",
+     "why": "The pairing of Death or an aged cadaver figure with a younger vital figure is a compositional trope in European allegorical sculpture and painting, particularly in Dance of Death and related traditions",
+     "bbox": [
+      0.12,
+      0.04,
+      0.68,
+      0.88
+     ],
+     "confidence": 0.78
+    },
+    {
+     "evidenceId": "emaciated-anatomy",
+     "feature": "Expressively rendered emaciated anatomy with visible musculature and bone structure on the larger figure",
+     "why": "The dramatic treatment of the aging body with detailed skin-over-bone rendering is characteristic of late Gothic and early Renaissance Northern European sculptural style",
+     "bbox": [
+      0.3,
+      0.12,
+      0.38,
+      0.48
+     ],
+     "confidence": 0.7
+    }
+   ],
+   "artist": [
+    {
+     "evidenceId": "no-signature",
+     "feature": "No visible signature, inscription, or maker's mark on any surface of the sculpture or base",
+     "why": "Absence of mark prevents attribution; the scale, ambition, and technical skill evident in the composition suggest a trained sculptor of considerable ability, but no attribution is possible from visual evidence alone",
+     "bbox": null,
+     "confidence": 0.9
+    }
+   ],
+   "format": [
+    {
+     "evidenceId": "studio-photo",
+     "feature": "Neutral grey gradient studio background with directional lighting from upper left and a three-quarter angle viewpoint",
+     "why": "Standard museum or auction-house object photography; the three-quarter angle was chosen to reveal sculptural depth and both figures simultaneously",
+     "bbox": [
+      0,
+      0,
+      1,
+      1
+     ],
+     "confidence": 0.95
+    },
+    {
+     "evidenceId": "rubble-base",
+     "feature": "Irregular rocky or rubble-textured base integrated as part of the sculptural composition",
+     "why": "The base is carved as part of the composition rather than a separate plinth, which is common in allegorical and devotional sculpture implying a setting",
+     "bbox": [
+      0.08,
+      0.82,
+      0.72,
+      0.14
+     ],
+     "confidence": 0.8
+    }
+   ]
+  },
+  "sources": [
+   {
+    "sourceId": "src-enwiki",
+    "url": "https://en.wikipedia.org/wiki/Glory_Pulling_Auguste_de_Villiers_de_l%27Isle_Adam_From_His_Eternal_Sleep",
+    "title": "Glory Pulling Auguste de Villiers de l'Isle Adam From His Eternal Sleep – Wikipedia",
+    "retrievedAt": "2026-09-16"
+   },
+   {
+    "sourceId": "src-frwiki",
+    "url": "https://fr.wikipedia.org/wiki/La_Gloire_tirant_Auguste_de_Villiers_de_l%27Isle_Adam_de_son_sommeil_%C3%A9ternel",
+    "title": "La Gloire tirant Auguste de Villiers de l'Isle Adam de son sommeil éternel – Wikipédia",
+    "retrievedAt": "2026-09-16"
+   },
+   {
+    "sourceId": "src-perelachaise",
+    "url": "https://pere-lachaise.com/tombe/villiers-de-lisle-adam-auguste/",
+    "title": "Villiers de l'Isle-Adam Auguste – tombe et biographie au Père-Lachaise",
+    "retrievedAt": "2026-09-16"
+   }
+  ],
+  "corrections": {
+   "consequential": []
+  },
+  "conflicts": [
+   {
+    "field": "medium",
+    "left": "Catalog and B2 sources describe the work as Plaster; B2 further interprets any visible wood-grain texture as depicting rendered coffin planks within a uniform plaster composition.",
+    "right": "Visual inspection finds the backing panel exhibits linear grain striations, split fibrous breaks, and rough edges consistent with actual wood material, while figure surfaces show a smoother finish consistent with plaster — suggesting mixed-media construction rather than a single uniform medium.",
+    "resolution": "",
+    "status": "humanReview"
+   }
+  ],
+  "uncertainty": "The medium of this work is contested: the catalog describes it as plaster, but visual inspection finds differentiated surface qualities consistent with a mixed-media construction combining actual wood backing with plaster-modelled figures. The skull's presence is visually confirmed with high confidence. Attribution to Frédéric Brou is strongly supported by documentary sources; no signature or maker's mark is visible on the object itself."
+ },
+ "note": "content-repair FAILURE: fresh run re-introduced the sealed false claims (see disputedAxes/removedFalseClaims). Preserved as regression fixture."
+}

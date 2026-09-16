@@ -18,6 +18,11 @@ import { dirname, join } from 'node:path';
 import { sha256, stableJson } from './vision-legacy.mjs';
 
 export const CONTENT_BLOCKED_VERSION = 'passBContentBlocked/1';
+export function canonicalBlockedWorkId(workId) {
+  const value = String(workId || '');
+  const match = value.match(/^(?:wikidata:|https?:\/\/(?:www\.)?wikidata\.org\/entity\/)(Q\d+)$/i);
+  return match ? `wikidata:${match[1].toUpperCase()}` : value;
+}
 
 // The canonical enforcement artifact resolved from the MODULE location (repo root), independent of cwd, so
 // enforcement cannot be bypassed by running from a different directory or passing a bogus path.
@@ -68,19 +73,20 @@ export function verifyFindingsArtifact(artifact) {
 
 // Exact-content descendant match: same work AND the same content by EITHER hash-base (delta or raw response).
 export function matchFinding(findings, { workId, rawDeltaSha256 = null, rawResponseSha256 = null }) {
-  return (findings || []).find((f) => f.workId === workId
+  const canonical = canonicalBlockedWorkId(workId);
+  return (findings || []).find((f) => canonicalBlockedWorkId(f.workId) === canonical
     && ((rawDeltaSha256 && f.rawDeltaSha256 === rawDeltaSha256) || (rawResponseSha256 && f.rawResponseSha256 && f.rawResponseSha256 === rawResponseSha256))) || null;
 }
 // Any finding for this work (used to require a resolution even for a fresh, different-delta run).
 export function findingsForWork(findings, workId) {
-  return (findings || []).filter((f) => f.workId === workId);
+  const canonical = canonicalBlockedWorkId(workId);
+  return (findings || []).filter((f) => canonicalBlockedWorkId(f.workId) === canonical);
 }
 
-// SPECIFIED CONTRACT, NOT WIRED INTO THE APPROVAL PATH (VSD-034: blocked works are intentionally left
-// uncleared until a bound owner-resolution artifact is implemented). The approval path never passes a
-// resolution, so blocked works cannot be cleared today — they overblock, never underblock. This function
-// defines the future clearing rule and is unit-tested in isolation; `authority` here is a placeholder that a
-// real implementation must replace with a verified owner/authoritative artifact reference, not a bare string.
+// VSD-035 clearing contract. The guarded approval path accepts resolutions only from the immutable,
+// claim-bundle-bound decisions artifact; caller/approval-object fields are ignored. A decision artifact still
+// requires the separate final ownerApproved act before publication. This pure function enforces the content
+// side of that boundary.
 // A resolution clears a finding only if it targets that finding, attests a fresh run, resolves EVERY blocked
 // claim, and the candidate content is NOT the blocked content. Never self-inferred; a new record hash never clears.
 export function resolutionClears(finding, resolution, candidate) {
@@ -102,7 +108,8 @@ export function evaluateApproval({ findings, candidate, resolution = null }) {
   if (exact) return { allowed: false, reason: 'content-blocked-descendant', findingId: exact.findingId };
   const forWork = findingsForWork(findings, candidate.workId);
   if (forWork.length) {
-    if (forWork.every((f) => resolutionClears(f, resolution, candidate))) return { allowed: true, reason: 'resolved-fresh-run', findingId: forWork[0].findingId };
+    const resolutions = Array.isArray(resolution) ? resolution : resolution ? [resolution] : [];
+    if (forWork.every((f) => resolutions.some((r) => resolutionClears(f, r, candidate)))) return { allowed: true, reason: 'resolved-fresh-run', findingId: forWork[0].findingId };
     return { allowed: false, reason: 'content-blocked-work-needs-resolution', findingId: forWork[0].findingId };
   }
   return { allowed: true, reason: 'not-blocked', findingId: null };

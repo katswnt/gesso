@@ -34,15 +34,19 @@ for (const mut of [(a) => { a.findings[0].findingId = 'cb-X'; }, (a) => { a.find
 // ---- pure: matching + evaluateApproval ----
 const F = [fA];
 ok(matchFinding(F, { workId: 'wikidata:Q1', rawDeltaSha256: H('deltaA') }) === fA, 'match by delta');
+ok(matchFinding(F, { workId: 'http://www.wikidata.org/entity/Q1', rawDeltaSha256: H('deltaA') }) === fA, 'Wikidata URL/id aliases cannot bypass a blocked finding');
 ok(matchFinding(F, { workId: 'wikidata:Q1', rawResponseSha256: H('respA') }) === fA, 'match by raw response');
 ok(matchFinding(F, { workId: 'wikidata:Q1', rawDeltaSha256: H('other') }) === null, 'no match different content');
 ok(evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q9', rawDeltaSha256: H('z') } }).allowed, 'unrelated work allowed');
 ok(evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('deltaA') } }).reason === 'content-blocked-descendant', 'exact content blocked');
 ok(!evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('fresh') } }).allowed, 'fresh run of blocked work refused without resolution');
 
-// ---- SPECIFIED-BUT-NOT-WIRED resolution contract (pure only; approval path never passes a resolution) ----
+// ---- Resolution contract (approval accepts it only through a verified reconciliation artifact) ----
 const goodRes = { findingId: fA.findingId, authority: 'owner', freshRun: true, resolvedClaims: [{ claim: 'c1' }, { claim: 'c2' }] };
 ok(evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('fresh') }, resolution: goodRes }).allowed, 'pure contract: valid resolution clears a fresh run');
+const fB = buildFinding({ workId: 'wikidata:Q1', rawDeltaSha256: H('deltaB'), rawResponseSha256: H('respB'), imgSha256: H('img'), blockedClaims: ['c3'], reason: 'r2' });
+const goodResB = { findingId: fB.findingId, authority: 'owner', freshRun: true, resolvedClaims: [{ claim: 'c3' }] };
+ok(evaluateApproval({ findings: [fA, fB], candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('fresh') }, resolution: [goodRes, goodResB] }).allowed, 'one bound resolution per finding clears a fresh run with multiple findings');
 ok(!evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('deltaA') }, resolution: goodRes }).allowed, 'pure contract: exact content never cleared');
 ok(!evaluateApproval({ findings: F, candidate: { workId: 'wikidata:Q1', rawDeltaSha256: H('fresh') }, resolution: { ...goodRes, authority: 'model' } }).allowed, 'pure contract: model authority never clears');
 
@@ -65,8 +69,8 @@ if (existsSync(CANONICAL_FINDINGS_PATH)) {
   try { buildApproval({ runDir, workId: 'harvard303416', teachPath, hotspotsPath }); ok(true, 'non-blocked work not content-blocked'); }
   catch (e) { ok(!/content-blocked/.test(e.message), `non-blocked work threw non-content-blocked (${e.message.slice(0, 40)})`); }
 
-  // applyApproval rejects a forged owner-approved approval for the blocked work, EVEN if it carries a
-  // resolution field (the approval path ignores approval.resolution — blocked works are uncleared).
+  // applyApproval rejects a forged owner-approved approval for the exact blocked content, EVEN if it carries
+  // a resolution field (the approval path ignores approval.resolution; exact blocked bytes never clear).
   const cpath = join(runDir, 'works', sha256(blocked).slice(0, 24), 'completions', `b4-${completionKey('B4', blocked)}.json`);
   if (existsSync(cpath)) {
     const rawC = readFileSync(cpath, 'utf8');

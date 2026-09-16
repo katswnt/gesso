@@ -7,7 +7,9 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildApproval, applyApproval, projectToProduction, APPROVABLE_FIELDS } from './lib/pass-b-approval.mjs';
 
-const RUN = process.env.PASS_B_RUN || 'data/incoming/vision-calibration/cal50-0a47b6f7f332';
+// Default to the owner-reviewed offline-rehydrated B4 run, not the older upstream completion layout.
+// The reconciliation loader verifies its full b4r -> b4c -> cal50 ancestry before approval can be staged.
+const RUN = process.env.PASS_B_RUN || 'data/incoming/vision-calibration/b4r-8f1f74ddc30f';
 const TEACH = 'data/teach-works.js';
 const HOTSPOTS = 'data/hotspots.js';
 const [cmd, workId] = process.argv.slice(2);
@@ -64,6 +66,7 @@ if (cmd === 'create') {
   console.log(`PENDING approval written: ${approvalPath}`);
   console.log(`  ownerApproved: false (a human must set true AFTER inspecting the card)`);
   console.log(`  bindings: runId=${approval.runId} b4Sha=${approval.b4CompletionSha256.slice(0, 12)} vcv=${approval.validationContractVersion}`);
+  console.log(`  reconciliation: ${approval.reconciliation.reportSha256.slice(0, 12)} (${approval.reconciliation.eligibleComponentIds.length} eligible components)`);
   console.log(`  why length: ${(teach.why || '').length}${OWNER_EDITS[workId] ? ' (owner-edited)' : ''}`);
   console.log(`  leaks in player copy: ${leaks.length ? leaks.join(', ') : 'none'}`);
   console.log(`  card: ${cardPath}`);

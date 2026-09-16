@@ -1,0 +1,54 @@
+{
+ "version": "passBContentRepairFixtures/1",
+ "note": "VSD-034/037 fixtures. The two content-repair-failure B4 bodies below are tested regressions (see tests/pass-b-identity-precedence.test.mjs). The conformance-failure run is REFERENCE evidence only — its failing run is not test-asserted here (no hydrated body was produced to preserve).",
+ "runs": [
+  {
+   "runId": "cr2-bc45fa3a2cd6",
+   "kind": "reference-evidence-not-tested",
+   "demonstrates": "corrective B1-B3 completed; B4 (La Gloire) + B2 (St John) fail-closed on schema caps/id-namespace — no hydrated content produced; referenced for provenance, not asserted by a test"
+  },
+  {
+   "runId": "cr2-af3d6ed79c1c",
+   "workId": "wikidata:Q16467705",
+   "kind": "content-repair-failure",
+   "b4BodyFixture": "tests/fixtures/pass-b-content-repair/f7525bb82ec7.b4-body.json",
+   "disputedAxes": [
+    "named-identity-or-role",
+    "iconography",
+    "medium"
+   ],
+   "removedFalseClaims": [
+    "why:In 1906, French sculptor Frédéric Brou created this maquette",
+    "cue:Emaciated anatomy with taut skin over angular bones → transi",
+    "cue:Skull raised aloft by the lower figure → memento mori iconog",
+    "cue:Smooth uniform finish on figure limbs alongside coarse grain",
+    "note:The Transi: Sculpting Death's Body",
+    "note:Skull Raised Aloft: Memento Mori in Motion",
+    "note:Wood, Plaster, or Both? A Material Question",
+    "note:Rough and Refined: A Calculated Contrast",
+    "guide:Who are the two figures in this composition and what roles d",
+    "guide:What role does the skull raised by the lower figure play in ",
+    "guide:How does the upper figure's physical form communicate that t",
+    "guide:What does the contrast between the raw backing element and t",
+    "guide:How does Brou invoke the medieval transi tradition, and how ",
+    "guide:This work survives only as a plaster model — what was it mad",
+    "guide:Who was Villiers de l'Isle-Adam, and why does he merit such "
+   ]
+  },
+  {
+   "runId": "cr2-af3d6ed79c1c",
+   "workId": "wikidata:Q1211814",
+   "kind": "content-repair-failure",
+   "b4BodyFixture": "tests/fixtures/pass-b-content-repair/bb76712d3ab6.b4-body.json",
+   "disputedAxes": [
+    "human-vs-animal"
+   ],
+   "removedFalseClaims": [
+    "why:Dürer's engraving of a medieval wilderness-hermit legend — a",
+    "note:Penitent, Wild Woman, or Saint?",
+    "guide:What visual signals in the central figure suggest a sacred o",
+    "guide:Who is the depicted saint, and why is Dürer's compositional "
+   ]
+  }
+ ]
+}
