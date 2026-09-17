@@ -284,14 +284,16 @@ async function main() {
   const legacyOf = (id) => snapshotLegacy(id, { teach, hotspots, vision, auditIds });
   const doneSet = new Set(eligible.filter(id => deriveDone(id, legacyOf(id)))); // recomputed from verified artifacts
   const queue = eligible.filter(id => !doneSet.has(id) && !heldSet.has(id));
-  const stageTotals = (() => { const wd = join(RUN_DIR, 'works'); let b1 = 0, b2 = 0, b3 = 0; if (existsSync(wd)) for (const w of readdirSync(wd)) { const c = join(wd, w, 'completions'); if (!existsSync(c)) continue; const has = (s) => readdirSync(c).some(f => f.startsWith(s)); if (has('b1-')) b1++; if (has('b2-')) b2++; if (has('b3-')) b3++; } return { b1, b2, b3 }; })();
+  // item 4: global stage-completion totals recomputed from VERIFIED artifacts (not session counters), each persist.
+  const recomputeStageTotals = () => { const wd = join(RUN_DIR, 'works'); let b1 = 0, b2 = 0, b3 = 0; if (existsSync(wd)) for (const w of readdirSync(wd)) { const c = join(wd, w, 'completions'); if (!existsSync(c)) continue; const has = (s) => readdirSync(c).some(f => f.startsWith(s)); if (has('b1-')) b1++; if (has('b2-')) b2++; if (has('b3-')) b3++; } return { b1, b2, b3 }; };
+  const stageTotals = recomputeStageTotals();
 
   const totals = { queued: eligible.length, done: doneSet.size, held: heldSet.size, remaining: Math.max(0, eligible.length - doneSet.size - heldSet.size), b1Complete: stageTotals.b1, b2Complete: stageTotals.b2, b3Complete: stageTotals.b3, attempts: ATTEMPT_SEQ, transportRetries: TRANSPORT_RETRIES };
   console.log(`runId: ${RUN_ID}`);
   console.log(`migration from ${PRIOR_RUN}: migrated ${mig.migrated}, skipped ${mig.skipped}`);
   console.log(`eligible ${eligible.length} | done(verified) ${doneSet.size} | held(terminal) ${heldSet.size} | remaining ${totals.remaining}${requeue.length ? ` | requeued ${requeue.length}` : ''}`);
   console.log(`prompt hashes (B1-B3 only, B4 excluded): B1=${PROMPT_HASHES_B0B3.B1.slice(0, 8)} B2=${PROMPT_HASHES_B0B3.B2.slice(0, 8)} B3=${PROMPT_HASHES_B0B3.B3.slice(0, 8)} | model ${CALIBRATION_MODEL} | lanes ${LANES} | attempts ${ATTEMPT_SEQ}`);
-  const persist = () => { led.heldIds = [...heldSet]; led.attemptSeq = ATTEMPT_SEQ; led.transportRetries = TRANSPORT_RETRIES; led.totals = { ...totals, done: doneSet.size, held: heldSet.size, remaining: Math.max(0, eligible.length - doneSet.size - heldSet.size), b1Complete: 0, attempts: ATTEMPT_SEQ, transportRetries: TRANSPORT_RETRIES }; led.updatedAt = new Date().toISOString(); led.stopReason = FATAL ? `fatal:${FATAL}` : (STOP ? 'usage-limit (cursor derived from verified terminal states; resume when capacity resets)' : null); atomicWrite(LEDGER, `${JSON.stringify(led, null, 1)}\n`); };
+  const persist = () => { const st = recomputeStageTotals(); led.heldIds = [...heldSet]; led.attemptSeq = ATTEMPT_SEQ; led.transportRetries = TRANSPORT_RETRIES; led.totals = { queued: eligible.length, done: doneSet.size, held: heldSet.size, remaining: Math.max(0, eligible.length - doneSet.size - heldSet.size), b1Complete: st.b1, b2Complete: st.b2, b3Complete: st.b3, attempts: ATTEMPT_SEQ, transportRetries: TRANSPORT_RETRIES, validationRetries: led.validationRetries || 0 }; led.updatedAt = new Date().toISOString(); led.stopReason = FATAL ? `fatal:${FATAL}` : (STOP ? 'usage-limit (cursor derived from verified terminal states; resume when capacity resets)' : null); atomicWrite(LEDGER, `${JSON.stringify(led, null, 1)}\n`); };
   persist();
   if (!live) { console.log('\nDRY CHECK: queue built (priority order), ledger + migration verified, checkpoints resumable. No calls/fetches. Re-run with PASS_B_CORPUS_LIVE=1 --run.'); return; }
 
