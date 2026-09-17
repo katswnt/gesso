@@ -358,6 +358,19 @@ VSD-035 adds the actual deterministic reconciliation layer:
   evidence-manifest membership of source/upstream manifests and B0–B3/source-B4 bytes, the
   manifest-bound source-B4 delta and transcript hash, recorded current-image SHA, and exact
   projected production content. This layer does not freshly hash the current image bytes.
+- **Corpus B0–B3 collector** (`scripts/pass-b-corpus-collect.mjs`, `passBCorpusCollector/2`): smallest wrapper
+  over the verified primitives (img-broker, `runWorkStages` `skipB4:true`, stage validators + capture,
+  `loadOrArchiveCompletion`). Run identity binds model + collector + broker + image-transport + validation +
+  **B1–B3 prompt hashes only** (a B4 change never invalidates B0–B3). Queue follows the vision-system.md
+  scheduling priority (next 7 days → days 8–30 → Easy → highest-fame quintile of Medium/Hard/Impossible →
+  remaining M/H/I → fallback), with region/source/medium rotation; queue derived from verified terminal states
+  (done recomputed from artifacts, held terminal with a narrow `PASS_B_CORPUS_REQUEUE` for named works). Four
+  lanes; exclusive run + per-stage leases; monotonic exclusive attempt ids; attempt/retry counters persisted.
+  Failure taxonomy: retryable transport (one retry, both attempts preserved) | usage-limit (stop, never retry,
+  resume from checkpoints) | fatal (`apiKeySource!=none`, model drift, contract mismatch, checkpoint-integrity,
+  confinement → abort). Cached derivatives rehashed and `b0-prep` re-verified against image/catalog/legacy
+  before reuse. Prior verified completions migrate hash-bound into a new run identity; the old run is preserved.
+  No B4/reconciliation/release-policy/approval/owner-decisions/production.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
