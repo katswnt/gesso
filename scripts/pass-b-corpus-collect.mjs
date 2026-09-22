@@ -50,6 +50,10 @@ export function runIdFor({ promptHashes, model = CALIBRATION_MODEL, collector = 
 // Queue is derived from verified terminal states: priority order minus done minus held (no fragile cursor).
 export function computeQueue(order, { eligibleSet, doneSet, heldSet }) { return order.filter(id => eligibleSet.has(id) && !doneSet.has(id) && !heldSet.has(id)); }
 export function derivativeMatches(path, sha) { try { return existsSync(path) && createHash('sha256').update(readFileSync(path)).digest('hex') === sha; } catch { return false; } }
+// A usage-limit interruption is NOT a terminal failure — the work is left for resume, never held.
+export function isUsageInterrupted(status) { return Object.values(status || {}).some(s => typeof s === 'string' && /usage limit/i.test(s)); }
+// Self-heal: held ids without a recorded terminal reason (legacy/usage-interrupted holds) are requeued once.
+export function heldToRequeue(heldIds, heldReasons = {}) { return (heldIds || []).filter(id => !heldReasons[id]); }
 const RUN_ID = runIdFor({ promptHashes: { ...PROMPT_HASHES_B0B3, B4: sha256(prompts.B4) } });
 const RUN_DIR = join(RUN_ROOT, RUN_ID);
 const IMGS_DIR = join(RUN_DIR, 'imgs');
@@ -275,9 +279,15 @@ async function main() {
   const mig = migrateVerified(pool, teach, hotspots, vision, auditIds);
   const led = readLedger(); ATTEMPT_SEQ = Math.max(led.attemptSeq || 0, countAttempts(RUN_DIR)); TRANSPORT_RETRIES = led.transportRetries || 0;
   const heldSet = new Set(led.heldIds || []);
+  led.heldReasons = led.heldReasons || {};
+  // Self-heal: a usage-limit interruption must NOT terminalize a work. Any held id lacking a recorded terminal
+  // reason (legacy holds from before reason-tracking, incl. usage-interrupted works) is requeued once so it is
+  // re-classified correctly; genuine terminal failures will re-hold WITH a reason.
+  for (const id of heldToRequeue([...heldSet], led.heldReasons)) heldSet.delete(id);
   // item 3: explicit narrow requeue of named held works
   const requeue = process.env.PASS_B_CORPUS_REQUEUE ? process.env.PASS_B_CORPUS_REQUEUE.split(',').map(s => s.trim()).filter(Boolean) : [];
-  for (const id of requeue) heldSet.delete(id);
+  for (const id of requeue) { heldSet.delete(id); delete led.heldReasons[id]; }
+  const hold = (id, reason) => { heldSet.add(id); led.heldReasons[id] = reason; };
 
   const order = buildPriorityQueue(pool, daily, { today });
   const eligible = order.filter(id => { const p = poolById.get(id); return p && typeof p.img === 'string' && p.img.trim(); });
@@ -309,12 +319,14 @@ async function main() {
     const catalog = trustedCatalog(p); const legacy = legacyOf(id);
     let prep;
     try { prep = await prepImage(id, p.img, catalog, legacy, imageIndex); } catch (e) { if (e instanceof UsageLimitError) throw e; prep = { ok: false, reason: `b0:${e.message.slice(0, 60)}` }; }
-    if (!prep.ok) { heldSet.add(id); console.log(`HELD ${id} B0:${prep.reason}`); return; }
+    if (!prep.ok) { hold(id, `B0:${prep.reason}`); console.log(`HELD ${id} B0:${prep.reason}`); return; }
     if (!existsSync(join(workRunDir, 'b0-prep.json'))) writeFileSync(join(workRunDir, 'b0-prep.json'), `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: prep }, null, 1)}\n`, { mode: 0o600 });
     const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts, runtimeVersion: process.env.CLAUDE_CODE_VERSION || 'unknown', spawnStage: makeSpawnStage(workRunDir, prep.imgSha256, prep.ext, id), capture: makeCapture(workRunDir), loadCompletion: makeLoadCompletion(workRunDir, id, prep.imgSha256, prep.ext), skipB4: true });
     if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
+    const usageInterrupted = isUsageInterrupted(status);
     if (deriveDone(id, legacy)) doneSet.add(id);
-    else { heldSet.add(id); console.log(`HELD ${id}: ${JSON.stringify(status)}`); } // B2 schema fail after its retry is terminal here (not re-called next resume)
+    else if (usageInterrupted) { /* usage-limit interruption — NOT terminal; left for resume (no hold) */ }
+    else { hold(id, `stage-fail:${JSON.stringify(status)}`.slice(0, 200)); console.log(`HELD ${id}: ${JSON.stringify(status)}`); } // genuine schema/content fail after its retry is terminal
   };
   const lane = async () => {
     while (!STOP && !FATAL) {
@@ -323,7 +335,7 @@ async function main() {
       catch (e) {
         if (e instanceof UsageLimitError) { STOP = true; console.log(`USAGE-LIMIT at ${id} — stopping cleanly`); break; }
         if (e instanceof FatalError) { FATAL = FATAL || `${id}: ${e.message}`; console.error(`FATAL at ${id}: ${e.message} — aborting run`); break; }
-        heldSet.add(id); console.log(`WORK ERROR ${id}: ${e.message}`);
+        hold(id, `work-error:${e.message}`.slice(0, 200)); console.log(`WORK ERROR ${id}: ${e.message}`);
       }
       processed++; persist();
       if (processed % 100 === 0) console.log(`... processed ${processed} this session | done ${doneSet.size} | held ${heldSet.size} | attempts ${ATTEMPT_SEQ} | transportRetries ${TRANSPORT_RETRIES} | remaining ${Math.max(0, eligible.length - doneSet.size - heldSet.size)}`);

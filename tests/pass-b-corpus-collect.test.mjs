@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue } from '../scripts/pass-b-corpus-collect.mjs';
+import { runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, heldToRequeue } from '../scripts/pass-b-corpus-collect.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
 
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok', name); };
@@ -77,6 +77,14 @@ t('10. priority order: next-7 scheduled works precede fallback; region rotation 
 t('11. relative CLI invocation executes main (dry run prints runId)', () => {
   const out = execFileSync('node', ['scripts/pass-b-corpus-collect.mjs'], { cwd: process.cwd(), encoding: 'utf8', timeout: 60000 });
   assert.ok(/^runId: corpus-b3-/m.test(out), 'relative invocation ran main and printed the runId');
+});
+
+t('12. usage-limit interruption is not terminal; genuine stage-fail is', () => {
+  assert.ok(isUsageInterrupted({ B1: 'complete', B2: 'failed:subscription usage limit', B3: 'not-requested' }), 'usage-limit mid-pipeline => interrupted (not held)');
+  assert.ok(!isUsageInterrupted({ B1: 'complete', B2: 'failed:invalid B2 body: guideAnswers', B3: 'not-requested' }), 'schema fail => genuine hold');
+});
+t('13. held ids without a recorded reason are requeued (self-heal for leaked usage holds)', () => {
+  assert.deepStrictEqual(heldToRequeue(['a', 'b', 'c'], { b: 'B0:http-status' }), ['a', 'c'], 'unreasoned holds requeued; reasoned hold stays');
 });
 
 console.log(`\n${n} corpus-collector regressions passed`);
