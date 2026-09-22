@@ -388,6 +388,17 @@ VSD-035 adds the actual deterministic reconciliation layer:
   `groundingAuthority:"model-proposal"` and therefore review-required. Archived `/2` deltas continue
   to rehydrate under policy `/1`, and the standing 44-set baseline is unchanged. No live `/3` call,
   corpus B4 continuation, release-policy integration, approval, or production write has run yet.
+- **Structured B4 canary** (VSD-040, plan/test only): `scripts/pass-b-b4-structured-canary.mjs`
+  freezes ten risk-weighted works from `cal50-0a47b6f7f332` and reopens the exact preserved B0 plus B1–B3
+  completion/raw/transcript evidence. The deterministic run identity binds those bytes, current B4 `/3`
+  prompt/schema/validation versions, model and command policy, and the canonical blocked-finding ids.
+  The live path is separately gated and capped at ten attempts total across resumes: tool-less B4 calls
+  with no conformance retry. A preserved usage-limit rejection may retry after reset but consumes the same
+  cap. Every attempt and checkpoint is re-derived from its transcript. Wrong/missing
+  `apiKeySource:none`, model drift, or any tool event aborts; invalid delta/hydration/leak/reconciliation
+  output is held. The report is explicitly a schema/scoping smoke with semantic accuracy and release
+  eligibility unmeasured. It has no decision, approval, resolution, merge, or production writer. No live
+  VSD-040 call has run.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
@@ -451,6 +462,12 @@ PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
 PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
   --live --foreground --only-work <work-id>
 
+# VSD-040 structured-B4 ten-work plan only (default; no output directory and no model calls).
+/opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs
+
+# Owner-gated VSD-040 smoke (maximum ten subscription B4 calls; DO NOT run before independent audit + go).
+PASS_B_B4_CANARY_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs --run
+
 # Offline-only VSD-027 rehydration of the preserved B4-v2 cohort, then render its corrected packet.
 # Creates a new quarantined run; verifies every source evidence byte stayed unchanged.
 /opt/homebrew/bin/node scripts/pass-b-b4-offline-repair.mjs
@@ -495,6 +512,7 @@ Relevant files:
 | File | Controls |
 |---|---|
 | `scripts/pass-b-calibration.mjs` | B0 preparation, subscription process execution, lanes, checkpoint resume, packet write |
+| `scripts/pass-b-b4-structured-canary.mjs` | Plan-first, ten-attempt structured-B4 `/3` schema/scoping smoke over preserved B1–B3 evidence; no approval/production sink |
 | `scripts/lib/pass-b-calibration.mjs` | call plan, boundaries, command construction, compact inputs, B1→B4 control flow |
 | `scripts/lib/pass-b-prompts.mjs` | version-bound B1–B4 prompts |
 | `scripts/lib/pass-b-wire-schema.mjs` | provider-facing structure-only schemas |
@@ -511,6 +529,7 @@ Relevant files:
 | `scripts/pass-b-spatial-confirmation-canary.mjs` | plan-by-default independent B5 confirmation for first-pass new points; re-verifies the primary run, withholds all earlier points/reasoning, and requires deterministic scope + ≤5-point agreement |
 | `scripts/pass-b-spatial-resolution-packet.mjs` | offline VSD-032 resolver; re-verifies both spatial evidence chains, writes the machine resolution, and renders only held exceptions with owner controls |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
+| `tests/pass-b-b4-structured-canary.test.mjs` | Offline source-binding, provenance-fatal, budget, checkpoint/resume, and zero-model-eligibility regressions for VSD-040 |
 
 ---
 
