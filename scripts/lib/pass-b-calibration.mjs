@@ -6,7 +6,7 @@ import { readFileSync, readdirSync, existsSync, renameSync, mkdirSync } from 'no
 import { join } from 'node:path';
 import { sha256, stableJson } from './vision-legacy.mjs';
 import { buildB2Input, validateStageBody, EVIDENCE_AXES } from './vision-content-schema.mjs';
-import { assembleAndValidateB4, b1Grounding, B4_DELTA_VERSION } from './pass-b-b4-delta.mjs';
+import { assembleAndValidateB4, b1Grounding } from './pass-b-b4-delta.mjs';
 import { verifyCapturedStage, completionKey } from './vision-content-capture.mjs';
 import { WIRE_SCHEMAS } from './pass-b-wire-schema.mjs';
 import { BROKER_POLICY_VERSION } from './img-broker.mjs';
@@ -17,14 +17,16 @@ export const RUN_ROOT = 'data/incoming/vision-calibration';
 // Claude opens it with the Read tool (the zero-tool @file/base64 transport did NOT deliver the image; see VSD-019).
 // A change to this string is part of the run-identity contract, forcing a fresh run.
 export const IMAGE_TRANSPORT_VERSION = 'readtool-confined-dir/1';
-// Run-identity binding for the ACCEPTANCE contract: validation rules, wire-schema contract, B4 delta
-// hydration, and execution-evidence policy. Bump this whenever any of those change so future runs get a
-// fresh run identity (and never silently reuse checkpoints accepted under different rules). VSD-023.
+// Shared B0-B3/run-evidence acceptance contract. B4 now has a separate downstream fork version below, so
+// a B4 schema/hydration change does not invalidate already-banked B1-B3 evidence. VSD-023/VSD-038.
 export const VALIDATION_CONTRACT_VERSION = 'passBValidation/4'; // /4: spatial pinRef + publishable-hotspot/lineage rules (VSD-027); /3: museum-source leak gate (VSD-026)
+// B4-only fork. This is deliberately separate from VALIDATION_CONTRACT_VERSION so banking/reusing B1-B3
+// does not acquire a new identity merely because the downstream synthesis contract changed. VSD-039.
+export const B4_VALIDATION_CONTRACT_VERSION = 'passBValidationB4/1-structured-grounding';
 // Pure, testable run-identity contract. The runId is 'cal50-' + contractHash(...). Every listed binding
 // participates; changing any one changes the runId.
-export function calibrationContract({ selIds, controllerVersion = CONTROLLER_VERSION, imageTransportVersion = IMAGE_TRANSPORT_VERSION, prompts, validationContractVersion = VALIDATION_CONTRACT_VERSION, schema = 'contentVisionEnrichment/1' }) {
-  return { sel: selIds, controller: controllerVersion, imageTransport: imageTransportVersion, prompts, validationContract: validationContractVersion, schema };
+export function calibrationContract({ selIds, controllerVersion = CONTROLLER_VERSION, imageTransportVersion = IMAGE_TRANSPORT_VERSION, prompts, validationContractVersion = VALIDATION_CONTRACT_VERSION, b4ValidationContractVersion = B4_VALIDATION_CONTRACT_VERSION, schema = 'contentVisionEnrichment/1' }) {
+  return { sel: selIds, controller: controllerVersion, imageTransport: imageTransportVersion, prompts, validationContract: validationContractVersion, b4ValidationContract: b4ValidationContractVersion, schema };
 }
 export function contractHash(inputs) { return sha256(stableJson(calibrationContract(inputs))).slice(0, 12); }
 export const MAX_B3 = 50; // retained: B3/B4 SCHEMAS survive for future synthesis; they are NOT in the calibration path.
@@ -455,6 +457,7 @@ export function syntheticFixture() {
   // B4Delta: the COMPACT editorial delta the model actually emits (VSD-022); it assembles into a valid full
   // record (like B4 above) using B1's grounding ids (ev_*/d1) + B2's source id (s1).
   const B4Delta = {
+    version: 'contentVisionB4Delta/3',
     imageState: 'usable', playable: true, playableReason: 'clear anchors', removeMedium: false,
     why: { action: 'revise', text: 'A ram-headed composite figure that rewards close looking.' },
     cues: { action: 'replace', items: ['ram head → composite deity'] },
@@ -462,7 +465,16 @@ export function syntheticFixture() {
     hotspots: [{ action: 'add', ref: 'n1', pinRef: 'n1', rank: 1, conciseText: 'Pointed arch', deepText: 'Anchors the longer lesson.', role: 'diagnostic', evidenceRef: 'ev_medium', sourceDependent: false }],
     guide: Array.from({ length: 5 }, (_, i) => ({ action: 'add', ref: null, q: `Why does detail ${i + 1} matter?`, a: 'Links visible evidence to sourced context.', kind: i < 3 ? 'image' : 'context', evidenceRef: i < 3 ? ['ev_when', 'ev_where', 'ev_medium'][i] : null, sourceRefs: ['s1'] })),
     corrections: [{ field: 'medium', from: 'oil', to: 'tempera', evidenceRef: 'ev_when', sourceRefs: ['s1'], confidence: 0.8 }],
-    conflicts: [], uncertainty: '',
+    conflicts: [],
+    grounding: {
+      components: [
+        ...Array.from({ length: 5 }, (_, i) => ({ target: `note:${i}`, claimRefs: ['c1'], observationRefs: ['ev_when'] })),
+        { target: 'hotspot:0', claimRefs: ['c1'], observationRefs: ['ev_medium'] },
+        ...Array.from({ length: 5 }, (_, i) => ({ target: `guide:${i}`, claimRefs: ['c1'], observationRefs: i < 3 ? [['ev_when', 'ev_where', 'ev_medium'][i]] : [] })),
+      ],
+      conflicts: [],
+      openClaims: [],
+    },
   };
   return { workId: 'fixture-synthetic-1', trustedCatalog: { title: 'Synthetic', artist: 'Anon', date: '1650', place: 'Somewhere', medium: 'oil', style: 'Baroque', catalogId: 'fixture-synthetic-1' }, bodies: { B1, B2, B3, B4, B4Delta }, contexts: { B2: { evidenceIds: axes.map(a => `ev_${a}`) }, B3: { requestIds: ['r1'] } } };
 }
@@ -558,7 +570,7 @@ export async function runWorkStages({ workId, catalog, legacy = null, imgSha256,
         let delta; try { delta = JSON.parse(rawDelta); } catch { throw new Error('B4 delta is not valid JSON'); }
         const asm = assembleAndValidateB4({ delta, b1: bodies.B1, b2: bodies.B2, b3: bodies.B3 || null, legacy });
         if (!asm.ok) throw new Error(`B4 ${asm.stage}: ${(asm.errors || []).slice(0, 3).join('; ')}`);
-        return { body: JSON.stringify(asm.body), record: { assembler: B4_DELTA_VERSION, deltaSha256: asm.deltaSha256, assembledBodySha256: asm.bodySha256, transcriptBoundDelta: true } };
+        return { body: JSON.stringify(asm.body), record: { assembler: asm.deltaVersion, b4ValidationContractVersion: B4_VALIDATION_CONTRACT_VERSION, deltaSha256: asm.deltaSha256, assembledBodySha256: asm.bodySha256, transcriptBoundDelta: true } };
       },
     });
   } catch (e) { status.B4 = `failed:${e.message.slice(0, 80)}`; }
@@ -578,11 +590,12 @@ export function compactB4DeltaInput({ b1, b2, b3, legacyInput }) {
   for (const f of (b2?.factChecks || [])) for (const s of (f.sources || [])) if (s?.sourceId && !seen.has(s.sourceId)) { seen.add(s.sourceId); sources.push({ id: s.sourceId, title: s.title, url: s.url }); }
   const b2c = b2 ? {
     catalog: b2.catalog ?? null,
-    factChecks: (b2.factChecks || []).map(f => ({ claim: f.claim, verdict: f.verdict, confidence: f.confidence, sourceRefs: (f.sources || []).map(s => s.sourceId) })),
+    factChecks: (b2.factChecks || []).map(f => ({ claimId: f.claimId, claim: f.claim, verdict: f.verdict, confidence: f.confidence, sourceRefs: (f.sources || []).map(s => s.sourceId) })),
     guideAnswers: (b2.guideAnswers || []).map(x => ({ q: x.q, a: x.a, kind: x.kind, sourceRefs: x.sourceRefs, evidenceRef: x.evidenceRef })),
     sources,
   } : null;
-  const b3c = b3 ? { verifications: (b3.verifications || []).map(v => ({ requestId: v.requestId, found: v.found, note: v.note, confidence: v.confidence })) } : null;
+  const requestClaims = new Map((b2?.targetedVerificationRequests || []).map(r => [r.requestId, r.claimId]));
+  const b3c = b3 ? { verifications: (b3.verifications || []).map(v => ({ observationId: `b3:${v.requestId}`, requestId: v.requestId, claimId: requestClaims.get(v.requestId) ?? null, found: v.found, note: v.note, confidence: v.confidence })) } : null;
   // Legacy content carries explicit ids so the model can reference an existing item by ref (legacy-n1, etc.).
   const lg = legacyInput || {};
   const legacy = {
@@ -594,7 +607,7 @@ export function compactB4DeltaInput({ b1, b2, b3, legacyInput }) {
     counts: lg.counts ?? null,
   };
   return {
-    version: 'passBB4DeltaInput/3',
+    version: 'passBB4DeltaInput/4',
     imageState: b1?.imageFitness?.imageState ?? null, playable: b1?.playable ?? null, seen: b1?.seen ?? null,
     grounding: { evidence, delights }, b1Candidates, b2: b2c, b3: b3c, legacy,
   };

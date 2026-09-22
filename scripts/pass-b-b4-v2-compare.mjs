@@ -12,7 +12,7 @@ import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { completionKey } from './lib/vision-content-capture.mjs';
 import {
   compactB4DeltaInput, legacyContentInput, buildStageCommand, parseStreamTranscript, transcriptFinal,
-  primaryModelFromEnvelope, CALIBRATION_MODEL, VALIDATION_CONTRACT_VERSION, RUN_ROOT,
+  primaryModelFromEnvelope, CALIBRATION_MODEL, VALIDATION_CONTRACT_VERSION, B4_VALIDATION_CONTRACT_VERSION, RUN_ROOT,
 } from './lib/pass-b-calibration.mjs';
 import { buildB4Prompt, promptHashes } from './lib/pass-b-prompts.mjs';
 import { assembleAndValidateB4 } from './lib/pass-b-b4-delta.mjs';
@@ -40,7 +40,7 @@ function loadWork(id) {
 
 const works = WORKS.map(loadWork);
 const b4PromptHash = promptHashes().B4;
-const binding = { srcRun: 'cal50-0a47b6f7f332', works: WORKS, b1b2b3Shas: Object.fromEntries(works.map((w) => [w.id, w.shas])), b4PromptHash, validationContractVersion: VALIDATION_CONTRACT_VERSION };
+const binding = { srcRun: 'cal50-0a47b6f7f332', works: WORKS, b1b2b3Shas: Object.fromEntries(works.map((w) => [w.id, w.shas])), b4PromptHash, validationContractVersion: VALIDATION_CONTRACT_VERSION, b4ValidationContractVersion: B4_VALIDATION_CONTRACT_VERSION };
 const runId = 'b4v2-' + sha256(stableJson(binding)).slice(0, 12);
 const outDir = join(RUN_ROOT, runId);
 
@@ -50,6 +50,7 @@ function printPlan() {
   console.log(`  fresh comparison run:   ${outDir}  (separate; original run untouched)`);
   console.log(`  new B4 prompt hash: ${b4PromptHash}`);
   console.log(`  validation-contract: ${VALIDATION_CONTRACT_VERSION}`);
+  console.log(`  B4 validation-contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
   console.log('  works + bound B1/B2/B3 completion SHAs:');
   for (const w of works) console.log(`    ${w.id.padEnd(16)} B1=${w.shas.B1.slice(0, 10)} B2=${w.shas.B2.slice(0, 10)} B3=${w.shas.B3.slice(0, 10)}`);
   console.log(`  expected model calls: ${works.length} × B4 (no image, no tools, --effort low). 0 × B0/B1/B2/B3.`);

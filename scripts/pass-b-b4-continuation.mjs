@@ -1,8 +1,8 @@
-// B4-v2 CONTINUATION across the fixed 50-work calibration cohort (VSD-026). Re-runs ONLY B4 using the
+// STRUCTURED B4-v3 CONTINUATION across the fixed 50-work calibration cohort (VSD-026/VSD-039). Re-runs ONLY B4 using the
 // already-verified B1/B2/B3 completions from the frozen run and the accepted B4 prompt + corrected contract
 // and leak gate. Never calls B0-B3. Five resumable lanes; ONE B4 attempt per work; a failed work is
 // quarantined and the batch continues; no automatic retries; no owner edits; nothing merged. Preserves
-// transcript/model/auth/usage evidence. Reuses an existing B4-v2 output ONLY if it independently passes the
+// transcript/model/auth/usage evidence. Reuses an existing structured B4 output ONLY if it independently passes the
 // final strict validation + corrected leak gate + evidence checks; otherwise it is re-called or left quarantined.
 // Default = PLAN (no model). Real spawns need --run AND PASS_B_CALIB_LIVE=1.
 //   node scripts/pass-b-b4-continuation.mjs            (plan)
@@ -16,10 +16,10 @@ import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { completionKey } from './lib/vision-content-capture.mjs';
 import {
   compactB4DeltaInput, legacyContentInput, buildStageCommand, parseStreamTranscript, transcriptFinal,
-  primaryModelFromEnvelope, CALIBRATION_MODEL, VALIDATION_CONTRACT_VERSION, RUN_ROOT,
+  primaryModelFromEnvelope, CALIBRATION_MODEL, VALIDATION_CONTRACT_VERSION, B4_VALIDATION_CONTRACT_VERSION, RUN_ROOT,
 } from './lib/pass-b-calibration.mjs';
 import { buildB4Prompt, promptHashes } from './lib/pass-b-prompts.mjs';
-import { assembleAndValidateB4 } from './lib/pass-b-b4-delta.mjs';
+import { assembleAndValidateB4, B4_DELTA_VERSION } from './lib/pass-b-b4-delta.mjs';
 import { validateStageBody } from './lib/vision-content-schema.mjs';
 import { projectToProduction } from './lib/pass-b-approval.mjs';
 import { scanTeachEntry } from './lib/public-output-leak.mjs';
@@ -43,7 +43,7 @@ function loadWork(id) {
 }
 const works = IDS.map(loadWork);
 const b4PromptHash = promptHashes().B4;
-const binding = { srcRun: 'cal50-0a47b6f7f332', works: IDS, b1b2b3Shas: Object.fromEntries(works.map((w) => [w.id, w.shas])), b4PromptHash, validationContractVersion: VALIDATION_CONTRACT_VERSION };
+const binding = { srcRun: 'cal50-0a47b6f7f332', works: IDS, b1b2b3Shas: Object.fromEntries(works.map((w) => [w.id, w.shas])), b4PromptHash, validationContractVersion: VALIDATION_CONTRACT_VERSION, b4ValidationContractVersion: B4_VALIDATION_CONTRACT_VERSION };
 const runId = 'b4c-' + sha256(stableJson(binding)).slice(0, 12);
 const outDir = join(RUN_ROOT, runId);
 
@@ -61,7 +61,7 @@ function reusable(id) {
     const cp = join(RUN_ROOT, d, 'works', `${safe(id)}.compare.json`);
     if (!existsSync(cp)) continue;
     let r; try { r = JSON.parse(readFileSync(cp, 'utf8')); } catch { continue; }
-    if (!r.ok || !r.newBody || r.rawDelta == null) continue;
+    if (!r.ok || !r.newBody || r.rawDelta?.version !== B4_DELTA_VERSION) continue;
     if (r.evidence?.resolvedModel !== CALIBRATION_MODEL || r.evidence?.apiKeySource !== 'none') continue;
     // re-hydrate the preserved delta from scratch and re-check the FINAL contract (do not trust the stored body)
     const w = works.find((x) => x.id === id);
@@ -138,11 +138,11 @@ function plan() {
   for (const w of works) { if (existsSync(join(outDir, 'works')) && statusOf(w.id) === 'complete') { already++; continue; } if (reusable(w.id)) reuse++; else call.push(w.id); }
   const perCallSec = 240; // observed 176-349s per B4 call
   const waves = Math.ceil(call.length / LANES);
-  console.log('B4-v2 CONTINUATION plan (VSD-026) — accepted B4 prompt + corrected contract/leak gate; B0-B3 NOT called');
+  console.log('STRUCTURED B4-v3 CONTINUATION plan (VSD-026/VSD-039) — accepted B4 prompt + corrected contract/leak gate; B0-B3 NOT called');
   console.log(`  source (read-only): ${SRC}  (50 verified B1/B2/B3)`);
   console.log(`  final run identity: ${runId}  ->  ${outDir}`);
-  console.log(`  B4 prompt hash: ${b4PromptHash.slice(0, 16)}…  | validation-contract: ${VALIDATION_CONTRACT_VERSION}`);
-  console.log(`  works: ${works.length} | already complete: ${already} | reusable existing B4-v2: ${reuse} | B4 calls still required: ${call.length}`);
+  console.log(`  B4 prompt hash: ${b4PromptHash.slice(0, 16)}…  | validation-contract: ${VALIDATION_CONTRACT_VERSION} | B4-contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
+  console.log(`  works: ${works.length} | already complete: ${already} | reusable structured B4: ${reuse} | B4 calls still required: ${call.length}`);
   console.log(`  lanes: ${LANES} | est. duration: ~${Math.round(waves * perCallSec / 60)} min (${waves} waves × ~${perCallSec}s; subscription-window permitting, capacity fast-fails quarantine + resume)`);
   console.log('  command (owner-gated):');
   console.log(`    PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-b4-continuation.mjs --run --lanes ${LANES}`);

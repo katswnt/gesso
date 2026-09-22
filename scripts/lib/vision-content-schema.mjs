@@ -283,10 +283,47 @@ function hotspot(item, grounding) {
     && typeof item.sourceDependent === 'boolean';
 }
 
+function validateStructuredGrounding(value, body, e) {
+  const required = ['version', 'components', 'unresolvedComponentTargets', 'conflicts', 'openClaims'];
+  e.need(keys(value, required), 'structuredGrounding keys');
+  if (!plain(value)) return;
+  e.need(value.version === 'passBStructuredGrounding/1', 'structuredGrounding version');
+  const groundId = v => typeof v === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(v);
+  const target = v => typeof v === 'string' && /^(why|cue:\d+|note:\d+|hotspot:\d+|guide:\d+)$/.test(v);
+  const refs = v => list(v, groundId, 100) && unique(v);
+  const expected = new Map();
+  expected.set(typeof body.proposedWhy === 'string' ? 'why' : 'why:empty', { surface: 'why', ordinal: 0 });
+  (body.proposedCues || []).forEach((cue, i) => expected.set(`cue:c_${sha256(`${i}|${cue}`).slice(0, 10)}`, { surface: 'cues', ordinal: i }));
+  (body.notes || []).forEach((row, i) => expected.set(`note:${row.noteId}`, { surface: 'notes', ordinal: i }));
+  (body.hotspots || []).forEach((row, i) => expected.set(`hotspot:${row.hotspotId}`, { surface: 'hotspots', ordinal: i }));
+  (body.guide || []).forEach((row, i) => expected.set(`guide:${row.questionId}`, { surface: 'guide', ordinal: i }));
+  e.need(list(value.components, row => {
+    if (!keys(row, ['target', 'componentId', 'surface', 'ordinal', 'claimRefs', 'observationRefs'])) return false;
+    const exp = expected.get(row.componentId);
+    return target(row.target) && !!exp && exp.surface === row.surface && exp.ordinal === row.ordinal
+      && refs(row.claimRefs) && refs(row.observationRefs);
+  }, 100), 'structuredGrounding components');
+  e.need(unique((value.components || []).map(row => row.target)), 'duplicate structured grounding target');
+  e.need(unique((value.components || []).map(row => row.componentId)), 'duplicate structured grounding componentId');
+  e.need(list(value.unresolvedComponentTargets, target, 100) && unique(value.unresolvedComponentTargets || []), 'structuredGrounding unresolved targets');
+  e.need(list(value.conflicts, row => keys(row, ['conflictId', 'conflictIndex', 'componentRefs', 'claimRefs', 'workScope', 'unresolvedTargets'])
+    && row.conflictId === `b4-conflict:${row.conflictIndex}` && Number.isInteger(row.conflictIndex) && row.conflictIndex >= 0 && row.conflictIndex < (body.conflicts || []).length
+    && refs(row.componentRefs) && row.componentRefs.every(ref => expected.has(ref)) && refs(row.claimRefs)
+    && list(row.unresolvedTargets, target, 100) && unique(row.unresolvedTargets)
+    && typeof row.workScope === 'boolean' && row.workScope === (row.componentRefs.length === 0 || row.unresolvedTargets.length > 0), 30), 'structuredGrounding conflicts');
+  e.need(unique((value.conflicts || []).map(row => row.conflictIndex)) && (value.conflicts || []).length === (body.conflicts || []).length, 'structuredGrounding conflict coverage');
+  e.need(list(value.openClaims, row => keys(row, ['openClaimId', 'proposition', 'componentRefs', 'claimRefs', 'workScope', 'unresolvedTargets'])
+    && groundId(row.openClaimId) && text(row.proposition, 1000) && refs(row.componentRefs) && row.componentRefs.every(ref => expected.has(ref)) && refs(row.claimRefs)
+    && list(row.unresolvedTargets, target, 100) && unique(row.unresolvedTargets)
+    && typeof row.workScope === 'boolean' && row.workScope === (row.componentRefs.length === 0 || row.unresolvedTargets.length > 0), 30), 'structuredGrounding openClaims');
+  e.need(unique((value.openClaims || []).map(row => row.openClaimId)), 'duplicate structured openClaimId');
+  e.need((value.openClaims || []).map(row => row.proposition).join(' ') === body.uncertainty, 'structured openClaims/uncertainty mismatch');
+}
+
 function validateB4(body) {
   const e = errors();
   const required = ['imageState', 'playable', 'playableReason', 'catsAdjustments', 'dispositions', 'proposedWhy', 'proposedCues', 'notes', 'hotspots', 'guide', 'richDescriptors', 'evidence', 'sources', 'corrections', 'conflicts', 'uncertainty'];
-  e.need(keys(body, required), 'B4 keys');
+  e.need(keys(body, required, ['structuredGrounding']), 'B4 keys');
   if (!plain(body)) return e.rows;
   e.need(IMAGE_STATES.includes(body.imageState), 'B4 imageState');
   // Component-level synthesis decisions. The model gives {component (controlled), disposition, reason};
@@ -349,6 +386,7 @@ function validateB4(body) {
     && text(item.resolution, 800, { empty: true }) && ['resolved', 'humanReview'].includes(item.status)
     && (item.status !== 'humanReview' || item.resolution === ''), 30), 'conflicts');
   e.need(text(body.uncertainty, 1000, { empty: true }), 'B4 uncertainty');
+  if (Object.hasOwn(body, 'structuredGrounding')) validateStructuredGrounding(body.structuredGrounding, body, e);
   if (body.imageState === 'unplayable') e.need(body.playable === false, 'B4 unplayable contradiction');
   return e.rows;
 }

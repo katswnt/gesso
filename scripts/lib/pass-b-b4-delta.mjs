@@ -11,7 +11,10 @@
 import { sha256, stableJson } from './vision-legacy.mjs';
 import { EVIDENCE_AXES, ROLES, IMAGE_STATES, validateStageBody, PLAYER_WHY_MAX, PLAYER_NOTE_HEAD_MAX, PLAYER_NOTE_BODY_MAX, GUIDE_ANSWER_MAX, HOTSPOT_MIN_DISTANCE, HOTSPOT_MAX_REGION_AREA } from './vision-content-schema.mjs';
 
-export const B4_DELTA_VERSION = 'contentVisionB4Delta/2';
+export const B4_DELTA_VERSION = 'contentVisionB4Delta/3';
+export const LEGACY_B4_DELTA_VERSION = 'contentVisionB4Delta/2';
+export const STRUCTURED_GROUNDING_VERSION = 'passBStructuredGrounding/1';
+export const b4DeltaVersion = delta => delta?.version === B4_DELTA_VERSION ? B4_DELTA_VERSION : LEGACY_B4_DELTA_VERSION;
 export { HOTSPOT_MIN_DISTANCE };
 export const HOTSPOT_MAX_BBOX_AREA = HOTSPOT_MAX_REGION_AREA / 10000;
 const ITEM_ACTIONS = ['keep', 'revise', 'replace', 'add', 'remove'];
@@ -119,7 +122,7 @@ export function guideLineageMetrics(delta, legacyGuideCount = 0) {
 const isStr = (v, max = 2000) => typeof v === 'string' && v.length > 0 && v.length <= max;
 const strOrNull = (v, max = 2000) => v === null || isStr(v, max);
 const strOrEmpty = (v, max = 2000) => typeof v === 'string' && v.length <= max; // empty allowed (e.g. humanReview resolution)
-export function validateB4Delta(delta, { b1, b2 }) {
+export function validateB4Delta(delta, { b1, b2, b3 = null }) {
   const e = [];
   const need = (c, m) => { if (!c) e.push(m); };
   const g = b1Grounding(b1);
@@ -127,6 +130,9 @@ export function validateB4Delta(delta, { b1, b2 }) {
   for (const f of (b2?.factChecks || [])) for (const s of (f.sources || [])) if (s?.sourceId) sourceIds.add(s.sourceId);
   need(delta && typeof delta === 'object', 'delta must be an object');
   if (!delta || typeof delta !== 'object') return { ok: false, errors: e };
+  const structured = delta.version === B4_DELTA_VERSION;
+  const legacy = delta.version === undefined || delta.version === LEGACY_B4_DELTA_VERSION;
+  need(structured || legacy, `delta.version must be ${B4_DELTA_VERSION} (or archived ${LEGACY_B4_DELTA_VERSION})`);
   need(IMAGE_STATES.includes(delta.imageState), 'delta.imageState');
   need(typeof delta.playable === 'boolean', 'delta.playable');
   need(typeof delta.removeMedium === 'boolean', 'delta.removeMedium');
@@ -181,7 +187,57 @@ export function validateB4Delta(delta, { b1, b2 }) {
     need(cf && isStr(cf.field, 100) && isStr(cf.left, 800) && isStr(cf.right, 800) && ['resolved', 'humanReview'].includes(cf.status) && strOrEmpty(cf.resolution ?? '', 800), 'conflict shape');
     need(cf.status !== 'humanReview' || (cf.resolution ?? '') === '', 'humanReview conflict must have empty resolution');
   }
-  need(strOrEmpty(delta.uncertainty ?? '', 1000), 'delta.uncertainty');
+  if (structured) {
+    need(!Object.hasOwn(delta, 'uncertainty'), 'structured delta must use grounding.openClaims, not free-text uncertainty');
+    const grounding = delta.grounding;
+    need(grounding && typeof grounding === 'object' && !Array.isArray(grounding), 'delta.grounding');
+    if (grounding && typeof grounding === 'object' && !Array.isArray(grounding)) {
+      need(Object.keys(grounding).sort().join('|') === 'components|conflicts|openClaims', 'delta.grounding keys');
+      need(Array.isArray(grounding.components), 'delta.grounding.components array');
+      need(Array.isArray(grounding.conflicts), 'delta.grounding.conflicts array');
+      need(Array.isArray(grounding.openClaims), 'delta.grounding.openClaims array');
+      const claimIds = new Set((b2?.factChecks || []).map(c => c?.claimId).filter(Boolean));
+      const observationIds = new Set([...g.ids]);
+      for (const v of (b3?.verifications || [])) if (v?.requestId) observationIds.add(`b3:${v.requestId}`);
+      const targets = new Set(['why']);
+      if (delta.cues?.action === 'replace') (delta.cues.items || []).forEach((_, i) => targets.add(`cue:${i}`));
+      for (const [surface, singular] of [['notes', 'note'], ['hotspots', 'hotspot'], ['guide', 'guide']]) (delta[surface] || []).forEach((item, i) => { if (item?.action !== 'remove') targets.add(`${singular}:${i}`); });
+      const targetGood = target => typeof target === 'string' && targets.has(target);
+      const refsGood = (refs, allowed) => Array.isArray(refs) && refs.every(ref => typeof ref === 'string' && allowed.has(ref)) && new Set(refs).size === refs.length;
+      const componentTargets = new Set();
+      for (const row of grounding.components || []) {
+        need(row && Object.keys(row).sort().join('|') === 'claimRefs|observationRefs|target', 'grounding component keys');
+        if (!row) continue;
+        need(targetGood(row.target), `grounding component target invalid: ${row.target}`);
+        need(!componentTargets.has(row.target), `duplicate grounding component target: ${row.target}`); componentTargets.add(row.target);
+        need(refsGood(row.claimRefs, claimIds), `grounding component claimRefs invalid: ${row.target}`);
+        need(refsGood(row.observationRefs, observationIds), `grounding component observationRefs invalid: ${row.target}`);
+      }
+      const conflictIndexes = new Set();
+      for (const row of grounding.conflicts || []) {
+        need(row && Object.keys(row).sort().join('|') === 'claimRefs|componentTargets|conflictIndex', 'grounding conflict keys');
+        if (!row) continue;
+        need(Number.isInteger(row.conflictIndex) && row.conflictIndex >= 0 && row.conflictIndex < (delta.conflicts || []).length, `grounding conflictIndex invalid: ${row.conflictIndex}`);
+        need(!conflictIndexes.has(row.conflictIndex), `duplicate grounding conflictIndex: ${row.conflictIndex}`); conflictIndexes.add(row.conflictIndex);
+        need(Array.isArray(row.componentTargets) && row.componentTargets.every(targetGood) && new Set(row.componentTargets).size === row.componentTargets.length, `grounding conflict componentTargets invalid: ${row.conflictIndex}`);
+        need(refsGood(row.claimRefs, claimIds), `grounding conflict claimRefs invalid: ${row.conflictIndex}`);
+      }
+      need(conflictIndexes.size === (delta.conflicts || []).length && [...Array((delta.conflicts || []).length).keys()].every(i => conflictIndexes.has(i)), 'every conflict needs exactly one structured grounding row');
+      const openIds = new Set();
+      for (const row of grounding.openClaims || []) {
+        need(row && Object.keys(row).sort().join('|') === 'claimRefs|componentTargets|openClaimId|proposition', 'grounding openClaim keys');
+        if (!row) continue;
+        need(isStr(row.openClaimId, 160), 'grounding openClaimId');
+        need(!openIds.has(row.openClaimId), `duplicate grounding openClaimId: ${row.openClaimId}`); openIds.add(row.openClaimId);
+        need(isStr(row.proposition, 1000), `grounding openClaim proposition: ${row.openClaimId}`);
+        need(Array.isArray(row.componentTargets) && row.componentTargets.every(targetGood) && new Set(row.componentTargets).size === row.componentTargets.length, `grounding openClaim componentTargets invalid: ${row.openClaimId}`);
+        need(refsGood(row.claimRefs, claimIds), `grounding openClaim claimRefs invalid: ${row.openClaimId}`);
+      }
+      need((grounding.openClaims || []).map(x => x.proposition).join(' ').length <= 1000, 'grounding openClaims exceed hydrated uncertainty cap');
+    }
+  } else {
+    need(strOrEmpty(delta.uncertainty ?? '', 1000), 'delta.uncertainty');
+  }
   need(strOrEmpty(delta.playableReason ?? '', 500), 'delta.playableReason');
   return { ok: e.length === 0, errors: e };
 }
@@ -191,6 +247,7 @@ export function validateB4Delta(delta, { b1, b2 }) {
 function hydrateB4({ delta, b1, b2, b3, legacy }) {
   const g = b1Grounding(b1);
   const hydration = { lineage: b4Lineage(delta), hotspots: { proposed: 0, published: 0, placements: [], suppressed: [] } };
+  const targetMap = new Map();
   const legacyT = legacy?.teaching || {};
   const shortId = (prefix, key) => `${prefix}${sha256(key).slice(0, 10)}`;
   // Resolve editorial provenance refs to their source TEXT (for keep/revise that reuse legacy or candidate text).
@@ -216,7 +273,7 @@ function hydrateB4({ delta, b1, b2, b3, legacy }) {
   // notes: from delta note actions (keep/revise/add of B1-candidate-grounded notes). Ids are index-derived so
   // uniqueness never depends on the model's text.
   const notes = []; let ni = 0;
-  for (const n of (delta.notes || [])) {
+  for (const [deltaIndex, n] of (delta.notes || []).entries()) {
     if (n.action === 'remove') continue;
     const cand = n.ref && g.candidates.get(n.ref);
     const lg = legacyNote(n.ref);
@@ -227,7 +284,10 @@ function hydrateB4({ delta, b1, b2, b3, legacy }) {
     const role = n.role ?? cand?.role ?? 'diagnostic';
     const evidenceRef = n.evidenceRef ?? cand?.evidenceRef;
     const pin = pinFor(g, evidenceRef, cand?.pin ?? (lg && Number.isFinite(lg.x) ? { x: lg.x, y: lg.y } : null));
-    notes.push({ noteId: shortId('n_', `${ni++}|${n.ref}|${head}`), head, body, pin, role, evidenceRef, sourceRefs: n.sourceRefs || [] });
+    const ordinal = ni++;
+    const noteId = shortId('n_', `${ordinal}|${n.ref}|${head}`);
+    notes.push({ noteId, head, body, pin, role, evidenceRef, sourceRefs: n.sourceRefs || [] });
+    targetMap.set(`note:${deltaIndex}`, { componentId: `note:${noteId}`, surface: 'notes', ordinal });
   }
   // Hotspots: editorial ancestry (`ref`) and spatial anchoring (`pinRef`) are independent. Retain only
   // player-usable locations; duplicate and unlocalized proposals stay in the hydration report for review.
@@ -257,22 +317,28 @@ function hydrateB4({ delta, b1, b2, b3, legacy }) {
     // rank is controller-assigned after suppression (unique and gap-free); original ordinal keeps ids stable.
     const hotspotId = shortId('h_', `${ordinal}|${h.ref}|${h.evidenceRef}`);
     hotspots.push({ hotspotId, observationId: obs, x: placement.pin.x, y: placement.pin.y, region: null, rank: hotspots.length + 1, role: h.role ?? cand?.role ?? 'diagnostic', conciseText: concise, deepText: deep, evidenceRef: h.evidenceRef, confidence: ev?.confidence ?? dl?.confidence ?? 0.6, sourceDependent: !!h.sourceDependent });
+    targetMap.set(`hotspot:${deltaIndex}`, { componentId: `hotspot:${hotspotId}`, surface: 'hotspots', ordinal: hotspots.length - 1 });
     hydration.hotspots.placements.push({ deltaIndex, hotspotId, evidenceRef: h.evidenceRef, pinRef: placement.pinRef, method: placement.method, x: placement.pin.x, y: placement.pin.y, bboxArea: placement.bboxArea ?? null });
   }
   hydration.hotspots.published = hotspots.length;
   // guide: keep copies legacy Q&A; revise/replace/add supply text
   const guide = [];
   let gi = 0;
-  for (const q of (delta.guide || [])) {
+  for (const [deltaIndex, q] of (delta.guide || []).entries()) {
     if (q.action === 'remove') continue;
     let qq = q.q, aa = q.a;
     const lgq = legacyGuideItem(q.ref);
     if (lgq) { qq = qq ?? lgq.q; aa = aa ?? lgq.a; }
-    guide.push({ questionId: shortId('q_', `${gi++}|${qq}`), q: String(qq || '').slice(0, 300), a: String(aa || '').slice(0, 1200), kind: q.kind || 'context', evidenceRef: q.evidenceRef ?? null, sourceRefs: q.sourceRefs || [] });
+    const ordinal = gi++;
+    const questionId = shortId('q_', `${ordinal}|${qq}`);
+    guide.push({ questionId, q: String(qq || '').slice(0, 300), a: String(aa || '').slice(0, 1200), kind: q.kind || 'context', evidenceRef: q.evidenceRef ?? null, sourceRefs: q.sourceRefs || [] });
+    targetMap.set(`guide:${deltaIndex}`, { componentId: `guide:${questionId}`, surface: 'guide', ordinal });
   }
   // proposedWhy / proposedCues
   const proposedWhy = delta.why.action === 'keep' ? (typeof legacyT.why === 'string' ? legacyT.why : { notApplicable: true, reason: 'no legacy why' }) : delta.why.text;
   const proposedCues = delta.cues.action === 'keep' ? (Array.isArray(legacyT.cues) ? legacyT.cues.slice(0, 8) : []) : delta.cues.items.slice(0, 8);
+  targetMap.set('why', { componentId: typeof proposedWhy === 'string' ? 'why' : 'why:empty', surface: 'why', ordinal: 0 });
+  if (delta.cues.action === 'replace') proposedCues.forEach((cue, ordinal) => targetMap.set(`cue:${ordinal}`, { componentId: `cue:c_${sha256(`${ordinal}|${cue}`).slice(0, 10)}`, surface: 'cues', ordinal }));
   // dispositions derived from the delta (controller-owned), covering every required component
   const changed = arr => (arr || []).some(x => x.action && x.action !== 'keep');
   const dispositions = [
@@ -287,12 +353,55 @@ function hydrateB4({ delta, b1, b2, b3, legacy }) {
   const corrections = { consequential: (delta.corrections || []).map(c => ({ field: c.field, from: c.from, to: c.to, evidenceRef: c.evidenceRef, sourceRefs: c.sourceRefs || [], confidence: c.confidence })) };
   const conflicts = (delta.conflicts || []).map(c => ({ field: c.field, left: c.left, right: c.right, resolution: c.resolution ?? '', status: c.status }));
 
+  let structuredGrounding;
+  let uncertainty;
+  if (delta.version === B4_DELTA_VERSION) {
+    const resolveTargets = targets => {
+      const resolved = []; const unresolvedTargets = [];
+      for (const target of targets || []) {
+        const row = targetMap.get(target);
+        if (row) resolved.push(row);
+        else unresolvedTargets.push(target);
+      }
+      return { resolved, unresolvedTargets };
+    };
+    const unresolvedComponentTargets = [];
+    const components = [];
+    for (const row of delta.grounding.components || []) {
+      const mapped = targetMap.get(row.target);
+      if (!mapped) { unresolvedComponentTargets.push(row.target); continue; }
+      components.push({ target: row.target, ...mapped, claimRefs: row.claimRefs, observationRefs: row.observationRefs });
+    }
+    const structuredConflicts = (delta.grounding.conflicts || []).map(row => {
+      const { resolved, unresolvedTargets } = resolveTargets(row.componentTargets);
+      return {
+        conflictId: `b4-conflict:${row.conflictIndex}`, conflictIndex: row.conflictIndex,
+        componentRefs: [...new Set(resolved.map(x => x.componentId))], claimRefs: row.claimRefs,
+        workScope: row.componentTargets.length === 0 || unresolvedTargets.length > 0, unresolvedTargets,
+      };
+    });
+    const openClaims = (delta.grounding.openClaims || []).map(row => {
+      const { resolved, unresolvedTargets } = resolveTargets(row.componentTargets);
+      return {
+        openClaimId: row.openClaimId, proposition: row.proposition,
+        componentRefs: [...new Set(resolved.map(x => x.componentId))], claimRefs: row.claimRefs,
+        workScope: row.componentTargets.length === 0 || unresolvedTargets.length > 0, unresolvedTargets,
+      };
+    });
+    structuredGrounding = { version: STRUCTURED_GROUNDING_VERSION, components, unresolvedComponentTargets, conflicts: structuredConflicts, openClaims };
+    uncertainty = openClaims.map(row => row.proposition).join(' ');
+    hydration.structuredGrounding = { targetCount: targetMap.size, unresolvedComponentTargets: [...unresolvedComponentTargets] };
+  } else {
+    uncertainty = delta.uncertainty ?? '';
+  }
+
   const body = {
     imageState: delta.imageState, playable: delta.playable, playableReason: delta.playableReason || '',
     catsAdjustments: { removeMedium: !!delta.removeMedium },
     dispositions, proposedWhy, proposedCues, notes, hotspots, guide,
-    richDescriptors, evidence, sources, corrections, conflicts, uncertainty: delta.uncertainty ?? '',
+    richDescriptors, evidence, sources, corrections, conflicts, uncertainty,
   };
+  if (structuredGrounding) body.structuredGrounding = structuredGrounding;
   return { body, hydration };
 }
 
@@ -305,9 +414,9 @@ function nullCatalog() {
 
 // Convenience: assemble then run the UNCHANGED strict full-record validator. Returns { ok, body, errors }.
 export function assembleAndValidateB4({ delta, b1, b2, b3, legacy }) {
-  const dv = validateB4Delta(delta, { b1, b2 });
+  const dv = validateB4Delta(delta, { b1, b2, b3 });
   if (!dv.ok) return { ok: false, stage: 'delta', errors: dv.errors, body: null };
   const { body, hydration } = hydrateB4({ delta, b1, b2, b3, legacy });
   const strict = validateStageBody('B4', body);
-  return { ok: strict.ok, stage: strict.ok ? 'assembled' : 'strict', errors: strict.errors || [], body, hydration, deltaSha256: sha256(stableJson(delta)), bodySha256: sha256(stableJson(body)) };
+  return { ok: strict.ok, stage: strict.ok ? 'assembled' : 'strict', errors: strict.errors || [], body, hydration, deltaVersion: b4DeltaVersion(delta), deltaSha256: sha256(stableJson(delta)), bodySha256: sha256(stableJson(body)) };
 }

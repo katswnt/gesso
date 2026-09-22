@@ -374,6 +374,20 @@ VSD-035 adds the actual deterministic reconciliation layer:
   confinement → abort). Cached derivatives rehashed and `b0-prep` re-verified against image/catalog/legacy
   before reuse. Prior verified completions migrate hash-bound into a new run identity; the old run is preserved.
   No B4/reconciliation/release-policy/approval/owner-decisions/production.
+- **Structured B4 fork** (VSD-039, offline implementation): B1–B3 checkpoints stay under the shared
+  `passBValidation/4` contract. A later B4-only call is independently bound to
+  `passBValidationB4/1-structured-grounding`, the B4 prompt hash, and the exact B1/B2/B3 completion
+  hashes. Its wire schema is `contentVisionB4Delta/3`: ordinary editorial delta fields plus
+  `grounding.components`, one grounding row for every conflict, and structured open claims. The model
+  may name only supplied B2 claim ids and B1/B3 observation ids; it cannot emit authority, effective
+  state, resolution, approval, or eligibility. Hydration validates all refs and translates temporary
+  targets (`why`, `cue:i`, `note:i`, `hotspot:i`, `guide:i`) into stable final component ids in a
+  `passBStructuredGrounding/1` sidecar. If a target disappears during hydration (notably a suppressed
+  hotspot), its conflict/open claim becomes work-scope. Reconciliation then uses
+  `passBReconciliationPolicy/2-structured-b4`; explicit model bindings remain
+  `groundingAuthority:"model-proposal"` and therefore review-required. Archived `/2` deltas continue
+  to rehydrate under policy `/1`, and the standing 44-set baseline is unchanged. No live `/3` call,
+  corpus B4 continuation, release-policy integration, approval, or production write has run yet.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;

@@ -8,7 +8,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { assembleAndValidateB4, B4_DELTA_VERSION, HOTSPOT_MAX_BBOX_AREA, HOTSPOT_MIN_DISTANCE, b4Lineage } from './lib/pass-b-b4-delta.mjs';
+import { assembleAndValidateB4, LEGACY_B4_DELTA_VERSION, HOTSPOT_MAX_BBOX_AREA, HOTSPOT_MIN_DISTANCE, b4Lineage } from './lib/pass-b-b4-delta.mjs';
 import { completionKey } from './lib/vision-content-capture.mjs';
 import { VALIDATION_CONTRACT_VERSION } from './lib/pass-b-calibration.mjs';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
@@ -64,7 +64,7 @@ const binding = {
   sourceRun: relative('.', SOURCE),
   upstreamRun: relative('.', UPSTREAM),
   evidenceManifestSha256,
-  assemblerVersion: B4_DELTA_VERSION,
+  assemblerVersion: LEGACY_B4_DELTA_VERSION,
   validationContractVersion: VALIDATION_CONTRACT_VERSION,
   hotspotPolicy: { maxBboxArea: HOTSPOT_MAX_BBOX_AREA, minDistance: HOTSPOT_MIN_DISTANCE },
 };

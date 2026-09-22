@@ -128,6 +128,34 @@ ok(!verifyClaimBundleAgainstSources(omittedCorrection, sourcesWithSeams, project
 const omittedUncertainty = structuredClone(seamBundle); omittedUncertainty.openClaims = [];
 ok(!verifyClaimBundleAgainstSources(omittedUncertainty, sourcesWithSeams, projected).ok, 'B4 uncertainty omission fails source verification');
 
+// ---- VSD-038 B4 fork: structured model proposals scope holds, but never become authority/eligibility ----
+const structuredSources = structuredClone(sources);
+structuredSources.b4.conflicts = [{ field: 'ambiguous legacy wording', left: 'wood', right: 'plaster', status: 'humanReview', resolution: '' }];
+structuredSources.b4.uncertainty = 'The guide wording still needs review.';
+structuredSources.b4.structuredGrounding = {
+  version: 'passBStructuredGrounding/1',
+  components: [
+    { target: 'note:0', componentId: 'note:n1', surface: 'notes', ordinal: 0, claimRefs: ['c1'], observationRefs: ['e1'] },
+    { target: 'guide:0', componentId: 'guide:q1', surface: 'guide', ordinal: 0, claimRefs: ['c1'], observationRefs: ['b3:r1'] },
+  ],
+  unresolvedComponentTargets: [],
+  conflicts: [{ conflictId: 'b4-conflict:0', conflictIndex: 0, componentRefs: ['note:n1'], claimRefs: ['c1'], workScope: false, unresolvedTargets: [] }],
+  openClaims: [{ openClaimId: 'open-guide-1', proposition: 'The guide wording still needs review.', componentRefs: ['guide:q1'], claimRefs: ['c1'], workScope: false, unresolvedTargets: [] }],
+};
+const structuredBundle = buildClaimBundle({ sources: structuredSources, projectedRecord: projected });
+ok(validateClaimBundle(structuredBundle).ok, 'structured B4 grounding produces a valid reconciliation bundle');
+ok(structuredBundle.policyVersion === 'passBReconciliationPolicy/2-structured-b4', 'structured B4 forks reconciliation policy without rewriting legacy baseline sets');
+ok(structuredBundle.components.find(c => c.componentId === 'note:n1').groundingAuthority === 'model-proposal', 'structured B4 binding remains a model proposal, never controller authority');
+ok(structuredBundle.conflicts[0].componentRefs.join() === 'note:n1' && !structuredBundle.conflicts[0].workScope, 'structured conflict scopes to its exact translated component');
+ok(structuredBundle.openClaims[0].componentRefs.join() === 'guide:q1' && !structuredBundle.openClaims[0].workScope, 'structured open claim scopes to its exact translated component');
+const structuredReport = auditReconciliation(structuredBundle).report;
+ok(structuredReport.componentReadiness.find(c => c.componentId === 'note:n1').contentReadiness === 'blocked', 'structured conflict blocks its note');
+ok(structuredReport.componentReadiness.find(c => c.componentId === 'guide:q1').contentReadiness === 'review-required', 'structured open claim holds its guide');
+ok(structuredReport.componentReadiness.find(c => c.componentId === 'why').contentReadiness === 'review-required', 'unrelated component is not blocked but remains ungrounded/review-required');
+ok(verifyClaimBundleAgainstSources(structuredBundle, structuredSources, projected).ok, 'structured scope and grounding rederive exactly from the bound B4 source');
+const forgedScope = structuredClone(structuredBundle); forgedScope.conflicts[0].componentRefs = ['why'];
+ok(!verifyClaimBundleAgainstSources(forgedScope, structuredSources, projected).ok, 'stored reconciliation cannot rewrite controller-translated conflict scope');
+
 // ---- VSD-037: owner-approved empty collection surface (via the existing *-set:empty component) + coupling ----
 const { surfaceCouplingViolation } = await import('../scripts/lib/pass-b-approval.mjs');
 const projectedNoHot = { teach: projected.teach, hotspots: [] };

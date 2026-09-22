@@ -75,12 +75,11 @@ const B4 = obj({
   uncertainty: str,
 });
 
-// VSD-022 compact editorial-delta B4: the model emits ONLY per-item keep/revise/replace/add/remove actions,
-// replacement text, references to existing B1/B2 ids, and corrections/conflicts/uncertainty. It never
-// reproduces a registry (evidence/delights/sources/catalog/coordinates). The controller deterministically
-// hydrates the full record and runs the UNCHANGED strict validateB4 on the assembled result.
+// VSD-022 compact editorial-delta B4. VSD-039 forks only this stage: /3 keeps the editorial delta and adds
+// model-PROPOSED structured claim/observation bindings. The controller validates and translates those
+// proposals into stable hydrated component ids; the model never sets authority, resolution, or eligibility.
 const ITEM_ACTION = enumOf('keep', 'revise', 'replace', 'add', 'remove');
-export const B4_DELTA = obj({
+const B4_EDITORIAL_FIELDS = {
   imageState: enumOf(...IMAGE_STATES), playable: bool, playableReason: str, removeMedium: bool,
   why: obj({ action: enumOf('keep', 'revise', 'replace'), text: nullable(str) }),
   cues: obj({ action: enumOf('keep', 'replace'), items: arr(str) }),
@@ -89,7 +88,21 @@ export const B4_DELTA = obj({
   guide: arr(obj({ action: ITEM_ACTION, ref: nullable(str), q: nullable(str), a: nullable(str), kind: nullable(enumOf('image', 'context')), evidenceRef: nullable(str), sourceRefs: arr(str) })),
   corrections: arr(obj({ field: str, from: any, to: any, evidenceRef: str, sourceRefs: arr(str), confidence: num })),
   conflicts: arr(obj({ field: str, left: str, right: str, resolution: str, status: enumOf('resolved', 'humanReview') })),
+};
+export const B4_DELTA_V2 = obj({
+  ...B4_EDITORIAL_FIELDS,
   uncertainty: str,
+});
+const componentTarget = str;
+const structuredGroundingDelta = obj({
+  components: arr(obj({ target: componentTarget, claimRefs: arr(str), observationRefs: arr(str) })),
+  conflicts: arr(obj({ conflictIndex: int, componentTargets: arr(componentTarget), claimRefs: arr(str) })),
+  openClaims: arr(obj({ openClaimId: str, proposition: str, componentTargets: arr(componentTarget), claimRefs: arr(str) })),
+});
+export const B4_DELTA = obj({
+  version: enumOf('contentVisionB4Delta/3'),
+  ...B4_EDITORIAL_FIELDS,
+  grounding: structuredGroundingDelta,
 });
 
 // B4's provider schema is now the delta (the model's actual output). The full-record shape lives only in the

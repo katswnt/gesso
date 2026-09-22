@@ -15,7 +15,7 @@ import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { captureStageCompletion, verifyCapturedStage } from './lib/vision-content-capture.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
 import {
-  RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION, contractHash,
+  RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION, B4_VALIDATION_CONTRACT_VERSION, contractHash,
   trustedCatalog, runWorkStages, buildStageCommand, neutralImageFile,
   parseStreamTranscript, transcriptFinal, verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope,
 } from './lib/pass-b-calibration.mjs';
@@ -46,7 +46,7 @@ const B4_CORRECTIVE = [
   'CONTENT-REPAIR CORRECTION (B4-corrective/VSD-036) — applies on top of everything above:',
   '- There is NO legacy content this run; treat every legacy why/cue/note/guide/hotspot as ABSENT. Never keep or restate a legacy claim — only add/replace from CURRENT B1/B3 visible evidence or a B2 source.',
   '- Treat B1 as fallible visual observation, NOT identity authority; where neutral B3 or an authoritative B2 source contradicts B1, REMOVE/REFUTE the B1 reading — do not harden it.',
-  '- Model conflict resolutions are PROPOSALS only; if a claim is unresolved or disputed, OMIT it from player copy and record it in conflicts/uncertainty instead of affirming it.',
+  '- Model conflict resolutions are PROPOSALS only; if a claim is unresolved or disputed, OMIT it from player copy and record it in conflicts or grounding.openClaims instead of affirming it.',
   '- Keep source-established NAMED IDENTITY separate from pixel-established region/visible form: a name requires a B2 source; pixels establish only visible form and region.',
   '- Do not assert a feature (wings, skull, a nude figure, a specific figure identity) unless neutral B3 reports it actually visible or B2 authoritatively supports it; otherwise omit and record the uncertainty.',
   '- OBEY EVERY LENGTH CAP EXACTLY (they are hard-rejected): why.text ≤ 500 chars; each note head ≤ 80 and body ≤ 600; each guide answer ≤ 700 and question ≤ 300. Be concise — 2-4 sentences per field. Prefer omitting a claim to exceeding a cap.',
@@ -145,7 +145,7 @@ async function main() {
     console.log(`stages ${p.workId}: ${JSON.stringify(status)}`);
     results.push({ workId: p.workId, status, hasB4: !!bodies.B4 });
   }
-  writeFileSync(join(RUN_DIR, 'canary.json'), `${JSON.stringify({ version: CANARY_VERSION, runId: RUN_ID, works: results, validationContractVersion: VALIDATION_CONTRACT_VERSION, note: 'Fresh corrective B1-B4. Reconciliation + source-span + owner artifact are separate offline steps.' }, null, 1)}\n`, { mode: 0o600 });
+  writeFileSync(join(RUN_DIR, 'canary.json'), `${JSON.stringify({ version: CANARY_VERSION, runId: RUN_ID, works: results, validationContractVersion: VALIDATION_CONTRACT_VERSION, b4ValidationContractVersion: B4_VALIDATION_CONTRACT_VERSION, note: 'Fresh corrective B1-B4. Reconciliation + source-span + owner artifact are separate offline steps.' }, null, 1)}\n`, { mode: 0o600 });
   console.log(`\nB1-B4 DONE. runId ${RUN_ID}. Next: offline reconciliation + source-span artifact + owner review artifact.`);
 }
 

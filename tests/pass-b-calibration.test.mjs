@@ -13,10 +13,10 @@ import {
   producerEvidence, protectedHoursBlock, syntheticFixture, runWorkStages,
   neutralImageFile, parseStreamTranscript, transcriptFinal, verifyB1ImageRead, verifyB2WebEvents, webFetchRetrieved,
   legacyContentInput, primaryModelFromEnvelope, stripJsonFence, IMAGE_TRANSPORT_VERSION, CONTROLLER_VERSION,
-  contractHash, VALIDATION_CONTRACT_VERSION, verifyStageEvidence, findTranscriptBySha, loadOrArchiveCompletion,
+  contractHash, VALIDATION_CONTRACT_VERSION, B4_VALIDATION_CONTRACT_VERSION, verifyStageEvidence, findTranscriptBySha, loadOrArchiveCompletion,
 } from '../scripts/lib/pass-b-calibration.mjs';
 import { buildB1Prompt, buildB2Prompt, buildB3Prompt, buildB4Prompt, promptHashes } from '../scripts/lib/pass-b-prompts.mjs';
-import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, WIRE_B4_FULL } from '../scripts/lib/pass-b-wire-schema.mjs';
+import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, B4_DELTA_V2, WIRE_B4_FULL } from '../scripts/lib/pass-b-wire-schema.mjs';
 import { compactB4DeltaInput } from '../scripts/lib/pass-b-calibration.mjs';
 import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLineageMetrics, HOTSPOT_MAX_BBOX_AREA } from '../scripts/lib/pass-b-b4-delta.mjs';
 import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass-b-editorial-review.mjs';
@@ -442,6 +442,7 @@ t('run-identity contract binds transport + validation-contract versions; each pa
   assert(/readtool-confined-dir\/1/.test(libSrc), 'transport version defined');
   assert(/imageTransport: imageTransportVersion/.test(libSrc), 'contract includes the transport version');
   assert(/validationContract: validationContractVersion/.test(libSrc), 'contract includes the validation-contract version');
+  assert(/b4ValidationContract: b4ValidationContractVersion/.test(libSrc), 'contract includes the separate B4 validation-contract version');
   assert(/passBCalibration\/5-b4-delta/.test(CONTROLLER_VERSION), 'controller version present');
   // VSD-023: a validation-contract-version change changes the runId (contractHash is a pure function).
   const base = { selIds: ['a', 'b'], prompts: { B1: 'h1' } };
@@ -449,6 +450,7 @@ t('run-identity contract binds transport + validation-contract versions; each pa
   const h2 = contractHash({ ...base, validationContractVersion: 'passBValidation/2' });
   assert(h1 !== h2, 'changing VALIDATION_CONTRACT_VERSION must change the contract hash / runId');
   assert.equal(contractHash({ ...base, validationContractVersion: 'passBValidation/1' }), h1, 'contractHash is deterministic');
+  assert(contractHash({ ...base, b4ValidationContractVersion: 'b4/1' }) !== contractHash({ ...base, b4ValidationContractVersion: 'b4/2' }), 'B4 contract version participates without changing the shared B1-B3 validation version');
   // transport version also still participates
   assert(contractHash({ ...base, imageTransportVersion: 'x/1' }) !== contractHash({ ...base, imageTransportVersion: 'x/2' }), 'transport version participates');
 });
@@ -484,6 +486,7 @@ t('B4 compact delta + deterministic hydration (VSD-022)', () => {
   for (const forbidden of ['evidence', 'delights', 'sources', 'catalog', 'richDescriptors']) assert(!props.includes(forbidden), `delta wire must not expose ${forbidden}`);
   assert('pinRef' in B4_DELTA.properties.hotspots.items.properties, 'B4 wire separates hotspot spatial pinRef from editorial ref');
   assert(/ref.*EDITORIAL ancestry/i.test(buildB4Prompt()) && /pinRef.*SPATIAL anchor/i.test(buildB4Prompt()), 'B4 prompt explains the two independent references');
+  assert(/contentVisionB4Delta\/3/.test(buildB4Prompt()) && /Grounding is NOT authority/i.test(buildB4Prompt()), 'B4 fork requires structured grounding without granting authority');
   assert(validateAgainstWire(B4_DELTA, { ...fx.bodies.B4Delta, evidence: {} }).length > 0, 'delta wire rejects an injected registry (additionalProperties:false)');
   // (5) the fixture delta assembles into a record that passes the UNCHANGED strict validateB4
   const r = assembleAndValidateB4({ delta: fx.bodies.B4Delta, b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
@@ -492,6 +495,9 @@ t('B4 compact delta + deterministic hydration (VSD-022)', () => {
   const collect = (obj) => { const out = []; for (const ax of ['when', 'where', 'medium', 'style', 'artist', 'format']) for (const it of (obj[ax] || [])) out.push(it.evidenceId); return out.sort(); };
   assert.deepEqual(collect(r.body.evidence), collect(fx.bodies.B1.evidence), 'assembled evidence ids == B1 evidence ids');
   assert.deepEqual(r.body.richDescriptors.visual.delights.map(d => d.delightId).sort(), fx.bodies.B1.visual.delights.map(d => d.delightId).sort(), 'assembled delights == B1 delights');
+  assert.equal(r.body.structuredGrounding.version, 'passBStructuredGrounding/1', 'v3 hydration emits controller-translated structured grounding');
+  assert(r.body.structuredGrounding.components.some(c => c.target === 'note:0' && c.componentId === `note:${r.body.notes[0].noteId}` && c.claimRefs.includes('c1')), 'delta target translates to stable final component id');
+  assert(!JSON.stringify(r.body.structuredGrounding).includes('groundingAuthority'), 'hydrated model proposal carries no authority/state/eligibility');
   // (3) invented references are rejected before any assembly
   const badEv = JSON.parse(JSON.stringify(fx.bodies.B4Delta)); badEv.notes[0].evidenceRef = 'made_up_id';
   assert(!validateB4Delta(badEv, { b1: fx.bodies.B1, b2: fx.bodies.B2 }).ok, 'invented evidenceRef rejected');
@@ -505,6 +511,19 @@ t('B4 compact delta + deterministic hydration (VSD-022)', () => {
   const inp = compactB4DeltaInput({ b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacyInput: legacyContentInput({ workId: 'w', counts: {} }) });
   assert(inp.grounding.evidence.length >= 1 && inp.b1Candidates.length >= 1, 'delta input exposes the grounding namespace + candidates');
   assert(inp.grounding.evidence.every(e => !('bbox' in e)) && inp.b1Candidates.every(c => !('pin' in c)), 'delta input must not hand the model B1 coordinates to echo');
+  assert.equal(inp.version, 'passBB4DeltaInput/4');
+  assert.equal(inp.b2.factChecks[0].claimId, 'c1');
+  assert.equal(inp.b3.verifications[0].observationId, 'b3:r1');
+  const badClaim = structuredClone(fx.bodies.B4Delta); badClaim.grounding.components[0].claimRefs = ['invented-claim'];
+  assert(!validateB4Delta(badClaim, { b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3 }).ok, 'dangling structured claim ref is rejected');
+  const injectedAuthority = structuredClone(fx.bodies.B4Delta); injectedAuthority.grounding.components[0].groundingAuthority = 'controller';
+  assert(validateAgainstWire(B4_DELTA, injectedAuthority).length > 0, 'wire rejects model-declared grounding authority');
+  const tamperedGrounding = structuredClone(r.body); tamperedGrounding.structuredGrounding.components[0].groundingAuthority = 'controller';
+  assert(!validateStageBody('B4', tamperedGrounding).ok, 'full B4 validator rejects authority injected into hydrated grounding');
+  const legacy = structuredClone(fx.bodies.B4Delta); delete legacy.version; delete legacy.grounding; legacy.uncertainty = '';
+  assert.equal(validateAgainstWire(B4_DELTA_V2, legacy).length, 0, 'archived v2 wire remains testable');
+  const old = assembleAndValidateB4({ delta: legacy, b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
+  assert(old.ok && !Object.hasOwn(old.body, 'structuredGrounding') && old.deltaVersion === 'contentVisionB4Delta/2', 'archived v2 delta still rehydrates byte-contract-compatible body');
 });
 
 t('B4 hotspot hydration separates editorial ref from spatial pinRef and uses existing B1 candidate pins', () => {
@@ -536,6 +555,23 @@ t('B4 hotspot hydration suppresses broad/missing anchors and duplicates without 
   assert(r.body.hotspots.every(h => h.region === null && Number.isFinite(h.x) && Number.isFinite(h.y)), 'no fake whole-image region is emitted');
   assert.deepEqual(r.hydration.hotspots.suppressed.map(x => x.reason), ['duplicate-evidence-ref', 'near-full-frame-bbox', 'missing-localized-anchor']);
   assert.equal(HOTSPOT_MAX_BBOX_AREA, 0.65);
+});
+
+t('B4 structured scope fails closed when its targeted hotspot is suppressed', () => {
+  const fx = syntheticFixture();
+  const b1 = structuredClone(fx.bodies.B1);
+  b1.noteCandidates = [];
+  b1.evidence.medium[0].bbox = null;
+  const delta = structuredClone(fx.bodies.B4Delta);
+  delta.hotspots[0].pinRef = null;
+  delta.conflicts = [{ field: 'medium detail', left: 'A', right: 'B', resolution: '', status: 'humanReview' }];
+  delta.grounding.conflicts = [{ conflictIndex: 0, componentTargets: ['hotspot:0'], claimRefs: ['c1'] }];
+  const r = assembleAndValidateB4({ delta, b1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } });
+  assert(r.ok, (r.errors || []).join('; '));
+  assert.equal(r.body.hotspots.length, 0, 'unlocalized hotspot is suppressed');
+  assert.deepEqual(r.body.structuredGrounding.unresolvedComponentTargets, ['hotspot:0']);
+  assert.equal(r.body.structuredGrounding.conflicts[0].workScope, true, 'unresolved target widens the conflict to work scope');
+  assert.deepEqual(r.body.structuredGrounding.conflicts[0].componentRefs, []);
 });
 
 t('VSD-029 keeps legacy points as candidates and routes spatial suppression without deleting content', () => {

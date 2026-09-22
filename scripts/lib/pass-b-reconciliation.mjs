@@ -16,6 +16,7 @@ export const CLAIM_BUNDLE_VERSION = 'passBClaimBundle/1';
 export const CLAIM_DECISIONS_VERSION = 'passBClaimDecisions/2';
 export const RECONCILIATION_REPORT_VERSION = 'passBReconciliationReport/1';
 export const RECONCILIATION_POLICY_VERSION = 'passBReconciliationPolicy/1';
+export const STRUCTURED_RECONCILIATION_POLICY_VERSION = 'passBReconciliationPolicy/2-structured-b4';
 export const RECONCILIATION_ACTIVE_VERSION = 'passBReconciliationActive/1';
 export const CONTENT_READINESS = Object.freeze(['eligible', 'review-required', 'blocked']);
 export const EFFECTIVE_STATES = Object.freeze(['accepted', 'rejected', 'disputed', 'unresolved']);
@@ -204,6 +205,13 @@ function itemGrounding(item, sourceIndex) {
     groundingArtifactRef: null,
   };
 }
+function structuredGroundingFor(b4, componentId) {
+  const row = b4?.structuredGrounding?.components?.find(item => item.componentId === componentId);
+  return row ? {
+    claimRefs: uniq(row.claimRefs || []), observationRefs: uniq(row.observationRefs || []),
+    groundingMode: 'explicit', groundingAuthority: 'model-proposal', groundingArtifactRef: null,
+  } : null;
+}
 function component(surface, componentId, value, grounding = {}) {
   return {
     componentId, surface,
@@ -221,23 +229,31 @@ function component(surface, componentId, value, grounding = {}) {
 function componentRows(b4, projectedRecord, sourceIndex) {
   const teach = projectedRecord?.teach || {};
   const hotspots = projectedRecord?.hotspots || [];
+  const structured = b4?.structuredGrounding?.version === 'passBStructuredGrounding/1';
   const rows = [];
-  rows.push(component('why', teach.why == null ? 'why:empty' : 'why', teach.why ?? null));
-  (teach.cues || []).forEach((v, i) => rows.push(component('cues', `cue:${i}`, v)));
+  const whyId = teach.why == null ? 'why:empty' : 'why';
+  rows.push(component('why', whyId, teach.why ?? null, structuredGroundingFor(b4, whyId) || {}));
+  (teach.cues || []).forEach((v, i) => {
+    const componentId = structured ? `cue:c_${sha256(`${i}|${v}`).slice(0, 10)}` : `cue:${i}`;
+    rows.push(component('cues', componentId, v, structuredGroundingFor(b4, componentId) || {}));
+  });
   if (!(teach.cues || []).length) rows.push(component('cues', 'cue-set:empty', []));
   (teach.notes || []).forEach((v, i) => {
     const src = b4?.notes?.[i] || {};
-    rows.push(component('notes', `note:${src.noteId || i}`, v, itemGrounding(src, sourceIndex)));
+    const componentId = `note:${src.noteId || i}`;
+    rows.push(component('notes', componentId, v, structuredGroundingFor(b4, componentId) || itemGrounding(src, sourceIndex)));
   });
   if (!(teach.notes || []).length) rows.push(component('notes', 'note-set:empty', []));
   (hotspots || []).forEach((v, i) => {
     const src = b4?.hotspots?.[i] || {};
-    rows.push(component('hotspots', `hotspot:${src.hotspotId || i}`, v, itemGrounding(src, sourceIndex)));
+    const componentId = `hotspot:${src.hotspotId || i}`;
+    rows.push(component('hotspots', componentId, v, structuredGroundingFor(b4, componentId) || itemGrounding(src, sourceIndex)));
   });
   if (!hotspots.length) rows.push(component('hotspots', 'hotspot-set:empty', []));
   (teach.guide || []).forEach((v, i) => {
     const src = b4?.guide?.[i] || {};
-    rows.push(component('guide', `guide:${src.questionId || i}`, v, itemGrounding(src, sourceIndex)));
+    const componentId = `guide:${src.questionId || i}`;
+    rows.push(component('guide', componentId, v, structuredGroundingFor(b4, componentId) || itemGrounding(src, sourceIndex)));
   });
   if (!(teach.guide || []).length) rows.push(component('guide', 'guide-set:empty', []));
   return rows;
@@ -267,23 +283,34 @@ export function buildClaimBundle({ sources, projectedRecord, sourceSpans = [], e
   }
   for (const c of claims) c.observationRefs = obsByClaim.get(c.claimId) || [];
   const components = componentRows(sources.b4, projectedRecord, sourceClaimIndex(claims));
-  const conflicts = (sources.b4?.conflicts || []).map((c, i) => ({
-    conflictId: `b4-conflict:${i}`,
-    claimRefs: [],
-    componentRefs: fieldComponents(c.field, components),
-    workScope: fieldComponents(c.field, components).length === 0,
-    left: c.left,
-    right: c.right,
-    modelStatus: c.status,
-    resolutionProposal: c.resolution || '',
-  }));
-  const openClaims = sources.b4?.uncertainty ? [{
-    openClaimId: 'b4-uncertainty:0', proposition: sources.b4.uncertainty,
-    componentRefs: [], workScope: true, modelStatus: 'open',
-  }] : [];
+  const structured = sources.b4?.structuredGrounding?.version === 'passBStructuredGrounding/1';
+  const structuredConflicts = new Map((sources.b4?.structuredGrounding?.conflicts || []).map(row => [row.conflictIndex, row]));
+  const conflicts = (sources.b4?.conflicts || []).map((c, i) => {
+    const scoped = structured ? structuredConflicts.get(i) : null;
+    const inferred = scoped ? scoped.componentRefs : fieldComponents(c.field, components);
+    return {
+      conflictId: scoped?.conflictId || `b4-conflict:${i}`,
+      claimRefs: scoped?.claimRefs || [],
+      componentRefs: inferred,
+      workScope: scoped ? scoped.workScope : inferred.length === 0,
+      left: c.left,
+      right: c.right,
+      modelStatus: c.status,
+      resolutionProposal: c.resolution || '',
+    };
+  });
+  const openClaims = structured
+    ? (sources.b4.structuredGrounding.openClaims || []).map(row => ({
+      openClaimId: row.openClaimId, proposition: row.proposition, claimRefs: row.claimRefs || [],
+      componentRefs: row.componentRefs, workScope: row.workScope, modelStatus: 'open',
+    }))
+    : (sources.b4?.uncertainty ? [{
+      openClaimId: 'b4-uncertainty:0', proposition: sources.b4.uncertainty,
+      componentRefs: [], workScope: true, modelStatus: 'open',
+    }] : []);
   return {
     version: CLAIM_BUNDLE_VERSION,
-    policyVersion: RECONCILIATION_POLICY_VERSION,
+    policyVersion: structured ? STRUCTURED_RECONCILIATION_POLICY_VERSION : RECONCILIATION_POLICY_VERSION,
     workId: sources.workId,
     imageSha256: sources.sourceBindings.imageSha256,
     sourceBindings: sources.sourceBindings,
@@ -306,6 +333,7 @@ export function validateClaimBundle(bundle) {
   const need = (v, m) => { if (!v) errors.push(m); };
   need(obj(bundle) && bundle.version === CLAIM_BUNDLE_VERSION, 'bad bundle version');
   if (!obj(bundle)) return { ok: false, errors };
+  need([RECONCILIATION_POLICY_VERSION, STRUCTURED_RECONCILIATION_POLICY_VERSION].includes(bundle.policyVersion), 'bad reconciliation policy version');
   need(text(bundle.workId, 500), 'workId');
   need(SHA.test(bundle.imageSha256 || ''), 'imageSha256');
   need(obj(bundle.sourceBindings), 'sourceBindings');
@@ -356,6 +384,8 @@ export function validateClaimBundle(bundle) {
   }
   for (const x of bundle.openClaims || []) {
     need(obj(x) && ID.test(x.openClaimId || '') && text(x.proposition) && Array.isArray(x.componentRefs) && typeof x.workScope === 'boolean', 'open claim shape');
+    if (Object.hasOwn(x || {}, 'claimRefs')) need(Array.isArray(x.claimRefs), `open claim claimRefs: ${x?.openClaimId}`);
+    for (const ref of x.claimRefs || []) need(claimIds.has(ref), `open claim claim ref missing: ${ref}`);
     for (const ref of x.componentRefs || []) need(componentIds.has(ref), `open claim component ref missing: ${ref}`);
   }
   return { ok: errors.length === 0, errors };
@@ -491,7 +521,7 @@ export function auditReconciliation(bundle, decisionsArtifact = buildDecisionArt
   const contentReadiness = severity(componentReadiness.map(c => c.contentReadiness));
   const reportCore = {
     version: RECONCILIATION_REPORT_VERSION,
-    policyVersion: RECONCILIATION_POLICY_VERSION,
+    policyVersion: bundle.policyVersion,
     workId: bundle.workId,
     sourceBindings: bundle.sourceBindings,
     claimBundleSha256: sha(bundle),
