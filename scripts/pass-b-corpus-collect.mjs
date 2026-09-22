@@ -10,7 +10,8 @@
 //     queue derived from verified terminal states (no fragile cursor).
 //  5. failure taxonomy: retryable transport (1 retry) | usage-limit (stop, never retry) | fatal
 //     (apiKeySource!=none, model drift, contract mismatch, checkpoint-integrity, confinement) -> abort.
-//  6. exclusive run lease + per-work-stage leases; a second collector is refused.
+//  6. exclusive run lease + per-work-stage leases; a second collector is refused. Dead-PID stage leases
+//     are recovered on resume; live or malformed lease conflicts remain fail-closed and never terminalize a work.
 //  7. cached derivatives rehashed before every reuse; b0-prep reopened + verified vs image/catalog/legacy.
 //  8. robust CLI main guard (relative invocation runs).
 //   node scripts/pass-b-corpus-collect.mjs                      # DRY: queue+ledger+migration check, no calls
@@ -53,7 +54,9 @@ export function derivativeMatches(path, sha) { try { return existsSync(path) && 
 // A usage-limit interruption is NOT a terminal failure — the work is left for resume, never held.
 export function isUsageInterrupted(status) { return Object.values(status || {}).some(s => typeof s === 'string' && /usage limit/i.test(s)); }
 // Self-heal: held ids without a recorded terminal reason (legacy/usage-interrupted holds) are requeued once.
-export function heldToRequeue(heldIds, heldReasons = {}) { return (heldIds || []).filter(id => !heldReasons[id]); }
+export function isLeaseInterrupted(status) { return Object.values(status || {}).some(s => typeof s === 'string' && /stage [A-Z0-9]+ leased by another collector/i.test(s)); }
+export function isRecoverableHeldReason(reason) { return !reason || /stage [A-Z0-9]+ leased by another collector/i.test(String(reason)); }
+export function heldToRequeue(heldIds, heldReasons = {}) { return (heldIds || []).filter(id => isRecoverableHeldReason(heldReasons[id])); }
 const RUN_ID = runIdFor({ promptHashes: { ...PROMPT_HASHES_B0B3, B4: sha256(prompts.B4) } });
 const RUN_DIR = join(RUN_ROOT, RUN_ID);
 const IMGS_DIR = join(RUN_DIR, 'imgs');
@@ -70,7 +73,40 @@ const atomicWrite = (path, text) => { const tmp = `${path}.tmp-${process.pid}`; 
 class UsageLimitError extends Error {}
 class FatalError extends Error {}
 class RetryableError extends Error {}
+class StageLeaseBusyError extends Error {}
 const USAGE_MARKER = /usage limit|spend limit|rate.?limit|quota/i;
+
+const processIsAlive = (pid) => {
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return e?.code !== 'ESRCH'; } // EPERM/unknown fail closed: assume the process is alive.
+};
+const parseStageLease = (text) => {
+  const m = String(text || '').trim().match(/^(\d+)\s+(\S+)$/);
+  if (!m || !Number.isSafeInteger(Number(m[1])) || Number(m[1]) <= 0 || !Number.isFinite(Date.parse(m[2]))) return null;
+  return { pid: Number(m[1]), createdAt: m[2] };
+};
+// Acquire a stage lease without requiring manual deletion after an interrupted collector. Only a well-formed
+// lease owned by a demonstrably dead PID is removed. Live, same-process, malformed, unreadable, or racing
+// leases remain fail-closed. The run-level lease still prevents two healthy collectors from starting together.
+export function acquireStageLease(lease, { pid = process.pid, now = new Date().toISOString(), isAlive = processIsAlive } = {}) {
+  const payload = `${pid} ${now}`;
+  try { writeFileSync(lease, payload, { flag: 'wx' }); return { recoveredStale: false }; }
+  catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    let priorText;
+    try { priorText = readFileSync(lease, 'utf8'); } catch { throw new StageLeaseBusyError('stage lease exists but cannot be verified'); }
+    const prior = parseStageLease(priorText);
+    if (!prior) throw new StageLeaseBusyError('stage lease exists with malformed ownership');
+    if (prior.pid === pid || isAlive(prior.pid)) throw new StageLeaseBusyError(`stage lease is active (pid ${prior.pid})`);
+    // Re-read before unlinking so a replacement lease cannot be mistaken for the dead owner's bytes.
+    let currentText;
+    try { currentText = readFileSync(lease, 'utf8'); } catch { throw new StageLeaseBusyError('stage lease changed during stale recovery'); }
+    if (currentText !== priorText) throw new StageLeaseBusyError('stage lease changed during stale recovery');
+    try { unlinkSync(lease); } catch { throw new StageLeaseBusyError('stale stage lease could not be removed'); }
+    try { writeFileSync(lease, payload, { flag: 'wx' }); return { recoveredStale: true, priorPid: prior.pid }; }
+    catch (writeErr) { throw new StageLeaseBusyError(`stage lease was claimed during stale recovery (${writeErr.code || 'error'})`); }
+  }
+}
 
 // ---- item 2: canonical scheduling priority + rotation ----
 const normQ = (id) => { const m = String(id).match(/Q\d+/i); return m ? m[0].toUpperCase() : String(id); };
@@ -152,7 +188,8 @@ function makeSpawnStage(workRunDir, imgSha256, ext, id) {
   const attemptsDir = join(workRunDir, 'attempts'); mkdirSync(attemptsDir, { recursive: true, mode: 0o700 });
   const once = async (stage, command, imageFile) => {
     const lease = join(workRunDir, `${stage}.lease`);
-    try { writeFileSync(lease, `${process.pid} ${new Date().toISOString()}`, { flag: 'wx' }); } catch (e) { if (e.code === 'EEXIST') throw new FatalError(`stage ${stage} leased by another collector`); throw e; }
+    try { acquireStageLease(lease); }
+    catch (e) { if (e instanceof StageLeaseBusyError) throw new FatalError(`stage ${stage} leased by another collector: ${e.message}`); throw e; }
     const call = mkdtempSync(join(tmpdir(), 'corpus-'));
     try {
       if (imageFile) copyFileSync(join(IMGS_DIR, `${imgSha256}.${ext}`), join(call, imageFile));
@@ -283,7 +320,7 @@ async function main() {
   // Self-heal: a usage-limit interruption must NOT terminalize a work. Any held id lacking a recorded terminal
   // reason (legacy holds from before reason-tracking, incl. usage-interrupted works) is requeued once so it is
   // re-classified correctly; genuine terminal failures will re-hold WITH a reason.
-  for (const id of heldToRequeue([...heldSet], led.heldReasons)) heldSet.delete(id);
+  for (const id of heldToRequeue([...heldSet], led.heldReasons)) { heldSet.delete(id); delete led.heldReasons[id]; }
   // item 3: explicit narrow requeue of named held works
   const requeue = process.env.PASS_B_CORPUS_REQUEUE ? process.env.PASS_B_CORPUS_REQUEUE.split(',').map(s => s.trim()).filter(Boolean) : [];
   for (const id of requeue) { heldSet.delete(id); delete led.heldReasons[id]; }
@@ -324,8 +361,10 @@ async function main() {
     const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts, runtimeVersion: process.env.CLAUDE_CODE_VERSION || 'unknown', spawnStage: makeSpawnStage(workRunDir, prep.imgSha256, prep.ext, id), capture: makeCapture(workRunDir), loadCompletion: makeLoadCompletion(workRunDir, id, prep.imgSha256, prep.ext), skipB4: true });
     if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
     const usageInterrupted = isUsageInterrupted(status);
+    const leaseInterrupted = isLeaseInterrupted(status);
     if (deriveDone(id, legacy)) doneSet.add(id);
     else if (usageInterrupted) { /* usage-limit interruption — NOT terminal; left for resume (no hold) */ }
+    else if (leaseInterrupted) { console.log(`LEASE-BUSY ${id} — nonterminal; left for verified resume`); }
     else { hold(id, `stage-fail:${JSON.stringify(status)}`.slice(0, 200)); console.log(`HELD ${id}: ${JSON.stringify(status)}`); } // genuine schema/content fail after its retry is terminal
   };
   const lane = async () => {

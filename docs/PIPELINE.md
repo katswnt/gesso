@@ -366,6 +366,9 @@ VSD-035 adds the actual deterministic reconciliation layer:
   remaining M/H/I → fallback), with region/source/medium rotation; queue derived from verified terminal states
   (done recomputed from artifacts, held terminal with a narrow `PASS_B_CORPUS_REQUEUE` for named works). Four
   lanes; exclusive run + per-stage leases; monotonic exclusive attempt ids; attempt/retry counters persisted.
+  A well-formed stage lease whose recorded PID is dead is recovered on resume; a live, malformed, unreadable,
+  or racing lease remains fail-closed but is a nonterminal interruption, never a content/schema hold. Historical
+  holds carrying the old `leased by another collector` reason are requeued automatically on the next start.
   Failure taxonomy: retryable transport (one retry, both attempts preserved) | usage-limit (stop, never retry,
   resume from checkpoints) | fatal (`apiKeySource!=none`, model drift, contract mismatch, checkpoint-integrity,
   confinement → abort). Cached derivatives rehashed and `b0-prep` re-verified against image/catalog/legacy

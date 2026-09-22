@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, heldToRequeue } from '../scripts/pass-b-corpus-collect.mjs';
+import { runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease } from '../scripts/pass-b-corpus-collect.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
 
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok', name); };
@@ -85,6 +85,37 @@ t('12. usage-limit interruption is not terminal; genuine stage-fail is', () => {
 });
 t('13. held ids without a recorded reason are requeued (self-heal for leaked usage holds)', () => {
   assert.deepStrictEqual(heldToRequeue(['a', 'b', 'c'], { b: 'B0:http-status' }), ['a', 'c'], 'unreasoned holds requeued; reasoned hold stays');
+});
+
+t('14. stale-lease holds requeue, but genuine content holds remain terminal', () => {
+  const reasons = {
+    stale: 'stage-fail:{"B2":"failed:stage B2 leased by another collector"}',
+    content: 'stage-fail:{"B2":"failed:invalid B2 body: catalog.sensitivity"}',
+  };
+  assert.deepStrictEqual(heldToRequeue(['stale', 'content'], reasons), ['stale']);
+  assert.ok(isLeaseInterrupted({ B1: 'complete', B2: 'failed:stage B2 leased by another collector: stage lease is active (pid 7)' }));
+  assert.ok(!isLeaseInterrupted({ B1: 'complete', B2: 'failed:invalid B2 body: guideAnswers' }));
+});
+
+t('15. a well-formed dead-PID stage lease is reclaimed, while a live lease is preserved', () => {
+  const d = mkdtempSync(join(tmpdir(), 'stage-lease-')); const p = join(d, 'B2.lease');
+  try {
+    writeFileSync(p, '12345 2026-09-21T18:00:00.000Z');
+    const recovered = acquireStageLease(p, { pid: 99999, now: '2026-09-22T18:00:00.000Z', isAlive: () => false });
+    assert.deepStrictEqual(recovered, { recoveredStale: true, priorPid: 12345 });
+    assert.strictEqual(readFileSync(p, 'utf8'), '99999 2026-09-22T18:00:00.000Z');
+    assert.throws(() => acquireStageLease(p, { pid: 77777, isAlive: () => true }), /stage lease is active/);
+    assert.strictEqual(readFileSync(p, 'utf8'), '99999 2026-09-22T18:00:00.000Z', 'live lease remains untouched');
+  } finally { rmSync(d, { recursive: true, force: true }); }
+});
+
+t('16. malformed stage lease fails closed and is never deleted', () => {
+  const d = mkdtempSync(join(tmpdir(), 'stage-lease-malformed-')); const p = join(d, 'B3.lease');
+  try {
+    writeFileSync(p, 'not-a-valid-owner');
+    assert.throws(() => acquireStageLease(p, { pid: 2, isAlive: () => false }), /malformed ownership/);
+    assert.strictEqual(readFileSync(p, 'utf8'), 'not-a-valid-owner');
+  } finally { rmSync(d, { recursive: true, force: true }); }
 });
 
 console.log(`\n${n} corpus-collector regressions passed`);
