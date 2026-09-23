@@ -29,10 +29,13 @@ import { auditReconciliation, buildClaimBundle, validateClaimBundle } from './li
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 
 const execFileP = promisify(execFile);
-export const CANARY_VERSION = 'passBStructuredB4Canary/3';
+export const CANARY_VERSION = 'passBStructuredB4Canary/4';
 export const SOURCE_RUN = 'cal50-0a47b6f7f332';
 export const MAX_ATTEMPTS = 10;
-export const CALL_TIMEOUT_MS = 6 * 60 * 1000;
+// 49 preserved b4c results: median 184391ms, max 302585ms; the /3 La Gloire call was
+// censored at 360000ms. Fifteen minutes gives ~3x the historical maximum, 2.5x that lower bound.
+// This is bounded headroom for structured grounding, not an estimated completion-time guarantee.
+export const CALL_TIMEOUT_MS = 15 * 60 * 1000;
 const CALL_KILL_SIGNAL = 'SIGKILL';
 const ATTEMPT_RESERVATION_VERSION = 'passBStructuredB4AttemptReservation/1';
 export const CANARY_WORKS = Object.freeze([
@@ -184,11 +187,15 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   const apiKeySources = execution.inits.map(init => init.apiKeySource ?? null);
   const invalidInit = apiKeySources.findIndex(source => source !== 'none');
   const apiKeySource = invalidInit >= 0 ? apiKeySources[invalidInit] : (apiKeySources.length ? 'none' : null);
+  const exactInitTools = execution.inits.every(init => Array.isArray(init.tools) &&
+    init.tools.length === 1 && init.tools[0] === 'StructuredOutput');
+  const forbiddenTool = execution.toolUses.some(row => row.type !== 'tool_use' || row.name !== 'StructuredOutput');
   const errors = [];
   let kind = 'held';
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
   else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
-  else if (execution.toolUses.length) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
+  else if (!exactInitTools) { kind = 'fatal'; errors.push('B4 init tools must be exactly [StructuredOutput]'); }
+  else if (forbiddenTool || execution.toolUses.length > 1) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
   else if (exitCode === 'timeout') errors.push('process-timeout');
   else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
@@ -196,6 +203,9 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   const delta = final?.structured_output ?? null;
   let body = null, bundle = null, reconciliation = null, leaks = [];
   if (kind !== 'usage-limit' && kind !== 'fatal') {
+    // StructuredOutput is the CLI's --json-schema return adapter, not a research/image capability.
+    // Successful acceptance needs exactly one emission. Interrupted calls may have none and stay held.
+    if (execution.toolUses.length !== 1) errors.push('missing-StructuredOutput-emission');
     if (delta?.version !== B4_DELTA_VERSION) errors.push(`delta-version:${delta?.version || 'missing'}`);
     if (delta) {
       const assembled = assembleAndValidateB4({ delta, b1: plan.b1, b2: plan.b2, b3: plan.b3, legacy: plan.legacy });
@@ -354,6 +364,7 @@ function scopingSummary(derived) {
 
 export async function runCanary({ planSet, outDir = join(RUN_ROOT, planSet.runId), callFn = callB4 } = {}) {
   if (!planSet) throw new Error('planSet required');
+  if (planSet.binding?.version !== CANARY_VERSION) throw new Error('execution contract differs from current canary; preserved runs cannot be resumed under a new contract');
   const manifestPath = join(outDir, 'run-manifest.json');
   if (!existsSync(outDir)) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
@@ -428,13 +439,14 @@ function printPlan(planSet) {
   console.log(`execution contract: ${CANARY_VERSION}`);
   console.log(`source: ${planSet.source} (read-only B0-B3 evidence)`);
   console.log(`model: ${CALIBRATION_MODEL} | delta: ${B4_DELTA_VERSION} | B4 contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
-  console.log(`execution gate: every init must report apiKeySource:none; every *tool_use block is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
+  console.log(`execution gate: every init must report apiKeySource:none and tools exactly [StructuredOutput]; acceptance requires exactly one tool_use:StructuredOutput output emission. Every other *tool_use, server tool, extra emission or init tool is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
   console.log(`hard budget: ${MAX_ATTEMPTS} durable pre-call reservations across resumes; ${planSet.plans.length} works; zero validation retries`);
   console.log('the cap assumes preserved history on the trusted local filesystem; deleting reservation history is outside its guarantee.');
   console.log('a reservation without complete transcript/result/meta evidence is consumed and terminal (unknown-outcome); accepted/held/fatal are terminal even without checkpoint.json.');
   console.log('usage-limit is the only retryable result; its reservation still consumes a slot. Any preserved fatal or unknown-outcome stops all further calls.');
   for (const plan of planSet.plans) console.log(`  - ${plan.workId} | ${plan.reason} | B1=${plan.sourceBinding.B1.completionSha256.slice(0, 10)} B2=${plan.sourceBinding.B2.completionSha256.slice(0, 10)} B3=${plan.sourceBinding.B3.completionSha256.slice(0, 10)}${plan.sealedFindingIds.length ? ' | SEALED-HOLD' : ''}`);
-  console.log('output manifest precedes calls; reservations plus verified transcript/result/meta evidence govern resume and reporting; B4 has no tools/image/web.');
+  console.log('output manifest precedes calls; reservations plus verified transcript/result/meta evidence govern resume and reporting; B4 has no research/image/web tools (StructuredOutput is the CLI output adapter).');
+  console.log('this execution contract creates a fresh ten-slot budget; earlier contract runs remain preserved and cannot resume under this policy.');
   console.log('the plan verifies the canonical sealed-finding artifact/IDs; SEALED-HOLD records their presence. The runner has no resolution/approval path.');
   console.log('report is a schema/scoping smoke only: no factual-accuracy, release-eligibility, approval, or production claim.');
   console.log('LIVE COMMAND (do not run without owner spend authorization):');
