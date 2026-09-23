@@ -358,22 +358,38 @@ VSD-035 adds the actual deterministic reconciliation layer:
   evidence-manifest membership of source/upstream manifests and B0–B3/source-B4 bytes, the
   manifest-bound source-B4 delta and transcript hash, recorded current-image SHA, and exact
   projected production content. This layer does not freshly hash the current image bytes.
-- **Corpus B0–B3 collector** (`scripts/pass-b-corpus-collect.mjs`, `passBCorpusCollector/2`): smallest wrapper
-  over the verified primitives (img-broker, `runWorkStages` `skipB4:true`, stage validators + capture,
-  `loadOrArchiveCompletion`). Run identity binds model + collector + broker + image-transport + validation +
-  **B1–B3 prompt hashes only** (a B4 change never invalidates B0–B3). Queue follows the vision-system.md
-  scheduling priority (next 7 days → days 8–30 → Easy → highest-fame quintile of Medium/Hard/Impossible →
-  remaining M/H/I → fallback), with region/source/medium rotation; queue derived from verified terminal states
-  (done recomputed from artifacts, held terminal with a narrow `PASS_B_CORPUS_REQUEUE` for named works). Four
-  lanes; exclusive run + per-stage leases; monotonic exclusive attempt ids; attempt/retry counters persisted.
-  A well-formed stage lease whose recorded PID is dead is recovered on resume; a live, malformed, unreadable,
-  or racing lease remains fail-closed but is a nonterminal interruption, never a content/schema hold. Historical
-  holds carrying the old `leased by another collector` reason are requeued automatically on the next start.
-  Failure taxonomy: retryable transport (one retry, both attempts preserved) | usage-limit (stop, never retry,
-  resume from checkpoints) | fatal (`apiKeySource!=none`, model drift, contract mismatch, checkpoint-integrity,
-  confinement → abort). Cached derivatives rehashed and `b0-prep` re-verified against image/catalog/legacy
-  before reuse. Prior verified completions migrate hash-bound into a new run identity; the old run is preserved.
-  No B4/reconciliation/release-policy/approval/owner-decisions/production.
+- **Corpus B0–B3 collector** (`scripts/pass-b-corpus-collect.mjs`, `passBCorpusCollector/4`,
+  VSD-041/042/045): subscription-only collection stays quarantined. Default invocation is now a
+  genuinely read-only plan: no ledger write, migration, lease, run-directory creation, fetch, or call.
+  It reopens B0/image plus each completion/raw/transcript and recomputes verified totals and terminal
+  holds. A missing hold reason never requeues a genuine validation failure. Preserved fatal history,
+  a durable `fatal.json`, or a fatal ledger stop prevents further calls; a caught stage exception cannot
+  erase that stop. Operational exceptions pause without creating a fatal finding. Incomplete fresh
+  attempt reservations stop resume as unknown outcomes for review. No blind named requeue remains.
+  `--repair-history` is offline maintenance: acquire the exclusive run lease, copy only missing raw
+  bytes from identical verified prior completion evidence, and update the local operational ledger.
+  The 2026-09-22 repair restored 75 raw files in 25 migrated works and re-held ten genuine failures;
+  416 completions verify (153 B1 / 134 B2 / 129 B3), 129 done, 23 held, 500 preserved attempts.
+  The evidence run remains `corpus-b3-6401bc543ead` under its unchanged `/2` B1–B3 input/acceptance
+  contract; historical producer labels are retained. Before new calls, append-only numbered files in
+  `execution-policies/` bind `/4`, exact installed CLI version, model, prompt hashes, validation and
+  scheduling rules. Each epoch binds its predecessor; each reservation binds its own epoch and policy
+  hashes. An old `/3` `execution-policy.json`, if present, remains unchanged as epoch zero. The child
+  environment enforces `DISABLE_AUTOUPDATER=1`, including local version inspection. Runtime drift
+  pauses before capture; only an explicit offline `--rebind-runtime <review.json>` appends a reviewed
+  successor. It never accepts a drifted body retrospectively or authorizes calls. Fresh captured
+  producer evidence uses the exact bound CLI version. Each fresh attempt is exclusively reserved
+  before invocation and preserves transcript + metadata.
+  Current scope is Pacific today through the following 29 dates, earliest date first, with diversity
+  rotation only within a date; no fall-through to Easy or the rest of the corpus. Every stage and retry
+  rechecks the 00:00–08:30 start window; clients have a 30-minute maximum and a 09:00 cutoff.
+  Missing/incomplete evidence and hang timeouts never trigger automatic conformance repair. A recorded
+  SIGKILL at/after 09:00 is a nonterminal deadline pause; proven provenance failures still take precedence.
+  Usage limits stop, and transport gets at most one retry with the same time gate. A single rejected B2
+  body followed by a usage rejection retains its one pending validation retry; the controller checks
+  preserved rejected-body counts before each B2 invocation, preventing a third conformance attempt. The four-lane collector and stage leases retain exclusive ownership; dead-PID leases
+  may be recovered, while live/malformed ownership fails closed. New-input or corrupt evidence is
+  preserved for review rather than automatically overwritten. No B4, approval, rescheduling or sink.
 - **Structured B4 fork** (VSD-039, offline implementation): B1–B3 checkpoints stay under the shared
   `passBValidation/4` contract. A later B4-only call is independently bound to
   `passBValidationB4/1-structured-grounding`, the B4 prompt hash, and the exact B1/B2/B3 completion
@@ -462,6 +478,86 @@ These commands never mutate B0–B4 evidence and never publish. `--write` create
 set with exclusive-create writes and atomically advances the separately hash-bound active pointer;
 the tool refuses to overwrite a different prior set or activation. Auto-policy and the curated
 index remain unauthorized.
+
+
+### Current launch scope and collector operation (VSD-041–045)
+
+Owner intent: Max 5x subscription only, almost all available weekly capacity, no deadline;
+a rolling 30-day buffer is the current scope. Public announcement requires completed B0–B4
+and approved auto-policy publication with no legacy teaching filler. The auto-policy,
+visible-content inventory, subset validation, writer/rollback and nightly supervisor remain
+unimplemented; `tasks/pass-b-auto-publish-policy-draft.md` v2 is proposed, not approval.
+The 50-work calibration/2-per-100 review proposal does not establish a rare-error guarantee.
+
+```bash
+# Read-only plan/status: safe offline; verifies preserved evidence and the Pacific window.
+node scripts/pass-b-corpus-collect.mjs
+
+# Explicit offline maintenance only: repairs missing raw copies and evidence-derived ledger holds.
+# Does not run collection, contact a model, fetch images, approve content or change the daily schedule.
+node scripts/pass-b-corpus-collect.mjs --repair-history
+
+# Offline tests use isolated scratch fixtures; never invoke the old ledger-writing dry mode.
+node tests/pass-b-corpus-collect.test.mjs
+```
+
+Collection remains stopped. A later explicitly authorized `--run` additionally requires
+`PASS_B_CORPUS_LIVE=1`; it refuses starts outside 00:00–08:30 Pacific and never bypasses the
+09:00 client deadline. No model probe should be used to discover remaining capacity. Earlier
+handoff commands do not authorize resume or supersede these gates. The current repaired plan
+for 2026-09-22 contains 600 window works and 526 queued; that is B0–B3 queue state, not
+publication readiness or a calendar-time estimate.
+
+### Reviewed runtime rebind and fatal recovery
+
+A CLI update is an operational pause, not a reason to erase history. Keep collection stopped,
+inspect the old/new CLI behavior and security flags, run the offline collector regressions, and
+review the exact target returned by `executionPolicy("<new-semver>")`. The read-only plan exposes
+the active epoch SHA. An explicitly reviewed JSON artifact must contain:
+
+```json
+{
+  "version": "passBCorpusRuntimeReview/1",
+  "runId": "corpus-b3-6401bc543ead",
+  "fromEpochSha256": "<active epoch SHA from plan>",
+  "toRuntimeVersion": "<reviewed exact semver>",
+  "toPolicySha256": "<sha256(stableJson(executionPolicy(toRuntimeVersion)))>",
+  "reviewedBy": "<actual reviewer>",
+  "reviewedAt": "<actual ISO timestamp>",
+  "reason": "<review evidence and compatibility conclusion>"
+}
+```
+
+After that review, `node scripts/pass-b-corpus-collect.mjs --rebind-runtime /path/to/review.json`
+acquires the run lease and exclusively appends one epoch, preserving the review inside it. It makes
+no CLI/model/network call and does not rewrite the ledger or old attempts. A stale/replayed review
+fails. Re-run the read-only plan; only a separately authorized live invocation may collect again.
+Model, prompt, validation, scope and scheduling changes cannot be smuggled through a runtime rebind.
+These hashes are a trusted-local-filesystem integrity boundary, not signed reviewer identity.
+
+For a **fatal** or unknown outcome, keep the collector stopped. Preserve `fatal.json`, all epoch,
+reservation, transcript, raw and completion bytes. Independently review the exact evidence, root
+cause, affected attempts and proposed remediation; distinguish a genuine boundary failure from an
+older operational error incorrectly marked fatal. Record that review and get explicit authorization
+for the concrete recovery. There is intentionally no in-place `--clear-fatal`: runtime rebind refuses
+fatal history and cannot erase unknown outcomes. A true boundary-failed run stays quarantined;
+recovery requires a separately reviewed fresh execution scope and migration of only unaffected,
+reverified evidence. That exceptional migration/clearance is **not implemented by this command**;
+it must be prepared and tested before any resumed calls. Deleting `fatal.json` or editing the ledger
+is never clearance, because preserved fatal attempt evidence still stops execution.
+
+### Remaining publication and operational follow-ups
+
+- **F2 blocks A8 publication:** B0 legacy comparison still reads live teaching/hotspot files. One
+  changed work aborts the entire plan. Before any publisher is connected, preserve a frozen legacy
+  baseline, classify drift per work as stale, and exclude or explicitly rerun only the affected work
+  without overwriting evidence. The current collector does not claim publication-safe staleness.
+- The wrong-image hold for `Q87332407` still needs the VSD-010 image-repair workflow. It remains held;
+  this repair neither swaps an image nor changes daily scheduling.
+- Window hold replacements require the proposed policy's separately approved rescheduling mechanism.
+  The collector does not fill the window with legacy or silently extend collection beyond 30 days.
+- Previously reported dead-PID leases and old scratch directories are preserved. Normal resume can
+  recover a verified dead-PID lease; unrelated scratch/image files were not deleted by this repair.
 
 ### Calibration commands
 

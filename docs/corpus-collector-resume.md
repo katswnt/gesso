@@ -1,68 +1,63 @@
-# Corpus Pass B (B1–B3) collector — resume handoff
+# Corpus Pass B (B0–B3) collector — stopped; offline handoff
 
-Point a fresh Claude instance at this file. It can run on **any** model; the pipeline's own
-model is pinned in code and this does not change that.
+Read `AGENTS.md`, then all of `docs/vision-system.md` and `docs/PIPELINE.md` before pipeline work.
+This handoff does not authorize model calls. The collector remains stopped pending explicit owner spend
+instruction and review of the `/4` changes.
 
-## One command (resume from checkpoints)
+## Safe offline checks
 
 ```bash
-cd /Users/kathrynswint/Documents/artguessr
-# verify the collector is intact after any update, then resume:
 node --check scripts/pass-b-corpus-collect.mjs
-node tests/pass-b-corpus-collect.test.mjs            # must pass (offline, no calls)
-PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run   # 4 lanes, background
+node tests/pass-b-corpus-collect.test.mjs
+node scripts/pass-b-corpus-collect.mjs
 ```
 
-Dry check (no calls, prints runId + queue totals + migration):
-`node scripts/pass-b-corpus-collect.mjs`
+Default invocation is read-only, including the ledger and migration tree. Tests use isolated scratch
+fixtures. If an authorized history repair is needed, `--repair-history` copies only verified missing raw
+files and repairs evidence-derived ledger state under the exclusive run lease; it cannot call a model or
+fetch an image. The 2026-09-22 repair is complete: 75 raw files restored for 25 migrated works, ten genuine
+failures re-held, 416 verified completions, 129 done / 23 held / 500 preserved attempts.
 
-Pause: `pkill -f pass-b-corpus-collect` (then remove `.../corpus-b3-*/collector.lease` only if its
-PID is dead). Resume is idempotent — completed stages are skipped via verified checkpoints.
+## Later owner-authorized collection
 
-## Model guarantee (Sonnet 4.6 stays Sonnet 4.6)
+`PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run` is the live entry point; do not run it
+from this handoff alone. The scope is Pacific today plus the following 29 dates, earliest date first,
+with no fall-through to Easy or the rest of the corpus. Every stage/retry must start 00:00–08:30 Pacific;
+clients finish or are terminated by 09:00. Foreground invocation does not bypass these limits.
 
-- Every B1/B2/B3 call is spawned with `--model claude-sonnet-4-6` (`CALIBRATION_MODEL`), keys
-  stripped, `apiKeySource:none`. The collector **fatally aborts on model drift** — it will halt
-  before using any other model. The orchestrating Claude instance's model is irrelevant.
-- If an update renames/removes `claude-sonnet-4-6`, the run fail-closes; fixing it is a
-  `CALIBRATION_MODEL` code change (send it through Codex review), not a prompt.
+The evidence directory stays `data/incoming/vision-calibration/corpus-b3-6401bc543ead/` under the banked
+`passBCorpusCollector/2` input/acceptance contract. Runtime `/4` is bound before new calls by append-only
+`execution-policies/` epochs, including the exact installed CLI version. Each reservation verifies against
+its own epoch. Children use `DISABLE_AUTOUPDATER=1`. Drift pauses until an explicit reviewed offline
+`--rebind-runtime <review.json>` appends a successor; old attempts are never relabeled. See the
+[review artifact and recovery procedure](PIPELINE.md#reviewed-runtime-rebind-and-fatal-recovery). Historical completion envelopes are preserved, including their older
+`runtimeVersion:unknown`; their transcripts remain the CLI-version evidence.
 
-## Scope — do NOT cross these lines
+The requested primary model is `claude-sonnet-4-6`; wrong provenance/model results fail fatally; CLI drift pauses
+and stops future calls pending the reviewed rebind. **Capability correction:** this checks returned evidence; it cannot prevent a
+provider from serving a wrong model before detection. Claude Code may also use Haiku internally to
+summarize fetched pages, so this is not a guarantee of exclusively Sonnet token usage.
 
-- **B1–B3 only.** No B4, reconciliation, release policy, approval, owner decisions, or
-  production writes. (B4 is handled separately by the owner + Codex.)
-- Do not alter B1–B3 prompts/schemas while collecting.
-- Do not touch the protected scripts: `pass-b-edit-pass.mjs`, `pass-b-edit-pass-diff.mjs`,
-  `pass-b-write-resolutions.mjs`.
-- VSD-038 (release grounding) stays paused/uncommitted; don't resume it here.
+Never make a throwaway model call to probe remaining capacity. Usage limits pause collection; resume
+only when reset evidence and the permitted time window allow it. Genuine validation failures remain
+terminal even without a hold reason. Fatal records and preserved fatal attempt evidence stop the whole
+run across restarts. Operational exceptions pause without creating `fatal.json`; unknown fresh reserved
+outcomes still stop resume for review. An observed 09:00 deadline termination pauses, while an earlier
+hang timeout is held. A B2 validation failure followed by usage rejection retains only its one unspent
+conformance retry; it cannot regain a fresh two-attempt budget across resumes. Do not delete evidence, reset a
+fatal, or use blind requeue to manufacture resumability. Well-formed dead-PID leases can be recovered by
+the collector; active/malformed ownership is preserved.
 
-## Stable artifacts
+B4, auto-policy, approval, owner decisions, daily rescheduling, and production writes are outside this
+collector. Do not modify B1–B3 prompts/schemas while collecting, the uncommitted VSD-038 prototype, or
+`pass-b-edit-pass.mjs`, `pass-b-edit-pass-diff.mjs`, `pass-b-write-resolutions.mjs`.
 
-- Collector + tests: `scripts/pass-b-corpus-collect.mjs`, `tests/pass-b-corpus-collect.test.mjs`
-  (committed, branch `g-03-image-agent-boundary`). Runbook: `docs/PIPELINE.md` (corpus collector bullet).
-- Run dir (checkpoints + `ledger.json`): `data/incoming/vision-calibration/corpus-b3-6401bc543ead/`
-  (gitignored). Deterministic runId — a fresh instance recomputes it and resumes the same run.
+The older handoff's automatic resume and throwaway usage-probe advice is explicitly superseded by this
+2026-09-22 correction and VSD-041/042/045. A fresh operator should present the concrete intended live
+scope for owner authorization if no such authorization exists in the active session.
 
-## Behavior to expect
-
-- Stops cleanly on a subscription **usage-limit**; resume when the window resets (probe with one
-  throwaway call, or just re-run — it fail-closes fast if still limited).
-- Held works are terminal *with a recorded reason* (schema-conformance / image-fetch failures);
-  usage-limit interruptions are NOT terminal and are retried on resume.
-- Ledger totals (`done` / `held` / `remaining`, stage completion counts) are recomputed from the
-  verified on-disk artifacts, so they're trustworthy across resumes.
-
-## What to tell the new instance
-
-> "Read `docs/corpus-collector-resume.md` in full, plus `docs/PIPELINE.md` (the corpus-collector
-> section) and the collector `scripts/pass-b-corpus-collect.mjs`. Then, BEFORE running anything or
-> making any model call, repeat back to me in your own words what you understand is happening: what
-> this pipeline does, its scope and hard limits, how the model is pinned, how resume/pause and the
-> checkpoints/ledger work, and exactly what command you'd run to resume. Wait for my confirmation.
-> Only after I confirm: verify the collector (node --check + its test), then resume the B1–B3
-> collector from its checkpoints. B1–B3 only; the pipeline is pinned to claude-sonnet-4-6 in code,
-> so run on whatever model you are. Don't touch B4/reconciliation/approval/production or the
-> protected scripts."
-
-The read-back-and-wait step is deliberate: it lets you confirm the new instance (possibly a new
-model after an update) has understood the scope and guardrails **before** it spends any calls.
+F2 remains a blocker before publication: this collector compares B0 legacy inputs to live content,
+so publication would currently cause a whole-plan drift failure. Frozen legacy baselines and per-work
+staleness are not implemented. The wrong-image repair queue and window replacement mechanism also
+remain follow-ups; no image or daily schedule was changed. Existing unrelated scratch files and old
+leases were preserved. The current 73 collector regressions are offline only.

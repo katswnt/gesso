@@ -121,6 +121,32 @@ as a separate decision.
 
 ## Pass B — descriptive content enrichment
 
+### Launch scope and subscription budget (VSD-041–044, owner confirmed 2026-09-22)
+
+Pass B uses the owner's Claude Max 5x subscription only, with almost all available weekly
+capacity allocated to enrichment and no deadline. No incremental API spend is authorized.
+The historical measured-usage estimate (about $6.9k interactive / $2.7k batch-optimized for
+the remaining corpus) motivated this choice; those estimates are not current price quotes
+or a throughput guarantee. Pass A's separately approved research budgets are unchanged.
+
+Maintain a rolling 30-day daily buffer, roughly 600 unique works with about 20 entering per
+day. Process scheduled works by their earliest date; Easy and the wider corpus wait until
+separately authorized. The initial collection horizon is today's Pacific date through the
+following 29 dates; it never rewrites daily scheduling or player history.
+
+Gesso is already live. Public announcement is gated on the next 30 days having completed
+the full B0–B4 pipeline and publication through an approved auto-policy, with no legacy
+teaching content left visible on upcoming dailies. Legacy coverage does not satisfy the gate.
+This supersedes VSD-014 for the public-announcement gate; it does not itself change the
+live site's schedule, approve any content, or authorize collection calls.
+
+The owner will not manually audit every work. Auto-audit and auto-publication are the
+intended path, with VSD-011's one-time 50-work calibration and 2/100 sampling available as
+the review proposal. The specific policy, risk thresholds, holdout size, higher launch sampling,
+subset teaching bar, and enrichment-based rescheduling remain proposed. The draft in
+`tasks/pass-b-auto-publish-policy-draft.md` is not approval. VSD-034's frozen labeled holdout,
+critical regression challenges, existing owner-review classes, and current release gates remain.
+
 ### What it must produce
 
 Pass B is not merely image QA. Its versioned superset schema must preserve and improve
@@ -375,8 +401,9 @@ Calibrate these states on a stratified set of 50 before using them broadly. A bl
 work is withheld from **unseen future dailies** and queued for image repair, but stays
 available in Collections. Do not rewrite today, past history, or already-seen dailies.
 For now, limit targeted replacement/rescheduling to the next 30 days and measure the
-count before expanding. There is no universal hard “daily must be vision-complete” gate
-yet because coverage is insufficient.
+count before expanding. VSD-043 now requires a completed and approved 30-day window before
+public announcement; that launch gate is not yet implemented. Rescheduling for insufficient
+enrichment, beyond VSD-010 image disposition, remains an unapproved policy proposal.
 
 When an image changes, rerun every image-grounded component. Preserve independently
 sourced catalog facts only when identity confidence remains high.
@@ -529,8 +556,10 @@ Pass B scheduling priority:
 6. remaining Hard;
 7. remaining Impossible.
 
-Within a priority band, rotate region, source, and medium so coverage does not become
-even more Eurocentric or host-concentrated.
+Under VSD-042, current collection stops at bands 1–2. Order those works by earliest
+Pacific daily date; rotate region, image source host, and medium only within the same date.
+The remaining bands are retained for later scope, not automatic fall-through. Highest-fame
+quintiles are calculated within each of Medium, Hard, and Impossible, not pooled.
 
 ## Unattended operation
 
@@ -542,13 +571,30 @@ and logged in.
 
 Timezone: `America/Los_Angeles`.
 
-- **09:00–22:00:** protected period; automated Pass B starts zero Claude calls.
-- **22:00–08:30:** overnight start window.
-- **08:30:** stop starting new work; an in-flight item may finish by 09:00.
+- **00:00 inclusive–08:30 exclusive:** the only automated call-start window (VSD-045).
+- **08:30:** stop starting every stage and retry, including later stages of an in-flight work.
+- **By 09:00:** in-flight client processes must finish or be terminated.
+- **09:00–24:00:** zero automated Pass B calls. This supersedes VSD-013's 22:00 start;
+  supervised collector invocation does not bypass the gate.
 
-Target no more than 75% of conservatively observed subscription capacity. Begin at 50%
-for three windows, raise to 70%, then to 75% only after the checkpoint/error data is
-stable. Do not buy or silently use extra API credits for Pass B. The child process must
+The collector implements these checks before each invocation and caps client execution at
+30 minutes and the remaining 09:00 deadline. A recorded deadline termination is a scheduling
+pause; an earlier hang timeout is a terminal hold. Other experimental entry points are not a
+replacement for this scheduling gate; their operators must obey the same operating intent.
+
+Fresh collector calls disable the child CLI auto-updater and bind an exact runtime in an
+append-only execution-policy epoch. Each reservation is checked against its own epoch;
+a later reviewed runtime upgrade never relabels banked attempts. Runtime drift pauses
+collection. A separate, explicit offline runtime review binds the current epoch and exact
+target policy before a successor can be appended; it authorizes no calls or content.
+Provenance, confinement, model and subscription-source failures remain durable fatal stops.
+Operational exceptions stop execution without manufacturing a permanent fatal finding;
+unknown reserved outcomes still stop resume for review. See the runbook's reviewed recovery
+procedure. None of this changes the B1–B3 content contract or creates release authority.
+
+VSD-041 supersedes the earlier 50→70→75% capacity-allocation target: the owner now
+allocates almost all weekly Max 5x capacity to Pass B. This is an allocation preference,
+not a known numerical allowance or permission to bypass usage-limit stops. Do not buy or silently use extra API credits for Pass B. The child process must
 remove `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` so it uses the intended subscription
 login. The installed Claude client may require both `api.anthropic.com` and `claude.ai`;
 do not assume an API-only hostname allowlist works until the prototype proves it.
@@ -591,6 +637,8 @@ summary, and never log tokens, cookies, API keys, or raw authorization errors.
 | Pass A recognition-inference pilot | Completed 2026-09-01: protocol freeze `5ea28c8`, sealed collection `9bcd580`, corrected Study-B closure `6a555af`; results are research-only and do not drive tiers |
 | Pass A survivor/censoring semantics and per-call checkpoints | Implemented and exercised in the completed pilot; raw responses remain append-only/hash-bound and non-monotonic vectors/censoring are preserved |
 | Pass A automatic tier use | Intentionally disabled/not implemented |
+| Pass B corpus resume and 30-day scheduler (VSD-041/042/045) | Implemented offline as `passBCorpusCollector/4`, with 73 regressions: read-only plan; completion/raw/transcript/image re-verification; evidence-derived terminal holds; durable fatal stop; repair of missing raw evidence; Pacific date-first 30-day queue; every stage/retry guarded by 00:00–08:30 starts and a client timeout before 09:00. Banked evidence identity stays `corpus-b3-6401bc543ead` under the unchanged B1–B3 `/2` collection contract; fresh execution gets immutable `/4` policy epochs with per-reservation CLI bindings, child auto-updater disabled, and an explicit reviewed runtime-rebind path. CLI drift/operational errors pause; provenance/confinement/model/subscription-source failures remain fatal. Deadline kills pause; B2 usage rejection preserves only the unspent validation retry. Historical runtime labels and evidence bytes are not rewritten. Offline repair restored 75 raw files for 25 migrated works and re-held ten genuine failures; 416 completions verify, 129 done / 23 held / 500 attempts. No collection resumed. Publication-safe frozen legacy input/per-work staleness (F2) remains unbuilt |
+| Public-announcement content gate (VSD-043/044) | Owner intent recorded; enforcement, approved auto-policy, calibrated semantic acceptance, publication/rollback, and rolling nightly job remain unbuilt. The v2 policy is proposed, with remaining review findings recorded separately; no publication or rescheduling authorized |
 | Unattended `launchd` supervisor and budget controller | Planned, not implemented |
 
 ## Open decisions and required evidence
@@ -608,7 +656,8 @@ decision, then append the result below.
    Read image `tool_result` from the `stream-json` transcript. The subscription/zero-web-for-
    the-image-stage intent stands; only the byte-transport mechanism changed. The historical
    *Prototype evidence* below is retained but is not evidence for the calibration transport.
-2. What observable usage/reset signal can safely drive the 50→70→75% subscription budget?
+2. What observable usage/reset signal can safely use the VSD-041 allocation within the
+   actual Max 5x limits and the VSD-045 start window? No absolute weekly capacity is assumed.
 3. What stronger Pass A rungs best break recognition while retaining useful visual signal?
 4. Should predicted-player recognition remain a model output, and how will it be calibrated?
 5. What later formula, if any, combines fame, predicted-human difficulty, and blinded
@@ -669,8 +718,8 @@ It does **not** prove the whole Pass B architecture.
 | VSD-010 | 2026-08-31 | Block unusable images from unseen future scheduling, initially within 30 days; preserve Collections and history. | Approved; calibration pending |
 | VSD-011 | 2026-08-31 | Calibrate major revisions on 50 stratified works, then review all flags plus 2/100 random auto-published works. | Approved |
 | VSD-012 | 2026-08-31 | Keep source links internal initially; preserve current contextual sensitivity behavior and human-remains exclusion. | Approved |
-| VSD-013 | 2026-08-31 | Protect subscription capacity 09:00–22:00 Pacific; run unattended overnight, starting at a 50% conservative budget. | Approved; supervisor unimplemented |
-| VSD-014 | 2026-08-31 | Do not add a universal hard daily-completion gate until audited coverage is sufficient. | Approved |
+| VSD-013 | 2026-08-31 | Protect subscription capacity 09:00–22:00 Pacific; run unattended overnight, starting at a 50% conservative budget. | Historical decision: start window Superseded by VSD-045; capacity allocation Superseded by VSD-041. Supervisor unimplemented |
+| VSD-014 | 2026-08-31 | Do not add a universal hard daily-completion gate until audited coverage is sufficient. | Superseded by VSD-043 for the public-announcement gate; history/live schedules unchanged |
 | VSD-015 | 2026-08-31 | Subscription image attachments use a neutral relative SHA-only path because Claude Code exposes the `@<path>` string as model text; usage budgets count internal turns, not only process launches. | Attachment MECHANISM superseded by VSD-019 (the `@<path>` transport did not deliver image bytes in the lean controller; now Read-tool + confined dir). The content-addressed-filename and turn-counting requirements STAND |
 | VSD-016 | 2026-08-31 | Registered Pass A research uses separate pilot/main freezes, a complete repeated-measures view panel, separate identification/facet calls, and a randomized supplied-identity causal primary; it remains append-only and cannot change tiers. | Approved; pilot completed 2026-09-01; main study not authorized |
 | VSD-017 | 2026-08-31 | Use a dedicated frozen git commit as the pilot preregistration record; no OSF/external-registration dependency. Freeze a stable registration id and artifact hashes, then have the runner derive and verify the commit before the first response (the commit cannot self-embed its own hash). | Approved; supersedes only VSD-016's external-registration venue wording; naming superseded by VSD-018 |
@@ -704,6 +753,16 @@ It does **not** prove the whole Pass B architecture.
 | VSD-040 N5 execution hardening | 2026-09-22 | **Close the remaining canary execution-evidence gaps before live spend.** Require at least one init and `apiKeySource:none` on every init; a later clean startup never erases earlier wrong/missing provenance. Reject every `*tool_use` block in execution envelopes, including server tools and streamed content blocks, without treating model prose/structured-output values as events. Bind a six-minute `execFile` timeout and `SIGKILL` to the command policy; preserve stdout and mark timeout evidence terminal held (fatal when provenance fails), never retryable usage-limit. Keep incomplete evidence unknown-outcome and retain reservation-based accounting. Bump execution contract `/2`→`/3`; do not change banked B1–B3 acceptance, prompts, model, or wire schema. Clarify that deleting local reservation history is outside the trusted-filesystem cap guarantee. | Implemented and verified offline: 74 canary checks, including mixed/missing init provenance, server/streamed tool blocks, actual forced termination of a harmless local Node fixture, checkpoint-free timeout/fatal resume, and an 11-reservation history rejection. R1/R2 regressions remain green. No live model calls, collector resume, evidence migration, owner decisions, approvals, baseline regeneration, or production writes; live spend still requires explicit owner authorization |
 
 | VSD-040 N2 diagnostic hardening | 2026-09-22 | Preserve terminal `unknown-outcome` when metadata is missing/truncated. If transcript + result files remain and the transcript reveals a fatal provenance failure, report `transcriptDerivedKind:"fatal"` as diagnostic only; never infer successful execution or change retryability. Execution contract stays `/3`: acceptance and reservation semantics are unchanged. | Implemented offline; 79 canary checks including missing/truncated fatal metadata and incomplete-success non-promotion. No live call or publication |
+
+| VSD-041 | 2026-09-22 | **Pass B budget/path: Max 5x subscription only, almost all available weekly capacity, no deadline.** The owner rejected corpus API spending after the measured-usage estimate of roughly $6.9k interactive / $2.7k batch-optimized. Supersedes the old 50→70→75% allocation target, not usage-limit stops, key stripping, explicit spend authorization, or Pass A's separate budget. No extra API credit fallback. | Owner decision recorded; allocation is not a measured throughput guarantee. Collector remains stopped |
+| VSD-042 | 2026-09-22 | **Prioritize a rolling 30-day fully enriched daily buffer (~600 works, ~20 entrants/day); Easy and the rest later.** Use America/Los_Angeles date, earliest scheduled date first, diversity rotation only within a date, and stop the collector at the horizon instead of falling through to Easy/corpus. This changes collection scope, not the actual daily schedule. | B0–B3 date-first window implemented offline; B4 window continuation, publication and nightly supervisor remain unbuilt |
+| VSD-043 | 2026-09-22 | **Public announcement requires the next 30 days of dailies to have the full B0–B4 pipeline completed and be published through an approved auto-policy, with no visible legacy teaching filler.** Gesso is already live; this gates announcement. Supersedes VSD-014 for this launch requirement. Existing legacy why/notes/pins do not count as completed enrichment or approval. | Owner decision recorded; launch gate enforcement and auto-policy publication are not implemented. No live site or schedule change |
+| VSD-044 | 2026-09-22 | **The owner will not hand-audit every window work; develop an auto-audit + auto-publish policy.** VSD-011's one-time 50-work policy-decision calibration and 2/100 sampling are acceptable to present; this does not establish rare-error accuracy or approve the proposed v2 policy. Retain VSD-034 holdout/regression requirements and current owner-review classes. Risk thresholds, holdout/sample expansion, teaching subset bar, rescheduling extension and semantic delegation need the specific policy decision. | Goal recorded. Policy v2 remains PROPOSED; exact owner component approval is still the implemented release path. No new effective decisions or approvals |
+| VSD-045 | 2026-09-22 | **Automated Pass B starts only 00:00 inclusive–08:30 exclusive America/Los_Angeles; in-flight clients finish by 09:00; zero automated calls 09:00–24:00.** Supersedes VSD-013's 22:00 start. Check every stage and retry, not merely work/session start; a supervised collector does not bypass this rule. | Collector gate + DST/date/cutoff/retry regressions implemented offline. Other experimental entry points require operator enforcement; no unattended supervisor or model call started |
+| VSD-042/045 collector implementation hardening | 2026-09-22 | **Repair resume evidence before authorized collection.** Reconstruct failures independently of fragile hold reasons; unknown hold reasons never authorize retries. Preserve fatal stops independently of status text/ledger across restart. Copy only missing raw bytes from identical verified migration sources. Default inspection and tests are write-free against real evidence; explicit `--repair-history` holds the run lease before any maintenance writes. Keep the banked B1–B3 evidence contract unchanged; bind new `/3` execution and exact CLI version separately, with drift refused. Pre-call receipts expose interrupted fresh attempts; terminal content failures are not blindly requeued. | 50 offline collector checks pass; 75 raw files restored, ten failures re-held, 416 completions reverified. Previous 500 transcripts/completions/images preserved; only the local operational ledger changed. No model/network call, baseline regeneration, approval or production write |
+
+
+| VSD-042/045 collector F1 hardening | 2026-09-22 | **Separate runtime maintenance from permanent boundary failures.** Execution `/3`→`/4`: disable the child CLI auto-updater, bind reservations to append-only policy epochs, and pause on CLI drift until an explicit review names the active epoch and target runtime-policy hash. Old epochs, reservations and completions remain unchanged; a drifted body is never accepted retroactively. Operational exceptions stop without `fatal.json`; proven provenance/confinement/model/subscription-source failures retain the durable stop. Distinguish 09:00 deadline termination from a hang timeout. Preserve an interrupted B2 validation retry without allowing more than two rejected bodies across resumes. Maintenance changes refresh `updatedAt`, and no-op repair remains write-free. | 73 collector regressions pass offline. Existing evidence still verifies as 129 done / 23 held / 500 attempts; no real runtime rebind, call or ledger rewrite performed in this follow-up. F2 frozen-legacy/per-work-staleness is explicitly required before publication, not claimed implemented. No approval, production write, baseline regeneration or owner-policy expansion |
 
 ## Maintenance protocol
 
