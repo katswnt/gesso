@@ -380,7 +380,9 @@ VSD-035 adds the actual deterministic reconciliation layer:
   hashes. Its wire schema is `contentVisionB4Delta/3`: ordinary editorial delta fields plus
   `grounding.components`, one grounding row for every conflict, and structured open claims. The model
   may name only supplied B2 claim ids and B1/B3 observation ids; it cannot emit authority, effective
-  state, resolution, approval, or eligibility. Hydration validates all refs and translates temporary
+  state, approval, or eligibility. **Wording correction (2026-09-22):** the wire does retain
+  `conflicts[].resolution` and `conflicts[].status` as model proposals; they never establish
+  effective/controller resolution. Hydration validates all refs and translates temporary
   targets (`why`, `cue:i`, `note:i`, `hotspot:i`, `guide:i`) into stable final component ids in a
   `passBStructuredGrounding/1` sidecar. If a target disappears during hydration (notably a suppressed
   hotspot), its conflict/open claim becomes work-scope. Reconciliation then uses
@@ -392,11 +394,31 @@ VSD-035 adds the actual deterministic reconciliation layer:
   freezes ten risk-weighted works from `cal50-0a47b6f7f332` and reopens the exact preserved B0 plus B1–B3
   completion/raw/transcript evidence. The deterministic run identity binds those bytes, current B4 `/3`
   prompt/schema/validation versions, model and command policy, and the canonical blocked-finding ids.
-  The live path is separately gated and capped at ten attempts total across resumes: tool-less B4 calls
-  with no conformance retry. A preserved usage-limit rejection may retry after reset but consumes the same
-  cap. Every attempt and checkpoint is re-derived from its transcript. Wrong/missing
-  `apiKeySource:none`, model drift, or any tool event aborts; invalid delta/hydration/leak/reconciliation
-  output is held. The report is explicitly a schema/scoping smoke with semantic accuracy and release
+  The execution contract is now `passBStructuredB4Canary/3`: `/2` repaired crash/resume accounting;
+  `/3` hardens fresh B4 provenance/tool-event checks and bounds process duration. The live path is
+  separately gated and capped at **ten durable pre-call reservations** across resumes:
+  `attempt-N.reserved.json` is created with `wx`, flushed, and its
+  directory entries synced before invoking the tool-less B4 call. Global count and contiguity come from
+  reservations. The cap assumes preserved evidence on the trusted local filesystem: deleting
+  reservation history can erase spent slots. A reservation without complete transcript/result/meta
+  evidence is a consumed, terminal `unknown-outcome`, never called again. `accepted`, `held`, `fatal`, and `unknown-outcome`
+  are terminal even when `checkpoint.json` is missing; checkpoints are convenience output only.
+  Missing/truncated metadata may expose `transcriptDerivedKind:"fatal"` when the remaining transcript
+  reveals fatal provenance, but status stays terminal `unknown-outcome` and the diagnostic grants no authority.
+  Only a verified `usage-limit` result may retry after reset, consuming a new reservation while its
+  previous slot still counts. Successful prose mentioning “rate limit” is not a usage-limit result.
+  Every initialization event must report `apiKeySource:none`, and at least one init is required.
+  An earlier bad/missing source cannot be masked by a later clean init. Model drift and every
+  `*tool_use` execution block (including server tools and streamed blocks) are fatal; prose and
+  structured-output payloads are not interpreted as execution events. The command policy binds a
+  360-second `execFile` timeout with `SIGKILL`. Timeout stdout and outcome are preserved; timeout
+  evidence is terminal held (or fatal if provenance fails), never a usage-limit retry. These changes
+  do not alter the shared parser or historically banked B1–B3 evidence contract. Any preserved fatal
+  anywhere stops execution before another call; unknown outcomes also stop execution. All preserved
+  work states are reported, including a fatal on a later work. Invalid delta/hydration/leak/reconciliation
+  output is held with no conformance retry. The runner verifies the canonical sealed-finding artifact
+  and binds the La Gloire/St. John finding IDs; `sealedHold` reports their presence, not an effective
+  resolution. The report is explicitly a schema/scoping smoke with semantic accuracy and release
   eligibility unmeasured. It has no decision, approval, resolution, merge, or production writer. No live
   VSD-040 call has run.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
@@ -465,7 +487,7 @@ PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
 # VSD-040 structured-B4 ten-work plan only (default; no output directory and no model calls).
 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs
 
-# Owner-gated VSD-040 smoke (maximum ten subscription B4 calls; DO NOT run before independent audit + go).
+# Owner-gated VSD-040 smoke (ten durable reservation slots; DO NOT run before independent audit + go).
 PASS_B_B4_CANARY_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs --run
 
 # Offline-only VSD-027 rehydration of the preserved B4-v2 cohort, then render its corrected packet.
@@ -512,7 +534,7 @@ Relevant files:
 | File | Controls |
 |---|---|
 | `scripts/pass-b-calibration.mjs` | B0 preparation, subscription process execution, lanes, checkpoint resume, packet write |
-| `scripts/pass-b-b4-structured-canary.mjs` | Plan-first, ten-attempt structured-B4 `/3` schema/scoping smoke over preserved B1–B3 evidence; no approval/production sink |
+| `scripts/pass-b-b4-structured-canary.mjs` | Plan-first structured-B4 `/3` smoke; ten durable pre-call reservation slots, evidence-derived terminal states; no approval/production sink |
 | `scripts/lib/pass-b-calibration.mjs` | call plan, boundaries, command construction, compact inputs, B1→B4 control flow |
 | `scripts/lib/pass-b-prompts.mjs` | version-bound B1–B4 prompts |
 | `scripts/lib/pass-b-wire-schema.mjs` | provider-facing structure-only schemas |
@@ -529,7 +551,7 @@ Relevant files:
 | `scripts/pass-b-spatial-confirmation-canary.mjs` | plan-by-default independent B5 confirmation for first-pass new points; re-verifies the primary run, withholds all earlier points/reasoning, and requires deterministic scope + ≤5-point agreement |
 | `scripts/pass-b-spatial-resolution-packet.mjs` | offline VSD-032 resolver; re-verifies both spatial evidence chains, writes the machine resolution, and renders only held exceptions with owner controls |
 | `tests/pass-b-calibration.test.mjs` | controller, boundary, resume, packet, and failure regressions |
-| `tests/pass-b-b4-structured-canary.test.mjs` | Offline source-binding, provenance-fatal, budget, checkpoint/resume, and zero-model-eligibility regressions for VSD-040 |
+| `tests/pass-b-b4-structured-canary.test.mjs` | Offline source-binding, reservation/crash/cap, checkpoint-independent terminality, later-fatal reporting, tamper/live-gate, and zero-model-eligibility regressions for VSD-040 |
 
 ---
 

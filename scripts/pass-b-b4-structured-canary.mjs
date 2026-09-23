@@ -2,11 +2,13 @@
 // Default is an offline plan. Live execution requires BOTH --run and PASS_B_B4_CANARY_LIVE=1.
 // The harness never calls B0-B3, never retries a validation failure, never creates decisions/approval,
 // and has no production sink. Ten selected works, zero validation retries, ten attempts TOTAL across resumes.
-// A preserved usage-limit rejection may retry on resume, but still consumes the same total cap.
+// Every attempt is reserved durably before the call. A reservation with incomplete evidence consumes the
+// budget and is terminal (unknown outcome); it is never called again. A preserved usage-limit rejection may
+// retry on resume, but still consumes the same total cap.
 import {
-  existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync,
+  closeSync, existsSync, fsyncSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, rmSync, writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
@@ -27,9 +29,12 @@ import { auditReconciliation, buildClaimBundle, validateClaimBundle } from './li
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 
 const execFileP = promisify(execFile);
-export const CANARY_VERSION = 'passBStructuredB4Canary/1';
+export const CANARY_VERSION = 'passBStructuredB4Canary/3';
 export const SOURCE_RUN = 'cal50-0a47b6f7f332';
 export const MAX_ATTEMPTS = 10;
+export const CALL_TIMEOUT_MS = 6 * 60 * 1000;
+const CALL_KILL_SIGNAL = 'SIGKILL';
+const ATTEMPT_RESERVATION_VERSION = 'passBStructuredB4AttemptReservation/1';
 export const CANARY_WORKS = Object.freeze([
   { workId: 'wikidata:Q16467705', reason: 'canonical La Gloire identity/iconography failure' },
   { workId: 'wikidata:Q1211814', reason: 'canonical St. John human/animal binding failure' },
@@ -58,6 +63,7 @@ function commandPolicy(command, promptHash) {
     bin: command.bin, argv, removeKeys: command.env.removeKeys,
     toolsEnforced: command.toolsEnforced, imageAttached: command.imageAttached,
     wireSchemaSha256: command.wireSchemaSha256,
+    timeoutMs: CALL_TIMEOUT_MS, killSignal: CALL_KILL_SIGNAL,
   };
 }
 
@@ -146,23 +152,45 @@ export function loadCanaryPlan({ source = sourceDir(), selection = CANARY_WORKS 
   return { source, plans, binding, runId: runIdFromBinding(binding) };
 }
 
-function usageLimited(transcript, final) {
+function b4ExecutionEvents(transcript) {
   const events = String(transcript).split('\n').map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
+  const inits = [], toolUses = [];
+  const visit = value => {
+    if (Array.isArray(value)) { value.forEach(visit); return; }
+    if (!value || typeof value !== 'object') return;
+    if (value.type === 'system' && value.subtype === 'init') inits.push(value);
+    if (typeof value.type === 'string' && value.type.endsWith('tool_use')) {
+      toolUses.push({ type: value.type, name: value.name ?? null });
+    }
+    // Inspect transcript envelopes/content blocks, including streamed content_block_start events.
+    // Do not interpret structured_output, tool inputs, or prose mentioning a tool as execution events.
+    for (const key of ['event', 'message', 'content', 'content_block']) visit(value[key]);
+  };
+  events.forEach(visit);
+  return { events, inits, toolUses };
+}
+
+function usageLimited(events, final) {
   return events.some(event => event.type === 'rate_limit_event' && event.rate_limit_info?.status === 'rejected')
-    || final?.api_error_status === 429 || /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || ''));
+    || final?.api_error_status === 429
+    || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
 }
 
 export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   const parsed = parseStreamTranscript(transcript);
+  const execution = b4ExecutionEvents(transcript);
   const final = transcriptFinal(parsed);
   const resolvedModel = primaryModelFromEnvelope(final) || parsed.init?.model || null;
-  const apiKeySource = parsed.init?.apiKeySource ?? null;
+  const apiKeySources = execution.inits.map(init => init.apiKeySource ?? null);
+  const invalidInit = apiKeySources.findIndex(source => source !== 'none');
+  const apiKeySource = invalidInit >= 0 ? apiKeySources[invalidInit] : (apiKeySources.length ? 'none' : null);
   const errors = [];
   let kind = 'held';
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
   else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
-  else if (parsed.toolUses.length) { kind = 'fatal'; errors.push(`B4 used tools:${parsed.toolUses.map(row => row.name).join(',')}`); }
-  else if (usageLimited(transcript, final)) kind = 'usage-limit';
+  else if (execution.toolUses.length) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
+  else if (exitCode === 'timeout') errors.push('process-timeout');
+  else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
 
   const delta = final?.structured_output ?? null;
@@ -201,50 +229,88 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   return {
     kind, errors, delta, body, bundle, reconciliation, leaks,
     evidence: {
-      exitCode, transcriptSha256: sha256(transcript), resolvedModel, apiKeySource,
+      exitCode, transcriptSha256: sha256(transcript), resolvedModel, apiKeySource, apiKeySources,
       claudeCodeVersion: parsed.init?.claudeCodeVersion ?? null, usage: final?.usage ?? null,
       modelUsage: final?.modelUsage ?? null, numTurns: final?.num_turns ?? null,
-      toolUses: parsed.toolUses.map(row => row.name),
+      toolUses: execution.toolUses.map(row => row.name), toolUseTypes: execution.toolUses.map(row => row.type),
     },
   };
 }
 
-function verifyAttemptHistory(outDir, plans) {
+function verifyAttemptHistory(outDir, plans, runId) {
   const numbers = new Set();
+  const byWork = new Map();
   for (const plan of plans) {
     const workOut = join(outDir, 'works', safeWork(plan.workId));
     if (!existsSync(workOut)) continue;
-    const transcriptNames = readdirSync(workOut).filter(name => /^attempt-\d+\.transcript\.jsonl$/.test(name));
-    for (const transcriptName of transcriptNames) {
-      const attempt = Number(/^attempt-(\d+)\./.exec(transcriptName)[1]);
+    const names = readdirSync(workOut);
+    const reservationNames = names.filter(name => /^attempt-\d+\.reserved\.json$/.test(name));
+    const reservedNumbers = new Set(reservationNames.map(name => Number(/^attempt-(\d+)\./.exec(name)[1])));
+    const evidenceNumbers = names.map(name => /^attempt-(\d+)\.(?:transcript\.jsonl|result\.json|meta\.json)$/.exec(name))
+      .filter(Boolean).map(match => Number(match[1]));
+    if (evidenceNumbers.some(attempt => !reservedNumbers.has(attempt))) throw new Error(`${plan.workId}: attempt evidence exists without a reservation`);
+    const workAttempts = [];
+    for (const reservationName of reservationNames) {
+      const attempt = Number(/^attempt-(\d+)\./.exec(reservationName)[1]);
       if (numbers.has(attempt)) throw new Error(`duplicate global attempt number: ${attempt}`);
       numbers.add(attempt);
-      const transcriptPath = join(workOut, transcriptName);
+      const reservation = readJson(join(workOut, reservationName));
+      if (reservation.version !== ATTEMPT_RESERVATION_VERSION || reservation.runId !== runId
+        || reservation.workId !== plan.workId || reservation.attempt !== attempt
+        || reservation.promptHash !== plan.promptHash) throw new Error(`${plan.workId}: attempt ${attempt} reservation binding mismatch`);
+      const transcriptPath = join(workOut, `attempt-${attempt}.transcript.jsonl`);
       const resultPath = join(workOut, `attempt-${attempt}.result.json`);
       const metaPath = join(workOut, `attempt-${attempt}.meta.json`);
-      if (!existsSync(resultPath) || !existsSync(metaPath)) throw new Error(`${plan.workId}: incomplete preserved attempt ${attempt}`);
+      const unknown = { attempt, kind: 'unknown-outcome', errors: ['reserved-attempt-has-incomplete-evidence'], derived: null };
+      const diagnoseUnknown = () => {
+        // N2: expose visible provenance failures without upgrading incomplete evidence to a verified result.
+        // The process exit is unknown; only fatal transcript evidence is diagnostic here.
+        if (existsSync(transcriptPath) && existsSync(resultPath)) {
+          const diagnostic = deriveB4Attempt(plan, readFileSync(transcriptPath, 'utf8'), 'unknown');
+          if (diagnostic.kind === 'fatal') unknown.transcriptDerivedKind = 'fatal';
+        }
+        return unknown;
+      };
+      if (!existsSync(transcriptPath) || !existsSync(resultPath) || !existsSync(metaPath)) {
+        workAttempts.push(diagnoseUnknown());
+        continue;
+      }
       const transcript = readFileSync(transcriptPath, 'utf8');
-      const meta = readJson(metaPath);
+      const metaText = readFileSync(metaPath, 'utf8');
+      let meta;
+      try { meta = JSON.parse(metaText); }
+      catch { workAttempts.push(diagnoseUnknown()); continue; } // Interrupted final evidence write; never retry it.
       if (meta.workId !== plan.workId || meta.attempt !== attempt || meta.promptHash !== plan.promptHash) throw new Error(`${plan.workId}: attempt ${attempt} binding mismatch`);
       if (meta.transcriptSha256 !== sha256(transcript) || meta.resultSha256 !== rawSha(resultPath)) throw new Error(`${plan.workId}: attempt ${attempt} evidence changed`);
       const derived = deriveB4Attempt(plan, transcript, meta.exitCode);
       if (meta.status !== derived.kind || stableJson(derived) !== stableJson(readJson(resultPath))) throw new Error(`${plan.workId}: attempt ${attempt} re-derivation mismatch`);
+      workAttempts.push({ attempt, kind: derived.kind, errors: derived.errors, derived });
     }
+    workAttempts.sort((a, b) => a.attempt - b.attempt);
+    if (workAttempts.slice(0, -1).some(row => row.kind !== 'usage-limit')) throw new Error(`${plan.workId}: attempt after terminal outcome`);
+    if (workAttempts.length) byWork.set(plan.workId, workAttempts);
   }
   const ordered = [...numbers].sort((a, b) => a - b);
   if (ordered.some((value, i) => value !== i + 1)) throw new Error('attempt history is not globally contiguous');
-  return ordered.length;
+  if (ordered.length > MAX_ATTEMPTS) throw new Error('attempt history exceeds the reservation cap');
+  return { count: ordered.length, byWork };
 }
 
-export async function callB4(plan) {
+export async function callB4(plan, { execute = execFileP } = {}) {
   const callDir = mkdtempSync(join(tmpdir(), 'pass-b-b4s-'));
   try {
     const env = { ...process.env };
     for (const key of plan.command.env.removeKeys) delete env[key];
     try {
-      const { stdout } = await execFileP(plan.command.bin, plan.command.argv, { cwd: callDir, env, maxBuffer: 64 * 1024 * 1024 });
+      const { stdout } = await execute(plan.command.bin, plan.command.argv, {
+        cwd: callDir, env, maxBuffer: 64 * 1024 * 1024,
+        timeout: CALL_TIMEOUT_MS, killSignal: CALL_KILL_SIGNAL,
+      });
       return { transcript: stdout, exitCode: 0 };
-    } catch (error) { return { transcript: error.stdout || '', exitCode: error.code ?? 1 }; }
+    } catch (error) {
+      const timedOut = error.killed === true && error.signal === CALL_KILL_SIGNAL && error.code == null;
+      return { transcript: error.stdout || '', exitCode: timedOut ? 'timeout' : (error.code ?? 1) };
+    }
   } finally { rmSync(callDir, { recursive: true, force: true }); }
 }
 
@@ -255,20 +321,18 @@ function verifyManifest(path, expectedRunId, expectedBinding) {
   return manifest;
 }
 
-function checkpointFor(outDir, plan) {
+function reserveAttempt(outDir, plan, runId, attempt) {
   const workOut = join(outDir, 'works', safeWork(plan.workId));
-  const checkpoint = join(workOut, 'checkpoint.json');
-  if (!existsSync(checkpoint)) return null;
-  const cp = readJson(checkpoint);
-  const transcriptPath = join(workOut, `attempt-${cp.attempt}.transcript.jsonl`);
-  const resultPath = join(workOut, `attempt-${cp.attempt}.result.json`);
-  const transcript = readFileSync(transcriptPath, 'utf8');
-  if (sha256(transcript) !== cp.transcriptSha256 || rawSha(resultPath) !== cp.resultSha256) throw new Error(`${plan.workId}: checkpoint evidence changed`);
-  const derived = deriveB4Attempt(plan, transcript, cp.exitCode);
-  const stored = readJson(resultPath);
-  if (stableJson(derived) !== stableJson(stored)) throw new Error(`${plan.workId}: checkpoint re-derivation mismatch`);
-  if (cp.workId !== plan.workId || cp.status !== derived.kind || cp.promptHash !== plan.promptHash) throw new Error(`${plan.workId}: checkpoint binding mismatch`);
-  return { checkpoint: cp, derived };
+  mkdirSync(workOut, { recursive: true, mode: 0o700 });
+  writeFileSync(join(workOut, `attempt-${attempt}.reserved.json`), `${JSON.stringify({
+    version: ATTEMPT_RESERVATION_VERSION, runId, workId: plan.workId, attempt, promptHash: plan.promptHash,
+  }, null, 2)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  // Persist the reservation's directory entry and any newly created ancestor entries before spending.
+  for (const path of [workOut, join(outDir, 'works'), outDir, dirname(outDir)]) {
+    const fd = openSync(path, 'r');
+    try { fsyncSync(fd); } finally { closeSync(fd); }
+  }
+  return workOut;
 }
 
 function scopingSummary(derived) {
@@ -293,53 +357,66 @@ export async function runCanary({ planSet, outDir = join(RUN_ROOT, planSet.runId
   const manifestPath = join(outDir, 'run-manifest.json');
   if (!existsSync(outDir)) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
-    writeFileSync(manifestPath, `${JSON.stringify({ runId: planSet.runId, binding: planSet.binding }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    writeFileSync(manifestPath, `${JSON.stringify({ runId: planSet.runId, binding: planSet.binding }, null, 2)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   } else verifyManifest(manifestPath, planSet.runId, planSet.binding);
 
-  let attempts = verifyAttemptHistory(outDir, planSet.plans);
-  const rows = [];
+  let history = verifyAttemptHistory(outDir, planSet.plans, planSet.runId);
+  let attempts = history.count;
   let stopped = null;
+  const priorFatal = [...history.byWork.values()].flat().find(row => row.kind === 'fatal');
+  const priorUnknown = [...history.byWork.values()].flat().find(row => row.kind === 'unknown-outcome');
+  if (priorFatal) stopped = 'fatal-provenance';
+  else if (priorUnknown) stopped = 'unknown-outcome';
   for (const plan of planSet.plans) {
-    const prior = checkpointFor(outDir, plan);
-    if (prior) {
-      rows.push({ workId: plan.workId, status: prior.derived.kind, errors: prior.derived.errors, sealedFindingIds: plan.sealedFindingIds, scoping: scopingSummary(prior.derived) });
-      if (prior.derived.kind === 'fatal') { stopped = 'fatal-provenance'; break; }
-      continue;
-    }
+    if (stopped) break;
+    const latest = history.byWork.get(plan.workId)?.at(-1);
+    if (latest && latest.kind !== 'usage-limit') continue;
     if (attempts >= MAX_ATTEMPTS) { stopped = 'attempt-cap'; break; }
-    const workOut = join(outDir, 'works', safeWork(plan.workId));
-    mkdirSync(workOut, { recursive: true, mode: 0o700 });
     const attempt = attempts + 1;
-    const raw = await callFn(plan);
+    const workOut = reserveAttempt(outDir, plan, planSet.runId, attempt);
     attempts++;
+    let raw;
+    try { raw = await callFn(plan); }
+    catch { stopped = 'unknown-outcome'; break; } // The call may have spent; never manufacture retryable evidence.
     const transcriptPath = join(workOut, `attempt-${attempt}.transcript.jsonl`);
-    writeFileSync(transcriptPath, raw.transcript || '', { flag: 'wx', mode: 0o600 });
+    writeFileSync(transcriptPath, raw.transcript || '', { flag: 'wx', mode: 0o600, flush: true });
     const derived = deriveB4Attempt(plan, raw.transcript || '', raw.exitCode ?? 1);
     const resultText = `${JSON.stringify(derived, null, 2)}\n`;
     const resultPath = join(workOut, `attempt-${attempt}.result.json`);
-    writeFileSync(resultPath, resultText, { flag: 'wx', mode: 0o600 });
+    writeFileSync(resultPath, resultText, { flag: 'wx', mode: 0o600, flush: true });
     writeFileSync(join(workOut, `attempt-${attempt}.meta.json`), `${JSON.stringify({
       workId: plan.workId, attempt, status: derived.kind, exitCode: raw.exitCode ?? 1,
       promptHash: plan.promptHash, transcriptSha256: sha256(raw.transcript || ''), resultSha256: rawSha(resultPath),
-    }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-    rows.push({ workId: plan.workId, status: derived.kind, errors: derived.errors, sealedFindingIds: plan.sealedFindingIds, scoping: scopingSummary(derived) });
+    }, null, 2)}\n`, { flag: 'wx', mode: 0o600, flush: true });
     if (derived.kind === 'usage-limit') { stopped = 'usage-limit'; break; }
+    // Convenience output only. Resume never reads a checkpoint to decide terminality or budget.
     writeFileSync(join(workOut, 'checkpoint.json'), `${JSON.stringify({
       workId: plan.workId, attempt, status: derived.kind, exitCode: raw.exitCode ?? 1,
       promptHash: plan.promptHash, transcriptSha256: sha256(raw.transcript || ''), resultSha256: rawSha(resultPath),
     }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
     if (derived.kind === 'fatal') { stopped = 'fatal-provenance'; break; }
   }
+  // Reconstruct every preserved work, even when a later work stopped execution before the loop began.
+  history = verifyAttemptHistory(outDir, planSet.plans, planSet.runId);
+  const rows = planSet.plans.flatMap(plan => {
+    const latest = history.byWork.get(plan.workId)?.at(-1);
+    return latest ? [{
+      workId: plan.workId, status: latest.kind, errors: latest.errors,
+      ...(latest.transcriptDerivedKind ? { transcriptDerivedKind: latest.transcriptDerivedKind } : {}),
+      sealedFindingIds: plan.sealedFindingIds, sealedHold: plan.sealedFindingIds.length > 0,
+      scoping: scopingSummary(latest.derived),
+    }] : [];
+  });
   const report = {
     version: 'passBStructuredB4CanaryReport/1', runId: planSet.runId,
     kind: 'structured-b4-schema-and-scoping-smoke', semanticAccuracy: 'unmeasured', releaseEligibility: 'not-tested',
-    attempts, maxAttempts: MAX_ATTEMPTS, stopped, rows,
-    counts: Object.fromEntries(['accepted', 'held', 'fatal', 'usage-limit'].map(status => [status, rows.filter(row => row.status === status).length])),
+    attempts: history.count, maxAttempts: MAX_ATTEMPTS, stopped, rows,
+    counts: Object.fromEntries(['accepted', 'held', 'fatal', 'usage-limit', 'unknown-outcome'].map(status => [status, rows.filter(row => row.status === status).length])),
     scopingTotals: rows.reduce((totals, row) => {
       for (const [key, value] of Object.entries(row.scoping || {})) totals[key] = (totals[key] || 0) + value;
       return totals;
     }, {}),
-    note: 'Accepted means provenance/shape/hydration/leak/reconciliation integrity only. It is not factual approval. Canonical works remain sealed and no component becomes eligible from model proposals.',
+    note: 'Accepted means provenance/shape/hydration/leak/reconciliation integrity only, not factual approval. Attempts count durable pre-call reservations. Accepted/held/fatal/unknown-outcome are terminal without checkpoints; only usage-limit may retry. The plan verifies the canonical sealed-finding artifact/IDs; sealedHold records their presence, not an effective resolution. This runner has no resolution/approval path and model proposals create no eligible components.',
   };
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 });
   return report;
@@ -348,12 +425,17 @@ export async function runCanary({ planSet, outDir = join(RUN_ROOT, planSet.runId
 function printPlan(planSet) {
   console.log('VSD-040 STRUCTURED B4 CANARY — OFFLINE PLAN (no model calls)');
   console.log(`runId: ${planSet.runId}`);
+  console.log(`execution contract: ${CANARY_VERSION}`);
   console.log(`source: ${planSet.source} (read-only B0-B3 evidence)`);
   console.log(`model: ${CALIBRATION_MODEL} | delta: ${B4_DELTA_VERSION} | B4 contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
-  console.log(`hard budget: ${MAX_ATTEMPTS} total attempts across resumes; ${planSet.plans.length} works; zero validation retries`);
-  console.log('a preserved usage-limit rejection may retry on resume, but it consumes the same total cap.');
+  console.log(`execution gate: every init must report apiKeySource:none; every *tool_use block is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
+  console.log(`hard budget: ${MAX_ATTEMPTS} durable pre-call reservations across resumes; ${planSet.plans.length} works; zero validation retries`);
+  console.log('the cap assumes preserved history on the trusted local filesystem; deleting reservation history is outside its guarantee.');
+  console.log('a reservation without complete transcript/result/meta evidence is consumed and terminal (unknown-outcome); accepted/held/fatal are terminal even without checkpoint.json.');
+  console.log('usage-limit is the only retryable result; its reservation still consumes a slot. Any preserved fatal or unknown-outcome stops all further calls.');
   for (const plan of planSet.plans) console.log(`  - ${plan.workId} | ${plan.reason} | B1=${plan.sourceBinding.B1.completionSha256.slice(0, 10)} B2=${plan.sourceBinding.B2.completionSha256.slice(0, 10)} B3=${plan.sourceBinding.B3.completionSha256.slice(0, 10)}${plan.sealedFindingIds.length ? ' | SEALED-HOLD' : ''}`);
-  console.log('output manifest is written before the first call; transcripts are the resume source of truth; B4 has no tools/image/web.');
+  console.log('output manifest precedes calls; reservations plus verified transcript/result/meta evidence govern resume and reporting; B4 has no tools/image/web.');
+  console.log('the plan verifies the canonical sealed-finding artifact/IDs; SEALED-HOLD records their presence. The runner has no resolution/approval path.');
   console.log('report is a schema/scoping smoke only: no factual-accuracy, release-eligibility, approval, or production claim.');
   console.log('LIVE COMMAND (do not run without owner spend authorization):');
   console.log('  PASS_B_B4_CANARY_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs --run');
@@ -365,6 +447,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   else {
     if (process.env.PASS_B_B4_CANARY_LIVE !== '1') { console.error('refusing live B4 canary: set PASS_B_B4_CANARY_LIVE=1 after explicit owner spend authorization'); process.exit(2); }
     const report = await runCanary({ planSet });
-    console.log(`B4 canary ${report.stopped || 'complete'}: accepted=${report.counts.accepted} held=${report.counts.held} fatal=${report.counts.fatal} attempts=${report.attempts}/${report.maxAttempts}`);
+    console.log(`B4 canary ${report.stopped || 'complete'}: accepted=${report.counts.accepted} held=${report.counts.held} fatal=${report.counts.fatal} unknown-outcome=${report.counts['unknown-outcome']} reservations=${report.attempts}/${report.maxAttempts}`);
   }
 }

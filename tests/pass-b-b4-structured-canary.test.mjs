@@ -1,13 +1,14 @@
-// VSD-040 offline regressions for the bounded structured-B4 canary. All model calls are injected mocks.
+// VSD-040 offline regressions. Model calls are mocked; the timeout test spawns only a local Node fixture.
 import assert from 'node:assert';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import { syntheticFixture, CALIBRATION_MODEL, RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
 import {
-  CANARY_WORKS, MAX_ATTEMPTS, deriveB4Attempt, loadCanaryPlan, runCanary, structuredB4RunId,
+  CALL_TIMEOUT_MS, CANARY_VERSION, CANARY_WORKS, MAX_ATTEMPTS, callB4, deriveB4Attempt, loadCanaryPlan, runCanary, structuredB4RunId,
 } from '../scripts/pass-b-b4-structured-canary.mjs';
 
 let n = 0;
@@ -15,12 +16,15 @@ const ok = (value, message) => { assert(value, message); n++; };
 const cleanups = [];
 const tempOut = () => { const p = mkdtempSync(join(tmpdir(), 'b4s-test-')); cleanups.push(p); return join(p, 'run'); };
 const H = value => sha256(String(value));
+const workOut = (outDir, plan) => join(outDir, 'works', sha256(plan.workId).slice(0, 24));
+let unexpectedCalls = 0;
+const noCall = async () => { unexpectedCalls++; throw new Error('resume must make zero calls'); };
 
-function transcript(output, { apiKeySource = 'none', model = CALIBRATION_MODEL, tools = [] } = {}) {
+function transcript(output, { apiKeySource = 'none', model = CALIBRATION_MODEL, tools = [], result = '' } = {}) {
   const events = [{ type: 'system', subtype: 'init', apiKeySource, model, claude_code_version: 'test' }];
   if (tools.length) events.push({ type: 'assistant', message: { content: tools.map((name, i) => ({ type: 'tool_use', id: `t${i}`, name, input: {} })) } });
   events.push({
-    type: 'result', subtype: 'success', is_error: false, structured_output: output,
+    type: 'result', subtype: 'success', is_error: false, structured_output: output, result,
     modelUsage: { [model]: { output_tokens: 10 } }, usage: { output_tokens: 10 }, num_turns: 1,
   });
   return `${events.map(row => JSON.stringify(row)).join('\n')}\n`;
@@ -57,6 +61,8 @@ function planSet(plans) {
 const real = loadCanaryPlan();
 ok(real.plans.length === 10 && CANARY_WORKS.length === 10, 'frozen ten-work plan loads');
 ok(real.runId === structuredB4RunId(real.binding), 'run id is deterministic from the complete binding');
+ok(real.binding.version === CANARY_VERSION && CANARY_VERSION === 'passBStructuredB4Canary/3', 'execution evidence contract is versioned independently');
+ok(real.plans.every(p => p.commandPolicy.timeoutMs === CALL_TIMEOUT_MS && p.commandPolicy.killSignal === 'SIGKILL'), 'plan binds the process timeout and kill signal');
 ok(real.plans.every(p => p.sourceBinding.B1.transcriptSha256 && p.sourceBinding.B2.transcriptSha256 && p.sourceBinding.B3.transcriptSha256), 'every source completion binds a transcript');
 ok(real.plans.filter(p => p.sealedFindingIds.length).map(p => p.workId).sort().join('|') === ['wikidata:Q1211814', 'wikidata:Q16467705'].sort().join('|'), 'both canonical failures remain sealed holds');
 
@@ -74,6 +80,68 @@ const usedTool = deriveB4Attempt(fp, transcript(fp.delta, { tools: ['Read'] }), 
 ok(usedTool.kind === 'fatal' && usedTool.errors.some(e => e.includes('used tools')), 'any B4 tool use is fatal');
 ok(deriveB4Attempt(fp, transcript(null), 0).kind === 'held', 'missing structured output is held, not accepted');
 ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong authentication cannot hide behind a usage-limit response');
+ok(deriveB4Attempt(fp, transcript(fp.delta, { result: 'The successful explanation mentions a rate limit and quota.' }), 0).kind === 'accepted', 'successful prose mentioning rate limit is not a usage-limit rejection');
+
+// N5: an earlier bad/missing auth event cannot be hidden by a later clean startup.
+for (const apiKeySource of ['ANTHROPIC_API_KEY', null, undefined]) {
+  const earlier = JSON.stringify({ type: 'system', subtype: 'init', apiKeySource, model: CALIBRATION_MODEL });
+  const derived = deriveB4Attempt(fp, `${earlier}\n${transcript(fp.delta)}`, 0);
+  ok(derived.kind === 'fatal' && derived.evidence.apiKeySources.length === 2 && derived.evidence.apiKeySource !== 'none', `every init is checked, including earlier ${apiKeySource}`);
+}
+{
+  const goodInit = JSON.stringify({ type: 'system', subtype: 'init', apiKeySource: 'none', model: CALIBRATION_MODEL });
+  ok(deriveB4Attempt(fp, `${goodInit}\n${transcript(fp.delta)}`, 0).kind === 'accepted', 'multiple clean init events remain acceptable');
+  ok(deriveB4Attempt(fp, transcript(fp.delta).split('\n').slice(1).join('\n'), 0).kind === 'fatal', 'no init event fails closed');
+  const badInit = goodInit.replace('"none"', '"ANTHROPIC_API_KEY"');
+  ok(deriveB4Attempt(fp, `${badInit}\n${usageTranscript()}`, 1).kind === 'fatal', 'earlier bad auth takes precedence over a later usage limit');
+}
+
+// N5: tool-use blocks include server tools, new tool-use types, and streamed/wrapped events.
+const forbiddenEvents = [
+  { type: 'assistant', message: { content: [{ type: 'server_tool_use', name: 'web_search' }] } },
+  { type: 'assistant', message: { content: [{ type: 'future_tool_use' }] } },
+  { type: 'content_block_start', content_block: { type: 'server_tool_use', name: 'web_fetch' } },
+  { type: 'stream_event', event: { type: 'content_block_start', content_block: { type: 'tool_use', name: 'Read' } } },
+  { type: 'server_tool_use', name: 'web_search' },
+  { type: 'assistant', content: [{ type: 'server_tool_use', name: 'web_fetch' }] },
+];
+for (const event of forbiddenEvents) {
+  const derived = deriveB4Attempt(fp, `${JSON.stringify(event)}\n${transcript(fp.delta)}`, 0);
+  ok(derived.kind === 'fatal' && derived.evidence.toolUseTypes.length === 1, `tool-use event is fatal: ${JSON.stringify(event)}`);
+}
+ok(deriveB4Attempt(fp, transcript(fp.delta, { result: 'An example string: {"type":"server_tool_use","name":"web_search"}' }), 0).kind === 'accepted', 'tool-use JSON mentioned in prose is not an execution event');
+{
+  const outDir = tempOut(); const set = planSet([fp, fixturePlan('after-server-tool')]);
+  const first = await runCanary({ planSet: set, outDir, callFn: async p => ({ transcript: `${JSON.stringify(forbiddenEvents[0])}\n${transcript(p.delta)}`, exitCode: 0 }) });
+  rmSync(join(workOut(outDir, fp), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(first.attempts === 1 && resumed.attempts === 1 && resumed.counts.fatal === 1 && resumed.stopped === 'fatal-provenance', 'server-tool fatal is preserved and prevents all further calls without a checkpoint');
+}
+
+// N5: exercise timeout/forced termination using a harmless local process, never the model binary.
+{
+  const outDir = tempOut(); const set = planSet([fp]); let optionsSeen;
+  const runLocal = promisify(execFile);
+  const localPlan = { ...fp, command: {
+    bin: process.execPath,
+    argv: ['-e', `process.on('SIGTERM', () => {}); process.stdout.write(${JSON.stringify(usageTranscript())}); setInterval(() => {}, 1000);`],
+    env: { removeKeys: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'] },
+  } };
+  const first = await runCanary({ planSet: set, outDir, callFn: async () => callB4(localPlan, { execute: async (bin, argv, options) => {
+    optionsSeen = options;
+    // Shorten only the test child's wait, keeping a hard kill even when mutation-testing the options.
+    return runLocal(bin, argv, { ...options, timeout: 500, killSignal: 'SIGKILL' });
+  } }) });
+  ok(optionsSeen.timeout === CALL_TIMEOUT_MS && CALL_TIMEOUT_MS === 360000 && optionsSeen.killSignal === 'SIGKILL', 'production execution passes a six-minute hard timeout');
+  ok(!existsSync(optionsSeen.cwd), 'timeout cleans up the confined call directory');
+  const dir = workOut(outDir, fp);
+  const stored = JSON.parse(readFileSync(join(dir, 'attempt-1.result.json'), 'utf8'));
+  ok(readFileSync(join(dir, 'attempt-1.transcript.jsonl'), 'utf8') === usageTranscript() && stored.evidence.exitCode === 'timeout', 'timeout preserves stdout and records the process outcome');
+  ok(first.attempts === 1 && first.counts.held === 1 && first.rows[0].errors.includes('process-timeout'), 'timeout consumes a reservation and cannot masquerade as retryable usage-limit');
+  rmSync(join(dir, 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts.held === 1, 'timeout remains terminal on checkpoint-free resume');
+}
 
 // Checkpointed resume re-derives the transcript/result and never re-executes a completed work.
 {
@@ -82,9 +150,60 @@ ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong auth
   ok(first.counts.accepted === 1 && calls === 1, 'mocked valid run checkpoints one accepted result');
   ok(first.rows[0].scoping.boundComponents > 0 && first.rows[0].scoping.eligibleComponents === 0, 'report exposes scoping coverage without implying eligibility');
   const resumed = await runCanary({ planSet: set, outDir, callFn: async () => { throw new Error('must not re-execute'); } });
-  ok(resumed.counts.accepted === 1 && calls === 1, 'verified resume reuses checkpoint without a call');
+  ok(resumed.counts.accepted === 1 && calls === 1, 'verified resume reuses preserved evidence without a call');
   const manifest = JSON.parse(readFileSync(join(outDir, 'run-manifest.json'), 'utf8'));
   ok(manifest.runId === structuredB4RunId(manifest.binding), 'pre-call manifest is self-bound');
+  rmSync(join(workOut(outDir, fp), 'checkpoint.json'));
+  const withoutCheckpoint = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(withoutCheckpoint.counts.accepted === 1 && withoutCheckpoint.attempts === 1, 'accepted is terminal without checkpoint.json');
+}
+
+// A call may spend and throw. Its exclusive pre-call reservation remains the terminal source of truth.
+{
+  const outDir = tempOut(); const set = planSet([fp]); let calls = 0;
+  let reservation, reservationText;
+  const first = await runCanary({ planSet: set, outDir, callFn: async () => {
+    calls++;
+    const path = join(workOut(outDir, fp), 'attempt-1.reserved.json');
+    reservationText = readFileSync(path, 'utf8');
+    reservation = JSON.parse(reservationText);
+    throw new Error('simulated crash after spending');
+  } });
+  ok(reservation?.runId === set.runId && reservation.workId === fp.workId && reservation.attempt === 1 && reservation.promptHash === fp.promptHash, 'bound reservation already exists when callFn starts spending');
+  ok(calls === 1 && first.attempts === 1 && first.stopped === 'unknown-outcome', 'throw after spending consumes exactly one reservation');
+  ok(first.counts['unknown-outcome'] === 1 && first.rows[0].status === 'unknown-outcome', 'incomplete evidence is reported as terminal unknown-outcome');
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts['unknown-outcome'] === 1 && resumed.stopped === 'unknown-outcome', 'unknown-outcome resume makes zero calls and preserves its budget slot');
+  ok(readFileSync(join(workOut(outDir, fp), 'attempt-1.reserved.json'), 'utf8') === reservationText, 'resume preserves the exact pre-call reservation bytes');
+}
+
+// Each incomplete-evidence boundary is terminal even if a convenience checkpoint survives.
+for (const suffix of ['transcript.jsonl', 'result.json', 'meta.json']) {
+  const outDir = tempOut(); const set = planSet([fp]);
+  await runCanary({ planSet: set, outDir, callFn: async p => ({ transcript: transcript(p.delta), exitCode: 0 }) });
+  rmSync(join(workOut(outDir, fp), `attempt-1.${suffix}`));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts['unknown-outcome'] === 1 && resumed.stopped === 'unknown-outcome', `missing ${suffix} consumes its reservation and cannot retry`);
+}
+
+{
+  const outDir = tempOut(); const set = planSet([fp]);
+  await runCanary({ planSet: set, outDir, callFn: async p => ({ transcript: transcript(p.delta), exitCode: 0 }) });
+  writeFileSync(join(workOut(outDir, fp), 'attempt-1.meta.json'), '{"workId":');
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts['unknown-outcome'] === 1 && resumed.stopped === 'unknown-outcome', 'interrupted meta write is a consumed terminal unknown-outcome');
+  ok(!resumed.rows[0].transcriptDerivedKind, 'incomplete successful evidence is never promoted by a diagnostic');
+}
+
+for (const missing of [false, true]) {
+  const outDir = tempOut(); const set = planSet([fp]);
+  await runCanary({ planSet: set, outDir, callFn: async p => ({ transcript: transcript(p.delta, { apiKeySource: 'user' }), exitCode: 0 }) });
+  const meta = join(workOut(outDir, fp), 'attempt-1.meta.json');
+  if (missing) rmSync(meta); else writeFileSync(meta, '{');
+  rmSync(join(workOut(outDir, fp), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts['unknown-outcome'] === 1 && resumed.counts.fatal === 0 && resumed.stopped === 'unknown-outcome', `${missing ? 'missing' : 'truncated'} fatal meta stays terminal unknown-outcome`);
+  ok(resumed.rows[0].transcriptDerivedKind === 'fatal', 'unverified transcript fatal remains visible as a diagnostic only');
 }
 
 // Usage-limit attempts remain fully verified evidence, consume budget, and may resume the same work once.
@@ -94,6 +213,7 @@ ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong auth
   ok(limited.stopped === 'usage-limit' && limited.attempts === 1, 'usage-limit stops cleanly and consumes one preserved attempt');
   const resumed = await runCanary({ planSet: set, outDir, callFn: async p => { calls++; return { transcript: transcript(p.delta), exitCode: 0 }; } });
   ok(resumed.counts.accepted === 1 && resumed.attempts === 2 && calls === 2, 'resume verifies the usage-limit attempt and retries within the total cap');
+  ok(readdirSync(workOut(outDir, fp)).filter(name => name.endsWith('.reserved.json')).length === 2, 'retry has its own reservation; the usage-limit reservation is preserved');
 }
 
 // Fatal provenance remains terminal across resume; it cannot be skipped to spend on later works.
@@ -102,8 +222,47 @@ ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong auth
   const set = planSet(plans); const outDir = tempOut(); let calls = 0;
   await runCanary({ planSet: set, outDir, callFn: async p => { calls++; return { transcript: transcript(p.delta, { apiKeySource: 'user' }), exitCode: 0 }; } });
   ok(calls === 1, 'fatal provenance stops the first execution immediately');
-  const resumed = await runCanary({ planSet: set, outDir, callFn: async () => { calls++; throw new Error('must not run after prior fatal'); } });
-  ok(calls === 1 && resumed.stopped === 'fatal-provenance', 'prior fatal checkpoint also stops resume');
+  const withCheckpoint = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(withCheckpoint.stopped === 'fatal-provenance' && withCheckpoint.counts.fatal === 1, 'prior fatal stops resume with its checkpoint');
+  rmSync(join(workOut(outDir, plans[0]), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.stopped === 'fatal-provenance' && resumed.counts.fatal === 1 && resumed.rows[0].status === 'fatal', 'fatal remains visible and terminal without checkpoint.json');
+}
+
+// Held validation is terminal independently of the convenience checkpoint.
+{
+  const outDir = tempOut(); const set = planSet([fp]);
+  await runCanary({ planSet: set, outDir, callFn: async () => ({ transcript: transcript(null), exitCode: 0 }) });
+  rmSync(join(workOut(outDir, fp), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 1 && resumed.counts.held === 1 && resumed.rows[0].errors.includes('no-structured-output'), 'held validation evidence stays terminal without checkpoint.json');
+}
+
+// A fatal on a later work must stay visible even though no scheduling loop may run.
+{
+  const plans = [fixturePlan('accepted-first'), fixturePlan('fatal-later'), fixturePlan('never-called')];
+  const set = planSet(plans); const outDir = tempOut(); let calls = 0;
+  const first = await runCanary({ planSet: set, outDir, callFn: async p => {
+    calls++;
+    return { transcript: transcript(p.delta, { apiKeySource: p === plans[1] ? 'user' : 'none' }), exitCode: 0 };
+  } });
+  ok(calls === 2 && first.counts.fatal === 1, 'later fatal stops before the third work');
+  for (const plan of plans.slice(0, 2)) rmSync(join(workOut(outDir, plan), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 2 && resumed.stopped === 'fatal-provenance' && resumed.counts.accepted === 1 && resumed.counts.fatal === 1 && resumed.rows[1].status === 'fatal', 'all preserved rows including the later fatal appear on zero-call resume');
+
+  // Seed a coherent retryable earlier attempt: the global fatal guard must precede its retry too.
+  const dir = workOut(outDir, plans[0]);
+  const text = usageTranscript();
+  const derived = deriveB4Attempt(plans[0], text, 1);
+  const resultText = `${JSON.stringify(derived, null, 2)}\n`;
+  const metaPath = join(dir, 'attempt-1.meta.json');
+  const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
+  writeFileSync(join(dir, 'attempt-1.transcript.jsonl'), text);
+  writeFileSync(join(dir, 'attempt-1.result.json'), resultText);
+  writeFileSync(metaPath, JSON.stringify({ ...meta, status: derived.kind, exitCode: 1, transcriptSha256: sha256(text), resultSha256: sha256(resultText) }));
+  const blockedRetry = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(blockedRetry.counts['usage-limit'] === 1 && blockedRetry.counts.fatal === 1 && blockedRetry.stopped === 'fatal-provenance' && blockedRetry.attempts === 2, 'fatal anywhere prevents even an earlier usage-limit retry and stays visible');
 }
 
 // The hard budget counts attempts across every work and stops at ten without a hidden retry.
@@ -112,27 +271,70 @@ ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong auth
   const set = planSet(plans); const outDir = tempOut(); let calls = 0;
   const report = await runCanary({ planSet: set, outDir, callFn: async () => { calls++; return { transcript: transcript(null), exitCode: 0 }; } });
   ok(calls === MAX_ATTEMPTS && report.attempts === MAX_ATTEMPTS && report.stopped === 'attempt-cap', 'total attempt cap holds across the run');
+  for (const plan of plans.slice(0, MAX_ATTEMPTS)) rmSync(join(workOut(outDir, plan), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === MAX_ATTEMPTS && resumed.counts.held === MAX_ATTEMPTS && resumed.stopped === 'attempt-cap', 'ten reservations still exhaust the cap after every checkpoint is deleted');
 }
 
-// Tampered preserved result is rejected on resume.
-{
+// Repeated usage-limit resumes consume all ten slots, including a final unknown outcome.
+for (const finalUnknown of [false, true]) {
+  const outDir = tempOut(); const set = planSet([fp]); let calls = 0;
+  for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+    const report = await runCanary({ planSet: set, outDir, callFn: async () => {
+      calls++;
+      if (finalUnknown && i === MAX_ATTEMPTS) throw new Error('spent the last slot');
+      return { transcript: usageTranscript(), exitCode: 1 };
+    } });
+    assert.strictEqual(report.attempts, i);
+  }
+  ok(calls === MAX_ATTEMPTS && readdirSync(workOut(outDir, fp)).filter(name => name.endsWith('.reserved.json')).length === MAX_ATTEMPTS, 'ten resumes consume ten exclusive reservation slots');
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === MAX_ATTEMPTS && resumed.stopped === (finalUnknown ? 'unknown-outcome' : 'attempt-cap'), `reservation cap survives resume with final ${finalUnknown ? 'unknown-outcome' : 'usage-limit'}`);
+  if (!finalUnknown) {
+    const reservation = JSON.parse(readFileSync(join(workOut(outDir, fp), 'attempt-1.reserved.json'), 'utf8'));
+    writeFileSync(join(workOut(outDir, fp), 'attempt-11.reserved.json'), JSON.stringify({ ...reservation, attempt: 11 }));
+    await assert.rejects(runCanary({ planSet: set, outDir, callFn: noCall }), /attempt history exceeds the reservation cap/); n++;
+  }
+}
+
+// Transcript and result tampering are rejected even without checkpoint.json.
+for (const suffix of ['transcript.jsonl', 'result.json']) {
   const outDir = tempOut(); const set = planSet([fp]);
   await runCanary({ planSet: set, outDir, callFn: async p => ({ transcript: transcript(p.delta), exitCode: 0 }) });
-  const workDir = join(outDir, 'works', sha256(fp.workId).slice(0, 24));
-  const resultPath = join(workDir, 'attempt-1.result.json');
-  const result = JSON.parse(readFileSync(resultPath, 'utf8')); result.kind = 'held';
-  writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`);
-  await assert.rejects(runCanary({ planSet: set, outDir, callFn: async () => { throw new Error('no'); } }), /attempt 1 evidence changed|checkpoint evidence changed|re-derivation mismatch/); n++;
+  rmSync(join(workOut(outDir, fp), 'checkpoint.json'));
+  const path = join(workOut(outDir, fp), `attempt-1.${suffix}`);
+  writeFileSync(path, `${readFileSync(path, 'utf8')} `);
+  await assert.rejects(runCanary({ planSet: set, outDir, callFn: noCall }), /attempt 1 evidence changed/); n++;
+}
+
+// Reservations, including unknown outcomes, participate in global contiguity and cannot be removed.
+{
+  const outDir = tempOut(); const set = planSet([fp]);
+  await runCanary({ planSet: set, outDir, callFn: async () => ({ transcript: usageTranscript(), exitCode: 1 }) });
+  await runCanary({ planSet: set, outDir, callFn: async () => { throw new Error('spent'); } });
+  rmSync(join(workOut(outDir, fp), 'attempt-2.reserved.json'));
+  const path = join(workOut(outDir, fp), 'attempt-3.reserved.json');
+  const first = JSON.parse(readFileSync(join(workOut(outDir, fp), 'attempt-1.reserved.json'), 'utf8'));
+  writeFileSync(path, JSON.stringify({ ...first, attempt: 3 }));
+  await assert.rejects(runCanary({ planSet: set, outDir, callFn: noCall }), /not globally contiguous/); n++;
+  rmSync(path);
+  rmSync(join(workOut(outDir, fp), 'attempt-1.reserved.json'));
+  await assert.rejects(runCanary({ planSet: set, outDir, callFn: noCall }), /evidence exists without a reservation/); n++;
 }
 
 // CLI defaults to plan-only and the live flag alone cannot bypass the owner-gated environment variable.
 {
   const env = { ...process.env }; delete env.PASS_B_B4_CANARY_LIVE;
   const before = existsSync(join(RUN_ROOT, real.runId));
+  const planned = spawnSync(process.execPath, ['scripts/pass-b-b4-structured-canary.mjs'], { cwd: process.cwd(), env, encoding: 'utf8' });
+  ok(planned.status === 0 && planned.stdout.includes(real.runId) && planned.stdout.includes(CANARY_VERSION), 'default CLI prints the deterministic plan and bumped contract version');
+  ok(/durable pre-call reservations/.test(planned.stdout) && /unknown-outcome/.test(planned.stdout) && /only retryable/.test(planned.stdout), 'plan describes the literal reservation cap and terminal semantics');
+  ok(existsSync(join(RUN_ROOT, real.runId)) === before, 'default plan creates no run directory');
   const guarded = spawnSync('/opt/homebrew/bin/node', ['scripts/pass-b-b4-structured-canary.mjs', '--run'], { cwd: process.cwd(), env, encoding: 'utf8' });
   ok(guarded.status === 2 && /refusing live/.test(guarded.stderr), 'live execution refuses without the explicit environment gate');
   ok(existsSync(join(RUN_ROOT, real.runId)) === before, 'refused live command creates no run directory');
 }
 
+ok(unexpectedCalls === 0, 'all terminal, fatal, capped, and tampered resumes invoked callFn zero times');
 for (const path of cleanups) rmSync(path, { recursive: true, force: true });
 console.log(`ok - pass-b structured B4 canary (offline): ${n} checks passed`);
