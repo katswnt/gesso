@@ -9,14 +9,17 @@
 
 // ---- static asset allowlist ----
 export const PUBLIC_FILES = ['index.html', 'styles.css', 'favicon.ico', 'favicon.png', 'apple-touch-icon.png'];
-export const PUBLIC_DIRS = ['assets', 'data/notes'];            // copied recursively (data/notes/* are generated shards)
+export const PUBLIC_DIRS = ['assets', 'data/notes', 'vendor/leaflet']; // copied recursively (data/notes/* are generated shards; vendor/leaflet is the self-hosted map library)
 
 // Per-dir entry allowlists (defense-in-depth: a stray non-shard / non-asset file must FAIL the build, not ship).
 // data/notes holds ONLY the generated reveal-note shards notes-<n>.json; assets holds ONLY image/font files.
 export const NOTE_SHARD_RE = /^notes-\d+\.json$/;
 export const ASSET_EXTENSIONS = new Set(['svg', 'png', 'webp', 'jpg', 'jpeg', 'gif', 'avif', 'ico', 'woff', 'woff2', 'ttf', 'otf']);
+// Self-hosted Leaflet 1.9.4 (byte-identical to the npm/unpkg release): exactly these files, nothing else.
+export const VENDOR_LEAFLET_FILES = new Set(['leaflet.js', 'leaflet.css', 'LICENSE.txt', 'layers.png', 'layers-2x.png', 'marker-icon.png', 'marker-icon-2x.png', 'marker-shadow.png']);
 export function isAllowedInDir(topDir, basename) {
   if (topDir === 'data/notes') return NOTE_SHARD_RE.test(basename);
+  if (topDir === 'vendor/leaflet') return VENDOR_LEAFLET_FILES.has(basename);
   if (topDir === 'assets') { const ext = (basename.split('.').pop() || '').toLowerCase(); return ASSET_EXTENSIONS.has(ext); }
   return true;
 }

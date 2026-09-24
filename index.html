@@ -14,7 +14,13 @@
 <meta property="og:title" content="Gesso — the daily art-guessing game" />
 <meta property="og:description" content="Guess a masterwork's date, place, movement, medium, and artist, then get taught. A daily art game built by Kat Swint." />
 <meta property="og:url" content="https://gesso.katswint.com/" />
+<meta property="og:image" content="https://gesso.katswint.com/assets/og-image.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Gesso: Vermeer's Girl with a Pearl Earring beside the words Guess the art. Learn to look." />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://gesso.katswint.com/assets/og-image.jpg" />
+<meta name="twitter:image:alt" content="Gesso: Vermeer's Girl with a Pearl Earring beside the words Guess the art. Learn to look." />
 <meta name="twitter:creator" content="@katswint" />
 <script type="application/ld+json">
 {
@@ -43,7 +49,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
 <link rel="shortcut icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -51,9 +57,10 @@
 <link rel="stylesheet" href="/styles.css?v=8">
 </head>
 <body>
-<div class="wrap"><div id="stage"></div></div>
+<div class="wrap"><div id="stage"><div class="card bootmsg" role="status"><div class="hero"><div class="tag">Loading today&rsquo;s artworks&hellip;</div></div></div></div></div>
+<noscript><div class="wrap"><div class="card"><div class="hero"><div class="tag">Gesso needs JavaScript to run. Please enable it and reload.</div></div></div></div></noscript>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/vendor/leaflet/leaflet.js"></script>
 <script src="data/cues.js"></script>
 <script src="data/cues-ext.js"></script>
 <!-- Per-work reveal notes are NO LONGER bundled here (teach-works.js grew to 22MB and every visitor paid the
@@ -264,8 +271,8 @@ const HOWTO_IMAGES={
   choose:'/assets/pick what fits.webp',
   lock:'/assets/lock in and learn.webp',
 };
-function openHowTo(){
-  let i=0;
+function openHowTo(opts={}){
+  let i=0; const firstRun=!!opts.firstRun;
   // Preload all step images on open so sliding Next/Back is instant (they are ~2MB PNGs each;
   // draw() swaps a single <img> src, so without this each slide fetches+decodes on demand = lag).
   try{ Object.values(HOWTO_IMAGES).forEach(src=>{ const im=new Image(); im.decoding='async'; im.src=src; }); }catch{}
@@ -294,9 +301,9 @@ function openHowTo(){
     $('.htotext').textContent=st.body;
     $('.htopips').innerHTML=pipsHTML(i,i);
     $('.obback').style.visibility=i===0?'hidden':'visible';
-    $('.obnext').textContent=i===HOWTO_STEPS.length-1?'Start playing':'Next';
+    $('.obnext').textContent=i===HOWTO_STEPS.length-1?(firstRun?'Start playing':'Got it'):'Next';
   };
-  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close();return;} if(i<0)i=0;
+  const go=d=>{i+=d; if(i>=HOWTO_STEPS.length){close(); if(firstRun&&location.pathname==='/')startGame('easy'); return;} if(i<0)i=0;
     const track=$('.htotrack'),panel=$('.htopanel'); if(!track||!panel){draw();return;}
     const old=panel.cloneNode(true); draw();
     if(d>0){track.insertBefore(old,panel);track.style.cssText='transition:none;transform:translateX(0);width:200%;display:flex';void track.offsetWidth;track.style.cssText='transition:transform 0.4s cubic-bezier(.22,1,.36,1);transform:translateX(-50%);width:200%;display:flex';}
@@ -1385,7 +1392,7 @@ function iconHTML(c){return ICONS[c]?`<span class="cicon">${ICONS[c]}</span>`:''
 let POOL=(window.ARTEFACTUM_POOL||[]).filter(x=>x&&x.img&&x.cats);
 // STAGING-ONLY demo flag: add ?demo to the URL to populate empty surfaces (e.g. the leaderboard) with
 // fake players so the layout can be reviewed. Never fetches or writes real data. Persists via this global.
-window.__DEMO = new URLSearchParams(location.search).has('demo');
+window.__DEMO = new URLSearchParams(location.search).has('demo') && location.hostname !== 'gesso.katswint.com';
 // Fabricate a full leaderboard payload (same shape as /api/leaderboard) — deterministic per date+tier.
 function demoBoard(tier,date){
   const NAMES=['Vermeerish','ClaudeM','brushstroke','ArtNerd88','chiaroscuro','Isadora','wanderlust','pigment_pam','vanGoghGirl','Tenebrist','SfumatoSam','oldMasters','impasto_ian','Quattrocento','fresco_head','ukiyoe_ellie','terracotta','gilded_gwen','tempera_tom','Rococo_Rae','baroquen','plein_air','Cubist_Cara','minimal_max','encaustic','vellum_vic','sgraffito','Fauvist_Fay'];
@@ -2748,7 +2755,7 @@ function renderStart(dateStr,push=true){try{window.scrollTo(0,0);}catch{}
       <div class="pz-block">
         <div class="pz-kicker">or play in learning mode</div>
         <div class="pz-chiprow">${TIERS.map(t=>`<button class="pchip inf" data-inf="${t.key}"><span class="chipdot" style="color:${TIERDOT[t.key]||'var(--accent)'}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 0L12 6L6 12L0 6L6 0Z" fill="currentColor"/></svg></span>${t.label}</button>`).join('')}</div>
-        <p class="pz-note">Keep going: endless works, free unlimited hints, and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
+        <p class="pz-note">Keep going: endless works, unlimited hints (they still cost points), and you can reveal the look-closer markers before you lock in. Won&rsquo;t change your streak or stats.</p>
       </div>
       <div class="pz-block">
         <div class="pz-kicker">or drill exactly what you want</div>
@@ -3711,7 +3718,8 @@ function resultSummary(){
   const bonusMax=results.reduce((a,r)=>a+(r.cells.artist?MAX_CAT:0),0);
   const grand=base+bonus, gmax=results.reduce((a,r)=>a+r.baseMax,0)+bonusMax, totalHints=results.reduce((a,r)=>a+r.hints,0);
   const lines=results.map(r=>r.it.cats.filter(c=>r.cells[c]).map(c=>shareSquare(c,r)).join('')+(r.hints?' 💡':'')).join('\n');
-  const share=`Gesso ${tier} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️`;
+  const link=(!infinite&&runDate&&tier)?`https://gesso.katswint.com/${runDate}/${tier}`:'https://gesso.katswint.com';
+  const share=`Gesso ${tier}${!infinite&&runDate?` · ${runDate}`:''} · ${grand.toLocaleString()}/${gmax.toLocaleString()}${totalHints?`  💡×${totalHints}`:''}\n${lines}\n🕰️🗺️🎨🏛️🖌️\n${link}`;
   return {grand,gmax,bonus,totalHints,lines,share};
 }
 function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
@@ -3747,7 +3755,8 @@ async function renderShareCard(data){
   ctx.strokeStyle=cssVar('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(84,1130);ctx.lineTo(996,1130);ctx.stroke();
   ctx.fillStyle=cssVar('--muted');ctx.font='600 24px Manrope, monospace';ctx.textAlign='left';ctx.fillText('Score',84,1190);
   ctx.fillStyle=cssVar('--ink');ctx.font="800 78px 'Faculty Glyphic', sans-serif";ctx.fillText(rs.grand.toLocaleString(),84,1260);
-  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px Manrope, monospace';ctx.fillText(' / 50k',390,1255);
+  const gw=ctx.measureText(rs.grand.toLocaleString()).width;
+  ctx.fillStyle=cssVar('--muted');ctx.font='600 30px Manrope, monospace';if(rs.gmax)ctx.fillText(` / ${rs.gmax.toLocaleString()}`,84+gw+8,1255);
   ctx.fillStyle=cssVar('--accent');ctx.font='700 25px Manrope, monospace';ctx.textAlign='right';ctx.fillText('gesso.katswint.com',996,1258);
   return canvas.toDataURL('image/png');
 }
@@ -3971,7 +3980,7 @@ document.addEventListener('click',e=>{if(e.target.classList&&e.target.classList.
 
 // ---------- boot ----------
 applySettings();
-if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Could not load the artwork data (data/pool.js). Serve this folder over http (e.g. python3 -m http.server).</div></div></div>';}
+if(!POOL.length){document.getElementById('stage').innerHTML='<div class="card"><div class="hero"><div class="big2">⚠︎</div><div class="tag">Gesso couldn&rsquo;t load today&rsquo;s artworks. Check your connection and try again.</div><p><button type="button" class="navbtn navbtn--filled" onclick="location.reload()">Reload</button></p></div></div>';}
 else{ buildIndexes();
   const _sp=new URLSearchParams(location.search); const wId=_sp.get('w'); const qaId=_sp.get('qa'); // ?w=<id> public share page · ?qa=<id>[,..] internal curated deep-link
   if(wId){ renderWorkPage(decodeURIComponent(wId)); }
@@ -3981,7 +3990,7 @@ else{ buildIndexes();
   if(location.pathname!=='/'){ const cur=location.pathname; try{ history.replaceState({v:'home'},'','/'); history.pushState(null,'',cur); }catch{} }
   renderFromPath();
   // first-visit: auto-show the walkthrough once (set flag on close)
-  try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(openHowTo,420); }catch{}
+  try{ if(!localStorage.getItem("gesso.onboarded")) setTimeout(()=>openHowTo({firstRun:true}),420); }catch{}
   // pick up an existing session (and any OAuth/magic-link redirect) once supabase-js has loaded
   setTimeout(()=>{ try{ refreshAuth(); }catch{} },600);
   setTimeout(()=>{ try{ backfillScores(); }catch{} },1500); } } // push any un-submitted past dailies to the board
