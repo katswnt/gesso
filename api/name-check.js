@@ -3,6 +3,7 @@
 // row with user_id set) has claimed it; names not tied to an account are fair game. Your own account's
 // name is always available to you. Storage: Supabase (server SECRET key).
 import { SUPABASE_URL } from './_supabase.js';
+import { isBlockedName } from '../server/api/moderation.js';
 function allowedOrigin(o){ if(!o)return true; try{const h=new URL(o).hostname;return h==='gesso.katswint.com'||h==='localhost'||h.endsWith('.vercel.app');}catch{return false;} }
 
 export default async function handler(req, res) {
@@ -15,6 +16,7 @@ export default async function handler(req, res) {
   const name = String(req.query.name || '').trim();
   const device = String(req.query.device || '').slice(0, 64);
   if (!name) return res.status(200).json({ available: true });
+  if (isBlockedName(name)) return res.status(200).json({ available: false, reason: 'not allowed' });
 
   try {
     // who (if anyone) has claimed this name with an ACCOUNT? (case-insensitive)

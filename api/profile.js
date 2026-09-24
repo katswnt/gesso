@@ -2,6 +2,7 @@
 // + header x-gesso-cap. Device-scoped, so capability-gated (CAP_MODE observe grandfathers a MISSING cap only).
 // Honors the name-reservation rule (a name held by another ACCOUNT is dropped).
 import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { isBlockedName } from '../server/api/moderation.js';
 import { admin } from '../server/api/supabaseAdmin.js';
 import { requireDeviceCap, callGuarded, guardedWriteToHttp } from '../server/api/device-ownership.js';
 
@@ -19,6 +20,7 @@ export default async function handler(req, res) {
   if (!gate.ok) return res.status(gate.status).json({ error: gate.reason });
 
   let name = String(body.name || '').slice(0, 16);
+  if (isBlockedName(name)) name = ''; // never store a blocked display name; the board shows the default handle
   const color = /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : '#2230b8';
   try {
     if (name) { // drop a name another account has reserved

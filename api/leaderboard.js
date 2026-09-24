@@ -2,6 +2,7 @@
 // GET /api/leaderboard?date=YYYY-MM-DD&tier=easy[&me=<deviceId>]  → top 50 + caller rank/percentile.
 // Storage: Supabase (Postgres via PostgREST), server-side SECRET key. Read-only. No auth.
 import { SUPABASE_URL } from './_supabase.js';
+import { isBlockedName } from '../server/api/moderation.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
 const TOP_N = 50;
 
@@ -18,6 +19,49 @@ const ARTIST_HANDLES=['Rembrandt','Vermeer','Monet','Degas','Cézanne','Matisse'
 const fbColor = d => { let h=0; d=String(d); for(let i=0;i<d.length;i++)h=(h*31+d.charCodeAt(i))>>>0; return SWATCHES[h%SWATCHES.length]; };
 const fbName = d => { let h=5381; d=String(d); for(let i=0;i<d.length;i++)h=((h<<5)+h+d.charCodeAt(i))>>>0; return ARTIST_HANDLES[h%ARTIST_HANDLES.length]; };
 
+// Supabase's PostgREST caps a response at 1000 rows by default, so read the day+tier in 1000-row pages;
+// otherwise a busy board silently truncates and ranks/counts go wrong.
+async function allScores(rest, date, tier, select) {
+  const out = [];
+  for (let from = 0; from < 100000; from += 1000) {
+    const r = await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&select=${select}`, { headers: { Range: `${from}-${from + 999}` } });
+    const page = await r.json();
+    if (!Array.isArray(page)) return from === 0 ? null : out; // e.g. the `cold` column missing → caller retries
+    out.push(...page);
+    if (page.length < 1000) break;
+  }
+  return out;
+}
+// Ranking reads every score for the day+tier, so remember the ranked board for 30s per warm instance.
+// A caller who is missing from the remembered board (they just submitted) always gets a fresh computation.
+const MEMO_MS = 30000;
+const memo = new Map();
+async function rankedBoard(rest, date, tier, me) {
+  const k = `${date}|${tier}`, hit = memo.get(k);
+  if (hit && Date.now() - hit.at < MEMO_MS && (!me || hit.devices.has(me))) return hit;
+  let all = await allScores(rest, date, tier, 'device_id,total,perfects,masterpieces,cold');
+  if (!Array.isArray(all)) all = await allScores(rest, date, tier, 'device_id,total,perfects,masterpieces'); // `cold` may not exist yet
+  all = Array.isArray(all) ? all : [];
+  const devIds = [...new Set(all.map(r => r.device_id))];
+  // profiles carry the account link (user_id) + display name/color; batch to keep URLs short, fetch in parallel
+  const profByDev = {};
+  const chunks = [];
+  for (let i = 0; i < devIds.length; i += 100) chunks.push(devIds.slice(i, i + 100));
+  const pages = await Promise.all(chunks.map(chunk => rest(`profiles?device_id=in.(${chunk.map(encodeURIComponent).join(',')})&select=device_id,user_id,name,color`).then(r => r.json()).catch(() => [])));
+  for (const ps of pages) for (const p of (Array.isArray(ps) ? ps : [])) profByDev[p.device_id] = p;
+  // group key = account when signed in, else the device. Keep each group's best score, so one signed-in
+  // player on several devices occupies ONE rank instead of several.
+  const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
+  const groups = new Map();
+  for (const r of all) { const key = keyOf(r.device_id); const prev = groups.get(key);
+    if (!prev || r.total > prev.total) groups.set(key, { ...r, _key: key }); }
+  const ranked = [...groups.values()].sort((a, b) => b.total - a.total);
+  const board = { at: Date.now(), ranked, profByDev, keyOf, devices: new Set(devIds) };
+  memo.set(k, board);
+  if (memo.size > 200) memo.delete(memo.keys().next().value);
+  return board;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   if (!allowedOrigin(req.headers.origin)) return res.status(403).json({ error: 'forbidden origin' });
@@ -33,44 +77,23 @@ export default async function handler(req, res) {
   if (!TIERS.includes(tier)) return res.status(400).json({ error: 'bad tier' });
 
   try {
-    // Fire the three INDEPENDENT queries together (was sequential → ~3 round-trips of latency): the score page,
-    // the exact total count, and (if a caller is given) the caller's own score. Dependent follow-ups parallelize too.
-    // Fetch ALL of the day+tier's scores, then collapse by ACCOUNT so one signed-in player on several
-    // devices occupies ONE rank (their best score) instead of several. Anonymous devices (no user_id)
-    // stay per-device. Small at current scale; a Postgres RPC/view is the answer if this ever gets large.
-    let all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&limit=5000&select=device_id,total,perfects,masterpieces,cold`)).json();
-    if (!Array.isArray(all)) { // `cold` column may not exist yet — self-heal by re-selecting without it
-      all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&order=total.desc&limit=5000&select=device_id,total,perfects,masterpieces`)).json();
-    }
-    all = Array.isArray(all) ? all : [];
-    const devIds = [...new Set(all.map(r => r.device_id))];
-
-    // profiles carry the account link (user_id) + display name/color; batch to keep URLs short
-    const profByDev = {};
-    for (let i = 0; i < devIds.length; i += 100) {
-      const chunk = devIds.slice(i, i + 100);
-      const ps = await (await rest(`profiles?device_id=in.(${chunk.map(encodeURIComponent).join(',')})&select=device_id,user_id,name,color`)).json();
-      for (const p of (ps || [])) profByDev[p.device_id] = p;
-    }
-    // group key = account when signed in, else the device. Keep each group's best score.
-    const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
-    const groups = new Map();
-    for (const r of all) { const key = keyOf(r.device_id); const prev = groups.get(key);
-      if (!prev || r.total > prev.total) groups.set(key, { ...r, _key: key }); }
-    const ranked = [...groups.values()].sort((a, b) => b.total - a.total);
+    const board = await rankedBoard(rest, date, tier, me);
+    const { ranked, profByDev, keyOf } = board;
     const count = ranked.length;
     const page = ranked.slice(offset, offset + TOP_N);
     const meKey = me ? keyOf(me) : null;
 
     const rows = page.map((r, i) => {
       const p = profByDev[r.device_id] || {};
-      return { rank: offset + i + 1, name: p.name || fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
+      return { rank: offset + i + 1, name: (p.name && !isBlockedName(p.name)) ? p.name : fbName(r.device_id), color: /^#[0-9a-fA-F]{6}$/.test(p.color || '') ? p.color : fbColor(r.device_id),
         score: r.total, perfects: r.perfects || 0, masterpieces: r.masterpieces || 0, cold: !!r.cold, isYou: !!meKey && r._key === meKey };
     });
 
     let you = null;
     if (meKey) { const idx = ranked.findIndex(r => r._key === meKey);
       if (idx >= 0) { const rank = idx + 1; you = { rank, score: ranked[idx].total, count, percentile: count ? Math.round(((count - rank + 1) / count) * 100) : null }; } }
+    // A board without a caller is identical for everyone, so let the CDN serve it; personal views never cache.
+    res.setHeader('Cache-Control', me ? 'private, no-store' : 'public, s-maxage=30, stale-while-revalidate=300');
     return res.status(200).json({ date, tier, count, offset, rows, you });
   } catch (e) {
     return res.status(500).json({ error: 'read failed' });

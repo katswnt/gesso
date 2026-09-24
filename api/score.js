@@ -4,6 +4,7 @@
 // Anonymous — keyed by a client-generated deviceId. Best-score-per-day guarded. Raw guesses stored for
 // later server re-scoring (Phase 4). Abuse controls mirror report.js: origin allowlist, honeypot.
 import { allowedOrigin, parseBody } from '../server/api/http.js';
+import { isBlockedName } from '../server/api/moderation.js';
 import { admin } from '../server/api/supabaseAdmin.js';
 import { requireDeviceCap, callGuarded, guardedWriteToHttp } from '../server/api/device-ownership.js';
 const TIERS = ['easy', 'medium', 'hard', 'impossible'];
@@ -38,7 +39,8 @@ export default async function handler(req, res) {
   const gate = await requireDeviceCap(req, a, deviceId, 'score');
   if (!gate.ok) return res.status(gate.status).json({ error: gate.reason });
 
-  const name = String(body.name || '').slice(0, 16);
+  const rawName = String(body.name || '').slice(0, 16);
+  const name = isBlockedName(rawName) ? '' : rawName; // blocked names fall back to the default handle
   const color = /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : '#2230b8';
   const perfects = Math.max(0, Math.min(ROUNDS, parseInt(body.perfects, 10) || 0));
   const masterpieces = Math.max(0, Math.min(ROUNDS, parseInt(body.masterpieces, 10) || 0));
@@ -77,32 +79,18 @@ export default async function handler(req, res) {
       }
     }
 
-    // rank/count must match the leaderboard, which collapses an account's devices to its single best score.
-    // Compute it that way here so the recap ("#7 of 30") never disagrees with the board. Wrapped in its own
-    // try/catch: the score WRITE already happened above, so a rank-display failure must NEVER 500 the submit —
-    // it falls back to the raw per-device count.
-    let rank, count;
+    // Rank/count via two exact COUNT queries instead of reading every score on each submit (that was O(n) per
+    // submission and would not survive a traffic spike). The board collapses a signed-in account's devices to
+    // its best score; this per-device count can differ from the board only for an account that played the same
+    // day+tier on several devices, by at most its extra devices. Display-only — the score WRITE already happened,
+    // so a count failure must never 500 the submit.
+    let rank = null, count = null;
     try {
-      const all = await (await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id,total`)).json();
-      const devIds = [...new Set((all || []).map(r => r.device_id))];
-      const profByDev = {};
-      for (let i = 0; i < devIds.length; i += 100) {
-        const chunk = devIds.slice(i, i + 100);
-        const ps = await (await rest(`profiles?device_id=in.(${chunk.map(encodeURIComponent).join(',')})&select=device_id,user_id`)).json();
-        for (const p of (ps || [])) profByDev[p.device_id] = p;
-      }
-      const keyOf = dev => { const p = profByDev[dev]; return p && p.user_id ? 'u:' + p.user_id : 'd:' + dev; };
-      const best = new Map();
-      for (const r of (all || [])) { const k = keyOf(r.device_id); const t = Number(r.total); if (!best.has(k) || t > best.get(k)) best.set(k, t); }
-      const myTotal = best.get(keyOf(deviceId)) ?? finalTotal;
-      count = best.size;
-      rank = [...best.values()].filter(t => t > myTotal).length + 1;
-    } catch {
       const rankRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&total=gt.${finalTotal}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
       const cntRes = await rest(`scores?date=eq.${date}&tier=eq.${tier}&select=device_id`, { headers: { Prefer: 'count=exact', Range: '0-0' } });
       const parseCount = r => { const cr = r.headers.get('content-range') || '*/0'; return parseInt(cr.split('/')[1], 10) || 0; };
       rank = parseCount(rankRes) + 1; count = parseCount(cntRes);
-    }
+    } catch { /* display-only */ }
     return res.status(200).json({ ok: true, isBest, rank, count });
   } catch (e) {
     return res.status(500).json({ error: 'store failed' });

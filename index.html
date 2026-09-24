@@ -1913,7 +1913,22 @@ function showDeviceConflict(msg){ try{ if(document.getElementById('gesso-devconf
   b.addEventListener('click',()=>b.remove()); setTimeout(()=>{try{b.remove();}catch{}},9000); document.body.appendChild(b);
 }catch{} }
 // analytics sink: fire-and-forget the tracked event to our own Supabase-backed /api/event (see api/event.js).
-window.__sink=function(event,props){ try{ fetch("/api/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({deviceId:deviceId(),event,props:props||{}})}).catch(()=>{}); }catch{} };
+// Analytics are batched: one request per flush instead of one per event (a daily fires ~20 events).
+// Flush at the end of a daily, when the page is hidden/closed, when the buffer fills, or after 30s.
+window.__evq=[];
+window.__flushEvents=function(){ try{
+  const q=window.__evq; if(!q.length) return; window.__evq=[]; clearTimeout(window.__evt);
+  const body=JSON.stringify({deviceId:deviceId(),events:q.slice(0,50)});
+  const sent=navigator.sendBeacon&&navigator.sendBeacon("/api/event",new Blob([body],{type:"application/json"}));
+  if(!sent) fetch("/api/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body}).catch(()=>{});
+}catch{} };
+window.__sink=function(event,props){ try{
+  window.__evq.push({event,props:{...(props||{}),at:Date.now()}});
+  if(event==='daily_complete'||window.__evq.length>=20) window.__flushEvents();
+  else { clearTimeout(window.__evt); window.__evt=setTimeout(window.__flushEvents,30000); }
+}catch{} };
+addEventListener('pagehide',()=>window.__flushEvents());
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') window.__flushEvents(); });
 function loadIdentity(){try{const i=JSON.parse(localStorage.getItem("gesso.identity"))||{};return{name:String(i.name||'').slice(0,16)||defaultName(),color:/^#[0-9a-fA-F]{6}$/.test(i.color)?i.color:defaultColor()};}catch{return{name:defaultName(),color:defaultColor()};}}
 // ---------- My Gallery: saved works (device-keyed Supabase + localStorage mirror) ----------
 let SAVED=new Set(); try{ SAVED=new Set(JSON.parse(localStorage.getItem("gesso.saved")||"[]")); }catch{}
@@ -2028,7 +2043,7 @@ function openIdentityModal(after){
     if(btn){ if(btn.disabled)return; cur.name=veil.querySelector('#idname').value.trim();
       const m=veil.querySelector('#idmsg'); btn.disabled=true; const orig=btn.textContent; btn.textContent='Saving…';
       if(cur.name){ try{ const r=await fetch(`/api/name-check?name=${encodeURIComponent(cur.name)}&device=${encodeURIComponent(deviceId())}`); const j=r.ok?await r.json():{available:true};
-        if(!j.available){ if(m)m.textContent='That name is taken by a registered player — pick another.'; btn.disabled=false; btn.textContent=orig; return; } }catch{} }
+        if(!j.available){ if(m)m.textContent=j.reason==='not allowed'?'That name isn’t allowed on the public board — pick another.':'That name is taken by a registered player — pick another.'; btn.disabled=false; btn.textContent=orig; return; } }catch{} }
       saveIdentity(cur);
       // push to the server so the board reflects the new name/color (fire-and-forget — don't delay the close)
       capFetch((dev,cap)=>fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json','x-gesso-cap':cap},body:JSON.stringify({deviceId:dev,name:cur.name,color:cur.color})})).catch(()=>{});
@@ -3931,7 +3946,8 @@ function renderFinal(push=true){
 const IIIF_RE=/\/full\/(?:\d+,|,\d+|!\d+,\d+|pct:\d+(?:\.\d+)?|max|full)\/(\d+)\/(default|native|color|gray|bitonal)/;
 function rewriteIiif(src,w){ return src.replace(IIIF_RE, `/full/${w},/$1/$2`); }
 function displaySrc(src){
-  if(src.includes("images.metmuseum.org")) return src;                                   // Met: keep web-large (~600), not original
+  if(src.includes("images.metmuseum.org")) return src.replace("/original/","/web-large/"); // Met: card uses web-large (~100KB), never the multi-MB original
+  if(src.includes("clevelandart.org")) return src.replace("_print.jpg","_web.jpg");        // Cleveland: card uses _web, never the ~3400px print
   if(IIIF_RE.test(src)) return rewriteIiif(src,1200);                                     // IIIF: Harvard / V&A / AIC-direct → 1200px card
   if(src.includes("commons.wikimedia.org")) return /[?&]width=\d+/.test(src)?src.replace(/width=\d+/,"width=1000"):src+(src.includes("?")?"&":"?")+"width=1000"; // guard against full-res Commons cards
   return src;                                                                            // Cleveland _web, LoC tile, Smithsonian, Blob — already card-sized
