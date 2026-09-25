@@ -628,13 +628,16 @@ async function main() {
   if (LANE === 'cloud') {
     const skipPath = process.env.PASS_B_CLOUD_SKIP;
     if (!skipPath || !existsSync(skipPath)) throw new Error('cloud lane needs PASS_B_CLOUD_SKIP=<skip.json> (local done/held/window ids) so it never duplicates local work');
-    const skip = new Set([...windowOrder, ...(readJson(skipPath).ids || [])]);
+    // Also skip works already exported from an earlier cloud container (state/exported.json beside skip.json),
+    // so a new session never redoes work that is waiting to be imported locally.
+    const exportedPath = join(dirname(skipPath), 'exported.json');
+    const skip = new Set([...windowOrder, ...(readJson(skipPath).ids || []), ...(existsSync(exportedPath) ? readJson(exportedPath).ids || [] : [])]);
     order = buildPriorityQueue(pool, daily, { today: clock.date, windowOnly: false }).filter(id => !skip.has(id));
   }
   const eligibleSet = new Set(allEligible.map(p => p.id));
   const queue = computeQueue(order, { eligibleSet, doneSet: inspection.doneSet, heldSet: inspection.heldSet });
   console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION} | lane: ${LANE}${LANE === 'cloud' ? ` (cap $${CLOUD_BUDGET_USD}, spent $${runSpendUsd(RUN_DIR).toFixed(2)})` : ''}`);
-  console.log(`Pacific date: ${clock.date} | window: [${clock.date}, ${plusDay(clock.date, 30)}) | may start now: ${clock.mayStart}`);
+  console.log(`Pacific date: ${clock.date} | window: [${clock.date}, ${plusDay(clock.date, 30)}) | ${LANE === 'cloud' ? 'cloud lane: no hours gate (dollar cap instead)' : `may start now: ${clock.mayStart}`}`);
   console.log(`corpus verified B1/B2/B3: ${inspection.totals.b1Complete}/${inspection.totals.b2Complete}/${inspection.totals.b3Complete} | done ${inspection.doneSet.size} | held ${inspection.heldSet.size} | attempts ${inspection.attempts}`);
   console.log(`${LANE === 'cloud' ? 'cloud-lane candidates (beyond window, minus skip list)' : 'window works'}: ${order.length} | queued: ${queue.length} | pending raw-file repairs: ${inspection.repairs.length} | fatal: ${inspection.fatal || 'none'} | pause: ${inspection.pause || 'none'}`);
   const active = executionEpochs(RUN_DIR).at(-1);
