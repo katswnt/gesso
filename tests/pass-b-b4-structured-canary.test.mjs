@@ -63,15 +63,17 @@ function planSet(plans) {
 const real = loadCanaryPlan();
 ok(real.plans.length === 10 && CANARY_WORKS.length === 10, 'frozen ten-work plan loads');
 ok(real.runId === structuredB4RunId(real.binding), 'run id is deterministic from the complete binding');
-ok(real.binding.version === CANARY_VERSION && CANARY_VERSION === 'passBStructuredB4Canary/4', 'execution evidence contract is versioned independently');
+ok(real.binding.version === CANARY_VERSION && CANARY_VERSION === 'passBStructuredB4Canary/5', 'execution evidence contract is versioned independently');
 ok(real.plans.every(p => p.commandPolicy.timeoutMs === CALL_TIMEOUT_MS && p.commandPolicy.killSignal === 'SIGKILL'), 'plan binds the process timeout and kill signal');
 ok(real.plans.every(p => p.sourceBinding.B1.transcriptSha256 && p.sourceBinding.B2.transcriptSha256 && p.sourceBinding.B3.transcriptSha256), 'every source completion binds a transcript');
 ok(real.plans.filter(p => p.sealedFindingIds.length).map(p => p.workId).sort().join('|') === ['wikidata:Q1211814', 'wikidata:Q16467705'].sort().join('|'), 'both canonical failures remain sealed holds');
 
 // Real execution fixtures are read in place and byte-bound, just like the existing banked B1-B3 inputs.
-// No historical result/report is regenerated: /4's offline interpretation cannot reopen the spent /3 run.
+// No historical result/report is regenerated: /5's offline interpretation cannot reopen either spent run.
 const spentDir = join(RUN_ROOT, 'b4s-016f64c8e0ca');
 const spentBefore = fileHashes(spentDir);
+const secondSpentDir = join(RUN_ROOT, 'b4s-18bc5fb62997');
+const secondSpentBefore = fileHashes(secondSpentDir);
 const stJohnPlan = real.plans.find(p => p.workId === 'wikidata:Q1211814');
 const stJohnText = readFileSync(join(workOut(spentDir, stJohnPlan), 'attempt-2.transcript.jsonl'), 'utf8');
 ok(sha256(stJohnText) === 'd2a3591a11ec1c354f153e76ef57ee5b9ae87066e68ee1a6fd960cee32a0bf1d', 'St. John fixture is the exact preserved owner-run /3 attempt 2');
@@ -86,16 +88,47 @@ ok(deriveB4Attempt(stJohnPlan, `${stJohnText}${JSON.stringify(addedRead)}\n`).ki
 const duplicatePath = join(RUN_ROOT, 'b4c-f45fac18da2e', 'works', 'cleveland120847.transcript.jsonl');
 const realDuplicate = readFileSync(duplicatePath, 'utf8');
 ok(sha256(realDuplicate) === '2db6c014011fbb91d50ce5e2a25bce3f8f3316fb55769b1b1f7f7ef83e159024', 'second execution fixture is an unmodified historical transcript with two adapter emissions');
-ok(deriveB4Attempt(stJohnPlan, realDuplicate).kind === 'fatal', 'real wire-schema retry with two StructuredOutput emissions is fatal under the requested exactly-once policy');
+ok(deriveB4Attempt(stJohnPlan, realDuplicate).kind === 'held', 'real historical wire-schema retry is held, not a provenance fatal');
 const gloirePlan = real.plans.find(p => p.workId === 'wikidata:Q16467705');
 const timedOutText = readFileSync(join(workOut(spentDir, gloirePlan), 'attempt-1.transcript.jsonl'), 'utf8');
 ok(sha256(timedOutText) === 'cf76fb53f9cf6d56528199afd7ec53c4089bb37b3d88d5603d1c9aae5745e6e6' && deriveB4Attempt(gloirePlan, timedOutText, 'timeout').kind === 'held', 'real interrupted La Gloire attempt stays held: no retroactive timeout extension or retry');
 const oldManifest = JSON.parse(readFileSync(join(spentDir, 'run-manifest.json'), 'utf8'));
 const oldReport = JSON.parse(readFileSync(join(spentDir, 'report.json'), 'utf8'));
 ok(oldReport.attempts === 2 && oldReport.stopped === 'fatal-provenance' && oldReport.counts.fatal === 1 && oldReport.counts.held === 1, 'spent /3 report remains terminal with both reservations consumed');
-ok(real.runId !== oldManifest.runId && real.binding.maxAttempts === 10, '/4 has a distinct identity and a fresh ten-slot budget, not eight remaining /3 slots');
+ok(real.runId !== oldManifest.runId && real.binding.maxAttempts === 10, '/5 has a distinct identity and a fresh ten-slot budget, not eight remaining /3 slots');
 await assert.rejects(runCanary({ planSet: { ...real, ...oldManifest }, outDir: spentDir, callFn: noCall }), /execution contract differs/); n++;
 assert.deepStrictEqual(fileHashes(spentDir), spentBefore); n++;
+
+// Smoke #2: the CLI rejected Hydria's first malformed JSON emission and accepted its second.
+// Even a strict-valid final body remains held; the controller never retries this work or stops others.
+const hydriaPlan = real.plans.find(p => p.workId === 'harvard303416');
+const hydriaText = readFileSync(join(workOut(secondSpentDir, hydriaPlan), 'attempt-3.transcript.jsonl'), 'utf8');
+ok(sha256(hydriaText) === '52c11aac0cf5113190888cb5d8ff1013b09b215e1660b197eab87099c855f8bb', 'Hydria fixture is the exact preserved owner-run /4 attempt 3');
+const hydria = deriveB4Attempt(hydriaPlan, hydriaText);
+ok(hydria.kind === 'held' && hydria.errors.join('|') === 'multiple-StructuredOutput-emissions', 'real Hydria is held solely for duplicate adapter emissions, not fatal or accepted');
+ok(hydria.evidence.claudeCodeVersion === '2.1.280' && hydria.evidence.apiKeySources.every(source => source === 'none') && hydria.evidence.toolUses.join('|') === 'StructuredOutput|StructuredOutput', 'both real Hydria emissions have clean subscription/adapter provenance');
+ok(hydria.body && hydria.leaks.length === 0 && hydria.reconciliation.componentReadiness.every(row => row.contentReadiness !== 'eligible'), 'held Hydria still exposes valid hydration and zero model-created eligibility');
+ok(deriveB4Attempt(hydriaPlan, `${hydriaText}${JSON.stringify(addedRead)}\n`).kind === 'fatal', 'duplicate adapter emissions cannot mask an extra ordinary tool in the real transcript');
+const limitedHydria = `${hydriaText}${JSON.stringify({ type: 'result', is_error: true, api_error_status: 429, result: 'usage limit reached' })}\n`;
+ok(deriveB4Attempt(hydriaPlan, limitedHydria, 1).kind === 'held', 'a usage-limit result after duplicate adapter emissions cannot make the work retryable');
+const secondManifest = JSON.parse(readFileSync(join(secondSpentDir, 'run-manifest.json'), 'utf8'));
+const secondReport = JSON.parse(readFileSync(join(secondSpentDir, 'report.json'), 'utf8'));
+ok(secondReport.attempts === 3 && secondReport.stopped === 'fatal-provenance' && secondReport.counts.accepted === 2 && secondReport.counts.fatal === 1, 'spent /4 report keeps its original terminal fatal and all three consumed reservations');
+ok(real.runId !== secondManifest.runId, '/5 does not reuse the spent /4 identity');
+await assert.rejects(runCanary({ planSet: { ...real, ...secondManifest }, outDir: secondSpentDir, callFn: noCall }), /execution contract differs/); n++;
+assert.deepStrictEqual(fileHashes(secondSpentDir), secondSpentBefore); n++;
+{
+  const next = fixturePlan('after-duplicate');
+  const set = planSet([hydriaPlan, next]); const outDir = tempOut(); let calls = 0;
+  const first = await runCanary({ planSet: set, outDir, callFn: async p => {
+    calls++;
+    return { transcript: p === hydriaPlan ? hydriaText : transcript(p.delta), exitCode: 0 };
+  } });
+  ok(calls === 2 && first.attempts === 2 && first.counts.held === 1 && first.counts.accepted === 1 && first.stopped === null, 'duplicate hold consumes one slot and allows the next work to run');
+  for (const p of set.plans) rmSync(join(workOut(outDir, p), 'checkpoint.json'));
+  const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
+  ok(resumed.attempts === 2 && resumed.rows[0].status === 'held' && resumed.rows[0].errors.includes('multiple-StructuredOutput-emissions'), 'duplicate hold stays terminal without a checkpoint and makes zero calls on resume');
+}
 
 // Timeout sizing is checked against real stage timings, not only a mocked execFile option.
 const historicDir = join(RUN_ROOT, 'b4c-f45fac18da2e', 'works');
@@ -122,7 +155,10 @@ ok(deriveB4Attempt(fp, transcript(null), 0).kind === 'held', 'missing structured
 ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong authentication cannot hide behind a usage-limit response');
 ok(deriveB4Attempt(fp, transcript(fp.delta, { result: 'The successful explanation mentions a rate limit and quota.' }), 0).kind === 'accepted', 'successful prose mentioning rate limit is not a usage-limit rejection');
 ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: [] }), 0).kind === 'held', 'successful acceptance requires one actual StructuredOutput emission');
-ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'] }), 0).kind === 'fatal', 'a second output-adapter emission is fatal');
+ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'] }), 0).kind === 'held', 'a second output-adapter emission is terminal held');
+for (const options of [{ apiKeySource: 'user' }, { model: 'different-model' }, { initTools: ['StructuredOutput', 'Read'] }]) {
+  ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'], ...options })).kind === 'fatal', 'provenance/capability violations still take precedence over duplicate-adapter holds');
+}
 for (const initTools of [undefined, null, [], ['Read'], ['StructuredOutput', 'Read'], ['StructuredOutput', 'StructuredOutput'], 'StructuredOutput']) {
   const rows = stJohnText.trim().split('\n').map(line => JSON.parse(line));
   rows.find(row => row.type === 'system' && row.subtype === 'init').tools = initTools;
@@ -158,12 +194,13 @@ const forbiddenEvents = [
   { type: 'server_tool_use', name: 'web_search' },
   { type: 'assistant', content: [{ type: 'server_tool_use', name: 'web_fetch' }] },
   { type: 'assistant', message: { content: [{ type: 'server_tool_use', name: 'StructuredOutput' }] } },
-  { type: 'stream_event', event: { type: 'content_block_start', content_block: { type: 'tool_use', name: 'StructuredOutput' } } },
 ];
 for (const event of forbiddenEvents) {
   const derived = deriveB4Attempt(fp, `${JSON.stringify(event)}\n${transcript(fp.delta)}`, 0);
   ok(derived.kind === 'fatal' && derived.evidence.toolUseTypes.length === 2, `tool-use event is fatal: ${JSON.stringify(event)}`);
 }
+const streamedAdapter = { type: 'stream_event', event: { type: 'content_block_start', content_block: { type: 'tool_use', name: 'StructuredOutput' } } };
+ok(deriveB4Attempt(fp, `${JSON.stringify(streamedAdapter)}\n${transcript(fp.delta)}`).kind === 'held', 'duplicate adapter events in stream envelopes are held too');
 ok(deriveB4Attempt(fp, transcript(fp.delta, { result: 'An example string: {"type":"server_tool_use","name":"web_search"}' }), 0).kind === 'accepted', 'tool-use JSON mentioned in prose is not an execution event');
 {
   const outDir = tempOut(); const set = planSet([fp, fixturePlan('after-server-tool')]);
@@ -385,6 +422,7 @@ for (const suffix of ['transcript.jsonl', 'result.json']) {
   ok(planned.status === 0 && planned.stdout.includes(real.runId) && planned.stdout.includes(CANARY_VERSION), 'default CLI prints the deterministic plan and bumped contract version');
   ok(/durable pre-call reservations/.test(planned.stdout) && /unknown-outcome/.test(planned.stdout) && /only retryable/.test(planned.stdout), 'plan describes the literal reservation cap and terminal semantics');
   ok(/exactly one tool_use:StructuredOutput/.test(planned.stdout) && /tools exactly \[StructuredOutput\]/.test(planned.stdout) && /timeout=900s/.test(planned.stdout), 'plan states the adapter exception, exact init tool list and measured timeout');
+  ok(/Duplicate adapter emissions are terminal held, without retry/.test(planned.stdout), 'plan distinguishes duplicate-adapter holds from fatal tool use');
   ok(existsSync(join(RUN_ROOT, real.runId)) === before, 'default plan creates no run directory');
   const guarded = spawnSync('/opt/homebrew/bin/node', ['scripts/pass-b-b4-structured-canary.mjs', '--run'], { cwd: process.cwd(), env, encoding: 'utf8' });
   ok(guarded.status === 2 && /refusing live/.test(guarded.stderr), 'live execution refuses without the explicit environment gate');
@@ -393,5 +431,6 @@ for (const suffix of ['transcript.jsonl', 'result.json']) {
 
 ok(unexpectedCalls === 0, 'all terminal, fatal, capped, and tampered resumes invoked callFn zero times');
 assert.deepStrictEqual(fileHashes(spentDir), spentBefore); n++;
+assert.deepStrictEqual(fileHashes(secondSpentDir), secondSpentBefore); n++;
 for (const path of cleanups) rmSync(path, { recursive: true, force: true });
 console.log(`ok - pass-b structured B4 canary (offline): ${n} checks passed`);

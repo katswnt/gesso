@@ -29,7 +29,7 @@ import { auditReconciliation, buildClaimBundle, validateClaimBundle } from './li
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 
 const execFileP = promisify(execFile);
-export const CANARY_VERSION = 'passBStructuredB4Canary/4';
+export const CANARY_VERSION = 'passBStructuredB4Canary/5';
 export const SOURCE_RUN = 'cal50-0a47b6f7f332';
 export const MAX_ATTEMPTS = 10;
 // 49 preserved b4c results: median 184391ms, max 302585ms; the /3 La Gloire call was
@@ -195,7 +195,10 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
   else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
   else if (!exactInitTools) { kind = 'fatal'; errors.push('B4 init tools must be exactly [StructuredOutput]'); }
-  else if (forbiddenTool || execution.toolUses.length > 1) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
+  else if (forbiddenTool) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
+  // The CLI can repeat its output adapter after rejecting malformed JSON. This is a terminal
+  // conformance hold, not a capability violation; it cannot become a usage-limit retry either.
+  else if (execution.toolUses.length > 1) errors.push('multiple-StructuredOutput-emissions');
   else if (exitCode === 'timeout') errors.push('process-timeout');
   else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
@@ -205,7 +208,7 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   if (kind !== 'usage-limit' && kind !== 'fatal') {
     // StructuredOutput is the CLI's --json-schema return adapter, not a research/image capability.
     // Successful acceptance needs exactly one emission. Interrupted calls may have none and stay held.
-    if (execution.toolUses.length !== 1) errors.push('missing-StructuredOutput-emission');
+    if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (delta?.version !== B4_DELTA_VERSION) errors.push(`delta-version:${delta?.version || 'missing'}`);
     if (delta) {
       const assembled = assembleAndValidateB4({ delta, b1: plan.b1, b2: plan.b2, b3: plan.b3, legacy: plan.legacy });
@@ -439,7 +442,7 @@ function printPlan(planSet) {
   console.log(`execution contract: ${CANARY_VERSION}`);
   console.log(`source: ${planSet.source} (read-only B0-B3 evidence)`);
   console.log(`model: ${CALIBRATION_MODEL} | delta: ${B4_DELTA_VERSION} | B4 contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
-  console.log(`execution gate: every init must report apiKeySource:none and tools exactly [StructuredOutput]; acceptance requires exactly one tool_use:StructuredOutput output emission. Every other *tool_use, server tool, extra emission or init tool is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
+  console.log(`execution gate: every init must report apiKeySource:none and tools exactly [StructuredOutput]; acceptance requires exactly one tool_use:StructuredOutput output emission. Duplicate adapter emissions are terminal held, without retry; every other *tool_use, server tool or extra init tool is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
   console.log(`hard budget: ${MAX_ATTEMPTS} durable pre-call reservations across resumes; ${planSet.plans.length} works; zero validation retries`);
   console.log('the cap assumes preserved history on the trusted local filesystem; deleting reservation history is outside its guarantee.');
   console.log('a reservation without complete transcript/result/meta evidence is consumed and terminal (unknown-outcome); accepted/held/fatal are terminal even without checkpoint.json.');
