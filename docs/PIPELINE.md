@@ -468,6 +468,7 @@ VSD-035 adds the actual deterministic reconciliation layer:
   remain a known A4 semantic challenge (despite `conflicts:[]`). Historical
   `b4c-f45fac18da2e/works/cleveland120847.transcript.jsonl` is another real held fixture: two adapter
   emissions after a wire-schema error. Neither duplicate-adapter fixture is accepted or retryable.
+- **Cloud-credit B1–B3 lane** (VSD-047): in a Claude Code cloud session, `PASS_B_CORPUS_LANE=cloud PASS_B_CLOUD_SKIP=<evidence>/state/skip.json PASS_B_CLOUD_BUDGET_USD=<remaining> PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run` processes works beyond the 30-day window (minus everything local has touched) with no hours gate and a dollar cap. `scripts/pass-b-cloud-bundle.mjs budget|export --push` (cloud) and `skip|import` (local) move evidence through the private repo `katswnt/gesso-pass-b-evidence`; import re-verifies every work before copying.
 - **Window structured-B4 runner** (`scripts/pass-b-b4-window.mjs`, `passBB4Window/1`, offline-tested; no live run
   yet): runs B4 `/3` for rolling 30-day window works whose B1–B3 the corpus collector has finished, re-verifying
   that banked evidence through `inspectWork` and never calling B0–B3. Each attempt is reserved durably before the

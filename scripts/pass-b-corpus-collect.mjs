@@ -177,6 +177,27 @@ export function pacificClock(now = new Date()) {
 }
 const plusDay = (day, n) => { const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 class SchedulePauseError extends Error {}
+class BudgetStopError extends Error {}
+// Lanes (VSD-047): 'local' = the Mac's subscription run for the rolling 30-day window, gated to 00:00–08:30
+// Pacific (VSD-045). 'cloud' = a Claude Code cloud session spending its separate cloud credits on works BEYOND
+// the window; the hours rule protects the subscription and does not apply there, a dollar cap does instead.
+export const LANE = process.env.PASS_B_CORPUS_LANE === 'cloud' ? 'cloud' : 'local';
+export const CLOUD_BUDGET_USD = Number(process.env.PASS_B_CLOUD_BUDGET_USD || 240);
+let SPENT_USD = 0; // cloud lane: client-reported list-price cost of every attempt in this run dir (baseline + session)
+export function laneWindow(lane = LANE, now = new Date()) {
+  if (lane === 'cloud') {
+    if (SPENT_USD >= CLOUD_BUDGET_USD) throw new BudgetStopError(`budget-cap: $${SPENT_USD.toFixed(2)} of $${CLOUD_BUDGET_USD} spent`);
+    return { timeout: 30 * 60 * 1000, killSignal: 'SIGKILL' };
+  }
+  return callWindow(now);
+}
+export function transcriptCostUsd(text) { const f = transcriptFinal(parseStreamTranscript(text)); const c = Number(f?.total_cost_usd); return Number.isFinite(c) && c > 0 ? c : 0; }
+export function runSpendUsd(runDir) {
+  let total = 0;
+  for (const w of files(join(runDir, 'works'))) for (const f of files(join(runDir, 'works', w, 'attempts'))) if (f.endsWith('.transcript.jsonl')) total += transcriptCostUsd(readFileSync(join(runDir, 'works', w, 'attempts', f), 'utf8'));
+  return total;
+}
+export function setSpentUsd(v) { SPENT_USD = v; }
 export function callWindow(now = new Date()) {
   const clock = pacificClock(now);
   if (!clock.mayStart) throw new SchedulePauseError('protected-hours: starts allowed only 00:00–08:30 America/Los_Angeles');
@@ -373,15 +394,16 @@ export function stopForException(error, { fatal, pause }) {
   if (error instanceof FatalError) fatal(error.message);
   else if (error instanceof UsageLimitError) pause('usage-limit');
   else if (error instanceof SchedulePauseError) pause('protected-hours');
+  else if (error instanceof BudgetStopError) pause('budget-cap');
   else if (!(error instanceof StageLeaseBusyError || error instanceof RetryableError || error instanceof TerminalAttemptError)) pause(`operational:${error.message}`);
 }
 
 // Injectable executor for offline regression tests. No test needs the real Claude binary.
 export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, ext, stage, command, imageFile,
-  seq, runtimeVersion, execute = execFileP, now = () => new Date() }) {
+  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE }) {
   const priorFatal = preservedFatal(runDir);
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);
-  callWindow(now());
+  laneWindow(lane, now());
   const epoch = bindExecutionPolicy(runDir, runtimeVersion);
   const attemptsDir = join(workRunDir, 'attempts'); mkdirSync(attemptsDir, { recursive: true, mode: 0o700 });
   const lease = join(workRunDir, `${stage}.lease`);
@@ -391,7 +413,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     call = mkdtempSync(join(tmpdir(), 'corpus-'));
     if (imageFile) copyFileSync(join(runDir, 'imgs', `${imgSha256}.${ext}`), join(call, imageFile));
     const env = { ...process.env, DISABLE_AUTOUPDATER: '1' }; for (const k of command.env.removeKeys) delete env[k];
-    const options = callWindow(now()); // immediately before reservation + invocation, including every retry
+    const options = laneWindow(lane, now()); // immediately before reservation + invocation, including every retry
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
@@ -404,6 +426,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     }
     const transcriptFile = attemptFilename(stage, seq, stdout);
     writeFileSync(join(attemptsDir, transcriptFile), stdout, { flag: 'wx', mode: 0o600, flush: true });
+    SPENT_USD += transcriptCostUsd(stdout);
     const tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
     const inits = initEvents(stdout);
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
@@ -435,7 +458,7 @@ function makeSpawnStage(workRunDir, imgSha256, ext, id) {
     if (FATAL) throw new FatalError(FATAL);
     if (STOP) throw new SchedulePauseError('run paused');
     try {
-      callWindow();
+      laneWindow();
       if (stage === 'B2') {
         const b0 = readJson(join(workRunDir, 'b0-prep.json'));
         enforceValidationBudget(inspectWork({ runDir: RUN_DIR, id, catalog: b0.trustedCatalog, legacy: b0.legacy }));
@@ -495,8 +518,11 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
 export function executionPolicy(runtimeVersion) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
   return { version: COLLECTOR_VERSION, evidenceRunId: RUN_ID, runtimeVersion, model: CALIBRATION_MODEL,
-    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, scope: 'rolling-30-days-through-b3',
-    timeZone: 'America/Los_Angeles', startWindow: '00:00–08:30', finishBy: '09:00', maxCallMs: 30 * 60 * 1000,
+    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION,
+    ...(LANE === 'cloud'
+      ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
+      : { scope: 'rolling-30-days-through-b3', timeZone: 'America/Los_Angeles', startWindow: '00:00–08:30', finishBy: '09:00' }),
+    maxCallMs: 30 * 60 * 1000,
     childEnv: { DISABLE_AUTOUPDATER: '1' } };
 }
 // Append-only local policy history, not signatures. The highest contiguous verified epoch is active.
@@ -584,20 +610,27 @@ async function main() {
   const ledger = readLedger();
   const inspection = inspectCorpus({ pool, legacyOf, ledger });
   const clock = pacificClock();
-  const order = buildPriorityQueue(pool, daily, { today: clock.date });
+  const windowOrder = buildPriorityQueue(pool, daily, { today: clock.date });
+  let order = windowOrder;
+  if (LANE === 'cloud') {
+    const skipPath = process.env.PASS_B_CLOUD_SKIP;
+    if (!skipPath || !existsSync(skipPath)) throw new Error('cloud lane needs PASS_B_CLOUD_SKIP=<skip.json> (local done/held/window ids) so it never duplicates local work');
+    const skip = new Set([...windowOrder, ...(readJson(skipPath).ids || [])]);
+    order = buildPriorityQueue(pool, daily, { today: clock.date, windowOnly: false }).filter(id => !skip.has(id));
+  }
   const eligibleSet = new Set(allEligible.map(p => p.id));
   const queue = computeQueue(order, { eligibleSet, doneSet: inspection.doneSet, heldSet: inspection.heldSet });
-  console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION}`);
+  console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION} | lane: ${LANE}${LANE === 'cloud' ? ` (cap $${CLOUD_BUDGET_USD}, spent $${runSpendUsd(RUN_DIR).toFixed(2)})` : ''}`);
   console.log(`Pacific date: ${clock.date} | window: [${clock.date}, ${plusDay(clock.date, 30)}) | may start now: ${clock.mayStart}`);
   console.log(`corpus verified B1/B2/B3: ${inspection.totals.b1Complete}/${inspection.totals.b2Complete}/${inspection.totals.b3Complete} | done ${inspection.doneSet.size} | held ${inspection.heldSet.size} | attempts ${inspection.attempts}`);
-  console.log(`window works: ${order.length} | queued: ${queue.length} | pending raw-file repairs: ${inspection.repairs.length} | fatal: ${inspection.fatal || 'none'} | pause: ${inspection.pause || 'none'}`);
+  console.log(`${LANE === 'cloud' ? 'cloud-lane candidates (beyond window, minus skip list)' : 'window works'}: ${order.length} | queued: ${queue.length} | pending raw-file repairs: ${inspection.repairs.length} | fatal: ${inspection.fatal || 'none'} | pause: ${inspection.pause || 'none'}`);
   const active = executionEpochs(RUN_DIR).at(-1);
   console.log(`runtime epoch: ${active ? `${active.number} / CLI ${active.policy.runtimeVersion} / ${active.sha256}` : 'none (first authorized run binds installed CLI)'}`);
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
-  if (!live && !repair && !rebind) { console.log('READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
+  if (!live && !repair && !rebind) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
-  if (live) callWindow();
+  if (live) laneWindow();
   mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 }); mkdirSync(IMGS_DIR, { recursive: true, mode: 0o700 });
   acquireStageLease(RUN_LEASE); // acquire before any ledger/migration write, including offline maintenance
   try {
@@ -619,11 +652,12 @@ async function main() {
     }
     if (fresh.fatal) throw new Error(`preserved fatal: ${fresh.fatal}`);
     if (fresh.pause) throw new OperationalPauseError(fresh.pause);
-    const onPath = String((await execFileP('/usr/bin/which', ['claude'])).stdout).trim();
+    const onPath = String((await execFileP('sh', ['-c', 'command -v claude'])).stdout).trim();
     CLAUDE_BIN = realpathSync(onPath); // e.g. ~/.local/share/claude/versions/2.1.282
     const versionResult = await execFileP(CLAUDE_BIN, ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
     RUNTIME_VERSION = String(versionResult.stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
     bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION);
+    if (LANE === 'cloud') { SPENT_USD = runSpendUsd(RUN_DIR); console.log(`cloud lane: $${SPENT_USD.toFixed(2)} already spent of $${CLOUD_BUDGET_USD} cap`); }
     STOP = false; STOP_REASON = null; FATAL = null;
     ATTEMPT_SEQ = fresh.maxSeq; TRANSPORT_RETRIES = led.transportRetries || 0;
     const imageIndex = existsSync(IMAGE_INDEX) ? readJson(IMAGE_INDEX) : {};
@@ -640,7 +674,7 @@ async function main() {
     let cursor = 0;
     const lane = async () => {
       while (!STOP && !FATAL) {
-        try { callWindow(); } catch (e) { STOP = true; STOP_REASON = 'protected-hours'; break; }
+        try { laneWindow(); } catch (e) { STOP = true; STOP_REASON = e instanceof BudgetStopError ? 'budget-cap' : 'protected-hours'; break; }
         const id = workQueue[cursor++]; if (!id) break;
         const p = poolById.get(id), workRunDir = wdirOf(id), catalog = trustedCatalog(p), legacy = legacyOf(id);
         try {
