@@ -49,6 +49,7 @@ export function isRecoverableHeldReason(reason) { return !!reason && /stage [A-Z
 export function heldToRequeue(heldIds, heldReasons = {}) { return (heldIds || []).filter(id => isRecoverableHeldReason(heldReasons[id])); }
 const RUN_ID = runIdFor({ promptHashes: { ...PROMPT_HASHES_B0B3, B4: sha256(prompts.B4) } });
 const RUN_DIR = join(RUN_ROOT, RUN_ID);
+export const CORPUS_RUN_ID = RUN_ID, CORPUS_RUN_DIR = RUN_DIR; // read-only source for the window B4 runner
 const IMGS_DIR = join(RUN_DIR, 'imgs');
 const IMAGE_INDEX = join(IMGS_DIR, 'image-index.json');
 const LEDGER = join(RUN_DIR, 'ledger.json');

@@ -220,7 +220,7 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
         const sources = {
           workId: plan.workId, b0: plan.b0, b1: plan.b1, b2: plan.b2, b3: plan.b3, b4: body,
           sourceBindings: {
-            imageSha256: plan.b0.image.imgSha256, sourceRunId: SOURCE_RUN,
+            imageSha256: plan.b0.image.imgSha256, sourceRunId: plan.sourceRunId || SOURCE_RUN,
             b0Sha256: plan.sourceBinding.b0Sha256,
             b1CompletionSha256: plan.sourceBinding.B1.completionSha256,
             b2CompletionSha256: plan.sourceBinding.B2.completionSha256,

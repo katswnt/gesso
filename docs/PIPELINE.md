@@ -468,6 +468,17 @@ VSD-035 adds the actual deterministic reconciliation layer:
   remain a known A4 semantic challenge (despite `conflicts:[]`). Historical
   `b4c-f45fac18da2e/works/cleveland120847.transcript.jsonl` is another real held fixture: two adapter
   emissions after a wire-schema error. Neither duplicate-adapter fixture is accepted or retryable.
+- **Window structured-B4 runner** (`scripts/pass-b-b4-window.mjs`, `passBB4Window/1`, offline-tested; no live run
+  yet): runs B4 `/3` for rolling 30-day window works whose B1–B3 the corpus collector has finished, re-verifying
+  that banked evidence through `inspectWork` and never calling B0–B3. Each attempt is reserved durably before the
+  call; one attempt per work with zero validation retries (only a verified usage-limit retries later); a
+  reservation with incomplete evidence is a terminal unknown-outcome; provenance/tool/model failures persist
+  `fatal.json` and block all later calls; duplicate `StructuredOutput` emissions are held. Calls start only
+  00:00–08:30 Pacific and are killed by 09:00, with the session's exact `claude` binary pinned and a `--max`
+  per-session call cap. Run identity binds the B4 contract, prompt, model and source run (not the moving work
+  list); each work's reservation binds its prompt hash and source completion hashes, and changed evidence is
+  refused. Output is quarantined review evidence only: no decisions, approvals or production writes.
+  Plan: `node scripts/pass-b-b4-window.mjs`; live (owner-authorized): `PASS_B_B4_WINDOW_LIVE=1 node scripts/pass-b-b4-window.mjs --run [--max N]`.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
