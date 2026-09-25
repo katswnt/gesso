@@ -28,7 +28,7 @@ clients finish or are terminated by 09:00. Foreground invocation does not bypass
 The evidence directory stays `data/incoming/vision-calibration/corpus-b3-6401bc543ead/` under the banked
 `passBCorpusCollector/2` input/acceptance contract. Runtime `/4` is bound before new calls by append-only
 `execution-policies/` epochs, including the exact installed CLI version. Each reservation verifies against
-its own epoch. Children use `DISABLE_AUTOUPDATER=1`. Drift pauses until an explicit reviewed offline
+its own epoch. Children use `DISABLE_AUTOUPDATER=1`. Patch-level CLI updates are accepted automatically and recorded (VSD-046); any other drift pauses until an explicit reviewed offline
 `--rebind-runtime <review.json>` appends a successor; old attempts are never relabeled. See the
 [review artifact and recovery procedure](PIPELINE.md#reviewed-runtime-rebind-and-fatal-recovery). Historical completion envelopes are preserved, including their older
 `runtimeVersion:unknown`; their transcripts remain the CLI-version evidence.

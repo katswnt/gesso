@@ -3,7 +3,7 @@
 // --run requires PASS_B_CORPUS_LIVE=1 and explicit owner spend authorization.
 // Banked /2 stage evidence stays byte-identical; /4 execution epochs separately pin the CLI/runtime,
 // subscription provenance, pre-call receipts, and Pacific start/deadline rules.
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, copyFileSync, mkdtempSync, rmSync, renameSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, copyFileSync, mkdtempSync, rmSync, renameSync, unlinkSync, realpathSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
@@ -363,6 +363,7 @@ function isUsageTranscript(text, final) {
 function initEvents(text) {
   return String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e.type === 'system' && e.subtype === 'init' ? [e] : []; } catch { return []; } });
 }
+let CLAUDE_BIN = null; // exact versioned binary resolved at session start (a mid-run update cannot swap it)
 let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null;
 const markFatal = reason => { FATAL ||= reason; persistFatal(RUN_DIR, FATAL); };
 // Only a classified boundary failure may create fatal.json. Filesystem, lease and runtime problems
@@ -395,7 +396,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
       executionEpoch: epoch.number, executionEpochSha256: epoch.sha256 })}\n`, { flag: 'wx', mode: 0o600, flush: true });
     let stdout = '', exitCode = 0;
-    try { ({ stdout } = await execute(command.bin, command.argv, { cwd: call, env, maxBuffer: 64 * 1024 * 1024, ...options })); }
+    try { ({ stdout } = await execute(CLAUDE_BIN || command.bin, command.argv, { cwd: call, env, maxBuffer: 64 * 1024 * 1024, ...options })); }
     catch (e) {
       exitCode = e.killed && e.signal === 'SIGKILL' ? (pacificClock(now()).seconds >= 9 * 3600 ? 'deadline' : 'timeout') : (e.code ?? 1);
       stdout = e.stdout || '';
@@ -525,11 +526,30 @@ function appendEpoch(runDir, policy, previous, review = null) {
   writeFileSync(join(dir, `${String(epoch.number).padStart(6, '0')}.json`), `${JSON.stringify(epoch, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   return { ...epoch, sha256: sha256(stableJson(epoch)) };
 }
+// Owner standing rule (VSD-046, 2026-09-25): a PATCH-level Claude Code update (same major.minor, higher patch)
+// with no other policy change is accepted automatically and recorded as its own epoch. Anything else — minor or
+// major upgrade, downgrade, or any non-runtime policy change — still pauses for a reviewed --rebind-runtime.
+export function isPatchUpgrade(from, to) {
+  const a = /^(\d+)\.(\d+)\.(\d+)$/.exec(from || ''), b = /^(\d+)\.(\d+)\.(\d+)$/.exec(to || '');
+  return !!a && !!b && a[1] === b[1] && a[2] === b[2] && Number(b[3]) > Number(a[3]);
+}
+const runtimeFixed = p => { const { version, runtimeVersion, childEnv, ...rest } = p; return rest; };
 export function bindExecutionPolicy(runDir, runtimeVersion) {
   const policy = executionPolicy(runtimeVersion), current = executionEpochs(runDir).at(-1);
   if (!current) return appendEpoch(runDir, policy);
-  if (stableJson(current.policy) !== stableJson(policy)) throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
-  return current;
+  if (stableJson(current.policy) === stableJson(policy)) return current;
+  const onlyRuntime = stableJson(runtimeFixed(current.policy)) === stableJson(runtimeFixed(policy))
+    && stableJson({ ...current.policy, runtimeVersion }) === stableJson(policy);
+  if (onlyRuntime && isPatchUpgrade(current.policy.runtimeVersion, runtimeVersion) && !preservedFatal(runDir)) {
+    return appendEpoch(runDir, policy, current, {
+      version: 'passBCorpusRuntimeReview/1', runId: RUN_ID, fromEpochSha256: current.sha256,
+      toRuntimeVersion: runtimeVersion, toPolicySha256: sha256(stableJson(policy)), automatic: true,
+      reviewedBy: 'automatic: owner standing rule VSD-046 (2026-09-25) accepts patch-level Claude Code updates',
+      reason: `patch update ${current.policy.runtimeVersion} -> ${runtimeVersion}; no other policy change`,
+      reviewedAt: new Date().toISOString(),
+    });
+  }
+  throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
 export function rebindRuntime(runDir, review) {
   if (preservedFatal(runDir)) throw new Error('runtime rebind cannot clear a preserved fatal');
@@ -540,8 +560,7 @@ export function rebindRuntime(runDir, review) {
   const policy = executionPolicy(review.toRuntimeVersion);
   if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('runtime review target policy binding mismatch');
   // A runtime rebind cannot change the banked content contract or the permitted collection scope.
-  const fixed = p => { const { version, runtimeVersion, childEnv, ...rest } = p; return rest; };
-  if (stableJson(fixed(previous.policy)) !== stableJson(fixed(policy))) throw new Error('runtime rebind cannot change the execution/content policy');
+  if (stableJson(runtimeFixed(previous.policy)) !== stableJson(runtimeFixed(policy))) throw new Error('runtime rebind cannot change the execution/content policy');
   if (stableJson(previous.policy) === stableJson(policy)) throw new Error('runtime rebind has no change');
   return appendEpoch(runDir, policy, previous, review);
 }
@@ -599,7 +618,9 @@ async function main() {
     }
     if (fresh.fatal) throw new Error(`preserved fatal: ${fresh.fatal}`);
     if (fresh.pause) throw new OperationalPauseError(fresh.pause);
-    const versionResult = await execFileP('claude', ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
+    const onPath = String((await execFileP('/usr/bin/which', ['claude'])).stdout).trim();
+    CLAUDE_BIN = realpathSync(onPath); // e.g. ~/.local/share/claude/versions/2.1.282
+    const versionResult = await execFileP(CLAUDE_BIN, ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
     RUNTIME_VERSION = String(versionResult.stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
     bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION);
     STOP = false; STOP_REASON = null; FATAL = null;

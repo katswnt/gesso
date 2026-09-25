@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
+import { isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
 import { syntheticFixture, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { stagePrompts } from '../scripts/lib/pass-b-prompts.mjs';
@@ -253,10 +253,23 @@ withFixture('fatal survives ledger replacement and is never cleared by offline r
 withFixture('malformed ledger never turns into empty resumable state',f=>{
   writeFileSync(join(f.runDir,'ledger.json'),'{');assert.throws(()=>readLedger(f.runDir));
 });
+withFixture('patch auto-accept never bypasses a preserved fatal',f=>{
+  bindExecutionPolicy(f.runDir,'2.1.280');persistFatal(f.runDir,'test fatal');
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.1.281'),/drift/);
+  assert.equal(isPatchUpgrade('2.1.280','2.1.281'),true);assert.equal(isPatchUpgrade('2.1.281','2.1.280'),false);assert.equal(isPatchUpgrade('2.1.9','2.2.0'),false);
+});
 withFixture('runtime version is bound separately while banked completion bytes stay unchanged',f=>{
   const before=tree(join(f.workRunDir,'completions'));
   bindExecutionPolicy(f.runDir,'2.1.280');bindExecutionPolicy(f.runDir,'2.1.280');
-  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.1.281'),/drift/);
+  // VSD-046: a patch-level update is accepted automatically and recorded as its own epoch.
+  const auto=bindExecutionPolicy(f.runDir,'2.1.281');
+  assert.equal(auto.number,2);assert.equal(auto.review.automatic,true);assert.equal(auto.review.toRuntimeVersion,'2.1.281');
+  assert.equal(executionEpochs(f.runDir).length,2);assert.equal(bindExecutionPolicy(f.runDir,'2.1.281').number,2);
+  // anything beyond a patch upgrade still pauses for a reviewed rebind
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.2.0'),/drift/);
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'3.0.0'),/drift/);
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.1.280'),/drift/); // downgrade
+  assert.equal(executionEpochs(f.runDir).length,2);
   assert.equal(f.inspect().done,true);assert.deepEqual(tree(join(f.workRunDir,'completions')),before);
 });
 
@@ -327,11 +340,11 @@ const reviewFor = (f, version='2.1.281') => ({version:'passBCorpusRuntimeReview/
   toPolicySha256:sha256(stableJson(executionPolicy(version))),reviewedBy:'offline test fixture',
   reviewedAt:'2026-09-22T10:00:00Z',reason:'Fixture-only runtime review; no real authorization'});
 
-await ta('startup CLI drift makes zero calls and leaves the current epoch unchanged',async()=>{
+await ta('startup non-patch CLI drift makes zero calls and leaves the current epoch unchanged',async()=>{
   const f=fixture({complete:['B1']});let calls=0;
   try{
     bindExecutionPolicy(f.runDir,'2.1.280');const before=tree(f.root);
-    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),runtimeVersion:'2.1.281',execute:async()=>{calls++;}}),/paused pending reviewed/);
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),runtimeVersion:'2.2.0',execute:async()=>{calls++;}}),/paused pending reviewed/);
     assert.equal(calls,0);assert.equal(preservedFatal(f.runDir),null);assert.deepEqual(tree(f.root),before);
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });

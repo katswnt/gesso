@@ -377,7 +377,9 @@ VSD-035 adds the actual deterministic reconciliation layer:
   hashes. An old `/3` `execution-policy.json`, if present, remains unchanged as epoch zero. The child
   environment enforces `DISABLE_AUTOUPDATER=1`, including local version inspection. Runtime drift
   pauses before capture; only an explicit offline `--rebind-runtime <review.json>` appends a reviewed
-  successor. It never accepts a drifted body retrospectively or authorizes calls. Fresh captured
+  successor, except that a patch-level update (same major.minor, higher patch, no other policy change) is
+  accepted automatically at session start as a recorded epoch (VSD-046). Each session pins the exact versioned
+  binary, so an update mid-run cannot change the child. It never accepts a drifted body retrospectively or authorizes calls. Fresh captured
   producer evidence uses the exact bound CLI version. Each fresh attempt is exclusively reserved
   before invocation and preserves transcript + metadata.
   Current scope is Pacific today through the following 29 dates, earliest date first, with diversity
@@ -405,15 +407,16 @@ VSD-035 adds the actual deterministic reconciliation layer:
   `passBReconciliationPolicy/2-structured-b4`; explicit model bindings remain
   `groundingAuthority:"model-proposal"` and therefore review-required. Archived `/2` deltas continue
   to rehydrate under policy `/1`, and the standing 44-set baseline is unchanged. The owner-run
-  VSD-040 smoke attempted two delta `/3` calls; corpus B4 continuation, release-policy integration,
+  VSD-040 smokes spent five delta `/3` reservations; corpus B4 continuation, release-policy integration,
   approval and production publication remain unrun.
-- **Structured B4 canary** (VSD-040, execution `/4` plan/test only after the `/3` smoke): `scripts/pass-b-b4-structured-canary.mjs`
+- **Structured B4 canary** (VSD-040, execution `/5` plan/test only after two terminal smokes): `scripts/pass-b-b4-structured-canary.mjs`
   freezes ten risk-weighted works from `cal50-0a47b6f7f332` and reopens the exact preserved B0 plus B1–B3
   completion/raw/transcript evidence. The deterministic run identity binds those bytes, current B4 `/3`
   prompt/schema/validation versions, model and command policy, and the canonical blocked-finding ids.
-  The execution contract is now `passBStructuredB4Canary/4`: `/2` repaired crash/resume accounting;
+  The execution contract is now `passBStructuredB4Canary/5`: `/2` repaired crash/resume accounting;
   `/3` hardened provenance checks but mistakenly rejected the CLI's built-in output adapter and used
-  an insufficient six-minute limit. `/4` corrects those two gates using preserved real transcripts.
+  an insufficient six-minute limit. `/4` corrected those gates; `/5` changes repeated output-adapter
+  emissions from a false provenance fatal to a terminal conformance hold.
   The live path is
   separately gated and capped at **ten durable pre-call reservations** across resumes:
   `attempt-N.reserved.json` is created with `wx`, flushed, and its
@@ -429,8 +432,10 @@ VSD-035 adds the actual deterministic reconciliation layer:
   Every initialization event must report `apiKeySource:none` and exactly `tools:["StructuredOutput"]`,
   and at least one init is required. An earlier bad/missing source or extra capability cannot be masked
   by a later clean init. Successful acceptance requires exactly one `tool_use:StructuredOutput` emission,
-  the built-in `--json-schema` return adapter. Every other `*tool_use`, duplicate emission, server tool
-  (including one named StructuredOutput), extra init tool or model drift is fatal. The gate inspects
+  the built-in `--json-schema` return adapter. Duplicate adapter emissions are terminal held, even
+  with a valid final body or subsequent usage-limit: consume the slot, never retry that work, and
+  allow other works to proceed. Every other `*tool_use`, server tool (including one named
+  StructuredOutput), extra init tool or model drift is fatal. The gate inspects
   execution/streamed blocks, not model prose or structured-output payloads. No ordinary research,
   filesystem, image or web capability is enabled. The command policy binds a 900-second `execFile`
   timeout with `SIGKILL`: 49 historical B4 durations had median 184.391 s and maximum 302.585 s,
@@ -446,14 +451,23 @@ VSD-035 adds the actual deterministic reconciliation layer:
   eligibility unmeasured. It has no decision, approval, resolution, merge, or production writer.
   The owner-run `/3` smoke `b4s-016f64c8e0ca` remains preserved and terminal at two reservations:
   La Gloire held for timeout, St. John falsely fatal on the adapter. Never resume or regenerate its
-  results with `/4`; the runner explicitly refuses earlier execution contracts. The new plan is
-  **`b4s-18bc5fb62997`**, with a fresh ten-slot budget, no run directory and no calls authorized yet.
-  The 110 offline checks now use exact byte-bound real transcript fixtures. St. John's `/4` replay
+  results with a newer contract; the runner explicitly refuses earlier execution contracts.
+  The separately owner-authorized `/4` smoke **`b4s-18bc5fb62997`** is also preserved and terminal:
+  three reservations, two accepted, one false fatal. Hydria's first adapter emission was rejected by
+  the CLI for malformed JSON; the second hydrates validly offline. Under `/5` it is held, not accepted
+  or fatal; the original `/4` report is never rewritten. Its zero eligible / 18 review-required / 25
+  blocked totals and reported La Gloire semantic failures do not establish factual success.
+  The owner directed the roughly 22:00 PT September 22 start as a one-off smoke #2 exception;
+  future automated collection still follows VSD-045 (starts 00:00–08:30, finishes by 09:00 Pacific).
+  New `/5` plan **`b4s-2dcb6f0830f1`** has no run directory or calls; no further smoke is authorized
+  by this correction. The 127 offline checks use exact byte-bound real transcript fixtures, including
+  Hydria's terminal hold, continued next-work execution, and checkpoint-free zero-call resume.
+  St. John's first-smoke replay
   derives accepted for schema/scoping only: 17 grounded components, zero unresolved targets/leaks,
   21 review-required / zero eligible. Its animal-presupposing guide and softened lion open claim
   remain a known A4 semantic challenge (despite `conflicts:[]`). Historical
-  `b4c-f45fac18da2e/works/cleveland120847.transcript.jsonl` is a real negative fixture: two adapter
-  emissions after a wire-schema error, intentionally fatal under the requested exactly-once rule.
+  `b4c-f45fac18da2e/works/cleveland120847.transcript.jsonl` is another real held fixture: two adapter
+  emissions after a wire-schema error. Neither duplicate-adapter fixture is accepted or retryable.
 - `passBApproval/3` requires and re-verifies reconciliation when staging and applying. Final
   `ownerApproved:true` remains a separate authorized publication act. The writer updates only
   the explicitly approved surfaces and preserves every unapproved production field byte-for-value;
@@ -600,7 +614,7 @@ PASS_B_CALIB_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-calibration.mjs \
 # VSD-040 structured-B4 ten-work plan only (default; no output directory and no model calls).
 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs
 
-# NEW owner-gated VSD-040 /4 smoke (fresh ten-slot identity; prior /3 authorization does not carry over).
+# VSD-040 /5 live syntax only; no further smoke authorized. Prior smoke authorizations do not carry over.
 PASS_B_B4_CANARY_LIVE=1 /opt/homebrew/bin/node scripts/pass-b-b4-structured-canary.mjs --run
 
 # Offline-only VSD-027 rehydration of the preserved B4-v2 cohort, then render its corrected packet.
