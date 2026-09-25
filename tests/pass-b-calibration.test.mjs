@@ -823,12 +823,23 @@ t('editorial packet identifies every hotspot and preserves enough information fo
   }
 });
 
-t('B4 delta rejects an invented/mismatched explicit pinRef', () => {
-  const fx = syntheticFixture(); const delta = JSON.parse(JSON.stringify(fx.bodies.B4Delta));
-  delta.hotspots[0].pinRef = 'made-up';
-  assert(!validateB4Delta(delta, { b1: fx.bodies.B1, b2: fx.bodies.B2 }).ok);
-  delta.hotspots[0].pinRef = 'n1'; delta.hotspots[0].evidenceRef = 'ev_when';
-  assert(!validateB4Delta(delta, { b1: fx.bodies.B1, b2: fx.bodies.B2 }).ok, 'pinRef must ground the same evidenceRef');
+t('B4 bad hotspot anchors: archived /2 deltas reject, structured /3 deltas suppress with a recorded reason', () => {
+  const fx = syntheticFixture(); const ctx = { b1: fx.bodies.B1, b2: fx.bodies.B2, b3: fx.bodies.B3, legacy: { teaching: {} } };
+  // archived /2: unchanged hard rejection (keeps the 44-set rehydration byte-identical)
+  const legacy = JSON.parse(JSON.stringify(fx.bodies.B4Delta)); delete legacy.version; delete legacy.grounding; legacy.uncertainty = '';
+  legacy.hotspots[0].pinRef = 'made-up';
+  assert(!validateB4Delta(legacy, ctx).ok, '/2: invented pinRef rejects');
+  legacy.hotspots[0].pinRef = 'n1'; legacy.hotspots[0].evidenceRef = 'ev_when';
+  assert(!validateB4Delta(legacy, ctx).ok, '/2: pinRef must ground the same evidenceRef');
+  // structured /3: the record survives; the bad hotspot is suppressed (never a guessed pin) with its reason
+  for (const [mutate, reason] of [[h => { h.pinRef = 'made-up'; }, 'invalid-pinRef'], [h => { h.evidenceRef = null; }, 'invalid-evidenceRef'], [h => { h.pinRef = 'n1'; h.evidenceRef = 'ev_when'; }, 'invalid-pinRef']]) {
+    const d = JSON.parse(JSON.stringify(fx.bodies.B4Delta)); mutate(d.hotspots[0]);
+    const r = assembleAndValidateB4({ delta: d, ...ctx });
+    assert(r.ok, `/3 ${reason}: record still assembles`);
+    assert.equal(r.body.hotspots.length, 0, `/3 ${reason}: bad hotspot is not published`);
+    assert(r.hydration.hotspots.suppressed.some(x => x.deltaIndex === 0 && x.reason === reason), `/3 ${reason}: suppression is recorded`);
+    assert(r.body.structuredGrounding.unresolvedComponentTargets.includes('hotspot:0'), `/3 ${reason}: grounding for it becomes unresolved`);
+  }
 });
 
 t('B4 lineage filters remove actions before joining and distinguishes verbatim/reworked/removed/new', () => {

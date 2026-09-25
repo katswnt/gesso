@@ -160,8 +160,12 @@ export function validateB4Delta(delta, { b1, b2, b3 = null }) {
     // rank + concise/deep text are controller-owned (assigned by order / filled from the grounding evidence's feature/why).
     if (h.action !== 'remove') {
       need(h.role === null || ROLES.includes(h.role), 'hotspot.role');
-      need(g.has(h.evidenceRef), `hotspot.evidenceRef not in B1 grounding: ${h.evidenceRef}`);
       need(typeof h.sourceDependent === 'boolean', 'hotspot.sourceDependent');
+      // Structured /3 (B4 contract /2): a hotspot whose evidenceRef or pinRef is invalid is SUPPRESSED at
+      // hydration (kept in the review report, never shown to players) instead of rejecting the whole record.
+      // Archived /2 deltas keep the original hard rejection so their rehydration is byte-identical.
+      if (structured) continue;
+      need(g.has(h.evidenceRef), `hotspot.evidenceRef not in B1 grounding: ${h.evidenceRef}`);
       if (h.pinRef != null) {
         const c = g.candidates.get(h.pinRef);
         need(!!c && c.evidenceRef === h.evidenceRef && validPoint(c.pin), `hotspot.pinRef must be a pinned B1 candidate for evidenceRef: ${h.pinRef}`);
@@ -297,6 +301,15 @@ function hydrateB4({ delta, b1, b2, b3, legacy }) {
     const ordinal = sourceOrdinal++;
     hydration.hotspots.proposed++;
     const cand = h.ref && g.candidates.get(h.ref);
+    if (delta.version === B4_DELTA_VERSION) {
+      // Structured /3: a bad anchor never becomes a guessed pin. Invalid grounding or a pinRef that is not a pinned
+      // B1 candidate for this evidence is suppressed with an explicit reason (VSD-027 semantics); any grounding or
+      // conflict targeting it becomes unresolved and widens to work scope.
+      const pc = h.pinRef != null ? g.candidates.get(h.pinRef) : null;
+      const reason = !g.has(h.evidenceRef) ? 'invalid-evidenceRef'
+        : (h.pinRef != null && !(pc && pc.evidenceRef === h.evidenceRef && validPoint(pc.pin))) ? 'invalid-pinRef' : null;
+      if (reason) { hydration.hotspots.suppressed.push({ deltaIndex, ref: h.ref ?? null, evidenceRef: h.evidenceRef ?? null, pinRef: h.pinRef ?? null, reason }); continue; }
+    }
     const placement = resolveHotspotPin(g, h);
     if (!placement.ok) {
       hydration.hotspots.suppressed.push({ deltaIndex, ref: h.ref ?? null, evidenceRef: h.evidenceRef ?? null, reason: placement.reason, bboxArea: placement.bboxArea ?? null });

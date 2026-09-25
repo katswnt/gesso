@@ -29,7 +29,7 @@ import { auditReconciliation, buildClaimBundle, validateClaimBundle } from './li
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 
 const execFileP = promisify(execFile);
-export const CANARY_VERSION = 'passBStructuredB4Canary/5';
+export const CANARY_VERSION = 'passBStructuredB4Canary/6';
 export const SOURCE_RUN = 'cal50-0a47b6f7f332';
 export const MAX_ATTEMPTS = 10;
 // 49 preserved b4c results: median 184391ms, max 302585ms; the /3 La Gloire call was
@@ -157,26 +157,35 @@ export function loadCanaryPlan({ source = sourceDir(), selection = CANARY_WORKS 
 
 function b4ExecutionEvents(transcript) {
   const events = String(transcript).split('\n').map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
-  const inits = [], toolUses = [];
+  const inits = [], toolUses = [], toolResults = [];
   const visit = value => {
     if (Array.isArray(value)) { value.forEach(visit); return; }
     if (!value || typeof value !== 'object') return;
     if (value.type === 'system' && value.subtype === 'init') inits.push(value);
     if (typeof value.type === 'string' && value.type.endsWith('tool_use')) {
-      toolUses.push({ type: value.type, name: value.name ?? null });
+      toolUses.push({ type: value.type, name: value.name ?? null, id: value.id ?? null, input: value.input });
     }
+    if (value.type === 'tool_result') toolResults.push({ toolUseId: value.tool_use_id ?? null, isError: value.is_error === true });
     // Inspect transcript envelopes/content blocks, including streamed content_block_start events.
     // Do not interpret structured_output, tool inputs, or prose mentioning a tool as execution events.
     for (const key of ['event', 'message', 'content', 'content_block']) visit(value[key]);
   };
   events.forEach(visit);
-  return { events, inits, toolUses };
+  return { events, inits, toolUses, toolResults };
 }
 
 function usageLimited(events, final) {
   return events.some(event => event.type === 'rate_limit_event' && event.rate_limit_info?.status === 'rejected')
     || final?.api_error_status === 429
     || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
+}
+
+export function cliResubmissionAccepted(execution, final) {
+  const uses = execution.toolUses; const res = id => execution.toolResults.find(r => r.toolUseId && r.toolUseId === id);
+  if (uses.length < 2 || uses.some(u => u.type !== 'tool_use' || u.name !== 'StructuredOutput' || !u.id)) return false;
+  if (!uses.slice(0, -1).every(u => res(u.id)?.isError === true)) return false;
+  const last = uses.at(-1), lastResult = res(last.id);
+  return !!lastResult && lastResult.isError === false && final?.structured_output != null && stableJson(final.structured_output) === stableJson(last.input);
 }
 
 export function deriveB4Attempt(plan, transcript, exitCode = 0) {
@@ -196,9 +205,10 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
   else if (!exactInitTools) { kind = 'fatal'; errors.push('B4 init tools must be exactly [StructuredOutput]'); }
   else if (forbiddenTool) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
-  // The CLI can repeat its output adapter after rejecting malformed JSON. This is a terminal
-  // conformance hold, not a capability violation; it cannot become a usage-limit retry either.
-  else if (execution.toolUses.length > 1) errors.push('multiple-StructuredOutput-emissions');
+  // The CLI can repeat its output adapter after IT rejects malformed JSON inside the same call (canary /6).
+  // Accept only when every earlier emission got a CLI error result, the last got a success result, and the
+  // final structured_output is exactly that last emission. Anything else stays a terminal conformance hold.
+  else if (execution.toolUses.length > 1 && !cliResubmissionAccepted(execution, final)) errors.push('multiple-StructuredOutput-emissions');
   else if (exitCode === 'timeout') errors.push('process-timeout');
   else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
@@ -246,6 +256,7 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
       claudeCodeVersion: parsed.init?.claudeCodeVersion ?? null, usage: final?.usage ?? null,
       modelUsage: final?.modelUsage ?? null, numTurns: final?.num_turns ?? null,
       toolUses: execution.toolUses.map(row => row.name), toolUseTypes: execution.toolUses.map(row => row.type),
+      cliRejectedEmissions: execution.toolUses.length > 1 && cliResubmissionAccepted(execution, final) ? execution.toolUses.length - 1 : 0,
     },
   };
 }
@@ -442,7 +453,7 @@ function printPlan(planSet) {
   console.log(`execution contract: ${CANARY_VERSION}`);
   console.log(`source: ${planSet.source} (read-only B0-B3 evidence)`);
   console.log(`model: ${CALIBRATION_MODEL} | delta: ${B4_DELTA_VERSION} | B4 contract: ${B4_VALIDATION_CONTRACT_VERSION}`);
-  console.log(`execution gate: every init must report apiKeySource:none and tools exactly [StructuredOutput]; acceptance requires exactly one tool_use:StructuredOutput output emission. Duplicate adapter emissions are terminal held, without retry; every other *tool_use, server tool or extra init tool is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
+  console.log(`execution gate: every init must report apiKeySource:none and tools exactly [StructuredOutput]; acceptance requires exactly one tool_use:StructuredOutput output emission. A repeated adapter emission is accepted only when the CLI itself rejected every earlier one (otherwise terminal held, without retry); every other *tool_use, server tool or extra init tool is fatal; timeout=${CALL_TIMEOUT_MS / 1000}s (${CALL_KILL_SIGNAL}, no timeout retry).`);
   console.log(`hard budget: ${MAX_ATTEMPTS} durable pre-call reservations across resumes; ${planSet.plans.length} works; zero validation retries`);
   console.log('the cap assumes preserved history on the trusted local filesystem; deleting reservation history is outside its guarantee.');
   console.log('a reservation without complete transcript/result/meta evidence is consumed and terminal (unknown-outcome); accepted/held/fatal are terminal even without checkpoint.json.');

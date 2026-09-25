@@ -22,7 +22,7 @@ export const IMAGE_TRANSPORT_VERSION = 'readtool-confined-dir/1';
 export const VALIDATION_CONTRACT_VERSION = 'passBValidation/4'; // /4: spatial pinRef + publishable-hotspot/lineage rules (VSD-027); /3: museum-source leak gate (VSD-026)
 // B4-only fork. This is deliberately separate from VALIDATION_CONTRACT_VERSION so banking/reusing B1-B3
 // does not acquire a new identity merely because the downstream synthesis contract changed. VSD-039.
-export const B4_VALIDATION_CONTRACT_VERSION = 'passBValidationB4/1-structured-grounding';
+export const B4_VALIDATION_CONTRACT_VERSION = 'passBValidationB4/2-structured-grounding'; // /2: bad structured hotspot anchors are suppressed, not whole-record rejections
 // Pure, testable run-identity contract. The runId is 'cal50-' + contractHash(...). Every listed binding
 // participates; changing any one changes the runId.
 export function calibrationContract({ selIds, controllerVersion = CONTROLLER_VERSION, imageTransportVersion = IMAGE_TRANSPORT_VERSION, prompts, validationContractVersion = VALIDATION_CONTRACT_VERSION, b4ValidationContractVersion = B4_VALIDATION_CONTRACT_VERSION, schema = 'contentVisionEnrichment/1' }) {

@@ -63,7 +63,7 @@ function planSet(plans) {
 const real = loadCanaryPlan();
 ok(real.plans.length === 10 && CANARY_WORKS.length === 10, 'frozen ten-work plan loads');
 ok(real.runId === structuredB4RunId(real.binding), 'run id is deterministic from the complete binding');
-ok(real.binding.version === CANARY_VERSION && CANARY_VERSION === 'passBStructuredB4Canary/5', 'execution evidence contract is versioned independently');
+ok(real.binding.version === CANARY_VERSION && CANARY_VERSION === 'passBStructuredB4Canary/6', 'execution evidence contract is versioned independently');
 ok(real.plans.every(p => p.commandPolicy.timeoutMs === CALL_TIMEOUT_MS && p.commandPolicy.killSignal === 'SIGKILL'), 'plan binds the process timeout and kill signal');
 ok(real.plans.every(p => p.sourceBinding.B1.transcriptSha256 && p.sourceBinding.B2.transcriptSha256 && p.sourceBinding.B3.transcriptSha256), 'every source completion binds a transcript');
 ok(real.plans.filter(p => p.sealedFindingIds.length).map(p => p.workId).sort().join('|') === ['wikidata:Q1211814', 'wikidata:Q16467705'].sort().join('|'), 'both canonical failures remain sealed holds');
@@ -100,14 +100,15 @@ await assert.rejects(runCanary({ planSet: { ...real, ...oldManifest }, outDir: s
 assert.deepStrictEqual(fileHashes(spentDir), spentBefore); n++;
 
 // Smoke #2: the CLI rejected Hydria's first malformed JSON emission and accepted its second.
-// Even a strict-valid final body remains held; the controller never retries this work or stops others.
+// Canary /6: a CLI-internal resubmission (every earlier emission rejected by the CLI, the last accepted, and the
+// final structured_output exactly that last emission) is one call's output, not a controller retry.
 const hydriaPlan = real.plans.find(p => p.workId === 'harvard303416');
 const hydriaText = readFileSync(join(workOut(secondSpentDir, hydriaPlan), 'attempt-3.transcript.jsonl'), 'utf8');
 ok(sha256(hydriaText) === '52c11aac0cf5113190888cb5d8ff1013b09b215e1660b197eab87099c855f8bb', 'Hydria fixture is the exact preserved owner-run /4 attempt 3');
 const hydria = deriveB4Attempt(hydriaPlan, hydriaText);
-ok(hydria.kind === 'held' && hydria.errors.join('|') === 'multiple-StructuredOutput-emissions', 'real Hydria is held solely for duplicate adapter emissions, not fatal or accepted');
+ok(hydria.kind === 'accepted' && hydria.evidence.cliRejectedEmissions === 1, 'real Hydria: CLI-rejected first emission + accepted resubmission is accepted (integrity only)');
 ok(hydria.evidence.claudeCodeVersion === '2.1.280' && hydria.evidence.apiKeySources.every(source => source === 'none') && hydria.evidence.toolUses.join('|') === 'StructuredOutput|StructuredOutput', 'both real Hydria emissions have clean subscription/adapter provenance');
-ok(hydria.body && hydria.leaks.length === 0 && hydria.reconciliation.componentReadiness.every(row => row.contentReadiness !== 'eligible'), 'held Hydria still exposes valid hydration and zero model-created eligibility');
+ok(hydria.body && hydria.leaks.length === 0 && hydria.reconciliation.componentReadiness.every(row => row.contentReadiness !== 'eligible'), 'accepted Hydria still has zero model-created eligibility');
 ok(deriveB4Attempt(hydriaPlan, `${hydriaText}${JSON.stringify(addedRead)}\n`).kind === 'fatal', 'duplicate adapter emissions cannot mask an extra ordinary tool in the real transcript');
 const limitedHydria = `${hydriaText}${JSON.stringify({ type: 'result', is_error: true, api_error_status: 429, result: 'usage limit reached' })}\n`;
 ok(deriveB4Attempt(hydriaPlan, limitedHydria, 1).kind === 'held', 'a usage-limit result after duplicate adapter emissions cannot make the work retryable');
@@ -124,10 +125,10 @@ assert.deepStrictEqual(fileHashes(secondSpentDir), secondSpentBefore); n++;
     calls++;
     return { transcript: p === hydriaPlan ? hydriaText : transcript(p.delta), exitCode: 0 };
   } });
-  ok(calls === 2 && first.attempts === 2 && first.counts.held === 1 && first.counts.accepted === 1 && first.stopped === null, 'duplicate hold consumes one slot and allows the next work to run');
+  ok(calls === 2 && first.attempts === 2 && first.counts.accepted === 2 && first.stopped === null, 'CLI resubmission is accepted and the next work runs');
   for (const p of set.plans) rmSync(join(workOut(outDir, p), 'checkpoint.json'));
   const resumed = await runCanary({ planSet: set, outDir, callFn: noCall });
-  ok(resumed.attempts === 2 && resumed.rows[0].status === 'held' && resumed.rows[0].errors.includes('multiple-StructuredOutput-emissions'), 'duplicate hold stays terminal without a checkpoint and makes zero calls on resume');
+  ok(resumed.attempts === 2 && resumed.rows[0].status === 'accepted', 'accepted resubmission stays terminal without a checkpoint and makes zero calls on resume');
 }
 
 // Timeout sizing is checked against real stage timings, not only a mocked execFile option.
@@ -155,7 +156,19 @@ ok(deriveB4Attempt(fp, transcript(null), 0).kind === 'held', 'missing structured
 ok(deriveB4Attempt(fp, usageTranscript('user'), 1).kind === 'fatal', 'wrong authentication cannot hide behind a usage-limit response');
 ok(deriveB4Attempt(fp, transcript(fp.delta, { result: 'The successful explanation mentions a rate limit and quota.' }), 0).kind === 'accepted', 'successful prose mentioning rate limit is not a usage-limit rejection');
 ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: [] }), 0).kind === 'held', 'successful acceptance requires one actual StructuredOutput emission');
-ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'] }), 0).kind === 'held', 'a second output-adapter emission is terminal held');
+ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'] }), 0).kind === 'held', 'two emissions without a CLI rejection are terminal held');
+{ // CLI-internal resubmission: only an exact rejected-then-accepted sequence is accepted
+  const init = { type: 'system', subtype: 'init', apiKeySource: 'none', model: CALIBRATION_MODEL, tools: ['StructuredOutput'], claude_code_version: 'test' };
+  const use = (id, input) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name: 'StructuredOutput', input }] } });
+  const res = (id, isError) => ({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, is_error: isError, content: isError ? 'InputValidationError' : 'Structured output provided successfully' }] } });
+  const fin = out => ({ type: 'result', subtype: 'success', is_error: false, structured_output: out, result: '', modelUsage: { [CALIBRATION_MODEL]: { output_tokens: 10 } }, usage: { output_tokens: 10 }, num_turns: 2 });
+  const tx = rows => `${rows.map(r => JSON.stringify(r)).join('\n')}\n`;
+  const bad = { ...fp.delta, imageState: 'nonsense' };
+  ok(deriveB4Attempt(fp, tx([init, use('a', bad), res('a', true), use('b', fp.delta), res('b', false), fin(fp.delta)])).kind === 'accepted', 'rejected-then-accepted resubmission is accepted');
+  ok(deriveB4Attempt(fp, tx([init, use('a', fp.delta), res('a', false), use('b', fp.delta), res('b', false), fin(fp.delta)])).kind === 'held', 'two CLI-accepted emissions are held');
+  ok(deriveB4Attempt(fp, tx([init, use('a', bad), res('a', true), use('b', fp.delta), res('b', false), fin(bad)])).kind === 'held', 'final output must equal the accepted emission');
+  ok(deriveB4Attempt(fp, tx([init, use('a', bad), use('b', fp.delta), res('b', false), fin(fp.delta)])).kind === 'held', 'an earlier emission without a CLI rejection result is held');
+}
 for (const options of [{ apiKeySource: 'user' }, { model: 'different-model' }, { initTools: ['StructuredOutput', 'Read'] }]) {
   ok(deriveB4Attempt(fp, transcript(fp.delta, { tools: ['StructuredOutput', 'StructuredOutput'], ...options })).kind === 'fatal', 'provenance/capability violations still take precedence over duplicate-adapter holds');
 }
@@ -422,7 +435,7 @@ for (const suffix of ['transcript.jsonl', 'result.json']) {
   ok(planned.status === 0 && planned.stdout.includes(real.runId) && planned.stdout.includes(CANARY_VERSION), 'default CLI prints the deterministic plan and bumped contract version');
   ok(/durable pre-call reservations/.test(planned.stdout) && /unknown-outcome/.test(planned.stdout) && /only retryable/.test(planned.stdout), 'plan describes the literal reservation cap and terminal semantics');
   ok(/exactly one tool_use:StructuredOutput/.test(planned.stdout) && /tools exactly \[StructuredOutput\]/.test(planned.stdout) && /timeout=900s/.test(planned.stdout), 'plan states the adapter exception, exact init tool list and measured timeout');
-  ok(/Duplicate adapter emissions are terminal held, without retry/.test(planned.stdout), 'plan distinguishes duplicate-adapter holds from fatal tool use');
+  ok(/accepted only when the CLI itself rejected every earlier one/.test(planned.stdout), 'plan distinguishes duplicate-adapter holds from fatal tool use');
   ok(existsSync(join(RUN_ROOT, real.runId)) === before, 'default plan creates no run directory');
   const guarded = spawnSync('/opt/homebrew/bin/node', ['scripts/pass-b-b4-structured-canary.mjs', '--run'], { cwd: process.cwd(), env, encoding: 'utf8' });
   ok(guarded.status === 2 && /refusing live/.test(guarded.stderr), 'live execution refuses without the explicit environment gate');
