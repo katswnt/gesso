@@ -491,6 +491,19 @@ const makeCapture = (workRunDir) => async ({ stage, rawResponse, trusted, produc
   if (!v.ok) throw new Error(v.errors.join(','));
   return cap;
 };
+// B0 image-fetch failures: 'transient' = the host was unreachable right now (network, DNS, timeout, proxy/policy
+// denial, throttling, server error); never a verdict on the artwork. 'terminal' = the image itself is unusable
+// (bad/insecure URL, wrong type, undecodable, too large, 404/410). Transient failures are skipped and retried in a
+// later session, become a terminal hold only after B0_TRANSIENT_HOLD_AFTER separate sessions, and
+// B0_CIRCUIT_BREAKER consecutive transient failures stop the whole run as 'network-unavailable'.
+export const B0_TRANSIENT_HOLD_AFTER = 5, B0_CIRCUIT_BREAKER = 5;
+const B0_TRANSIENT = new Set(['timeout', 'network-error', 'dns-failed', 'no-ipv4', 'remote-addr-mismatch', 'write-failed', 'fetch-failed']);
+export function b0FailureClass({ code, status } = {}) {
+  if (B0_TRANSIENT.has(code)) return 'transient';
+  if (code === 'http-status' && (status == null || status === 403 || status === 408 || status === 429 || status >= 500)) return 'transient';
+  return 'terminal';
+}
+
 // ---- item 7: rehash-before-reuse image prep + b0-prep re-verification ----
 async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
   const b0Path = join(wdirOf(id), 'b0-prep.json');
@@ -510,7 +523,7 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
   }
   await new Promise(r => setTimeout(r, 500));
   const f = await broker.fetchImageToModelFile(imgUrl, IMGS_DIR, { userAgent: BROWSER, referer: true });
-  const prep = f.ok ? { id, ok: true, imgSha256: f.sha256, ext: f.ext, width: f.width, height: f.height, mime: f.mime, bytes: f.bytes } : { id, ok: false, reason: `${f.reason || 'fetch-failed'}${f.host ? ' @' + f.host : ''}` };
+  const prep = f.ok ? { id, ok: true, imgSha256: f.sha256, ext: f.ext, width: f.width, height: f.height, mime: f.mime, bytes: f.bytes } : { id, ok: false, reason: `${f.reason || 'fetch-failed'}${f.host ? ' @' + f.host : ''}`, code: f.reason || 'fetch-failed', status: f.status ?? null, host: f.host ?? null };
   if (prep.ok) { imageIndex[id] = prep; atomicWrite(IMAGE_INDEX, `${JSON.stringify(imageIndex, null, 1)}\n`); }
   return prep;
 }
@@ -671,7 +684,7 @@ async function main() {
       atomicWrite(LEDGER, `${JSON.stringify(led, null, 1)}\n`);
     };
     const hold = (id, reason) => { heldSet.add(id); led.heldReasons[id] = reason; persist(); };
-    let cursor = 0;
+    let cursor = 0, consecutiveB0 = 0;
     const lane = async () => {
       while (!STOP && !FATAL) {
         try { laneWindow(); } catch (e) { STOP = true; STOP_REASON = e instanceof BudgetStopError ? 'budget-cap' : 'protected-hours'; break; }
@@ -680,7 +693,17 @@ async function main() {
         try {
           mkdirSync(workRunDir, { recursive: true, mode: 0o700 });
           const prep = await prepImage(id, p.img, catalog, legacy, imageIndex);
-          if (!prep.ok) { hold(id, `B0:${prep.reason}`); continue; }
+          if (!prep.ok) {
+            if (b0FailureClass(prep) === 'transient') {
+              led.b0Transient ||= {}; const seen = (led.b0Transient[id] = (led.b0Transient[id] || 0) + 1);
+              consecutiveB0 += 1;
+              if (seen >= B0_TRANSIENT_HOLD_AFTER) hold(id, `B0:persistent-${prep.reason} (${seen} sessions)`);
+              if (consecutiveB0 >= B0_CIRCUIT_BREAKER) { STOP = true; STOP_REASON = `network-unavailable (${prep.reason})`; }
+              persist(); continue;
+            }
+            hold(id, `B0:${prep.reason}`); continue;
+          }
+          consecutiveB0 = 0;
           if (!existsSync(join(workRunDir, 'b0-prep.json'))) writeFileSync(join(workRunDir, 'b0-prep.json'), `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: prep }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
           const verified = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
           const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts,

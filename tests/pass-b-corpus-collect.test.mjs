@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
+import { b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
 import { syntheticFixture, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { stagePrompts } from '../scripts/lib/pass-b-prompts.mjs';
@@ -252,6 +252,13 @@ withFixture('fatal survives ledger replacement and is never cleared by offline r
 });
 withFixture('malformed ledger never turns into empty resumable state',f=>{
   writeFileSync(join(f.runDir,'ledger.json'),'{');assert.throws(()=>readLedger(f.runDir));
+});
+withFixture('B0 fetch failures: unreachable hosts are transient, unusable images are terminal',f=>{
+  for (const x of [{code:'timeout'},{code:'network-error'},{code:'dns-failed'},{code:'http-status',status:403},{code:'http-status',status:429},{code:'http-status',status:503},{code:'http-status',status:null}])
+    assert.equal(b0FailureClass(x),'transient',JSON.stringify(x));
+  for (const x of [{code:'scheme-not-https'},{code:'bad-url'},{code:'mime-not-allowed'},{code:'decode-failed'},{code:'too-large'},{code:'blocked-ip'},{code:'http-status',status:404},{code:'http-status',status:410}])
+    assert.equal(b0FailureClass(x),'terminal',JSON.stringify(x));
+  assert.equal(B0_TRANSIENT_HOLD_AFTER,5);assert.equal(B0_CIRCUIT_BREAKER,5);
 });
 withFixture('patch auto-accept never bypasses a preserved fatal',f=>{
   bindExecutionPolicy(f.runDir,'2.1.280');persistFatal(f.runDir,'test fatal');
