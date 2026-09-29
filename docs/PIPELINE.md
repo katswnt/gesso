@@ -611,7 +611,10 @@ node scripts/pass-b-shadow-audit.mjs                 # read-only plan: frozen in
 PASS_B_SHADOW_AUDIT_LIVE=1 node scripts/pass-b-shadow-audit.mjs --run
 # daytime (outside 00:00–08:30 PT) needs the owner's dated exception, recorded in each reservation:
 PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION=YYYY-MM-DD PASS_B_SHADOW_AUDIT_LIVE=1 node scripts/pass-b-shadow-audit.mjs --run
-node scripts/pass-b-shadow-audit.mjs --report        # offline scoring -> <run>/report.json
+node scripts/pass-b-shadow-audit.mjs --report        # offline scoring -> <run>/report.json (+ corrected report.v2.json)
+node scripts/pass-b-audit-evidence.mjs               # snapshot cited pages + select passages -> audit-evidence-v1/
+node scripts/pass-b-shadow-audit.mjs --demo-compact  # offline: preserved v1 outputs re-expressed in the v2 form
+node scripts/pass-b-shadow-audit.mjs --variant 2     # candidate v2 plan (VSD-051); --run/--report as above with --variant 2
 ```
 
 - Output goes to `data/incoming/vision-calibration/sa-<hash>/` (quarantined, gitignored). It holds a manifest, the

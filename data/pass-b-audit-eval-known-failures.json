@@ -11,7 +11,8 @@
       "why": "Asserts wings behind Glory; B1 inventory does not show wings and the Carnavalet record does not mention them (the work's own open claim says so).",
       "errorTarget": {
         "pattern": "\\bwings?\\b.*\\b(glory|her|female figure|woman)\\b|\\b(glory|her|female figure|woman)\\b.*\\bwings?\\b",
-        "error": "Glory has wings"
+        "error": "Glory has wings",
+        "expectedKind": "iconography"
       }
     },
     {
@@ -22,7 +23,8 @@
       "why": "Describes 'a draped winged woman'; same unsupported wings.",
       "errorTarget": {
         "pattern": "\\bwinged woman\\b",
-        "error": "the woman is winged"
+        "error": "the woman is winged",
+        "expectedKind": "iconography"
       }
     },
     {
@@ -33,7 +35,8 @@
       "why": "'Why give Glory wings…' presupposes the unsupported wings.",
       "errorTarget": {
         "pattern": "\\bglory\\b.*\\bwing|\\bwing.*\\bglory\\b|\\b(this|the) (figure|woman)\\b.*\\bwing",
-        "error": "presupposition: Glory has wings"
+        "error": "presupposition: Glory has wings",
+        "expectedKind": "iconography"
       }
     },
     {
@@ -45,7 +48,8 @@
       "errorTarget": {
         "pattern": "\\bstrid|\\bforward\\b",
         "error": "the writer strides forward",
-        "availableEvidence": "Carnavalet passage span-carnavalet-iconography: \"sommeil\" (asleep)"
+        "availableEvidence": "Carnavalet passage span-carnavalet-iconography: \"sommeil\" (asleep)",
+        "expectedKind": "visibility"
       }
     },
     {
@@ -56,7 +60,8 @@
       "why": "Sealed finding cb-d4c407b953ac: the lower-left figure is the crawling penitent, not a crouching animal/lion.",
       "errorTarget": {
         "pattern": "crouching animal|\\banimal\\b.*lower left|possibly a lion|\\blion\\b.*(rests|lower left|corner)",
-        "error": "the lower-left figure is an animal/lion"
+        "error": "the lower-left figure is an animal/lion",
+        "expectedKind": "identity"
       }
     },
     {
@@ -67,7 +72,8 @@
       "why": "Same aliasing as a hotspot: 'The crouching animal — possibly a lion'.",
       "errorTarget": {
         "pattern": "crouching animal|\\banimal\\b.*lower left|possibly a lion|\\blion\\b.*(rests|lower left|corner)",
-        "error": "the lower-left figure is an animal/lion"
+        "error": "the lower-left figure is an animal/lion",
+        "expectedKind": "identity"
       }
     },
     {
@@ -82,5 +88,5 @@
       }
     }
   ],
-  "errorTargetNote": "errorTarget is a SCORING aid only: a narrow case-insensitive pattern that finds the extracted assertion(s) stating this specific error in an audit output. It can recognize these known cases; it cannot enforce a general identity policy over arbitrary prose, and it is never a publication gate. 'availableEvidence' names evidence that was supplied to the auditor and should have been used."
+  "errorTargetNote": "errorTarget is a SCORING aid only: a narrow case-insensitive pattern that finds the extracted assertion(s) stating this specific error in an audit output. It can recognize these known cases; it cannot enforce a general identity policy over arbitrary prose, and it is never a publication gate. 'availableEvidence' names evidence that was supplied to the auditor and should have been used. expectedKind is the claim kind a correct v2 audit should declare for the error (measured, not enforced)."
 }

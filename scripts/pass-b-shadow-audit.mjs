@@ -23,6 +23,7 @@ import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-fin
 import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
+import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
 
 export const AUDIT_VERSION = 'passBShadowAudit/1';
 const RESERVATION_VERSION = 'passBShadowAuditReservation/1';
@@ -204,10 +205,24 @@ export function buildWorkInput(spec, { root = CAL } = {}) {
     ...b4.bundle.conflicts.filter(o => touches(o, c.componentId)).map(o => `conflict: ${o.left} vs ${o.right}`),
   ]]));
   const binding = { b0Sha256: sha256(b0Text), b2CompletionSha256: b2.completionSha256, b4Run: spec.b4Run, b4Attempt: b4.attempt, b4ResultSha256: b4.resultSha256, authoritativeSha256 };
-  return { spec, input, binding, controllerHolds };
+  return { spec, input, binding, controllerHolds, body: b4.body };
 }
 
-export function auditBinding() {
+// Variant 2 (candidate, Codex 2026-09-29) uses the prepared passages; its binding also pins the evidence file.
+const EVIDENCE_FILE = join(CAL, 'audit-evidence-v1', 'evidence.json');
+export const loadEvidence = (file = EVIDENCE_FILE) => {
+  const e = readJson(file);
+  if (e.sha256 !== sha256(stableJson(e.works))) throw new Error('audit evidence file changed');
+  return e;
+};
+
+export function auditBinding(variant = 1, evidence = null) {
+  if (variant === 2) {
+    const command = buildStageCommand({ stage: 'B4', promptText: '<per-work>', wireSchema: AUDIT_V2_WIRE_SCHEMA });
+    return { version: AUDIT_V2_VERSION, model: CALIBRATION_MODEL, promptSha256: sha256(AUDIT_V2_PROMPT), wireSchemaSha256: command.wireSchemaSha256,
+      toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: MAX_RESERVATIONS,
+      works: AUDIT_WORKS.map(w => w.workId), evidenceSha256: (evidence || loadEvidence()).sha256 };
+  }
   const command = buildStageCommand({ stage: 'B4', promptText: '<per-work>', wireSchema: AUDIT_WIRE_SCHEMA });
   return { version: AUDIT_VERSION, model: CALIBRATION_MODEL, promptSha256: sha256(AUDIT_PROMPT), wireSchemaSha256: command.wireSchemaSha256,
     toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: MAX_RESERVATIONS,
@@ -215,8 +230,17 @@ export function auditBinding() {
 }
 export const auditRunId = binding => `sa-${sha256(stableJson(binding)).slice(0, 12)}`;
 
-export function planAudit(spec, opts) {
+export function planAudit(spec, opts, variant = 1, evidence = null) {
   const w = buildWorkInput(spec, opts);
+  if (variant === 2) {
+    const ev = (evidence || loadEvidence()).works.find(x => x.workId === spec.workId);
+    if (!ev) throw new Error(`${spec.workId}: no prepared evidence`);
+    const input = buildInputV2({ workInput: w.input, body: w.body, evidenceWork: ev });
+    const promptText = `${AUDIT_V2_PROMPT}\n\nINPUTS:\n${JSON.stringify(input)}`;
+    return { spec, variant: 2, workId: spec.workId, input, v1Input: w.input, controllerHolds: w.controllerHolds,
+      binding: { ...w.binding, evidenceSha256: (evidence || loadEvidence()).sha256 },
+      inputSha256: sha256(stableJson(input)), promptHash: sha256(promptText), command: buildStageCommand({ stage: 'B4', promptText, wireSchema: AUDIT_V2_WIRE_SCHEMA }) };
+  }
   const promptText = `${AUDIT_PROMPT}\n\nINPUTS:\n${JSON.stringify(w.input)}`;
   return { ...w, workId: spec.workId, inputSha256: sha256(stableJson(w.input)), promptHash: sha256(promptText),
     command: buildStageCommand({ stage: 'B4', promptText, wireSchema: AUDIT_WIRE_SCHEMA }) };
@@ -285,7 +309,13 @@ export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
   const { execution, final, errors } = call;
   let kind = call.kind, audit = null;
   const output = final?.structured_output ?? null;
-  if (kind !== 'fatal' && kind !== 'usage-limit') {
+  if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 2) {
+    if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
+    if (output?.v !== AUDIT_V2_VERSION) errors.push(`audit-version:${output?.v || 'missing'}`);
+    if (output && Array.isArray(output.segs)) { audit = controlAuditV2(output, plan.input); errors.push(...audit.errors); }
+    else errors.push('no-structured-output');
+    kind = errors.length ? 'held' : 'accepted';
+  } else if (kind !== 'fatal' && kind !== 'usage-limit') {
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (output?.version !== AUDIT_VERSION) errors.push(`audit-version:${output?.version || 'missing'}`);
     if (output && Array.isArray(output.components)) { audit = controlAudit(output, plan.input); errors.push(...audit.errors); }
@@ -405,7 +435,7 @@ export function errorDetection(component, target) {
     : flagged.some(a => a.form === 'statement' || a.form === 'presupposition') ? 'identified'
     : flagged.length ? 'partial-ambiguous'
     : hits.some(a => a.class === 'visual-only') ? 'routed-to-visual' : 'accepted';
-  return { level, contradicted: flagged.some(a => a.class === 'contradicted'), targets: hits.map(a => `${a.form}/${a.class}: ${a.text}`) };
+  return { level, contradicted: flagged.some(a => a.class === 'contradicted'), targets: hits.map(a => `${a.form}/${a.class}${a.kind ? `/${a.kind}` : ''}${a.misrouted ? '/misrouted' : ''}: ${a.text}`) };
 }
 
 export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, controller = 1 }) {
@@ -413,13 +443,13 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, c
   for (const plan of plans) {
     const h = auditHistory(outDir, plan, runId);
     const d = h?.derived;
-    const audit = d?.output && controller !== 1 ? controlAudit(d.output, plan.input, { controller }) : d?.audit;
+    const audit = plan.variant !== 2 && d?.output && controller !== 1 ? controlAudit(d.output, plan.input, { controller }) : d?.audit;
     const byId = new Map((audit?.components || []).map(c => [c.componentId, c]));
     const usage = d?.evidence?.usage || null;
     works.push({ workId: plan.workId, outcome: h ? h.kind : 'not-run', errors: d?.errors || [], durationMs: h?.meta?.durationMs ?? null,
       inputTokens: usage ? (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0) : null, outputTokens: usage?.output_tokens ?? null,
       sealedHold: sealed(plan.workId).length > 0 });
-    for (const c of plan.input.components) {
+    for (const c of plan.variant === 2 ? plan.v1Input.components : plan.input.components) {
       const a = byId.get(c.componentId);
       const k = known.find(x => x.workId === plan.workId && x.componentId === c.componentId);
       const o = ownerLabels.find(x => x.workId === plan.workId && x.componentId === c.componentId);
@@ -429,7 +459,12 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, c
         holdReasons: (a?.assertions || []).filter(x => x.class === 'unsupported' || x.class === 'contradicted').map(x => `${x.class}${x.citationError ? ` (${x.citationError})` : ''}: ${x.text}`),
         controllerHolds: plan.controllerHolds[c.componentId] || [], sealedHold: sealed(plan.workId).length > 0,
         label: k ? { kind: 'known', expected: k.expected, class: k.class } : o?.label ? { kind: 'owner', expected: o.label } : null,
-        errorDetection: k?.errorTarget && a ? { error: k.errorTarget.error, ...errorDetection(a, k.errorTarget), availableEvidence: k.errorTarget.availableEvidence || null } : null,
+        errorDetection: k?.errorTarget && a ? (() => {
+          const det = errorDetection(a, k.errorTarget), re = new RegExp(k.errorTarget.pattern, 'i');
+          const kinds = (a.assertions || []).filter(x => re.test(x.text) && x.kind).map(x => x.kind);
+          return { error: k.errorTarget.error, ...det, availableEvidence: k.errorTarget.availableEvidence || null,
+            expectedKind: k.errorTarget.expectedKind || null, declaredKinds: kinds, kindCorrect: kinds.length ? kinds.includes(k.errorTarget.expectedKind) : null };
+        })() : null,
         citationDowngrades: (a?.assertions || []).filter(x => x.citationError).map(x => `${x.citationError}: ${x.text}`),
       });
     }
@@ -442,7 +477,7 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, c
       const ks = scored.filter(r => r.label.expected === 'hold');
       const by = lvl => ks.filter(r => r.errorDetection?.level === lvl).length;
       return { total: ks.length, componentHeld: ks.filter(r => r.auditor === 'hold').length,
-        errorIdentified: by('identified'), partialOrAmbiguous: by('partial-ambiguous'), routedToVisual: by('routed-to-visual'), accepted: by('accepted'), notExtracted: by('not-extracted'),
+        errorIdentified: by('identified'), kindCorrect: ks.filter(r => r.errorDetection?.kindCorrect === true).length, kindWrong: ks.filter(r => r.errorDetection?.kindCorrect === false).length, partialOrAmbiguous: by('partial-ambiguous'), routedToVisual: by('routed-to-visual'), accepted: by('accepted'), notExtracted: by('not-extracted'),
         items: ks.map(r => ({ workId: r.workId, componentId: r.componentId, componentVerdict: r.auditor, ...r.errorDetection })) };
     })(),
     notThisErrorControls: scored.filter(r => r.label.expected === 'not-this-error').map(r => ({ componentId: r.componentId, auditor: r.auditor,
@@ -458,12 +493,37 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, c
   return { version: controller === 1 ? 'passBShadowAuditReport/1' : 'passBShadowAuditReport/2', controller, runId, works, summary, rows };
 }
 
-function loadPlans() { return AUDIT_WORKS.map(spec => planAudit(spec)); }
+function loadPlans(variant = 1) { const ev = variant === 2 ? loadEvidence() : null; return AUDIT_WORKS.map(spec => planAudit(spec, undefined, variant, ev)); }
+
+// Offline demo (no calls): re-express the preserved v1 outputs in the compact v2 form and compare sizes. Kinds are
+// placeholders; thinking tokens are not modelled. Token figures are estimates from the observed v1 chars/token.
+export function compactDemo({ v1Plans, v2Plans, outDir, runId, thinkingShare = 0.36 }) {
+  const rows = v1Plans.map((p1, i) => {
+    const h = auditHistory(outDir, p1, runId), out = h.derived.output, p2 = v2Plans[i];
+    const v1Chars = JSON.stringify(out).length, compact = compactFromV1(out, p2.input), v2Chars = JSON.stringify(compact).length;
+    const outTok = h.derived.evidence.usage.output_tokens, visibleTok = Math.round(outTok * (1 - thinkingShare));
+    return { workId: p1.workId, v1Chars, v2Chars, ratio: +(v2Chars / v1Chars).toFixed(2), v1OutputTokens: outTok, v1VisibleTokensEst: visibleTok,
+      v2VisibleTokensEst: Math.round(visibleTok * v2Chars / v1Chars), claims: compact.segs.reduce((n, s) => n + s.c.length + (s.pre || []).length, 0),
+      v1InputChars: p1.command.argv[1].length, v2InputChars: p2.command.argv[1].length };
+  });
+  const sum = k => rows.reduce((n, r) => n + r[k], 0);
+  return { note: 'Representation-size estimate from preserved v1 outputs; kinds are placeholders and thinking tokens are not modelled. Actual savings and detection remain unmeasured until an authorized comparison.',
+    rows, total: { v1Chars: sum('v1Chars'), v2Chars: sum('v2Chars'), v1VisibleTokensEst: sum('v1VisibleTokensEst'), v2VisibleTokensEst: sum('v2VisibleTokensEst'), v1InputChars: sum('v1InputChars'), v2InputChars: sum('v2InputChars') } };
+}
 
 async function main() {
   const args = process.argv.slice(2), live = args.includes('--run');
   if (live && process.env.PASS_B_SHADOW_AUDIT_LIVE !== '1') throw new Error('refusing --run: set PASS_B_SHADOW_AUDIT_LIVE=1');
-  const plans = loadPlans(), binding = auditBinding(), runId = auditRunId(binding), outDir = join(RUN_ROOT, runId);
+  const variant = args.includes('--variant') ? Number(args[args.indexOf('--variant') + 1]) : 1;
+  if (![1, 2].includes(variant)) throw new Error('--variant must be 1 or 2');
+  if (args.includes('--demo-compact')) {
+    const b1 = auditBinding(1), r1 = auditRunId(b1);
+    const demo = compactDemo({ v1Plans: loadPlans(1), v2Plans: loadPlans(2), outDir: join(RUN_ROOT, r1), runId: r1 });
+    writeFileSync(join(RUN_ROOT, r1, 'compact-demo.json'), `${JSON.stringify(demo, null, 1)}\n`, { mode: 0o600 });
+    console.log(JSON.stringify(demo, null, 1));
+    return;
+  }
+  const plans = loadPlans(variant), binding = auditBinding(variant), runId = auditRunId(binding), outDir = join(RUN_ROOT, runId);
   if (args.includes('--report')) {
     const known = readJson('data/pass-b-audit-eval-known-failures.json').items;
     const boundPath = join(RUN_ROOT, 'audit-eval-v1', 'owner-labels.bound.json');
@@ -471,6 +531,12 @@ async function main() {
     const findings = loadCanonicalFindings();
     const sealedOf = id => findingsForWork(findings, id);
     // The original report.json is preserved as written by the run; the corrected report is a separate derived file.
+    if (variant === 2) {
+      const report = scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf });
+      writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
+      console.log(JSON.stringify({ works: report.works, summary: report.summary }, null, 1));
+      return;
+    }
     if (!existsSync(join(outDir, 'report.json'))) writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf, controller: 1 }), null, 1)}\n`, { mode: 0o600 });
     const report = scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf, controller: 2 });
     writeFileSync(join(outDir, 'report.v2.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
@@ -478,19 +544,21 @@ async function main() {
     return;
   }
   const clock = pacificClock();
-  console.log(`runId: ${runId} | ${AUDIT_VERSION} | model ${CALIBRATION_MODEL} | tools: ${binding.toolsEnforced} | reservations used ${countReservations(outDir)}/${MAX_RESERVATIONS}`);
+  console.log(`runId: ${runId} | ${binding.version} | model ${CALIBRATION_MODEL} | tools: ${binding.toolsEnforced} | reservations used ${countReservations(outDir)}/${MAX_RESERVATIONS}`);
   console.log(`Pacific ${clock.date} | in start window: ${clock.mayStart} | hours exception set for today: ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
   for (const p of plans) {
     const h = existsSync(outDir) ? auditHistory(outDir, p, runId) : null;
+    const size = `prompt ${Math.round(p.command.argv[1].length / 1000)}k chars | ${h ? `attempt: ${h.kind}` : 'not run'}`;
+    if (p.variant === 2) { console.log(`- ${p.spec.name} (${p.workId}) segments ${p.input.segments.length} (${p.input.segments.filter(s => s.role === 'question' || s.role === 'heading').length} questions/headings), evidence ${p.input.evidence.length} (${[...new Set(p.input.evidence.map(e => e.type))].join('/')}), unavailable ${p.input.unavailable.length}, observations ${p.input.observations.length}, ${size}`); continue; }
     const src = p.input.sources, fetched = src.filter(s => s.status === 'fetched').length;
-    console.log(`- ${p.spec.name} (${p.workId}) [${p.spec.role}] components ${p.input.components.length}, authoritative ${p.input.authoritative.length}, sources ${fetched} fetched / ${src.length} cited, observations ${p.input.observations.length}, prompt ${Math.round(p.command.argv[1].length / 1000)}k chars | ${h ? `attempt: ${h.kind}` : 'not run'}`);
+    console.log(`- ${p.spec.name} (${p.workId}) [${p.spec.role}] components ${p.input.components.length}, authoritative ${p.input.authoritative.length}, sources ${fetched} fetched / ${src.length} cited, observations ${p.input.observations.length}, ${size}`);
   }
   if (preservedFatal(outDir)) console.log(`PRESERVED FATAL: ${preservedFatal(outDir)}; no calls until reviewed`);
   if (!live) { console.log('READ-ONLY PLAN: no calls or writes.'); return; }
   const bin = realpathSync(String((await execFileP('/bin/sh', ['-c', 'command -v claude'])).stdout).trim()); // pin this session's binary
   const r = await runAudit({ plans, outDir, runId, binding, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) });
   console.log(`shadow audit: stop=${r.stop} calls=${r.calls} accepted=${r.accepted} held=${r.held} fatal=${r.fatal} usage-limit=${r['usage-limit']} unknown=${r['unknown-outcome']} skipped=${r.skipped}`);
-  console.log(`next: node scripts/pass-b-shadow-audit.mjs --report`);
+  console.log(`next: node scripts/pass-b-shadow-audit.mjs${variant === 2 ? ' --variant 2' : ''} --report`);
   if (r.stop === 'fatal-provenance') process.exitCode = 1;
 }
 
