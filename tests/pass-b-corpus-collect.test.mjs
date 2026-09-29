@@ -350,9 +350,15 @@ await ta('clearance: one exact finding clears to a terminal hold; replay, wrong 
     await assert.rejects(b3(31,{outside:true}),/confinement violation/);
     assert.ok(readFileSync(join(f.runDir,'fatal.json')).equals(fatalBytes),'first-fatal file unchanged');
     assert.ok(f.inspect().fatal,'the new fatal attempt still blocks');
-    // tampering with the cleared attempt's meta fails closed
+    // tampering with any bound evidence of the cleared attempt fails closed: reservation changed, reservation missing, meta changed
+    const resPath=join(A,'b3-000030.reserved.json'), resBytes=readFileSync(resPath), res=JSON.parse(resBytes);
+    writeFileSync(resPath,JSON.stringify({...res,promptHash:'0'.repeat(64)}));
+    assert.throws(()=>f.inspect(),/cleared attempt evidence changed/,'changed reservation');
+    rmSync(resPath);
+    assert.throws(()=>f.inspect(),/cleared attempt evidence changed|reservation/,'missing reservation');
+    writeFileSync(resPath,resBytes); assert.equal(f.inspect().terminalReasons.some(r=>r.includes('fatal-cleared')),true,'restored bytes verify again');
     writeFileSync(join(A,'b3-000030.meta.json'),JSON.stringify({...meta,reason:'edited'}));
-    assert.throws(()=>f.inspect(),/cleared attempt evidence changed/);
+    assert.throws(()=>f.inspect(),/cleared attempt evidence changed/,'changed meta');
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 await ta('a swallowed fatal is durable and the next invocation spends zero calls',async()=>{

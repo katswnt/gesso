@@ -397,8 +397,10 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (!usage && final && model && model !== CALIBRATION_MODEL) fatal ||= `${id}/${stage}: preserved model drift`;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (clearance) {
-      const metaFile = join(attemptsDir, `${name.slice(0, 9)}.meta.json`);
-      if (!existsSync(metaFile) || rawFileSha(metaFile) !== clearance.finding.metaSha256) throw new Error(`${id}/${stage}: cleared attempt evidence changed`);
+      const metaFile = join(attemptsDir, `${name.slice(0, 9)}.meta.json`), resFile = join(attemptsDir, `${name.slice(0, 9)}.reserved.json`);
+      // Every use of a clearance re-verifies ALL of its bound attempt evidence; missing or changed evidence fails closed.
+      if (!existsSync(metaFile) || rawFileSha(metaFile) !== clearance.finding.metaSha256
+          || !existsSync(resFile) || rawFileSha(resFile) !== clearance.finding.reservationSha256) throw new Error(`${id}/${stage}: cleared attempt evidence changed`);
       terminalReasons.push(`${stage}:${CLEARANCE_DISPOSITION}`); continue; // reviewed false-positive: hold, never capture or retry
     }
     const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
