@@ -6,3 +6,23 @@ committed AND pushed to prod. The img swaps were correct, but shipping with a re
 violation. RULE: run `node scripts/check-pool.mjs` as its OWN Bash call, READ "✅ PASS" in the
 output, and only THEN run a separate commit call. Never join gate and commit with `;` or `&&`
 in the same invocation. (Reinforces memory gesso-gate-before-commit.)
+
+## 2026-09-22 — Safety check written against synthetic transcripts, not real ones
+My review told Codex to make "any `*tool_use` block fatal" for the tool-less B4 canary. In reality, Claude
+Code returns `--json-schema` output through a built-in `StructuredOutput` tool_use, and all 49 historical B4
+transcripts contain it. The offline tests used hand-made transcripts without that event, so they passed. The
+first live smoke then spent 2 of its 10 slots: St. John was fatal on its own valid answer, and La Gloire hit
+a 6-minute timeout that was never sized against real B4 durations (up to ~5 min historically, longer under
+/3). RULE: any provenance, tool, or timeout gate must be regression-tested against at least one REAL preserved
+transcript from the same stage and CLI version, and timeouts must come from the measured duration
+distribution with headroom. Synthetic fixtures are additions, never substitutes.
+
+## 2026-09-29 — Collapsed separate failures into one cause, and let a coarse metric stand
+After the four-call shadow audit I reported "6/6 known holds caught" and said "the cause is the evidence, not the
+model." Both were wrong. Every known-failure component was held only because of a NEIGHBOURING unsupported
+sentence; the error-bearing assertion itself was routed to visual-only (wings, pose, lion), never extracted
+(the wings question's presupposition), or ignored despite supplied contradicting evidence (Carnavalet
+"sommeil"). Missing evidence explained the holds on owner-supported copy; the audit's reasoning failures were a
+separate problem that more evidence does not fix. RULE: score detection at the level of the specific error
+(identified / partial or ambiguous / routed elsewhere / not extracted), never "component held". Before naming a
+single cause, check each failure class against the saved outputs and list every independent cause.
