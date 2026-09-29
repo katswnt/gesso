@@ -589,6 +589,20 @@ reverified evidence. That exceptional migration/clearance is **not implemented b
 it must be prepared and tested before any resumed calls. Deleting `fatal.json` or editing the ledger
 is never clearance, because preserved fatal attempt evidence still stops execution.
 
+**Incident-specific fatal clearance (VSD-049).** The strict image verifier is unchanged; there is no general
+misread exception. After independent review and a separate owner authorization, one exact finding may be cleared
+offline with `node scripts/pass-b-corpus-collect.mjs --clear-fatal <clearance.json>`. The artifact
+(`passBCorpusFatalClearance/1`) pins run, work, stage, seq, and the reservation, meta, transcript and `fatal.json`
+hashes plus the fatal reason, the independent-review reference, the owner authorization and `reviewedAt`. The command
+takes the run lease, re-hashes every bound file, and re-checks the exact incident pattern (one init with pinned
+model/subscription/tools and cwd; exactly two paired Reads, the first an in-cwd wrong basename answered by exactly the
+CLI missing-file diagnostic, the second the exact image returning only image blocks; the strict verifier's only
+defect is that misread). It appends `fatal-clearances/NNNNNN.json` (hash-chained, `wx`), never edits `fatal.json`,
+attempts or completions, and turns only that attempt into a terminal hold (`fatal-cleared, uncaptured result`: no
+capture, no retry). Every other fatal, including a later one while the first `fatal.json` stays unchanged, still
+blocks; a changed cleared attempt fails closed. Applying a clearance and resuming collection are separate owner
+authorizations.
+
 ### Remaining publication and operational follow-ups
 
 - **F2 blocks A8 publication:** B0 legacy comparison still reads live teaching/hotspot files. One

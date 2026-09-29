@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
-import { syntheticFixture, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
+import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
+import { syntheticFixture, verifyB1ImageRead, parseStreamTranscript, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { stagePrompts } from '../scripts/lib/pass-b-prompts.mjs';
 import { BROKER_POLICY_VERSION } from '../scripts/lib/img-broker.mjs';
@@ -253,6 +253,40 @@ withFixture('fatal survives ledger replacement and is never cleared by offline r
 withFixture('malformed ledger never turns into empty resumable state',f=>{
   writeFileSync(join(f.runDir,'ledger.json'),'{');assert.throws(()=>readLedger(f.runDir));
 });
+
+// ---- VSD-049: incident-specific fatal clearance (strict verifier unchanged) ----
+{
+  const W='data/incoming/vision-calibration/corpus-b3-6401bc543ead/works/80af7ef472e10b8b2dd4f6ae';
+  const realPath=join(W,'attempts','b3-002996-9e10b97c.transcript.jsonl');
+  if(existsSync(realPath)){
+    const real=readFileSync(realPath,'utf8'); const b0=JSON.parse(readFileSync(join(W,'b0-prep.json'),'utf8')); const img=`${b0.image.imgSha256}.${b0.image.ext}`;
+    t('real Q17327791 B3 transcript: strict verifier still fatal; exact-incident check matches',()=>{
+      assert.equal(sha256(real),'9e10b97c80841967ed1ba88523e18048053e5d9a0fa04aa2d6690f1e7df1f86b');
+      assert.equal(verifyB1ImageRead(parseStreamTranscript(real),{callDir:null,imageBasename:img}).bad.length,1);
+      const r=verifyMisreadIncident(real,img); assert.equal(r.ok,true,r.reason);
+    });
+    const C='/private/tmp/corpus-7ZgDbK', diag=`File does not exist. Note: your current working directory is ${C}.`;
+    const lines=real.split('\n').filter(Boolean);
+    const edit=fn=>lines.map(l=>{const e=JSON.parse(l);fn(e);return JSON.stringify(e);}).join('\n')+'\n';
+    const eachBlock=(e,fn)=>{for(const b of (Array.isArray(e.message?.content)?e.message.content:[]))fn(b);};
+    for(const [name,mut] of [
+      ['diagnostic with a filename suggestion',e=>eachBlock(e,b=>{if(b.type==='tool_result'&&b.content===diag)b.content=diag+' Did you mean secrets.txt?';})],
+      ['misread outside the call dir',e=>eachBlock(e,b=>{if(b.type==='tool_use'&&b.name==='Read'&&!b.input.file_path.endsWith(img))b.input.file_path='/private/tmp/other/'+b.input.file_path.split('/').pop();})],
+      ['traversal in the misread',e=>eachBlock(e,b=>{if(b.type==='tool_use'&&b.name==='Read'&&!b.input.file_path.endsWith(img))b.input.file_path=C+'/../x.jpg';})],
+      ['misread result returned content',e=>eachBlock(e,b=>{if(b.type==='tool_result'&&b.content===diag){b.is_error=false;b.content=[{type:'text',text:'secret'}];}})],
+      ['wrong cwd in init',e=>{if(e.type==='system'&&e.subtype==='init')e.cwd='/private/tmp/elsewhere';}],
+      ['API key provenance',e=>{if(e.type==='system'&&e.subtype==='init')e.apiKeySource='user';}],
+      ['image read returned extra text',e=>eachBlock(e,b=>{if(b.type==='tool_result'&&Array.isArray(b.content)&&b.content.some(x=>x.type==='image'))b.content.push({type:'text',text:'x'});})],
+    ]) t(`exact-incident check refuses: ${name}`,()=>assert.equal(verifyMisreadIncident(edit(mut),img).ok,false));
+    t('exact-incident check refuses a missing or duplicated misread result',()=>{
+      const withoutResult=lines.filter(l=>!l.includes(JSON.stringify(diag).slice(1,-1))).join('\n')+'\n';
+      assert.equal(verifyMisreadIncident(withoutResult,img).ok,false);
+      const dupIdx=lines.findIndex(l=>l.includes('File does not exist'));
+      const dup=[...lines.slice(0,dupIdx+1),lines[dupIdx],...lines.slice(dupIdx+1)].join('\n')+'\n';
+      assert.equal(verifyMisreadIncident(dup,img).ok,false);
+    });
+  }
+}
 withFixture('B0 fetch failures: unreachable hosts are transient, unusable images are terminal',f=>{
   for (const x of [{code:'timeout'},{code:'network-error'},{code:'dns-failed'},{code:'http-status',status:403},{code:'http-status',status:429},{code:'http-status',status:503},{code:'http-status',status:null}])
     assert.equal(b0FailureClass(x),'transient',JSON.stringify(x));
@@ -282,6 +316,45 @@ withFixture('runtime version is bound separately while banked completion bytes s
 
 const ta=async(name,fn)=>{await fn();n++;console.log('ok',name);};
 const attemptArgs=f=>({runDir:f.runDir,workRunDir:f.workRunDir,id:f.id,imgSha256:f.imgSha256,ext:f.ext,stage:'B2',seq:20,runtimeVersion:'2.1.280',command:{bin:'fixture-only',argv:['-p','fixture'],env:{removeKeys:['ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN']}},now:()=>at('2026-09-22T10:00:00Z')});
+const misreadTranscript=(C,image,body,{outside=false}={})=>{
+  const bad=outside?'/private/tmp/outside/x.jpg':`${C}/${'0'.repeat(64)}.png`;
+  return [{type:'system',subtype:'init',apiKeySource:'none',model:CALIBRATION_MODEL,tools:['Read','StructuredOutput'],cwd:C,claude_code_version:'2.1.280'},
+    {type:'assistant',message:{content:[{type:'tool_use',id:'r1',name:'Read',input:{file_path:bad}}]}},
+    {type:'user',message:{content:[{type:'tool_result',tool_use_id:'r1',is_error:true,content:`File does not exist. Note: your current working directory is ${C}.`}]}},
+    {type:'assistant',message:{content:[{type:'tool_use',id:'r2',name:'Read',input:{file_path:`${C}/${image}`}}]}},
+    {type:'user',message:{content:[{type:'tool_result',tool_use_id:'r2',content:[{type:'image',source:{type:'base64',data:'x'}}]}]}},
+    {type:'assistant',message:{content:[{type:'tool_use',id:'so',name:'StructuredOutput',input:body}]}},
+    {type:'user',message:{content:[{type:'tool_result',tool_use_id:'so',content:'Structured output provided successfully'}]}},
+    {type:'result',subtype:'success',is_error:false,structured_output:body,modelUsage:{[CALIBRATION_MODEL]:{output_tokens:10}}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
+};
+await ta('clearance: one exact finding clears to a terminal hold; replay, wrong hash and a second fatal all still block',async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    const b3=(seq,opts)=>executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3,opts)})});
+    await assert.rejects(b3(30),/confinement violation/);
+    assert.ok(preservedFatal(f.runDir)); assert.ok(f.inspect().fatal);
+    const A=join(f.workRunDir,'attempts'), meta=JSON.parse(readFileSync(join(A,'b3-000030.meta.json'),'utf8'));
+    const H=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
+    const fatalBytes=readFileSync(join(f.runDir,'fatal.json'));
+    const req={version:FATAL_CLEARANCE_VERSION,runId:JSON.parse(fatalBytes).runId,disposition:CLEARANCE_DISPOSITION,independentReview:'test review',ownerAuthorization:'test owner',reviewedAt:'2026-09-29T12:00:00Z',
+      finding:{workId:f.id,stage:'B3',seq:30,reservationSha256:H(join(A,'b3-000030.reserved.json')),metaSha256:H(join(A,'b3-000030.meta.json')),transcriptSha256:H(join(A,meta.transcriptFile)),transcriptFile:meta.transcriptFile,fatalJsonSha256:H(join(f.runDir,'fatal.json')),fatalReason:JSON.parse(fatalBytes).reason}};
+    assert.throws(()=>applyFatalClearance(f.runDir,{...req,finding:{...req.finding,metaSha256:'0'.repeat(64)}}),/hash mismatch/);
+    assert.throws(()=>applyFatalClearance(f.runDir,{...req,ownerAuthorization:''}),/owner authorization/);
+    applyFatalClearance(f.runDir,req);
+    assert.equal(loadFatalClearances(f.runDir).length,1);
+    assert.equal(preservedFatal(f.runDir),null); const row=f.inspect();
+    assert.equal(row.fatal,null); assert.ok(row.terminalReasons.some(r=>r.includes('fatal-cleared')));
+    assert.ok(readFileSync(join(f.runDir,'fatal.json')).equals(fatalBytes),'fatal.json preserved byte-for-byte');
+    assert.throws(()=>applyFatalClearance(f.runDir,req),/already cleared/);
+    // a second fatal (outside-dir read) with fatal.json unchanged must still block
+    await assert.rejects(b3(31,{outside:true}),/confinement violation/);
+    assert.ok(readFileSync(join(f.runDir,'fatal.json')).equals(fatalBytes),'first-fatal file unchanged');
+    assert.ok(f.inspect().fatal,'the new fatal attempt still blocks');
+    // tampering with the cleared attempt's meta fails closed
+    writeFileSync(join(A,'b3-000030.meta.json'),JSON.stringify({...meta,reason:'edited'}));
+    assert.throws(()=>f.inspect(),/cleared attempt evidence changed/);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
 await ta('a swallowed fatal is durable and the next invocation spends zero calls',async()=>{
   const f=fixture({complete:['B1']});let calls=0;
   try{

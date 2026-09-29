@@ -210,14 +210,99 @@ export function readLedger(runDir = RUN_DIR) {
   if (ledger.runId !== RUN_ID || !Array.isArray(ledger.heldIds)) throw new Error('ledger binding/shape mismatch');
   return ledger;
 }
+// ---- Incident-specific fatal clearance (VSD-049) ----
+// NOT a general exception: the strict image verifier is unchanged, and each clearance pins ONE exact finding
+// (run/work/stage/seq + reservation, meta, transcript and fatal.json hashes). It is applied offline under the run
+// lease only after independent review and owner authorization, is append-only, and never deletes or edits
+// fatal.json, attempts or completions. Any other fatal, existing or new, still blocks.
+export const FATAL_CLEARANCE_VERSION = 'passBCorpusFatalClearance/1';
+export const CLEARANCE_DISPOSITION = 'terminal-hold: fatal-cleared, uncaptured result';
+export function loadFatalClearances(runDir) {
+  const dir = join(runDir, 'fatal-clearances'), out = [];
+  const names = files(dir).sort();
+  for (let i = 0; i < names.length; i++) {
+    if (names[i] !== `${String(i + 1).padStart(6, '0')}.json`) throw new Error('fatal clearance sequence mismatch');
+    const c = readJson(join(dir, names[i])); // unreadable/partial clearance fails closed
+    const f = c.finding || {};
+    if (c.version !== FATAL_CLEARANCE_VERSION || c.runId !== RUN_ID || c.disposition !== CLEARANCE_DISPOSITION
+        || c.previousSha256 !== (out.at(-1)?.sha256 || null) || !c.independentReview || !c.ownerAuthorization
+        || !['workId', 'stage', 'seq', 'reservationSha256', 'metaSha256', 'transcriptSha256', 'transcriptFile', 'fatalJsonSha256', 'fatalReason'].every(k => f[k] != null))
+      throw new Error(`fatal clearance ${names[i]} is malformed or out of chain`);
+    out.push({ ...c, sha256: sha256(stableJson(c)) });
+  }
+  return out;
+}
+// Exact-incident pattern check: one init (pinned model, subscription, tools exactly [Read, StructuredOutput]); exactly
+// two Reads with unique ids, each with exactly one later result; the first is a wrong basename in the init cwd whose
+// result is EXACTLY the CLI's missing-file diagnostic; the second is the exact image and returns only image blocks;
+// one StructuredOutput; a successful final. The strict verifier must report that misread as its only defect.
+export function verifyMisreadIncident(text, imageBasename) {
+  const fail = reason => ({ ok: false, reason });
+  let ev; try { ev = String(text).split('\n').filter(l => l.trim()).map(l => JSON.parse(l)); } catch { return fail('unparseable transcript'); }
+  const inits = ev.filter(e => e.type === 'system' && e.subtype === 'init');
+  if (inits.length !== 1) return fail('expected exactly one init');
+  const init = inits[0], C = init.cwd;
+  if (typeof C !== 'string' || !C.startsWith('/') || C.includes('..')) return fail('bad cwd');
+  if (init.apiKeySource !== 'none' || init.model !== CALIBRATION_MODEL || stableJson(init.tools) !== stableJson(['Read', 'StructuredOutput'])) return fail('init provenance/tools');
+  const uses = [], results = [];
+  ev.forEach((e, idx) => { for (const b of (Array.isArray(e.message?.content) ? e.message.content : [])) {
+    if (b?.type === 'tool_use') uses.push({ id: b.id, name: b.name, input: b.input, idx });
+    else if (b?.type === 'tool_result') results.push({ id: b.tool_use_id, isError: b.is_error === true, content: b.content, idx });
+    else if (typeof b?.type === 'string' && b.type.endsWith('tool_use')) uses.push({ id: b.id, name: `${b.type}:${b.name}`, input: b.input, idx });
+  } });
+  const ids = uses.map(u => u.id);
+  if (ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length) return fail('tool-use ids missing or reused');
+  const reads = uses.filter(u => u.name === 'Read'), others = uses.filter(u => u.name !== 'Read');
+  if (reads.length !== 2 || others.length !== 1 || others[0].name !== 'StructuredOutput') return fail('expected exactly two Reads and one StructuredOutput');
+  const resultOf = u => { const r = results.filter(x => x.id === u.id); return r.length === 1 && r[0].idx > u.idx ? r[0] : null; };
+  const [r1, r2] = reads, res1 = resultOf(r1), res2 = resultOf(r2);
+  if (!res1 || !res2) return fail('each Read needs exactly one later result');
+  const p1 = r1.input?.file_path, p2 = r2.input?.file_path;
+  if (typeof p1 !== 'string' || p1.includes('..') || p1.slice(0, p1.lastIndexOf('/')) !== C || p1.split('/').pop() === imageBasename) return fail('first Read is not an in-cwd wrong basename');
+  if (!(res1.isError && typeof res1.content === 'string' && res1.content === `File does not exist. Note: your current working directory is ${C}.`)) return fail('first Read result is not exactly the missing-file diagnostic');
+  if (p2 !== `${C}/${imageBasename}`) return fail('second Read is not the exact image');
+  if (res2.isError || !Array.isArray(res2.content) || !res2.content.length || !res2.content.every(b => b?.type === 'image')) return fail('second Read did not return only image content');
+  const final = ev.filter(e => e.type === 'result');
+  if (final.length !== 1 || final[0].subtype !== 'success' || final[0].is_error || final[0].structured_output == null) return fail('final result');
+  const receipt = verifyB1ImageRead(parseStreamTranscript(text), { callDir: C, imageBasename });
+  if (receipt.good !== 1 || stableJson(receipt.bad) !== stableJson([p1])) return fail('strict verifier does not report the misread as the only defect');
+  return { ok: true, cwd: C, misreadPath: p1 };
+}
+const clearedFatalReasons = runDir => new Set(loadFatalClearances(runDir).map(c => c.finding.fatalReason));
+export function applyFatalClearance(runDir, request) {
+  const f = request?.finding || {};
+  if (request?.version !== FATAL_CLEARANCE_VERSION || request.runId !== RUN_ID || request.disposition !== CLEARANCE_DISPOSITION) throw new Error('clearance request version/run/disposition mismatch');
+  if (!String(request.independentReview || '').trim() || !String(request.ownerAuthorization || '').trim() || !Number.isFinite(Date.parse(request.reviewedAt))) throw new Error('clearance needs an independent review reference, a separate owner authorization and reviewedAt');
+  const workDir = join(runDir, 'works', sha256(String(f.workId)).slice(0, 24)), attemptsDir = join(workDir, 'attempts');
+  const stem = `${String(f.stage).toLowerCase()}-${String(f.seq).padStart(6, '0')}`;
+  const resPath = join(attemptsDir, `${stem}.reserved.json`), metaPath = join(attemptsDir, `${stem}.meta.json`), trPath = join(attemptsDir, String(f.transcriptFile));
+  for (const [path, want] of [[resPath, f.reservationSha256], [metaPath, f.metaSha256], [trPath, f.transcriptSha256], [join(runDir, 'fatal.json'), f.fatalJsonSha256]])
+    if (!existsSync(path) || rawFileSha(path) !== want) throw new Error(`clearance hash mismatch: ${path}`);
+  const meta = readJson(metaPath), fatal = readJson(join(runDir, 'fatal.json')), b0 = readJson(join(workDir, 'b0-prep.json'));
+  if (meta.workId !== f.workId || meta.stage !== f.stage || meta.seq !== f.seq || meta.kind !== 'fatal' || meta.transcriptFile !== f.transcriptFile) throw new Error('clearance meta binding mismatch');
+  if (fatal.runId !== RUN_ID || fatal.reason !== f.fatalReason || f.fatalReason !== `${f.workId}/${f.stage}: ${meta.reason}`) throw new Error('clearance fatal binding mismatch');
+  const check = verifyMisreadIncident(readFileSync(trPath, 'utf8'), neutralImageFile(b0.image?.imgSha256, b0.image?.ext));
+  if (!check.ok) throw new Error(`clearance refused: ${check.reason}`);
+  const prior = loadFatalClearances(runDir);
+  if (prior.some(c => c.finding.transcriptSha256 === f.transcriptSha256)) throw new Error('finding already cleared');
+  const record = { version: FATAL_CLEARANCE_VERSION, runId: RUN_ID, finding: { workId: f.workId, stage: f.stage, seq: f.seq, reservationSha256: f.reservationSha256, metaSha256: f.metaSha256, transcriptSha256: f.transcriptSha256, transcriptFile: f.transcriptFile, fatalJsonSha256: f.fatalJsonSha256, fatalReason: f.fatalReason, misreadPath: check.misreadPath },
+    disposition: CLEARANCE_DISPOSITION, independentReview: request.independentReview, ownerAuthorization: request.ownerAuthorization, reviewedAt: request.reviewedAt, previousSha256: prior.at(-1)?.sha256 || null };
+  const dir = join(runDir, 'fatal-clearances'); mkdirSync(dir, { recursive: true, mode: 0o700 });
+  writeFileSync(join(dir, `${String(prior.length + 1).padStart(6, '0')}.json`), `${JSON.stringify(record, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  return record;
+}
 export function preservedFatal(runDir, ledger = readLedger(runDir)) {
+  const cleared = clearedFatalReasons(runDir);
   const path = join(runDir, 'fatal.json');
   if (existsSync(path)) {
     const f = readJson(path);
     if (f.runId !== RUN_ID || typeof f.reason !== 'string') throw new Error('fatal record binding mismatch');
-    return f.reason;
+    // fatal.json keeps only the FIRST fatal; a cleared first fatal never hides a later one (ledger + attempt evidence).
+    const clearedFile = cleared.has(f.reason) && loadFatalClearances(runDir).some(c => c.finding.fatalJsonSha256 === rawFileSha(path));
+    if (!clearedFile) return f.reason;
   }
-  return typeof ledger.stopReason === 'string' && ledger.stopReason.startsWith('fatal:') ? ledger.stopReason.slice(6) : null;
+  const led = typeof ledger.stopReason === 'string' && ledger.stopReason.startsWith('fatal:') ? ledger.stopReason.slice(6) : null;
+  return led && !cleared.has(led) ? led : null;
 }
 export function persistFatal(runDir, reason) {
   const path = join(runDir, 'fatal.json');
@@ -267,6 +352,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     bodies[stage] = c.body;
   }
   let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
+  const clearances = loadFatalClearances(runDir);
   const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set();
   // Resolve every receipt against its own immutable epoch, never against today's runtime policy.
   for (const name of files(attemptsDir).filter(n => n.endsWith('.reserved.json'))) {
@@ -309,6 +395,12 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if ((!inits.length && !operational && !deadline && !incompleteTranscripts.has(name)) || inits.some(e => e.apiKeySource !== 'none') ||
         (binding ? inits.some(e => e.model !== CALIBRATION_MODEL) : (model && model !== CALIBRATION_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
     if (!usage && final && model && model !== CALIBRATION_MODEL) fatal ||= `${id}/${stage}: preserved model drift`;
+    const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
+    if (clearance) {
+      const metaFile = join(attemptsDir, `${name.slice(0, 9)}.meta.json`);
+      if (!existsSync(metaFile) || rawFileSha(metaFile) !== clearance.finding.metaSha256) throw new Error(`${id}/${stage}: cleared attempt evidence changed`);
+      terminalReasons.push(`${stage}:${CLEARANCE_DISPOSITION}`); continue; // reviewed false-positive: hold, never capture or retry
+    }
     const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
     if (receipt?.bad?.length) fatal ||= `${id}/${stage}: preserved confinement violation`;
     if (meta?.kind === 'fatal') fatal ||= `${id}/${stage}: ${meta.reason}`;
@@ -370,7 +462,8 @@ export function applyHistoryRepair({ runDir = RUN_DIR, inspection, ledger = read
     doneIds: [...inspection.doneSet], attemptSeq: inspection.maxSeq,
     totals: { ...ledger.totals, queued: eligibleCount, done: inspection.doneSet.size, held: inspection.heldSet.size,
       remaining: Math.max(0, eligibleCount - new Set([...inspection.doneSet, ...inspection.heldSet]).size), ...inspection.totals, attempts: inspection.attempts },
-    stopReason: inspection.fatal ? `fatal:${inspection.fatal}` : inspection.pause ? `paused:${inspection.pause}` : (ledger.stopReason ?? null),
+    stopReason: inspection.fatal ? `fatal:${inspection.fatal}` : inspection.pause ? `paused:${inspection.pause}`
+      : (typeof ledger.stopReason === 'string' && ledger.stopReason.startsWith('fatal:') && clearedFatalReasons(runDir).has(ledger.stopReason.slice(6)) ? null : (ledger.stopReason ?? null)),
   };
   if (stableJson(ledger) !== stableJson(repaired)) {
     repaired.updatedAt = now().toISOString();
@@ -607,7 +700,17 @@ export function rebindRuntime(runDir, review) {
 async function main() {
   const args = process.argv.slice(2);
   const rebind = args[0] === '--rebind-runtime' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
-  if (!rebind && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), OR --run (gated)');
+  const clearFatal = args[0] === '--clear-fatal' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  if (clearFatal) { // offline, under the run lease; no CLI/model/network call
+    mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 });
+    acquireStageLease(RUN_LEASE);
+    try {
+      const record = applyFatalClearance(RUN_DIR, readJson(clearFatal));
+      console.log(`FATAL CLEARANCE APPENDED: ${record.finding.workId}/${record.finding.stage} seq ${record.finding.seq} -> ${record.disposition}. fatal.json and all attempts preserved. No calls.`);
+    } finally { unlinkSync(RUN_LEASE); }
+    return;
+  }
+  if (!rebind && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
