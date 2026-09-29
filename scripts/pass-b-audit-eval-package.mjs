@@ -6,6 +6,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
+import { componentsOf } from './lib/pass-b-audit-components.mjs';
 
 const ROOT = 'data/incoming/vision-calibration';
 const SOURCES = [{ run: 'b4w-04b88c97e6eb', label: 'window' }, { run: 'b4s-06e99464c52b', label: 'canary', only: ['wikidata:Q16467705', 'wikidata:Q1211814'] }];
@@ -15,15 +16,6 @@ const known = JSON.parse(readFileSync('data/pass-b-audit-eval-known-failures.jso
 // Words that describe the pipeline or are too generic to signal a disputed claim.
 const STOP = new Set(('the and for with that this from into over under than then there their they them these those have has had was were been being are is its it not but also only such which what when where while whether would could should about after before between both each more most other some very much many main large small figure figures work image visual inventory legacy notes note source sources claim claims record records catalog verified verification confirmed describe describes described shows show shown appears appear visible evidence stage content entry text model structured unresolved uncertain uncertainty possible possibly likely whether cannot identified identification based rather though because since without within specific exact exactly precise precisely').split(' '));
 const words = t => new Set(String(t).toLowerCase().match(/[a-z][a-z'-]{3,}/g)?.map(w => w.replace(/'s$/, '').replace(/s$/, '')).filter(w => !STOP.has(w)) || []);
-
-function componentsOf(body) {
-  const out = [{ componentId: 'why', surface: 'why', text: typeof body.proposedWhy === 'string' ? body.proposedWhy : '' }];
-  (body.proposedCues || []).forEach((c, i) => out.push({ componentId: `cue:c_${sha256(`${i}|${c}`).slice(0, 10)}`, surface: 'cue', text: c }));
-  for (const n of body.notes || []) out.push({ componentId: `note:${n.noteId}`, surface: 'note', text: `${n.head} — ${n.body}` });
-  for (const g of body.guide || []) out.push({ componentId: `guide:${g.questionId}`, surface: 'guide', text: `${g.q} || ${g.a}` });
-  for (const h of body.hotspots || []) out.push({ componentId: `hotspot:${h.hotspotId}`, surface: 'hotspot', text: `${h.conciseText} — ${h.deepText}` });
-  return out.filter(c => c.text);
-}
 
 const works = [];
 for (const src of SOURCES) {

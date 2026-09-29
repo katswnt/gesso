@@ -604,6 +604,25 @@ blocks; a changed cleared attempt fails closed. Applying a clearance and resumin
 authorizations. Applied once, 2026-09-29 20:50:27Z (`fatal-clearances/000001.json`, work
 `http://www.wikidata.org/entity/Q17327791` B3 seq 2996); independently verified under d0a1421 with no other fatal found.
 
+### Shadow-audit experiment (VSD-050, four calls, measurement only)
+
+```bash
+node scripts/pass-b-shadow-audit.mjs                 # read-only plan: frozen inputs, reservations used, hours
+PASS_B_SHADOW_AUDIT_LIVE=1 node scripts/pass-b-shadow-audit.mjs --run
+# daytime (outside 00:00–08:30 PT) needs the owner's dated exception, recorded in each reservation:
+PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION=YYYY-MM-DD PASS_B_SHADOW_AUDIT_LIVE=1 node scripts/pass-b-shadow-audit.mjs --run
+node scripts/pass-b-shadow-audit.mjs --report        # offline scoring -> <run>/report.json
+```
+
+- Output goes to `data/incoming/vision-calibration/sa-<hash>/` (quarantined, gitignored). It holds a manifest, the
+  frozen inputs, and one reservation/transcript/result/meta per work. At most four reservations exist across
+  resumes; a reserved work is never called again, whatever its outcome.
+- The report lists hold / needs-visual-check / text-covered separately. Known failures are regression
+  challenges. Only individually labeled components are scored; unsure labels stay unscored. Controller holds
+  (open claims/conflicts) and sealed-work holds sit in separate columns from the auditor's own verdict.
+- Owner labels: `scripts/pass-b-audit-label-import.mjs` binds the label page's export to the frozen sample
+  (`audit-eval-v1/sample-freeze.json`) by per-component text hashes.
+
 ### Remaining publication and operational follow-ups
 
 - **F2 blocks A8 publication:** B0 legacy comparison still reads live teaching/hotspot files. One

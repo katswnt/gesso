@@ -188,7 +188,10 @@ export function cliResubmissionAccepted(execution, final) {
   return !!lastResult && lastResult.isError === false && final?.structured_output != null && stableJson(final.structured_output) === stableJson(last.input);
 }
 
-export function deriveB4Attempt(plan, transcript, exitCode = 0) {
+// Call-level safety for any no-tool StructuredOutput call (B4 and the shadow audit): subscription provenance,
+// model, exact init tools, forbidden tools, CLI resubmission, timeout, usage limit, process failure.
+// kind is 'fatal', 'usage-limit', or 'held' (the caller decides acceptance from the body).
+export function noToolCallProvenance(transcript, exitCode = 0) {
   const parsed = parseStreamTranscript(transcript);
   const execution = b4ExecutionEvents(transcript);
   const final = transcriptFinal(parsed);
@@ -212,6 +215,20 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
   else if (exitCode === 'timeout') errors.push('process-timeout');
   else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
+  const evidence = {
+    exitCode, transcriptSha256: sha256(transcript), resolvedModel, apiKeySource, apiKeySources,
+    claudeCodeVersion: parsed.init?.claudeCodeVersion ?? null, usage: final?.usage ?? null,
+    modelUsage: final?.modelUsage ?? null, numTurns: final?.num_turns ?? null,
+    toolUses: execution.toolUses.map(row => row.name), toolUseTypes: execution.toolUses.map(row => row.type),
+    cliRejectedEmissions: execution.toolUses.length > 1 && cliResubmissionAccepted(execution, final) ? execution.toolUses.length - 1 : 0,
+  };
+  return { kind, errors, execution, final, evidence };
+}
+
+export function deriveB4Attempt(plan, transcript, exitCode = 0) {
+  const call = noToolCallProvenance(transcript, exitCode);
+  const { execution, final, errors } = call;
+  let kind = call.kind;
 
   const delta = final?.structured_output ?? null;
   let body = null, bundle = null, reconciliation = null, leaks = [];
@@ -250,14 +267,7 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
     kind = errors.length ? 'held' : 'accepted';
   }
   return {
-    kind, errors, delta, body, bundle, reconciliation, leaks,
-    evidence: {
-      exitCode, transcriptSha256: sha256(transcript), resolvedModel, apiKeySource, apiKeySources,
-      claudeCodeVersion: parsed.init?.claudeCodeVersion ?? null, usage: final?.usage ?? null,
-      modelUsage: final?.modelUsage ?? null, numTurns: final?.num_turns ?? null,
-      toolUses: execution.toolUses.map(row => row.name), toolUseTypes: execution.toolUses.map(row => row.type),
-      cliRejectedEmissions: execution.toolUses.length > 1 && cliResubmissionAccepted(execution, final) ? execution.toolUses.length - 1 : 0,
-    },
+    kind, errors, delta, body, bundle, reconciliation, leaks, evidence: call.evidence,
   };
 }
 

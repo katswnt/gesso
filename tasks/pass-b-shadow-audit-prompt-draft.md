@@ -1,6 +1,7 @@
 # Shadow-audit prompt draft (A4 plus text coverage), for Codex review
 
-Status: DRAFT v2 (Codex review 2026-09-29 applied: no contradiction from uncertainty; authoritative passages
+Status: v3, IMPLEMENTED in `scripts/pass-b-shadow-audit.mjs` (VSD-050), which is the canonical prompt text; this
+file keeps the rationale. Earlier: v2 (Codex review 2026-09-29 applied: no contradiction from uncertainty; authoritative passages
 supplied separately; source status from the existing retrieval check; separate verdict reporting; frozen
 sample). No model calls have been made. Nothing runs until Codex reviews this and the owner authorizes
 the 4 initial calls in the last section.
@@ -110,7 +111,7 @@ OUTPUT: only JSON matching the schema.
       "text": "atomic assertion, in your own words",
       "form": "statement | presupposition | comparison | interpretation",
       "class": "catalog-supported | source-supported | contradicted | visual-only | unsupported",
-      "catalogField": "string?", "sourceId": "string?", "quote": "string?",
+      "catalogField": "string?", "catalogValue": "string?", "passageId": "string?", "sourceId": "string?", "quote": "string?",
       "visualCheck": "string?", "observationId": "string?", "why": "string (≤200 chars)"
     } ],
     "verdict": "hold | needs-visual-check | text-covered"
