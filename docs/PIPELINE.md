@@ -601,7 +601,8 @@ defect is that misread). It appends `fatal-clearances/NNNNNN.json` (hash-chained
 attempts or completions, and turns only that attempt into a terminal hold (`fatal-cleared, uncaptured result`: no
 capture, no retry). Every other fatal, including a later one while the first `fatal.json` stays unchanged, still
 blocks; a changed cleared attempt fails closed. Applying a clearance and resuming collection are separate owner
-authorizations.
+authorizations. Applied once, 2026-09-29 20:50:27Z (`fatal-clearances/000001.json`, work
+`http://www.wikidata.org/entity/Q17327791` B3 seq 2996); independently verified under d0a1421 with no other fatal found.
 
 ### Remaining publication and operational follow-ups
 
