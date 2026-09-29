@@ -6,9 +6,11 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sha256 } from './lib/vision-legacy.mjs';
+import { freezeSample } from './pass-b-audit-label-import.mjs';
 
 const ROOT = 'data/incoming/vision-calibration', CORPUS = join(ROOT, 'corpus-b3-6401bc543ead'), OUT = join(ROOT, 'audit-eval-v1');
 const sample = JSON.parse(readFileSync(join(OUT, 'owner-sample.json'), 'utf8'));
+const SAMPLE_SHA = freezeSample(sample).sampleSha256; // exports carry it so labels bind to this exact sample
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function workEvidence(workId) {
@@ -76,7 +78,7 @@ cards.forEach((c,i)=>{const k=c.dataset.key, s=state[k]||{};
   c.querySelectorAll('input[type=radio]').forEach(r=>{ if(s.label===r.value) r.checked=true; r.onchange=()=>{state[k]={...(state[k]||{}),label:r.value}; save();}; });
   const note=c.querySelector('.note'); note.value=s.note||''; note.oninput=()=>{state[k]={...(state[k]||{}),note:note.value}; save();}; });
 document.getElementById('dl').onclick=()=>{const rows=cards.map(c=>{const [workId,componentId]=c.dataset.key.split('|'); return {workId,componentId,...(state[c.dataset.key]||{})};});
-  const blob=new Blob([JSON.stringify({version:'passBAuditOwnerLabels/1',labeledAt:new Date().toISOString(),rows},null,1)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({version:'passBAuditOwnerLabels/1',sampleSha256:'${SAMPLE_SHA}',labeledAt:new Date().toISOString(),rows},null,1)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='audit-owner-labels.json'; a.click();};
 save();
 </script></body></html>`;
