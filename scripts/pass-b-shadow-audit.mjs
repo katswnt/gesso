@@ -223,19 +223,32 @@ export function planAudit(spec, opts) {
 }
 
 // ---------- deterministic controller (offline) ----------
-const normText = t => String(t ?? '').normalize('NFC').replace(/[‘’‛′]/g, "'").replace(/[“”„″]/g, '"').replace(/[‐‑‒–—―]/g, '-').replace(/\s+/g, ' ').trim();
-const contains = (hay, needle) => { const n = normText(needle); return n.length > 0 && normText(hay).includes(n); };
+// Controller versions. 1 = as run (stored results are re-derived and verified with it; never change it).
+// 2 = offline correction (Codex 2026-09-29): markdown formatting (**, __, `, *, heading #) is ignored on both sides,
+// and a multi-field catalog citation ("artist / medium" = "X / Y") is checked field by field. Paraphrases and
+// elisions still fail.
+export const CONTROLLER_VERSIONS = [1, 2];
+const normV1 = t => String(t ?? '').normalize('NFC').replace(/[‘’‛′]/g, "'").replace(/[“”„″]/g, '"').replace(/[‐‑‒–—―]/g, '-').replace(/\s+/g, ' ').trim();
+const normV2 = t => normV1(String(t ?? '').replace(/\*\*|__|`|\*/g, '').replace(/(^|\n)\s*#{1,6}\s+/g, '$1'));
+const contains = (hay, needle, controller = 1) => { const norm = controller >= 2 ? normV2 : normV1; const n = norm(needle); return n.length > 0 && norm(hay).includes(n); };
 
 // Citation check only proves the cited words exist where cited. Whether they SUPPORT the assertion stays the
 // model's judgment (scored separately).
-export function checkCitation(a, input) {
+export function checkCitation(a, input, controller = 1) {
   const catalog = input.catalog || {};
-  const viaCatalog = () => (a.catalogField && Object.hasOwn(catalog, a.catalogField) && catalog[a.catalogField] != null && contains(stableJson(catalog[a.catalogField]).replace(/^"|"$/g, ''), a.catalogValue))
-    ? null : `catalog citation invalid (${a.catalogField || 'no field'})`;
+  const fieldHas = (field, value) => Object.hasOwn(catalog, field) && catalog[field] != null && contains(stableJson(catalog[field]).replace(/^"|"$/g, ''), value, controller);
+  const viaCatalog = () => {
+    if (a.catalogField && fieldHas(a.catalogField, a.catalogValue)) return null;
+    if (controller >= 2 && a.catalogField && !Object.hasOwn(catalog, a.catalogField)) { // explicit multi-field citation
+      const fields = a.catalogField.split(/\s*[\/,]\s*/).filter(Boolean), values = String(a.catalogValue ?? '').split(/\s*\/\s*/).filter(Boolean);
+      if (fields.length > 1 && fields.length === values.length && fields.every((f, i) => fieldHas(f, values[i]))) return null;
+    }
+    return `catalog citation invalid (${a.catalogField || 'no field'})`;
+  };
   const viaText = () => {
     if (a.passageId && a.sourceId) return 'cites both a passage and a source';
-    if (a.passageId) { const p = input.authoritative.find(x => x.passageId === a.passageId); return !p ? `unknown passageId ${a.passageId}` : (contains(p.excerpt, a.quote) ? null : 'quote not found in passage'); }
-    if (a.sourceId) { const s = input.sources.find(x => x.sourceId === a.sourceId); if (!s) return `unknown sourceId ${a.sourceId}`; if (s.status !== 'fetched') return `source ${a.sourceId} is ${s.status}`; return contains(s.digest, a.quote) ? null : 'quote not found in source digest'; }
+    if (a.passageId) { const p = input.authoritative.find(x => x.passageId === a.passageId); return !p ? `unknown passageId ${a.passageId}` : (contains(p.excerpt, a.quote, controller) ? null : 'quote not found in passage'); }
+    if (a.sourceId) { const s = input.sources.find(x => x.sourceId === a.sourceId); if (!s) return `unknown sourceId ${a.sourceId}`; if (s.status !== 'fetched') return `source ${a.sourceId} is ${s.status}`; return contains(s.digest, a.quote, controller) ? null : 'quote not found in source digest'; }
     return 'no passageId or sourceId';
   };
   if (a.class === 'catalog-supported') return viaCatalog();
@@ -245,7 +258,7 @@ export function checkCitation(a, input) {
   return null;
 }
 
-export function controlAudit(output, input) {
+export function controlAudit(output, input, { controller = 1 } = {}) {
   const errors = [], ids = input.components.map(c => c.componentId), seen = new Map();
   for (const c of output?.components || []) {
     if (!ids.includes(c.componentId)) { errors.push(`unknown component ${c.componentId}`); continue; }
@@ -256,7 +269,7 @@ export function controlAudit(output, input) {
     const c = seen.get(id);
     if (!c) return { componentId: id, verdict: 'hold', modelVerdict: null, reason: 'missing from audit output (incomplete coverage)', assertions: [] };
     const assertions = (c.assertions || []).map(a => {
-      const citationError = CLASSES.includes(a.class) ? checkCitation(a, input) : `bad class ${a.class}`;
+      const citationError = CLASSES.includes(a.class) ? checkCitation(a, input, controller) : `bad class ${a.class}`;
       const obsError = a.observationId && !input.observations.some(o => o.observationId === a.observationId) ? `unknown observationId ${a.observationId}` : null;
       return { ...a, modelClass: a.class, class: citationError ? 'unsupported' : a.class, citationError, obsError, quoteVerified: !!(a.quote || a.catalogValue) && !citationError };
     });
@@ -264,7 +277,7 @@ export function controlAudit(output, input) {
     const verdict = assertions.length === 0 ? 'hold' : (cls.has('contradicted') || cls.has('unsupported')) ? 'hold' : cls.has('visual-only') ? 'needs-visual-check' : 'text-covered';
     return { componentId: id, verdict, modelVerdict: c.verdict, verdictDisagreement: c.verdict !== verdict, reason: assertions.length === 0 ? 'no assertions extracted' : null, assertions };
   });
-  return { errors, components };
+  return controller >= 2 ? { controller, errors, components } : { errors, components }; // v1 shape is frozen evidence
 }
 
 export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
@@ -376,11 +389,32 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
 }
 
 // ---------- offline scoring ----------
-export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed }) {
+const FLAGGED = new Set(['unsupported', 'contradicted']);
+// Error-level detection for a known failure (never just "component held"). errorTarget.pattern finds the
+// assertion(s) stating the specific error; it is a scoring aid for known cases, not a general identity policy.
+//   identified        a target stated as fact/presupposition is unsupported or contradicted
+//   partial-ambiguous only a target interpretation/comparison is flagged (may be flagged for its interpretation)
+//   routed-to-visual  target extracted but sent to the image check
+//   accepted          target extracted and classed as supported
+//   not-extracted     no extracted assertion states the error
+export function errorDetection(component, target) {
+  const re = new RegExp(target.pattern, 'i');
+  const hits = (component?.assertions || []).filter(a => re.test(a.text));
+  const flagged = hits.filter(a => FLAGGED.has(a.class));
+  const level = !hits.length ? 'not-extracted'
+    : flagged.some(a => a.form === 'statement' || a.form === 'presupposition') ? 'identified'
+    : flagged.length ? 'partial-ambiguous'
+    : hits.some(a => a.class === 'visual-only') ? 'routed-to-visual' : 'accepted';
+  return { level, contradicted: flagged.some(a => a.class === 'contradicted'), targets: hits.map(a => `${a.form}/${a.class}: ${a.text}`) };
+}
+
+export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, controller = 1 }) {
   const rows = [], works = [];
   for (const plan of plans) {
     const h = auditHistory(outDir, plan, runId);
-    const d = h?.derived, byId = new Map((d?.audit?.components || []).map(c => [c.componentId, c]));
+    const d = h?.derived;
+    const audit = d?.output && controller !== 1 ? controlAudit(d.output, plan.input, { controller }) : d?.audit;
+    const byId = new Map((audit?.components || []).map(c => [c.componentId, c]));
     const usage = d?.evidence?.usage || null;
     works.push({ workId: plan.workId, outcome: h ? h.kind : 'not-run', errors: d?.errors || [], durationMs: h?.meta?.durationMs ?? null,
       inputTokens: usage ? (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0) : null, outputTokens: usage?.output_tokens ?? null,
@@ -395,6 +429,8 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed })
         holdReasons: (a?.assertions || []).filter(x => x.class === 'unsupported' || x.class === 'contradicted').map(x => `${x.class}${x.citationError ? ` (${x.citationError})` : ''}: ${x.text}`),
         controllerHolds: plan.controllerHolds[c.componentId] || [], sealedHold: sealed(plan.workId).length > 0,
         label: k ? { kind: 'known', expected: k.expected, class: k.class } : o?.label ? { kind: 'owner', expected: o.label } : null,
+        errorDetection: k?.errorTarget && a ? { error: k.errorTarget.error, ...errorDetection(a, k.errorTarget), availableEvidence: k.errorTarget.availableEvidence || null } : null,
+        citationDowngrades: (a?.assertions || []).filter(x => x.citationError).map(x => `${x.citationError}: ${x.text}`),
       });
     }
   }
@@ -402,9 +438,16 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed })
   const count = (f) => scored.filter(f).length;
   const summary = {
     verdicts: Object.fromEntries(VERDICTS.map(v => [v, rows.filter(r => r.auditor === v).length])),
-    knownHolds: { total: count(r => r.label.expected === 'hold'), caughtByAuditor: count(r => r.label.expected === 'hold' && r.auditor === 'hold'),
-      missedByAuditor: scored.filter(r => r.label.expected === 'hold' && r.auditor !== 'hold').map(r => `${r.workId} ${r.componentId} -> ${r.auditor}${r.controllerHolds.length ? ' (controller would hold)' : ''}`) },
-    notThisErrorControls: scored.filter(r => r.label.expected === 'not-this-error').map(r => ({ componentId: r.componentId, auditor: r.auditor, holdReasons: r.holdReasons, reviewNote: 'passes unless a hold reason is the human-as-animal aliasing' })),
+    knownErrors: (() => {
+      const ks = scored.filter(r => r.label.expected === 'hold');
+      const by = lvl => ks.filter(r => r.errorDetection?.level === lvl).length;
+      return { total: ks.length, componentHeld: ks.filter(r => r.auditor === 'hold').length,
+        errorIdentified: by('identified'), partialOrAmbiguous: by('partial-ambiguous'), routedToVisual: by('routed-to-visual'), accepted: by('accepted'), notExtracted: by('not-extracted'),
+        items: ks.map(r => ({ workId: r.workId, componentId: r.componentId, componentVerdict: r.auditor, ...r.errorDetection })) };
+    })(),
+    notThisErrorControls: scored.filter(r => r.label.expected === 'not-this-error').map(r => ({ componentId: r.componentId, auditor: r.auditor,
+      pass: !(r.errorDetection?.targets || []).some(t => /\/(unsupported|contradicted):/.test(t)), targets: r.errorDetection?.targets || [], holdReasons: r.holdReasons })),
+    citationDowngrades: rows.reduce((n, r) => n + r.citationDowngrades.length, 0),
     ownerSupported: { total: count(r => r.label.expected === 'supported'), textCovered: count(r => r.label.expected === 'supported' && r.auditor === 'text-covered'),
       needsVisualCheck: count(r => r.label.expected === 'supported' && r.auditor === 'needs-visual-check'),
       held: scored.filter(r => r.label.expected === 'supported' && r.auditor === 'hold').map(r => ({ workId: r.workId, componentId: r.componentId, holdReasons: r.holdReasons })) },
@@ -412,7 +455,7 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed })
     unscoredUnsure: rows.filter(r => r.label?.expected === 'unsure').length, unlabeled: rows.filter(r => !r.label).length,
     caveat: 'Known holds are regression challenges concentrated in two works, not a recall estimate. Owner labels are few; counts, not rates. Quote verification proves the words exist; support is still the model judgment under test.',
   };
-  return { version: 'passBShadowAuditReport/1', runId, works, summary, rows };
+  return { version: controller === 1 ? 'passBShadowAuditReport/1' : 'passBShadowAuditReport/2', controller, runId, works, summary, rows };
 }
 
 function loadPlans() { return AUDIT_WORKS.map(spec => planAudit(spec)); }
@@ -426,9 +469,12 @@ async function main() {
     const boundPath = join(RUN_ROOT, 'audit-eval-v1', 'owner-labels.bound.json');
     const ownerLabels = existsSync(boundPath) ? readJson(boundPath).rows : [];
     const findings = loadCanonicalFindings();
-    const report = scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: id => findingsForWork(findings, id) });
-    writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
-    console.log(JSON.stringify({ works: report.works, summary: report.summary }, null, 1));
+    const sealedOf = id => findingsForWork(findings, id);
+    // The original report.json is preserved as written by the run; the corrected report is a separate derived file.
+    if (!existsSync(join(outDir, 'report.json'))) writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf, controller: 1 }), null, 1)}\n`, { mode: 0o600 });
+    const report = scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf, controller: 2 });
+    writeFileSync(join(outDir, 'report.v2.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
+    console.log(JSON.stringify({ controller: report.controller, works: report.works, summary: report.summary }, null, 1));
     return;
   }
   const clock = pacificClock();

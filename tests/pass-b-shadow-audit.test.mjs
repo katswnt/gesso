@@ -8,7 +8,7 @@ import { sha256, stableJson } from '../scripts/lib/vision-legacy.mjs';
 import { CALIBRATION_MODEL, RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import {
   AUDIT_VERSION, AUDIT_WORKS, MAX_RESERVATIONS, controlAudit, deriveAuditAttempt, runAudit, auditHistory, countReservations,
-  startGate, scoreAudit, planAudit, auditBinding, auditRunId,
+  startGate, scoreAudit, planAudit, auditBinding, auditRunId, errorDetection,
 } from '../scripts/pass-b-shadow-audit.mjs';
 
 let n = 0; const check = async (name, fn) => { try { await fn(); n++; } catch (e) { console.error(`FAIL ${name}`); throw e; } };
@@ -72,6 +72,29 @@ await check('missing, unknown, duplicate and empty components', () => {
 await check('unknown observationId is recorded, not trusted', () => {
   const r = controlAudit(out([{ componentId: 'why', verdict: 'needs-visual-check', assertions: [A('visual-only', { visualCheck: 'x', observationId: 'o9' })] }]), input);
   assert.match(r.components[0].assertions[0].obsError, /unknown observationId/);
+});
+
+await check('controller 2 ignores markdown formatting and checks multi-field catalog citations; v1 unchanged', () => {
+  const md = { ...input, catalog: { artist: 'Albrecht Dürer', medium: 'Engraving' }, sources: [{ sourceId: 's1', url: 'a', status: 'fetched', digest: '# Facts **Date:** c. 1497 **Artist:** Albrecht Dürer' }] };
+  const o = out([{ componentId: 'why', verdict: 'text-covered', assertions: [A('source-supported', { sourceId: 's1', quote: 'Date: c. 1497' }), A('catalog-supported', { catalogField: 'artist / medium', catalogValue: 'Albrecht Dürer / Engraving' })] }]);
+  const v1 = controlAudit(o, md), v2 = controlAudit(o, md, { controller: 2 });
+  assert.equal(v1.controller, undefined); // stored v1 results keep their exact shape
+  assert.ok(v1.components[0].assertions.every(a => a.class === 'unsupported'));
+  assert.ok(v2.components[0].assertions.every(a => !a.citationError)); assert.equal(v2.controller, 2);
+  const bad = out([{ componentId: 'why', verdict: 'text-covered', assertions: [
+    A('source-supported', { sourceId: 's1', quote: 'Date: c. 1497 … Dürer' }), A('source-supported', { sourceId: 's1', quote: 'dated around 1497' }),
+    A('catalog-supported', { catalogField: 'artist / medium', catalogValue: 'Albrecht Dürer / Woodcut' }), A('catalog-supported', { catalogField: 'artist / medium', catalogValue: 'Albrecht Dürer' })] }]);
+  assert.ok(controlAudit(bad, md, { controller: 2 }).components[0].assertions.every(a => a.class === 'unsupported')); // elision, paraphrase, wrong value, count mismatch
+});
+await check('error-level detection distinguishes identified, partial, routed, accepted, not extracted', () => {
+  const t = { pattern: '\\bwings?\\b.*\\bglory\\b' };
+  const c = as => ({ assertions: as });
+  assert.equal(errorDetection(c([A('unsupported', { form: 'statement', text: 'Wings spread behind Glory' })]), t).level, 'identified');
+  assert.equal(errorDetection(c([A('contradicted', { form: 'presupposition', text: 'wings belong to Glory' })]), t).contradicted, true);
+  assert.equal(errorDetection(c([A('unsupported', { form: 'interpretation', text: 'The wings mark Glory as divine' })]), t).level, 'partial-ambiguous');
+  assert.equal(errorDetection(c([A('visual-only', { text: 'Wings behind Glory' }), A('unsupported', { text: 'Unrelated claim' })]), t).level, 'routed-to-visual');
+  assert.equal(errorDetection(c([A('source-supported', { text: 'Wings behind Glory' })]), t).level, 'accepted');
+  assert.equal(errorDetection(c([A('unsupported', { text: 'Wings signal divinity' })]), t).level, 'not-extracted');
 });
 
 // ---- call provenance ----
@@ -175,12 +198,27 @@ await check('scoring separates auditor verdicts from controller and sealed holds
   const dir = tmp(), plans = mkPlans(1);
   await runAudit({ plans, outDir: dir, runId: 'sa-t', binding: {}, callFn: good, now: inWindow });
   const rep = scoreAudit({ plans, outDir: dir, runId: 'sa-t', sealed: () => [{ findingId: 'cb' }],
-    known: [{ workId: 'w0', componentId: 'note:n1', expected: 'hold' }], ownerLabels: [{ workId: 'w0', componentId: 'why', label: 'unsure' }] });
-  assert.equal(rep.summary.knownHolds.caughtByAuditor, 1); assert.equal(rep.summary.unscoredUnsure, 1);
+    known: [{ workId: 'w0', componentId: 'note:n1', expected: 'hold', errorTarget: { pattern: 'zzz', error: 'e' } }], ownerLabels: [{ workId: 'w0', componentId: 'why', label: 'unsure' }] });
+  // held component, but the specific error was never extracted: not counted as identified
+  assert.equal(rep.summary.knownErrors.componentHeld, 1); assert.equal(rep.summary.knownErrors.errorIdentified, 0); assert.equal(rep.summary.knownErrors.notExtracted, 1);
+  assert.equal(rep.summary.unscoredUnsure, 1);
   assert.deepEqual(rep.summary.verdicts, { hold: 1, 'needs-visual-check': 0, 'text-covered': 1 });
   const row = rep.rows.find(r => r.componentId === 'note:n1');
   assert.deepEqual(row.controllerHolds, ['open-claim: z']); assert.equal(row.sealedHold, true);
   assert.equal(rep.works[0].outputTokens, 10);
+  rmSync(dir, { recursive: true });
+});
+
+await check('the corrected report re-derives with controller 2; the stored v1 audit is untouched', async () => {
+  const dir = tmp();
+  const mdInput = { ...input, sources: [{ sourceId: 's1', url: 'a', status: 'fetched', digest: '**Date:** c. 1497' }] };
+  const p = [{ ...plan, workId: 'w0', input: mdInput }].map(x => ({ ...x, inputSha256: sha256(stableJson(x.input)) }));
+  const o = out([{ componentId: 'why', verdict: 'text-covered', assertions: [A('source-supported', { sourceId: 's1', quote: 'Date: c. 1497' })] }, { componentId: 'note:n1', verdict: 'hold', assertions: [A('unsupported')] }]);
+  await runAudit({ plans: p, outDir: dir, runId: 'sa-t', binding: {}, callFn: async () => ({ transcript: transcript(o), exitCode: 0 }), now: inWindow });
+  const args = { plans: p, outDir: dir, runId: 'sa-t', known: [], ownerLabels: [], sealed: () => [] };
+  assert.equal(scoreAudit({ ...args, controller: 1 }).rows[0].auditor, 'hold');
+  assert.equal(scoreAudit({ ...args, controller: 2 }).rows[0].auditor, 'text-covered');
+  assert.equal(auditHistory(dir, p[0], 'sa-t').kind, 'accepted'); // stored evidence still verifies under v1
   rmSync(dir, { recursive: true });
 });
 

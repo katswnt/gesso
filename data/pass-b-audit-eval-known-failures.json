@@ -1,14 +1,86 @@
 {
-  "version": "passBAuditEvalKnownFailures/1",
+  "version": "passBAuditEvalKnownFailures/2",
   "note": "Component-level ground truth for the auto-audit evaluation package. Ids refer to the VSD-040 canary /6 run b4s-06e99464c52b (quarantined, gitignored). Labels come from the sealed content-blocked findings and La Gloire's Musée Carnavalet source record, not from model judgment. 'hold' = must never publish as written. 'publish-ok' entries are deliberate over-holding controls.",
   "sourceRun": "b4s-06e99464c52b",
   "items": [
-    { "workId": "wikidata:Q16467705", "componentId": "note:n_3d96cd2b42", "expected": "hold", "class": "unsupported identity-bearing iconography", "why": "Asserts wings behind Glory; B1 inventory does not show wings and the Carnavalet record does not mention them (the work's own open claim says so)." },
-    { "workId": "wikidata:Q16467705", "componentId": "note:n_6005a1f61c", "expected": "hold", "class": "unsupported identity-bearing iconography", "why": "Describes 'a draped winged woman'; same unsupported wings." },
-    { "workId": "wikidata:Q16467705", "componentId": "guide:q_5c5598faa0", "expected": "hold", "class": "presupposition in a guide question", "why": "'Why give Glory wings…' presupposes the unsupported wings." },
-    { "workId": "wikidata:Q16467705", "componentId": "note:n_c3ac388dd4", "expected": "hold", "class": "figure-role / pose contradiction", "why": "Describes the writer striding forward; the Carnavalet record says sommeil (asleep) in the coffin." },
-    { "workId": "wikidata:Q1211814", "componentId": "note:n_e61c5276e7", "expected": "hold", "class": "entity aliasing (human read as animal)", "why": "Sealed finding cb-d4c407b953ac: the lower-left figure is the crawling penitent, not a crouching animal/lion." },
-    { "workId": "wikidata:Q1211814", "componentId": "hotspot:h_fde3df1d24", "expected": "hold", "class": "entity aliasing (human read as animal)", "why": "Same aliasing as a hotspot: 'The crouching animal — possibly a lion'." },
-    { "workId": "wikidata:Q1211814", "componentId": "guide:q_960eec604c", "expected": "not-this-error", "class": "over-holding control", "why": "Retells the legend ('crawls like a beast'), a figurative description of the penitent, not the aliasing error. Only that point is labeled; the rest of the answer is unreviewed, so an audit must not hold it FOR aliasing." }
-  ]
+    {
+      "workId": "wikidata:Q16467705",
+      "componentId": "note:n_3d96cd2b42",
+      "expected": "hold",
+      "class": "unsupported identity-bearing iconography",
+      "why": "Asserts wings behind Glory; B1 inventory does not show wings and the Carnavalet record does not mention them (the work's own open claim says so).",
+      "errorTarget": {
+        "pattern": "\\bwings?\\b.*\\b(glory|her|female figure|woman)\\b|\\b(glory|her|female figure|woman)\\b.*\\bwings?\\b",
+        "error": "Glory has wings"
+      }
+    },
+    {
+      "workId": "wikidata:Q16467705",
+      "componentId": "note:n_6005a1f61c",
+      "expected": "hold",
+      "class": "unsupported identity-bearing iconography",
+      "why": "Describes 'a draped winged woman'; same unsupported wings.",
+      "errorTarget": {
+        "pattern": "\\bwinged woman\\b",
+        "error": "the woman is winged"
+      }
+    },
+    {
+      "workId": "wikidata:Q16467705",
+      "componentId": "guide:q_5c5598faa0",
+      "expected": "hold",
+      "class": "presupposition in a guide question",
+      "why": "'Why give Glory wings…' presupposes the unsupported wings.",
+      "errorTarget": {
+        "pattern": "\\bglory\\b.*\\bwing|\\bwing.*\\bglory\\b|\\b(this|the) (figure|woman)\\b.*\\bwing",
+        "error": "presupposition: Glory has wings"
+      }
+    },
+    {
+      "workId": "wikidata:Q16467705",
+      "componentId": "note:n_c3ac388dd4",
+      "expected": "hold",
+      "class": "figure-role / pose contradiction",
+      "why": "Describes the writer striding forward; the Carnavalet record says sommeil (asleep) in the coffin.",
+      "errorTarget": {
+        "pattern": "\\bstrid|\\bforward\\b",
+        "error": "the writer strides forward",
+        "availableEvidence": "Carnavalet passage span-carnavalet-iconography: \"sommeil\" (asleep)"
+      }
+    },
+    {
+      "workId": "wikidata:Q1211814",
+      "componentId": "note:n_e61c5276e7",
+      "expected": "hold",
+      "class": "entity aliasing (human read as animal)",
+      "why": "Sealed finding cb-d4c407b953ac: the lower-left figure is the crawling penitent, not a crouching animal/lion.",
+      "errorTarget": {
+        "pattern": "crouching animal|\\banimal\\b.*lower left|possibly a lion|\\blion\\b.*(rests|lower left|corner)",
+        "error": "the lower-left figure is an animal/lion"
+      }
+    },
+    {
+      "workId": "wikidata:Q1211814",
+      "componentId": "hotspot:h_fde3df1d24",
+      "expected": "hold",
+      "class": "entity aliasing (human read as animal)",
+      "why": "Same aliasing as a hotspot: 'The crouching animal — possibly a lion'.",
+      "errorTarget": {
+        "pattern": "crouching animal|\\banimal\\b.*lower left|possibly a lion|\\blion\\b.*(rests|lower left|corner)",
+        "error": "the lower-left figure is an animal/lion"
+      }
+    },
+    {
+      "workId": "wikidata:Q1211814",
+      "componentId": "guide:q_960eec604c",
+      "expected": "not-this-error",
+      "class": "over-holding control",
+      "why": "Retells the legend ('crawls like a beast'), a figurative description of the penitent, not the aliasing error. Only that point is labeled; the rest of the answer is unreviewed, so an audit must not hold it FOR aliasing.",
+      "errorTarget": {
+        "pattern": "\\b(animal|lion)\\b",
+        "error": "human-as-animal aliasing (must NOT be the hold reason)"
+      }
+    }
+  ],
+  "errorTargetNote": "errorTarget is a SCORING aid only: a narrow case-insensitive pattern that finds the extracted assertion(s) stating this specific error in an audit output. It can recognize these known cases; it cannot enforce a general identity policy over arbitrary prose, and it is never a publication gate. 'availableEvidence' names evidence that was supplied to the auditor and should have been used."
 }
