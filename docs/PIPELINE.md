@@ -615,6 +615,7 @@ node scripts/pass-b-shadow-audit.mjs --report        # offline scoring -> <run>/
 node scripts/pass-b-audit-evidence.mjs               # snapshot cited pages + select passages -> audit-evidence-v1/
 node scripts/pass-b-shadow-audit.mjs --demo-compact  # offline: preserved v1 outputs re-expressed in the v2 form
 node scripts/pass-b-shadow-audit.mjs --variant 2     # candidate v2 plan (VSD-051); --run/--report as above with --variant 2
+node scripts/pass-b-shadow-audit.mjs --variant 3     # judgment-only pairs (VSD-052): ONE call; --run/--report with --variant 3
 ```
 
 - Output goes to `data/incoming/vision-calibration/sa-<hash>/` (quarantined, gitignored). It holds a manifest, the

@@ -60,6 +60,23 @@ export function extractText(html) {
   return t.split('\n').map(l => l.replace(/[ \t\r\f\v]+/g, ' ').trim()).filter(l => l.length >= 3).join('\n').normalize('NFC');
 }
 
+// passBSourceText/2: /1 replaced every tag with a space, which left spaces before punctuation and inside quotes
+// ("British Museum , where", "\" Theses on ... History \""), so correct verbatim quotes failed to match. /2 is /1 plus
+// that repair, re-derived from the preserved raw bytes. /1 files and the evidence built from them are unchanged.
+export const EXTRACTION_VERSION_2 = 'passBSourceText/2';
+export function extractTextV2(html) {
+  return extractText(html).split('\n').map(l => l
+    .replace(/\s+([,.;:!?)\]}»”’])/g, '$1').replace(/([(\[{«“‘])\s+/g, '$1')
+    .replace(/"\s+([^"]*?)\s+"/g, '"$1"')).join('\n');
+}
+export function snapshotTextV2(key, snapDir = SNAP) {
+  const meta = JSON.parse(readFileSync(join(snapDir, `${key}.meta.json`), 'utf8'));
+  const raw = readFileSync(join(snapDir, `${key}.raw`));
+  if (sha256(raw) !== meta.rawSha256) throw new Error(`${meta.url}: raw snapshot changed`);
+  const text = extractTextV2(raw.toString('utf8'));
+  return { url: meta.url, rawSha256: meta.rawSha256, extraction: EXTRACTION_VERSION_2, text, textSha256: sha256(text) };
+}
+
 // ---- deterministic passage selection ----
 const STOP = new Set('the and for with that this from into over under than then there their they them these those have has had was were been being are its not but also only such which what when where while whether would could should about after before between both each more most other some very much many into upon onto your you his her him she he who whom whose one two three work works image figure figures piece here just like made make makes shows show seen see looks look'.split(' '));
 const words = t => new Set((String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').match(/[a-z][a-z'-]{3,}/g) || []).map(w => w.replace(/'s$/, '').replace(/s$/, '')).filter(w => !STOP.has(w)));

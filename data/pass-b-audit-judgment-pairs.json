@@ -1,0 +1,68 @@
+{
+  "version": "passBAuditJudgmentPairs/1",
+  "note": "Claim-and-evidence judgment cases drawn from the VSD-050/051 shadow-audit failures (Codex 2026-09-29). Each pair tests ONE judgment with the relevant passage beside the claim, separating 'can it judge evidence' from 'can it find every assertion'. Evidence is located by exact anchors in preserved snapshot text (passBSourceText/2) or a preserved authoritative span; the builder extracts the passage and hashes it. 'accept' lists the verdicts scored correct; 'mustNot' names the specific wrong verdict each case targets. Expected verdicts judge only what the supplied passage states, not what is true of the artwork.",
+  "pairs": [
+    {
+      "id": "J1", "workId": "wikidata:Q16467705", "case": "sleeping vs striding (contradiction must be used)",
+      "claim": "The writer strides forward, his weight shifted and his head thrown back.",
+      "evidence": [{ "ref": "E1", "authoritative": "cr2-af3d6ed79c1c/owner-review/lagloire-authoritative-spans.json#span-carnavalet-iconography" }],
+      "accept": ["contradicted"], "mustNot": "unsupported or supported",
+      "basis": "The holding museum's iconographic record lists Villiers with 'sommeil' (sleep); a sleeping figure is not striding."
+    },
+    {
+      "id": "J2", "workId": "wikidata:Q16467705", "case": "unstated spatial relationship ('Glory above')",
+      "claim": "Glory, positioned above him, pulls the writer up out of his coffin.",
+      "evidence": [
+        { "ref": "E1", "authoritative": "cr2-af3d6ed79c1c/owner-review/lagloire-authoritative-spans.json#span-carnavalet-iconography" },
+        { "ref": "E2", "url": "https://en.wikipedia.org/wiki/Glory_Pulling_Auguste_de_Villiers_de_l%27Isle_Adam_From_His_Eternal_Sleep", "start": "A sculpture was presented to the Salon", "end": "de l'Isle Adam's coffin." }
+      ],
+      "accept": ["unsupported"], "mustNot": "supported",
+      "basis": "Neither passage states where Glory is relative to the writer; a valid quotation about the coffin does not support the position."
+    },
+    {
+      "id": "J3", "workId": "wikidata:Q1211814", "case": "animal identity for a figure (lion)",
+      "claim": "The large crouching animal in the lower left foreground is a lion.",
+      "evidence": [{ "ref": "E1", "url": "https://www.clevelandart.org/art/1934.339", "start": "In the late Middle Ages an unusual legend", "end": "virtuous triumph over sin." }],
+      "accept": ["unsupported"], "mustNot": "supported",
+      "basis": "The museum description mentions no lion; it says John 'crawled like a beast', which does not identify any figure as an animal."
+    },
+    {
+      "id": "J4", "workId": "wikidata:Q16467705", "case": "iconography by silence (wings)",
+      "claim": "Glory has wings.",
+      "evidence": [{ "ref": "E1", "authoritative": "cr2-af3d6ed79c1c/owner-review/lagloire-authoritative-spans.json#span-carnavalet-iconography" }],
+      "accept": ["unsupported"], "mustNot": "supported",
+      "basis": "The record describes Glory as 'femme, nu, drapé' and is silent on wings. Silence is not support; it is also not an explicit contradiction."
+    },
+    {
+      "id": "J5", "workId": "wikidata:Q16467705", "case": "indirect, attributed evidence (critic's remark about wings)",
+      "claim": "Glory has wings.",
+      "evidence": [{ "ref": "E1", "url": "https://en.wikipedia.org/wiki/Glory_Pulling_Auguste_de_Villiers_de_l%27Isle_Adam_From_His_Eternal_Sleep", "start": "He stood up a real coffin", "end": "still had wings on her back!\"" }],
+      "accept": ["contradicted", "unsupported"], "mustNot": "supported",
+      "basis": "A critic's quip about the exhibited full-size version implies the figure lacks wings; the implication is indirect and attributed, so contradicted or unsupported are both acceptable; supported is wrong."
+    },
+    {
+      "id": "J6", "workId": "wikidata:Q5315707", "case": "directly supported identity (livery badge)",
+      "claim": "The jewel is a livery badge.",
+      "evidence": [{ "ref": "E1", "url": "https://en.wikipedia.org/wiki/Dunstable_Swan_Jewel", "start": "The jewel is a unique survival of the most expensive form of livery badge", "end": "representations in paintings." }],
+      "accept": ["supported"], "mustNot": "unsupported",
+      "basis": "The passage states it directly."
+    },
+    {
+      "id": "J7", "workId": "wikidata:Q537640", "case": "compatible statements must not be called a contradiction",
+      "claim": "Benjamin died in 1940 while trying to escape across the Pyrenees.",
+      "evidence": [{ "ref": "E1", "url": "https://en.wikipedia.org/wiki/Angelus_Novus", "start": "Before he tried to flee further", "end": "deported back to France." }],
+      "accept": ["unsupported"], "mustNot": "contradicted",
+      "basis": "Dying in Spain after trying to flee is compatible with crossing the Pyrenees, but the passage does not mention the Pyrenees or the crossing."
+    },
+    {
+      "id": "J8", "workId": "wikidata:Q537640", "case": "directly supported interpretation attributed to a named author",
+      "claim": "In a 1940 essay, Benjamin described this work as the angel of history.",
+      "evidence": [{ "ref": "E1", "url": "https://en.wikipedia.org/wiki/Angelus_Novus", "start": "In his 1940 essay", "end": "\"angel of history\":" }],
+      "accept": ["supported"], "mustNot": "unsupported",
+      "basis": "The passage states it directly."
+    }
+  ],
+  "pendingOwnerAdjudication": [
+    { "workId": "wikidata:Q5315707", "componentId": "note:n_567e0138fd", "question": "The copy calls the jewel a 'pendant badge'; the Wikipedia page calls it a 'brooch' (with a chain). Is 'pendant' an error to fix, or acceptable?" }
+  ]
+}

@@ -23,6 +23,8 @@ import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-fin
 import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
+import { JUDGMENT_VERSION, JUDGMENT_UNIT, JUDGMENT_PROMPT, JUDGMENT_WIRE_SCHEMA, buildJudgmentInput, authoritativeResolver, controlJudgment, scoreJudgment } from './lib/pass-b-audit-judgment.mjs';
+import { snapshotTextV2 } from './pass-b-audit-evidence.mjs';
 import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
 
 export const AUDIT_VERSION = 'passBShadowAudit/1';
@@ -216,7 +218,26 @@ export const loadEvidence = (file = EVIDENCE_FILE) => {
   return e;
 };
 
+// Variant 3: judgment-only pairs (data/pass-b-audit-judgment-pairs.json), ONE call, evidence beside each claim.
+const PAIRS_FILE = 'data/pass-b-audit-judgment-pairs.json';
+export const JUDGMENT_MAX_RESERVATIONS = 1;
+export function planJudgment({ specFile = PAIRS_FILE, root = CAL } = {}) {
+  const specText = readFileSync(specFile, 'utf8'), spec = JSON.parse(specText);
+  const keyOf = url => sha256(url).slice(0, 24);
+  const { input, provenance } = buildJudgmentInput(spec, { snapshotText: url => snapshotTextV2(keyOf(url), join(root, 'audit-evidence-v1', 'snapshots')), authoritative: authoritativeResolver(root) });
+  const promptText = `${JUDGMENT_PROMPT}\n\nINPUTS:\n${JSON.stringify(input)}`;
+  return { spec: { name: 'Judgment pairs', role: `${spec.pairs.length} claim-evidence pairs` }, pairSpec: spec, variant: 3, workId: JUDGMENT_UNIT, input,
+    binding: { pairsSpecSha256: sha256(specText), provenance }, controllerHolds: {},
+    inputSha256: sha256(stableJson(input)), promptHash: sha256(promptText), command: buildStageCommand({ stage: 'B4', promptText, wireSchema: JUDGMENT_WIRE_SCHEMA }) };
+}
+
 export function auditBinding(variant = 1, evidence = null) {
+  if (variant === 3) {
+    const command = buildStageCommand({ stage: 'B4', promptText: '<pairs>', wireSchema: JUDGMENT_WIRE_SCHEMA });
+    return { version: JUDGMENT_VERSION, model: CALIBRATION_MODEL, promptSha256: sha256(JUDGMENT_PROMPT), wireSchemaSha256: command.wireSchemaSha256,
+      toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: JUDGMENT_MAX_RESERVATIONS,
+      works: [JUDGMENT_UNIT], pairsSpecSha256: sha256(readFileSync(PAIRS_FILE, 'utf8')) };
+  }
   if (variant === 2) {
     const command = buildStageCommand({ stage: 'B4', promptText: '<per-work>', wireSchema: AUDIT_V2_WIRE_SCHEMA });
     return { version: AUDIT_V2_VERSION, model: CALIBRATION_MODEL, promptSha256: sha256(AUDIT_V2_PROMPT), wireSchemaSha256: command.wireSchemaSha256,
@@ -309,7 +330,13 @@ export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
   const { execution, final, errors } = call;
   let kind = call.kind, audit = null;
   const output = final?.structured_output ?? null;
-  if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 2) {
+  if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 3) {
+    if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
+    if (output?.v !== JUDGMENT_VERSION) errors.push(`judgment-version:${output?.v || 'missing'}`);
+    if (output && Array.isArray(output.j)) { audit = controlJudgment(output, plan.input); errors.push(...audit.errors); }
+    else errors.push('no-structured-output');
+    kind = errors.length ? 'held' : 'accepted';
+  } else if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 2) {
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (output?.v !== AUDIT_V2_VERSION) errors.push(`audit-version:${output?.v || 'missing'}`);
     if (output && Array.isArray(output.segs)) { audit = controlAuditV2(output, plan.input); errors.push(...audit.errors); }
@@ -394,7 +421,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
   for (const plan of plans) {
     if (stop) break;
     if (auditHistory(outDir, plan, runId)) { tally.skipped++; continue; } // one attempt per work, whatever its outcome
-    if (countReservations(outDir) >= MAX_RESERVATIONS) { stop = 'reservation-cap'; break; }
+    if (countReservations(outDir) >= (binding?.maxReservations ?? MAX_RESERVATIONS)) { stop = 'reservation-cap'; break; }
     let gate;
     try { gate = startGate(now(), exception); } catch (e) { stop = 'protected-hours'; break; }
     const dir = join(outDir, 'works', safeWork(plan.workId));
@@ -493,7 +520,8 @@ export function scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed, c
   return { version: controller === 1 ? 'passBShadowAuditReport/1' : 'passBShadowAuditReport/2', controller, runId, works, summary, rows };
 }
 
-function loadPlans(variant = 1) { const ev = variant === 2 ? loadEvidence() : null; return AUDIT_WORKS.map(spec => planAudit(spec, undefined, variant, ev)); }
+function loadPlans(variant = 1) { if (variant === 3) return [planJudgment()]; return loadPlansAudit(variant); }
+function loadPlansAudit(variant) { const ev = variant === 2 ? loadEvidence() : null; return AUDIT_WORKS.map(spec => planAudit(spec, undefined, variant, ev)); }
 
 // Offline demo (no calls): re-express the preserved v1 outputs in the compact v2 form and compare sizes. Kinds are
 // placeholders; thinking tokens are not modelled. Token figures are estimates from the observed v1 chars/token.
@@ -515,7 +543,7 @@ async function main() {
   const args = process.argv.slice(2), live = args.includes('--run');
   if (live && process.env.PASS_B_SHADOW_AUDIT_LIVE !== '1') throw new Error('refusing --run: set PASS_B_SHADOW_AUDIT_LIVE=1');
   const variant = args.includes('--variant') ? Number(args[args.indexOf('--variant') + 1]) : 1;
-  if (![1, 2].includes(variant)) throw new Error('--variant must be 1 or 2');
+  if (![1, 2, 3].includes(variant)) throw new Error('--variant must be 1, 2 or 3');
   if (args.includes('--demo-compact')) {
     const b1 = auditBinding(1), r1 = auditRunId(b1);
     const demo = compactDemo({ v1Plans: loadPlans(1), v2Plans: loadPlans(2), outDir: join(RUN_ROOT, r1), runId: r1 });
@@ -531,6 +559,15 @@ async function main() {
     const findings = loadCanonicalFindings();
     const sealedOf = id => findingsForWork(findings, id);
     // The original report.json is preserved as written by the run; the corrected report is a separate derived file.
+    if (variant === 3) {
+      const h = auditHistory(outDir, plans[0], runId), u = h?.derived?.evidence?.usage;
+      const report = { version: 'passBAuditJudgmentReport/1', runId, outcome: h ? h.kind : 'not-run', durationMs: h?.meta?.durationMs ?? null,
+        tokens: u ? { input: (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0), output: u.output_tokens, thinking: u.output_tokens_details?.thinking_tokens ?? null } : null,
+        ...scoreJudgment(plans[0].pairSpec, h?.derived?.audit) };
+      writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
+      console.log(JSON.stringify(report, null, 1));
+      return;
+    }
     if (variant === 2) {
       const report = scoreAudit({ plans, outDir, runId, known, ownerLabels, sealed: sealedOf });
       writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 1)}\n`, { mode: 0o600 });
@@ -544,11 +581,12 @@ async function main() {
     return;
   }
   const clock = pacificClock();
-  console.log(`runId: ${runId} | ${binding.version} | model ${CALIBRATION_MODEL} | tools: ${binding.toolsEnforced} | reservations used ${countReservations(outDir)}/${MAX_RESERVATIONS}`);
+  console.log(`runId: ${runId} | ${binding.version} | model ${CALIBRATION_MODEL} | tools: ${binding.toolsEnforced} | reservations used ${countReservations(outDir)}/${binding.maxReservations}`);
   console.log(`Pacific ${clock.date} | in start window: ${clock.mayStart} | hours exception set for today: ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
   for (const p of plans) {
     const h = existsSync(outDir) ? auditHistory(outDir, p, runId) : null;
     const size = `prompt ${Math.round(p.command.argv[1].length / 1000)}k chars | ${h ? `attempt: ${h.kind}` : 'not run'}`;
+    if (p.variant === 3) { console.log(`- ${p.spec.name}: ${p.input.pairs.length} pairs, ${p.input.pairs.reduce((n, x) => n + x.evidence.length, 0)} evidence passages (${p.input.pairs.reduce((n, x) => n + x.evidence.reduce((m, e) => m + e.text.length, 0), 0)} chars), ${size}`); continue; }
     if (p.variant === 2) { console.log(`- ${p.spec.name} (${p.workId}) segments ${p.input.segments.length} (${p.input.segments.filter(s => s.role === 'question' || s.role === 'heading').length} questions/headings), evidence ${p.input.evidence.length} (${[...new Set(p.input.evidence.map(e => e.type))].join('/')}), unavailable ${p.input.unavailable.length}, observations ${p.input.observations.length}, ${size}`); continue; }
     const src = p.input.sources, fetched = src.filter(s => s.status === 'fetched').length;
     console.log(`- ${p.spec.name} (${p.workId}) [${p.spec.role}] components ${p.input.components.length}, authoritative ${p.input.authoritative.length}, sources ${fetched} fetched / ${src.length} cited, observations ${p.input.observations.length}, ${size}`);
@@ -558,7 +596,7 @@ async function main() {
   const bin = realpathSync(String((await execFileP('/bin/sh', ['-c', 'command -v claude'])).stdout).trim()); // pin this session's binary
   const r = await runAudit({ plans, outDir, runId, binding, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) });
   console.log(`shadow audit: stop=${r.stop} calls=${r.calls} accepted=${r.accepted} held=${r.held} fatal=${r.fatal} usage-limit=${r['usage-limit']} unknown=${r['unknown-outcome']} skipped=${r.skipped}`);
-  console.log(`next: node scripts/pass-b-shadow-audit.mjs${variant === 2 ? ' --variant 2' : ''} --report`);
+  console.log(`next: node scripts/pass-b-shadow-audit.mjs${variant > 1 ? ` --variant ${variant}` : ''} --report`);
   if (r.stop === 'fatal-provenance') process.exitCode = 1;
 }
 
