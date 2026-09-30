@@ -17,7 +17,7 @@ import { stagePrompts } from './lib/pass-b-prompts.mjs';
 import { CORPUS_RUN_DIR, pacificClock } from './pass-b-corpus-collect.mjs';
 import { CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { runAudit, auditHistory, countReservations, preservedFatal, callAuditPinned, loadB2 } from './pass-b-shadow-audit.mjs';
-import { snapshot, snapshotTextV2 } from './pass-b-audit-evidence.mjs';
+import { snapshot, snapshotTextV2, selectPassages } from './pass-b-audit-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
 
 const execFileP = promisify(execFile);
@@ -28,7 +28,7 @@ const loadGlobal = (file, name) => { const w = {}; new Function('window', readFi
 export const TRIAL = { primaryDate: '2026-10-02', fillDate: '2026-10-03', size: 20 };
 // Per-trial model (owner 2026-09-30: Sonnet 5.5 pilot). Bound into every stage binding, so each model gets its own
 // runs; the provenance check requires exactly this model.
-export const OPTS = { model: CALIBRATION_MODEL, size: TRIAL.size };
+export const OPTS = { model: CALIBRATION_MODEL, size: TRIAL.size, identities: false };
 
 // ---------- trial works: B1+B2 captured in the corpus run ----------
 function completion(id, stage) {
@@ -62,6 +62,8 @@ const pageFor = url => { const key = sha256(url).slice(0, 24); return existsSync
 const STAGES = {
   S1: { tag: 'judge-claims', stage: 'B4', prompt: CF.S1.prompt, schema: CF.S1.schema, version: CF.S1.version, control: CF.S1.control },
   S2: { tag: 'confirm-visuals', stage: 'B3', prompt: stagePrompts().B3, schema: null, version: null, control: CF.controlConfirm, image: true, effort: 'low' }, // low effort: pilot 1 spent half its output here
+  SI: { tag: 'identify', stage: 'B4', prompt: CF.IDENT_PROMPT, schema: CF.IDENT_WIRE_SCHEMA, version: CF.IDENT_VERSION, control: CF.controlIdentity },
+  SJ: { tag: 'judge-identities', stage: 'B4', prompt: CF.S1.prompt, schema: CF.S1.schema, version: CF.S1.version, control: CF.S1.control },
   S3: { tag: 'write', stage: 'B4', prompt: CF.WRITE_PROMPT, schema: CF.WRITE_WIRE_SCHEMA, version: CF.WRITE_VERSION, control: CF.controlWrite },
   S4: { tag: 'check', stage: 'B4', prompt: CF.CHECK_PROMPT, schema: CF.CHECK_WIRE_SCHEMA, version: CF.CHECK_VERSION, control: CF.controlCheck },
 };
@@ -70,7 +72,8 @@ export function stageBinding(key, works) {
   const command = buildStageCommand({ stage: st.stage, model: OPTS.model, effort: st.effort || null, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
   // Only stages that changed after pilot 1 get new bindings: S2 (effort), S3 (write /2), S4 (checks /2 output).
   // S1 is unchanged, so its accepted pilot-1 results are reused, not re-called.
-  const changes = { S2: { effort: st.effort }, S3: { write: CF.WRITE_VERSION }, S4: { write: CF.WRITE_VERSION } }[key] || {};
+  const ident = OPTS.identities ? { identities: CF.IDENT_VERSION } : {};
+  const changes = { S2: { effort: st.effort }, SI: ident, SJ: ident, S3: { write: CF.WRITE_VERSION, ...ident }, S4: { write: CF.WRITE_VERSION, ...ident } }[key] || {};
   return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: OPTS.model, ...changes, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
     toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: works.length, works };
 }
@@ -106,12 +109,39 @@ export function planS2(base) {
 const runDirFor = (key, works) => { const b = stageBinding(key, works), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
 const verified = (key, works, plan) => { const r = runDirFor(key, works); return existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null; };
 
-export function planS3(base, works, s1Plan, s2Plan) {
+// Passages for identification: page text that overlaps the title, the confirmed visuals and B1's figure notes
+// (B1's guesses only SELECT passages; the model never sees them).
+export function planSI(base, works, s2Plan) {
+  const h2 = verified('S2', works, s2Plan);
+  if (h2?.kind !== 'accepted') return null;
+  const visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
+  const probe = [base.catalog?.title, ...visuals.map(v => v.text), ...(base.b1?.visual?.figures || []).map(f => `${f.who} ${f.role}`), ...(base.b1?.visual?.iconography || [])].join(' ');
+  const pages = citedUrls(base.b2).map(u => ({ sourceId: u, page: pageFor(u) })).filter(x => x.page).map(x => ({ sourceId: x.sourceId, text: x.page.text }));
+  const picked = selectPassages({ componentId: 'ident', text: probe }, pages, { perComponent: 14, perWorkChars: 7000, minScore: 2 }).map(p => p.text);
+  const input = CF.buildIdentityInput({ workId: base.id, title: base.catalog?.title, passages: picked, visuals });
+  return mkPlan('SI', base, input, { ...base.binding, s2: h2.meta.resultSha256 });
+}
+export function planSJ(base, works, siPlan) {
+  if (!siPlan) return null;
+  const hi = verified('SI', works, siPlan);
+  if (hi?.kind !== 'accepted') return null;
+  const input = CF.buildIdentityJudgeInput({ workId: base.id, identInput: siPlan.input, identAudit: hi.derived.audit });
+  return { plan: mkPlan('SJ', base, input, { ...base.binding, si: hi.meta.resultSha256 }), identAudit: hi.derived.audit };
+}
+
+export function planS3(base, works, s1Plan, s2Plan, sj = null) {
   const h1 = verified('S1', works, s1Plan), h2 = verified('S2', works, s2Plan);
   if (h1?.kind !== 'accepted' || h2?.kind !== 'accepted') return null;
-  const claims = CF.supportedClaims(s1Plan.input, h1.derived.audit), visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
+  let identities = [];
+  if (OPTS.identities) {
+    if (!sj) return null;
+    const hj = sj.plan.input.pairs.length ? verified('SJ', works, sj.plan) : null;
+    if (sj.plan.input.pairs.length && hj?.kind !== 'accepted') return null;
+    identities = hj ? CF.supportedIdentities(sj.plan.input, hj.derived.audit, sj.identAudit) : [];
+  }
+  const claims = [...CF.supportedClaims(s1Plan.input, h1.derived.audit), ...identities.map(i => ({ id: i.id, text: i.text }))], visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
   const input = CF.buildWriteInput({ workId: base.id, catalog: base.catalog, claims, visuals });
-  return { plan: mkPlan('S3', base, input, { ...base.binding, s1: h1.meta.resultSha256, s2: h2.meta.resultSha256 }), claims, visuals };
+  return { plan: mkPlan('S3', base, input, { ...base.binding, s1: h1.meta.resultSha256, s2: h2.meta.resultSha256 }), claims, visuals, identities };
 }
 export function planS4(base, works, s3) {
   if (!s3) return null;
@@ -124,8 +154,9 @@ export function planS4(base, works, s3) {
 function allPlans(works) {
   return works.map(id => {
     const base = workBase(id), s1 = planS1(base), s2 = planS2(base);
-    const s3 = planS3(base, works, s1, s2), s4 = planS4(base, works, s3);
-    return { id, base, s1, s2, s3, s4 };
+    const si = OPTS.identities ? planSI(base, works, s2) : null, sj = si ? planSJ(base, works, si) : null;
+    const s3 = planS3(base, works, s1, s2, sj), s4 = planS4(base, works, s3);
+    return { id, base, s1, s2, si, sj, s3, s4 };
   });
 }
 
@@ -136,10 +167,13 @@ function tokensOf(h) {
 }
 export function report(works) {
   const rows = allPlans(works).map(w => {
-    const h = { S1: verified('S1', works, w.s1), S2: verified('S2', works, w.s2), S3: w.s3 ? verified('S3', works, w.s3.plan) : null, S4: w.s4 ? verified('S4', works, w.s4.plan) : null };
+    const h = { S1: verified('S1', works, w.s1), S2: verified('S2', works, w.s2), ...(OPTS.identities ? { SI: w.si ? verified('SI', works, w.si) : null, SJ: w.sj?.plan.input.pairs.length ? verified('SJ', works, w.sj.plan) : null } : {}),
+      S3: w.s3 ? verified('S3', works, w.s3.plan) : null, S4: w.s4 ? verified('S4', works, w.s4.plan) : null };
     const out = { id: w.id, title: w.base.catalog?.title, outcomes: Object.fromEntries(Object.entries(h).map(([k, v]) => [k, v?.kind || 'not-run'])),
       tokens: Object.fromEntries(Object.entries(h).map(([k, v]) => [k, tokensOf(v)])) };
     out.claims = { total: w.s1.input.pairs.length, supported: h.S1?.kind === 'accepted' ? CF.supportedClaims(w.s1.input, h.S1.derived.audit).length : null };
+    if (OPTS.identities) out.identities = { proposed: h.SI?.derived?.audit?.rows.length ?? null, quoteVerified: h.SI?.derived?.audit?.rows.filter(r => !r.issues.length).length ?? null,
+      supported: w.s3?.identities?.length ?? null, names: (w.s3?.identities || []).map(i => i.name), rejected: (h.SI?.derived?.audit?.rows || []).filter(r => !(w.s3?.identities || []).some(i => i.id === r.id)).map(r => `${r.name}: ${r.issues.join('; ') || 'judge: not supported'}`) };
     out.visuals = { candidates: w.s2.input.candidates.length, confirmed: h.S2?.kind === 'accepted' ? CF.confirmedVisuals(h.S2.derived.audit, h.S2.derived.output).length : null };
     if (h.S3?.kind === 'accepted' && h.S4?.kind === 'accepted') {
       const a = CF.assemble({ writeAudit: h.S3.derived.audit, checkAudit: h.S4.derived.audit, visuals: w.s3.visuals });
@@ -154,7 +188,7 @@ export function report(works) {
   return { version: 'passBClaimFirstReport/1', works: rows.length, usable, withWhy: rows.filter(r => r.copy?.why).length,
     withNotes: rows.filter(r => r.copy?.notes.length).length, withHotspots: rows.filter(r => r.copy?.hotspots.length).length,
     trimmedSentences: rows.reduce((n, r) => n + (r.trimmed?.length || 0), 0), totalSentences: rows.reduce((n, r) => n + (r.sentences || 0), 0),
-    tokens: { total, perUsableStrict: per(usable.strict), perUsableMinimal: per(usable.minimal), byStage: Object.fromEntries(['S1', 'S2', 'S3', 'S4'].map(k => [k, rows.reduce((n, r) => n + (r.tokens[k]?.output || 0), 0)])) },
+    tokens: { total, perUsableStrict: per(usable.strict), perUsableMinimal: per(usable.minimal), byStage: Object.fromEntries(['S1', 'S2', 'SI', 'SJ', 'S3', 'S4'].map(k => [k, rows.reduce((n, r) => n + (r.tokens[k]?.output || 0), 0)])) },
     rows };
 }
 
@@ -174,6 +208,7 @@ async function main() {
   const args = process.argv.slice(2);
   const opt = k => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
   if (opt('--model')) OPTS.model = opt('--model');
+  if (args.includes('--identities')) OPTS.identities = true;
   if (opt('--works')) OPTS.size = Math.max(1, Math.min(TRIAL.size, Number(opt('--works'))));
   const works = trialWorks();
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
@@ -193,8 +228,8 @@ async function main() {
   const live = args.includes('--run');
   if (live && process.env.PASS_B_SHADOW_AUDIT_LIVE !== '1') throw new Error('refusing --run: set PASS_B_SHADOW_AUDIT_LIVE=1');
   const plans = allPlans(works), clock = pacificClock();
-  console.log(`claim-first trial: model ${OPTS.model} | ${works.length} works (${TRIAL.primaryDate} + fill from ${TRIAL.fillDate}) | Pacific ${clock.date} | in start window ${clock.mayStart} | hours exception today ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
-  for (const key of ['S1', 'S2', 'S3', 'S4']) { const r = runDirFor(key, works); console.log(`  ${key} ${STAGES[key].tag}: run ${r.runId}, reservations ${countReservations(r.outDir)}/${works.length}${preservedFatal(r.outDir) ? ' PRESERVED FATAL' : ''}`); }
+  console.log(`claim-first trial: model ${OPTS.model}${OPTS.identities ? ' + identities' : ''} | ${works.length} works (${TRIAL.primaryDate} + fill from ${TRIAL.fillDate}) | Pacific ${clock.date} | in start window ${clock.mayStart} | hours exception today ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
+  for (const key of ['S1', 'S2', ...(OPTS.identities ? ['SI', 'SJ'] : []), 'S3', 'S4']) { const r = runDirFor(key, works); console.log(`  ${key} ${STAGES[key].tag}: run ${r.runId}, reservations ${countReservations(r.outDir)}/${works.length}${preservedFatal(r.outDir) ? ' PRESERVED FATAL' : ''}`); }
   const claims = plans.reduce((n, p) => n + p.s1.input.pairs.length, 0), cands = plans.reduce((n, p) => n + p.s2.input.candidates.length, 0);
   const pagesHave = plans.reduce((n, p) => n + citedUrls(p.base.b2).filter(u => pageFor(u)).length, 0), pagesAll = plans.reduce((n, p) => n + citedUrls(p.base.b2).length, 0);
   console.log(`  inputs: ${claims} research claims, ${cands} visual candidates, cited pages snapshotted ${pagesHave}/${pagesAll}; max calls ${works.length * 4}`);
@@ -203,6 +238,12 @@ async function main() {
   const run = async (key, ps) => { const r = runDirFor(key, works); const res = await runAudit({ plans: ps, outDir: r.outDir, runId: r.runId, binding: r.binding, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) }); console.log(`${key}: ${JSON.stringify(res)}`); return res; };
   const [r1, r2] = await Promise.all([run('S1', plans.map(p => p.s1)), run('S2', plans.map(p => p.s2))]);
   if ([r1, r2].some(r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r.stop))) { console.log('stopped before writing'); return; }
+  if (OPTS.identities) {
+    const ri = await run('SI', allPlans(works).map(p => p.si).filter(Boolean));
+    if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(ri.stop)) { console.log('stopped before identity judging'); return; }
+    const rj = await run('SJ', allPlans(works).map(p => p.sj?.plan).filter(p => p && p.input.pairs.length));
+    if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(rj.stop)) { console.log('stopped before writing'); return; }
+  }
   const p3 = allPlans(works).map(p => p.s3?.plan).filter(Boolean);
   const r3 = await run('S3', p3);
   if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r3.stop)) { console.log('stopped before checking'); return; }

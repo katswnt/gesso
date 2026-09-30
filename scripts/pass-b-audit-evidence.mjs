@@ -25,16 +25,16 @@ export async function snapshot(url, SNAP = SNAPSHOT_DIR) {
   if (!/^https:\/\//i.test(url)) return { url, ok: false, error: 'not https' };
   let meta;
   try {
-    const r = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GessoSourceSnapshot/1; +https://gesso.katswint.com)', Accept: 'text/html,application/xhtml+xml' } });
+    const r = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GessoSourceSnapshot/1; +https://gesso.katswint.com)', Accept: 'text/html,application/xhtml+xml,application/json' } });
     const buf = Buffer.from(await r.arrayBuffer());
     const type = r.headers.get('content-type') || '';
     meta = { url, finalUrl: r.url, status: r.status, contentType: type, bytes: buf.length, retrievedAt: new Date().toISOString(), rawSha256: sha256(buf) };
     if (r.status !== 200) meta.error = `http ${r.status}`;
     else if (buf.length > MAX_BYTES) meta.error = 'too large';
-    else if (!/html/i.test(type)) meta.error = `unsupported content-type ${type}`;
+    else if (!/html|json/i.test(type)) meta.error = `unsupported content-type ${type}`;
     if (!meta.error) {
       writeFileSync(join(SNAP, `${key}.raw`), buf, { flag: 'wx', mode: 0o600 });
-      const text = extractText(buf.toString('utf8'));
+      const text = /json/i.test(type) ? extractJsonText(buf.toString('utf8')) : extractText(buf.toString('utf8'));
       writeFileSync(join(SNAP, `${key}.txt`), text, { flag: 'wx', mode: 0o600 });
       Object.assign(meta, { extraction: EXTRACTION_VERSION, textSha256: sha256(text), textChars: text.length });
     }
@@ -69,11 +69,23 @@ export function extractTextV2(html) {
     .replace(/\s+([,.;:!?)\]}»”’])/g, '$1').replace(/([(\[{«“‘])\s+/g, '$1')
     .replace(/"\s+([^"]*?)\s+"/g, '"$1"')).join('\n');
 }
+// Museum API records (e.g. Art Institute of Chicago) come back as JSON: keep every string field as "key: value",
+// with any embedded HTML converted by the /2 extractor. Deterministic.
+export function extractJsonText(raw) {
+  const lines = [];
+  const walk = (v, key) => {
+    if (typeof v === 'string') { const t = /<[a-z!/]/i.test(v) ? extractTextV2(v).replace(/\n+/g, ' ') : v.replace(/\s+/g, ' ').trim(); if (t.length >= 3) lines.push(`${key}: ${t}`); }
+    else if (Array.isArray(v)) v.forEach(x => walk(x, key));
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, k);
+  };
+  walk(JSON.parse(raw), 'record');
+  return lines.join('\n').normalize('NFC');
+}
 export function snapshotTextV2(key, snapDir = SNAP) {
   const meta = JSON.parse(readFileSync(join(snapDir, `${key}.meta.json`), 'utf8'));
   const raw = readFileSync(join(snapDir, `${key}.raw`));
   if (sha256(raw) !== meta.rawSha256) throw new Error(`${meta.url}: raw snapshot changed`);
-  const text = extractTextV2(raw.toString('utf8'));
+  const text = /json/i.test(meta.contentType || '') ? extractJsonText(raw.toString('utf8')) : extractTextV2(raw.toString('utf8'));
   return { url: meta.url, rawSha256: meta.rawSha256, extraction: EXTRACTION_VERSION_2, text, textSha256: sha256(text) };
 }
 

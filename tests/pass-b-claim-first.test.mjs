@@ -90,6 +90,22 @@ import('../scripts/lib/pass-b-calibration.mjs').then(({ buildStageCommand }) => 
   console.log('pass-b-claim-first.test: pilot-1 fix checks passed');
 });
 
+check('identities: verbatim quote required, visual link only to confirmed visuals, judge input pairs passage with visual', () => {
+  const input = CF.buildIdentityInput({ workId: 'w', title: 'Triptych', passages: ['The work was commissioned by the Castilian merchant Jean de Sedano , who kneels at left.'], visuals: [{ id: 'd1', text: 'A kneeling man in black at lower left.' }] });
+  const out = { v: CF.IDENT_VERSION, ids: [
+    { claim: 'The kneeling man at left is the donor Jean de Sedano.', name: 'Jean de Sedano', kind: 'person', e: 'P1', quote: 'the Castilian merchant Jean de Sedano, who kneels at left', visual: 'd1' },
+    { claim: 'Saint John stands at right.', name: 'Saint John', kind: 'religious', e: 'P1', quote: 'Saint John stands at right', visual: 'none' },
+    { claim: 'X', name: 'X', kind: 'other', e: 'P1', quote: 'commissioned by … Sedano', visual: 'd9' }] };
+  const a = CF.controlIdentity(out, input);
+  assert.deepEqual(a.rows.map(r => r.issues.length), [0, 1, 2]); // spacing tolerated; invented quote and elision rejected
+  assert.equal(a.rows[0].visual, 'd1'); assert.equal(a.rows[1].visual, null); assert.equal(a.rows[2].visual, null);
+  const j = CF.buildIdentityJudgeInput({ workId: 'w', identInput: input, identAudit: a });
+  assert.equal(j.pairs.length, 1); assert.deepEqual(j.pairs[0].evidence.map(e => e.ref), ['E1', 'E2']);
+  const sup = CF.supportedIdentities(j, { rows: [{ id: 'id1', verdict: 'supported', ref: 'E1', issues: [] }] }, a);
+  assert.deepEqual(sup.map(x => [x.id, x.name, x.visual]), [['id1', 'Jean de Sedano', 'd1']]);
+  assert.deepEqual(CF.supportedIdentities(j, { rows: [{ id: 'id1', verdict: 'unsupported', ref: 'none', issues: [] }] }, a), []);
+});
+
 // ---- image-stage safeguards against a REAL preserved B3 transcript (skipped where absent) ----
 const corpus = join(RUN_ROOT, 'corpus-b3-6401bc543ead', 'works');
 const realB3 = existsSync(corpus) ? readdirSync(corpus).map(d => join(corpus, d, 'attempts')).filter(existsSync)
