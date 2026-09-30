@@ -72,6 +72,21 @@ import('../scripts/pass-b-b4-structured-canary.mjs').then(({ noToolCallProvenanc
   console.log('pass-b-claim-first.test: model pin checks passed');
 });
 
+import('../scripts/lib/pass-b-calibration.mjs').then(({ buildStageCommand }) => {
+  const items = CF.catalogItems({ title: 'Night', artist: 'Arkhip Kuindzhi', date: '1908', catalogId: 'Q1', medium: '' });
+  assert.deepEqual(items.map(i => i.id), ['cat.title', 'cat.artist', 'cat.date']);
+  const wi = CF.buildWriteInput({ workId: 'w', catalog: { date: '1908' }, claims: [{ id: 'f1', text: 'x' }], visuals: [] });
+  const w = CF.controlWrite({ why: [{ s: 'It was painted in 1908.', ids: ['cat.date'] }, { s: 'The catalog entry omits the support.', ids: ['cat.date'] }, { s: 'The research note says so.', ids: ['f1'] }], notes: [], hotspots: [] }, wi);
+  assert.deepEqual(w.sentences.map(x => x.issues.join('|')), ['', 'pipeline language', 'pipeline language']);
+  for (const ok of ['The claim of divine right runs through the scene.', 'A catalog of saints fills the border.', 'The sources of the river are shown at left.']) assert.ok(!CF.PIPELINE_LANGUAGE.test(ok), ok);
+  for (const bad of ['According to the sources, it dates from 1908.', 'The cited claims say it is Florentine.', 'Its metadata lists oil.']) assert.ok(CF.PIPELINE_LANGUAGE.test(bad), bad);
+  const argv = (stage, effort) => buildStageCommand({ stage, promptText: 'x', imageFile: stage === 'B3' ? `${'0'.repeat(64)}.jpg` : null, effort }).argv;
+  assert.ok(!argv('B3', null).includes('--effort')); // collector B3 unchanged
+  assert.equal(argv('B3', 'low')[argv('B3', 'low').indexOf('--effort') + 1], 'low');
+  assert.equal(argv('B4', 'high')[argv('B4', 'high').indexOf('--effort') + 1], 'low'); // B4 stays pinned low
+  console.log('pass-b-claim-first.test: pilot-1 fix checks passed');
+});
+
 // ---- image-stage safeguards against a REAL preserved B3 transcript (skipped where absent) ----
 const corpus = join(RUN_ROOT, 'corpus-b3-6401bc543ead', 'works');
 const realB3 = existsSync(corpus) ? readdirSync(corpus).map(d => join(corpus, d, 'attempts')).filter(existsSync)

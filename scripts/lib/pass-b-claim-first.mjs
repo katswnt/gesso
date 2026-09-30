@@ -63,14 +63,18 @@ export function controlConfirm(output, input) {
 export const confirmedVisuals = s2Audit => (s2Audit?.rows || []).filter(r => r.confirmed).map(r => ({ id: r.id, text: r.text, bbox: r.bbox }));
 
 // ---------- S3: write only from supported claims and confirmed visuals ----------
-export const WRITE_VERSION = 'passBClaimFirstWrite/1';
+export const WRITE_VERSION = 'passBClaimFirstWrite/2';
 export const WRITE_PROMPT = `You write short teaching copy for an art-history game about ONE artwork, using ONLY the numbered items below.
-- claims: research facts that were checked against sources.
+- claims: facts checked against sources, plus the museum catalog fields (ids starting "cat.").
 - visuals: details confirmed visible in the image. They establish only WHAT IS VISIBLE (shape, position, colour,
   pose, gesture). Never use a visual to say who someone is, what something represents, what it is made of, or why
   it was made; those need a claim.
 You have no image, no tools and no other knowledge. Do not add ANY fact, name, date, identity, material, cause or
 interpretation that the cited items do not state. Invitations to look ("Notice...") and plain framing are fine.
+Write for a museum visitor: never mention research, sources, claims, notes, catalogs, records, entries or
+metadata. Point hotspots only at the artwork itself, never at a display stand, mount, plinth added for display,
+frame, label, or the photograph's background. The why must say what makes the work worth looking at, not just
+restate a date or a medium; if the items cannot support that, write one short, accurate sentence.
 
 Write:
 - why: 2–3 sentences on why this work matters.
@@ -89,7 +93,14 @@ export const WRITE_WIRE_SCHEMA = {
     hotspots: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['anchor', 'head', 'body'], properties: { anchor: { type: 'string' }, head: SENT, body: { type: 'array', items: SENT } } } },
   },
 };
-export const buildWriteInput = ({ workId, catalog, claims, visuals }) => ({ unit: workId, catalog, claims, visuals: visuals.map(v => ({ id: v.id, text: v.text })) });
+// Catalog fields are citable items (fix after pilot 1: catalog facts in the why had no id and were all trimmed).
+export const CATALOG_FIELDS = ['title', 'artist', 'date', 'place', 'medium', 'style'];
+export const catalogItems = catalog => CATALOG_FIELDS.filter(f => typeof catalog?.[f] === 'string' && catalog[f].trim())
+  .map(f => ({ id: `cat.${f}`, text: `Museum catalog ${f}: ${catalog[f]}` }));
+export const buildWriteInput = ({ workId, catalog, claims, visuals }) => ({ unit: workId, claims: [...catalogItems(catalog), ...claims], visuals: visuals.map(v => ({ id: v.id, text: v.text })) });
+
+// Pipeline language never reaches players; trimmed deterministically, before the model check.
+export const PIPELINE_LANGUAGE = /\b(catalog(ue)?\s+(entry|record|field|data)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content))/i;
 
 // Flatten the written copy into sentences with stable ids: why.0, n0.h, n0.b1, h0.h, h0.b0.
 export function sentencesOf(written) {
@@ -107,6 +118,7 @@ export function controlWrite(output, input) {
     if (!String(x.s || '').trim()) issues.push('empty');
     if (!x.ids?.length) issues.push('no ids');
     for (const id of x.ids || []) if (!known.has(id)) issues.push(`unknown id ${id}`);
+    if (PIPELINE_LANGUAGE.test(String(x.s || ''))) issues.push('pipeline language');
     return { ...x, issues };
   });
   const anchorIssues = (output?.hotspots || []).map((h, k) => visualIds.has(h.anchor) ? null : `h${k}: anchor ${h.anchor} is not a confirmed visual`).filter(Boolean);

@@ -323,7 +323,7 @@ export function neutralImageFile(imgSha256, ext) {
 // one SHA image; B2 gets ONLY web search/fetch and NEVER an image; B4 is tool-less. Env strips API
 // keys so the intended subscription/OAuth login is used, never a paid key. Output is stream-json so the
 // controller can verify real tool-use events (Read / WebSearch / WebFetch) from the raw transcript. ----
-export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText, imageFile = null, wireSchema = null }) {
+export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText, imageFile = null, wireSchema = null, effort = null }) {
   if (!['B1', 'B2', 'B3', 'B4', 'B5'].includes(stage)) throw new Error(`unknown stage ${stage}`);
   const imageStage = stage === 'B1' || stage === 'B3' || stage === 'B5';
   if (imageStage && !imageFile) throw new Error(`${stage} requires a confined image filename`);
@@ -339,6 +339,7 @@ export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText
   // B4 editorial reconciliation and B5 point localization are bounded, not open-ended research: cap them
   // at low effort. B1/B2/B3 keep the session default effort.
   if (stage === 'B4' || stage === 'B5') argv.push('--effort', 'low');
+  else if (effort) argv.push('--effort', effort); // explicit override for other stages (claim-first S2); unset = session default
   argv.push(
     '--json-schema', JSON.stringify(schema), '--prompt-suggestions', 'false',
     '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',

@@ -61,14 +61,17 @@ const pageFor = url => { const key = sha256(url).slice(0, 24); return existsSync
 // ---------- stage bindings and plans ----------
 const STAGES = {
   S1: { tag: 'judge-claims', stage: 'B4', prompt: CF.S1.prompt, schema: CF.S1.schema, version: CF.S1.version, control: CF.S1.control },
-  S2: { tag: 'confirm-visuals', stage: 'B3', prompt: stagePrompts().B3, schema: null, version: null, control: CF.controlConfirm, image: true },
+  S2: { tag: 'confirm-visuals', stage: 'B3', prompt: stagePrompts().B3, schema: null, version: null, control: CF.controlConfirm, image: true, effort: 'low' }, // low effort: pilot 1 spent half its output here
   S3: { tag: 'write', stage: 'B4', prompt: CF.WRITE_PROMPT, schema: CF.WRITE_WIRE_SCHEMA, version: CF.WRITE_VERSION, control: CF.controlWrite },
   S4: { tag: 'check', stage: 'B4', prompt: CF.CHECK_PROMPT, schema: CF.CHECK_WIRE_SCHEMA, version: CF.CHECK_VERSION, control: CF.controlCheck },
 };
 export function stageBinding(key, works) {
   const st = STAGES[key];
-  const command = buildStageCommand({ stage: st.stage, model: OPTS.model, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
-  return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: OPTS.model, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
+  const command = buildStageCommand({ stage: st.stage, model: OPTS.model, effort: st.effort || null, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
+  // Only stages that changed after pilot 1 get new bindings: S2 (effort), S3 (write /2), S4 (checks /2 output).
+  // S1 is unchanged, so its accepted pilot-1 results are reused, not re-called.
+  const changes = { S2: { effort: st.effort }, S3: { write: CF.WRITE_VERSION }, S4: { write: CF.WRITE_VERSION } }[key] || {};
+  return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: OPTS.model, ...changes, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
     toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: works.length, works };
 }
 export const stageRunId = binding => `cf-${sha256(stableJson(binding)).slice(0, 12)}`;
@@ -80,7 +83,7 @@ function mkPlan(key, base, input, binding, extra = {}) {
   if (st.image) {
     const imageFile = `${base.b0.image.imgSha256}.${base.b0.image.ext}`;
     promptText = `${st.prompt}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(CF.confirmRequests(input.candidates))}`;
-    command = buildStageCommand({ stage: 'B3', model: OPTS.model, promptText, imageFile });
+    command = buildStageCommand({ stage: 'B3', model: OPTS.model, effort: st.effort || null, promptText, imageFile });
     Object.assign(extra, { imageFile, imageSource: join(CORPUS_RUN_DIR, 'imgs', imageFile) });
   } else {
     promptText = `${st.prompt}\n\nINPUTS:\n${JSON.stringify(input)}`;
@@ -181,8 +184,10 @@ async function main() {
   }
   if (args.includes('--report')) {
     const rep = report(works);
-    writeFileSync(join(OUT, 'report.json'), `${JSON.stringify(rep, null, 1)}\n`, { mode: 0o600 });
-    writeFileSync(join(OUT, 'review.html'), reviewPage(rep, works), { mode: 0o600 });
+    const tag = `${OPTS.model}-${works.length}w-${runDirFor('S3', works).runId}`;
+    writeFileSync(join(OUT, `report-${tag}.json`), `${JSON.stringify(rep, null, 1)}\n`, { mode: 0o600 });
+    writeFileSync(join(OUT, `review-${tag}.html`), reviewPage(rep, works), { mode: 0o600 });
+    console.log(`wrote report-${tag}.json and review-${tag}.html`);
     const { rows, ...summary } = rep; console.log(JSON.stringify(summary, null, 1)); return;
   }
   const live = args.includes('--run');
