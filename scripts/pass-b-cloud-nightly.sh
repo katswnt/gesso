@@ -23,13 +23,17 @@ git -C "$REPO_DIR" fetch -q origin "$PIN" 2>/dev/null || git -C "$REPO_DIR" fetc
 git -C "$REPO_DIR" worktree add -q --detach "$WT" "$PIN"
 ln -s "$EV/incoming" "$WT/data/incoming"
 cd "$WT"
+# node_modules are not in git (e.g. sharp for the image broker): install exactly the lockfile's versions.
+npm ci --no-audit --no-fund --loglevel=error
 export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-60}"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
 if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then
-  node scripts/pass-b-nightly.mjs; node scripts/pass-b-corpus-collect.mjs | head -6
-  node scripts/pass-b-cloud-lease.mjs status | head -12; echo "DRY RUN COMPLETE (claude on PATH: $(command -v claude || echo MISSING); CLI $(claude --version 2>/dev/null | head -1))"; exit 0
+  node scripts/pass-b-nightly.mjs || { echo "DRY RUN FAILED: nightly plan"; exit 1; }
+  node scripts/pass-b-corpus-collect.mjs > /tmp/pass-b-collect-plan.txt 2>&1 || { tail -5 /tmp/pass-b-collect-plan.txt; echo "DRY RUN FAILED: collector plan"; exit 1; }; head -6 /tmp/pass-b-collect-plan.txt
+  node scripts/pass-b-cloud-lease.mjs status | head -12 || { echo "DRY RUN FAILED: lease status"; exit 1; }
+  echo "DRY RUN COMPLETE (claude on PATH: $(command -v claude || echo MISSING); CLI $(claude --version 2>/dev/null | head -1))"; exit 0
 fi
 node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER"; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
