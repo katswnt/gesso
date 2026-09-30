@@ -34,3 +34,9 @@ workload", which is a plausible hypothesis, not an established cause; (3) floate
 verdict rested on its own unsupported assertion. RULE: credit detection only when the model's stated reason names
 the specific error; label causes as hypotheses unless an experiment isolated them; when a model result disagrees
 with a pre-registered label, test the model's reasoning against the evidence before questioning the label.
+
+## 2026-09-30 — `git add <directory>` swept protected untracked files into a pushed commit
+Staging with `git add scripts tests` picked up the owner/Codex prototype files that must stay untracked (edit-pass,
+VSD-038 release-grounding, staging-pilot scripts), and the commit was pushed. Fixed by `git rm --cached` in a follow-up
+commit (files on disk verified unchanged by hash); they remain in the branch history. RULE: in this repo, always stage
+explicit file paths, never a directory or `-A`, and read `git status --short` BEFORE committing, not after.
