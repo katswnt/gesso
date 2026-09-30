@@ -26,3 +26,11 @@ sentence; the error-bearing assertion itself was routed to visual-only (wings, p
 separate problem that more evidence does not fix. RULE: score detection at the level of the specific error
 (identified / partial or ambiguous / routed elsewhere / not extracted), never "component held". Before naming a
 single cause, check each failure class against the saved outputs and list every independent cause.
+
+## 2026-09-29 — Reported a held verdict as detection, a hypothesis as a cause, and doubted a correct label
+After the eight-pair judgment test I (1) said J2 showed the model handled "Glory above", although its reason
+only addressed the coffin, never the position; (2) said the full audit's failures "look tied to the extraction
+workload", which is a plausible hypothesis, not an established cause; (3) floated relabelling J7 when the model's
+verdict rested on its own unsupported assertion. RULE: credit detection only when the model's stated reason names
+the specific error; label causes as hypotheses unless an experiment isolated them; when a model result disagrees
+with a pre-registered label, test the model's reasoning against the evidence before questioning the label.
