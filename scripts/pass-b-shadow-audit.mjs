@@ -371,6 +371,7 @@ export function deriveStageAttempt(plan, transcript, exitCode = 0) {
     if (spec.version && output?.v !== spec.version) errors.push(`version:${output?.v || 'missing'}`);
     if (output) { audit = spec.control(output, plan.input); errors.push(...(audit.errors || [])); }
     else errors.push('no-structured-output');
+    if (spec.transcriptCheck) { const e = spec.transcriptCheck(transcript); if (e) errors.push(e); } // e.g. B2 must really retrieve pages
     kind = errors.length ? 'held' : 'accepted';
   }
   return { kind, errors, output, audit, imageReceipt, evidence: call.evidence };
