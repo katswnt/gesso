@@ -13,6 +13,7 @@ import { createHash } from 'node:crypto';
 import broker, { BROKER_POLICY_VERSION } from './lib/img-broker.mjs';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { captureStageCompletion, verifyCapturedStage, completionKey } from './lib/vision-content-capture.mjs';
+import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
 import {
@@ -186,6 +187,7 @@ export function pacificClock(now = new Date()) {
 }
 const plusDay = (day, n) => { const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 class SchedulePauseError extends Error {}
+export class PacingStopError extends Error {} // usage pacing (VSD-055): a clean pause, never a fatal or a hold
 class BudgetStopError extends Error {}
 // Lanes (VSD-047): 'local' = the Mac's subscription run for the rolling 30-day window, gated to 00:00–08:30
 // Pacific (VSD-045). 'cloud' = a Claude Code cloud session spending its separate cloud credits on works BEYOND
@@ -504,7 +506,9 @@ function initEvents(text) {
   return String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e.type === 'system' && e.subtype === 'init' ? [e] : []; } catch { return []; } });
 }
 let CLAUDE_BIN = null; // exact versioned binary resolved at session start (a mid-run update cannot swap it)
-let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null, ACTIVE_MODEL = null;
+let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null, ACTIVE_MODEL = null, PACER = null;
+export const USAGE_LOG = join(RUN_ROOT, '..', 'vision-ops', 'usage-observations.jsonl');
+export const SESSION_CALL_CAP = Number(process.env.PASS_B_MAX_CALLS || 150); // backstop; pacing decides first
 const markFatal = reason => { FATAL ||= reason; persistFatal(RUN_DIR, FATAL); };
 // Only a classified boundary failure may create fatal.json. Filesystem, lease and runtime problems
 // cannot become permanent provenance findings merely because they surfaced outside runWorkStages.
@@ -512,6 +516,7 @@ export function stopForException(error, { fatal, pause }) {
   if (error instanceof FatalError) fatal(error.message);
   else if (error instanceof UsageLimitError) pause('usage-limit');
   else if (error instanceof SchedulePauseError) pause('protected-hours');
+  else if (error instanceof PacingStopError) pause(`pacing: ${error.message}`);
   else if (error instanceof BudgetStopError) pause('budget-cap');
   else if (!(error instanceof StageLeaseBusyError || error instanceof RetryableError || error instanceof TerminalAttemptError)) pause(`operational:${error.message}`);
 }
@@ -534,6 +539,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     if (imageFile) copyFileSync(join(runDir, 'imgs', `${imgSha256}.${ext}`), join(call, imageFile));
     const env = { ...process.env, DISABLE_AUTOUPDATER: '1' }; for (const k of command.env.removeKeys) delete env[k];
     const options = laneWindow(lane, now()); // immediately before reservation + invocation, including every retry
+    if (PACER) { const d = PACER.check(); if (!d.go) throw new PacingStopError(d.reason); } // VSD-055: before any reservation
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
@@ -546,6 +552,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     }
     const transcriptFile = attemptFilename(stage, seq, stdout);
     writeFileSync(join(attemptsDir, transcriptFile), stdout, { flag: 'wx', mode: 0o600, flush: true });
+    try { recordObservation(USAGE_LOG, stdout, { observedAt: now(), source: `collector:${id}/${stage}` }); } catch { /* pacing log is advisory; the call's evidence is already durable */ }
     SPENT_USD += transcriptCostUsd(stdout);
     const tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
     const inits = initEvents(stdout);
@@ -830,6 +837,7 @@ async function main() {
     const versionResult = await execFileP(CLAUDE_BIN, ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
     RUNTIME_VERSION = String(versionResult.stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
     ACTIVE_MODEL = epochModel(bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION)); // VSD-054: every new call uses the active epoch's model
+    PACER = LANE === 'cloud' ? null : makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP }); // VSD-055 (cloud credits lane has its own $ cap)
     if (LANE === 'cloud') { SPENT_USD = runSpendUsd(RUN_DIR); console.log(`cloud lane: $${SPENT_USD.toFixed(2)} already spent of $${CLOUD_BUDGET_USD} cap`); }
     STOP = false; STOP_REASON = null; FATAL = null;
     ATTEMPT_SEQ = fresh.maxSeq; TRANSPORT_RETRIES = led.transportRetries || 0;

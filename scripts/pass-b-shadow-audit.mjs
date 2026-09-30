@@ -23,6 +23,7 @@ import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-fin
 import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
+import { recordObservation } from './lib/pass-b-pacing.mjs';
 import { JUDGMENT_VERSION, JUDGMENT_UNIT, JUDGMENT_PROMPT, JUDGMENT_WIRE_SCHEMA, buildJudgmentInput, authoritativeResolver, controlJudgment, scoreJudgment } from './lib/pass-b-audit-judgment.mjs';
 import { snapshotTextV2 } from './pass-b-audit-evidence.mjs';
 import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
@@ -432,7 +433,8 @@ export async function callAuditPinned(plan, { bin, timeout, execute = execFileP 
   } finally { rmSync(callDir, { recursive: true, force: true }); }
 }
 
-export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception }) {
+// pacer / usageLog (VSD-055): optional usage pacing checked before each reservation; observations recorded after each call.
+export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null }) {
   if (!existsSync(join(outDir, 'run-manifest.json'))) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
     durableWrite(join(outDir, 'run-manifest.json'), `${JSON.stringify({ runId, binding, inputs: plans.map(p => ({ workId: p.workId, inputSha256: p.inputSha256, promptHash: p.promptHash, binding: p.binding })) }, null, 2)}\n`);
@@ -450,6 +452,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     if (countReservations(outDir) >= (binding?.maxReservations ?? MAX_RESERVATIONS)) { stop = 'reservation-cap'; break; }
     let gate;
     try { gate = startGate(now(), exception); } catch (e) { stop = 'protected-hours'; break; }
+    if (pacer) { const d = pacer.check(); if (!d.go) { stop = `pacing: ${d.reason}`; break; } }
     const dir = join(outDir, 'works', safeWork(plan.workId));
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     durableWrite(join(dir, 'attempt-1.reserved.json'), `${JSON.stringify({ version: RESERVATION_VERSION, runId, workId: plan.workId, attempt: 1, promptHash: plan.promptHash, inputSha256: plan.inputSha256, binding: plan.binding, hoursException: gate.hoursException, reservedAt: now().toISOString() }, null, 1)}\n`);
@@ -460,6 +463,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     try { raw = await callFn(plan, gate); } catch { tally['unknown-outcome']++; continue; } // reservation stays terminal
     const durationMs = Date.now() - started;
     durableWrite(join(dir, 'attempt-1.transcript.jsonl'), raw.transcript || '');
+    if (usageLog) try { recordObservation(usageLog, raw.transcript || '', { observedAt: now(), source: `${runId}:${plan.workId}` }); } catch { /* advisory */ }
     const derived = deriveAuditAttempt(plan, raw.transcript || '', raw.exitCode ?? 1);
     const resultPath = join(dir, 'attempt-1.result.json');
     durableWrite(resultPath, `${JSON.stringify(derived, null, 2)}\n`);

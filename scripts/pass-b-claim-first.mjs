@@ -14,7 +14,8 @@ import { pathToFileURL } from 'node:url';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { RUN_ROOT, CALIBRATION_MODEL, buildStageCommand } from './lib/pass-b-calibration.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
-import { CORPUS_RUN_DIR, pacificClock } from './pass-b-corpus-collect.mjs';
+import { CORPUS_RUN_DIR, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
+import { makePacer } from './lib/pass-b-pacing.mjs';
 import { CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { runAudit, auditHistory, countReservations, preservedFatal, callAuditPinned, loadB2 } from './pass-b-shadow-audit.mjs';
 import { snapshot, snapshotTextV2, selectPassages } from './pass-b-audit-evidence.mjs';
@@ -237,18 +238,21 @@ async function main() {
   console.log(`  inputs: ${claims} research claims, ${cands} visual candidates, cited pages snapshotted ${pagesHave}/${pagesAll}; max calls ${works.length * 4}`);
   if (!live) { console.log('READ-ONLY PLAN: no calls or writes.'); return; }
   const bin = realpathSync(String((await execFileP('/bin/sh', ['-c', 'command -v claude'])).stdout).trim());
-  const run = async (key, ps) => { const r = runDirFor(key, works); const res = await runAudit({ plans: ps, outDir: r.outDir, runId: r.runId, binding: r.binding, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) }); console.log(`${key}: ${JSON.stringify(res)}`); return res; };
+  // One pacer for the whole session unless the owner explicitly overrides for an authorized one-off trial.
+  const pacer = process.env.PASS_B_PACING_OVERRIDE === clock.date ? null : makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP });
+  const run = async (key, ps) => { const r = runDirFor(key, works); const res = await runAudit({ plans: ps, outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) }); console.log(`${key}: ${JSON.stringify(res)}`); return res; };
   const [r1, r2] = await Promise.all([run('S1', plans.map(p => p.s1)), run('S2', plans.map(p => p.s2))]);
-  if ([r1, r2].some(r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r.stop))) { console.log('stopped before writing'); return; }
+  const halted = r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r.stop) || String(r.stop).startsWith('pacing');
+  if ([r1, r2].some(halted)) { console.log('stopped before writing'); return; }
   if (OPTS.identities) {
     const ri = await run('SI', allPlans(works).map(p => p.si).filter(Boolean));
-    if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(ri.stop)) { console.log('stopped before identity judging'); return; }
+    if (halted(ri)) { console.log('stopped before identity judging'); return; }
     const rj = await run('SJ', allPlans(works).map(p => p.sj?.plan).filter(p => p && p.input.pairs.length));
-    if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(rj.stop)) { console.log('stopped before writing'); return; }
+    if (halted(rj)) { console.log('stopped before writing'); return; }
   }
   const p3 = allPlans(works).map(p => p.s3?.plan).filter(Boolean);
   const r3 = await run('S3', p3);
-  if (['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r3.stop)) { console.log('stopped before checking'); return; }
+  if (halted(r3)) { console.log('stopped before checking'); return; }
   const p4 = allPlans(works).map(p => p.s4?.plan).filter(Boolean);
   await run('S4', p4);
   console.log('next: node scripts/pass-b-claim-first.mjs --report');
