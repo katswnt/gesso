@@ -22,7 +22,10 @@ check('confirmation needs found, confidence >= 0.6 and an overlapping region', (
     { requestId: 'c', found: true, bbox: [0.2, 0.2, 0.1, 0.1], confidence: 0.5 }, { requestId: 'zz', found: true, bbox: null }] }, input);
   assert.deepEqual(r.rows.map(x => x.confirmed), [true, false, false, false]);
   assert.deepEqual(r.errors, ['unknown request zz']);
-  assert.deepEqual(CF.confirmedVisuals(r).map(v => v.id), ['a']);
+  // the writer gets B3's neutral note, never B1's candidate wording; a confirmed row with no note is dropped
+  const out = { verifications: [{ requestId: 'a', found: true, bbox: [0.2, 0.2, 0.2, 0.2], confidence: 0.8, note: 'Two hands rest on a kneeling figure.' }] };
+  assert.deepEqual(CF.confirmedVisuals(r, out), [{ id: 'a', text: 'Two hands rest on a kneeling figure.', bbox: [0.1, 0.1, 0.2, 0.2] }]);
+  assert.deepEqual(CF.confirmedVisuals(r, { verifications: [{ requestId: 'a', note: '  ' }] }), []);
 });
 check('only supported claims with a real evidence ref and no issues are writable', () => {
   const s1Input = { pairs: [{ id: 'f1', claim: 'A' }, { id: 'f2', claim: 'B' }, { id: 'f3', claim: 'C' }, { id: 'f4', claim: 'D' }] };

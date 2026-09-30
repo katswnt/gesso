@@ -109,7 +109,7 @@ const verified = (key, works, plan) => { const r = runDirFor(key, works); return
 export function planS3(base, works, s1Plan, s2Plan) {
   const h1 = verified('S1', works, s1Plan), h2 = verified('S2', works, s2Plan);
   if (h1?.kind !== 'accepted' || h2?.kind !== 'accepted') return null;
-  const claims = CF.supportedClaims(s1Plan.input, h1.derived.audit), visuals = CF.confirmedVisuals(h2.derived.audit);
+  const claims = CF.supportedClaims(s1Plan.input, h1.derived.audit), visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
   const input = CF.buildWriteInput({ workId: base.id, catalog: base.catalog, claims, visuals });
   return { plan: mkPlan('S3', base, input, { ...base.binding, s1: h1.meta.resultSha256, s2: h2.meta.resultSha256 }), claims, visuals };
 }
@@ -140,7 +140,7 @@ export function report(works) {
     const out = { id: w.id, title: w.base.catalog?.title, outcomes: Object.fromEntries(Object.entries(h).map(([k, v]) => [k, v?.kind || 'not-run'])),
       tokens: Object.fromEntries(Object.entries(h).map(([k, v]) => [k, tokensOf(v)])) };
     out.claims = { total: w.s1.input.pairs.length, supported: h.S1?.kind === 'accepted' ? CF.supportedClaims(w.s1.input, h.S1.derived.audit).length : null };
-    out.visuals = { candidates: w.s2.input.candidates.length, confirmed: h.S2?.kind === 'accepted' ? CF.confirmedVisuals(h.S2.derived.audit).length : null };
+    out.visuals = { candidates: w.s2.input.candidates.length, confirmed: h.S2?.kind === 'accepted' ? CF.confirmedVisuals(h.S2.derived.audit, h.S2.derived.output).length : null };
     if (h.S3?.kind === 'accepted' && h.S4?.kind === 'accepted') {
       const a = CF.assemble({ writeAudit: h.S3.derived.audit, checkAudit: h.S4.derived.audit, visuals: w.s3.visuals });
       Object.assign(out, { sentences: h.S3.derived.audit.sentences.length, trimmed: a.trimmed, anchorIssues: h.S3.derived.audit.anchorIssues, copy: { why: a.why, notes: a.notes, hotspots: a.hotspots }, usable: a.usable });
