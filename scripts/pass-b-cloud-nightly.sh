@@ -23,8 +23,10 @@ git -C "$REPO_DIR" fetch -q origin "$PIN" 2>/dev/null || git -C "$REPO_DIR" fetc
 git -C "$REPO_DIR" worktree add -q --detach "$WT" "$PIN"
 ln -s "$EV/incoming" "$WT/data/incoming"
 cd "$WT"
-# node_modules are not in git (e.g. sharp for the image broker): install exactly the lockfile's versions.
-npm ci --no-audit --no-fund --loglevel=error
+# node_modules are not in git and package-lock.json is gitignored: install the exact versions the laptop evidence
+# was produced with (sharp's version shapes the image derivatives whose hashes are recorded).
+npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
+node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/package.json','utf8')).version; if (v!=='0.35.3') { console.error('sharp '+v+' != 0.35.3'); process.exit(1); }"
 export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-60}"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
 set +e
