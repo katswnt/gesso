@@ -24,6 +24,7 @@ import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
 import { recordObservation } from './lib/pass-b-pacing.mjs';
+import { remoteRoot, persist } from './lib/pass-b-remote-evidence.mjs';
 import { JUDGMENT_VERSION, JUDGMENT_UNIT, JUDGMENT_PROMPT, JUDGMENT_WIRE_SCHEMA, buildJudgmentInput, authoritativeResolver, controlJudgment, scoreJudgment } from './lib/pass-b-audit-judgment.mjs';
 import { snapshotTextV2 } from './pass-b-audit-evidence.mjs';
 import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
@@ -457,6 +458,9 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     durableWrite(join(dir, 'attempt-1.reserved.json'), `${JSON.stringify({ version: RESERVATION_VERSION, runId, workId: plan.workId, attempt: 1, promptHash: plan.promptHash, inputSha256: plan.inputSha256, binding: plan.binding, hoursException: gate.hoursException, reservedAt: now().toISOString() }, null, 1)}\n`);
     syncDirs([dir, join(outDir, 'works'), outDir]);
+    // Cloud (PASS_B_REMOTE_EVIDENCE): the reservation must be PUSHED before the call spends anything.
+    try { persist(remoteRoot(), [join(outDir, 'run-manifest.json'), ...readdirSync(outDir).filter(f => f.startsWith('input-')).map(f => join(outDir, f)), join(dir, 'attempt-1.reserved.json')], `reserve ${runId} ${plan.workId}`); }
+    catch (e) { stop = `persist-failed: ${e.message}`; break; }
     tally.calls++;
     const started = Date.now();
     let raw;
@@ -471,6 +475,8 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     tally[derived.kind] = (tally[derived.kind] || 0) + 1;
     if (derived.kind === 'fatal') { persistFatal(outDir, runId, `${plan.workId}: ${derived.errors.join('; ')}`); stop = 'fatal-provenance'; }
     else if (derived.kind === 'usage-limit') stop = 'usage-limit';
+    try { persist(remoteRoot(), [dir, join(outDir, 'fatal.json'), usageLog], `outcome ${runId} ${plan.workId}: ${derived.kind}`); }
+    catch (e) { stop ||= `persist-failed: ${e.message}`; } // the remote copy then shows a reservation without outcome: terminal, never retried
   }
   return { stop: stop || 'done', ...tally };
 }

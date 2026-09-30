@@ -14,6 +14,7 @@ import broker, { BROKER_POLICY_VERSION } from './lib/img-broker.mjs';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { captureStageCompletion, verifyCapturedStage, completionKey } from './lib/vision-content-capture.mjs';
 import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
+import { remoteRoot, persist as persistRemote } from './lib/pass-b-remote-evidence.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
 import {
@@ -319,6 +320,7 @@ export function preservedFatal(runDir, ledger = readLedger(runDir)) {
 export function persistFatal(runDir, reason) {
   const path = join(runDir, 'fatal.json');
   if (!existsSync(path)) writeFileSync(path, `${JSON.stringify({ runId: RUN_ID, reason, recordedAt: new Date().toISOString() })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  try { persistRemote(remoteRoot(), [path], `FATAL: ${String(reason).slice(0, 80)}`); } catch { /* local fatal.json still stops every later local run */ }
 }
 export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_ROOT, PRIOR_RUN) }) {
   const workDir = join(runDir, 'works', sha256(id).slice(0, 24));
@@ -544,6 +546,9 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
       executionEpoch: epoch.number, executionEpochSha256: epoch.sha256 })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    // Cloud: push the reservation (and the epoch chain it names) BEFORE spending; a push failure pauses with no call.
+    try { persistRemote(remoteRoot(), [join(attemptsDir, `${stem}.reserved.json`), join(runDir, 'execution-policies')], `reserve ${id}/${stage} ${stem}`); }
+    catch (e) { throw new OperationalPauseError(`persist-failed before call: ${e.message}`); }
     let stdout = '', exitCode = 0;
     try { ({ stdout } = await execute(CLAUDE_BIN || command.bin, command.argv, { cwd: call, env, maxBuffer: 64 * 1024 * 1024, ...options })); }
     catch (e) {
@@ -570,6 +575,8 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (exitCode === 'timeout' && cls.kind !== 'fatal') cls = { kind: 'held', reason: 'process-timeout; never retry automatically' };
     writeFileSync(join(attemptsDir, `${stem}.meta.json`), `${JSON.stringify({ workId: id, stage, seq, exitCode, ...cls, transcriptFile, transcriptSha256: sha256(stdout) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    try { persistRemote(remoteRoot(), [join(attemptsDir, `${stem}.meta.json`), join(attemptsDir, transcriptFile), USAGE_LOG], `outcome ${id}/${stage} ${stem}: ${cls.kind}`); }
+    catch (e) { if (cls.kind !== 'fatal') throw new OperationalPauseError(`persist-failed after call: ${e.message}`); }
     if (cls.kind === 'fatal') { persistFatal(runDir, `${id}/${stage}: ${cls.reason}`); throw new FatalError(cls.reason); }
     if (cls.kind === 'runtime-pause') throw new RuntimePauseError(cls.reason);
     if (cls.kind === 'operational-pause') throw new OperationalPauseError(cls.reason);
@@ -851,6 +858,8 @@ async function main() {
       led.stopReason = FATAL ? `fatal:${FATAL}` : STOP_REASON;
       atomicWrite(LEDGER, `${JSON.stringify(led, null, 1)}\n`);
     };
+    // Cloud: after each work, push its whole directory (B0, completions, raw) plus images, index and ledger.
+    const persistWork = id => persistRemote(remoteRoot(), [wdirOf(id), IMGS_DIR, IMAGE_INDEX, LEDGER], `work ${id}`);
     const hold = (id, reason) => { heldSet.add(id); led.heldReasons[id] = reason; persist(); };
     let cursor = 0, consecutiveB0 = 0;
     const lane = async () => {
@@ -885,7 +894,7 @@ async function main() {
           if (result.fatal) { markFatal(result.fatal); break; }
           if (result.done) doneSet.add(id);
           else hold(id, `stage-fail:${JSON.stringify(status)}`);
-          persist();
+          persist(); persistWork(id);
         } catch (e) {
           stopForException(e, { fatal: reason => markFatal(`${id}: ${reason}`), pause: reason => { STOP = true; STOP_REASON ||= reason; } });
           persist();
