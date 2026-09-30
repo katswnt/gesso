@@ -100,10 +100,15 @@ check('identities: verbatim quote required, visual link only to confirmed visual
   assert.deepEqual(a.rows.map(r => r.issues.length), [0, 1, 2]); // spacing tolerated; invented quote and elision rejected
   assert.equal(a.rows[0].visual, 'd1'); assert.equal(a.rows[1].visual, null); assert.equal(a.rows[2].visual, null);
   const j = CF.buildIdentityJudgeInput({ workId: 'w', identInput: input, identAudit: a });
-  assert.equal(j.pairs.length, 1); assert.deepEqual(j.pairs[0].evidence.map(e => e.ref), ['E1', 'E2']);
-  const sup = CF.supportedIdentities(j, { rows: [{ id: 'id1', verdict: 'supported', ref: 'E1', issues: [] }] }, a);
-  assert.deepEqual(sup.map(x => [x.id, x.name, x.visual]), [['id1', 'Jean de Sedano', 'd1']]);
-  assert.deepEqual(CF.supportedIdentities(j, { rows: [{ id: 'id1', verdict: 'unsupported', ref: 'none', issues: [] }] }, a), []);
+  // identity and visual link are judged as two separate questions
+  assert.deepEqual(j.pairs.map(p => [p.id, p.evidence.map(e => e.ref).join('+')]), [['id1', 'E1'], ['id1-v', 'E1+E2']]);
+  assert.match(j.pairs[1].claim, /unnamed description/);
+  const row = (id, verdict) => ({ id, verdict, ref: verdict === 'supported' ? 'E1' : 'none', issues: [] });
+  assert.deepEqual(CF.supportedIdentities(j, { rows: [row('id1', 'supported'), row('id1-v', 'supported')] }, a).map(x => [x.name, x.visual]), [['Jean de Sedano', 'd1']]);
+  // identity passes, link fails: still named, but not anchored to a hotspot
+  assert.deepEqual(CF.supportedIdentities(j, { rows: [row('id1', 'supported'), row('id1-v', 'unsupported')] }, a).map(x => [x.name, x.visual]), [['Jean de Sedano', null]]);
+  // link alone never names anyone
+  assert.deepEqual(CF.supportedIdentities(j, { rows: [row('id1', 'unsupported'), row('id1-v', 'supported')] }, a), []);
 });
 
 // ---- image-stage safeguards against a REAL preserved B3 transcript (skipped where absent) ----

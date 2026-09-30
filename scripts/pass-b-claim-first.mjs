@@ -26,9 +26,11 @@ const safeWork = id => sha256(id).slice(0, 24);
 const readJson = p => JSON.parse(readFileSync(p, 'utf8'));
 const loadGlobal = (file, name) => { const w = {}; new Function('window', readFileSync(file, 'utf8'))(w); return w[name]; };
 export const TRIAL = { primaryDate: '2026-10-02', fillDate: '2026-10-03', size: 20 };
+// Owner 2026-09-30: claim-first runs on Sonnet 5.5 (4.6 comparison: 1/10 vs 8/10 usable on the same prompts).
+export const CLAIM_FIRST_MODEL = 'claude-sonnet-5-5';
 // Per-trial model (owner 2026-09-30: Sonnet 5.5 pilot). Bound into every stage binding, so each model gets its own
 // runs; the provenance check requires exactly this model.
-export const OPTS = { model: CALIBRATION_MODEL, size: TRIAL.size, identities: false };
+export const OPTS = { model: CLAIM_FIRST_MODEL, size: TRIAL.size, identities: false };
 
 // ---------- trial works: B1+B2 captured in the corpus run ----------
 function completion(id, stage) {
