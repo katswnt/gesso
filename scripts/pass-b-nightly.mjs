@@ -19,6 +19,7 @@ import { CORPUS_RUN_DIR, buildPriorityQueue, inspectWork, pacificClock, USAGE_LO
 import { runAudit, auditHistory, callAuditPinned } from './pass-b-shadow-audit.mjs';
 import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
+import { remoteRoot, persist } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
 import { OPTS, setBaseProvider, stageBinding, stageRunId, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
@@ -108,12 +109,15 @@ async function main() {
     if (stop) break;
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
     for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snapshot(u, SNAP); // plain GETs, no model
+    // Cloud: page snapshots are frozen S1 inputs; push them before any call so a later night never re-fetches a changed page.
+    try { persist(remoteRoot(), [SNAP], `snapshots for ${id}`); } catch (e) { stop = `persist-failed: ${e.message}`; break; }
     for (let guard = 0; guard < 8 && !stop; guard++) {
       const st = workStatus(base);
       if (st.next === 'copy') {
         const f = join(OUT, 'copy', dateOf.get(id) || 'undated', `${sha256(id).slice(0, 24)}.json`);
         mkdirSync(join(OUT, 'copy', dateOf.get(id) || 'undated'), { recursive: true, mode: 0o700 });
         if (!existsSync(f)) writeFileSync(f, `${JSON.stringify({ version: 'passBClaimFirstCopy/1', workId: id, date: dateOf.get(id) || null, model: OPTS.model, ...st.copy }, null, 1)}\n`, { flag: 'wx', mode: 0o600 });
+        try { persist(remoteRoot(), [f], `copy ${id}`); } catch (e) { stop = `persist-failed: ${e.message}`; }
         finished++; break;
       }
       if (st.next === 'terminal') break;

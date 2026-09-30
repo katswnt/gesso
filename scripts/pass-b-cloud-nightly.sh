@@ -26,6 +26,11 @@ cd "$WT"
 export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-60}"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
 set +e
+# Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
+if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then
+  node scripts/pass-b-nightly.mjs; node scripts/pass-b-corpus-collect.mjs | head -6
+  node scripts/pass-b-cloud-lease.mjs status | head -12; echo "DRY RUN COMPLETE (claude on PATH: $(command -v claude || echo MISSING); CLI $(claude --version 2>/dev/null | head -1))"; exit 0
+fi
 node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER"; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
 node scripts/pass-b-nightly.mjs --run ${PASS_B_COLLECT:+--collect} 2>&1 | tee /tmp/pass-b-nightly.log; RUN=${PIPESTATUS[0]}
