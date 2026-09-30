@@ -37,21 +37,21 @@ Today about 3.2 GB of pipeline evidence exists only on the laptop. In cloud mode
 5. Verify the new bundles locally, commit them with `status.json`, push, and release the lease.
 6. On a fatal stop: write `fatal.json`, push, open a GitHub issue (phone notification). All later runs refuse.
 
-The length of a single routine run isn't documented, so chunks stay short (about 30–45 minutes). A killed chunk
-leaves only terminal reservations and is never retried, which the runner already handles.
+The length of a single routine run isn't documented, so chunks stay short (about 30–45 minutes). Each reservation
+is pushed to the evidence repo BEFORE its call and each outcome right after it (see the corrections below), so a
+reclaimed VM leaves a durable terminal reservation that is never retried.
 
 ## Pacing rule (built with option B; works on laptop or cloud)
 
-It reads `rate_limit_event` (seven_day and five_hour utilization plus resetsAt) from the newest transcript. No
-extra model calls.
-- **Full night:** weekly use ≤ the fraction of the week elapsed (weekly reset Thursday 04:00 PT).
-- **Half night:** up to about 5 points ahead of pace.
-- **Stop:** further ahead, or weekly ≥ about 85% (hard floor), or 5-hour ≥ about 90%.
+**Built as VSD-055.** Every transcript's `rate_limit_event` (both windows, each with its own resetsAt) is logged
+with its observation time. Before every reservation: go only if weekly use is below min(85%, elapsed fraction of
+the week + 3 points) and five-hour use is below 90%. A missing, stale (>3 h) or pre-reset reading never counts as
+zero: 2 probe calls, then stop. A per-session call cap is the backstop. In the cloud, the usage log lives in the
+evidence repo.
 
 ## Phases
 
-0. **Laptop, offline (next):** option B (model per epoch; Sonnet 5.5 for new collection), the pacing gate, and a
-   nightly job of collection plus claim-first. Tests against real transcripts.
+0. **Laptop, offline: DONE 2026-09-30** (VSD-054 model per epoch, VSD-055 pacing, VSD-056 nightly job).
 1. **Evidence repo as source of truth:** a sync tool (laptop → repo for window works), cloud checkout, lease,
    `status.json`, and a fatal → GitHub issue. Tests with fixture bundles.
 2. **Routine setup:** the network environment (Full, as the image hosts need), a setup script and the schedule.
