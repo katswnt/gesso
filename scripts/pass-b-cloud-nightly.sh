@@ -13,6 +13,9 @@ BRANCH="claude/pass-b-state"
 HOLDER="routine-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 if [ ! -d "$EV/.git" ]; then git clone -q --depth 1 --branch "$BRANCH" https://github.com/katswnt/gesso-pass-b-evidence.git "$EV"; fi
 git -C "$EV" config user.name "Gesso Pass B (cloud)"; git -C "$EV" config user.email "pass-b-cloud@users.noreply.github.com"
+# An attached repo is cloned on its default branch: always switch to the state branch (never merge into main).
+git -C "$EV" fetch -q origin "$BRANCH"
+if [ "$(git -C "$EV" rev-parse --abbrev-ref HEAD)" != "$BRANCH" ]; then git -C "$EV" checkout -q -B "$BRANCH" "origin/$BRANCH"; fi
 git -C "$EV" pull -q --ff-only origin "$BRANCH"
 PIN="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$EV/state/pin.json','utf8')).commit)")"
 WT="$(mktemp -d)/gesso"
