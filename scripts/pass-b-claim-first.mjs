@@ -31,7 +31,11 @@ export const TRIAL = { primaryDate: '2026-10-02', fillDate: '2026-10-03', size: 
 export const CLAIM_FIRST_MODEL = 'claude-sonnet-5-5';
 // Per-trial model (owner 2026-09-30: Sonnet 5.5 pilot). Bound into every stage binding, so each model gets its own
 // runs; the provenance check requires exactly this model.
-export const OPTS = { model: CLAIM_FIRST_MODEL, size: TRIAL.size, identities: false };
+export const OPTS = { model: CLAIM_FIRST_MODEL, size: TRIAL.size, identities: false, nightly: false };
+// Nightly mode (VSD-056): stable per-stage runs not keyed by a work list (the window moves daily), and inputs only
+// from the collector's VERIFIED inspection (setBaseProvider), never raw completion files.
+let BASE_PROVIDER = null;
+export const setBaseProvider = fn => { BASE_PROVIDER = fn; };
 
 // ---------- trial works: B1+B2 captured in the corpus run ----------
 function completion(id, stage) {
@@ -53,6 +57,7 @@ export function trialWorks() {
 }
 
 export function workBase(id) {
+  if (BASE_PROVIDER) return BASE_PROVIDER(id);
   const dir = join(CORPUS_RUN_DIR, 'works', safeWork(id));
   const b0 = readJson(join(dir, 'b0-prep.json'));
   const b1 = completion(id, 'B1'), b2 = completion(id, 'B2');
@@ -77,6 +82,9 @@ export function stageBinding(key, works) {
   // S1 is unchanged, so its accepted pilot-1 results are reused, not re-called.
   const ident = OPTS.identities ? { identities: CF.IDENT_VERSION } : {};
   const changes = { S2: { effort: st.effort }, SI: ident, SJ: ident, S3: { write: CF.WRITE_VERSION, ...ident }, S4: { write: CF.WRITE_VERSION, ...ident } }[key] || {};
+  if (OPTS.nightly) return { version: `passBClaimFirstNightly/1:${key}:${st.tag}`, model: OPTS.model, ...changes, identities: CF.IDENT_VERSION,
+    promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256, toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys,
+    callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: 1e9 }; // per-session limits come from the pacer
   return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: OPTS.model, ...changes, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
     toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: works.length, works };
 }

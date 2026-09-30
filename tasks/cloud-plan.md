@@ -61,10 +61,33 @@ extra model calls.
 4. **Travel mode:** routines on, laptop off. The morning check is `status.json` / a status page on the phone.
    Import to the laptop when home.
 
+## Codex review corrections (2026-09-30), to build before any unattended cloud run
+
+- **Save each reservation remotely BEFORE spending**, save each outcome promptly, and stop if persistence fails.
+  A reservation on a reclaimed VM that was never pushed is a lost unknown outcome. (The draft wrongly said killed
+  chunks leave terminal reservations.)
+- **The export format must be complete.** `scripts/pass-b-cloud-bundle.mjs` currently excludes reservations and
+  epochs and covers only finished B1–B3. Cloud mode needs reservations, epochs (the model per epoch, VSD-054),
+  claim-first stage runs, and fatal findings, clearances and their evidence, even for works outside the window.
+- **Lease:** one designated state branch; the first successful push wins and losers exit. Never auto-merge a
+  losing claim, and never steal an expired lease. The laptop honours the same lease.
+- **Pin the code revision and evidence branch** explicitly in the routine; never rely on the default checkout.
+- **Checkout:** sparse checkout still downloads history, so measure the first checkout and use a partial clone
+  if needed. Re-fetching images detects changed bytes but can't recover the original, so keep the exact evidence
+  images somewhere durable.
+- **Time zone and cost:** schedule in America/Los_Angeles with the 08:30 start cutoff and 09:00 finish deadline.
+  Disable paid overage while the requirement is $0 incremental spend.
+- **Pilot unknowns:** nested `claude -p` auth, model and transcript behaviour inside a Routine, VM expiry and
+  restart. Prove them with the 5-work pilot.
+- **Codex's role while travelling:** hosted Codex Cloud tasks from the ChatGPT app (laptop off), plus
+  `@codex review` on GitHub PRs from a phone. Codex scheduled tasks are for status checks, not a durable
+  pipeline runner.
+
 ## Still not built (needed for launch, independent of the cloud)
 
-Publishing verified copy to the live game, meaning the approval/publish path with rollback. This can be developed
-from phone sessions during travel.
+Publishing verified copy to the live game (guarded approval/publish with rollback), and a final check of each text
+after trimming: the assembler joins surviving sentences with no coherence check yet. Neither blocks a quarantined
+cloud pilot; both can be developed from phone sessions during travel.
 
 ## Open questions
 

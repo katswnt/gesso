@@ -764,7 +764,7 @@ async function main() {
     } finally { unlinkSync(RUN_LEASE); }
     return;
   }
-  if (!rebind && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
+  if (!rebind && !rebindModelFile && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
@@ -800,7 +800,7 @@ async function main() {
   const active = executionEpochs(RUN_DIR).at(-1);
   console.log(`runtime epoch: ${active ? `${active.number} / CLI ${active.policy.runtimeVersion} / ${active.sha256}` : 'none (first authorized run binds installed CLI)'}`);
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
-  if (!live && !repair && !rebind) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
+  if (!live && !repair && !rebind && !rebindModelFile) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
   if (live) laneWindow();
