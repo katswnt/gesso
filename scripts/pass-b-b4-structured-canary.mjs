@@ -193,7 +193,7 @@ export function cliResubmissionAccepted(execution, final) {
 // kind is 'fatal', 'usage-limit', or 'held' (the caller decides acceptance from the body).
 // allowedTools: default exactly [StructuredOutput] (B4, audits). An image stage passes ['Read', 'StructuredOutput'];
 // its image-read confinement is verified by the caller. Only StructuredOutput emissions count as output emissions.
-export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = ['StructuredOutput'] } = {}) {
+export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = ['StructuredOutput'], expectedModel = CALIBRATION_MODEL } = {}) {
   const parsed = parseStreamTranscript(transcript);
   const execution = b4ExecutionEvents(transcript);
   const final = transcriptFinal(parsed);
@@ -209,7 +209,7 @@ export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = 
   const errors = [];
   let kind = 'held';
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
-  else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
+  else if (resolvedModel !== expectedModel) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
   else if (!exactInitTools) { kind = 'fatal'; errors.push(allowed.length === 1 ? 'B4 init tools must be exactly [StructuredOutput]' : `init tools must be exactly [${allowed.join(', ')}]`); }
   else if (forbiddenTool) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
   // The CLI can repeat its output adapter after IT rejects malformed JSON inside the same call (canary /6).

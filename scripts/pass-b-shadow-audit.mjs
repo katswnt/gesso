@@ -357,7 +357,7 @@ export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
 // An image stage must Read exactly its one confined image; a read outside it is a durable fatal (as in the collector).
 export function deriveStageAttempt(plan, transcript, exitCode = 0) {
   const spec = plan.stageSpec;
-  const call = noToolCallProvenance(transcript, exitCode, { allowedTools: spec.allowedTools || ['StructuredOutput'] });
+  const call = noToolCallProvenance(transcript, exitCode, { allowedTools: spec.allowedTools || ['StructuredOutput'], ...(spec.model ? { expectedModel: spec.model } : {}) });
   const { final, errors } = call;
   let kind = call.kind, audit = null, imageReceipt = null;
   if (spec.image && kind !== 'usage-limit') {

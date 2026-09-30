@@ -26,6 +26,9 @@ const safeWork = id => sha256(id).slice(0, 24);
 const readJson = p => JSON.parse(readFileSync(p, 'utf8'));
 const loadGlobal = (file, name) => { const w = {}; new Function('window', readFileSync(file, 'utf8'))(w); return w[name]; };
 export const TRIAL = { primaryDate: '2026-10-02', fillDate: '2026-10-03', size: 20 };
+// Per-trial model (owner 2026-09-30: Sonnet 5.5 pilot). Bound into every stage binding, so each model gets its own
+// runs; the provenance check requires exactly this model.
+export const OPTS = { model: CALIBRATION_MODEL, size: TRIAL.size };
 
 // ---------- trial works: B1+B2 captured in the corpus run ----------
 function completion(id, stage) {
@@ -43,7 +46,7 @@ export function trialWorks() {
   const ready = id => completion(id, 'B1') && completion(id, 'B2');
   const out = ids(TRIAL.primaryDate).filter(ready);
   for (const id of ids(TRIAL.fillDate)) { if (out.length >= TRIAL.size) break; if (ready(id) && !out.includes(id)) out.push(id); }
-  return out.slice(0, TRIAL.size);
+  return out.slice(0, OPTS.size);
 }
 
 export function workBase(id) {
@@ -64,12 +67,12 @@ const STAGES = {
 };
 export function stageBinding(key, works) {
   const st = STAGES[key];
-  const command = buildStageCommand({ stage: st.stage, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
-  return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: CALIBRATION_MODEL, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
+  const command = buildStageCommand({ stage: st.stage, model: OPTS.model, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
+  return { version: `${CF.CLAIM_FIRST_VERSION}:${key}:${st.tag}`, model: OPTS.model, promptSha256: sha256(st.prompt), wireSchemaSha256: command.wireSchemaSha256,
     toolsEnforced: command.toolsEnforced, removeKeys: command.env.removeKeys, callTimeoutMs: CALL_TIMEOUT_MS, maxReservations: works.length, works };
 }
 export const stageRunId = binding => `cf-${sha256(stableJson(binding)).slice(0, 12)}`;
-const stageSpec = key => ({ version: STAGES[key].version, allowedTools: STAGES[key].image ? ['Read', 'StructuredOutput'] : ['StructuredOutput'], image: !!STAGES[key].image, control: STAGES[key].control });
+const stageSpec = key => ({ model: OPTS.model, version: STAGES[key].version, allowedTools: STAGES[key].image ? ['Read', 'StructuredOutput'] : ['StructuredOutput'], image: !!STAGES[key].image, control: STAGES[key].control });
 
 function mkPlan(key, base, input, binding, extra = {}) {
   const st = STAGES[key];
@@ -77,11 +80,11 @@ function mkPlan(key, base, input, binding, extra = {}) {
   if (st.image) {
     const imageFile = `${base.b0.image.imgSha256}.${base.b0.image.ext}`;
     promptText = `${st.prompt}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(CF.confirmRequests(input.candidates))}`;
-    command = buildStageCommand({ stage: 'B3', promptText, imageFile });
+    command = buildStageCommand({ stage: 'B3', model: OPTS.model, promptText, imageFile });
     Object.assign(extra, { imageFile, imageSource: join(CORPUS_RUN_DIR, 'imgs', imageFile) });
   } else {
     promptText = `${st.prompt}\n\nINPUTS:\n${JSON.stringify(input)}`;
-    command = buildStageCommand({ stage: st.stage, promptText, wireSchema: st.schema });
+    command = buildStageCommand({ stage: st.stage, model: OPTS.model, promptText, wireSchema: st.schema });
   }
   return { spec: { name: base.catalog?.title || base.id }, workId: base.id, stageSpec: stageSpec(key), input, binding, controllerHolds: {},
     inputSha256: sha256(stableJson(input)), promptHash: sha256(promptText), command, ...extra };
@@ -165,7 +168,11 @@ export function reviewPage(rep, works) {
 }
 
 async function main() {
-  const args = process.argv.slice(2), works = trialWorks();
+  const args = process.argv.slice(2);
+  const opt = k => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
+  if (opt('--model')) OPTS.model = opt('--model');
+  if (opt('--works')) OPTS.size = Math.max(1, Math.min(TRIAL.size, Number(opt('--works'))));
+  const works = trialWorks();
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   if (args.includes('--snapshot')) {
     const urls = [...new Set(works.flatMap(id => citedUrls(workBase(id).b2)))];
@@ -181,7 +188,7 @@ async function main() {
   const live = args.includes('--run');
   if (live && process.env.PASS_B_SHADOW_AUDIT_LIVE !== '1') throw new Error('refusing --run: set PASS_B_SHADOW_AUDIT_LIVE=1');
   const plans = allPlans(works), clock = pacificClock();
-  console.log(`claim-first trial: ${works.length} works (${TRIAL.primaryDate} + fill from ${TRIAL.fillDate}) | Pacific ${clock.date} | in start window ${clock.mayStart} | hours exception today ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
+  console.log(`claim-first trial: model ${OPTS.model} | ${works.length} works (${TRIAL.primaryDate} + fill from ${TRIAL.fillDate}) | Pacific ${clock.date} | in start window ${clock.mayStart} | hours exception today ${process.env.PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION === clock.date}`);
   for (const key of ['S1', 'S2', 'S3', 'S4']) { const r = runDirFor(key, works); console.log(`  ${key} ${STAGES[key].tag}: run ${r.runId}, reservations ${countReservations(r.outDir)}/${works.length}${preservedFatal(r.outDir) ? ' PRESERVED FATAL' : ''}`); }
   const claims = plans.reduce((n, p) => n + p.s1.input.pairs.length, 0), cands = plans.reduce((n, p) => n + p.s2.input.candidates.length, 0);
   const pagesHave = plans.reduce((n, p) => n + citedUrls(p.base.b2).filter(u => pageFor(u)).length, 0), pagesAll = plans.reduce((n, p) => n + citedUrls(p.base.b2).length, 0);

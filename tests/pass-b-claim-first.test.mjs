@@ -62,6 +62,16 @@ check('a missing check verdict trims the sentence (fail closed)', () => {
   assert.equal(a.why, null); assert.deepEqual(a.usable, { minimal: false, strict: false });
 });
 
+import('../scripts/pass-b-b4-structured-canary.mjs').then(({ noToolCallProvenance }) => {
+  const t = model => `${[{ type: 'system', subtype: 'init', apiKeySource: 'none', model, tools: ['StructuredOutput'] },
+    { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't0', name: 'StructuredOutput', input: {} }] } },
+    { type: 'result', subtype: 'success', is_error: false, structured_output: {}, modelUsage: { [model]: { output_tokens: 1 } }, usage: { output_tokens: 1 } }].map(r => JSON.stringify(r)).join('\n')}\n`;
+  assert.equal(noToolCallProvenance(t('claude-sonnet-5-5'), 0).kind, 'fatal'); // default still pins 4.6
+  assert.notEqual(noToolCallProvenance(t('claude-sonnet-5-5'), 0, { expectedModel: 'claude-sonnet-5-5' }).kind, 'fatal');
+  assert.equal(noToolCallProvenance(t('claude-sonnet-4-6'), 0, { expectedModel: 'claude-sonnet-5-5' }).kind, 'fatal');
+  console.log('pass-b-claim-first.test: model pin checks passed');
+});
+
 // ---- image-stage safeguards against a REAL preserved B3 transcript (skipped where absent) ----
 const corpus = join(RUN_ROOT, 'corpus-b3-6401bc543ead', 'works');
 const realB3 = existsSync(corpus) ? readdirSync(corpus).map(d => join(corpus, d, 'attempts')).filter(existsSync)
