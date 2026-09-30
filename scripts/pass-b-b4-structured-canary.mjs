@@ -191,7 +191,9 @@ export function cliResubmissionAccepted(execution, final) {
 // Call-level safety for any no-tool StructuredOutput call (B4 and the shadow audit): subscription provenance,
 // model, exact init tools, forbidden tools, CLI resubmission, timeout, usage limit, process failure.
 // kind is 'fatal', 'usage-limit', or 'held' (the caller decides acceptance from the body).
-export function noToolCallProvenance(transcript, exitCode = 0) {
+// allowedTools: default exactly [StructuredOutput] (B4, audits). An image stage passes ['Read', 'StructuredOutput'];
+// its image-read confinement is verified by the caller. Only StructuredOutput emissions count as output emissions.
+export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = ['StructuredOutput'] } = {}) {
   const parsed = parseStreamTranscript(transcript);
   const execution = b4ExecutionEvents(transcript);
   const final = transcriptFinal(parsed);
@@ -199,19 +201,21 @@ export function noToolCallProvenance(transcript, exitCode = 0) {
   const apiKeySources = execution.inits.map(init => init.apiKeySource ?? null);
   const invalidInit = apiKeySources.findIndex(source => source !== 'none');
   const apiKeySource = invalidInit >= 0 ? apiKeySources[invalidInit] : (apiKeySources.length ? 'none' : null);
+  const allowed = [...allowedTools].sort();
   const exactInitTools = execution.inits.every(init => Array.isArray(init.tools) &&
-    init.tools.length === 1 && init.tools[0] === 'StructuredOutput');
-  const forbiddenTool = execution.toolUses.some(row => row.type !== 'tool_use' || row.name !== 'StructuredOutput');
+    stableJson([...init.tools].sort()) === stableJson(allowed));
+  const forbiddenTool = execution.toolUses.some(row => row.type !== 'tool_use' || !allowed.includes(row.name));
+  const emissions = { ...execution, toolUses: execution.toolUses.filter(row => row.name === 'StructuredOutput') };
   const errors = [];
   let kind = 'held';
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
   else if (resolvedModel !== CALIBRATION_MODEL) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
-  else if (!exactInitTools) { kind = 'fatal'; errors.push('B4 init tools must be exactly [StructuredOutput]'); }
+  else if (!exactInitTools) { kind = 'fatal'; errors.push(allowed.length === 1 ? 'B4 init tools must be exactly [StructuredOutput]' : `init tools must be exactly [${allowed.join(', ')}]`); }
   else if (forbiddenTool) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
   // The CLI can repeat its output adapter after IT rejects malformed JSON inside the same call (canary /6).
   // Accept only when every earlier emission got a CLI error result, the last got a success result, and the
   // final structured_output is exactly that last emission. Anything else stays a terminal conformance hold.
-  else if (execution.toolUses.length > 1 && !cliResubmissionAccepted(execution, final)) errors.push('multiple-StructuredOutput-emissions');
+  else if (emissions.toolUses.length > 1 && !cliResubmissionAccepted(emissions, final)) errors.push('multiple-StructuredOutput-emissions');
   else if (exitCode === 'timeout') errors.push('process-timeout');
   else if (usageLimited(execution.events, final)) kind = 'usage-limit';
   else if (exitCode !== 0 || !final || final.is_error) errors.push(`process-failed:exit${exitCode}`);
@@ -220,9 +224,9 @@ export function noToolCallProvenance(transcript, exitCode = 0) {
     claudeCodeVersion: parsed.init?.claudeCodeVersion ?? null, usage: final?.usage ?? null,
     modelUsage: final?.modelUsage ?? null, numTurns: final?.num_turns ?? null,
     toolUses: execution.toolUses.map(row => row.name), toolUseTypes: execution.toolUses.map(row => row.type),
-    cliRejectedEmissions: execution.toolUses.length > 1 && cliResubmissionAccepted(execution, final) ? execution.toolUses.length - 1 : 0,
+    cliRejectedEmissions: emissions.toolUses.length > 1 && cliResubmissionAccepted(emissions, final) ? emissions.toolUses.length - 1 : 0,
   };
-  return { kind, errors, execution, final, evidence };
+  return { kind, errors, execution, emissions, final, evidence };
 }
 
 export function deriveB4Attempt(plan, transcript, exitCode = 0) {

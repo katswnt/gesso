@@ -10,7 +10,7 @@
 // fatal.json and stop every later run. Calls start only 00:00–08:30 America/Los_Angeles (VSD-045) unless the
 // owner sets PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION to today's Pacific date; the exception is recorded in the
 // reservation.
-import { closeSync, existsSync, fsyncSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFile } from 'node:child_process';
@@ -18,7 +18,7 @@ import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
-import { RUN_ROOT, CALIBRATION_MODEL, buildStageCommand, parseStreamTranscript, webFetchRetrieved } from './lib/pass-b-calibration.mjs';
+import { RUN_ROOT, CALIBRATION_MODEL, buildStageCommand, parseStreamTranscript, webFetchRetrieved, verifyB1ImageRead } from './lib/pass-b-calibration.mjs';
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
@@ -151,7 +151,7 @@ export function b2Fetches(transcriptText) {
   });
 }
 
-function loadB2(workDir) {
+export function loadB2(workDir) {
   const comp = readdirSync(join(workDir, 'completions')).find(f => f.startsWith('b2-'));
   if (!comp) return { body: null, fetches: [], completionSha256: null };
   const text = readFileSync(join(workDir, 'completions', comp), 'utf8'), c = JSON.parse(text);
@@ -326,6 +326,7 @@ export function controlAudit(output, input, { controller = 1 } = {}) {
 }
 
 export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
+  if (plan.stageSpec) return deriveStageAttempt(plan, transcript, exitCode);
   const call = noToolCallProvenance(transcript, exitCode);
   const { execution, final, errors } = call;
   let kind = call.kind, audit = null;
@@ -350,6 +351,29 @@ export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
     kind = errors.length ? 'held' : 'accepted';
   }
   return { kind, errors, output, audit, evidence: call.evidence };
+}
+
+// Generic stage (claim-first prototype): plan.stageSpec = { version?, allowedTools, image?, control(output, input) }.
+// An image stage must Read exactly its one confined image; a read outside it is a durable fatal (as in the collector).
+export function deriveStageAttempt(plan, transcript, exitCode = 0) {
+  const spec = plan.stageSpec;
+  const call = noToolCallProvenance(transcript, exitCode, { allowedTools: spec.allowedTools || ['StructuredOutput'] });
+  const { final, errors } = call;
+  let kind = call.kind, audit = null, imageReceipt = null;
+  if (spec.image && kind !== 'usage-limit') {
+    imageReceipt = verifyB1ImageRead(parseStreamTranscript(transcript), { callDir: null, imageBasename: plan.imageFile });
+    if (imageReceipt.bad.length) { kind = 'fatal'; errors.push(`confinement violation: ${imageReceipt.bad.join(', ')}`); }
+  }
+  const output = final?.structured_output ?? null;
+  if (kind !== 'fatal' && kind !== 'usage-limit') {
+    if (call.emissions.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
+    if (spec.image && !imageReceipt.ok) errors.push(`image not read: ${imageReceipt.reason}`);
+    if (spec.version && output?.v !== spec.version) errors.push(`version:${output?.v || 'missing'}`);
+    if (output) { audit = spec.control(output, plan.input); errors.push(...(audit.errors || [])); }
+    else errors.push('no-structured-output');
+    kind = errors.length ? 'held' : 'accepted';
+  }
+  return { kind, errors, output, audit, imageReceipt, evidence: call.evidence };
 }
 
 // ---------- durable execution (mirrors pass-b-b4-window) ----------
@@ -394,6 +418,7 @@ export function startGate(now = new Date(), exception = process.env.PASS_B_SHADO
 export async function callAuditPinned(plan, { bin, timeout, execute = execFileP }) {
   const callDir = mkdtempSync(join(tmpdir(), 'pass-b-audit-'));
   try {
+    if (plan.imageSource) copyFileSync(plan.imageSource, join(callDir, plan.imageFile)); // the one confined image
     const env = { ...process.env, DISABLE_AUTOUPDATER: '1' };
     for (const key of plan.command.env.removeKeys) delete env[key];
     try {

@@ -14,12 +14,12 @@ import { AUDIT_WORKS, buildWorkInput } from './pass-b-shadow-audit.mjs';
 
 export const EXTRACTION_VERSION = 'passBSourceText/1';
 export const SELECTION_VERSION = 'passBAuditPassages/1';
-const OUT = join(RUN_ROOT, 'audit-evidence-v1'), SNAP = join(OUT, 'snapshots');
+const OUT = join(RUN_ROOT, 'audit-evidence-v1'), SNAP = join(OUT, 'snapshots'), SNAPSHOT_DIR = SNAP;
 const MAX_BYTES = 5 * 1024 * 1024, TIMEOUT_MS = 20000;
 export const BUDGET = { perComponent: 3, perWorkChars: 9000, minScore: 2 };
 
 // ---- fetch (plain GET, https only, bounded size/time, no cookies) ----
-async function snapshot(url) {
+export async function snapshot(url, SNAP = SNAPSHOT_DIR) {
   const key = sha256(url).slice(0, 24), metaPath = join(SNAP, `${key}.meta.json`);
   if (existsSync(metaPath)) return JSON.parse(readFileSync(metaPath, 'utf8'));
   if (!/^https:\/\//i.test(url)) return { url, ok: false, error: 'not https' };
