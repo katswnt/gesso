@@ -484,7 +484,8 @@ export function syntheticFixture() {
 // capture so it is unit-testable without any model call. A failed stage blocks that work's dependents but
 // never corrupts other works. `spawnStage(stage,{argv,imageFile})` returns raw stdout; `capture(...)`
 // validates+persists and throws on an invalid body; `hasCompletion(stage)` supports resume. ----
-export async function runWorkStages({ workId, catalog, legacy = null, imgSha256, ext, prompts, runtimeVersion, spawnStage, capture, loadCompletion = () => null, skipB4 = false }) {
+// model: the model of the collector's ACTIVE execution epoch (VSD-054); the default keeps calibration callers on 4.6.
+export async function runWorkStages({ workId, catalog, legacy = null, imgSha256, ext, prompts, runtimeVersion, spawnStage, capture, loadCompletion = () => null, skipB4 = false, model = CALIBRATION_MODEL }) {
   // Calibration: B1 (image, Read tool) → CONDITIONAL B2 (no-image research) → CONDITIONAL B3 (image, only on
   // B2 targeted requests) → compact B4 synthesis (no image, only when B2 ran).
   const status = { B1: 'pending', B2: 'not-requested', B3: 'not-requested', B4: 'not-requested' };
@@ -508,8 +509,8 @@ export async function runWorkStages({ workId, catalog, legacy = null, imgSha256,
     // delta→body rehydration (item 2). B1/B2/B3 evidence needs no bodies.
     const existing = await loadCompletion(stage, { promptHash: sha256(promptText), context, bodies, legacy }); // resume verifies bindings + evidence
     if (existing) { status[stage] = 'complete'; return existing; }
-    const command = buildStageCommand({ stage, promptText, imageFile: img });
-    const producer = producerEvidence(stage, { runtimeVersion });
+    const command = buildStageCommand({ stage, model, promptText, imageFile: img });
+    const producer = producerEvidence(stage, { model, runtimeVersion });
     let lastErr;
     for (let attempt = 0; attempt <= validationRetries; attempt++) {
       const spawned = await spawnStage(stage, { command, imageFile: img }); // fresh process each attempt; process/web/model failure propagates (no retry)

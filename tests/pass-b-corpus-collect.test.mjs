@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION } from '../scripts/pass-b-corpus-collect.mjs';
+import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION, COLLECTION_MODEL, HISTORICAL_MODEL, rebindModel, epochModel } from '../scripts/pass-b-corpus-collect.mjs';
 import { syntheticFixture, verifyB1ImageRead, parseStreamTranscript, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { stagePrompts } from '../scripts/lib/pass-b-prompts.mjs';
@@ -190,14 +190,15 @@ function fixture({complete=['B1','B2','B3'],id='test-work'}={}) {
   writeFileSync(join(runDir,'imgs',imageFile),'test image bytes');
   writeFileSync(join(workRunDir,'b0-prep.json'),JSON.stringify({work:{id},trustedCatalog:catalog,legacy,image:{ok:true,imgSha256,ext}}));
   const bodies=syntheticFixture().bodies;
-  const transcript=(stage,body,{apiKeySource='none',error=false,result='',version='2.1.280',haikuDominates=false}={}) => {
+  const transcript=(stage,body,{apiKeySource='none',error=false,result='',version='2.1.280',haikuDominates=false,model=COLLECTION_MODEL}={}) => {
     const blocks=stage==='B2' ? [{type:'tool_use',id:'s',name:'WebSearch',input:{query:'test'}},{type:'tool_use',id:'f',name:'WebFetch',input:{url:'https://example.test'}}] : [{type:'tool_use',id:'r',name:'Read',input:{file_path:`./${imageFile}`}}];
     const results=stage==='B2' ? ['s','f'].map(id=>({type:'tool_result',tool_use_id:id,content:[{type:'text',text:'Museum record text with object details. '.repeat(10)}]})) : [{type:'tool_result',tool_use_id:'r',content:[{type:'image'}]}];
-    return [{type:'system',subtype:'init',apiKeySource,claude_code_version:version,model:CALIBRATION_MODEL},{type:'assistant',message:{content:blocks}},{type:'user',message:{content:results}},{type:'result',subtype:'success',is_error:error,result,structured_output:body,modelUsage:{[CALIBRATION_MODEL]:{output_tokens:10},...(haikuDominates?{'claude-haiku-4-5-20251001':{output_tokens:100}}:{})}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
+    return [{type:'system',subtype:'init',apiKeySource,claude_code_version:version,model},{type:'assistant',message:{content:blocks}},{type:'user',message:{content:results}},{type:'result',subtype:'success',is_error:error,result,structured_output:body,modelUsage:{[model]:{output_tokens:10},...(haikuDominates?{'claude-haiku-4-5-20251001':{output_tokens:100}}:{})}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
   };
   const context=stage=>stage==='B2'?syntheticFixture().contexts.B2:stage==='B3'?syntheticFixture().contexts.B3:{};
   let seq=0;
-  const attempt=(stage,body,opts={})=>{ const text=transcript(stage,body,opts); const path=join(workRunDir,'attempts',attemptFilename(stage,++seq,text)); writeFileSync(path,text); return {text,path}; };
+  // unreserved attempts = pre-epoch history (historical 4.6 rule)
+  const attempt=(stage,body,opts={})=>{ const text=transcript(stage,body,{model:HISTORICAL_MODEL,...opts}); const path=join(workRunDir,'attempts',attemptFilename(stage,++seq,text)); writeFileSync(path,text); return {text,path}; };
   for(const stage of complete){
     const {text}=attempt(stage,bodies[stage]);
     const promptHash=sha256(effectivePromptFor(stage,{id,catalog,legacy,imageFile,b1body:bodies.B1,b2body:bodies.B2}));
@@ -315,17 +316,17 @@ withFixture('runtime version is bound separately while banked completion bytes s
 });
 
 const ta=async(name,fn)=>{await fn();n++;console.log('ok',name);};
-const attemptArgs=f=>({runDir:f.runDir,workRunDir:f.workRunDir,id:f.id,imgSha256:f.imgSha256,ext:f.ext,stage:'B2',seq:20,runtimeVersion:'2.1.280',command:{bin:'fixture-only',argv:['-p','fixture'],env:{removeKeys:['ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN']}},now:()=>at('2026-09-22T10:00:00Z')});
+const attemptArgs=f=>({runDir:f.runDir,workRunDir:f.workRunDir,id:f.id,imgSha256:f.imgSha256,ext:f.ext,stage:'B2',seq:20,runtimeVersion:'2.1.280',command:{bin:'fixture-only',argv:['-p','fixture','--model',COLLECTION_MODEL],env:{removeKeys:['ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN']}},now:()=>at('2026-09-22T10:00:00Z')});
 const misreadTranscript=(C,image,body,{outside=false}={})=>{
   const bad=outside?'/private/tmp/outside/x.jpg':`${C}/${'0'.repeat(64)}.png`;
-  return [{type:'system',subtype:'init',apiKeySource:'none',model:CALIBRATION_MODEL,tools:['Read','StructuredOutput'],cwd:C,claude_code_version:'2.1.280'},
+  return [{type:'system',subtype:'init',apiKeySource:'none',model:COLLECTION_MODEL,tools:['Read','StructuredOutput'],cwd:C,claude_code_version:'2.1.280'},
     {type:'assistant',message:{content:[{type:'tool_use',id:'r1',name:'Read',input:{file_path:bad}}]}},
     {type:'user',message:{content:[{type:'tool_result',tool_use_id:'r1',is_error:true,content:`File does not exist. Note: your current working directory is ${C}.`}]}},
     {type:'assistant',message:{content:[{type:'tool_use',id:'r2',name:'Read',input:{file_path:`${C}/${image}`}}]}},
     {type:'user',message:{content:[{type:'tool_result',tool_use_id:'r2',content:[{type:'image',source:{type:'base64',data:'x'}}]}]}},
     {type:'assistant',message:{content:[{type:'tool_use',id:'so',name:'StructuredOutput',input:body}]}},
     {type:'user',message:{content:[{type:'tool_result',tool_use_id:'so',content:'Structured output provided successfully'}]}},
-    {type:'result',subtype:'success',is_error:false,structured_output:body,modelUsage:{[CALIBRATION_MODEL]:{output_tokens:10}}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
+    {type:'result',subtype:'success',is_error:false,structured_output:body,modelUsage:{[COLLECTION_MODEL]:{output_tokens:10}}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
 };
 await ta('clearance: one exact finding clears to a terminal hold; replay, wrong hash and a second fatal all still block',async()=>{
   const f=fixture({complete:['B1','B2']});
@@ -461,7 +462,7 @@ await ta('mid-call CLI drift requires a bound review; no drifted body becomes a 
     const fresh=await executeCorpusAttempt({...attemptArgs(f),seq:21,runtimeVersion:'2.1.281',execute:async()=>({stdout:f.transcript('B2',f.bodies.B2,{version:'2.1.281',result:'fresh after reviewed rebind'})})});
     captureStageCompletion({runDir:f.workRunDir,stage:'B2',rawResponse:fresh.raw,
       trusted:{workId:f.id,imgSha256:f.imgSha256,promptHash:sha256(effectivePromptFor('B2',{id:f.id,catalog:f.catalog,legacy:f.legacy,imageFile:f.imageFile,b1body:f.bodies.B1})),brokerPolicyVersion:BROKER_POLICY_VERSION,imageTransportVersion:IMAGE_TRANSPORT_VERSION,transcriptSha256:fresh.transcriptSha256},
-      producer:producerEvidence('B2',{runtimeVersion:'2.1.281'}),createdAt:'2026-09-22T11:00:00Z',context:syntheticFixture().contexts.B2});
+      producer:producerEvidence('B2',{model:COLLECTION_MODEL,runtimeVersion:'2.1.281'}),createdAt:'2026-09-22T11:00:00Z',context:syntheticFixture().contexts.B2});
     assert.ok(f.inspect().bodies.B2,'a later clean completion survives resume with the earlier drifted attempt preserved');
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
@@ -573,4 +574,64 @@ await ta('deadline termination cannot mask a proven provenance failure',async()=
     assert.ok(preservedFatal(f.runDir));assert.ok(f.corpus().fatal);
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
+
+// ---------- VSD-054: model per execution epoch (Codex-reviewed direction, 2026-09-30) ----------
+const modelReview=(f,toModel)=>{const prev=executionEpochs(f.runDir).at(-1);return {version:'passBCorpusModelReview/1',runId:currentRun,fromEpochSha256:prev.sha256,toModel,
+  toPolicySha256:sha256(stableJson(executionPolicy(prev.policy.runtimeVersion,toModel))),reviewedBy:'offline test fixture',reviewedAt:'2026-09-30T10:00:00Z',reason:'fixture-only model review'};};
+const reserveManual=(f,{stage,seq,epoch,text})=>{const A=join(f.workRunDir,'attempts'),stem=`${stage.toLowerCase()}-${String(seq).padStart(6,'0')}`;
+  writeFileSync(join(A,`${stem}.reserved.json`),JSON.stringify({runId:currentRun,workId:f.id,stage,seq,executionEpoch:epoch.number,executionEpochSha256:epoch.sha256,executionPolicySha256:sha256(stableJson(epoch.policy))}));
+  const file=attemptFilename(stage,seq,text);writeFileSync(join(A,file),text);
+  writeFileSync(join(A,`${stem}.meta.json`),JSON.stringify({workId:f.id,stage,seq,exitCode:0,kind:'ok',transcriptFile:file,transcriptSha256:sha256(text)}));return file;};
+const captureB2=(f,text,model)=>captureStageCompletion({runDir:f.workRunDir,stage:'B2',rawResponse:JSON.stringify(f.bodies.B2),
+  trusted:{workId:f.id,imgSha256:f.imgSha256,promptHash:sha256(effectivePromptFor('B2',{id:f.id,catalog:f.catalog,legacy:f.legacy,imageFile:f.imageFile,b1body:f.bodies.B1})),brokerPolicyVersion:BROKER_POLICY_VERSION,imageTransportVersion:IMAGE_TRANSPORT_VERSION,transcriptSha256:sha256(text)},
+  producer:producerEvidence('B2',{model,runtimeVersion:'2.1.280'}),createdAt:'2026-09-30T11:00:00Z',context:syntheticFixture().contexts.B2});
+const inFixture=async(name,fn,opts)=>ta(name,async()=>{const f=fixture(opts);try{await fn(f);}finally{rmSync(f.root,{recursive:true,force:true});}});
+
+await inFixture('mixed history: unreserved 4.6 B1, a 4.6-epoch B2 and a later 5.5 epoch all verify against their own model',async f=>{
+  bindExecutionPolicy(f.runDir,'2.1.280');                         // epoch 1: collection model (5.5)
+  const e2=rebindModel(f.runDir,modelReview(f,'claude-sonnet-4-6')); // epoch 2: 4.6
+  const text=f.transcript('B2',f.bodies.B2,{model:'claude-sonnet-4-6'});reserveManual(f,{stage:'B2',seq:30,epoch:e2,text});captureB2(f,text,'claude-sonnet-4-6');
+  const e3=rebindModel(f.runDir,modelReview(f,COLLECTION_MODEL));   // epoch 3: back to 5.5; epoch-2 evidence must still verify as 4.6
+  assert.equal(epochModel(e3),COLLECTION_MODEL);
+  const r=f.inspect();assert.equal(r.fatal,null);assert.ok(r.bodies.B1&&r.bodies.B2);
+},{complete:['B1']});
+await inFixture('a 5.5 completion under a 5.5 epoch verifies; the same transcript claiming 4.6 is a preserved model-drift fatal',async f=>{
+  const e1=bindExecutionPolicy(f.runDir,'2.1.280');assert.equal(epochModel(e1),COLLECTION_MODEL);
+  const good=f.transcript('B2',f.bodies.B2,{model:COLLECTION_MODEL});reserveManual(f,{stage:'B2',seq:30,epoch:e1,text:good});captureB2(f,good,COLLECTION_MODEL);
+  assert.equal(f.inspect().fatal,null);assert.ok(f.inspect().bodies.B2);
+  const bad=f.transcript('B2',null,{model:'claude-sonnet-4-6',result:'x'});reserveManual(f,{stage:'B2',seq:31,epoch:e1,text:bad});
+  assert.match(String(f.inspect().fatal),/preserved (provenance failure|model drift)/);
+},{complete:['B1']});
+await inFixture('a completion whose producer model disagrees with its reservation epoch is rejected',async f=>{
+  const e1=bindExecutionPolicy(f.runDir,'2.1.280');
+  const text=f.transcript('B2',f.bodies.B2,{model:COLLECTION_MODEL});reserveManual(f,{stage:'B2',seq:30,epoch:e1,text});captureB2(f,text,'claude-sonnet-4-6');
+  assert.throws(()=>f.inspect(),/producer does not match|invalid B2 completion/);
+},{complete:['B1']});
+await inFixture('unreserved (pre-epoch) evidence claiming 5.5 fails the historical rule, so an epoch-less import cannot smuggle a model',async f=>{
+  f.attempt('B2',null,{model:COLLECTION_MODEL,result:'x'});
+  assert.match(String(f.inspect().fatal),/preserved (provenance failure|model drift)/);
+},{complete:['B1']});
+await inFixture('model rebind: reviewed binding required, only the model changes, preserved fatal blocks it, runtime rebind keeps the model',async f=>{
+  bindExecutionPolicy(f.runDir,'2.1.280');
+  for(const [k,v] of [['reviewedBy',''],['toModel','claude-opus-5'],['fromEpochSha256','x'],['runId','other']]){const r=modelReview(f,'claude-sonnet-4-6');r[k]=v;if(k==='toModel')r.toPolicySha256='x';assert.throws(()=>rebindModel(f.runDir,r));}
+  assert.throws(()=>rebindModel(f.runDir,modelReview(f,COLLECTION_MODEL)),/no change/);
+  const e2=rebindModel(f.runDir,modelReview(f,'claude-sonnet-4-6'));assert.equal(epochModel(e2),'claude-sonnet-4-6');
+  const {model:_a,...before}=executionEpochs(f.runDir)[0].policy,{model:_b,...after}=e2.policy;assert.deepEqual(after,before);
+  // the active epoch is 4.6 but new collection uses 5.5: sessions pause instead of switching silently
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.1.280'),/paused pending reviewed --rebind-model/);
+  const rr={version:'passBCorpusRuntimeReview/1',runId:currentRun,fromEpochSha256:e2.sha256,toRuntimeVersion:'2.1.281',toPolicySha256:sha256(stableJson(executionPolicy('2.1.281','claude-sonnet-4-6'))),reviewedBy:'fixture',reviewedAt:'2026-09-30T10:00:00Z',reason:'fixture'};
+  assert.equal(epochModel(rebindRuntime(f.runDir,rr)),'claude-sonnet-4-6');
+  persistFatal(f.runDir,'fixture fatal');assert.throws(()=>rebindModel(f.runDir,modelReview(f,COLLECTION_MODEL)),/preserved fatal/);
+},{complete:['B1']});
+await inFixture('a model rebind leaves terminal holds and attempts untouched',async f=>{
+  bindExecutionPolicy(f.runDir,'2.1.280');
+  f.attempt('B2',null,{result:'x',error:true});const before=f.corpus();
+  const tr=tree(join(f.workRunDir,'attempts'));rebindModel(f.runDir,modelReview(f,'claude-sonnet-4-6'));
+  const after=f.corpus();assert.deepEqual([...after.heldSet],[...before.heldSet]);assert.equal(after.attempts,before.attempts);assert.deepEqual(tree(join(f.workRunDir,'attempts')),tr);
+},{complete:['B1']});
+await inFixture('a live command whose model differs from the active epoch is refused before any reservation',async f=>{
+  bindExecutionPolicy(f.runDir,'2.1.280');const before=tree(join(f.workRunDir,'attempts'));let calls=0;
+  await assert.rejects(executeCorpusAttempt({...attemptArgs(f),command:{bin:'fixture-only',argv:['-p','fixture','--model','claude-sonnet-4-6'],env:{removeKeys:['ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN']}},execute:async()=>{calls++;}}),/no reservation written/);
+  assert.equal(calls,0);assert.deepEqual(tree(join(f.workRunDir,'attempts')),before);
+},{complete:['B1']});
 console.log(`\n${n} corpus-collector regressions passed`);

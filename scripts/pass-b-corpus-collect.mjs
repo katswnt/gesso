@@ -35,6 +35,15 @@ const PROMPT_HASHES_B0B3 = { B1: sha256(prompts.B1), B2: sha256(prompts.B2), B3:
 export function computeRunId(contract) { return 'corpus-b3-' + sha256(stableJson(contract)).slice(0, 12); }
 // Evidence run identity binds the original collection contract, model, broker, transport, validation, and
 // B1–B3 prompts. Runtime/scheduling hardening is separately bound by execution-policy.json; B4 is excluded.
+// VSD-054 (owner 2026-09-30, Codex-reviewed direction): the model lives in each append-only execution epoch, not in
+// the run identity. The run id keeps its historical 4.6 label, so every banked attempt stays byte-identical and
+// verifies against ITS OWN epoch's model; attempts with no epoch binding use the explicit historical rule. New
+// collection uses COLLECTION_MODEL only after an owner-reviewed --rebind-model appends an epoch; until then the
+// collector pauses rather than silently switching.
+export const HISTORICAL_MODEL = CALIBRATION_MODEL; // 'claude-sonnet-4-6': attempts without a model-bearing epoch
+export const COLLECTION_MODEL = 'claude-sonnet-5-5';
+export const ALLOWED_COLLECTION_MODELS = Object.freeze(['claude-sonnet-4-6', 'claude-sonnet-5-5']);
+export const epochModel = epoch => epoch?.policy?.model ?? HISTORICAL_MODEL;
 export function runIdFor({ promptHashes, model = CALIBRATION_MODEL, collector = EVIDENCE_CONTRACT_VERSION }) {
   return computeRunId({ scope: 'corpus-through-b3', collector, prompts: { B1: promptHashes.B1, B2: promptHashes.B2, B3: promptHashes.B3 }, model, broker: BROKER_POLICY_VERSION, transport: IMAGE_TRANSPORT_VERSION, validation: VALIDATION_CONTRACT_VERSION });
 }
@@ -236,14 +245,14 @@ export function loadFatalClearances(runDir) {
 // two Reads with unique ids, each with exactly one later result; the first is a wrong basename in the init cwd whose
 // result is EXACTLY the CLI's missing-file diagnostic; the second is the exact image and returns only image blocks;
 // one StructuredOutput; a successful final. The strict verifier must report that misread as its only defect.
-export function verifyMisreadIncident(text, imageBasename) {
+export function verifyMisreadIncident(text, imageBasename, expectedModel = HISTORICAL_MODEL) {
   const fail = reason => ({ ok: false, reason });
   let ev; try { ev = String(text).split('\n').filter(l => l.trim()).map(l => JSON.parse(l)); } catch { return fail('unparseable transcript'); }
   const inits = ev.filter(e => e.type === 'system' && e.subtype === 'init');
   if (inits.length !== 1) return fail('expected exactly one init');
   const init = inits[0], C = init.cwd;
   if (typeof C !== 'string' || !C.startsWith('/') || C.includes('..')) return fail('bad cwd');
-  if (init.apiKeySource !== 'none' || init.model !== CALIBRATION_MODEL || stableJson(init.tools) !== stableJson(['Read', 'StructuredOutput'])) return fail('init provenance/tools');
+  if (init.apiKeySource !== 'none' || init.model !== expectedModel || stableJson(init.tools) !== stableJson(['Read', 'StructuredOutput'])) return fail('init provenance/tools');
   const uses = [], results = [];
   ev.forEach((e, idx) => { for (const b of (Array.isArray(e.message?.content) ? e.message.content : [])) {
     if (b?.type === 'tool_use') uses.push({ id: b.id, name: b.name, input: b.input, idx });
@@ -281,7 +290,8 @@ export function applyFatalClearance(runDir, request) {
   const meta = readJson(metaPath), fatal = readJson(join(runDir, 'fatal.json')), b0 = readJson(join(workDir, 'b0-prep.json'));
   if (meta.workId !== f.workId || meta.stage !== f.stage || meta.seq !== f.seq || meta.kind !== 'fatal' || meta.transcriptFile !== f.transcriptFile) throw new Error('clearance meta binding mismatch');
   if (fatal.runId !== RUN_ID || fatal.reason !== f.fatalReason || f.fatalReason !== `${f.workId}/${f.stage}: ${meta.reason}`) throw new Error('clearance fatal binding mismatch');
-  const check = verifyMisreadIncident(readFileSync(trPath, 'utf8'), neutralImageFile(b0.image?.imgSha256, b0.image?.ext));
+  const reservation = readJson(resPath), resEpoch = executionEpochs(runDir).find(e => e.number === (reservation.executionEpoch ?? 0));
+  const check = verifyMisreadIncident(readFileSync(trPath, 'utf8'), neutralImageFile(b0.image?.imgSha256, b0.image?.ext), resEpoch ? epochModel(resEpoch) : HISTORICAL_MODEL); // VSD-054: the attempt's own epoch
   if (!check.ok) throw new Error(`clearance refused: ${check.reason}`);
   const prior = loadFatalClearances(runDir);
   if (prior.some(c => c.finding.transcriptSha256 === f.transcriptSha256)) throw new Error('finding already cleared');
@@ -323,6 +333,17 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   const attemptsDir = join(workDir, 'attempts');
   const contexts = stage => stage === 'B2' ? { evidenceIds: b2InputFor(id, catalog, bodies.B1).visibleSignals.map(s => s.evidenceId) }
     : stage === 'B3' ? { requestIds: b3Plan(bodies.B2).requestIds } : {};
+  // VSD-054: the model a completion must show is the model of the epoch its transcript was reserved under; a
+  // transcript with no reservation (pre-epoch history) uses the explicit historical 4.6 rule.
+  const workEpochs = executionEpochs(runDir);
+  const expectedModelFor = (stage, transcriptSha256) => {
+    const found = findTranscriptBySha(workDir, stage, transcriptSha256);
+    const stem = found?.file?.slice(0, 9) || '', reservedPath = join(attemptsDir, `${stem}.reserved.json`);
+    if (!/^b[123]-\d{6}$/.test(stem) || !existsSync(reservedPath)) return HISTORICAL_MODEL;
+    const r = readJson(reservedPath), epoch = workEpochs.find(e => e.number === (r.executionEpoch ?? 0));
+    if (!epoch || sha256(stableJson(epoch.policy)) !== r.executionPolicySha256) throw new Error(`${id}: execution policy binding mismatch`);
+    return epochModel(epoch);
+  };
   for (const stage of ['B1', 'B2', 'B3']) {
     const name = `${stage.toLowerCase()}-${completionKey(stage, id)}.json`;
     const found = files(join(workDir, 'completions')).filter(f => f.startsWith(`${stage.toLowerCase()}-`));
@@ -331,7 +352,8 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const path = join(workDir, 'completions', name), c = readJson(path);
     if (c.stage !== stage) throw new Error(`${id}: completion stage mismatch`);
     const promptHash = sha256(effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1body: bodies.B1, b2body: bodies.B2 }));
-    const v = validateStageCompletion(c, { ...contexts(stage), trusted: { workId: id, imgSha256: b0.image.imgSha256, promptHash, brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION }, producer: producerEvidence(stage, { runtimeVersion: c.producer?.runtimeVersion }) });
+    const expectedModel = expectedModelFor(stage, c.transcriptSha256);
+    const v = validateStageCompletion(c, { ...contexts(stage), trusted: { workId: id, imgSha256: b0.image.imgSha256, promptHash, brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION }, producer: producerEvidence(stage, { model: expectedModel, runtimeVersion: c.producer?.runtimeVersion }) });
     if (!v.ok) throw new Error(`${id}: invalid ${stage} completion: ${v.errors.join(',')}`);
     const rawTarget = join(workDir, 'raw', `${c.rawResponseSha256}.json`);
     let rawPath = rawTarget;
@@ -344,7 +366,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     }
     const raw = readFileSync(rawPath, 'utf8');
     if (sha256(raw) !== c.rawResponseSha256 || stableJson(JSON.parse(raw)) !== stableJson(c.body)) throw new Error(`${id}: raw/body mismatch`);
-    const ev = verifyStageEvidence({ stage, workRunDir: workDir, completion: c, imageBasename: imageFile });
+    const ev = verifyStageEvidence({ stage, workRunDir: workDir, completion: c, imageBasename: imageFile, expectedModel });
     if (!ev.ok) throw new Error(`${id}: ${stage} evidence: ${ev.errors.join(',')}`);
     const tr = parseStreamTranscript(findTranscriptBySha(workDir, stage, c.transcriptSha256).bytes);
     if (stableJson(transcriptFinal(tr)?.structured_output) !== stableJson(c.body)) throw new Error(`${id}: transcript/body mismatch`);
@@ -393,8 +415,9 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const operational = meta?.kind === 'operational-pause' && meta.exitCode !== 0;
     const deadline = meta?.kind === 'deadline-pause' && meta.exitCode === 'deadline';
     if ((!inits.length && !operational && !deadline && !incompleteTranscripts.has(name)) || inits.some(e => e.apiKeySource !== 'none') ||
-        (binding ? inits.some(e => e.model !== CALIBRATION_MODEL) : (model && model !== CALIBRATION_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
-    if (!usage && final && model && model !== CALIBRATION_MODEL) fatal ||= `${id}/${stage}: preserved model drift`;
+        (binding ? inits.some(e => e.model !== epochModel(binding.epoch)) : (model && model !== HISTORICAL_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
+    const expected = binding ? epochModel(binding.epoch) : HISTORICAL_MODEL; // each attempt against ITS OWN epoch
+    if (!usage && final && model && model !== expected) fatal ||= `${id}/${stage}: preserved model drift`;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (clearance) {
       const metaFile = join(attemptsDir, `${name.slice(0, 9)}.meta.json`), resFile = join(attemptsDir, `${name.slice(0, 9)}.reserved.json`);
@@ -481,7 +504,7 @@ function initEvents(text) {
   return String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e.type === 'system' && e.subtype === 'init' ? [e] : []; } catch { return []; } });
 }
 let CLAUDE_BIN = null; // exact versioned binary resolved at session start (a mid-run update cannot swap it)
-let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null;
+let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null, ACTIVE_MODEL = null;
 const markFatal = reason => { FATAL ||= reason; persistFatal(RUN_DIR, FATAL); };
 // Only a classified boundary failure may create fatal.json. Filesystem, lease and runtime problems
 // cannot become permanent provenance findings merely because they surfaced outside runWorkStages.
@@ -500,6 +523,8 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);
   laneWindow(lane, now());
   const epoch = bindExecutionPolicy(runDir, runtimeVersion);
+  const epochModelNow = epochModel(epoch), argv = command.argv;
+  if (argv[argv.indexOf('--model') + 1] !== epochModelNow) throw new RuntimePauseError(`command model ${argv[argv.indexOf('--model') + 1]} != active epoch model ${epochModelNow}; no reservation written`);
   const attemptsDir = join(workRunDir, 'attempts'); mkdirSync(attemptsDir, { recursive: true, mode: 0o700 });
   const lease = join(workRunDir, `${stage}.lease`);
   acquireStageLease(lease);
@@ -527,12 +552,12 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
     const webEvents = stage === 'B2' ? verifyB2WebEvents(tr) : null;
     let cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
-      model: primaryModelFromEnvelope(final), expectedModel: CALIBRATION_MODEL, exitCode, final, isError: final?.is_error,
+      model: primaryModelFromEnvelope(final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
       subtype: final?.subtype, structuredOutputPresent: final?.structured_output != null, imageReceipt, webEvents });
     if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
-    else if (inits.some(e => e.model !== CALIBRATION_MODEL)) cls = { kind: 'fatal', reason: 'model drift in init' };
+    else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
     else if (imageReceipt?.bad?.length) cls = { kind: 'fatal', reason: 'confinement violation' };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
@@ -623,9 +648,10 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
   return prep;
 }
 
-export function executionPolicy(runtimeVersion) {
+export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
-  return { version: COLLECTOR_VERSION, evidenceRunId: RUN_ID, runtimeVersion, model: CALIBRATION_MODEL,
+  if (!ALLOWED_COLLECTION_MODELS.includes(model)) throw new Error(`model ${model} is not an allowed collection model`);
+  return { version: COLLECTOR_VERSION, evidenceRunId: RUN_ID, runtimeVersion, model,
     promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
@@ -670,7 +696,10 @@ export function isPatchUpgrade(from, to) {
 }
 const runtimeFixed = p => { const { version, runtimeVersion, childEnv, ...rest } = p; return rest; };
 export function bindExecutionPolicy(runDir, runtimeVersion) {
-  const policy = executionPolicy(runtimeVersion), current = executionEpochs(runDir).at(-1);
+  const current = executionEpochs(runDir).at(-1);
+  // A model change is never automatic (VSD-054): it needs an owner-reviewed --rebind-model epoch first.
+  if (current && epochModel(current) !== COLLECTION_MODEL) throw new RuntimePauseError(`collection model ${COLLECTION_MODEL} differs from active epoch model ${epochModel(current)}; paused pending reviewed --rebind-model`);
+  const policy = executionPolicy(runtimeVersion);
   if (!current) return appendEpoch(runDir, policy);
   if (stableJson(current.policy) === stableJson(policy)) return current;
   const onlyRuntime = stableJson(runtimeFixed(current.policy)) === stableJson(runtimeFixed(policy))
@@ -686,13 +715,28 @@ export function bindExecutionPolicy(runDir, runtimeVersion) {
   }
   throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
+// VSD-054: an owner-reviewed model change appends ONE epoch that differs from the previous only in its model.
+// Existing attempts keep verifying against their own epochs; a preserved fatal blocks it; holds are untouched.
+export function rebindModel(runDir, review) {
+  if (preservedFatal(runDir)) throw new Error('model rebind cannot clear a preserved fatal');
+  const previous = executionEpochs(runDir).at(-1);
+  if (!previous || review?.version !== 'passBCorpusModelReview/1' || review.runId !== RUN_ID ||
+      review.fromEpochSha256 !== previous.sha256 || !review.reviewedBy?.trim() || !review.reason?.trim() ||
+      !Number.isFinite(Date.parse(review.reviewedAt))) throw new Error('explicit model review binding required');
+  if (!ALLOWED_COLLECTION_MODELS.includes(review.toModel)) throw new Error(`model ${review.toModel} is not an allowed collection model`);
+  if (review.toModel === epochModel(previous)) throw new Error('model rebind has no change');
+  const policy = executionPolicy(previous.policy.runtimeVersion, review.toModel);
+  if (stableJson({ ...previous.policy, model: review.toModel }) !== stableJson(policy)) throw new Error('model rebind cannot change anything but the model');
+  if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('model review target policy binding mismatch');
+  return appendEpoch(runDir, policy, previous, review);
+}
 export function rebindRuntime(runDir, review) {
   if (preservedFatal(runDir)) throw new Error('runtime rebind cannot clear a preserved fatal');
   const previous = executionEpochs(runDir).at(-1);
   if (!previous || review?.version !== 'passBCorpusRuntimeReview/1' || review.runId !== RUN_ID ||
       review.fromEpochSha256 !== previous.sha256 || !review.reviewedBy?.trim() || !review.reason?.trim() ||
       !Number.isFinite(Date.parse(review.reviewedAt))) throw new Error('explicit runtime review binding required');
-  const policy = executionPolicy(review.toRuntimeVersion);
+  const policy = executionPolicy(review.toRuntimeVersion, epochModel(previous)); // a runtime rebind never changes the model
   if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('runtime review target policy binding mismatch');
   // A runtime rebind cannot change the banked content contract or the permitted collection scope.
   if (stableJson(runtimeFixed(previous.policy)) !== stableJson(runtimeFixed(policy))) throw new Error('runtime rebind cannot change the execution/content policy');
@@ -702,6 +746,7 @@ export function rebindRuntime(runDir, review) {
 async function main() {
   const args = process.argv.slice(2);
   const rebind = args[0] === '--rebind-runtime' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const rebindModelFile = args[0] === '--rebind-model' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const clearFatal = args[0] === '--clear-fatal' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   if (clearFatal) { // offline, under the run lease; no CLI/model/network call
     mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 });
@@ -757,6 +802,13 @@ async function main() {
   try {
     // Reinspect under the lease, then copy only verified missing bytes. Existing evidence is never overwritten.
     const fresh = inspectCorpus({ pool, legacyOf });
+    if (rebindModelFile) {
+      if (fresh.fatal) throw new Error('model rebind cannot clear preserved fatal history');
+      if (fresh.pause) throw new Error(`model rebind requires no pending pause: ${fresh.pause}`);
+      const epoch = rebindModel(RUN_DIR, readJson(rebindModelFile));
+      console.log(`OFFLINE MODEL REBIND: epoch ${epoch.number}, model ${epoch.policy.model}, CLI ${epoch.policy.runtimeVersion}, ${epoch.sha256}. No calls; prior attempts unchanged.`);
+      return;
+    }
     if (rebind) {
       if (fresh.fatal) throw new Error('runtime rebind cannot clear preserved fatal history');
       if (fresh.pause && !fresh.pause.includes('runtime drift; reviewed rebind required')) throw new Error('runtime rebind cannot clear an unknown/operational outcome');
@@ -777,7 +829,7 @@ async function main() {
     CLAUDE_BIN = realpathSync(onPath); // e.g. ~/.local/share/claude/versions/2.1.282
     const versionResult = await execFileP(CLAUDE_BIN, ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
     RUNTIME_VERSION = String(versionResult.stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
-    bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION);
+    ACTIVE_MODEL = epochModel(bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION)); // VSD-054: every new call uses the active epoch's model
     if (LANE === 'cloud') { SPENT_USD = runSpendUsd(RUN_DIR); console.log(`cloud lane: $${SPENT_USD.toFixed(2)} already spent of $${CLOUD_BUDGET_USD} cap`); }
     STOP = false; STOP_REASON = null; FATAL = null;
     ATTEMPT_SEQ = fresh.maxSeq; TRANSPORT_RETRIES = led.transportRetries || 0;
@@ -816,7 +868,7 @@ async function main() {
           const verified = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
           const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts,
             runtimeVersion: RUNTIME_VERSION, spawnStage: makeSpawnStage(workRunDir, prep.imgSha256, prep.ext, id),
-            capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true });
+            capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true, model: ACTIVE_MODEL });
           if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
           // runWorkStages captures exceptions as status text; the durable fatal flag remains authoritative.
           if (FATAL) break;
