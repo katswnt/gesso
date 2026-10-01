@@ -177,6 +177,9 @@ async function main() {
   const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: safetyCheck, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   let stop = null, finished = 0;
+  // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
+  const only = (process.env.PASS_B_NIGHTLY_ONLY || '').split(',').map(x => x.trim()).filter(Boolean);
+  if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
   for (const id of pending) {
     if (stop) break;
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
