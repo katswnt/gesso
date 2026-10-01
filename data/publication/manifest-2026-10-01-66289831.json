@@ -1,0 +1,194 @@
+{
+ "version": "passBPublicationPreview/1",
+ "date": "2026-10-01",
+ "target": "/Users/kathrynswint/Documents/artguessr-preview",
+ "createdAt": "2026-10-01T21:30:13.659Z",
+ "works": [
+  {
+   "workId": "http://www.wikidata.org/entity/Q1213453",
+   "removed": {
+    "cues": 4,
+    "guide": 11,
+    "legacyNotes": 7,
+    "legacyPins": 5
+   },
+   "after": {
+    "why": true,
+    "pinnedNotes": 3,
+    "notes": 4
+   },
+   "before": {
+    "teach": {
+     "why": "This is a French history painting of 1833 in oil, and the biggest giveaway is the theatrical, stage-lit Tudor execution scene painted with polished detail and strong emotion.",
+     "cues": [
+      "smooth finish, dramatic spotlight, and carefully researched old costumes → an early 19th-century date, when history painting aimed to feel vivid and believable",
+      "Lady Jane Grey’s Tudor dress and an execution staged as a European royal tragedy → France looking across the Channel for moving historical subjects",
+      "blindfolded heroine, grieving attendants, and a suspenseful pause before the axe falls → Romantic history painting, built to make the past emotionally immediate",
+      "slick oil surface with porcelain skin, black velvet, straw, and satin all separated clearly → Delaroche’s careful hand and oil paint’s power to imitate many textures"
+     ],
+     "guide": [
+      {
+       "q": "How can we date it to the 1830s?",
+       "a": "Smooth finish, dramatic spotlight, and carefully researched old costumes: an early 19th-century date, when history painting aimed to feel vivid and believable."
+      },
+      {
+       "q": "How can we connect it to Paul Delaroche?",
+       "a": "Slick oil surface with porcelain skin, black velvet, straw, and satin all separated clearly: Delaroche’s careful hand and oil paint’s power to imitate many textures."
+      },
+      {
+       "q": "How can we tell it is Academic art?",
+       "a": "Academic art appears in the polished finish, carefully staged historical setting, readable emotion, and theatrical clarity of every costume and texture."
+      },
+      {
+       "q": "Who are we looking at, and how can I tell what is happening?",
+       "a": "The blindfolded young woman in white is Lady Jane Grey, the English noblewoman executed in 1554 after briefly being proclaimed queen. You can read the scene through the props: the block waiting at the front, the executioner with the axe, the official guiding her hands, and the attendants collapsing in grief."
+      },
+      {
+       "q": "Why is Lady Jane Grey dressed in white?",
+       "a": "The white dress makes her stand out instantly in the dark room, but it also suggests youth, innocence, and vulnerability. Delaroche is guiding your sympathy before you even know the story."
+      },
+      {
+       "q": "Why use oil paint here, and why not something like watercolor or a print?",
+       "a": "Oil paint let Delaroche make the scene feel almost touchable: the white satin, the straw on the floor, the cold stone, and the soft flesh all behave differently. Watercolor would not have carried this scale and depth as forcefully, and a print could spread the image widely but not give the same rich, slow-building drama of color and surface."
+      },
+      {
+       "q": "Why does this painting matter?",
+       "a": "Delaroche made history painting feel intimate, suspenseful, and almost cinematic. Instead of showing a grand battle or a king on a throne, he makes us stand beside a frightened young woman at the most human moment of the story."
+      },
+      {
+       "q": "How was it made, and what should I notice up close?",
+       "a": "Look at how controlled the paint is: the surface is smooth, with very few obvious brush marks. Delaroche uses crisp edges and careful lighting so your eye moves from the white dress to Jane’s searching hands and then to the block."
+      },
+      {
+       "q": "Who made it, for whom, and what is the backstory?",
+       "a": "Paul Delaroche was a French painter famous for emotionally charged scenes from European history. This work was painted in 1833, when French audiences loved dramatic historical subjects, especially ones that turned public events into private feeling."
+      },
+      {
+       "q": "Is the painting meant to be completely historically accurate?",
+       "a": "It feels convincing, but it is arranged for drama rather than documentary accuracy. Delaroche chooses the blindfold, the helpless hands, and the grieving women because they make the scene emotionally clear at a glance."
+      },
+      {
+       "q": "Why does it feel like a theatre scene?",
+       "a": "The figures are placed almost like actors on a stage, with the action paused at the most painful second. The lighting works like a spotlight, isolating Jane against the darker witnesses and walls."
+      }
+     ],
+     "notes": [
+      {
+       "head": "Jane's white dress pulls the eye into the tragedy",
+       "body": "Blindfolded and dressed in luminous satin, Lady Jane Grey reaches uncertainly toward the block. Delaroche makes her youth and vulnerability the emotional center of the dark chamber.",
+       "x": 43,
+       "y": 51
+      },
+      {
+       "head": "The block and straw hold the suspended moment",
+       "body": "The execution has not yet happened. The low wooden block and scattered straw wait in the foreground, turning the pause before the act into the painting's main drama.",
+       "x": 49,
+       "y": 82
+      },
+      {
+       "head": "The executioner waits in uneasy stillness",
+       "body": "At the right, the executioner stands ready with the axe lowered beside him. His restraint keeps the focus on Jane's fear rather than on spectacle or violence.",
+       "x": 88,
+       "y": 56
+      },
+      {
+       "head": "Grief gathers around Jane",
+       "body": "The attendants at the left collapse, turn away, or cover their faces. Their responses make the political execution feel intimate, as if the scene were a private catastrophe.",
+       "x": 21,
+       "y": 49
+      },
+      {
+       "head": "The guiding hands make the scene painfully human",
+       "body": "The older man bends close to guide Jane toward the block, his hands hovering near hers. That small gesture gives the historical scene a tender, immediate charge.",
+       "x": 53,
+       "y": 63
+      },
+      {
+       "head": "Every surface is carefully distinguished",
+       "body": "Satin, velvet, fur, stone, wood, skin, and straw are separated with polished clarity. The crisp textures heighten the theatrical power of the scene without breaking its stillness."
+      },
+      {
+       "head": "Romantic history painting turns the past into feeling",
+       "body": "Delaroche uses a Tudor subject to create a scene of suspense, sympathy, and emotional intensity. The historical setting feels researched, but the composition is arranged above all for feeling."
+      }
+     ]
+    },
+    "hotspots": [
+     {
+      "n": 1,
+      "x": 43,
+      "y": 51
+     },
+     {
+      "n": 2,
+      "x": 49,
+      "y": 82
+     },
+     {
+      "n": 3,
+      "x": 88,
+      "y": 56
+     },
+     {
+      "n": 4,
+      "x": 21,
+      "y": 49
+     },
+     {
+      "n": 5,
+      "x": 53,
+      "y": 63
+     }
+    ],
+    "vision": null
+   },
+   "afterTeach": {
+    "why": "Jane was executed in 1554 after being proclaimed queen for nine days. The painting was thought destroyed after the 1928 Thames flood and was rediscovered at the Tate in 1973.",
+    "notes": [
+     {
+      "head": "Lady Jane Grey in white",
+      "body": "Lady Jane Grey is in the centre, her white satin dress strongly lit against the very dark background.",
+      "x": 42,
+      "y": 38
+     },
+     {
+      "head": "The wooden block",
+      "body": "The block, with an iron ring on its front face, sits in front of the kneeling figure at lower centre and anchors the composition. Straw is visible around it.",
+      "x": 44,
+      "y": 79.5
+     },
+     {
+      "head": "Crimson hose",
+      "body": "The standing man at right wears vivid crimson hose against the dark right side of the canvas. They are the strongest red contrast there, so they pull the eye to that corner, near the axe.",
+      "x": 82,
+      "y": 65.5
+     },
+     {
+      "head": "Light picks out the central figure",
+      "body": "Lady Jane Grey, in white satin, is strongly lit while the background is very dark. This contrast sets her apart and draws the eye to the centre of the canvas first."
+     },
+     {
+      "head": "A dungeon setting that is not historically accurate",
+      "body": "The scene is painted in a dungeon-like interior. The real execution took place outdoors, at Tower Green, so the setting is the painter's choice rather than a record of the event."
+     },
+     {
+      "head": "Calm centre, distressed attendants",
+      "body": "The blindfolded central figure in white looks composed, while the attendants at left are visibly distressed: one covers her face and the other has collapsed. Notice how this contrast between the figures sits side by side in the scene."
+     },
+     {
+      "head": "Detailed Tudor-style dress",
+      "body": "The garments are rendered in careful detail: a jeweled French hood, puffed sleeves, fur-trimmed robes and a jeweled necklace. These textures reward a close look."
+     }
+    ]
+   }
+  }
+ ],
+ "filesBefore": {
+  "data/teach-works.js": "f01fd25cc0accfe9e770fea9ae680293e17aea6cde15143b84f93a7f15d2ce14",
+  "data/hotspots.js": "0b3dcad71ee7573d1764c26e2a7f98ce8fd3d4433c5121cf7bf4600c49071781"
+ },
+ "filesAfter": {
+  "data/teach-works.js": "7372be7f0cc622da3b8d3df86560e744d568c1133c6a6f5b9be8bfc7a8671e84",
+  "data/hotspots.js": "17398cb2be86e42cefd08624e2de37f120d8d55fbbb9eb9390580bbb02e3d598"
+ }
+}
