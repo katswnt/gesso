@@ -69,7 +69,8 @@ export const confirmedVisuals = (s2Audit, s2Output) => (s2Audit?.rows || []).fil
 }).filter(Boolean);
 
 // ---------- S3: write only from supported claims and confirmed visuals ----------
-export const WRITE_VERSION = 'passBClaimFirstWrite/7'; // /7 (owner 2026-10-01): the approved study-guide style (docs/vision-study-guide-style.md, VSD-020) carried into claim-first; unpinned notes fold into the guide
+export const WRITE_VERSION = 'passBClaimFirstWrite/8'; // /8: never narrate the writer's own limits to the reader (owner review of /7, 2026-10-01).
+// /7 // /7 (owner 2026-10-01): the approved study-guide style (docs/vision-study-guide-style.md, VSD-020) carried into claim-first; unpinned notes fold into the guide
 export const WRITE_PROMPT = `You write the teaching copy a player reads after guessing ONE artwork in an art-history game, using ONLY the
 numbered items below.
 - claims: facts checked against sources, plus the museum catalog fields (ids starting "cat.").
@@ -135,7 +136,8 @@ RULES THAT ALWAYS WIN:
 - Style (owner rule): plain, concrete words. No literary flourishes or stacked emotional adjectives ("painfully
   human", "uneasy stillness", "haunting"); never tell the viewer what to feel.
 - Player copy only: never mention research, sources, claims, notes, catalogs, records, entries, metadata, the
-  prompt or the model. Point hotspots only at the artwork itself, never at a stand, mount, frame, label or the
+  prompt or the model. Never explain to the reader what is unknown to you or what you may not say ("is
+  interpretation", "not stated here", "left to the viewer"); if something cannot be supported, leave it out. Point hotspots only at the artwork itself, never at a stand, mount, frame, label or the
   photograph's background.
 Every sentence, head and question is { s, ids }: ids lists EVERY item it relies on (at least one). If the items
 cannot support a section, return fewer entries rather than inventing. Return notes as [] (folded into the guide).
@@ -158,7 +160,7 @@ export const catalogItems = catalog => CATALOG_FIELDS.filter(f => typeof catalog
 export const buildWriteInput = ({ workId, catalog, claims, visuals }) => ({ unit: workId, claims: [...catalogItems(catalog), ...claims], visuals: visuals.map(v => ({ id: v.id, text: v.text })) });
 
 // Pipeline language never reaches players; trimmed deterministically, before the model check.
-export const PIPELINE_LANGUAGE = /\b(catalog(ue)?\s+(entry|record|field|data)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content))/i;
+export const PIPELINE_LANGUAGE = /\b(catalog(ue)?\s+(entry|record|field|data)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content)|not\s+stated\s+here|(is|be|counts\s+as)\s+(an\s+)?interpretation|left\s+to\s+the\s+viewer|cannot\s+be\s+(said|stated|confirmed)\s+here)/i;
 
 // /7: a guide question the museum label already answers is never worth opening (owner 2026-10-01, Café Terrace).
 export const LABEL_QUESTION = /^\s*(what (style|movement|medium|materials?) (is|was|does)\b|what is the (style|movement|medium|date)\b|what is it made (of|from)\b|(where|when)( and (where|when))? (is|was) (it|this|the \w+) (made|painted|created|carved|produced)\b|who (made|painted|carved|created) (it|this)\b|what is the title\b)/i;

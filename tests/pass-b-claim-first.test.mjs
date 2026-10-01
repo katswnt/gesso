@@ -158,4 +158,10 @@ check('write /7: label-answerable guide questions are trimmed; usable counts gui
   assert.equal(a.guide.length, 3); assert.deepEqual(a.usable, { minimal: true, strict: true });
   assert.match(CF.WRITE_PROMPT, /Hotspots teach what to notice/); assert.match(CF.WRITE_PROMPT, /Did Mino da Fiesole carve the entire relief himself/);
 });
+check('write /8: self-narrated limits are pipeline language and are trimmed', () => {
+  for (const x of ['How to read that is left to the viewer, since calling her serene is interpretation.', 'Its sources are not stated here, so it is best read as a visual form.'])
+    assert.ok(CF.PIPELINE_LANGUAGE.test(x), x);
+  for (const x of ['Notice how the light sets her apart.', 'Scholars read it as a scene of the Flood.', 'The viewer looks at the pair rather than meeting a gaze.'])
+    assert.ok(!CF.PIPELINE_LANGUAGE.test(x), x);
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
