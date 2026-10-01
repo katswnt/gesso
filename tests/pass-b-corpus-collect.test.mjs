@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION, COLLECTION_MODEL, HISTORICAL_MODEL, rebindModel, epochModel } from '../scripts/pass-b-corpus-collect.mjs';
+import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION, COLLECTION_MODEL, HISTORICAL_MODEL, rebindModel, epochModel, rebindContract, grantFormatRetries, loadFormatRetries, WIRE_POLICY } from '../scripts/pass-b-corpus-collect.mjs';
 import { syntheticFixture, verifyB1ImageRead, parseStreamTranscript, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { stagePrompts } from '../scripts/lib/pass-b-prompts.mjs';
@@ -633,5 +633,51 @@ await inFixture('a live command whose model differs from the active epoch is ref
   bindExecutionPolicy(f.runDir,'2.1.280');const before=tree(join(f.workRunDir,'attempts'));let calls=0;
   await assert.rejects(executeCorpusAttempt({...attemptArgs(f),command:{bin:'fixture-only',argv:['-p','fixture','--model','claude-sonnet-4-6'],env:{removeKeys:['ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN']}},execute:async()=>{calls++;}}),/no reservation written/);
   assert.equal(calls,0);assert.deepEqual(tree(join(f.workRunDir,'attempts')),before);
+},{complete:['B1']});
+
+// ---------- VSD-057: capped wire schema epoch + one fresh attempt for format-held works ----------
+const preWireEpoch=f=>{const {wireSchema:_w,wireSchemaSha256:_h,...policy}=executionPolicy('2.1.280');const dir=join(f.runDir,'execution-policies');mkdirSync(dir,{recursive:true});
+  writeFileSync(join(dir,'000001.json'),JSON.stringify({version:'passBCorpusExecutionEpoch/1',runId:currentRun,number:1,previousSha256:null,policy,review:null}));return executionEpochs(f.runDir).at(-1);};
+const contractReview=f=>{const prev=executionEpochs(f.runDir).at(-1);return {version:'passBCorpusContractReview/1',runId:currentRun,fromEpochSha256:prev.sha256,
+  toPolicySha256:sha256(stableJson(executionPolicy(prev.policy.runtimeVersion,epochModel(prev)))),reviewedBy:'offline test fixture',reviewedAt:'2026-10-01T10:00:00Z',reason:'fixture-only contract review'};};
+const retryReview=f=>({version:'passBCorpusFormatRetryReview/1',runId:currentRun,epochSha256:executionEpochs(f.runDir).at(-1).sha256,reviewedBy:'offline test fixture',reviewedAt:'2026-10-01T10:00:00Z',reason:'fixture'});
+const overCap=f=>({...f.bodies.B2,catalog:{...f.bodies.B2.catalog,movementSuggestion:'x'.repeat(301)}});
+await inFixture('contract rebind: a pre-wire epoch pauses with a --rebind-contract message; the review may change only the wire binding',async f=>{
+  preWireEpoch(f);
+  assert.throws(()=>bindExecutionPolicy(f.runDir,'2.1.280'),/--rebind-contract/);
+  for(const [k,v] of [['reviewedBy',''],['fromEpochSha256','x'],['runId','other'],['toPolicySha256','x']]){const r=contractReview(f);r[k]=v;assert.throws(()=>rebindContract(f.runDir,r));}
+  const e2=rebindContract(f.runDir,contractReview(f));
+  assert.equal(e2.policy.wireSchema,WIRE_POLICY.wireSchema);assert.equal(epochModel(e2),COLLECTION_MODEL);
+  assert.equal(bindExecutionPolicy(f.runDir,'2.1.280').sha256,e2.sha256,'the new epoch is now the bound policy');
+  assert.throws(()=>rebindContract(f.runDir,contractReview(f)),/no change/);
+  persistFatal(f.runDir,'fixture fatal');assert.throws(()=>rebindContract(f.runDir,contractReview(f)),/preserved fatal/);
+},{complete:['B1']});
+await inFixture('format retry: two pre-wire invalid B2 bodies are held; one grant releases exactly them, once, without touching evidence',async f=>{
+  preWireEpoch(f);f.attempt('B2',overCap(f));f.attempt('B2',overCap(f));
+  let r=f.corpus();assert.equal(r.heldSet.size,1);assert.equal(f.inspect().b2ValidationFailures,2);assert.equal(f.inspect().formatEligible.length,2);
+  assert.throws(()=>grantFormatRetries(f.runDir,retryReview(f),r.rows),/wire-schema epoch/,'no grant before the capped-schema epoch');
+  rebindContract(f.runDir,contractReview(f));
+  const tr=tree(join(f.workRunDir,'attempts'));
+  assert.equal(grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows).length,1);
+  r=f.corpus();const w=f.inspect();
+  assert.equal(r.heldSet.size,0,'work re-enters the queue');assert.equal(w.b2ValidationFailures,0);assert.equal(w.formatRetryGranted,true);assert.equal(w.attempts,3,'B1 + both preserved B2 attempts still counted');
+  assert.deepEqual(tree(join(f.workRunDir,'attempts')),tr,'preserved transcripts untouched');
+  assert.equal(grantFormatRetries(f.runDir,retryReview(f),r.rows).length,0,'one grant per work, ever');
+  // A fresh failure under the capped epoch counts normally: B2 keeps exactly its one ordinary retry.
+  const e=executionEpochs(f.runDir).at(-1),bad=f.transcript('B2',overCap(f),{model:COLLECTION_MODEL});reserveManual(f,{stage:'B2',seq:40,epoch:e,text:bad});
+  assert.equal(f.inspect().b2ValidationFailures,1);assert.equal(f.inspect().formatEligible,null);
+},{complete:['B1']});
+await inFixture('format retry: tampered released transcript or a forged second record fails closed',async f=>{
+  preWireEpoch(f);const file=f.attempt('B2',overCap(f));f.attempt('B2',overCap(f));rebindContract(f.runDir,contractReview(f));
+  grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows);
+  const rec=readFileSync(join(f.runDir,'format-retries','000001.json'),'utf8');
+  writeFileSync(join(f.runDir,'format-retries','000002.json'),rec.replace('"number": 1','"number": 2'));
+  assert.throws(()=>loadFormatRetries(f.runDir),/out of chain|second grant/);rmSync(join(f.runDir,'format-retries','000002.json'));
+  writeFileSync(file.path,file.text+'\n');
+  assert.throws(()=>f.inspect(),/release mismatch|mismatch/);
+},{complete:['B1']});
+await inFixture('format retry: a work with any non-format terminal reason is not eligible',async f=>{
+  preWireEpoch(f);f.attempt('B2',overCap(f));f.attempt('B2',null,{result:'x',error:true});rebindContract(f.runDir,contractReview(f));
+  assert.equal(f.inspect().formatEligible,null);assert.equal(grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows).length,0);
 },{complete:['B1']});
 console.log(`\n${n} corpus-collector regressions passed`);

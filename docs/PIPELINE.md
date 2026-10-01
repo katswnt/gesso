@@ -616,6 +616,21 @@ handoff commands do not authorize resume or supersede these gates. The current r
 for 2026-09-22 contains 600 window works and 526 queued; that is B0–B3 queue state, not
 publication readiness or a calendar-time estimate.
 
+### Wire-schema contract epoch and format retries (VSD-057)
+
+The B1–B3 `--json-schema` carries the validator's length/count/range caps, so the CLI bounces an over-cap
+`StructuredOutput` inside the same call. B2's schema is built per work: guide `evidenceRef` must be one of the
+visible-signal ids B2 received. The binding is part of the execution policy, so a changed wire schema pauses
+collection until an owner-reviewed contract epoch exists. Offline, under the run lease:
+
+1. `node scripts/pass-b-corpus-collect.mjs --rebind-contract <passBCorpusContractReview/1 json>` appends an
+   epoch that differs only in `wireSchema`/`wireSchemaSha256`.
+2. `node scripts/pass-b-corpus-collect.mjs --grant-format-retries <passBCorpusFormatRetryReview/1 json>`
+   (bound to that active epoch) appends one `format-retries/NNNNNN.json` per eligible format-held work, at
+   most one per work, ever. It releases exactly the listed invalid transcripts from the hold and the retry count.
+   They are preserved and never captured.
+3. `node scripts/pass-b-wire-parity.mjs` must report 0 falsely rejected accepted bodies.
+
 ### Reviewed runtime rebind and fatal recovery
 
 A CLI update is an operational pause, not a reason to erase history. Keep collection stopped,

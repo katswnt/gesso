@@ -16,7 +16,7 @@ import {
   contractHash, VALIDATION_CONTRACT_VERSION, B4_VALIDATION_CONTRACT_VERSION, verifyStageEvidence, findTranscriptBySha, loadOrArchiveCompletion,
 } from '../scripts/lib/pass-b-calibration.mjs';
 import { buildB1Prompt, buildB2Prompt, buildB3Prompt, buildB4Prompt, promptHashes } from '../scripts/lib/pass-b-prompts.mjs';
-import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, B4_DELTA_V2, WIRE_B4_FULL } from '../scripts/lib/pass-b-wire-schema.mjs';
+import { WIRE_SCHEMAS, validateAgainstWire, B4_DELTA, B4_DELTA_V2, WIRE_B4_FULL, wireSchemaFor } from '../scripts/lib/pass-b-wire-schema.mjs';
 import { compactB4DeltaInput } from '../scripts/lib/pass-b-calibration.mjs';
 import { validateB4Delta, assembleAndValidateB4, b1Grounding, b4Lineage, guideLineageMetrics, HOTSPOT_MAX_BBOX_AREA } from '../scripts/lib/pass-b-b4-delta.mjs';
 import { EDITORIAL_REVIEW_VERSION, hotspotReviewRows } from '../scripts/lib/pass-b-editorial-review.mjs';
@@ -989,8 +989,25 @@ t('resume evidence + stale-vs-corrupt: valid load, fabricated transcript, corrup
   { const { runDir, cp } = setup({ promptHash: H('p-old') }); const res = call(runDir, H('p-new')); assert.equal(res, null, 'stale returns null (re-run)'); assert.ok(!existsSync(cp), 'stale moved out of completions'); assert.equal(rdir(join(runDir, 'stale')).length, 1, 'stale artifact archived'); }
 });
 
+t('VSD-057 capped wire: over-cap B1/B2 fields bounce in-call; per-work B2 schema pins guide evidenceRef to the given ids', () => {
+  const fx = syntheticFixture(), ctx = fx.contexts.B2;
+  assert.equal(validateAgainstWire(wireSchemaFor('B2', ctx), fx.bodies.B2).length, 0, 'fixture B2 passes the per-work schema');
+  const long = { ...fx.bodies.B2, catalog: { ...fx.bodies.B2.catalog, movementSuggestion: 'x'.repeat(301) } };
+  assert(validateAgainstWire(WIRE_SCHEMAS.B2, long).some(e => /movementSuggestion: no anyOf/.test(e)), 'movementSuggestion > 300');
+  const sens = { ...fx.bodies.B2, catalog: { ...fx.bodies.B2.catalog, sensitivity: ['y'.repeat(101)] } };
+  assert(validateAgainstWire(WIRE_SCHEMAS.B2, sens).length > 0, 'sensitivity item > 100');
+  const few = { ...fx.bodies.B2, guideAnswers: fx.bodies.B2.guideAnswers.slice(0, 4) };
+  assert(validateAgainstWire(WIRE_SCHEMAS.B2, few).some(e => /guideAnswers: items/.test(e)), 'fewer than 5 guide answers');
+  const g = fx.bodies.B2.guideAnswers[0], invented = { ...fx.bodies.B2, guideAnswers: [{ ...g, evidenceRef: 'not-a-b1-id' }, ...fx.bodies.B2.guideAnswers.slice(1)] };
+  assert.equal(validateAgainstWire(WIRE_SCHEMAS.B2, invented).length, 0, 'static schema cannot know the ids');
+  assert(validateAgainstWire(wireSchemaFor('B2', ctx), invented).length > 0, 'per-work schema rejects an invented evidenceRef');
+  assert.equal(wireSchemaFor('B2', { evidenceIds: [] }).properties.guideAnswers.items.properties.evidenceRef.type, 'null', 'no ids -> evidenceRef must be null');
+  assert.equal(wireSchemaFor('B1', ctx), WIRE_SCHEMAS.B1); assert.equal(wireSchemaFor('B4', {}), B4_DELTA, 'B4 delta untouched');
+  const pal = { ...fx.bodies.B1, visual: { ...fx.bodies.B1.visual, palette: { ...fx.bodies.B1.visual.palette, colors: Array(21).fill('red') } } };
+  assert(validateAgainstWire(WIRE_SCHEMAS.B1, pal).length > 0, 'more than 20 palette colours');
+});
 const passN = { n: 0 };
 (async () => {
   for (const { n, fn } of tests) { try { await fn(); passN.n++; console.log('ok -', n); } catch (e) { console.error('FAIL -', n, '\n   ', e.message); process.exitCode = 1; } }
-  console.log(`\n${passN.n} checks passed`);
+console.log(`\n${passN.n} checks passed`);
 })();

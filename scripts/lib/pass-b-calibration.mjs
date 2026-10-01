@@ -8,7 +8,7 @@ import { sha256, stableJson } from './vision-legacy.mjs';
 import { buildB2Input, validateStageBody, EVIDENCE_AXES } from './vision-content-schema.mjs';
 import { assembleAndValidateB4, b1Grounding } from './pass-b-b4-delta.mjs';
 import { verifyCapturedStage, completionKey } from './vision-content-capture.mjs';
-import { WIRE_SCHEMAS } from './pass-b-wire-schema.mjs';
+import { WIRE_SCHEMAS, wireSchemaFor } from './pass-b-wire-schema.mjs';
 import { BROKER_POLICY_VERSION } from './img-broker.mjs';
 
 export const CONTROLLER_VERSION = 'passBCalibration/5-b4-delta'; // B4 = compact editorial delta + deterministic hydration (VSD-022)
@@ -509,7 +509,7 @@ export async function runWorkStages({ workId, catalog, legacy = null, imgSha256,
     // delta→body rehydration (item 2). B1/B2/B3 evidence needs no bodies.
     const existing = await loadCompletion(stage, { promptHash: sha256(promptText), context, bodies, legacy }); // resume verifies bindings + evidence
     if (existing) { status[stage] = 'complete'; return existing; }
-    const command = buildStageCommand({ stage, model, promptText, imageFile: img });
+    const command = buildStageCommand({ stage, model, promptText, imageFile: img, wireSchema: wireSchemaFor(stage, context) });
     const producer = producerEvidence(stage, { model, runtimeVersion });
     let lastErr;
     for (let attempt = 0; attempt <= validationRetries; attempt++) {

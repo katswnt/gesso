@@ -17,6 +17,7 @@ import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist as persistRemote, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
+import { WIRE_SCHEMAS, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs';
 import {
   RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION,
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
@@ -381,6 +382,9 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
   const clearances = loadFatalClearances(runDir);
   const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set();
+  const retryGrant = loadFormatRetries(runDir).find(r => r.workId === id) || null;
+  const formatFailures = []; // uncaptured invalid bodies from pre-wire-schema epochs (grant candidates)
+  let releasedCount = 0;
   // Resolve every receipt against its own immutable epoch, never against today's runtime policy.
   for (const name of files(attemptsDir).filter(n => n.endsWith('.reserved.json'))) {
     const r = readJson(join(attemptsDir, name));
@@ -447,6 +451,14 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (bodies[stage] || usage) continue;
     if (!final || final.is_error || final.structured_output == null) { terminalReasons.push(`${stage}:unknown-or-failed-attempt`); continue; }
     const v = validateStageBody(stage, final.structured_output, contexts(stage));
+    const attemptEpoch = binding?.epoch ?? epochs.find(e => e.number === 0) ?? null;
+    if (!v.ok && meta?.kind !== 'held' && attemptEpoch?.policy?.wireSchema == null) formatFailures.push({ file: name, sha256: sha256(text) });
+    if (retryGrant?.released.some(x => x.file === name)) {
+      const x = retryGrant.released.find(x => x.file === name);
+      // A released transcript must still be byte-identical, invalid, and older than the grant's epoch.
+      if (x.sha256 !== sha256(text) || v.ok || (attemptEpoch?.number ?? 0) >= retryGrant.epochNumber) throw new Error(`${id}/${stage}: format retry release mismatch`);
+      releasedCount++; continue;
+    }
     if (stage === 'B2' && !v.ok) b2ValidationFailures++;
     terminalReasons.push(v.ok ? `${stage}:uncaptured-result` : `${stage}:invalid body: ${v.errors.join(',')}`);
   }
@@ -456,7 +468,13 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     terminalReasons.every(r => r.startsWith('B2:invalid body:'));
   if (pendingB2Retry) terminalReasons.length = 0;
   const done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
-  return { id, bodies, repairs, done, attempts, maxSeq, fatal, pause, pendingB2Retry, b2ValidationFailures,
+  if (retryGrant && releasedCount !== retryGrant.released.length) throw new Error(`${id}: format retry releases a missing transcript`);
+  const uniqueReasons = [...new Set(terminalReasons)];
+  // Grant candidate: not done, no fatal/pause, no grant yet, and EVERY terminal reason is a pre-wire invalid body.
+  const formatEligible = !done && !fatal && !pause && !retryGrant && formatFailures.length > 0 && uniqueReasons.length > 0 &&
+    uniqueReasons.every(r => /^B[123]:invalid body: /.test(r)) ? formatFailures : null;
+  return { id, bodies, repairs, done, attempts, maxSeq, fatal, pause, pendingB2Retry, b2ValidationFailures, formatEligible,
+    formatRetryGranted: !!retryGrant,
     terminalReasons: done ? [] : [...new Set(terminalReasons)], cliVersions: [...cliVersions] };
 }
 export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readLedger(runDir), priorDir }) {
@@ -476,6 +494,7 @@ export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readL
     if (row.done) doneSet.add(p.id);
     else if (row.terminalReasons.length) { heldSet.add(p.id); heldReasons[p.id] = `evidence:${row.terminalReasons.join('; ')}`; }
     else if (row.pendingB2Retry && /^evidence:B2:invalid body:/.test(heldReasons[p.id] || '')) { heldSet.delete(p.id); delete heldReasons[p.id]; }
+    else if (row.formatRetryGranted && /^evidence:B[123]:invalid body:/.test(heldReasons[p.id] || '')) { heldSet.delete(p.id); delete heldReasons[p.id]; }
     else if (heldToRequeue([p.id], heldReasons).length) { heldSet.delete(p.id); delete heldReasons[p.id]; }
   }
   return { rows, repairs, heldSet, heldReasons, doneSet, fatal, pause, attempts, maxSeq: Math.max(maxSeq, attempts), totals };
@@ -667,11 +686,15 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
   return prep;
 }
 
+// VSD-057: the capped B1–B3 provider schemas (and the per-work B2 evidenceRef enum generator) are part of the
+// execution policy. Earlier epochs have no wire fields; adding them needs a reviewed --rebind-contract epoch.
+export const WIRE_POLICY = Object.freeze({ wireSchema: WIRE_SCHEMA_CONTRACT,
+  wireSchemaSha256: sha256(stableJson({ B1: WIRE_SCHEMAS.B1, B2: WIRE_SCHEMAS.B2, B3: WIRE_SCHEMAS.B3 })) });
 export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
   if (!ALLOWED_COLLECTION_MODELS.includes(model)) throw new Error(`model ${model} is not an allowed collection model`);
   return { version: COLLECTOR_VERSION, evidenceRunId: RUN_ID, runtimeVersion, model,
-    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION,
+    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
       : { scope: 'rolling-30-days-through-b3', timeZone: 'America/Los_Angeles', startWindow: '00:00–08:30', finishBy: '09:00' }),
@@ -732,6 +755,8 @@ export function bindExecutionPolicy(runDir, runtimeVersion) {
       reviewedAt: new Date().toISOString(),
     });
   }
+  if (stableJson(withoutWire(current.policy)) === stableJson(withoutWire(policy)))
+    throw new RuntimePauseError('wire-schema contract changed; paused pending reviewed --rebind-contract');
   throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
 // VSD-054: an owner-reviewed model change appends ONE epoch that differs from the previous only in its model.
@@ -762,11 +787,76 @@ export function rebindRuntime(runDir, review) {
   if (stableJson(previous.policy) === stableJson(policy)) throw new Error('runtime rebind has no change');
   return appendEpoch(runDir, policy, previous, review);
 }
+// VSD-057: an owner-reviewed contract epoch that differs from the previous ONLY in the wire-schema binding.
+// Model, runtime, prompts, validation and scope are unchanged; prior attempts keep verifying against their epochs.
+export const CONTRACT_REVIEW_VERSION = 'passBCorpusContractReview/1';
+const withoutWire = p => { const { wireSchema, wireSchemaSha256, ...rest } = p; return rest; };
+export function rebindContract(runDir, review) {
+  if (preservedFatal(runDir)) throw new Error('contract rebind cannot clear a preserved fatal');
+  const previous = executionEpochs(runDir).at(-1);
+  if (!previous || review?.version !== CONTRACT_REVIEW_VERSION || review.runId !== RUN_ID ||
+      review.fromEpochSha256 !== previous.sha256 || !review.reviewedBy?.trim() || !review.reason?.trim() ||
+      !Number.isFinite(Date.parse(review.reviewedAt))) throw new Error('explicit contract review binding required');
+  const policy = executionPolicy(previous.policy.runtimeVersion, epochModel(previous));
+  if (stableJson(withoutWire(previous.policy)) !== stableJson(withoutWire(policy))) throw new Error('contract rebind cannot change anything but the wire schema');
+  if (stableJson(previous.policy) === stableJson(policy)) throw new Error('contract rebind has no change');
+  if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('contract review target policy binding mismatch');
+  return appendEpoch(runDir, policy, previous, review);
+}
+
+// VSD-057 one fresh attempt for FORMAT-held works. A work whose every terminal reason is an invalid body produced
+// BEFORE the wire-schema epoch may be granted exactly one record (append-only, one per work, ever). The record
+// releases exactly those transcripts (file + sha) from the hold/retry count; they stay preserved and are never
+// captured. New attempts then run under the capped schema with the ordinary budget (B2 keeps its one retry).
+export const FORMAT_RETRY_VERSION = 'passBCorpusFormatRetry/1';
+export const FORMAT_RETRY_REVIEW_VERSION = 'passBCorpusFormatRetryReview/1';
+export function loadFormatRetries(runDir) {
+  const dir = join(runDir, 'format-retries'), out = [], names = files(dir).sort();
+  for (let i = 0; i < names.length; i++) {
+    if (names[i] !== `${String(i + 1).padStart(6, '0')}.json`) throw new Error('format retry sequence mismatch');
+    const r = readJson(join(dir, names[i]));
+    if (r.version !== FORMAT_RETRY_VERSION || r.runId !== RUN_ID || r.number !== i + 1 || r.previousSha256 !== (out.at(-1)?.sha256 || null)
+        || typeof r.workId !== 'string' || !Number.isSafeInteger(r.epochNumber) || !/^[0-9a-f]{64}$/.test(r.epochSha256 || '')
+        || !/^[0-9a-f]{64}$/.test(r.reviewSha256 || '') || !Array.isArray(r.released) || !r.released.length
+        || r.released.some(x => !/^b[123]-\d{6}-[\w-]+\.transcript\.jsonl$/.test(x.file || '') || !/^[0-9a-f]{64}$/.test(x.sha256 || '')))
+      throw new Error(`format retry ${names[i]} is malformed or out of chain`);
+    if (out.some(o => o.workId === r.workId)) throw new Error(`format retry ${names[i]}: second grant for ${r.workId}`);
+    out.push({ ...r, sha256: sha256(stableJson(r)) });
+  }
+  const epochs = executionEpochs(runDir);
+  for (const r of out) {
+    const e = epochs.find(x => x.number === r.epochNumber);
+    if (!e || e.sha256 !== r.epochSha256 || e.policy.wireSchema == null) throw new Error(`format retry ${r.number}: not bound to a wire-schema epoch`);
+  }
+  return out;
+}
+export function grantFormatRetries(runDir, review, rows) {
+  if (preservedFatal(runDir)) throw new Error('format retry grant cannot run with a preserved fatal');
+  const active = executionEpochs(runDir).at(-1);
+  if (review?.version !== FORMAT_RETRY_REVIEW_VERSION || review.runId !== RUN_ID || review.epochSha256 !== active?.sha256 ||
+      active.policy.wireSchema == null || !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
+    throw new Error('explicit format retry review bound to the active wire-schema epoch required');
+  const existing = loadFormatRetries(runDir), granted = [];
+  const dir = join(runDir, 'format-retries'); mkdirSync(dir, { recursive: true, mode: 0o700 });
+  for (const row of rows) {
+    if (!row.formatEligible || existing.some(r => r.workId === row.id)) continue;
+    const prev = existing.at(-1) || null;
+    const record = { version: FORMAT_RETRY_VERSION, runId: RUN_ID, number: (prev?.number || 0) + 1, previousSha256: prev?.sha256 || null,
+      workId: row.id, epochNumber: active.number, epochSha256: active.sha256, reviewSha256: sha256(stableJson(review)),
+      released: row.formatEligible, grantedAt: new Date().toISOString() };
+    writeFileSync(join(dir, `${String(record.number).padStart(6, '0')}.json`), `${JSON.stringify(record, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    existing.push({ ...record, sha256: sha256(stableJson(record)) }); granted.push(record);
+  }
+  return granted;
+}
 async function main() {
   const args = process.argv.slice(2);
   const rebind = args[0] === '--rebind-runtime' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const rebindModelFile = args[0] === '--rebind-model' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const clearFatal = args[0] === '--clear-fatal' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const rebindContractFile = args[0] === '--rebind-contract' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const grantRetriesFile = args[0] === '--grant-format-retries' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const offlineReview = rebindContractFile || grantRetriesFile;
   if (clearFatal) { // offline, under the run lease; no CLI/model/network call
     mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 });
     acquireStageLease(RUN_LEASE);
@@ -776,7 +866,7 @@ async function main() {
     } finally { unlinkSync(RUN_LEASE); }
     return;
   }
-  if (!rebind && !rebindModelFile && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
+  if (!rebind && !rebindModelFile && !offlineReview && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --rebind-contract <review.json> (offline), --grant-format-retries <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
   if (live) assertExecutionLease({ required: true });
@@ -813,7 +903,7 @@ async function main() {
   const active = executionEpochs(RUN_DIR).at(-1);
   console.log(`runtime epoch: ${active ? `${active.number} / CLI ${active.policy.runtimeVersion} / ${active.sha256}` : 'none (first authorized run binds installed CLI)'}`);
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
-  if (!live && !repair && !rebind && !rebindModelFile) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
+  if (!live && !repair && !rebind && !rebindModelFile && !offlineReview) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
   if (live) laneWindow();
@@ -822,6 +912,22 @@ async function main() {
   try {
     // Reinspect under the lease, then copy only verified missing bytes. Existing evidence is never overwritten.
     const fresh = inspectCorpus({ pool, legacyOf });
+    if (rebindContractFile) {
+      if (fresh.fatal) throw new Error('contract rebind cannot clear preserved fatal history');
+      if (fresh.pause) throw new Error(`contract rebind requires no pending pause: ${fresh.pause}`);
+      const epoch = rebindContract(RUN_DIR, readJson(rebindContractFile));
+      console.log(`OFFLINE CONTRACT REBIND: epoch ${epoch.number}, wire ${epoch.policy.wireSchema} ${epoch.policy.wireSchemaSha256.slice(0, 12)}, model ${epoch.policy.model}, CLI ${epoch.policy.runtimeVersion}, ${epoch.sha256}. No calls.`);
+      return;
+    }
+    if (grantRetriesFile) {
+      if (fresh.fatal) throw new Error('format retry grant cannot clear preserved fatal history');
+      if (fresh.pause) throw new Error(`format retry grant requires no pending pause: ${fresh.pause}`);
+      const granted = grantFormatRetries(RUN_DIR, readJson(grantRetriesFile), fresh.rows);
+      const after = inspectCorpus({ pool, legacyOf, ledger: readLedger() });
+      applyHistoryRepair({ inspection: after, eligibleCount: allEligible.length });
+      console.log(`FORMAT RETRIES GRANTED: ${granted.length} works (${granted.reduce((n, r) => n + r.released.length, 0)} preserved transcripts released from holds); held ${fresh.heldSet.size} -> ${after.heldSet.size}. No calls.`);
+      return;
+    }
     if (rebindModelFile) {
       if (fresh.fatal) throw new Error('model rebind cannot clear preserved fatal history');
       if (fresh.pause) throw new Error(`model rebind requires no pending pause: ${fresh.pause}`);
