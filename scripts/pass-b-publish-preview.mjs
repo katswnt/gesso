@@ -7,7 +7,8 @@
 // Writes a publication manifest (before/after per work, file hashes) and a rollback file (exact prior entries), then
 // rebuilds the note shards in the target. Fail-closed: every touched file must round-trip byte-identically first.
 // Never touches production: the owner reviews the preview deployment of the target branch.
-//   node scripts/pass-b-publish-preview.mjs --target ../artguessr-preview --date 2026-10-01 [--apply]
+//   node scripts/pass-b-publish-preview.mjs --target ../artguessr-preview --date 2026-10-01 [--only id1,id2] [--apply]
+// --only applies a later batch without re-applying (and overwriting the rollback of) works already published.
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -32,7 +33,9 @@ export function toGame(copy) {
   return { why: copy.why, notes: [...pinned, ...plain] };
 }
 
-const copies = existsSync(COPY) ? readdirSync(COPY).filter(f => f.endsWith('.json')).map(f => JSON.parse(readFileSync(join(COPY, f), 'utf8'))) : [];
+const ONLY = opt('--only') ? new Set(opt('--only').split(',')) : null;
+const copies = (existsSync(COPY) ? readdirSync(COPY).filter(f => f.endsWith('.json')).map(f => JSON.parse(readFileSync(join(COPY, f), 'utf8'))) : []).filter(c => !ONLY || ONLY.has(c.workId));
+const TAG = ONLY ? `${DATE}-${sha([...ONLY].sort().join(',')).slice(0, 8)}` : DATE;
 if (!copies.length) throw new Error(`no finished copy for ${DATE} in ${COPY}`);
 const teach = load('teach'), hot = load('hotspots'), vis = load('vision');
 for (const [k, f] of [['teach', teach], ['hotspots', hot]]) if (FILES[k].ser(f.obj) !== f.text) throw new Error(`${FILES[k].path} does not round-trip byte-identically; refusing`);
@@ -52,10 +55,11 @@ for (const c of copies) {
 const out = join(TARGET, 'data', 'publication'); mkdirSync(out, { recursive: true });
 console.log(manifest.works.map(w => `${w.workId}: removes ${w.removed.cues} cues, ${w.removed.guide} guide Qs, ${w.removed.legacyNotes} legacy notes, ${w.removed.legacyPins} legacy pins -> why + ${w.after.pinnedNotes} hotspots + ${w.after.notes} notes`).join('\n'));
 if (!args.includes('--apply')) { console.log('DRY RUN: nothing written. Add --apply.'); process.exit(0); }
+if (existsSync(join(out, `manifest-${TAG}.json`))) throw new Error(`manifest-${TAG}.json exists; refusing to overwrite a rollback`);
 writeFileSync(join(TARGET, FILES.teach.path), FILES.teach.ser(teach.obj));
 writeFileSync(join(TARGET, FILES.hotspots.path), FILES.hotspots.ser(hot.obj));
 manifest.filesAfter = { [FILES.teach.path]: sha(FILES.teach.ser(teach.obj)), [FILES.hotspots.path]: sha(FILES.hotspots.ser(hot.obj)) };
-writeFileSync(join(out, `manifest-${DATE}.json`), `${JSON.stringify(manifest, null, 1)}\n`);
-writeFileSync(join(out, `rollback-${DATE}.json`), `${JSON.stringify(rollback, null, 1)}\n`);
+writeFileSync(join(out, `manifest-${TAG}.json`), `${JSON.stringify(manifest, null, 1)}\n`);
+writeFileSync(join(out, `rollback-${TAG}.json`), `${JSON.stringify(rollback, null, 1)}\n`);
 execFileSync('node', ['scripts/build-teach-shards.mjs'], { cwd: TARGET, stdio: 'inherit' });
 console.log(`applied ${copies.length} works to ${TARGET}; manifest + rollback in data/publication/`);
