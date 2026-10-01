@@ -128,8 +128,8 @@ if (realB3) {
   });
 }
 check('write /6 guide: a Q&A survives only with its question AND >= 1 checked answer; questions are checked for presuppositions', () => {
-  const input = { claims: [{ id: 'c1', text: 'The real execution took place at Tower Green.' }], visuals: [{ id: 'v1', text: 'a block', bbox: [0.4, 0.7, 0.1, 0.1] }] };
-  const out = { v: CF.WRITE_VERSION, why: [{ s: 'Why.', ids: ['c1'] }], notes: [], hotspots: [], guide: [
+  const input = { claims: [{ id: 'c0', text: 'It was shown at the 1834 Salon.' }, { id: 'c1', text: 'The real execution took place at Tower Green.' }], visuals: [{ id: 'v1', text: 'a block', bbox: [0.4, 0.7, 0.1, 0.1] }] };
+  const out = { v: CF.WRITE_VERSION, why: [{ s: 'Why.', ids: ['c0'] }], notes: [], hotspots: [], guide: [
     { q: { s: 'Is the scene accurate?', ids: ['c1'] }, a: [{ s: 'No: it happened outdoors.', ids: ['c1'] }, { s: 'Added fact.', ids: ['c1'] }] },
     { q: { s: 'Why is she afraid?', ids: ['v1'] }, a: [{ s: 'Answer.', ids: ['v1'] }] },
     { q: { s: 'Where is the block?', ids: ['v1'] }, a: [{ s: 'Lost answer.', ids: ['v1'] }] }] };
@@ -148,9 +148,9 @@ check('write /7: label-answerable guide questions are trimmed; usable counts gui
     assert.ok(CF.LABEL_QUESTION.test(q), q);
   for (const q of ['Why make Fuji so tiny?', 'Where is Mount Fuji in this picture?', 'Is the sky invented?', 'How can we date it to the mid-1400s in Florence?', 'What style markers point to Van Gogh?', 'Why use oil paint for this scene?'])
     assert.ok(!CF.LABEL_QUESTION.test(q), q);
-  const input = { claims: [{ id: 'c1', text: 'x' }], visuals: [{ id: 'v1', text: 'y', bbox: [0, 0, 0.2, 0.2] }, { id: 'v2', text: 'z', bbox: [0.5, 0.5, 0.2, 0.2] }] };
+  const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }], visuals: [{ id: 'v1', text: 'y', bbox: [0, 0, 0.2, 0.2] }, { id: 'v2', text: 'z', bbox: [0.5, 0.5, 0.2, 0.2] }] };
   const S = (s, ids = ['c1']) => ({ s, ids });
-  const out = { v: CF.WRITE_VERSION, why: [S('Why.')], notes: [], hotspots: [{ anchor: 'v1', head: S('A', ['v1']), body: [S('a.', ['v1'])] }, { anchor: 'v2', head: S('B', ['v2']), body: [S('b.', ['v2'])] }],
+  const out = { v: CF.WRITE_VERSION, why: [S('Why.', ['c0'])], notes: [], hotspots: [{ anchor: 'v1', head: S('A', ['v1']), body: [S('a.', ['v1'])] }, { anchor: 'v2', head: S('B', ['v2']), body: [S('b.', ['v2'])] }],
     guide: [{ q: S('What style is it?'), a: [S('Romanticism.')] }, ...['Q1?', 'Q2?', 'Q3?'].map(q => ({ q: S(q), a: [S('A.')] }))] };
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   assert.deepEqual(w.sentences.find(x => x.id === 'g0.q').issues, ['label question']);
@@ -182,5 +182,25 @@ check('v9 review: any mention of the catalog in player copy is trimmed', () => {
   for (const x of ["That absence fits the catalog's label of abstract art.", 'The catalog classes the painting as Baroque.', 'It is catalogued as Romanticism.', 'The catalog gives Munich, Germany, and 1913.'])
     assert.ok(CF.PIPELINE_LANGUAGE.test(x), x);
   assert.ok(!CF.PIPELINE_LANGUAGE.test('Look for the detailed Tudor dress.')); assert.ok(!CF.PIPELINE_LANGUAGE.test('A catalog of saints fills the border.'));
+});
+check('write /10: gk is citable and checked as general knowledge; a why that lost its opening is dropped; a guide answer repeating the why is trimmed', () => {
+  const input = { claims: [{ id: 'c1', text: 'Thought destroyed after the 1928 flood; rediscovered in 1973.' }, { id: 'c2', text: 'A sensation at the 1834 Salon.' }], visuals: [{ id: 'v1', text: 'thick curved strokes', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'awning', bbox: [0.3, 0.3, 0.2, 0.2] }] };
+  const S = (s, ids) => ({ s, ids });
+  const out = { v: CF.WRITE_VERSION, notes: [],
+    why: [S('Delaroche made a sensation at the 1834 Salon.', ['c2']), S('It was later thought destroyed in 1928, then found in 1973.', ['c1'])],
+    hotspots: [{ anchor: 'v1', axis: 'artist', head: S('Cobblestones', ['v1']), body: [S('Each stone is one thick curved stroke, a habit typical of Van Gogh.', ['v1', 'gk'])] },
+      { anchor: 'v2', axis: 'delight', head: S('Awning', ['v2']), body: [S('The gold awning pulls the eye.', ['v2'])] }],
+    guide: [{ q: S('Did it survive?', ['c1']), a: [S('It was thought destroyed in 1928.', ['c1'])] }, { q: S('Why was it a sensation?', ['c2']), a: [S('Look at the staging.', ['v1']), S('Repeat of the why.', ['c2'])] }] };
+  const w = CF.controlWrite(out, input);
+  assert.deepEqual(w.sentences.find(x => x.id === 'h0.b0').issues, [], 'gk is a known id');
+  const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  assert.match(ci.sentences.find(x => x.id === 'h0.b0').items.find(i => i.id === 'gk').text, /^general knowledge/);
+  const ok = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
+  assert.equal(ok.hotspots[0].axis, 'artist', 'gk counts as a source for the axis');
+  assert.deepEqual(ok.guide.map(g => g.q), ['Why was it a sensation?'], 'the survival question repeats the why and is dropped');
+  assert.equal(ok.guide[0].a, 'Look at the staging.');
+  const frag = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
+  assert.equal(frag.why, null, 'a why starting "It was later…" without its opening is not published');
+  assert.match(CF.CHECK_PROMPT, /general knowledge/); assert.match(CF.WRITE_PROMPT, /never just names or describes an object/);
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

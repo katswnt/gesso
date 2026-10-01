@@ -58,6 +58,15 @@ question).
 
 ## Rules that always win
 
+- **General knowledge (owner, 2026-10-01, VSD-060):** like the school rule that a widely known
+  fact needs no citation, a widely known, uncontroversial art-history generalization may be used
+  without a source: an artist's typical technique ("thick, single-stroke paint is typical of Van
+  Gogh"), a movement's hallmarks, what a medium does, a period's conventions. It is how hotspots
+  connect a visible detail to era, place, medium, style or artist. It never covers a fact about
+  this specific work, anything contested, or meaning and emotion. No extra research calls.
+- **Hotspots say why:** a hotspot never just names or describes an object ("the wooden block sits
+  in the foreground" is not a hotspot); it says what to notice and what that tells you.
+
 - **Interpretation (2026-09-30):** a light reading of how a visible detail works on the eye is
   allowed ("draws the eye", "sets the figure apart"). Meaning, theme, emotion, narrative and
   symbolism need a source. Players must never think the software decided what the art means.
