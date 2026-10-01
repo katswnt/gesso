@@ -40,7 +40,8 @@ const copies = (existsSync(COPY) ? readdirSync(COPY).filter(f => f.endsWith('.js
 const rank = c => Number(String(c.write || 'passBClaimFirstWrite/5').split('/')[1]);
 const newest = new Map(); for (const c of copies) if (!newest.has(c.workId) || rank(c) > rank(newest.get(c.workId))) newest.set(c.workId, c);
 copies.splice(0, copies.length, ...newest.values());
-const TAG = ONLY ? `${DATE}-${sha([...ONLY].sort().join(',')).slice(0, 8)}` : DATE;
+// Batch tag = the exact copy being published (ids + content), so a re-publish of newer copy gets its own manifest.
+const TAG = `${DATE}-${sha(JSON.stringify(copies.map(c => [c.workId, c.write || null, sha(JSON.stringify(c))]).sort())).slice(0, 8)}`;
 if (!copies.length) throw new Error(`no finished copy for ${DATE} in ${COPY}`);
 const teach = load('teach'), hot = load('hotspots'), vis = load('vision');
 for (const [k, f] of [['teach', teach], ['hotspots', hot]]) if (FILES[k].ser(f.obj) !== f.text) throw new Error(`${FILES[k].path} does not round-trip byte-identically; refusing`);
