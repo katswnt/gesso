@@ -30,11 +30,16 @@ export function toGame(copy) {
   const pct = v => Math.round(v * 1000) / 10;
   const pinned = (copy.hotspots || []).map(h => ({ head: h.head, body: h.body, x: pct(h.x), y: pct(h.y) }));
   const plain = (copy.notes || []).map(n => ({ head: n.head, body: n.body }));
-  return { src: 'claim-first', why: copy.why, notes: [...pinned, ...plain] }; // src: the game shows every note (none is filler)
+  const guide = (copy.guide || []).map(g => ({ q: g.q, a: g.a }));
+  return { src: 'claim-first', why: copy.why, notes: [...pinned, ...plain], ...(guide.length ? { guide } : {}) }; // src: the game shows every note (none is filler)
 }
 
 const ONLY = opt('--only') ? new Set(opt('--only').split(',')) : null;
 const copies = (existsSync(COPY) ? readdirSync(COPY).filter(f => f.endsWith('.json')).map(f => JSON.parse(readFileSync(join(COPY, f), 'utf8'))) : []).filter(c => !ONLY || ONLY.has(c.workId));
+// Several writer versions may exist for one work on one day: publish the newest (copy /2 carries `write`).
+const rank = c => Number(String(c.write || 'passBClaimFirstWrite/5').split('/')[1]);
+const newest = new Map(); for (const c of copies) if (!newest.has(c.workId) || rank(c) > rank(newest.get(c.workId))) newest.set(c.workId, c);
+copies.splice(0, copies.length, ...newest.values());
 const TAG = ONLY ? `${DATE}-${sha([...ONLY].sort().join(',')).slice(0, 8)}` : DATE;
 if (!copies.length) throw new Error(`no finished copy for ${DATE} in ${COPY}`);
 const teach = load('teach'), hot = load('hotspots'), vis = load('vision');
@@ -47,7 +52,7 @@ for (const c of copies) {
   const id = c.workId, before = { teach: teach.obj[id] ?? null, hotspots: hot.obj[id] ?? null, vision: vis.obj?.[id] ?? null };
   if (before.vision) throw new Error(`${id} has a legacy vision record; vision.js removal not implemented in this preview`);
   const after = { teach: toGame(c), hotspots: null };
-  manifest.works.push({ workId: id, removed: { cues: before.teach?.cues?.length || 0, guide: before.teach?.guide?.length || 0, legacyNotes: before.teach?.notes?.length || 0, legacyPins: before.hotspots?.length || 0 },
+  manifest.works.push({ workId: id, write: c.write || 'passBClaimFirstWrite/5', removed: { cues: before.teach?.cues?.length || 0, guide: before.teach?.guide?.length || 0, legacyNotes: before.teach?.notes?.length || 0, legacyPins: before.hotspots?.length || 0 },
     after: { why: !!after.teach.why, pinnedNotes: after.teach.notes.filter(n => n.x != null).length, notes: after.teach.notes.filter(n => n.x == null).length }, before, afterTeach: after.teach });
   rollback.entries.push({ workId: id, teach: before.teach, hotspots: before.hotspots });
   teach.obj[id] = after.teach; delete hot.obj[id];

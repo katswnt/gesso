@@ -127,4 +127,20 @@ if (realB3) {
     assert.equal(deriveStageAttempt({ ...plan, stageSpec: { ...plan.stageSpec, allowedTools: ['StructuredOutput'] } }, t, 0).kind, 'fatal');
   });
 }
+check('write /6 guide: a Q&A survives only with its question AND >= 1 checked answer; questions are checked for presuppositions', () => {
+  const input = { claims: [{ id: 'c1', text: 'The real execution took place at Tower Green.' }], visuals: [{ id: 'v1', text: 'a block', bbox: [0.4, 0.7, 0.1, 0.1] }] };
+  const out = { v: CF.WRITE_VERSION, why: [{ s: 'Why.', ids: ['c1'] }], notes: [], hotspots: [], guide: [
+    { q: { s: 'Is the scene accurate?', ids: ['c1'] }, a: [{ s: 'No: it happened outdoors.', ids: ['c1'] }, { s: 'Added fact.', ids: ['c1'] }] },
+    { q: { s: 'Why is she afraid?', ids: ['v1'] }, a: [{ s: 'Answer.', ids: ['v1'] }] },
+    { q: { s: 'Where is the block?', ids: ['v1'] }, a: [{ s: 'Lost answer.', ids: ['v1'] }] }] };
+  const w = CF.controlWrite(out, input);
+  assert.deepEqual(w.sentences.filter(x => x.section === 'g0').map(x => x.id), ['g0.q', 'g0.a0', 'g0.a1']);
+  const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  assert.match(ci.sentences.find(x => x.id === 'g1.q').kind, /^question/);
+  const verdicts = { 'g0.a1': 'adds', 'g1.q': 'adds', 'g2.a0': 'adds' };
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: verdicts[x.id] || 'ok' })) }, visuals: input.visuals });
+  assert.deepEqual(a.guide, [{ q: 'Is the scene accurate?', a: 'No: it happened outdoors.' }]);
+  assert(a.trimmed.some(x => x.id === 'g1.q') && a.trimmed.some(x => x.id === 'g0.a1'));
+  assert.ok(CF.WRITE_WIRE_SCHEMA.required.includes('guide'));
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

@@ -121,4 +121,10 @@ await check('collector receives only remaining local allowance and errors propag
   let calls = 0;
   await collectRemaining({ pacer: { remaining: 0 }, execute: async () => { calls++; } }); assert.equal(calls, 0);
 });
+{ // write /6 copy gets its own file; /5 keeps its original path and shape
+  const a5 = copyArtifact('w1', '2026-10-01', { why: 'x' }, '/o', 'passBClaimFirstWrite/5'), a6 = copyArtifact('w1', '2026-10-01', { why: 'x' }, '/o', 'passBClaimFirstWrite/6');
+  assert.ok(a5.path.endsWith(`${sha256('w1').slice(0, 24)}.json`) && a5.body.version === 'passBClaimFirstCopy/1' && !('write' in a5.body));
+  assert.ok(a6.path.endsWith(`${sha256('w1').slice(0, 24)}.w6.json`) && a6.body.version === 'passBClaimFirstCopy/2' && a6.body.write === 'passBClaimFirstWrite/6');
+  console.log('ok write /6 copy artifacts are versioned and never collide with /5 copy');
+}
 console.log(`pass-b-nightly.test: ${n} checks passed`);

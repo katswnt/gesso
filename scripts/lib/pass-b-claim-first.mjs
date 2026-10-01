@@ -69,7 +69,7 @@ export const confirmedVisuals = (s2Audit, s2Output) => (s2Audit?.rows || []).fil
 }).filter(Boolean);
 
 // ---------- S3: write only from supported claims and confirmed visuals ----------
-export const WRITE_VERSION = 'passBClaimFirstWrite/5';
+export const WRITE_VERSION = 'passBClaimFirstWrite/6'; // /6 (owner 2026-10-01): adds the study guide (follow-up Q&A) and the plain-style rule
 export const WRITE_PROMPT = `You write short teaching copy for an art-history game about ONE artwork, using ONLY the numbered items below.
 - claims: facts checked against sources, plus the museum catalog fields (ids starting "cat.").
 - visuals: details confirmed visible in the image. They establish only WHAT IS VISIBLE (shape, position, colour,
@@ -88,6 +88,8 @@ Write for a museum visitor: never mention research, sources, claims, notes, cata
 metadata. Point hotspots only at the artwork itself, never at a display stand, mount, plinth added for display,
 frame, label, or the photograph's background. The why must say what makes the work worth looking at, not just
 restate a date or a medium; if the items cannot support that, write one short, accurate sentence.
+Style (owner rule): plain, concrete words. No stacked emotional adjectives or literary flourishes ("painfully
+human", "uneasy stillness", "haunting"), and never tell the viewer what to feel.
 
 Depth: GUIDED (owner choice). Each entry says what to notice AND why it matters, in plain words for a curious
 non-specialist. Not bare labels, and not essays.
@@ -96,17 +98,23 @@ Write:
 - notes: 2–4 notes, each a head (a short heading) and 2–3 body sentences explaining why the detail matters.
 - hotspots: up to 4, each anchored to ONE visual id (the spot it points at), with a head and 1–2 body sentences:
   what to notice there, and why. When a verified identity is linked to that visual, name the figure.
+- guide: 3–5 follow-up questions a curious visitor would ask after looking, each a q and 1–3 answer sentences.
+  Good questions are specific to this work and answerable from the items: "Is the scene historically accurate?",
+  "Why does it feel like a stage set?", "Who is the man in red?", "Where was it painted?". Do not repeat a note.
+  A question must not take for granted anything its cited items do not state (no "Why is she so afraid?" unless
+  a claim says she is). Cite what the question takes for granted in its ids.
 Every sentence and every head is { s, ids }: ids lists EVERY item it relies on (at least one). A head or question
 takes things for granted; cite what it takes for granted too. If the items cannot support a section, return fewer
 entries rather than inventing. Return v "${WRITE_VERSION}".`;
 const SENT = { type: 'object', additionalProperties: false, required: ['s', 'ids'], properties: { s: { type: 'string' }, ids: { type: 'array', items: { type: 'string' } } } };
 export const WRITE_WIRE_SCHEMA = {
-  type: 'object', additionalProperties: false, required: ['v', 'why', 'notes', 'hotspots'],
+  type: 'object', additionalProperties: false, required: ['v', 'why', 'notes', 'hotspots', 'guide'],
   properties: {
     v: { type: 'string', enum: [WRITE_VERSION] },
     why: { type: 'array', items: SENT },
     notes: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['head', 'body'], properties: { head: SENT, body: { type: 'array', items: SENT } } } },
     hotspots: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['anchor', 'head', 'body'], properties: { anchor: { type: 'string' }, head: SENT, body: { type: 'array', items: SENT } } } },
+    guide: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['q', 'a'], properties: { q: SENT, a: { type: 'array', items: SENT } } } },
   },
 };
 // Catalog fields are citable items (fix after pilot 1: catalog facts in the why had no id and were all trimmed).
@@ -124,6 +132,7 @@ export function sentencesOf(written) {
   (written?.why || []).forEach((x, i) => out.push({ id: `why.${i}`, section: 'why', part: 'body', ...x }));
   (written?.notes || []).forEach((n, k) => { out.push({ id: `n${k}.h`, section: `n${k}`, part: 'head', ...n.head }); (n.body || []).forEach((x, i) => out.push({ id: `n${k}.b${i}`, section: `n${k}`, part: 'body', ...x })); });
   (written?.hotspots || []).forEach((h, k) => { out.push({ id: `h${k}.h`, section: `h${k}`, part: 'head', anchor: h.anchor, ...h.head }); (h.body || []).forEach((x, i) => out.push({ id: `h${k}.b${i}`, section: `h${k}`, part: 'body', ...x })); });
+  (written?.guide || []).forEach((g, k) => { out.push({ id: `g${k}.q`, section: `g${k}`, part: 'question', ...g.q }); (g.a || []).forEach((x, i) => out.push({ id: `g${k}.a${i}`, section: `g${k}`, part: 'body', ...x })); });
   return out;
 }
 export function controlWrite(output, input) {
@@ -162,7 +171,7 @@ export const CHECK_WIRE_SCHEMA = {
 export function buildCheckInput({ workId, writeInput, writeAudit }) {
   const known = new Map([...writeInput.claims.map(c => [c.id, `claim: ${c.text}`]), ...writeInput.visuals.map(v => [v.id, `visible detail: ${v.text}`])]);
   const sentences = writeAudit.sentences.filter(x => !x.issues.length)
-    .map(x => ({ id: x.id, kind: x.part === 'head' ? 'heading (check what it takes for granted too)' : 'sentence', s: x.s, items: x.ids.map(id => ({ id, text: known.get(id) })) }));
+    .map(x => ({ id: x.id, kind: x.part === 'head' ? 'heading (check what it takes for granted too)' : x.part === 'question' ? 'question (check what it takes for granted: a question may not presuppose an uncited fact, emotion or meaning)' : 'sentence', s: x.s, items: x.ids.map(id => ({ id, text: known.get(id) })) }));
   return { unit: workId, sentences };
 }
 export function controlCheck(output, input) {
@@ -176,24 +185,26 @@ export function controlCheck(output, input) {
 }
 
 // ---------- assembly: trim failing sentences, then decide what survives ----------
-// Kept sentence: valid ids (S3 control) and verdict ok (S4). A why survives with >= 1 kept sentence; a note or
+// Kept sentence: valid ids (S3 control) and verdict ok (S4). A guide entry survives with its question AND >= 1 kept
+// answer sentence. A why survives with >= 1 kept sentence; a note or
 // hotspot survives only if its head AND >= 1 body sentence are kept (and a hotspot's anchor is confirmed).
 export function assemble({ writeAudit, checkAudit, visuals }) {
   const verdict = new Map((checkAudit?.rows || []).map(r => [r.id, r.verdict]));
   const kept = x => !x.issues.length && verdict.get(x.id) === 'ok';
   const bySection = new Map();
   for (const x of writeAudit.sentences) (bySection.get(x.section) || bySection.set(x.section, []).get(x.section)).push(x);
-  const trimmed = [], why = [], notes = [], hotspots = [];
+  const trimmed = [], why = [], notes = [], hotspots = [], guide = [];
   for (const [section, xs] of bySection) {
     for (const x of xs) if (!kept(x)) trimmed.push({ id: x.id, s: x.s, why: x.issues.length ? x.issues.join('; ') : `check: ${verdict.get(x.id) ?? 'missing'}` });
-    const head = xs.find(x => x.part === 'head'), body = xs.filter(x => x.part === 'body' && kept(x));
+    const head = xs.find(x => x.part === 'head' || x.part === 'question'), body = xs.filter(x => x.part === 'body' && kept(x));
     if (section === 'why') { if (body.length) why.push(...body.map(x => x.s)); continue; }
     if (!head || !kept(head) || !body.length) continue;
+    if (section.startsWith('g')) { guide.push({ q: head.s, a: body.map(x => x.s).join(' ') }); continue; }
     if (section.startsWith('n')) notes.push({ head: head.s, body: body.map(x => x.s).join(' ') });
     else { const v = visuals.find(y => y.id === head.anchor); if (v) hotspots.push({ anchor: v.id, x: v.bbox[0] + v.bbox[2] / 2, y: v.bbox[1] + v.bbox[3] / 2, head: head.s, body: body.map(x => x.s).join(' ') }); }
   }
   const whyText = why.join(' ');
-  return { why: whyText || null, notes, hotspots, trimmed,
+  return { why: whyText || null, notes, hotspots, guide, trimmed,
     usable: { minimal: !!whyText && notes.length >= 1 && hotspots.length >= 1, strict: !!whyText && notes.length >= 2 && hotspots.length >= 2 } };
 }
 export const inputSha = x => sha256(JSON.stringify(x));

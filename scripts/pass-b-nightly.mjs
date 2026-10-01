@@ -95,9 +95,13 @@ export function workStatus(base) {
   return { next: 'copy', copy: CF.assemble({ writeAudit: h3.derived.audit, checkAudit: h4.derived.audit, visuals: s3.visuals }), s3 };
 }
 
-export function copyArtifact(id, date, copy, out = OUT) {
-  return { path: join(out, 'copy', date || 'undated', `${sha256(id).slice(0, 24)}.json`),
-    body: { version: 'passBClaimFirstCopy/1', workId: id, date: date || null, model: OPTS.model, ...copy } };
+// Write /5 copy keeps its original path and shape. Later writer versions get their own file (…​.w6.json) so a
+// re-write never collides with, or overwrites, earlier finished copy for the same day.
+export function copyArtifact(id, date, copy, out = OUT, write = CF.WRITE_VERSION) {
+  const legacy = write === 'passBClaimFirstWrite/5', tag = legacy ? '' : `.w${write.split('/')[1]}`;
+  return { path: join(out, 'copy', date || 'undated', `${sha256(id).slice(0, 24)}${tag}.json`),
+    body: legacy ? { version: 'passBClaimFirstCopy/1', workId: id, date: date || null, model: OPTS.model, ...copy }
+      : { version: 'passBClaimFirstCopy/2', write, workId: id, date: date || null, model: OPTS.model, ...copy } };
 }
 export function copyExists(artifact) {
   if (!existsSync(artifact.path)) return false;
