@@ -680,4 +680,10 @@ await inFixture('format retry: a work with any non-format terminal reason is not
   preWireEpoch(f);f.attempt('B2',overCap(f));f.attempt('B2',null,{result:'x',error:true});rebindContract(f.runDir,contractReview(f));
   assert.equal(f.inspect().formatEligible,null);assert.equal(grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows).length,0);
 },{complete:['B1']});
+await ta('owner hours exception: only today\'s Pacific date opens a daytime start, and it is reported for the reservation',async()=>{
+  const day=at('2026-10-01T20:00:00Z');
+  assert.throws(()=>callWindow(day,undefined),/protected-hours/);assert.throws(()=>callWindow(day,'2026-09-30'),/protected-hours/);
+  const w=callWindow(day,'2026-10-01');assert.equal(w.hoursException,'2026-10-01');assert.equal(w.timeout,30*60*1000);
+  assert.equal(callWindow(at('2026-10-01T08:00:00Z'),'2026-10-01').hoursException,undefined,'inside the window no exception is recorded');
+});
 console.log(`\n${n} corpus-collector regressions passed`);

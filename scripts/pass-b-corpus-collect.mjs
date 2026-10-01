@@ -212,8 +212,11 @@ export function runSpendUsd(runDir) {
   return total;
 }
 export function setSpentUsd(v) { SPENT_USD = v; }
-export function callWindow(now = new Date()) {
+// Owner one-day exception (same pattern as claim-first's PASS_B_SHADOW_AUDIT_HOURS_EXCEPTION): the owner sets
+// PASS_B_CORPUS_HOURS_EXCEPTION to TODAY's Pacific date; it is recorded on every reservation it permits.
+export function callWindow(now = new Date(), exception = process.env.PASS_B_CORPUS_HOURS_EXCEPTION) {
   const clock = pacificClock(now);
+  if (!clock.mayStart && exception && exception === clock.date) return { timeout: 30 * 60 * 1000, killSignal: 'SIGKILL', hoursException: clock.date };
   if (!clock.mayStart) throw new SchedulePauseError('protected-hours: starts allowed only 00:00–08:30 America/Los_Angeles');
   return { timeout: Math.min(30 * 60 * 1000, clock.remainingMs), killSignal: 'SIGKILL' };
 }
@@ -566,7 +569,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
-      executionEpoch: epoch.number, executionEpochSha256: epoch.sha256 })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+      executionEpoch: epoch.number, executionEpochSha256: epoch.sha256, ...(options.hoursException ? { hoursException: options.hoursException } : {}) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
     // Cloud: push the reservation (and the epoch chain it names) BEFORE spending; a push failure pauses with no call.
     try { persistRemote(remoteRoot(), [...corpusWorkEvidencePaths(workRunDir), join(runDir, 'imgs', `${imgSha256}.${ext}`), join(runDir, 'execution-policy.json'), join(runDir, 'execution-policies'), PACER?.statePath], `reserve ${id}/${stage} ${stem}`); }
     catch (e) { throw new OperationalPauseError(`persist-failed before call: ${e.message}`); }
@@ -894,6 +897,9 @@ async function main() {
     const skip = new Set([...windowOrder, ...(readJson(skipPath).ids || []), ...(existsSync(exportedPath) ? readJson(exportedPath).ids || [] : [])]);
     order = buildPriorityQueue(pool, daily, { today: clock.date, windowOnly: false }).filter(id => !skip.has(id));
   }
+  // Owner-directed subset (PASS_B_CORPUS_ONLY="id1,id2"): narrows the queue only; every gate still applies.
+  const only = new Set((process.env.PASS_B_CORPUS_ONLY || '').split(',').map(x => x.trim()).filter(Boolean));
+  if (only.size) { order = order.filter(id => only.has(id)); console.log(`owner subset: ${order.length} of ${only.size} requested works in the queue order`); }
   const eligibleSet = new Set(allEligible.map(p => p.id));
   const queue = computeQueue(order, { eligibleSet, doneSet: inspection.doneSet, heldSet: inspection.heldSet });
   console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION} | lane: ${LANE}${LANE === 'cloud' ? ` (cap $${CLOUD_BUDGET_USD}, spent $${runSpendUsd(RUN_DIR).toFixed(2)})` : ''}`);
