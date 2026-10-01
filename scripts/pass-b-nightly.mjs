@@ -21,7 +21,7 @@ import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
-import { OPTS, setBaseProvider, stageBinding, stageRunId, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
+import { OPTS, setBaseProvider, stageBinding, stageRunId, stageHistory, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
 const execFileP = promisify(execFile);
 const OUT = join(RUN_ROOT, 'claim-first-nightly'), SNAP = join(RUN_ROOT, 'claim-first-v1', 'snapshots');
@@ -75,7 +75,7 @@ export function verifiedBaseFactory({ pool, legacyOf, runDir = CORPUS_RUN_DIR, i
 }
 
 const runOf = key => { const b = stageBinding(key, []), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
-const historyOf = (key, plan) => { const r = runOf(key); return existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null; };
+const historyOf = (key, plan) => stageHistory(key, [], plan); // S2 also reads its pre-cap equivalent run (VSD-057)
 // Status of one work across stages; 'copy' when S4 is accepted.
 export function workStatus(base) {
   const s1 = planS1(base), s2 = planS2(base), h1 = historyOf('S1', s1), h2 = historyOf('S2', s2);

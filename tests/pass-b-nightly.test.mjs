@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
+import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
 import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining } from '../scripts/pass-b-nightly.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
@@ -126,5 +127,12 @@ await check('collector receives only remaining local allowance and errors propag
   assert.ok(a5.path.endsWith(`${sha256('w1').slice(0, 24)}.json`) && a5.body.version === 'passBClaimFirstCopy/1' && !('write' in a5.body));
   assert.ok(a6.path.endsWith(`${sha256('w1').slice(0, 24)}.w6.json`) && a6.body.version === 'passBClaimFirstCopy/2' && a6.body.write === 'passBClaimFirstWrite/6');
   console.log('ok write /6 copy artifacts are versioned and never collide with /5 copy');
+}
+{ // VSD-057: S2's pre-cap run is an equivalent history source (same binding except the B3 wire-schema hash)
+  const runs = CF_RUNNER.equivalentRuns('S2', []);
+  assert.equal(runs.length, 2); assert.equal(runs[1].runId, 'cf-1d898d84282f');
+  const { wireSchemaSha256: _a, ...x } = runs[0].binding, { wireSchemaSha256: _b, ...y } = runs[1].binding; assert.deepEqual(x, y);
+  assert.equal(CF_RUNNER.equivalentRuns('S3', []).length, 1, 'no other stage gains an alias');
+  console.log('ok S2 pre-cap run resolves to cf-1d898d84282f and differs only in the wire-schema hash');
 }
 console.log(`pass-b-nightly.test: ${n} checks passed`);

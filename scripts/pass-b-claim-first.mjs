@@ -118,7 +118,24 @@ export function planS2(base) {
   return mkPlan('S2', base, { unit: base.id, candidates }, { ...base.binding });
 }
 const runDirFor = (key, works) => { const b = stageBinding(key, works), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
-const verified = (key, works, plan) => { const r = runDirFor(key, works); return existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null; };
+// VSD-057 follow-up: S2 reuses the corpus B3 wire schema, so adding validator caps to it (2026-10-01) moved S2 to
+// a new run although its prompt, model, effort and output contract are unchanged. The pre-cap nightly S2 run stays
+// valid: the EARLIEST accepted S2 among the equivalent runs is used, so every work stays bound to the S2 output its
+// later stages (SI/SJ/S3) consumed. Without any accepted result, the earliest recorded outcome stands (a held S2
+// stays terminal; it is never re-run in a newer run).
+export const S2_PRE_CAP_WIRE_SHA256 = '1eff2375c79cfdb181de6ae7d1c2ee127084ce819f2249b3ef3c60a54288afc5';
+export function equivalentRuns(key, works) {
+  const r = runDirFor(key, works);
+  if (key !== 'S2' || !OPTS.nightly || r.binding.wireSchemaSha256 === S2_PRE_CAP_WIRE_SHA256) return [r];
+  const b = { ...r.binding, wireSchemaSha256: S2_PRE_CAP_WIRE_SHA256 }, id = stageRunId(b);
+  return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }];
+}
+export function stageHistory(key, works, plan) {
+  const found = equivalentRuns(key, works).map(r => existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null).filter(Boolean);
+  const at = h => Date.parse(h.reservation?.reservedAt) || 0, earliest = xs => xs.sort((a, b) => at(a) - at(b))[0] || null;
+  return earliest(found.filter(h => h.kind === 'accepted')) || earliest(found);
+}
+const verified = stageHistory;
 
 // Passages for identification: page text that overlaps the title, the confirmed visuals and B1's figure notes
 // (B1's guesses only SELECT passages; the model never sees them).
