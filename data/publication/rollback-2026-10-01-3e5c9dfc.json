@@ -1,0 +1,50 @@
+{
+ "version": "passBPublicationRollback/1",
+ "date": "2026-10-01",
+ "entries": [
+  {
+   "workId": "http://www.wikidata.org/entity/Q1213453",
+   "teach": {
+    "src": "claim-first",
+    "why": "Jane was executed in 1554 after being proclaimed queen for nine days. The painting was thought destroyed after the 1928 Thames flood and was rediscovered at the Tate in 1973.",
+    "notes": [
+     {
+      "head": "Lady Jane Grey in white",
+      "body": "Lady Jane Grey is in the centre, her white satin dress strongly lit against the very dark background.",
+      "x": 42,
+      "y": 38
+     },
+     {
+      "head": "The wooden block",
+      "body": "The block, with an iron ring on its front face, sits in front of the kneeling figure at lower centre and anchors the composition. Straw is visible around it.",
+      "x": 44,
+      "y": 79.5
+     },
+     {
+      "head": "Crimson hose",
+      "body": "The standing man at right wears vivid crimson hose against the dark right side of the canvas. They are the strongest red contrast there, so they pull the eye to that corner, near the axe.",
+      "x": 82,
+      "y": 65.5
+     },
+     {
+      "head": "Light picks out the central figure",
+      "body": "Lady Jane Grey, in white satin, is strongly lit while the background is very dark. This contrast sets her apart and draws the eye to the centre of the canvas first."
+     },
+     {
+      "head": "A dungeon setting that is not historically accurate",
+      "body": "The scene is painted in a dungeon-like interior. The real execution took place outdoors, at Tower Green, so the setting is the painter's choice rather than a record of the event."
+     },
+     {
+      "head": "Calm centre, distressed attendants",
+      "body": "The blindfolded central figure in white looks composed, while the attendants at left are visibly distressed: one covers her face and the other has collapsed. Notice how this contrast between the figures sits side by side in the scene."
+     },
+     {
+      "head": "Detailed Tudor-style dress",
+      "body": "The garments are rendered in careful detail: a jeweled French hood, puffed sleeves, fur-trimmed robes and a jeweled necklace. These textures reward a close look."
+     }
+    ]
+   },
+   "hotspots": null
+  }
+ ]
+}

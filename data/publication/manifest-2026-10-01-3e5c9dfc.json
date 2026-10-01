@@ -1,0 +1,133 @@
+{
+ "version": "passBPublicationPreview/1",
+ "date": "2026-10-01",
+ "target": "/Users/kathrynswint/Documents/artguessr-preview",
+ "createdAt": "2026-10-01T22:53:00.221Z",
+ "works": [
+  {
+   "workId": "http://www.wikidata.org/entity/Q1213453",
+   "write": "passBClaimFirstWrite/6",
+   "removed": {
+    "cues": 0,
+    "guide": 0,
+    "legacyNotes": 7,
+    "legacyPins": 0
+   },
+   "after": {
+    "why": true,
+    "pinnedNotes": 3,
+    "notes": 4
+   },
+   "before": {
+    "teach": {
+     "src": "claim-first",
+     "why": "Jane was executed in 1554 after being proclaimed queen for nine days. The painting was thought destroyed after the 1928 Thames flood and was rediscovered at the Tate in 1973.",
+     "notes": [
+      {
+       "head": "Lady Jane Grey in white",
+       "body": "Lady Jane Grey is in the centre, her white satin dress strongly lit against the very dark background.",
+       "x": 42,
+       "y": 38
+      },
+      {
+       "head": "The wooden block",
+       "body": "The block, with an iron ring on its front face, sits in front of the kneeling figure at lower centre and anchors the composition. Straw is visible around it.",
+       "x": 44,
+       "y": 79.5
+      },
+      {
+       "head": "Crimson hose",
+       "body": "The standing man at right wears vivid crimson hose against the dark right side of the canvas. They are the strongest red contrast there, so they pull the eye to that corner, near the axe.",
+       "x": 82,
+       "y": 65.5
+      },
+      {
+       "head": "Light picks out the central figure",
+       "body": "Lady Jane Grey, in white satin, is strongly lit while the background is very dark. This contrast sets her apart and draws the eye to the centre of the canvas first."
+      },
+      {
+       "head": "A dungeon setting that is not historically accurate",
+       "body": "The scene is painted in a dungeon-like interior. The real execution took place outdoors, at Tower Green, so the setting is the painter's choice rather than a record of the event."
+      },
+      {
+       "head": "Calm centre, distressed attendants",
+       "body": "The blindfolded central figure in white looks composed, while the attendants at left are visibly distressed: one covers her face and the other has collapsed. Notice how this contrast between the figures sits side by side in the scene."
+      },
+      {
+       "head": "Detailed Tudor-style dress",
+       "body": "The garments are rendered in careful detail: a jeweled French hood, puffed sleeves, fur-trimmed robes and a jeweled necklace. These textures reward a close look."
+      }
+     ]
+    },
+    "hotspots": null,
+    "vision": null
+   },
+   "afterTeach": {
+    "src": "claim-first",
+    "why": "Paul Delaroche painted this large oil scene in France in 1833, and it was an immediate sensation when shown at the Paris Salon of 1834. It shows Lady Jane Grey, who was executed in 1554 after being proclaimed queen for nine days. The painting was thought destroyed after the 1928 Thames flood, then rediscovered at the Tate in 1973.",
+    "notes": [
+     {
+      "head": "The block",
+      "body": "An iron ring marks the front of the wooden block at lower centre, just in front of the kneeling figure.",
+      "x": 44,
+      "y": 79.5
+     },
+     {
+      "head": "Crimson hose",
+      "body": "The standing man's bright red hose stand out sharply against the dark right side, and the axe is visible at lower right.",
+      "x": 82,
+      "y": 65.5
+     },
+     {
+      "head": "Figures at left",
+      "body": "Beside the blindfolded central figure, one attendant covers her face and another has collapsed.",
+      "x": 40,
+      "y": 50
+     },
+     {
+      "head": "Light pulls you to the centre",
+      "body": "Lady Jane Grey, in the centre, wears a white satin dress that is strongly lit against a very dark background. This contrast sets her apart from everything around her, and the light seems to come from the upper left or front-left."
+     },
+     {
+      "head": "The block anchors the composition",
+      "body": "The wooden block has an iron ring on its front face at the lower centre, in front of the kneeling figure. Its position holds the composition steady and makes the kneeling posture easy to read. Straw is visible around it in the foreground."
+     },
+     {
+      "head": "A single strong red",
+      "body": "The standing man at right wears vivid crimson hose against the dark right side of the canvas. They are the strongest red in the picture; only a small cap and a rosette on the same figure come close, so the eye is drawn to that corner."
+     },
+     {
+      "head": "Detailed Tudor-style dress",
+      "body": "The clothes are painted in close detail: a jeweled French hood, puffed sleeves, fur-trimmed robes and a jeweled necklace."
+     }
+    ],
+    "guide": [
+     {
+      "q": "Is the setting historically accurate?",
+      "a": "No. The real execution took place outdoors on Tower Green, not in a dungeon-like interior as painted here."
+     },
+     {
+      "q": "Who was Lady Jane Grey?",
+      "a": "She was proclaimed queen for nine days and was executed in 1554."
+     },
+     {
+      "q": "Who is the older man guiding Jane?",
+      "a": "He is identified as John Brydges, Lord Chandos, Lieutenant of the Tower."
+     },
+     {
+      "q": "Did the painting survive intact?",
+      "a": "It was thought destroyed after the 1928 Thames flood. It was rediscovered at the Tate in 1973."
+     }
+    ]
+   }
+  }
+ ],
+ "filesBefore": {
+  "data/teach-works.js": "1df788b04efbde6703be551ace88f7acb91dbd7b3d1d6c85584ccde0ddc13bae",
+  "data/hotspots.js": "17398cb2be86e42cefd08624e2de37f120d8d55fbbb9eb9390580bbb02e3d598"
+ },
+ "filesAfter": {
+  "data/teach-works.js": "3822f95c95ca84e55fb541f7ad007c188909e1d13745142be8719758087fde7b",
+  "data/hotspots.js": "17398cb2be86e42cefd08624e2de37f120d8d55fbbb9eb9390580bbb02e3d598"
+ }
+}
