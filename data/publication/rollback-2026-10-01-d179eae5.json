@@ -1,0 +1,182 @@
+{
+ "version": "passBPublicationRollback/1",
+ "date": "2026-10-01",
+ "entries": [
+  {
+   "workId": "wikidata:Q1025704",
+   "teach": {
+    "src": "claim-first",
+    "why": "Van Gogh painted this night scene of a café terrace in Arles in 1888, working outdoors at night rather than from memory or in a studio. The stars are placed to match the real night sky over Arles in mid-September 1888, and the terrace is lit by gas lamp.",
+    "notes": [
+     {
+      "head": "Starry sky",
+      "body": "Look at the thick bursts of yellow, white and pale blue, with halo-like rings around the larger stars. Their positions match the real night sky over Arles in September 1888.",
+      "x": 67,
+      "y": 23
+     },
+     {
+      "head": "Glowing awning",
+      "body": "The large yellow awning is a flat, bright surface that glows almost as brightly as the café interior. It stands out strongly against the blue sky.",
+      "x": 32,
+      "y": 29
+     },
+     {
+      "head": "Cobblestones",
+      "body": "The pavement is built from many short curved dark and light strokes, one small arc of paint each.",
+      "x": 50,
+      "y": 82.5
+     },
+     {
+      "head": "Dark tree",
+      "body": "A dark green tree at the right edge is the only unlit, organic silhouette, set against the starry sky.",
+      "x": 87.5,
+      "y": 19
+     },
+     {
+      "head": "Warm light against deep blue",
+      "body": "The whole image is organized around the warm yellow-orange of the lit café at left set against the deep cobalt blue of the sky and buildings. This contrast pulls your eye to the café first, and the terrace is lit by gas lamp."
+     },
+     {
+      "head": "Stars built from strokes",
+      "body": "The stars are clusters of short, thick strokes radiating outward, not simple dots, with halo-like rings around the larger ones. Their positions match the sky over Arles on 16 or 17 September 1888."
+     },
+     {
+      "head": "Painted on the spot",
+      "body": "Van Gogh painted this at night, in situ, rather than from memory or in the studio. Look at the thick bursts of yellow, white and pale blue paint in the sky."
+     },
+     {
+      "head": "Pavement made of marks",
+      "body": "The cobblestones are made of many short curved dark and light strokes, each a small arc of paint. These marks keep your eye moving across the foreground."
+     }
+    ]
+   },
+   "hotspots": null
+  },
+  {
+   "workId": "wikidata:Q2990634",
+   "teach": {
+    "src": "claim-first",
+    "why": "Composition VII is an oil painting made by Wassily Kandinsky in Munich in 1913, and it is catalogued as abstract art. Scholars identify themes of the Flood, Last Judgment, and Resurrection as embedded in it, even though the canvas shows no clear narrative subject.",
+    "notes": [
+     {
+      "head": "Striped ladder-like cluster",
+      "body": "Left of center, a curved, ladder-like cluster of striped lines carries red, blue and yellow hatching. Its dense stripes stand out from the broader color fields around it and draw the eye.",
+      "x": 16,
+      "y": 30
+     },
+     {
+      "head": "Color set side by side",
+      "body": "Warm yellows, oranges and reds sit directly beside blues and greens across the whole canvas. The transitions are mostly abrupt, so the contrasts make the eye jump from one patch to the next."
+     },
+     {
+      "head": "Lines over color",
+      "body": "Thin black strokes overlay broader color fields, mostly in the left-center and center. The fine lines contrast with the wider areas of color and give the eye paths to follow across the middle of the canvas."
+     },
+     {
+      "head": "No clear subject",
+      "body": "Colored shapes and line accents are spread across the canvas with no clear narrative subject. Scholars nonetheless identify themes of the Flood, Last Judgment, and Resurrection as embedded in the work."
+     },
+     {
+      "head": "Made through many studies",
+      "body": "Over thirty preliminary studies were created for this painting, in Indian ink, watercolor, diagrams, and on canvas. The finished canvas dates from 1913, during Kandinsky's Munich period."
+     }
+    ]
+   },
+   "hotspots": null
+  },
+  {
+   "workId": "http://www.wikidata.org/entity/Q517408",
+   "teach": {
+    "src": "claim-first",
+    "why": "Antonio Canova carved this marble group in 1794 in the Neoclassical style, showing Cupid holding Psyche in his arms. It is designed to be seen from multiple viewpoints, so the figures reward a walk around them rather than a single glance. A second version was commissioned by Prince Yusupov in 1796 and is now at the Hermitage Museum, Saint Petersburg.",
+    "notes": [
+     {
+      "head": "Cupid's wings",
+      "body": "Two upswept feathered wings rise above Cupid, largely separate from his body. Their upward sweep carries the eye to the top of the group.",
+      "x": 49,
+      "y": 19
+     },
+     {
+      "head": "Drapery around Psyche",
+      "body": "Look at the fine ridges and deeper folds at the hip and thigh, where shadow lines make the sheet read as cloth.",
+      "x": 52.5,
+      "y": 72.5
+     },
+     {
+      "head": "The rock base",
+      "body": "The rock is rougher and more textured than the polished skin above it.",
+      "x": 48,
+      "y": 77.5
+     },
+     {
+      "head": "A diagonal that leads the eye",
+      "body": "The composition rises diagonally from the reclining figure at lower right, through the embrace at center, to the wings at upper left. This line carries your eye across the whole group, and because the work is made to be seen in the round, you can keep following it as you move."
+     },
+     {
+      "head": "Smooth skin against rough rock",
+      "body": "The figures' skin looks smooth and glossy, while the rock base below is rougher and shows tool marks. That contrast sets the polished figures apart from the base they rest on."
+     },
+     {
+      "head": "Cloth carved in stone",
+      "body": "Drapery around Psyche's lower body shows thin ridges and folds with fine shadows that read as cloth. The shadow lines in the folds give the marble a soft, fabric-like look."
+     },
+     {
+      "head": "Faces turned toward each other",
+      "body": "The two faces are turned toward each other in a kiss, and Cupid's eyes look downward. Neither figure looks at the viewer, so your attention stays on the embrace itself."
+     }
+    ]
+   },
+   "hotspots": null
+  },
+  {
+   "workId": "http://www.wikidata.org/entity/Q2610936",
+   "teach": {
+    "src": "claim-first",
+    "why": "This oil painting on canvas is attributed to Caravaggio and dates to the 1590s, in the Baroque style. Caravaggio was employed in d'Arpino's workshop specifically to paint fruit and flowers, and a 2012 technical analysis found an underlying drawing that confirms he worked from direct observation of nature.",
+    "notes": [
+     {
+      "head": "The young man",
+      "body": "The brightly lit shoulder and white sleeve stand out from the dark background, so the eye lands on the boy holding the basket first.",
+      "x": 15,
+      "y": 30
+     },
+     {
+      "head": "Bunches of grapes",
+      "body": "Notice the small highlight on each pale berry. These bright points make the cluster stand out.",
+      "x": 77,
+      "y": 73
+     },
+     {
+      "head": "A drooping autumn leaf",
+      "body": "A yellow-brown leaf hangs at the lower right, toward the viewer's side, over the rim area of the basket.",
+      "x": 84,
+      "y": 90
+     },
+     {
+      "head": "Peaches and apples",
+      "body": "Look among the fruit for the peaches and apples. They sit alongside grapes and other fruit in the same basket.",
+      "x": 45,
+      "y": 68
+     },
+     {
+      "head": "A figure lit against darkness",
+      "body": "The bare shoulder and white sleeve are brightly lit against a dark, mostly plain brown-black background. This contrast sets the figure apart and draws the eye first to the young man holding the basket."
+     },
+     {
+      "head": "A basket full of varied fruit",
+      "body": "The basket holds peaches, apples, grapes and other fruit, with small red fruit, figs and pomegranate also visible."
+     },
+     {
+      "head": "Highlights on the grapes",
+      "body": "At the right, pale green-white grapes each carry a small bright highlight. These tiny points of light make the berries look rounded and glossy."
+     },
+     {
+      "head": "Painted from life",
+      "body": "It confirms Caravaggio worked from direct observation of nature."
+     }
+    ]
+   },
+   "hotspots": null
+  }
+ ]
+}
