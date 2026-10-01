@@ -69,7 +69,8 @@ export const confirmedVisuals = (s2Audit, s2Output) => (s2Audit?.rows || []).fil
 }).filter(Boolean);
 
 // ---------- S3: write only from supported claims and confirmed visuals ----------
-export const WRITE_VERSION = 'passBClaimFirstWrite/8'; // /8: never narrate the writer's own limits to the reader (owner review of /7, 2026-10-01).
+export const WRITE_VERSION = 'passBClaimFirstWrite/9'; // /9 (VSD-059): docs/teaching-copy-guide.md — guided why restored, axis-tagged hotspots, no overlap.
+// /8: never narrate the writer's own limits to the reader (owner review of /7, 2026-10-01).
 // /7 // /7 (owner 2026-10-01): the approved study-guide style (docs/vision-study-guide-style.md, VSD-020) carried into claim-first; unpinned notes fold into the guide
 export const WRITE_PROMPT = `You write the teaching copy a player reads after guessing ONE artwork in an art-history game, using ONLY the
 numbered items below.
@@ -81,15 +82,20 @@ numbered items below.
 You have no image, no tools and no other knowledge. Do not add ANY fact, name, date, identity, material, cause or
 interpretation that the cited items do not state.
 
-WHAT TO WRITE (the owner-approved study-guide style):
+WHAT TO WRITE (docs/teaching-copy-guide.md, owner-approved):
 "Hotspots teach what to notice. The study guide explains why those details matter, what larger traditions they
 belong to, and what genuinely interesting questions the object raises." Readers are curious, attentive
 non-specialists who read well and know a little about art.
-- why: 2–3 sentences. Open with what instantly identifies the work and makes it worth looking at, not generic
-  praise and not a bare date or medium.
-- hotspots: 2–5, each anchored to ONE visual id (the spot it points at): a short head naming the place to look,
-  and 1–2 body sentences saying what to notice there and why it matters. Together they walk the eye across the
-  picture. When a verified identity is linked to that visual, name the figure.
+- why: 2–3 sentences on why this work matters (guided depth), not a bare date or medium. If the items cannot
+  support that, write one short, accurate sentence.
+- hotspots: 2–5, each anchored to ONE visual id (the spot it points at) and tagged with what it teaches:
+  axis "when", "where", "medium", "style", "artist" or "format" when the hotspot ties the visible detail to that
+  guessing category (period, place, material/technique, movement or school, maker, object type), or "delight"
+  when it is simply worth noticing. Head: a short name for the place to look. Body, 1–2 sentences: what to notice
+  there, then what it tells you ("…a mark of Neo-Classical ornament", "…pins the scene to Bourke Street,
+  Melbourne"). Tie a detail to an axis ONLY when a cited claim or catalog item states that link; otherwise use
+  "delight". Prefer axis hotspots: most should teach an axis, and delight should be the minority. When a verified
+  identity is linked to that visual, name the figure.
 - guide: the strongest 5–7 questions a curious visitor would genuinely want answered after looking, each with a
   2–4 sentence answer. Everything worth teaching that is not a spot on the image belongs here.
 
@@ -104,7 +110,9 @@ GUIDE QUESTIONS — make the reader want to open the answer:
 - Flat questions are rejected: anything the label already answers or a glance shows ("Where is this café?",
   "What style is it?", "What is the medium?", "Where and when was it made?"), and questions whose answer is merely
   correct rather than illuminating. Fold a plain fact into a better question's answer instead.
-- Do not restate a hotspot as a question.
+- No overlap: each fact appears once. Do not restate the why or a hotspot as a question, and do not ask a question
+  whose answer the why or a hotspot already gives (a why that tells how the painting survived means no "Did it
+  survive?" question).
 - Run an arc: the early questions decode THIS work (what is happening, who, what the details are doing); the later
   ones teach transferable looking (how to date it, why this medium, how to tell the maker or tradition apart).
   When the items support it, use the pair "How can we tell this is by <maker> from the work itself?" then "How do
@@ -141,7 +149,9 @@ RULES THAT ALWAYS WIN:
   photograph's background.
 Every sentence, head and question is { s, ids }: ids lists EVERY item it relies on (at least one). If the items
 cannot support a section, return fewer entries rather than inventing. Return notes as [] (folded into the guide).
+Each hotspot also returns axis (one of when, where, medium, style, artist, format, delight).
 Return v "${WRITE_VERSION}".`;
+export const HOTSPOT_AXES = ['when', 'where', 'medium', 'style', 'artist', 'format', 'delight'];
 const SENT = { type: 'object', additionalProperties: false, required: ['s', 'ids'], properties: { s: { type: 'string' }, ids: { type: 'array', items: { type: 'string' } } } };
 export const WRITE_WIRE_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['v', 'why', 'notes', 'hotspots', 'guide'],
@@ -149,7 +159,7 @@ export const WRITE_WIRE_SCHEMA = {
     v: { type: 'string', enum: [WRITE_VERSION] },
     why: { type: 'array', items: SENT },
     notes: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['head', 'body'], properties: { head: SENT, body: { type: 'array', items: SENT } } } },
-    hotspots: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['anchor', 'head', 'body'], properties: { anchor: { type: 'string' }, head: SENT, body: { type: 'array', items: SENT } } } },
+    hotspots: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['anchor', 'axis', 'head', 'body'], properties: { anchor: { type: 'string' }, axis: { type: 'string', enum: HOTSPOT_AXES }, head: SENT, body: { type: 'array', items: SENT } } } },
     guide: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['q', 'a'], properties: { q: SENT, a: { type: 'array', items: SENT } } } },
   },
 };
@@ -170,7 +180,7 @@ export function sentencesOf(written) {
   const out = [];
   (written?.why || []).forEach((x, i) => out.push({ id: `why.${i}`, section: 'why', part: 'body', ...x }));
   (written?.notes || []).forEach((n, k) => { out.push({ id: `n${k}.h`, section: `n${k}`, part: 'head', ...n.head }); (n.body || []).forEach((x, i) => out.push({ id: `n${k}.b${i}`, section: `n${k}`, part: 'body', ...x })); });
-  (written?.hotspots || []).forEach((h, k) => { out.push({ id: `h${k}.h`, section: `h${k}`, part: 'head', anchor: h.anchor, ...h.head }); (h.body || []).forEach((x, i) => out.push({ id: `h${k}.b${i}`, section: `h${k}`, part: 'body', ...x })); });
+  (written?.hotspots || []).forEach((h, k) => { out.push({ id: `h${k}.h`, section: `h${k}`, part: 'head', anchor: h.anchor, axis: h.axis ?? null, ...h.head }); (h.body || []).forEach((x, i) => out.push({ id: `h${k}.b${i}`, section: `h${k}`, part: 'body', ...x })); });
   (written?.guide || []).forEach((g, k) => { out.push({ id: `g${k}.q`, section: `g${k}`, part: 'question', ...g.q }); (g.a || []).forEach((x, i) => out.push({ id: `g${k}.a${i}`, section: `g${k}`, part: 'body', ...x })); });
   return out;
 }
@@ -241,7 +251,9 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
     if (!head || !kept(head) || !body.length) continue;
     if (section.startsWith('g')) { guide.push({ q: head.s, a: body.map(x => x.s).join(' ') }); continue; }
     if (section.startsWith('n')) notes.push({ head: head.s, body: body.map(x => x.s).join(' ') });
-    else { const v = visuals.find(y => y.id === head.anchor); if (v) hotspots.push({ anchor: v.id, x: v.bbox[0] + v.bbox[2] / 2, y: v.bbox[1] + v.bbox[3] / 2, head: head.s, body: body.map(x => x.s).join(' ') }); }
+    else { const v = visuals.find(y => y.id === head.anchor); // An axis tag needs a kept sentence that cites a claim (not only visuals); otherwise it is a delight.
+    const visualIds = new Set(visuals.map(y => y.id)), sourced = body.some(x => x.ids.some(id => !visualIds.has(id)));
+    if (v) hotspots.push({ anchor: v.id, ...(head.axis ? { axis: head.axis !== 'delight' && !sourced ? 'delight' : head.axis } : {}), x: v.bbox[0] + v.bbox[2] / 2, y: v.bbox[1] + v.bbox[3] / 2, head: head.s, body: body.map(x => x.s).join(' ') }); }
   }
   const whyText = why.join(' ');
   return { why: whyText || null, notes, hotspots, guide, trimmed,

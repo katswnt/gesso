@@ -164,4 +164,18 @@ check('write /8: self-narrated limits are pipeline language and are trimmed', ()
   for (const x of ['Notice how the light sets her apart.', 'Scholars read it as a scene of the Flood.', 'The viewer looks at the pair rather than meeting a gaze.'])
     assert.ok(!CF.PIPELINE_LANGUAGE.test(x), x);
 });
+check('write /9: hotspots carry an axis; an axis without a kept claim-citing sentence becomes delight; schema requires axis', () => {
+  const input = { claims: [{ id: 'c1', text: 'Shell ornament is a hallmark of Neo-Classical design.' }], visuals: [{ id: 'v1', text: 'shell relief', bbox: [0.1, 0.1, 0.2, 0.2] }, { id: 'v2', text: 'lattice', bbox: [0.5, 0.5, 0.2, 0.2] }] };
+  const S = (s, ids) => ({ s, ids });
+  const out = { v: CF.WRITE_VERSION, why: [S('Why.', ['c1'])], notes: [], guide: [], hotspots: [
+    { anchor: 'v1', axis: 'style', head: S('Shell relief', ['v1']), body: [S('Notice the shell.', ['v1']), S('It is a hallmark of Neo-Classical design.', ['c1', 'v1'])] },
+    { anchor: 'v2', axis: 'when', head: S('Lattice', ['v2']), body: [S('A diamond lattice band.', ['v2'])] }] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
+  assert.deepEqual(a.hotspots.map(h => h.axis), ['style', 'delight']);
+  const b = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'h0.b1' ? 'adds' : 'ok' })) }, visuals: input.visuals });
+  assert.equal(b.hotspots[0].axis, 'delight', 'the sourced link was trimmed, so the tag cannot claim it');
+  assert.ok(CF.WRITE_WIRE_SCHEMA.properties.hotspots.items.required.includes('axis'));
+  assert.match(CF.WRITE_PROMPT, /teaching-copy-guide/); assert.match(CF.WRITE_PROMPT, /No overlap/);
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
