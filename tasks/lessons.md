@@ -40,3 +40,8 @@ Staging with `git add scripts tests` picked up the owner/Codex prototype files t
 VSD-038 release-grounding, staging-pilot scripts), and the commit was pushed. Fixed by `git rm --cached` in a follow-up
 commit (files on disk verified unchanged by hash); they remain in the branch history. RULE: in this repo, always stage
 explicit file paths, never a directory or `-A`, and read `git status --short` BEFORE committing, not after.
+
+## 2026-10-01 — Replacing a stage silently dropped an owner-approved standard
+- What happened: claim-first (VSD-053) replaced B4's writer, and its WRITE_PROMPT was written from the newest owner rules only. B4's prompt carried the owner-approved study-guide standard (`docs/vision-study-guide-style.md`, VSD-020); it was not carried over, so claim-first guide questions came out flat ("Where is this café?").
+- Rule: when a new stage replaces an old one, inventory EVERY owner-approved standard the old stage's prompt/validator enforced (grep its prompt for referenced docs/VSDs) and carry each forward or record an explicit owner decision to drop it.
+- Rule: before writing player-facing copy prompts, read `docs/vision-study-guide-style.md` (the canonical editorial guide with worked examples).
