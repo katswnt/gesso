@@ -143,4 +143,19 @@ check('write /6 guide: a Q&A survives only with its question AND >= 1 checked an
   assert(a.trimmed.some(x => x.id === 'g1.q') && a.trimmed.some(x => x.id === 'g0.a1'));
   assert.ok(CF.WRITE_WIRE_SCHEMA.required.includes('guide'));
 });
+check('write /7: label-answerable guide questions are trimmed; usable counts guide questions when notes fold in', () => {
+  for (const q of ['What style is it?', 'Where and when was it made?', 'What is the medium?', 'What is it made of, and in what style?', 'Who painted this?', 'When was it painted?'])
+    assert.ok(CF.LABEL_QUESTION.test(q), q);
+  for (const q of ['Why make Fuji so tiny?', 'Where is Mount Fuji in this picture?', 'Is the sky invented?', 'How can we date it to the mid-1400s in Florence?', 'What style markers point to Van Gogh?', 'Why use oil paint for this scene?'])
+    assert.ok(!CF.LABEL_QUESTION.test(q), q);
+  const input = { claims: [{ id: 'c1', text: 'x' }], visuals: [{ id: 'v1', text: 'y', bbox: [0, 0, 0.2, 0.2] }, { id: 'v2', text: 'z', bbox: [0.5, 0.5, 0.2, 0.2] }] };
+  const S = (s, ids = ['c1']) => ({ s, ids });
+  const out = { v: CF.WRITE_VERSION, why: [S('Why.')], notes: [], hotspots: [{ anchor: 'v1', head: S('A', ['v1']), body: [S('a.', ['v1'])] }, { anchor: 'v2', head: S('B', ['v2']), body: [S('b.', ['v2'])] }],
+    guide: [{ q: S('What style is it?'), a: [S('Romanticism.')] }, ...['Q1?', 'Q2?', 'Q3?'].map(q => ({ q: S(q), a: [S('A.')] }))] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  assert.deepEqual(w.sentences.find(x => x.id === 'g0.q').issues, ['label question']);
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
+  assert.equal(a.guide.length, 3); assert.deepEqual(a.usable, { minimal: true, strict: true });
+  assert.match(CF.WRITE_PROMPT, /Hotspots teach what to notice/); assert.match(CF.WRITE_PROMPT, /Did Mino da Fiesole carve the entire relief himself/);
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

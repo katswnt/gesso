@@ -69,43 +69,77 @@ export const confirmedVisuals = (s2Audit, s2Output) => (s2Audit?.rows || []).fil
 }).filter(Boolean);
 
 // ---------- S3: write only from supported claims and confirmed visuals ----------
-export const WRITE_VERSION = 'passBClaimFirstWrite/6'; // /6 (owner 2026-10-01): adds the study guide (follow-up Q&A) and the plain-style rule
-export const WRITE_PROMPT = `You write short teaching copy for an art-history game about ONE artwork, using ONLY the numbered items below.
+export const WRITE_VERSION = 'passBClaimFirstWrite/7'; // /7 (owner 2026-10-01): the approved study-guide style (docs/vision-study-guide-style.md, VSD-020) carried into claim-first; unpinned notes fold into the guide
+export const WRITE_PROMPT = `You write the teaching copy a player reads after guessing ONE artwork in an art-history game, using ONLY the
+numbered items below.
 - claims: facts checked against sources, plus the museum catalog fields (ids starting "cat.").
 - visuals: details confirmed visible in the image. They establish only WHAT IS VISIBLE (shape, position, colour,
   pose, gesture). Never use a visual to say who someone is, what something represents, what it is made of, or why
   it was made; those need a claim. Name a person, saint, deity, character, animal species, place, event or story
-  ONLY when a claim or catalog item states it; otherwise describe what is seen ("a kneeling figure", "a winged
-  figure", "a four-legged animal").
+  ONLY when a claim or catalog item states it; otherwise describe what is seen ("a kneeling figure").
 You have no image, no tools and no other knowledge. Do not add ANY fact, name, date, identity, material, cause or
-interpretation that the cited items do not state. Invitations to look ("Notice...") and plain framing are fine.
-Interpretation (owner rule): you MAY say how a cited visible detail works on the viewer's eye: composition, light,
-colour, direction, contrast ("draws the eye", "the light sets the figure apart", "the diagonal leads toward the
-Virgin"). You may NOT state meaning, theme, emotion, narrative or symbolism ("built around looking and being looked
-at", "suggests a long journey") unless a cited claim states it. Viewers must never think the software decided what
-the art means.
-Write for a museum visitor: never mention research, sources, claims, notes, catalogs, records, entries or
-metadata. Point hotspots only at the artwork itself, never at a display stand, mount, plinth added for display,
-frame, label, or the photograph's background. The why must say what makes the work worth looking at, not just
-restate a date or a medium; if the items cannot support that, write one short, accurate sentence.
-Style (owner rule): plain, concrete words. No stacked emotional adjectives or literary flourishes ("painfully
-human", "uneasy stillness", "haunting"), and never tell the viewer what to feel.
+interpretation that the cited items do not state.
 
-Depth: GUIDED (owner choice). Each entry says what to notice AND why it matters, in plain words for a curious
-non-specialist. Not bare labels, and not essays.
-Write:
-- why: 2–3 sentences on why this work matters.
-- notes: 2–4 notes, each a head (a short heading) and 2–3 body sentences explaining why the detail matters.
-- hotspots: up to 4, each anchored to ONE visual id (the spot it points at), with a head and 1–2 body sentences:
-  what to notice there, and why. When a verified identity is linked to that visual, name the figure.
-- guide: 3–5 follow-up questions a curious visitor would ask after looking, each a q and 1–3 answer sentences.
-  Good questions are specific to this work and answerable from the items: "Is the scene historically accurate?",
-  "Why does it feel like a stage set?", "Who is the man in red?", "Where was it painted?". Do not repeat a note.
-  A question must not take for granted anything its cited items do not state (no "Why is she so afraid?" unless
-  a claim says she is). Cite what the question takes for granted in its ids.
-Every sentence and every head is { s, ids }: ids lists EVERY item it relies on (at least one). A head or question
-takes things for granted; cite what it takes for granted too. If the items cannot support a section, return fewer
-entries rather than inventing. Return v "${WRITE_VERSION}".`;
+WHAT TO WRITE (the owner-approved study-guide style):
+"Hotspots teach what to notice. The study guide explains why those details matter, what larger traditions they
+belong to, and what genuinely interesting questions the object raises." Readers are curious, attentive
+non-specialists who read well and know a little about art.
+- why: 2–3 sentences. Open with what instantly identifies the work and makes it worth looking at, not generic
+  praise and not a bare date or medium.
+- hotspots: 2–5, each anchored to ONE visual id (the spot it points at): a short head naming the place to look,
+  and 1–2 body sentences saying what to notice there and why it matters. Together they walk the eye across the
+  picture. When a verified identity is linked to that visual, name the figure.
+- guide: the strongest 5–7 questions a curious visitor would genuinely want answered after looking, each with a
+  2–4 sentence answer. Everything worth teaching that is not a spot on the image belongs here.
+
+GUIDE QUESTIONS — make the reader want to open the answer:
+- A good question points at something specific and surprising in THIS work: a detail, a choice, a contradiction,
+  a puzzle. Approved examples from other works (for their SHAPE only; never reuse their facts):
+  "Why make Fuji so tiny?" · "Why do the two hands look different?" · "Is this a realistic view or a clever
+  design?" · "Why would a water jar carry a scene from the Iliad?" · "Why does a Bible story look so ordinary?" ·
+  "Did Mino da Fiesole carve the entire relief himself?" · "Is this actually a portrait of Julius Caesar from
+  life?" · "Why is Caesar shown in strict left-facing profile rather than three-quarter or frontal view?" ·
+  "What do the incised letters flanking the head mean?" · "How can we date it to the mid-1400s in Florence?"
+- Flat questions are rejected: anything the label already answers or a glance shows ("Where is this café?",
+  "What style is it?", "What is the medium?", "Where and when was it made?"), and questions whose answer is merely
+  correct rather than illuminating. Fold a plain fact into a better question's answer instead.
+- Do not restate a hotspot as a question.
+- Run an arc: the early questions decode THIS work (what is happening, who, what the details are doing); the later
+  ones teach transferable looking (how to date it, why this medium, how to tell the maker or tradition apart).
+  When the items support it, use the pair "How can we tell this is by <maker> from the work itself?" then "How do
+  I spot <maker>/<tradition> elsewhere?"; both answers must name visible style markers stated in the items.
+- A question must not take for granted anything its cited items do not state (no "Why is she so afraid?" unless a
+  claim says she is). Cite what the question takes for granted in its ids.
+
+ANSWERS — teach reading the evidence:
+- Point at the surface: "Look for…", "Notice…", "…points toward…". Identification comes from visible traits.
+- Teach technique as meaning, never as a spec: connect a material or method to its visible effect.
+- Each answer stands alone (2–4 sentences) and explains its own terms; a specialist term is fine if explained.
+- Hedge honestly where the items hedge ("probably", "is attributed to").
+
+VOICE EXAMPLE (owner-approved; illustrates voice and depth ONLY, never facts or structure):
+Q "Did Mino da Fiesole carve the entire relief himself?" A "Not quite. The portrait panel is attributed to Mino,
+while the garland is attributed to his workshop. You can see why scholars separate them: the portrait is deeply and
+precisely carved in smooth white marble, while the gray limestone garland is shallower, rougher, and more broadly
+handled."
+Q "What does all'antica mean, and how do you see it here?" A "All'antica means 'in the antique manner': a
+Renaissance work deliberately made using the visual language of ancient Greece or Rome. Here, that language
+appears in the coin-like profile, Latin inscription, classical drapery and carved marble. The object is not
+Roman, but it wants you to think about Rome."
+
+RULES THAT ALWAYS WIN:
+- Interpretation (owner rule): you MAY say how a cited visible detail works on the eye (composition, light,
+  colour, direction, contrast: "draws the eye", "sets the figure apart"). You may NOT state meaning, theme,
+  emotion, narrative or symbolism unless a cited claim states it. Viewers must never think the software decided
+  what the art means.
+- Style (owner rule): plain, concrete words. No literary flourishes or stacked emotional adjectives ("painfully
+  human", "uneasy stillness", "haunting"); never tell the viewer what to feel.
+- Player copy only: never mention research, sources, claims, notes, catalogs, records, entries, metadata, the
+  prompt or the model. Point hotspots only at the artwork itself, never at a stand, mount, frame, label or the
+  photograph's background.
+Every sentence, head and question is { s, ids }: ids lists EVERY item it relies on (at least one). If the items
+cannot support a section, return fewer entries rather than inventing. Return notes as [] (folded into the guide).
+Return v "${WRITE_VERSION}".`;
 const SENT = { type: 'object', additionalProperties: false, required: ['s', 'ids'], properties: { s: { type: 'string' }, ids: { type: 'array', items: { type: 'string' } } } };
 export const WRITE_WIRE_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['v', 'why', 'notes', 'hotspots', 'guide'],
@@ -126,6 +160,9 @@ export const buildWriteInput = ({ workId, catalog, claims, visuals }) => ({ unit
 // Pipeline language never reaches players; trimmed deterministically, before the model check.
 export const PIPELINE_LANGUAGE = /\b(catalog(ue)?\s+(entry|record|field|data)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content))/i;
 
+// /7: a guide question the museum label already answers is never worth opening (owner 2026-10-01, Café Terrace).
+export const LABEL_QUESTION = /^\s*(what (style|movement|medium|materials?) (is|was|does)\b|what is the (style|movement|medium|date)\b|what is it made (of|from)\b|(where|when)( and (where|when))? (is|was) (it|this|the \w+) (made|painted|created|carved|produced)\b|who (made|painted|carved|created) (it|this)\b|what is the title\b)/i;
+
 // Flatten the written copy into sentences with stable ids: why.0, n0.h, n0.b1, h0.h, h0.b0.
 export function sentencesOf(written) {
   const out = [];
@@ -144,6 +181,7 @@ export function controlWrite(output, input) {
     if (!x.ids?.length) issues.push('no ids');
     for (const id of x.ids || []) if (!known.has(id)) issues.push(`unknown id ${id}`);
     if (PIPELINE_LANGUAGE.test(String(x.s || ''))) issues.push('pipeline language');
+    if (x.part === 'question' && LABEL_QUESTION.test(String(x.s || ''))) issues.push('label question');
     return { ...x, issues };
   });
   const anchorIssues = (output?.hotspots || []).map((h, k) => visualIds.has(h.anchor) ? null : `h${k}: anchor ${h.anchor} is not a confirmed visual`).filter(Boolean);
@@ -205,7 +243,9 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
   }
   const whyText = why.join(' ');
   return { why: whyText || null, notes, hotspots, guide, trimmed,
-    usable: { minimal: !!whyText && notes.length >= 1 && hotspots.length >= 1, strict: !!whyText && notes.length >= 2 && hotspots.length >= 2 } };
+    // /7 folds notes into the guide: either carries the teaching beyond the hotspots.
+    usable: { minimal: !!whyText && hotspots.length >= 1 && (notes.length >= 1 || guide.length >= 1),
+      strict: !!whyText && hotspots.length >= 2 && (notes.length >= 2 || guide.length >= 3) } };
 }
 export const inputSha = x => sha256(JSON.stringify(x));
 
