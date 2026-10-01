@@ -178,4 +178,9 @@ check('write /9: hotspots carry an axis; an axis without a kept claim-citing sen
   assert.ok(CF.WRITE_WIRE_SCHEMA.properties.hotspots.items.required.includes('axis'));
   assert.match(CF.WRITE_PROMPT, /teaching-copy-guide/); assert.match(CF.WRITE_PROMPT, /No overlap/);
 });
+check('v9 review: any mention of the catalog in player copy is trimmed', () => {
+  for (const x of ["That absence fits the catalog's label of abstract art.", 'The catalog classes the painting as Baroque.', 'It is catalogued as Romanticism.', 'The catalog gives Munich, Germany, and 1913.'])
+    assert.ok(CF.PIPELINE_LANGUAGE.test(x), x);
+  assert.ok(!CF.PIPELINE_LANGUAGE.test('Look for the detailed Tudor dress.'));
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
