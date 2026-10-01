@@ -15,6 +15,11 @@ try {
   } else if (cmd === 'acquire') { console.log(`lease acquired: ${JSON.stringify(acquireLease(root, arg))}`); }
   else if (cmd === 'release') { console.log(releaseLease(root, arg === '--force' ? 'owner' : arg, { force: arg === '--force' }) ? 'lease released' : 'no lease held'); }
   else if (cmd === 'write-status') { writeStatus(root, JSON.parse(arg)); console.log('status written'); }
+  else if (cmd === 'write-status-env') {
+    const e = process.env;
+    writeStatus(root, { summary: e.PASS_B_STATUS_SUMMARY || '', exit: Number(e.PASS_B_STATUS_EXIT), holder: e.PASS_B_STATUS_HOLDER || null, pinnedCommit: e.PASS_B_STATUS_PIN || null });
+    console.log('status written');
+  }
   else { console.error('usage: status | acquire <holder> | release <holder> | release --force | write-status <json>'); process.exit(2); }
 } catch (e) {
   if (e instanceof LeaseBusyError) { console.log(`LEASE BUSY: ${e.message}`); process.exit(3); }

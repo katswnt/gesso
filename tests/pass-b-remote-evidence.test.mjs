@@ -229,4 +229,11 @@ await check('collector refuses a failed reservation push or a cutoff crossed aft
     }
   }
 });
+await check('status is written from environment variables, surviving braces, quotes and ampersands (2026-10-01 laptop-pilot bug)', () => {
+  const w = world(), summary = 'claim-first: finished 3 work(s) {a,b}, "q" & stop=pacing: cap';
+  execFileSync('node', ['scripts/pass-b-cloud-lease.mjs', 'write-status-env'], { env: { ...process.env, PASS_B_REMOTE_EVIDENCE: w.a, PASS_B_STATUS_SUMMARY: summary, PASS_B_STATUS_EXIT: '0', PASS_B_STATUS_HOLDER: 'h', PASS_B_STATUS_PIN: 'p' }, stdio: 'pipe' });
+  const st = JSON.parse(execFileSync('git', ['--git-dir', w.bare, 'show', 'claude/pass-b-state:state/status.json'], { encoding: 'utf8' }));
+  assert.equal(st.summary, summary); assert.equal(st.exit, 0);
+  rmSync(w.root, { recursive: true });
+});
 console.log(`pass-b-remote-evidence.test: ${n} checks passed`);

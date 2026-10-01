@@ -45,7 +45,9 @@ node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER"; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
 node scripts/pass-b-nightly.mjs --run ${PASS_B_COLLECT:+--collect} 2>&1 | tee /tmp/pass-b-nightly.log; RUN=${PIPESTATUS[0]}
 SUMMARY="$(tail -3 /tmp/pass-b-nightly.log | tr '\n' ' ' | cut -c1-400)"
-node scripts/pass-b-cloud-lease.mjs write-status "$(node -e "console.log(JSON.stringify({summary: process.argv[1], exit: Number(process.argv[2]), holder: process.argv[3], pinnedCommit: process.argv[4]}))" "$SUMMARY" "$RUN" "$HOLDER" "$PIN")" || { echo "STATUS PUSH FAILED; lease retained for review"; exit 1; }
+# Status via environment variables (inline JS in the shell was mangled by brace expansion in the 2026-10-01 laptop pilot).
+PASS_B_STATUS_SUMMARY="$SUMMARY" PASS_B_STATUS_EXIT="$RUN" PASS_B_STATUS_HOLDER="$HOLDER" PASS_B_STATUS_PIN="$PIN" \
+  node scripts/pass-b-cloud-lease.mjs write-status-env || { echo "STATUS PUSH FAILED; lease retained for review"; exit 1; }
 if [ "$RUN" -ne 0 ]; then echo "RUN FAILED; lease retained for review"; exit "$RUN"; fi
 node scripts/pass-b-cloud-lease.mjs release "$HOLDER"
 exit $RUN
