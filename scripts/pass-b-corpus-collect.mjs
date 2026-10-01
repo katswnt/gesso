@@ -387,7 +387,11 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set();
   const retryGrant = loadFormatRetries(runDir).find(r => r.workId === id) || null;
   const formatFailures = []; // uncaptured invalid bodies from pre-wire-schema epochs (grant candidates)
-  let releasedCount = 0;
+  // Released transcripts must stay present and byte-identical whatever happens later (incl. a successful retry).
+  for (const x of retryGrant?.released || []) {
+    const path = join(attemptsDir, x.file);
+    if (!existsSync(path) || sha256(readFileSync(path, 'utf8')) !== x.sha256) throw new Error(`${id}: format retry releases a missing or changed transcript`);
+  }
   // Resolve every receipt against its own immutable epoch, never against today's runtime policy.
   for (const name of files(attemptsDir).filter(n => n.endsWith('.reserved.json'))) {
     const r = readJson(join(attemptsDir, name));
@@ -460,7 +464,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
       const x = retryGrant.released.find(x => x.file === name);
       // A released transcript must still be byte-identical, invalid, and older than the grant's epoch.
       if (x.sha256 !== sha256(text) || v.ok || (attemptEpoch?.number ?? 0) >= retryGrant.epochNumber) throw new Error(`${id}/${stage}: format retry release mismatch`);
-      releasedCount++; continue;
+      continue;
     }
     if (stage === 'B2' && !v.ok) b2ValidationFailures++;
     terminalReasons.push(v.ok ? `${stage}:uncaptured-result` : `${stage}:invalid body: ${v.errors.join(',')}`);
@@ -471,7 +475,6 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     terminalReasons.every(r => r.startsWith('B2:invalid body:'));
   if (pendingB2Retry) terminalReasons.length = 0;
   const done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
-  if (retryGrant && releasedCount !== retryGrant.released.length) throw new Error(`${id}: format retry releases a missing transcript`);
   const uniqueReasons = [...new Set(terminalReasons)];
   // Grant candidate: not done, no fatal/pause, no grant yet, and EVERY terminal reason is a pre-wire invalid body.
   const formatEligible = !done && !fatal && !pause && !retryGrant && formatFailures.length > 0 && uniqueReasons.length > 0 &&

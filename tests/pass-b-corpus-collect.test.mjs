@@ -674,11 +674,17 @@ await inFixture('format retry: tampered released transcript or a forged second r
   writeFileSync(join(f.runDir,'format-retries','000002.json'),rec.replace('"number": 1','"number": 2'));
   assert.throws(()=>loadFormatRetries(f.runDir),/out of chain|second grant/);rmSync(join(f.runDir,'format-retries','000002.json'));
   writeFileSync(file.path,file.text+'\n');
-  assert.throws(()=>f.inspect(),/release mismatch|mismatch/);
+  assert.throws(()=>f.inspect(),/missing or changed transcript/);
 },{complete:['B1']});
 await inFixture('format retry: a work with any non-format terminal reason is not eligible',async f=>{
   preWireEpoch(f);f.attempt('B2',overCap(f));f.attempt('B2',null,{result:'x',error:true});rebindContract(f.runDir,contractReview(f));
   assert.equal(f.inspect().formatEligible,null);assert.equal(grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows).length,0);
+},{complete:['B1']});
+await inFixture('format retry: a SUCCESSFUL fresh B2 after the grant verifies (released transcripts stay preserved, never captured)',async f=>{
+  preWireEpoch(f);f.attempt('B2',overCap(f));f.attempt('B2',overCap(f));const e=rebindContract(f.runDir,contractReview(f));
+  grantFormatRetries(f.runDir,retryReview(f),f.corpus().rows);
+  const good=f.transcript('B2',f.bodies.B2,{model:COLLECTION_MODEL});reserveManual(f,{stage:'B2',seq:50,epoch:e,text:good});captureB2(f,good,COLLECTION_MODEL);
+  const w=f.inspect();assert.equal(w.fatal,null);assert.ok(w.bodies.B2);assert.equal(f.corpus().heldSet.size,0);
 },{complete:['B1']});
 await ta('owner hours exception: only today\'s Pacific date opens a daytime start, and it is reported for the reservation',async()=>{
   const day=at('2026-10-01T20:00:00Z');
