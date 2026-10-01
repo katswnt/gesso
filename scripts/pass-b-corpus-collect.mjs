@@ -14,7 +14,7 @@ import broker, { BROKER_POLICY_VERSION } from './lib/img-broker.mjs';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { captureStageCompletion, verifyCapturedStage, completionKey } from './lib/vision-content-capture.mjs';
 import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
-import { remoteRoot, persist as persistRemote } from './lib/pass-b-remote-evidence.mjs';
+import { remoteRoot, persist as persistRemote, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
 import {
@@ -79,6 +79,7 @@ class StageLeaseBusyError extends Error {}
 class TerminalAttemptError extends Error {}
 export class OperationalPauseError extends Error {}
 export class RuntimePauseError extends OperationalPauseError {}
+export const corpusWorkEvidencePaths = workRunDir => ['b0-prep.json', 'attempts', 'completions', 'raw'].map(p => join(workRunDir, p));
 const USAGE_MARKER = /usage limit|spend limit|rate.?limit|quota/i;
 
 const processIsAlive = (pid) => {
@@ -526,6 +527,7 @@ export function stopForException(error, { fatal, pause }) {
 // Injectable executor for offline regression tests. No test needs the real Claude binary.
 export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, ext, stage, command, imageFile,
   seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE }) {
+  assertExecutionLease();
   const priorFatal = preservedFatal(runDir);
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);
   laneWindow(lane, now());
@@ -540,15 +542,16 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     call = mkdtempSync(join(tmpdir(), 'corpus-'));
     if (imageFile) copyFileSync(join(runDir, 'imgs', `${imgSha256}.${ext}`), join(call, imageFile));
     const env = { ...process.env, DISABLE_AUTOUPDATER: '1' }; for (const k of command.env.removeKeys) delete env[k];
-    const options = laneWindow(lane, now()); // immediately before reservation + invocation, including every retry
+    let options = laneWindow(lane, now()); // immediately before reservation + invocation, including every retry
     if (PACER) { const d = PACER.check(); if (!d.go) throw new PacingStopError(d.reason); } // VSD-055: before any reservation
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
       executionEpoch: epoch.number, executionEpochSha256: epoch.sha256 })}\n`, { flag: 'wx', mode: 0o600, flush: true });
     // Cloud: push the reservation (and the epoch chain it names) BEFORE spending; a push failure pauses with no call.
-    try { persistRemote(remoteRoot(), [join(attemptsDir, `${stem}.reserved.json`), join(runDir, 'execution-policies')], `reserve ${id}/${stage} ${stem}`); }
+    try { persistRemote(remoteRoot(), [...corpusWorkEvidencePaths(workRunDir), join(runDir, 'imgs', `${imgSha256}.${ext}`), join(runDir, 'execution-policy.json'), join(runDir, 'execution-policies'), PACER?.statePath], `reserve ${id}/${stage} ${stem}`); }
     catch (e) { throw new OperationalPauseError(`persist-failed before call: ${e.message}`); }
+    options = laneWindow(lane, now()); // remote persistence may have crossed the call-start cutoff
     let stdout = '', exitCode = 0;
     try { ({ stdout } = await execute(CLAUDE_BIN || command.bin, command.argv, { cwd: call, env, maxBuffer: 64 * 1024 * 1024, ...options })); }
     catch (e) {
@@ -619,10 +622,12 @@ export async function retryTransportOnce(invoke, onRetry = () => {}) {
   }
 }
 
-const makeCapture = (workRunDir) => async ({ stage, rawResponse, trusted, producer, context }) => {
+export const makeCapture = (workRunDir) => async ({ stage, rawResponse, trusted, producer, context }) => {
   const cap = captureStageCompletion({ runDir: workRunDir, stage, rawResponse, trusted, producer, createdAt: new Date().toISOString(), context });
   const v = verifyCapturedStage({ completionPath: cap.completionPath, runDir: workRunDir, trusted, producer, context });
   if (!v.ok) throw new Error(v.errors.join(','));
+  try { persistRemote(remoteRoot(), corpusWorkEvidencePaths(workRunDir), `capture ${trusted.workId}/${stage}`); }
+  catch (e) { STOP = true; STOP_REASON ||= `persist-failed: ${e.message}`; throw new OperationalPauseError(STOP_REASON); }
   return cap;
 };
 // B0 image-fetch failures: 'transient' = the host was unreachable right now (network, DNS, timeout, proxy/policy
@@ -774,6 +779,7 @@ async function main() {
   if (!rebind && !rebindModelFile && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
+  if (live) assertExecutionLease({ required: true });
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
   const pool = loadGlobal('data/pool.js', 'ARTEFACTUM_POOL');
   const poolById = new Map(pool.map(p => [p.id, p]));
@@ -844,7 +850,7 @@ async function main() {
     const versionResult = await execFileP(CLAUDE_BIN, ['--version'], { timeout: 10000, maxBuffer: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } }); // local metadata, never a model query
     RUNTIME_VERSION = String(versionResult.stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
     ACTIVE_MODEL = epochModel(bindExecutionPolicy(RUN_DIR, RUNTIME_VERSION)); // VSD-054: every new call uses the active epoch's model
-    PACER = LANE === 'cloud' ? null : makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP }); // VSD-055 (cloud credits lane has its own $ cap)
+    PACER = LANE === 'cloud' ? null : makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP, statePath: executionBudgetPath() });
     if (LANE === 'cloud') { SPENT_USD = runSpendUsd(RUN_DIR); console.log(`cloud lane: $${SPENT_USD.toFixed(2)} already spent of $${CLOUD_BUDGET_USD} cap`); }
     STOP = false; STOP_REASON = null; FATAL = null;
     ATTEMPT_SEQ = fresh.maxSeq; TRANSPORT_RETRIES = led.transportRetries || 0;
@@ -859,7 +865,7 @@ async function main() {
       atomicWrite(LEDGER, `${JSON.stringify(led, null, 1)}\n`);
     };
     // Cloud: after each work, push its whole directory (B0, completions, raw) plus images, index and ledger.
-    const persistWork = id => persistRemote(remoteRoot(), [wdirOf(id), IMGS_DIR, IMAGE_INDEX, LEDGER], `work ${id}`);
+    const persistWork = id => persistRemote(remoteRoot(), [...corpusWorkEvidencePaths(wdirOf(id)), IMGS_DIR, IMAGE_INDEX, LEDGER], `work ${id}`);
     const hold = (id, reason) => { heldSet.add(id); led.heldReasons[id] = reason; persist(); };
     let cursor = 0, consecutiveB0 = 0;
     const lane = async () => {
@@ -888,8 +894,8 @@ async function main() {
             capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true, model: ACTIVE_MODEL });
           if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
           // runWorkStages captures exceptions as status text; the durable fatal flag remains authoritative.
-          if (FATAL) break;
-          if (STOP || isUsageInterrupted(status) || isLeaseInterrupted(status)) continue;
+          if (FATAL) { persist(); persistWork(id); break; }
+          if (STOP || isUsageInterrupted(status) || isLeaseInterrupted(status)) { persist(); persistWork(id); continue; }
           const result = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
           if (result.fatal) { markFatal(result.fatal); break; }
           if (result.done) doneSet.add(id);
@@ -905,6 +911,7 @@ async function main() {
     persist();
     const after = inspectCorpus({ pool, legacyOf, ledger: led });
     applyHistoryRepair({ inspection: after, ledger: led, eligibleCount: allEligible.length });
+    persistRemote(remoteRoot(), [LEDGER, IMAGE_INDEX, USAGE_LOG, join(RUN_DIR, 'fatal.json')], 'collector stopped');
     if (FATAL) throw new Error(`fatal: ${FATAL}`);
     console.log(`Stopped: ${STOP_REASON || 'window queue exhausted'}; done ${after.doneSet.size}, held ${after.heldSet.size}.`);
   } finally { unlinkSync(RUN_LEASE); }

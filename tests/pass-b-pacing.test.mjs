@@ -61,4 +61,77 @@ await check('the shared runner stops on pacing BEFORE writing any reservation, a
   assert.match(r.stop, /^pacing: weekly 97%/); assert.equal(calls, 0); assert.equal(countReservations(join(dir, 'run')), 0);
   rmSync(dir, { recursive: true });
 });
+await check('stale blocking readings remain blocking until their own reset', () => {
+  const late = new Date(reset - 3600e3);
+  assert.equal(pacingDecision({ obs: obs(.97, { at: new Date(late - 4 * 3600e3) }), now: late }).go, false);
+  const old = { ...obs(.1, { at: new Date(now - 4 * 3600e3) }), fiveHour: { utilization: .95, resetsAt: now.getTime() + 3600e3 } };
+  assert.equal(pacingDecision({ obs: old, now }).go, false);
+  assert.equal(pacingDecision({ obs: { ...old, fiveHour: { ...old.fiveHour, resetsAt: now.getTime() - 1 } }, now }).mode, 'probe');
+});
+await check('missing, expired, invalid or independently stale five-hour evidence never permits normal execution', () => {
+  for (const fiveHour of [null, { utilization: .1, resetsAt: now.getTime() - 1 }, { utilization: NaN, resetsAt: reset },
+    { utilization: .1, resetsAt: reset, observedAt: new Date(now - 4 * 3600e3).toISOString() }]) {
+    const r = { ...obs(.1), fiveHour };
+    assert.equal(pacingDecision({ obs: r, now }).mode, 'probe');
+    assert.equal(pacingDecision({ obs: r, now, probeUsed: 2 }).go, false);
+  }
+});
+await check('partial observations retain the other window and cannot erase a known ceiling', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pace-partial-')), log = join(dir, 'usage');
+  try {
+    recordObservation(log, ev(.97), { observedAt: now });
+    recordObservation(log, JSON.stringify({ type: 'rate_limit_event', rate_limit_info: { unifiedWindows: { five_hour: { utilization: .1, resetsAt: reset / 1000 } } } }), { observedAt: new Date(now.getTime() + 1000) });
+    assert.equal(latestObservation(log).sevenDay.utilization, .97);
+    assert.equal(makePacer({ logPath: log, maxCalls: 30, now: () => new Date(now.getTime() + 2000) }).check().go, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+await check('future-dated readings cannot replace known usage or grant normal capacity', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pace-future-')), log = join(dir, 'usage');
+  try {
+    recordObservation(log, ev(.1), { observedAt: new Date(now.getTime() + 1000) });
+    assert.equal(latestObservation(log, now), null);
+    recordObservation(log, ev(.97), { observedAt: now });
+    assert.equal(makePacer({ logPath: log, maxCalls: 30, now: () => now }).check().go, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+await check('partial readings do not repeatedly restore the two-probe allowance', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pace-partial-')), log = join(dir, 'usage'); let time = now.getTime();
+  try {
+    const p = makePacer({ logPath: log, maxCalls: 30, now: () => new Date(time) });
+    for (let i = 0; i < 5; i++) {
+      recordObservation(log, JSON.stringify({ type: 'rate_limit_event', rate_limit_info: { unifiedWindows: { five_hour: { utilization: .1, resetsAt: reset / 1000 } } } }), { observedAt: new Date(++time) });
+      assert.equal(p.check().go, i < 2);
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+await check('one durable cap across parent, collector and three routine firings', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pace-budget-')), log = join(dir, 'usage'), statePath = join(dir, 'budget.json');
+  try {
+    recordObservation(log, ev(.1), { observedAt: now });
+    let calls = 0;
+    for (let session = 0; session < 3; session++) {
+      const p = makePacer({ logPath: log, maxCalls: 30, statePath, now: () => now });
+      for (let i = 0; i < 20; i++) if (p.check().go) calls++;
+    }
+    assert.equal(calls, 30);
+    assert.equal(makePacer({ logPath: log, maxCalls: 30, statePath }).remaining, 0);
+    assert.throws(() => makePacer({ logPath: log, maxCalls: 31, statePath }).check(), /budget binding/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+await check('missing telemetry permits two probes total across restarts, then a complete reading restores pacing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pace-budget-')), log = join(dir, 'usage'), statePath = join(dir, 'budget.json');
+  try {
+    let calls = 0;
+    for (let session = 0; session < 3; session++) {
+      const p = makePacer({ logPath: log, maxCalls: 30, statePath, now: () => now });
+      for (let i = 0; i < 3; i++) if (p.check().go) calls++;
+    }
+    assert.equal(calls, 2);
+    recordObservation(log, ev(.1), { observedAt: now });
+    assert.equal(makePacer({ logPath: log, maxCalls: 30, statePath, now: () => now }).check().mode, 'normal');
+    writeFileSync(statePath, '{');
+    assert.throws(() => makePacer({ logPath: log, maxCalls: 30, statePath }).check());
+    assert.throws(() => makePacer({ logPath: log, maxCalls: NaN }));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
 console.log(`pass-b-pacing.test: ${n} checks passed`);

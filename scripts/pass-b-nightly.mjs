@@ -8,25 +8,40 @@
 // No publication, approval or production write.
 //   node scripts/pass-b-nightly.mjs                 # read-only plan
 //   PASS_B_NIGHTLY_LIVE=1 node scripts/pass-b-nightly.mjs --run [--collect]
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
-import { sha256 } from './lib/vision-legacy.mjs';
+import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { RUN_ROOT, trustedCatalog, snapshotLegacy } from './lib/pass-b-calibration.mjs';
-import { CORPUS_RUN_DIR, buildPriorityQueue, inspectWork, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
-import { runAudit, auditHistory, callAuditPinned } from './pass-b-shadow-audit.mjs';
+import { CORPUS_RUN_DIR, buildPriorityQueue, inspectWork, inspectCorpus, preservedFatal as corpusFatal, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
+import { runAudit, auditHistory, auditRunFatal, callAuditPinned } from './pass-b-shadow-audit.mjs';
 import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
-import { remoteRoot, persist } from './lib/pass-b-remote-evidence.mjs';
+import { remoteRoot, persist, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
 import { OPTS, setBaseProvider, stageBinding, stageRunId, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
 const execFileP = promisify(execFile);
 const OUT = join(RUN_ROOT, 'claim-first-nightly'), SNAP = join(RUN_ROOT, 'claim-first-v1', 'snapshots');
 const loadGlobal = (file, name) => { const w = {}; new Function('window', readFileSync(file, 'utf8'))(w); return w[name]; };
-const HALT = r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r.stop) || String(r.stop).startsWith('pacing');
+export const mustHalt = r => r.stop !== 'done';
+
+export function nightlyFatal({ root = RUN_ROOT, runDir = CORPUS_RUN_DIR, inspection } = {}) {
+  const fatal = inspection?.fatal || corpusFatal(runDir);
+  if (fatal) return `preserved-fatal: ${fatal}`;
+  for (const name of existsSync(root) ? readdirSync(root).filter(n => n.startsWith('cf-')) : []) {
+    const dir = join(root, name), file = join(dir, 'run-manifest.json');
+    if (!existsSync(file)) continue;
+    const m = JSON.parse(readFileSync(file, 'utf8'));
+    if (!m.binding?.version?.startsWith('passBClaimFirstNightly/')) continue;
+    if (m.runId !== name || stageRunId(m.binding) !== name) throw new Error('nightly run binding mismatch');
+    const reason = auditRunFatal(dir);
+    if (reason) return `preserved-fatal: ${name}: ${reason}`;
+  }
+  return null;
+}
 
 export function loadCorpusContext() {
   const pool = loadGlobal('data/pool.js', 'ARTEFACTUM_POOL');
@@ -39,15 +54,16 @@ export function loadCorpusContext() {
 }
 
 // Base for claim-first from the collector's VERIFIED inspection only (Codex 2026-09-30). null if not ready.
-export function verifiedBaseFactory({ pool, legacyOf, runDir = CORPUS_RUN_DIR }) {
+export function verifiedBaseFactory({ pool, legacyOf, runDir = CORPUS_RUN_DIR, inspection }) {
   const cache = new Map();
+  const verifiedRows = inspection && new Map(inspection.rows.map(r => [r.id, r]));
   return id => {
     if (cache.has(id)) return cache.get(id);
     let base = null;
     const p = pool.find(x => x.id === id);
     if (p) {
-      const r = inspectWork({ runDir, id, catalog: trustedCatalog(p), legacy: legacyOf(id) });
-      if (r.done && !r.fatal && r.bodies.B1 && r.bodies.B2) {
+      const r = verifiedRows ? verifiedRows.get(id) : inspectWork({ runDir, id, catalog: trustedCatalog(p), legacy: legacyOf(id) });
+      if (r?.done && !r.fatal && !r.pause && r.bodies.B1 && r.bodies.B2) {
         const dir = join(runDir, 'works', sha256(id).slice(0, 24)), b0Text = readFileSync(join(dir, 'b0-prep.json'), 'utf8');
         base = { id, dir, b0: JSON.parse(b0Text), catalog: JSON.parse(b0Text).trustedCatalog, b1: r.bodies.B1, b2: r.bodies.B2,
           binding: { b0: sha256(b0Text), b1: sha256(JSON.stringify(r.bodies.B1)), b2: sha256(JSON.stringify(r.bodies.B2)) } };
@@ -63,8 +79,8 @@ const historyOf = (key, plan) => { const r = runOf(key); return existsSync(r.out
 // Status of one work across stages; 'copy' when S4 is accepted.
 export function workStatus(base) {
   const s1 = planS1(base), s2 = planS2(base), h1 = historyOf('S1', s1), h2 = historyOf('S2', s2);
+  if ([h1, h2].some(h => h && h.kind !== 'accepted')) return { next: 'terminal', why: `S1 ${h1?.kind || 'missing'}, S2 ${h2?.kind || 'missing'}` };
   if (!h1 || !h2) return { next: 'S1S2', s1, s2 };
-  if (h1.kind !== 'accepted' || h2.kind !== 'accepted') return { next: 'terminal', why: `S1 ${h1.kind}, S2 ${h2.kind}` };
   const si = planSI(base, [], s2), hi = historyOf('SI', si);
   if (!hi) return { next: 'SI', si };
   if (hi.kind !== 'accepted') return { next: 'terminal', why: `SI ${hi.kind}` };
@@ -79,58 +95,105 @@ export function workStatus(base) {
   return { next: 'copy', copy: CF.assemble({ writeAudit: h3.derived.audit, checkAudit: h4.derived.audit, visuals: s3.visuals }), s3 };
 }
 
+export function copyArtifact(id, date, copy, out = OUT) {
+  return { path: join(out, 'copy', date || 'undated', `${sha256(id).slice(0, 24)}.json`),
+    body: { version: 'passBClaimFirstCopy/1', workId: id, date: date || null, model: OPTS.model, ...copy } };
+}
+export function copyExists(artifact) {
+  if (!existsSync(artifact.path)) return false;
+  if (stableJson(JSON.parse(readFileSync(artifact.path, 'utf8'))) !== stableJson(artifact.body)) throw new Error('finished copy differs from verified stages');
+  return true;
+}
+export function preserveCopy(artifact) {
+  if (!copyExists(artifact)) {
+    mkdirSync(dirname(artifact.path), { recursive: true, mode: 0o700 });
+    writeFileSync(artifact.path, `${JSON.stringify(artifact.body, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  }
+  persist(remoteRoot(), [artifact.path], `copy ${artifact.body.workId}`);
+}
+
+// Injectable work loop: resuming after S4 only materializes copy. Any operational stop propagates to the job.
+export async function advanceWork({ base, call, saveCopy, prepare = async () => {}, statusOf = workStatus, safetyCheck = () => null }) {
+  let prepared = false;
+  for (let guard = 0; guard < 8; guard++) {
+    const stop = safetyCheck(); if (stop) return { stop };
+    const st = statusOf(base);
+    if (st.next === 'terminal') return { stop: 'done', terminal: true };
+    if (st.next === 'copy') { await saveCopy(st.copy); return { stop: 'done', finished: true }; }
+    if (!prepared) { await prepare(); prepared = true; continue; } // refresh plans after snapshots are frozen
+    // Sequential dispatch permits a failed S1 to stop before S2 spends anything. Already-reserved stages skip.
+    const stages = st.next === 'S1S2' ? [['S1', st.s1], ['S2', st.s2]]
+      : [[st.next, st.next === 'SI' ? st.si : st.next === 'SJ' ? st.sj.plan : st.next === 'S3' ? st.s3.plan : st.s4.plan]];
+    for (const [key, plan] of stages) {
+      const result = await call(key, plan);
+      if (mustHalt(result)) return result;
+      // A held/unknown stage terminates the work even if its sibling has never run.
+      if (statusOf(base).next === 'terminal') return { stop: 'done', terminal: true };
+    }
+  }
+  throw new Error('nightly work did not reach a terminal state within its bounded stage loop');
+}
+
+export async function collectRemaining({ pacer, execute = execFileP, env = process.env }) {
+  if (pacer.remaining === 0) return;
+  const r = await execute('node', ['scripts/pass-b-corpus-collect.mjs', '--run'], {
+    env: { ...env, PASS_B_CORPUS_LIVE: '1', PASS_B_MAX_CALLS: String(pacer.statePath ? SESSION_CALL_CAP : pacer.remaining) }, maxBuffer: 64 * 1024 * 1024 });
+  return String(r.stdout || '').trim().split('\n').slice(-6).join('\n'); // rejection propagates; stderr is not success
+}
+
 async function main() {
   const args = process.argv.slice(2), live = args.includes('--run');
   if (live && process.env.PASS_B_NIGHTLY_LIVE !== '1') throw new Error('refusing --run: set PASS_B_NIGHTLY_LIVE=1');
+  if (live) assertExecutionLease({ required: true });
   OPTS.nightly = true; OPTS.identities = true; // model: CF default (Sonnet 5.5)
   const ctx = loadCorpusContext(), clock = pacificClock();
-  setBaseProvider(verifiedBaseFactory(ctx));
+  const inspection = inspectCorpus({ pool: ctx.pool, legacyOf: ctx.legacyOf });
+  const safetyCheck = () => nightlyFatal({ inspection }) || (inspection.pause ? `preserved-pause: ${inspection.pause}` : null);
+  setBaseProvider(verifiedBaseFactory({ ...ctx, inspection }));
   const order = buildPriorityQueue(ctx.pool, ctx.daily, { today: clock.date });
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
-  const counts = { window: order.length, notReady: 0, copy: 0, terminal: 0, pending: 0 }, pending = [];
+  const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0 }, pending = [];
   for (const id of order) {
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
     if (!base) { counts.notReady++; continue; }
     const st = workStatus(base);
-    if (st.next === 'copy') counts.copy++; else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
+    if (st.next === 'copy') {
+      if (copyExists(copyArtifact(id, dateOf.get(id), st.copy))) counts.copy++;
+      else counts.copyPending++;
+      // Idempotently ensure remote persistence too, including a prior committed-but-unpushed copy.
+      pending.push(id);
+    } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
-  console.log(`  window ${counts.window}: copy done ${counts.copy} | pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
+  console.log(`  window ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
+  console.log(`  safety: ${safetyCheck() || 'clear'}`);
   for (const k of ['S1', 'S2', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   if (!live) { console.log(`READ-ONLY PLAN: no calls or writes. Next up: ${pending.slice(0, 5).map(id => `${dateOf.get(id)} ${id}`).join('; ')}`); return; }
+  if (safetyCheck()) throw new Error(safetyCheck());
 
   const bin = realpathSync(String((await execFileP('/bin/sh', ['-c', 'command -v claude'])).stdout).trim());
-  const pacer = makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP });
-  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
+  const pacer = makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP, statePath: executionBudgetPath() });
+  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: safetyCheck, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   let stop = null, finished = 0;
   for (const id of pending) {
     if (stop) break;
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
-    for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snapshot(u, SNAP); // plain GETs, no model
-    // Cloud: page snapshots are frozen S1 inputs; push them before any call so a later night never re-fetches a changed page.
-    try { persist(remoteRoot(), [SNAP], `snapshots for ${id}`); } catch (e) { stop = `persist-failed: ${e.message}`; break; }
-    for (let guard = 0; guard < 8 && !stop; guard++) {
-      const st = workStatus(base);
-      if (st.next === 'copy') {
-        const f = join(OUT, 'copy', dateOf.get(id) || 'undated', `${sha256(id).slice(0, 24)}.json`);
-        mkdirSync(join(OUT, 'copy', dateOf.get(id) || 'undated'), { recursive: true, mode: 0o700 });
-        if (!existsSync(f)) writeFileSync(f, `${JSON.stringify({ version: 'passBClaimFirstCopy/1', workId: id, date: dateOf.get(id) || null, model: OPTS.model, ...st.copy }, null, 1)}\n`, { flag: 'wx', mode: 0o600 });
-        try { persist(remoteRoot(), [f], `copy ${id}`); } catch (e) { stop = `persist-failed: ${e.message}`; }
-        finished++; break;
-      }
-      if (st.next === 'terminal') break;
-      const results = st.next === 'S1S2' ? await Promise.all([call('S1', st.s1), call('S2', st.s2)])
-        : [await call(st.next, st.next === 'SI' ? st.si : st.next === 'SJ' ? st.sj.plan : st.next === 'S3' ? st.s3.plan : st.s4.plan)];
-      const h = results.find(HALT); if (h) stop = h.stop;
-    }
+    const result = await advanceWork({ base, call, safetyCheck,
+      saveCopy: copy => preserveCopy(copyArtifact(id, dateOf.get(id), copy)),
+      prepare: async () => {
+        for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snapshot(u, SNAP);
+        persist(remoteRoot(), [SNAP], `snapshots for ${id}`);
+      } });
+    if (result.finished) finished++;
+    if (mustHalt(result)) stop = result.stop;
   }
   console.log(`claim-first: finished ${finished} work(s) this session; stop=${stop || 'window covered'}; pacer calls ${pacer.calls}`);
+  if (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
-    const r = await execFileP('node', ['scripts/pass-b-corpus-collect.mjs', '--run'], { env: { ...process.env, PASS_B_CORPUS_LIVE: '1' }, maxBuffer: 64 * 1024 * 1024 }).catch(e => e);
-    console.log(String(r.stdout || '').trim().split('\n').slice(-6).join('\n'));
+    console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted');
   }
 }
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) main().catch(e => { console.error(`FAIL-CLOSED: ${e.message}`); process.exit(1); });

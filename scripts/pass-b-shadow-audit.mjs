@@ -24,7 +24,7 @@ import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
 import { recordObservation } from './lib/pass-b-pacing.mjs';
-import { remoteRoot, persist } from './lib/pass-b-remote-evidence.mjs';
+import { remoteRoot, persist, assertExecutionLease } from './lib/pass-b-remote-evidence.mjs';
 import { JUDGMENT_VERSION, JUDGMENT_UNIT, JUDGMENT_PROMPT, JUDGMENT_WIRE_SCHEMA, buildJudgmentInput, authoritativeResolver, controlJudgment, scoreJudgment } from './lib/pass-b-audit-judgment.mjs';
 import { snapshotTextV2 } from './pass-b-audit-evidence.mjs';
 import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
@@ -383,6 +383,23 @@ export function deriveStageAttempt(plan, transcript, exitCode = 0) {
 function durableWrite(path, text) { writeFileSync(path, text, { flag: 'wx', mode: 0o600, flush: true }); }
 function syncDirs(paths) { for (const p of paths) { const fd = openSync(p, 'r'); try { fsyncSync(fd); } finally { closeSync(fd); } } }
 export function preservedFatal(outDir) { const p = join(outDir, 'fatal.json'); return existsSync(p) ? readJson(p).reason : null; }
+// Global nightly preflight must see terminal evidence even if the convenience fatal marker was lost.
+export function auditRunFatal(outDir) {
+  const marker = preservedFatal(outDir);
+  if (marker) return marker;
+  const works = join(outDir, 'works');
+  if (!existsSync(works)) return null;
+  for (const w of readdirSync(works)) {
+    const dir = join(works, w), m = join(dir, 'attempt-1.meta.json'), res = join(dir, 'attempt-1.result.json'), tr = join(dir, 'attempt-1.transcript.jsonl');
+    if (!existsSync(m) || !existsSync(res) || !existsSync(tr)) continue; // incomplete = terminal unknown-outcome
+    let meta; try { meta = readJson(m); } catch { continue; }
+    const result = readJson(res);
+    if (meta.transcriptSha256 !== rawSha(tr) || meta.resultSha256 !== rawSha(res) || meta.status !== result.kind)
+      throw new Error(`${w}: attempt evidence changed`);
+    if (result.kind === 'fatal') return `${w}: ${result.errors.join('; ')}`;
+  }
+  return null;
+}
 function persistFatal(outDir, runId, reason) { const p = join(outDir, 'fatal.json'); if (!existsSync(p)) durableWrite(p, `${JSON.stringify({ runId, reason, recordedAt: new Date().toISOString() })}\n`); }
 
 export function countReservations(outDir) {
@@ -435,32 +452,45 @@ export async function callAuditPinned(plan, { bin, timeout, execute = execFileP 
 }
 
 // pacer / usageLog (VSD-055): optional usage pacing checked before each reservation; observations recorded after each call.
-export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null }) {
+export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null, beforeReserve = () => null }) {
+  const incremental = binding?.version?.startsWith('passBClaimFirstNightly/1:');
   if (!existsSync(join(outDir, 'run-manifest.json'))) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
-    durableWrite(join(outDir, 'run-manifest.json'), `${JSON.stringify({ runId, binding, inputs: plans.map(p => ({ workId: p.workId, inputSha256: p.inputSha256, promptHash: p.promptHash, binding: p.binding })) }, null, 2)}\n`);
-    for (const p of plans) durableWrite(join(outDir, `input-${safeWork(p.workId)}.json`), `${JSON.stringify(p.input, null, 1)}\n`);
+    durableWrite(join(outDir, 'run-manifest.json'), `${JSON.stringify({ runId, binding, ...(incremental ? { inputMode: 'per-work/1', inputs: [] } : { inputs: plans.map(p => ({ workId: p.workId, inputSha256: p.inputSha256, promptHash: p.promptHash, binding: p.binding })) }) }, null, 2)}\n`);
+    if (!incremental) for (const p of plans) durableWrite(join(outDir, `input-${safeWork(p.workId)}.json`), `${JSON.stringify(p.input, null, 1)}\n`);
   } else {
     const m = readJson(join(outDir, 'run-manifest.json'));
     if (m.runId !== runId || stableJson(m.binding) !== stableJson(binding)) throw new Error('run manifest differs from the current audit contract');
-    for (const p of plans) { const f = m.inputs.find(x => x.workId === p.workId); if (!f || f.inputSha256 !== p.inputSha256 || f.promptHash !== p.promptHash) throw new Error(`${p.workId}: frozen input changed`); }
+    for (const p of plans) { const f = m.inputs.find(x => x.workId === p.workId); if ((!f && !incremental) || (f && (f.inputSha256 !== p.inputSha256 || f.promptHash !== p.promptHash))) throw new Error(`${p.workId}: frozen input changed`); }
+  }
+  if (incremental) for (const p of plans) {
+    const inputFile = join(outDir, `input-${safeWork(p.workId)}.json`), receiptFile = join(outDir, `input-${safeWork(p.workId)}.binding.json`);
+    const receipt = { workId: p.workId, inputSha256: p.inputSha256, promptHash: p.promptHash, binding: p.binding };
+    if (existsSync(inputFile)) { if (stableJson(readJson(inputFile)) !== stableJson(p.input)) throw new Error(`${p.workId}: frozen input changed`); }
+    else durableWrite(inputFile, `${JSON.stringify(p.input, null, 1)}\n`);
+    if (existsSync(receiptFile)) { if (stableJson(readJson(receiptFile)) !== stableJson(receipt)) throw new Error(`${p.workId}: frozen input binding changed`); }
+    else durableWrite(receiptFile, `${JSON.stringify(receipt)}\n`);
   }
   const tally = { calls: 0, accepted: 0, held: 0, fatal: 0, 'usage-limit': 0, 'unknown-outcome': 0, skipped: 0 };
-  let stop = preservedFatal(outDir) ? 'preserved-fatal' : null;
+  let stop = auditRunFatal(outDir) ? 'preserved-fatal' : null;
   for (const plan of plans) {
     if (stop) break;
     if (auditHistory(outDir, plan, runId)) { tally.skipped++; continue; } // one attempt per work, whatever its outcome
     if (countReservations(outDir) >= (binding?.maxReservations ?? MAX_RESERVATIONS)) { stop = 'reservation-cap'; break; }
     let gate;
     try { gate = startGate(now(), exception); } catch (e) { stop = 'protected-hours'; break; }
+    stop = beforeReserve(); if (stop) break;
+    assertExecutionLease();
     if (pacer) { const d = pacer.check(); if (!d.go) { stop = `pacing: ${d.reason}`; break; } }
     const dir = join(outDir, 'works', safeWork(plan.workId));
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     durableWrite(join(dir, 'attempt-1.reserved.json'), `${JSON.stringify({ version: RESERVATION_VERSION, runId, workId: plan.workId, attempt: 1, promptHash: plan.promptHash, inputSha256: plan.inputSha256, binding: plan.binding, hoursException: gate.hoursException, reservedAt: now().toISOString() }, null, 1)}\n`);
     syncDirs([dir, join(outDir, 'works'), outDir]);
     // Cloud (PASS_B_REMOTE_EVIDENCE): the reservation must be PUSHED before the call spends anything.
-    try { persist(remoteRoot(), [join(outDir, 'run-manifest.json'), ...readdirSync(outDir).filter(f => f.startsWith('input-')).map(f => join(outDir, f)), join(dir, 'attempt-1.reserved.json')], `reserve ${runId} ${plan.workId}`); }
+    try { persist(remoteRoot(), [join(outDir, 'run-manifest.json'), ...readdirSync(outDir).filter(f => f.startsWith('input-')).map(f => join(outDir, f)), join(dir, 'attempt-1.reserved.json'), pacer?.statePath], `reserve ${runId} ${plan.workId}`); }
     catch (e) { stop = `persist-failed: ${e.message}`; break; }
+    // A slow remote push cannot carry a call past the allowed start/deadline window.
+    try { gate = startGate(now(), exception); } catch { stop = 'protected-hours'; break; }
     tally.calls++;
     const started = Date.now();
     let raw;

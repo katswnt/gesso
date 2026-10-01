@@ -18,7 +18,7 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { trustedCatalog, snapshotLegacy } from './lib/pass-b-calibration.mjs';
-import { CORPUS_RUN_ID, CORPUS_RUN_DIR, inspectWork, readLedger, runSpendUsd, executionEpochs } from './pass-b-corpus-collect.mjs';
+import { CORPUS_RUN_ID, CORPUS_RUN_DIR, HISTORICAL_MODEL, inspectWork, readLedger, runSpendUsd, executionEpochs } from './pass-b-corpus-collect.mjs';
 
 export const BUNDLE_VERSION = 'passBCloudBundle/1';
 const MAX_BUNDLE_RAW_BYTES = 80 * 1024 * 1024; // transcripts compress well; keeps each .tar.gz comfortably under git limits
@@ -44,6 +44,7 @@ export function workEvidenceFiles(runDir, id) {
   for (const f of files(join(abs, 'completions'))) {
     out.push(join(w, 'completions', f));
     const c = readJson(join(abs, 'completions', f));
+    if (c.producer?.model !== HISTORICAL_MODEL) throw new Error('legacy bundles support historical 4.6 only; retain and verify the complete evidence checkout for epoch-model collection');
     out.push(join(w, 'raw', `${c.rawResponseSha256}.json`));
     wanted.add(c.transcriptSha256);
   }

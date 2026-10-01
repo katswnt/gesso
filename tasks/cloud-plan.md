@@ -8,77 +8,84 @@ Nothing here runs until the owner authorizes it; one Codex review before the fir
 
 | Where | Role |
 |---|---|
-| **Claude Code Routines** (scheduled cloud sessions, Max usage pool) | The nightly pipeline: hourly runs 00:00–08:00 PT, each a short paced chunk that commits its results. |
+| **Claude Code Routines** (scheduled cloud sessions, Max usage pool) | The nightly pipeline: three scheduled firings (currently 07:00/10:00/13:00 UTC, or 00:00/03:00/06:00 PDT); the runner enforces Pacific hours and a shared call cap. |
 | **Claude cloud sessions from the phone app** | Development, reading reports, "run now", fixing issues; pushes to `claude/*` branches. |
 | **Codex cloud (ChatGPT app)** | Independent review of branches and PRs and second opinions. Exact capabilities to be confirmed by Codex itself. |
 | **Laptop** | Optional. When home, it imports the cloud evidence and verifies it. It never runs at the same time as the cloud. |
 
 ## Where the evidence lives
 
-Today about 3.2 GB of pipeline evidence exists only on the laptop. In cloud mode the private repo
-`katswnt/gesso-pass-b-evidence` becomes the source of truth:
-- **Per-work bundles.** Stage completions, transcripts, reservations, meta, and saved source-page snapshots, in the
-  bundle format built for the September cloud lane. Every bundle is re-verified on import (hashes plus full
-  re-derivation), so a bad or tampered bundle is rejected.
-- **No images in git.** They are re-fetched by B0's broker (the cloud lane already did this with Full network),
-  and each is hash-checked against its recorded digest.
-- **Only the working set is needed.** A routine checks out only the current 30-day window's works
-  (sparse checkout), not all 854+.
-- **Run-level state in the repo.** Ledger, execution epochs (now including the model, see option B), `fatal.json`,
-  and a `status.json` summary. Append-only where the local collector is append-only.
+The private repo `katswnt/gesso-pass-b-evidence`, branch `claude/pass-b-state`, has been seeded
+with the complete evidence tree (13,733 files, 2.71 GB at seeding). It becomes the execution source of truth:
+- **Complete run state**, including reservations, outcomes, completions/raw, snapshots, execution epochs,
+  fatal findings/clearances and the evidence those records bind. The old September cloud bundle omits
+  reservations and epochs; it is historical 4.6 interchange only, not this runner's resume format.
+- **Exact images are in the evidence repo.** Re-fetching alone cannot recover changed historical bytes.
+- **Full working-tree checkout, shallow history.** Sparse window checkout is not implemented and would
+  need to retain out-of-window fatal/clearance evidence too. No such redesign is needed for this pilot.
+- **Run-level state:** the shared lease, owner code pin, call/probe allowance and status summary. Append-only
+  where the collector is append-only; status/ledger remain convenience artifacts, not terminal authority.
 
 ## One nightly chunk (a Routine run)
 
-1. Check out the code repo branch and the evidence repo window (sparse).
-2. **Gates, before any call:** the lease is free (no laptop or other routine holding it), no preserved fatal,
-   inside 00:00–08:30 PT, and the **pacing rule** says go. Otherwise record why and exit.
-3. Take the lease (a commit in the evidence repo; the first push wins, and a losing run exits).
-4. Run up to N calls (collection, then claim-first for window works), re-checking pacing after every call.
-5. Verify the new bundles locally, commit them with `status.json`, push, and release the lease.
-6. On a fatal stop: write `fatal.json`, push, open a GitHub issue (phone notification). All later runs refuse.
+1. Check out the evidence state branch and run the owner-pinned code in a clean worktree.
+2. Take the shared lease: exclusive local creation, then first successful remote push wins. A loser exits;
+   a dead run's lease is never stolen. Laptop native collection/nightly calls require the same lease.
+3. Check global preserved fatal/pause state, Pacific hours and pacing before each reservation.
+4. Run claim-first end to end for nearest verified dailies, then collection if requested. One durable
+   **30-call pilot allowance total**, shared across both processes, restarts and all schedule firings.
+5. Push every reservation, shared allowance and necessary inputs before the call. Collection pushes
+   B0/image/epochs and each captured stage promptly. Push outcomes and completed copy; stop on failure.
+6. Push `state/status.json` and release the lease on clean completion/pause. Abnormal exits retain the
+   lease for deliberate owner recovery. Fatal-to-GitHub-issue alerts are **not built**.
 
-The length of a single routine run isn't documented, so chunks stay short (about 30–45 minutes). Each reservation
-is pushed to the evidence repo BEFORE its call and each outcome right after it (see the corrections below), so a
-reclaimed VM leaves a durable terminal reservation that is never retried.
+The Routine's lifetime and nested CLI behavior need pilot confirmation. Correctness does not depend on
+surviving an entire work: a lost VM leaves a remotely durable reservation that cannot silently be retried.
+The scheduled UTC hours shift relative to Pacific time at DST; the runner's Pacific gate remains authoritative.
+The configured wrapper default is `PASS_B_CALL_BUDGET_ID=pilot-30`, `PASS_B_MAX_CALLS=30`. Reusing the ID
+resumes its remaining allowance. Do not reset it or choose a new ID/cap without owner authorization.
 
 ## Pacing rule (built with option B; works on laptop or cloud)
 
 **Built as VSD-055.** Every transcript's `rate_limit_event` (both windows, each with its own resetsAt) is logged
 with its observation time. Before every reservation: go only if weekly use is below min(85%, elapsed fraction of
 the week + 3 points) and five-hour use is below 90%. A missing, stale (>3 h) or pre-reset reading never counts as
-zero: 2 probe calls, then stop. A per-session call cap is the backstop. In the cloud, the usage log lives in the
-evidence repo.
+zero. Pacing `/2` requires both windows to be fresh for normal operation; a stale high reading still
+blocks until its reset. Two probe calls are shared across restarts for the same telemetry/reset state;
+partial readings cannot repeatedly replenish them. The durable shared pilot cap is the backstop. The
+usage log and allowance file live in the evidence repo, and allowance + reservation are pushed together.
 
 ## Phases
 
-0. **Laptop, offline: DONE 2026-09-30** (VSD-054 model per epoch, VSD-055 pacing, VSD-056 nightly job).
-1. **Evidence repo as source of truth:** a sync tool (laptop → repo for window works), cloud checkout, lease,
-   `status.json`, and a fatal → GitHub issue. Tests with fixture bundles.
-2. **Routine setup:** the network environment (Full, as the image hosts need), a setup script and the schedule.
-   The owner does anything that needs the claude.ai UI; the rest I set up by CLI or API.
-3. **Pilot night after the weekly reset:** a small cap (about 5 works). It confirms child `claude -p` inside a
-   routine, chunk timing, pushes and the pacing reading. Then the full nightly.
-4. **Travel mode:** routines on, laptop off. The morning check is `status.json` / a status page on the phone.
-   Import to the laptop when home.
+0. **Offline implementation:** VSD-054 model epochs, VSD-055 pacing and VSD-056 nightly job exist.
+   The 2026-09-30 review repairs add global fatal handling, incremental frozen work inputs, zero-call
+   copy recovery, complete prerequisite persistence, shared pacing/caps and lease exclusion.
+1. **Persistence:** seed/checkout/lease/status implemented. The repair uses the complete checkout;
+   no new bundle format. GitHub-issue alerts remain deferred.
+2. **Routine configuration:** a Routine and environment exist; this offline repair changes neither
+   their state nor the owner pin. The corrected code needs a later reviewed commit/pin update.
+3. **Pilot:** owner-authorized 30 calls total; confirm nested CLI auth/model, push permissions, restart
+   behavior and telemetry. A usage reset is not a fresh pilot authorization or allowance.
+4. **Travel mode:** only after the pilot and owner go-ahead. Morning checks read `state/status.json`;
+   laptop and cloud use the same lease/evidence rather than running independent collectors.
 
-## Codex review corrections (2026-09-30), to build before any unattended cloud run
+## Original review corrections (2026-09-30; implementation status clarified above)
 
 - **Save each reservation remotely BEFORE spending**, save each outcome promptly, and stop if persistence fails.
   A reservation on a reclaimed VM that was never pushed is a lost unknown outcome. (The draft wrongly said killed
   chunks leave terminal reservations.)
 - **The export format must be complete.** `scripts/pass-b-cloud-bundle.mjs` currently excludes reservations and
-  epochs and covers only finished B1–B3. Cloud mode needs reservations, epochs (the model per epoch, VSD-054),
+  epochs and covers only finished B1–B3. The current full-checkout path retains reservations, epochs (the model per epoch, VSD-054),
   claim-first stage runs, and fatal findings, clearances and their evidence, even for works outside the window.
 - **Lease:** one designated state branch; the first successful push wins and losers exit. Never auto-merge a
   losing claim, and never steal an expired lease. The laptop honours the same lease.
 - **Pin the code revision and evidence branch** explicitly in the routine; never rely on the default checkout.
 - **Checkout:** sparse checkout still downloads history, so measure the first checkout and use a partial clone
-  if needed. Re-fetching images detects changed bytes but can't recover the original, so keep the exact evidence
-  images somewhere durable.
+  if needed later. The implemented pilot uses a full shallow checkout and retains exact image bytes.
 - **Time zone and cost:** schedule in America/Los_Angeles with the 08:30 start cutoff and 09:00 finish deadline.
   Disable paid overage while the requirement is $0 incremental spend.
 - **Pilot unknowns:** nested `claude -p` auth, model and transcript behaviour inside a Routine, VM expiry and
-  restart. Prove them with the 5-work pilot.
+  restart. Measure them within the authorized 30-call pilot; work count depends on stage applicability.
 - **Codex's role while travelling:** hosted Codex Cloud tasks from the ChatGPT app (laptop off), plus
   `@codex review` on GitHub PRs from a phone. Codex scheduled tasks are for status checks, not a durable
   pipeline runner.

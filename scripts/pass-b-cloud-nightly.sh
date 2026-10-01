@@ -27,7 +27,11 @@ cd "$WT"
 # was produced with (sharp's version shapes the image derivatives whose hashes are recorded).
 npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
 node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/package.json','utf8')).version; if (v!=='0.35.3') { console.error('sharp '+v+' != 0.35.3'); process.exit(1); }"
-export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-60}"
+export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-30}"
+# Cloud host, subscription rules: never inherit the historical cloud-credit lane's pacing/hours exemption.
+export PASS_B_CORPUS_LANE=local
+# One pilot allowance, not 30 new calls on every cron firing. A new id/cap requires new owner authorization.
+export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-pilot-30}" PASS_B_LEASE_HOLDER="$HOLDER"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
@@ -41,6 +45,7 @@ node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER"; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
 node scripts/pass-b-nightly.mjs --run ${PASS_B_COLLECT:+--collect} 2>&1 | tee /tmp/pass-b-nightly.log; RUN=${PIPESTATUS[0]}
 SUMMARY="$(tail -3 /tmp/pass-b-nightly.log | tr '\n' ' ' | cut -c1-400)"
-node scripts/pass-b-cloud-lease.mjs write-status "$(node -e "console.log(JSON.stringify({summary: process.argv[1], exit: Number(process.argv[2]), holder: process.argv[3], pinnedCommit: process.argv[4]}))" "$SUMMARY" "$RUN" "$HOLDER" "$PIN")"
+node scripts/pass-b-cloud-lease.mjs write-status "$(node -e "console.log(JSON.stringify({summary: process.argv[1], exit: Number(process.argv[2]), holder: process.argv[3], pinnedCommit: process.argv[4]}))" "$SUMMARY" "$RUN" "$HOLDER" "$PIN")" || { echo "STATUS PUSH FAILED; lease retained for review"; exit 1; }
+if [ "$RUN" -ne 0 ]; then echo "RUN FAILED; lease retained for review"; exit "$RUN"; fi
 node scripts/pass-b-cloud-lease.mjs release "$HOLDER"
 exit $RUN

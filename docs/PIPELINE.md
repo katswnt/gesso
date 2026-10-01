@@ -468,7 +468,72 @@ VSD-035 adds the actual deterministic reconciliation layer:
   remain a known A4 semantic challenge (despite `conflicts:[]`). Historical
   `b4c-f45fac18da2e/works/cleveland120847.transcript.jsonl` is another real held fixture: two adapter
   emissions after a wire-schema error. Neither duplicate-adapter fixture is accepted or retryable.
-- **Cloud-credit B1–B3 lane** (VSD-047): in a Claude Code cloud session, `PASS_B_CORPUS_LANE=cloud PASS_B_CLOUD_SKIP=<evidence>/state/skip.json PASS_B_CLOUD_BUDGET_USD=<remaining> PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run` processes works beyond the 30-day window (minus everything local has touched) with no hours gate and a dollar cap. `scripts/pass-b-cloud-bundle.mjs budget|export --push` (cloud) and `skip|import` (local) move evidence through the private repo `katswnt/gesso-pass-b-evidence`; import re-verifies every work before copying. For a long run use `scripts/pass-b-cloud-run.sh` (from the gesso checkout, evidence at `../evidence`): it spends in `$CHUNK_USD` chunks (default $20) and exports + pushes after each, so a reclaimed VM loses at most one chunk; the cloud lane also skips everything already in `state/exported.json`. Pilot 2026-09-25: 4 works done, 2 held (known validation classes), $4.85; all 4 imported and re-verified with confinement identical to local (B1/B3 Read-only, B2 web-only, no MCP/hooks, apiKeySource none).
+- **Historical cloud-credit B1–B3 lane** (VSD-047; credits used; not the current subscription nightly path): in a Claude Code cloud session, `PASS_B_CORPUS_LANE=cloud PASS_B_CLOUD_SKIP=<evidence>/state/skip.json PASS_B_CLOUD_BUDGET_USD=<remaining> PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run` processes works beyond the 30-day window (minus everything local has touched) with no hours gate and a dollar cap. `scripts/pass-b-cloud-bundle.mjs budget|export --push` (cloud) and `skip|import` (local) move evidence through the private repo `katswnt/gesso-pass-b-evidence`; import re-verifies every work before copying. For a long run use `scripts/pass-b-cloud-run.sh` (from the gesso checkout, evidence at `../evidence`): it spends in `$CHUNK_USD` chunks (default $20) and exports + pushes after each, so a reclaimed VM loses at most one chunk; the cloud lane also skips everything already in `state/exported.json`. Pilot 2026-09-25: 4 works done, 2 held (known validation classes), $4.85; all 4 imported and re-verified with confinement identical to local (B1/B3 Read-only, B2 web-only, no MCP/hooks, apiKeySource none).
+  **Correction 2026-09-30:** that historical bundle format omits reservations and execution epochs;
+  it is not complete cloud-resume evidence and now refuses export of non-historical-model completions.
+  The current path below preserves the complete evidence checkout, including images. Native live
+  collection requires its shared lease; the old standalone credit-lane command is historical only.
+
+### Current subscription nightly/cloud execution (VSD-054–056)
+
+`scripts/pass-b-nightly.mjs` processes verified 30-day-window works in earliest-date order:
+S1/S2 → SI → SJ → S3 → S4, then optionally collection (`--collect`). Finished copy is quarantined
+under `claim-first-nightly/copy/<date>/`; nothing is approved or published. Plans are write-free:
+
+```bash
+node scripts/pass-b-nightly.mjs
+node scripts/pass-b-corpus-collect.mjs
+```
+
+The cloud entry script is `scripts/pass-b-cloud-nightly.sh`. It checks out the owner-pinned
+`state/pin.json` commit in a clean worktree, installs the specified dependencies, and points
+`data/incoming` at the full private evidence checkout on `claude/pass-b-state`. This is a shallow
+full working-tree clone, not sparse window-only checkout. Exact evidence images are retained.
+The wrapper explicitly selects the subscription lane (`PASS_B_CORPUS_LANE=local`), even on a cloud host.
+Use the same wrapper/lease on a laptop; bare native `--run` entry points refuse without shared
+lease ownership and an explicit shared call-budget ID/cap. The older bundle importer remains
+for historical 4.6 evidence only, not epoch-model migration.
+
+Offline hardening on 2026-09-30:
+
+- Before every model callback, push the reservation, immutable inputs and shared allowance.
+  Collection also pushes B0, the exact image, epoch chain and captured predecessors; each
+  completed stage is pushed immediately after capture. Normal pauses persist work state.
+  Local PID leases are not exported. A replacement VM sees an incomplete reservation as
+  consumed/unknown and does not retry it. Any push failure stops execution.
+- `state/call-budgets/<PASS_B_CALL_BUDGET_ID>.json` (`passBCallBudget/1`) is shared by the parent,
+  collector and later schedule firings. Wrapper default: `pilot-30`, cap 30. Restarting or
+  firing three times does not grant another 30 calls. An allowance can be consumed even when
+  reservation/persistence fails; no automatic refund. Do not delete/reset it or choose a new
+  ID/cap without new owner authorization. Existing limits cannot change under the same ID.
+- Pacing `/2` retains each window's own observation time/reset and known high utilization.
+  A stale 97% weekly reading still forbids calls until reset. Normal mode needs fresh weekly
+  **and** five-hour readings; partial observations cannot continually restore the two-probe
+  allowance. Probe consumption persists across restarts under the shared budget. Account use
+  can increase between readings, so this is pacing plus a hard call cap, not an exact token cap.
+- Global corpus and nightly-stage fatal evidence is checked before work and reservations,
+  even outside the window or if a stage's convenience fatal marker is absent. Held/unknown
+  stages terminate their work before any missing sibling spends. Every non-success stage stop
+  is propagated; collection subprocess failures are not swallowed.
+- Stable nightly stage manifests use `inputMode: per-work/1` plus immutable input/binding files.
+  New works can join; old prompt/source bindings cannot change. Existing fixed trials remain
+  frozen. Resume verifies stage evidence; accepted S4 can reconstruct and push missing copy
+  without another model call. Existing copy must match that verified assembly.
+- Exclusive local lease creation plus the remote first-push rule prevents same-checkout and
+  separate-clone races. Abnormal exit or status-push failure retains the lease. After a VM loss,
+  establish that the prior process is dead, inspect the preserved reservations/status/fatal
+  evidence, then have the owner deliberately release the lease. Never steal it on a timer or
+  clear fatal evidence to resume. A successful clean pacing pause can release normally.
+- Call-start hours are rechecked **after** remote persistence; a slow push cannot cross 08:30
+  and still launch a model. The existing 09:00 client deadline remains in force.
+
+This repair does not update `state/pin.json`, change the Routine, or authorize calls. Commit and
+pin the reviewed code before a later authorized pilot uses it. Real nested CLI authentication,
+model/runtime and remote push permissions still need pilot confirmation. Automatic GitHub-issue
+fatal alerts are not built; `state/status.json` and a retained lease are the implemented signals.
+
+### Other quarantined runners and publication boundaries
+
 - **Window structured-B4 runner** (`scripts/pass-b-b4-window.mjs`, `passBB4Window/1`, offline-tested; no live run
   yet): runs B4 `/3` for rolling 30-day window works whose B1–B3 the corpus collector has finished, re-verifying
   that banked evidence through `inspectWork` and never calling B0–B3. Each attempt is reserved durably before the
