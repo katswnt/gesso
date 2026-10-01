@@ -1,0 +1,569 @@
+{
+ "version": "passBPublicationRollback/1",
+ "date": "2026-10-01",
+ "entries": [
+  {
+   "workId": "wikidata:Q1025704",
+   "teach": {
+    "why": "Van Gogh's nocturnal Arles café scene under a starry sky, glowing yellow terrace against deep blue, painted without using black.",
+    "cues": [
+     "glowing yellow awning lit by gas lamp → Van Gogh's expressive artificial light",
+     "star-dotted deep-blue sky → his fascination with painting night outdoors",
+     "heavy directional brushstrokes on cobblestones → Post-Impressionist texture",
+     "warm-cool yellow/blue contrast with no black → his bold color theory"
+    ],
+    "guide": [
+     {
+      "q": "What place are we seeing?",
+      "a": "A cafe terrace in Arles, southern France, at night, seen from the street. Van Gogh turns an everyday setting into a stage of yellow gaslight, blue sky, cobblestones, and small figures."
+     },
+     {
+      "q": "How would you recognize another Van Gogh?",
+      "a": "Look for thick directional brushstrokes, pulsing outlines, intensified complementary colors, and ordinary places made emotionally vivid. His mature works turn streets, skies, fields, and rooms into charged patterns of paint."
+     },
+     {
+      "q": "Why does the cafe glow so strongly?",
+      "a": "The yellow awning and gas lamp create a pool of artificial light pushing against the deep blue night. The light feels almost physical, as if the cafe radiates warmth into the street."
+     },
+     {
+      "q": "Why does it matter that he painted night without black?",
+      "a": "He builds darkness from blues, violets, greens, and warm reflected color instead of black. That makes the night feel alive and supports his belief that color could carry feeling as strongly as drawing."
+     },
+     {
+      "q": "How is this different from an Impressionist night scene?",
+      "a": "An Impressionist might dissolve fleeting light across the scene. Van Gogh uses heavier paint, stronger outlines, and forceful color contrasts so the night feels structured by emotion."
+     },
+     {
+      "q": "How do the cobblestones help?",
+      "a": "They are built from directional strokes that pull the eye into the street. The ground feels active, guiding us toward the cafe while keeping the surface visibly handmade."
+     },
+     {
+      "q": "How does the yellow-blue contrast work?",
+      "a": "Yellow and blue intensify one another as strong warm-cool opposites. Van Gogh uses the contrast to make the cafe feel human and immediate against the vastness of the night."
+     },
+     {
+      "q": "What role do the tiny figures play?",
+      "a": "They give the terrace social life without making it a portrait scene. Kept small, they let the real drama be the meeting of light, color, street, and night."
+     },
+     {
+      "q": "How does this fit his Arles period?",
+      "a": "The 1888 Arles works use saturated color, simplified forms, and thick strokes to make southern places feel newly intense. Here he explores how color can express sensation directly, a concern continued in The Starry Night."
+     }
+    ],
+    "notes": [
+     {
+      "head": "Yellow awning thrusts toward the viewer",
+      "body": "The sharp diagonal of the café awning drives toward us from the upper left, making the terrace feel close and immediate. It divides the canvas between warm artificial light and cool night, organizing the entire composition.",
+      "x": 32,
+      "y": 28
+     },
+     {
+      "head": "Café light holds the street",
+      "body": "The terrace glows in dense yellows and oranges, turning the left side of the street into a warm gathering place. Van Gogh saturates the light until it feels almost physical — a pool of warmth against the surrounding blue night.",
+      "x": 34,
+      "y": 42
+     },
+     {
+      "head": "Small figures give human scale",
+      "body": "Van Gogh keeps the diners and passersby small, so they provide human warmth without pulling attention from the larger drama of light, color, and space. The scene is alive with people but never about any one of them.",
+      "x": 51,
+      "y": 63
+     },
+     {
+      "head": "Cobblestones carry the eye into depth",
+      "body": "The street is built from short, flickering strokes that make the cobblestones vibrate. Their rhythm guides the eye from the warm foreground toward the darker buildings receding into the night beyond.",
+      "x": 58,
+      "y": 83
+     },
+     {
+      "head": "Stars echo the café lamps",
+      "body": "The bright stars in the upper blue sky repeat the small points of gaslight below, creating a visual rhyme between the lively human street and the vast, impersonal night overhead.",
+      "x": 65,
+      "y": 10
+     },
+     {
+      "head": "Night built from color, not black",
+      "body": "The darkness is composed entirely of blues, greens, and violets — Van Gogh reportedly painted the scene without using any black. The shadows feel active, atmospheric, and full of depth as a result."
+     },
+     {
+      "head": "Arles light as emotional structure",
+      "body": "Painted during Van Gogh's intensely productive Arles period in September 1888, the scene uses saturated, contrasting color and forceful brushwork to turn an ordinary café street into something that feels charged with feeling."
+     }
+    ]
+   },
+   "hotspots": [
+    {
+     "n": 1,
+     "x": 32,
+     "y": 28
+    },
+    {
+     "n": 2,
+     "x": 34,
+     "y": 42
+    },
+    {
+     "n": 3,
+     "x": 51,
+     "y": 63
+    },
+    {
+     "n": 4,
+     "x": 58,
+     "y": 83
+    },
+    {
+     "n": 5,
+     "x": 65,
+     "y": 10
+    }
+   ]
+  },
+  {
+   "workId": "wikidata:Q2990634",
+   "teach": {
+    "why": "Among the most ambitious early abstractions, Composition VII is the climax of Kandinsky's pre-WWI drive to make painting as expressive and spiritual as music.",
+    "cues": [
+     "Swirling vortex of color with no recognizable objects → Kandinsky's pioneering abstraction, c.1913",
+     "Veiled apocalyptic motifs (deluge, resurrection) buried in the chaos → spiritual subject of his Munich period",
+     "Intense, clashing yet harmonized color masses → Expressionist abstraction, 'concerning the spiritual in art'",
+     "Large, dynamic, near-symphonic scale → Kandinsky's 'Compositions' series"
+    ],
+    "guide": [
+     {
+      "q": "What is the painting actually showing?",
+      "a": "There is no single recognizable scene. Kandinsky dissolves veiled motifs of catastrophe and renewal, such as a deluge and a resurrection, into a swirling vortex of color, aiming to move you the way music does."
+     },
+     {
+      "q": "How can I recognize Kandinsky's hand from this period?",
+      "a": "Look for a churning whirlpool of color with no fixed objects, hot clashing hues somehow held in balance, and faint traces of imagery buried in the storm. His early abstractions feel symphonic and explosive rather than calm or geometric."
+     },
+     {
+      "q": "What makes it Expressionism?",
+      "a": "Line, color, and form are pushed past description to make inner feeling and spiritual states visible. Kandinsky abstracts emotion itself rather than depicting the world, which is the heart of his Expressionist abstraction."
+     },
+     {
+      "q": "How is it different from his later Bauhaus work?",
+      "a": "This is hot, swirling, and gestural. His 1920s painting cools into precise circles, triangles, and grids, so the same artist looks far more controlled and diagrammatic a decade later."
+     },
+     {
+      "q": "Why does it feel near-symphonic in scale?",
+      "a": "Kandinsky belonged to a generation comparing painting to music, and he built his 'Compositions' as the most ambitious statements of that idea. The large size and orchestrated color masses are meant to overwhelm like a piece of music."
+     },
+     {
+      "q": "Why hide apocalyptic themes instead of showing them?",
+      "a": "Kandinsky believed direct depiction tied art too closely to the material world. By burying the deluge and resurrection, he lets color and movement carry the spiritual charge while the subject stays just out of reach."
+     }
+    ],
+    "notes": [
+     {
+      "head": "A dense dark vortex at the left center",
+      "body": "A swirling mass of deep blue-black with a ringed oval form anchors the left side of the canvas, creating a gravitational pull against which all the surrounding color and line seem to orbit. It reads as the painting's heaviest emotional weight.",
+      "x": 30,
+      "y": 52
+     },
+     {
+      "head": "Yellow arcs and diagonal lines across the upper right",
+      "body": "Bright yellow arcs, sharp black diagonals, and spiky forms sweep across the upper and right portions of the canvas — fast, upward, almost musical in their rhythm. The energy here feels released rather than compressed.",
+      "x": 72,
+      "y": 28
+     },
+     {
+      "head": "Color and line doing the work of feeling",
+      "body": "Reds, yellows, blues, greens, and blacks clash, echo, and find uneasy balance across the surface. Kandinsky believed these color relationships carried inner sensation and spiritual meaning more directly than any depicted subject could.",
+      "x": 52,
+      "y": 65
+     },
+     {
+      "head": "Apocalyptic themes buried in the turbulence",
+      "body": "Kandinsky associated this work with the Flood, Resurrection, Judgment Day, and Paradise — but none of those subjects appear as illustration. They are dissolved into the chaos and energy, felt rather than read.",
+      "x": 18,
+      "y": 35
+     },
+     {
+      "head": "Organized like a symphony, not a scene",
+      "body": "As the seventh in his major Composition series, the canvas was planned like an orchestrated whole: crescendos, pauses, and passages. There is no single resting point; the eye is kept in motion across the entire surface."
+     },
+     {
+      "head": "Munich, 1913 — on the edge of catastrophe",
+      "body": "Made in Munich just before the First World War, this painting's heat and turbulence belong to years of avant-garde intensity that the war would shatter. Kandinsky was Russian-born but working in Germany; the painting is now in Moscow."
+     }
+    ]
+   },
+   "hotspots": [
+    {
+     "n": 1,
+     "x": 30,
+     "y": 52
+    },
+    {
+     "n": 2,
+     "x": 72,
+     "y": 28
+    },
+    {
+     "n": 3,
+     "x": 52,
+     "y": 65
+    },
+    {
+     "n": 4,
+     "x": 18,
+     "y": 35
+    }
+   ]
+  },
+  {
+   "workId": "http://www.wikidata.org/entity/Q517408",
+   "teach": {
+    "why": "This is a 1794 Neoclassical marble sculpture by Antonio Canova from Italy, and the main giveaway is the polished white marble body pair arranged in a graceful antique-inspired embrace.",
+    "cues": [
+     "Idealized nude bodies, restrained emotion, and antique myth → late eighteenth-century Neoclassicism",
+     "Canova's Venetian background and European mythological subject → an Italian sculptural culture looking back to ancient Greece and Rome",
+     "Cupid and Psyche posed in a balanced, elegant embrace → Neoclassical love of clarity, poise, and classical mythology",
+     "Highly polished marble with soft flesh-like transitions → Canova's distinctive ability to make stone look warm and living"
+    ],
+    "guide": [
+     {
+      "q": "Who are these figures, and how can I tell?",
+      "a": "They are Psyche and Cupid from classical myth. Cupid's wings identify him, while Psyche is the young woman waking from a deathlike sleep as love restores her."
+     },
+     {
+      "q": "What exact moment in the story does Canova show?",
+      "a": "Psyche has opened a forbidden vessel from the underworld and fallen into a deathlike sleep. Cupid bends over her and revives her with a kiss, so the sculpture catches the instant between collapse and awakening."
+     },
+     {
+      "q": "How can we tell this is by Canova just from looking?",
+      "a": "Look for marble polished until skin seems to glow and almost yield to the touch, paired with calm, poised faces even in emotional scenes. Canova varies finish so hair, wings, and drapery each read as a different material, and his figures lean into long, sweeping curves."
+     },
+     {
+      "q": "Why does Cupid have wings?",
+      "a": "Cupid is the god of love, and wings make him seem swift, airborne, and not fully bound to the human world. In the sculpture they also create sweeping curves that frame the embrace."
+     },
+     {
+      "q": "Why is Psyche's body arched upward?",
+      "a": "Her pose makes the revival visible: she is not simply lying still, but lifting back toward consciousness and love. The arch of her body also creates a graceful counter-curve to Cupid's bending form."
+     },
+     {
+      "q": "What makes this Neoclassical?",
+      "a": "The subject comes from ancient myth, and the bodies are idealized, balanced, and restrained rather than violently emotional. Neoclassicism often looks back to Greece and Rome for clarity, purity, and disciplined beauty."
+     },
+     {
+      "q": "How would you spot another Canova in a gallery?",
+      "a": "Watch for the same too-soft-for-stone skin, the cool restraint of the faces, and intertwining limbs that form airy loops. Canova fuses antique ideal proportions with a tender, almost modern sense of feeling, and he loves open spaces between figures."
+     },
+     {
+      "q": "Why use marble for this instead of bronze?",
+      "a": "Marble carried classical prestige and let Canova make skin look pale, luminous, and ideal. Bronze would have given the group a darker, harder presence, while marble helps the scene feel purified and dreamlike."
+     },
+     {
+      "q": "How can stone look so much like flesh?",
+      "a": "Canova varied the finish, polishing skin until light slides across it while leaving hair, wings, and drapery with different textures. That contrast makes the bodies seem warm and living even though the material is cold."
+     },
+     {
+      "q": "Why does the sculpture invite you to walk around it?",
+      "a": "The wings, arms, and bodies form loops and crossing curves that change as you move. From one angle you see the kiss, from another the geometry of the embrace, and from another the delicate engineering that holds the group together."
+     },
+     {
+      "q": "Is the sculpture meant to be erotic, spiritual, or both?",
+      "a": "It is both sensual and idealized, which is part of its power. Canova gives the bodies physical tenderness, but the polished restraint and mythological subject keep the scene elevated rather than merely private."
+     },
+     {
+      "q": "Why are the figures nude?",
+      "a": "In Neoclassical art, nudity often signals ideal beauty and connection to ancient sculpture rather than everyday realism. Here it also makes the contact between the two bodies feel direct, fragile, and emotionally charged."
+     },
+     {
+      "q": "What is especially difficult about carving this group?",
+      "a": "The open spaces between arms, wings, and bodies make the sculpture feel light, but they are technically risky in marble. Canova had to make a complex, airy composition while keeping the stone structurally stable."
+     },
+     {
+      "q": "Why does the composition feel like a dance?",
+      "a": "Cupid bends down as Psyche rises, so their bodies answer each other in crossing diagonals. The movement feels choreographed, with love shown as a graceful exchange rather than a static pose."
+     },
+     {
+      "q": "What should I notice up close besides the faces?",
+      "a": "Look at the different surfaces: smooth skin, feathered wings, textured hair, and the drapery beneath Psyche. Those changes show how carefully Canova controlled marble so each material feels distinct."
+     }
+    ],
+    "notes": [
+     {
+      "head": "Cupid's wings lift the composition",
+      "body": "The tall feathered wings identify the bending figure as Cupid and give the marble group its upward sweep. They make the embrace feel lighter than stone should allow.",
+      "x": 45,
+      "y": 17
+     },
+     {
+      "head": "A kiss at the moment of revival",
+      "body": "Cupid leans down as Psyche rises from the couch, her arms circling toward him. Canova catches the instant between collapse and awakening rather than a settled pose.",
+      "x": 47,
+      "y": 43
+     },
+     {
+      "head": "Skin made from polished marble",
+      "body": "The smooth finish lets light move softly across shoulders, arms, and torso, so cold marble reads as warm living flesh.",
+      "x": 59,
+      "y": 65
+     },
+     {
+      "head": "Drapery changes the surface rhythm",
+      "body": "The cloth beneath Psyche is cut into crisp, deep folds, set against the smoother bodies above. That contrast helps the same marble become skin, fabric, feathers, and stone.",
+      "x": 66,
+      "y": 83
+     },
+     {
+      "head": "The rough support stays visible",
+      "body": "Behind the figures, the carved rock and couch remain heavier and more textured. They anchor the airborne curves of the bodies and wings.",
+      "x": 34,
+      "y": 78
+     },
+     {
+      "head": "Neoclassical calm at an emotional peak",
+      "body": "The subject comes from ancient myth, but the faces and bodies stay idealized, balanced, and restrained. Even a dramatic resurrection becomes graceful and composed."
+     },
+     {
+      "head": "Designed to be seen in motion",
+      "body": "The crossed arms, open spaces, wings, and reclining body create a sculpture that changes as you move around it, shifting between a kiss, a spiral, and a feat of marble engineering."
+     }
+    ]
+   },
+   "hotspots": [
+    {
+     "n": 1,
+     "x": 45,
+     "y": 17
+    },
+    {
+     "n": 2,
+     "x": 47,
+     "y": 43
+    },
+    {
+     "n": 3,
+     "x": 59,
+     "y": 65
+    },
+    {
+     "n": 4,
+     "x": 66,
+     "y": 83
+    },
+    {
+     "n": 5,
+     "x": 34,
+     "y": 78
+    }
+   ]
+  },
+  {
+   "workId": "http://www.wikidata.org/entity/Q28418167",
+   "teach": {
+    "why": "A late-15th-century Japanese Zen ink painting (a 'splashed-ink' landscape) by Sesshū Tōyō, recognizable from its near-abstract wash of grey suggesting mountains out of almost nothing.",
+    "cues": [
+     "loose splashed wash with little detail → late-medieval Muromachi Zen aesthetic",
+     "monochrome ink landscape → Japan absorbing and reworking Chinese painting",
+     "spontaneous 'flung ink' method → Zen ink-painting tradition of intuitive brushwork",
+     "tones built only from black ink and water → suiboku (ink-wash) on paper, no color at all"
+    ],
+    "guide": [
+     {
+      "q": "What is it made of?",
+      "a": "Just black ink and water on paper, mounted as a hanging scroll. Color was deliberately avoided; the whole point was to see how much a landscape could be suggested with ink alone, the way a poem suggests more than it says."
+     },
+     {
+      "q": "What is depicted?",
+      "a": "A misty mountain landscape with a faint suggestion of a village, a tavern banner, and tiny figures in a boat. Most of it is left to your imagination, conjured from soft grey washes and a few sharp accents."
+     },
+     {
+      "q": "Why is this important?",
+      "a": "Sesshū is regarded as Japan's greatest master of ink landscape, and this 'splashed ink' work shows him at his most daring and free. It marks the moment Japanese ink painting fully came into its own rather than imitating Chinese models."
+     },
+     {
+      "q": "What technique should I notice?",
+      "a": "The 'haboku' or flung-ink method: broad wet washes dropped onto the paper, then a few quick dark strokes pulling forms out of the blur. The speed and confidence are the whole achievement."
+     },
+     {
+      "q": "Who made it and why?",
+      "a": "Sesshū Tōyō was a Zen monk-painter who even traveled to China to study. He reportedly made this as a parting gift for a pupil, with an inscription, so it doubles as a teaching example of his style."
+     },
+     {
+      "q": "How can something so vague feel complete?",
+      "a": "That restraint is the Zen point. By leaving so much blank, the painting invites your eye and mind to finish it, mirroring a meditative way of seeing the world."
+     }
+    ],
+    "notes": [
+     {
+      "head": "Pale mountains almost vanish into the paper",
+      "body": "At the top of the scroll, a tall peak is suggested by only the faintest grey wash — no contour line, no texture, barely a whisper of ink. The blank paper around it reads as mist. In haboku (splashed-ink) technique, the unpainted surface is as important as the brushstrokes.",
+      "x": 52,
+      "y": 16
+     },
+     {
+      "head": "Dark central mass of rocks and trees",
+      "body": "Sesshu drops a dense cluster of dark ink strokes near the middle of the scroll, then draws sharper, drier lines over them to pull out the forms of trees and boulders. The drama comes from the contrast between this dark anchor and the pale haze surrounding it.",
+      "x": 42,
+      "y": 57
+     },
+     {
+      "head": "Two small horizontal strokes at lower right",
+      "body": "A pair of brief, flat marks near the right edge suggest a boat or a figure on the water. Sesshu uses minimal marks to create human scale, letting the viewer complete the story — a core Zen aesthetic principle.",
+      "x": 72,
+      "y": 83
+     },
+     {
+      "head": "Inscription and red seal at lower left",
+      "body": "The vertical column of Japanese characters and the square red seal in the lower left corner identify this as a completed work by Sesshu Toyo. The seal anchors the otherwise airy composition and gives the scroll formal authority.",
+      "x": 9,
+      "y": 91
+     },
+     {
+      "head": "Ink wash creates atmosphere without color",
+      "body": "The entire scene — mountains, trees, water, mist — is built from a single ink diluted across a range from near-black to the palest grey. No pigment is added; moisture alone controls the atmosphere, a hallmark of Japanese suiboku-ga (ink painting).",
+      "x": 60,
+      "y": 35
+     }
+    ]
+   },
+   "hotspots": [
+    {
+     "n": 1,
+     "x": 52,
+     "y": 16
+    },
+    {
+     "n": 2,
+     "x": 42,
+     "y": 57
+    },
+    {
+     "n": 3,
+     "x": 72,
+     "y": 83
+    },
+    {
+     "n": 4,
+     "x": 9,
+     "y": 91
+    },
+    {
+     "n": 5,
+     "x": 60,
+     "y": 35
+    }
+   ]
+  },
+  {
+   "workId": "http://www.wikidata.org/entity/Q2610936",
+   "teach": {
+    "why": "This is late 16th-century Italian Baroque oil painting by Caravaggio, rooted in a Lombard naturalist eye, and the giveaway is the unidealized boy and fruit painted with direct, sensuous realism under strong light.",
+    "cues": [
+     "close-up half-length figure pressed near the picture plane → late 1500s move toward immediate, lifelike Baroque presence",
+     "a young painter's Italian naturalism with fruit observed as closely as a portrait → Caravaggio's Lombard background and northern Italian realism",
+     "ordinary boy, blemished leaves, ripe fruit, and theatrical intimacy → Italian Baroque naturalism replacing polished Renaissance idealization",
+     "thickly convincing oil surfaces in skin, grapes, peaches, and leaves → Caravaggio's hand in making real things feel touchable"
+    ],
+    "guide": [
+     {
+      "q": "What points to a date around 1594?",
+      "a": "Look for close-up half-length figure pressed near the picture plane; that is a concrete clue to late 1500s move toward immediate, lifelike Baroque presence."
+     },
+     {
+      "q": "What supports the attribution to Caravaggio?",
+      "a": "The hand is visible in a young painter's Italian naturalism with fruit observed as closely as a portrait, which matches Caravaggio's Lombard background and northern Italian realism."
+     },
+     {
+      "q": "What makes it Italian Baroque?",
+      "a": "Italian Baroque shows in ordinary boy, blemished leaves, ripe fruit, and theatrical intimacy, a marker of Italian Baroque naturalism replacing polished Renaissance idealization."
+     },
+     {
+      "q": "Why oil paint here, and why not fresco or drawing?",
+      "a": "Oil paint let Caravaggio make fruit, skin, cloth, and shadow feel physically present. Fresco would suit a wall but not this close, sensual studio image, and drawing could not give the same ripe color and weight."
+     },
+     {
+      "q": "Who is the boy, and what are we looking at?",
+      "a": "We are looking at a young boy holding a basket of fruit, shown close enough that he feels almost in our space. The picture is less about naming the boy than about seeing youth, beauty, ripeness, and decay with unusual directness."
+     },
+     {
+      "q": "Why does this work matter?",
+      "a": "It shows the young Caravaggio turning ordinary life into serious painting. That was new because the boy and fruit are not polished into perfection; they are made powerful by looking real."
+     },
+     {
+      "q": "What technique should I notice up close?",
+      "a": "Look at the different surfaces: soft skin, glossy grapes, fuzzy peaches, dry leaves, and the woven basket. Caravaggio uses oil paint to make each thing catch light in its own way."
+     },
+     {
+      "q": "What is the story or context behind it?",
+      "a": "Caravaggio made works like this early in his career, when he was proving how much drama and beauty could come from direct observation. The painting belongs to the moment before his large religious scenes made him famous."
+     },
+     {
+      "q": "Why is some of the fruit imperfect?",
+      "a": "The blemished leaves and overripe fruit are part of the point. Caravaggio is not giving us a decorative fruit bowl; he is making freshness and decay sit together in the same image."
+     },
+     {
+      "q": "What makes it Baroque?",
+      "a": "The Baroque quality is the immediacy: the figure is close, the light is strong, and the scene feels present rather than distant. It pulls the viewer into a direct encounter."
+     },
+     {
+      "q": "Is this a portrait?",
+      "a": "It has the intensity of a portrait, but it also behaves like a study of youth and still life. Caravaggio gives the boy and the fruit nearly equal attention, which is one reason the image feels so vivid."
+     }
+    ],
+    "notes": [
+     {
+      "head": "The boy brought close",
+      "body": "The sitter fills the foreground, with his bare shoulder, tilted head, and basket pressed near the picture plane. That closeness gives the scene the direct presence of Caravaggio's early naturalism.",
+      "x": 45.5,
+      "y": 39.5
+     },
+     {
+      "head": "Fruit treated like portraiture",
+      "body": "Grapes, peaches, figs, apples, and leaves receive the same concentrated attention as the boy's face. The basket is not a prop so much as another living subject in the painting.",
+      "x": 50,
+      "y": 68.5
+     },
+     {
+      "head": "Ripeness and damage together",
+      "body": "The curling, torn, and spotted leaves keep the fruit from feeling idealized. Caravaggio lets beauty and decay share the same light.",
+      "x": 71,
+      "y": 57.5
+     },
+     {
+      "head": "White cloth in strong light",
+      "body": "The gathered sleeve catches the light in crisp folds, setting off the warmer skin and the darker fruit. Oil paint makes each surface feel distinct: linen, flesh, wicker, grape skin, and dry leaf.",
+      "x": 31,
+      "y": 84
+     },
+     {
+      "head": "A shadowed stage for looking",
+      "body": "The plain dark background removes distraction and makes the boy and basket feel intensely present. The drama comes from attention, not from a story unfolding around him."
+     },
+     {
+      "head": "An early statement of ambition",
+      "body": "This early Caravaggio shows how a young model and ordinary fruit could carry the seriousness of a formal painting. Nothing here is polished into distance; the appeal is immediate and physical."
+     }
+    ]
+   },
+   "hotspots": [
+    {
+     "n": 1,
+     "x": 45.5,
+     "y": 39.5
+    },
+    {
+     "n": 2,
+     "x": 50,
+     "y": 68.5
+    },
+    {
+     "n": 3,
+     "x": 71,
+     "y": 57.5
+    },
+    {
+     "n": 4,
+     "x": 31,
+     "y": 84
+    }
+   ]
+  }
+ ]
+}
