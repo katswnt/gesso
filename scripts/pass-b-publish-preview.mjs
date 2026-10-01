@@ -30,7 +30,7 @@ export function toGame(copy) {
   const pct = v => Math.round(v * 1000) / 10;
   const pinned = (copy.hotspots || []).map(h => ({ head: h.head, body: h.body, x: pct(h.x), y: pct(h.y) }));
   const plain = (copy.notes || []).map(n => ({ head: n.head, body: n.body }));
-  return { why: copy.why, notes: [...pinned, ...plain] };
+  return { src: 'claim-first', why: copy.why, notes: [...pinned, ...plain] }; // src: the game shows every note (none is filler)
 }
 
 const ONLY = opt('--only') ? new Set(opt('--only').split(',')) : null;
