@@ -51,3 +51,8 @@ explicit file paths, never a directory or `-A`, and read `git status --short` BE
 - Rule: anything a stage's control/derivation uses (controlWrite, controlCheck, regexes they call) is part of that stage's contract. Changing it requires a new WRITE/CHECK version (new run). Post-check wording trims belong in assemble (versioned by ASSEMBLE_VERSION).
 - Rule: after any claim-first change, re-run workStatus over every work with existing copy before pinning.
 - Also: compare writer versions on more than one sample per work; single runs are noisy, and a deterministic rule that removes content needs a before/after count on real copy before shipping (the stub rule removed far more good questions than stubs).
+
+## 2026-10-02 — Ignored the owner-approved gold examples while iterating on copy
+- What happened: the owner repeatedly pointed to "north star" guides. Claude found the north-star list (docs/vision-study-guide-style.md) but used only their questions, iterated writer v6–v10 by adding rules, then told the owner no gold examples existed. The whole records (diagnostic hotspots, cues, whys) were in data/teach-works.js all along; copy quality declined with each rule.
+- Rule: when the owner says approved examples exist, find the actual records and read several whole ones before writing any prompt. Never state something does not exist until it has been searched for by every name the owner used.
+- Rule: build copy prompts from worked examples (gold records), not accumulating rules; score changes against the gold offline before spending calls.
