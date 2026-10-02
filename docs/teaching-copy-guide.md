@@ -48,7 +48,7 @@ confirmed visible.
 
 | Part | Job | Shape |
 |---|---|---|
-| **Why** | Why this work deserves attention: what it changed, what makes it remarkable, what to know first. | 2–3 sentences (guided depth). Not a recap of the label and not a fun fact. If the sources cannot support that, one short, accurate sentence. |
+| **Why** | A reason to look: what makes this work worth attention. | 2–3 sentences (guided depth). Open with a distinctive, supported feature that stands on its own ("Canova makes marble read as skin, cloth and rough rock"), not a catalog label. A claim about the work's historical rank or importance ("a key work", "a masterpiece", "early", "leading") needs a source (VSD-063). Not a recap of the label and not a fun fact. |
 | **Hotspots** | What to notice in a spot you can point at, and what it tells you. | 2–5 pins on the image. A short head naming the place to look, plus 1–2 sentences. Each carries one tag: `when`, `where`, `medium`, `style`, `artist`, `format` or `delight`. |
 | **Follow-up questions** | What a curious person wonders about after looking: the story, the choices, the terms, the comparisons, how to recognize it elsewhere. | The strongest 5–7. Answers of 2–4 sentences, each readable on its own. |
 
@@ -64,7 +64,9 @@ question.
   general knowledge (below).
 - **`delight` is the minority,** and still says why the detail is worth noticing.
 - **The text describes its own pin.** It must describe the detail the pin sits on.
-- **Technique, format and object type make the strongest pins.** Emotional or story pins are the weakest.
+- **Explain, don't just name.** Technique, format and object-type pins teach well, and so do story and identity pins
+  that explain ("This is Saint Peter Martyr; the wound in his head identifies him"). The weak pin is one that only
+  names or describes an object.
 
 ### Follow-up questions
 
@@ -79,12 +81,14 @@ question.
   - **how to date it, or what makes it this movement;**
   - **the attribution pair:** "How can we tell this is by X from the work itself?" then "How do I spot X
     elsewhere?";
-  - **a closing summary:** "How should I identify this in the game?".
+  - **a closing summary, optional:** "How should I identify this in the game?" sometimes; prefer an object-specific
+    closing question when it teaches more. Never on every work: the guide is not a questionnaire.
 - **Never ask what the label answers or a glance shows,** like "What style is it?" or "What is the medium?".
   These are trimmed automatically.
 - **Run an arc:** decode this work first, then teach transferable looking.
 - **Teach reading the evidence:** "Look for…", "Notice…". Present technique as its visible effect, explain
-  terms, and hedge honestly.
+  terms, and hedge honestly. Model restraint: general statements say "often", "typically", "a way", not "only",
+  "always", "the way", unless that is strictly true.
 - **A question must not take for granted anything its sources do not state.**
 
 ### Overlap

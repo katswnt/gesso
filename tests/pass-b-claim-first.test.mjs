@@ -237,4 +237,16 @@ check('v11 regression pack (Codex audit fixtures): dangling "that approach", Com
   assert.ok(CF.buildWriteInput({ workId: 'w', catalog: {}, claims: [], visuals: [{ id: 'v', text: 'It is unclear whether this is a lamp.' }] }).visuals.length === 0, 'a visual left empty after cleaning is dropped');
   assert.ok(CF.WORKED_EXAMPLES.startsWith('## 1.') && CF.WORKED_EXAMPLES.length > 10000);
 });
+check('v12 / assembly /4: "Later it…" after a trimmed sentence is dangling; hotspot headings lose trailing punctuation; prompt carries restraint and optional closer', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }], visuals: [{ id: 'v1', text: 'z', bbox: [0.1, 0.1, 0.2, 0.2] }] };
+  const out = { v: CF.WRITE_VERSION, notes: [], guide: [], why: [S('A hushed theatrical scene.', ['c1']), S('Later it was thought destroyed in a flood.', ['c2'])],
+    hotspots: [{ anchor: 'v1', axis: 'delight', head: S('The lit dress.', ['v1']), body: [S('It draws the eye.', ['v1'])] }] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
+  assert.equal(a.why, null); assert.ok(a.trimmed.some(t => t.id === 'why.1' && /antecedent/.test(t.why)));
+  assert.equal(a.hotspots[0].head, 'The lit dress');
+  assert.match(CF.WRITE_PROMPT, /optional/); assert.match(CF.WRITE_PROMPT, /Restraint/); assert.match(CF.CHECK_PROMPT, /Romanticism/);
+  assert.ok(!/only way to make tone/.test(CF.WORKED_EXAMPLES));
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

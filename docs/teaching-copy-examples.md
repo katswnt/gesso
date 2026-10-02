@@ -26,7 +26,7 @@ red-figure technique to show bodies that twist and turn.
   black. That reversal is the key clue for red-figure pottery, as opposed to black-figure, where the figures
   themselves are black.
 - [format] **Hydria shape.** The wide body, narrow neck and side handles mark this as a hydria, a jar for
-  carrying and pouring water. Vessel shape is often the fastest way to name a Greek pot.
+  carrying and pouring water. Vessel shape is often one of the quickest ways to name a Greek pot.
 - [style] **Bodies in motion.** Look at the overlapping limbs and turned torsos. Drawing bodies that move
   through space was the new ambition of Athenian painters around 500 BCE.
 - [delight] **Palmette band.** The scrolling band below the scene frames the story and balances it with
@@ -172,8 +172,8 @@ field of color. It is one of the founding images of modern flat painting, where 
   a painting. The Red Studio keeps that idea, though Matisse painted it after the movement's brief peak.
 - **How is this different from German Expressionist color?** Matisse's color is intense but balanced and
   decorative. German Expressionist color tends to be harsher and more jagged.
-- **How should I identify this in the game?** An interior almost entirely in one flat color, with objects drawn
-  as outlines, points to Matisse in the early 1910s.
+- **How can I recognize Matisse elsewhere?** Look for big areas of flat color, rooms flattened into pattern, and
+  objects defined by a few lines rather than shading.
 
 ---
 
@@ -185,7 +185,7 @@ publicity.
 
 **Hotspots**
 - [medium] **Lines cut in wood.** Every shadow, fold and muscle is built from black lines, with no gray wash.
-  Parallel and crossed hatching is the woodcut's only way to make tone.
+  Parallel and crossed hatching is the woodcut's main way to suggest tone.
 - [format] **Joined sheets.** Faint vertical seams show the image was printed from several blocks and assembled
   into one long panorama.
 - [where] **Latin and German inscriptions.** Text blocks name the virtues around the emperor. Inscriptions in
@@ -203,8 +203,9 @@ publicity.
   carved it; the precision of the line system is still his.
 - **How can I recognize Dürer's linework?** Dense, disciplined hatching, crisp contours, and intricate surfaces
   such as armor, wheels and ornament, all organized so the image stays readable.
-- **How should I identify this in the game?** A black-line German print packed with allegory, inscriptions and
-  imperial pageantry points to Dürer and the court of Maximilian I.
+- **What makes it Renaissance rather than a medieval pageant?** The classical triumph, the learned inscriptions and
+  the system of personified virtues belong to Renaissance humanist culture, while the dense, intricate line stays
+  strongly Northern European.
 
 ---
 
@@ -244,7 +245,7 @@ education and taste.
 
 **Hotspots**
 - [style] **The relaxed pose.** His weight rests on one leg, so his hips and shoulders tilt. That stance,
-  called contrapposto, is the classical way of making a stone body look alive.
+  called contrapposto, is a classical way of making a stone body look alive.
 - [delight] **Dog and boar's head.** The hunting dog and boar's head beside his legs identify him as Meleager,
   slayer of the Calydonian boar, and add mass at the base so the figure stands securely.
 - [medium] **Weathered stone.** The surface is carved stone made to survive outdoors. Garden statues needed bold
