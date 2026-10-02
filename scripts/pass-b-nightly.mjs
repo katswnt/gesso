@@ -155,7 +155,11 @@ async function main() {
   const inspection = inspectCorpus({ pool: ctx.pool, legacyOf: ctx.legacyOf });
   const safetyCheck = () => nightlyFatal({ inspection }) || (inspection.pause ? `preserved-pause: ${inspection.pause}` : null);
   setBaseProvider(verifiedBaseFactory({ ...ctx, inspection }));
-  const order = buildPriorityQueue(ctx.pool, ctx.daily, { today: clock.date });
+  // Owner-directed subset (PASS_B_NIGHTLY_ONLY): those works are considered even when their next daily is outside the
+  // 30-day window (2026-10-02: a re-run of yesterday's dailies found "0 of 5 pending"). Same gates otherwise.
+  const ownerOnly = (process.env.PASS_B_NIGHTLY_ONLY || '').split(',').map(x => x.trim()).filter(Boolean);
+  const windowOrder = buildPriorityQueue(ctx.pool, ctx.daily, { today: clock.date });
+  const order = ownerOnly.length ? [...windowOrder, ...ownerOnly.filter(id => !windowOrder.includes(id))] : windowOrder;
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
   const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0 }, pending = [];
@@ -183,7 +187,7 @@ async function main() {
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   let stop = null, finished = 0;
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
-  const only = (process.env.PASS_B_NIGHTLY_ONLY || '').split(',').map(x => x.trim()).filter(Boolean);
+  const only = ownerOnly;
   if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
   for (const id of pending) {
     if (stop) break;
