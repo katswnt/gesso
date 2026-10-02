@@ -37,7 +37,7 @@ export function toGame(copy) {
 const ONLY = opt('--only') ? new Set(opt('--only').split(',')) : null;
 const copies = (existsSync(COPY) ? readdirSync(COPY).filter(f => f.endsWith('.json')).map(f => JSON.parse(readFileSync(join(COPY, f), 'utf8'))) : []).filter(c => !ONLY || ONLY.has(c.workId));
 // Several writer versions may exist for one work on one day: publish the newest (copy /2 carries `write`).
-const rank = c => Number(String(c.write || 'passBClaimFirstWrite/5').split('/')[1]);
+const rank = c => Number(String(c.write || 'passBClaimFirstWrite/5').split('/')[1]) * 100 + (c.assemble || 1);
 const newest = new Map(); for (const c of copies) if (!newest.has(c.workId) || rank(c) > rank(newest.get(c.workId))) newest.set(c.workId, c);
 copies.splice(0, copies.length, ...newest.values());
 // Batch tag = the exact copy being published (ids + content), so a re-publish of newer copy gets its own manifest.

@@ -130,16 +130,16 @@ if (realB3) {
 check('write /6 guide: a Q&A survives only with its question AND >= 1 checked answer; questions are checked for presuppositions', () => {
   const input = { claims: [{ id: 'c0', text: 'It was shown at the 1834 Salon.' }, { id: 'c1', text: 'The real execution took place at Tower Green.' }], visuals: [{ id: 'v1', text: 'a block', bbox: [0.4, 0.7, 0.1, 0.1] }] };
   const out = { v: CF.WRITE_VERSION, why: [{ s: 'Why.', ids: ['c0'] }], notes: [], hotspots: [], guide: [
-    { q: { s: 'Is the scene accurate?', ids: ['c1'] }, a: [{ s: 'No: it happened outdoors.', ids: ['c1'] }, { s: 'Added fact.', ids: ['c1'] }] },
+    { q: { s: 'Is the scene accurate?', ids: ['c1'] }, a: [{ s: 'No: it happened outdoors.', ids: ['c1'] }, { s: 'Added fact.', ids: ['c1'] }, { s: 'Look at the walls.', ids: ['c1'] }] },
     { q: { s: 'Why is she afraid?', ids: ['v1'] }, a: [{ s: 'Answer.', ids: ['v1'] }] },
     { q: { s: 'Where is the block?', ids: ['v1'] }, a: [{ s: 'Lost answer.', ids: ['v1'] }] }] };
   const w = CF.controlWrite(out, input);
-  assert.deepEqual(w.sentences.filter(x => x.section === 'g0').map(x => x.id), ['g0.q', 'g0.a0', 'g0.a1']);
+  assert.deepEqual(w.sentences.filter(x => x.section === 'g0').map(x => x.id), ['g0.q', 'g0.a0', 'g0.a1', 'g0.a2']);
   const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   assert.match(ci.sentences.find(x => x.id === 'g1.q').kind, /^question/);
   const verdicts = { 'g0.a1': 'adds', 'g1.q': 'adds', 'g2.a0': 'adds' };
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: verdicts[x.id] || 'ok' })) }, visuals: input.visuals });
-  assert.deepEqual(a.guide, [{ q: 'Is the scene accurate?', a: 'No: it happened outdoors.' }]);
+  assert.deepEqual(a.guide, [{ q: 'Is the scene accurate?', a: 'No: it happened outdoors. Look at the walls.' }]);
   assert(a.trimmed.some(x => x.id === 'g1.q') && a.trimmed.some(x => x.id === 'g0.a1'));
   assert.ok(CF.WRITE_WIRE_SCHEMA.required.includes('guide'));
 });
@@ -190,7 +190,7 @@ check('write /10: gk is citable and checked as general knowledge; a why that los
     why: [S('Delaroche made a sensation at the 1834 Salon.', ['c2']), S('It was later thought destroyed in 1928, then found in 1973.', ['c1'])],
     hotspots: [{ anchor: 'v1', axis: 'artist', head: S('Cobblestones', ['v1']), body: [S('Each stone is one thick curved stroke, a habit typical of Van Gogh.', ['v1', 'gk'])] },
       { anchor: 'v2', axis: 'delight', head: S('Awning', ['v2']), body: [S('The gold awning pulls the eye.', ['v2'])] }],
-    guide: [{ q: S('Did it survive?', ['c1']), a: [S('It was thought destroyed in 1928.', ['c1'])] }, { q: S('Why was it a sensation?', ['c2']), a: [S('Look at the staging.', ['v1']), S('Repeat of the why.', ['c2'])] }] };
+    guide: [{ q: S('Did it survive?', ['c1']), a: [S('It was thought destroyed in 1928.', ['c1'])] }, { q: S('Why was it a sensation?', ['c2']), a: [S('Look at the staging.', ['gk']), S('Repeat of the why.', ['c2']), S('Notice the light.', ['gk'])] }] };
   const w = CF.controlWrite(out, input);
   assert.deepEqual(w.sentences.find(x => x.id === 'h0.b0').issues, [], 'gk is a known id');
   const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
@@ -198,9 +198,24 @@ check('write /10: gk is citable and checked as general knowledge; a why that los
   const ok = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
   assert.equal(ok.hotspots[0].axis, 'artist', 'gk counts as a source for the axis');
   assert.deepEqual(ok.guide.map(g => g.q), ['Why was it a sensation?'], 'the survival question repeats the why and is dropped');
-  assert.equal(ok.guide[0].a, 'Look at the staging.');
+  assert.equal(ok.guide[0].a, 'Look at the staging. Notice the light.');
   const frag = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
   assert.equal(frag.why, null, 'a why starting "It was later…" without its opening is not published');
   assert.match(CF.CHECK_PROMPT, /general knowledge/); assert.match(CF.WRITE_PROMPT, /never just names or describes an object/);
+});
+check('v10 follow-up: stub answers drop their question; answers that only re-describe a hotspot are trimmed; "museum classes" is pipeline language', () => {
+  const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }], visuals: [{ id: 'v1', text: 'cobbles', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'stars', bbox: [0.5, 0.1, 0.2, 0.1] }] };
+  const S = (s, ids) => ({ s, ids });
+  const out = { v: CF.WRITE_VERSION, notes: [], why: [S('Why.', ['c0'])],
+    hotspots: [{ anchor: 'v1', axis: 'style', head: S('Cobbles', ['v1']), body: [S('Single strokes, typical of Van Gogh.', ['v1', 'gk'])] }, { anchor: 'v2', axis: 'delight', head: S('Stars', ['v2']), body: [S('Bursts.', ['v2'])] }],
+    guide: [{ q: S('How was the pavement made?', ['v1']), a: [S('Each cobble is one curved stroke.', ['v1']), S('Dark and light arcs.', ['v1'])] },
+      { q: S('How do I spot Van Gogh elsewhere?', ['gk']), a: [S('The museum classes it as Post-Impressionism.', ['cat.style']), S('Look for thick strokes.', ['gk'])] },
+      { q: S('Are the stars real?', ['c1']), a: [S('They match the sky over Arles.', ['c1']), S('Look at the rings.', ['v2', 'c2'])] }] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  assert.ok(w.sentences.find(x => x.id === 'g1.a0').issues.includes('pipeline language'));
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
+  assert.deepEqual(a.guide.map(g => g.q), ['Are the stars real?'], 'pavement repeats the hotspot; Van Gogh answer is cut to a stub');
+  assert.ok(a.trimmed.some(t => t.why === 'repeats a hotspot') && a.trimmed.some(t => t.why === 'answer cut to a stub'));
+  assert.ok(CF.PIPELINE_LANGUAGE.test('It is classed as abstract art.'));
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

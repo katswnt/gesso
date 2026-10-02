@@ -125,7 +125,7 @@ await check('collector receives only remaining local allowance and errors propag
 { // write /6 copy gets its own file; /5 keeps its original path and shape
   const a5 = copyArtifact('w1', '2026-10-01', { why: 'x' }, '/o', 'passBClaimFirstWrite/5'), a6 = copyArtifact('w1', '2026-10-01', { why: 'x' }, '/o', 'passBClaimFirstWrite/6');
   assert.ok(a5.path.endsWith(`${sha256('w1').slice(0, 24)}.json`) && a5.body.version === 'passBClaimFirstCopy/1' && !('write' in a5.body));
-  assert.ok(a6.path.endsWith(`${sha256('w1').slice(0, 24)}.w6.json`) && a6.body.version === 'passBClaimFirstCopy/2' && a6.body.write === 'passBClaimFirstWrite/6');
+  assert.ok(a6.path.endsWith(`${sha256('w1').slice(0, 24)}.w6.a${CF.ASSEMBLE_VERSION}.json`) && a6.body.version === 'passBClaimFirstCopy/2' && a6.body.write === 'passBClaimFirstWrite/6' && a6.body.assemble === CF.ASSEMBLE_VERSION);
   console.log('ok write /6 copy artifacts are versioned and never collide with /5 copy');
 }
 { // VSD-057: S2's pre-cap run is an equivalent history source (same binding except the B3 wire-schema hash)

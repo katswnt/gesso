@@ -161,6 +161,8 @@ cannot support a section, return fewer entries rather than inventing. Return not
 Each hotspot also returns axis (one of when, where, medium, style, artist, format, delight).
 Return v "${WRITE_VERSION}".`;
 export const GK_ID = 'gk';
+// Deterministic assembly rules change without a new model call; finished copy records (and is filed by) this version.
+export const ASSEMBLE_VERSION = 2; // 2: stub answers dropped, hotspot repeats and "museum classes" trimmed (2026-10-01)
 export const HOTSPOT_AXES = ['when', 'where', 'medium', 'style', 'artist', 'format', 'delight'];
 const SENT = { type: 'object', additionalProperties: false, required: ['s', 'ids'], properties: { s: { type: 'string' }, ids: { type: 'array', items: { type: 'string' } } } };
 export const WRITE_WIRE_SCHEMA = {
@@ -180,7 +182,7 @@ export const catalogItems = catalog => CATALOG_FIELDS.filter(f => typeof catalog
 export const buildWriteInput = ({ workId, catalog, claims, visuals }) => ({ unit: workId, claims: [...catalogItems(catalog), ...claims], visuals: visuals.map(v => ({ id: v.id, text: v.text })) });
 
 // Pipeline language never reaches players; trimmed deterministically, before the model check.
-export const PIPELINE_LANGUAGE = /\b((the|its|this|museum)\s+catalog(ue)?\b|catalog(ue)?'s|catalog(u)?ed\b|catalog(ue)?\s+(entry|record|field|data|label)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content)|not\s+stated\s+here|(is|be|counts\s+as)\s+(an\s+)?interpretation|left\s+to\s+the\s+viewer|cannot\s+be\s+(said|stated|confirmed)\s+here)/i;
+export const PIPELINE_LANGUAGE = /\b((the|its|this|museum)\s+catalog(ue)?\b|catalog(ue)?'s|catalog(u)?ed\b|catalog(ue)?\s+(entry|record|field|data|label)|research\s+(note|claim|finding)s?|(the|these|this)\s+(cited\s+)?(claims?|items?|sources?)\s+(say|says|state|states|show|shows|note|notes|indicate|indicates|mention|mentions)|according\s+to\s+(the\s+)?(sources?|research|records?|catalog(ue)?)|metadata|legacy\s+(copy|note|content)|not\s+stated\s+here|(the\s+)?museum\s+(classes|classifies|lists|labels|records|catalogs|catalogues)\b|classed\s+as|(is|be|counts\s+as)\s+(an\s+)?interpretation|left\s+to\s+the\s+viewer|cannot\s+be\s+(said|stated|confirmed)\s+here)/i;
 
 // /7: a guide question the museum label already answers is never worth opening (owner 2026-10-01, Café Terrace).
 export const LABEL_QUESTION = /^\s*(what (style|movement|medium|materials?) (is|was|does)\b|what is the (style|movement|medium|date)\b|what is it made (of|from)\b|(where|when)( and (where|when))? (is|was) (it|this|the \w+) (made|painted|created|carved|produced)\b|who (made|painted|carved|created) (it|this)\b|what is the title\b)/i;
@@ -279,10 +281,20 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
   // /10: no overlap. A guide answer sentence whose claims are all already used by the kept why repeats it.
   const workClaim = id => !id.startsWith('cat.') && id !== GK_ID && !visuals.some(v => v.id === id);
   const whyClaims = new Set(why.length ? whyRows.filter(kept).flatMap(x => x.ids.filter(workClaim)) : []);
+  // /10 follow-up (owner 2026-10-01): an answer sentence that only re-describes a kept hotspot's detail (cites only
+  // visuals that anchor kept hotspots) repeats the hotspot; and an answer the writer gave in 2+ sentences that is cut
+  // down to one is dropped with its question rather than published as a stub.
+  const anchors = new Set(hotspots.map(h => h.anchor)), visualSet = new Set(visuals.map(v => v.id));
   for (const g of guide) {
-    const rows = (bySection.get(g.section) || []).filter(x => x.part === 'body' && kept(x));
-    const fresh = rows.filter(x => { const c = x.ids.filter(workClaim); return !(c.length && c.every(id => whyClaims.has(id))); });
-    if (fresh.length < rows.length) rows.filter(x => !fresh.includes(x)).forEach(x => trimmed.push({ id: x.id, s: x.s, why: 'repeats the why' }));
+    const written = (bySection.get(g.section) || []).filter(x => x.part === 'body');
+    const rows = written.filter(kept);
+    const fresh = rows.filter(x => {
+      const c = x.ids.filter(workClaim);
+      if (c.length && c.every(id => whyClaims.has(id))) { trimmed.push({ id: x.id, s: x.s, why: 'repeats the why' }); return false; }
+      if (x.ids.length && x.ids.every(id => visualSet.has(id) && anchors.has(id))) { trimmed.push({ id: x.id, s: x.s, why: 'repeats a hotspot' }); return false; }
+      return true;
+    });
+    if (written.length >= 2 && fresh.length < 2) { if (fresh.length) trimmed.push({ id: g.section, s: g.q, why: 'answer cut to a stub' }); g.a = ''; continue; }
     g.a = fresh.map(x => x.s).join(' ');
   }
   for (let i = guide.length - 1; i >= 0; i--) if (!guide[i].a) guide.splice(i, 1);
