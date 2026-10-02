@@ -203,19 +203,17 @@ check('write /10: gk is citable and checked as general knowledge; a why that los
   assert.equal(frag.why, null, 'a why starting "It was later…" without its opening is not published');
   assert.match(CF.CHECK_PROMPT, /general knowledge/); assert.match(CF.WRITE_PROMPT, /never just names or describes an object/);
 });
-check('v10 follow-up: stub answers drop their question; answers that only re-describe a hotspot are trimmed; "museum classes" is pipeline language', () => {
-  const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }], visuals: [{ id: 'v1', text: 'cobbles', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'stars', bbox: [0.5, 0.1, 0.2, 0.1] }] };
+check('assemble /2: answers that only re-describe a hotspot are trimmed; "museum classes" is trimmed at assembly, not in the S3 control', () => {
+  const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }, { id: 'cat.style', text: 'style' }], visuals: [{ id: 'v1', text: 'cobbles', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'stars', bbox: [0.5, 0.1, 0.2, 0.1] }] };
   const S = (s, ids) => ({ s, ids });
   const out = { v: CF.WRITE_VERSION, notes: [], why: [S('Why.', ['c0'])],
     hotspots: [{ anchor: 'v1', axis: 'style', head: S('Cobbles', ['v1']), body: [S('Single strokes, typical of Van Gogh.', ['v1', 'gk'])] }, { anchor: 'v2', axis: 'delight', head: S('Stars', ['v2']), body: [S('Bursts.', ['v2'])] }],
-    guide: [{ q: S('How was the pavement made?', ['v1']), a: [S('Each cobble is one curved stroke.', ['v1']), S('Dark and light arcs.', ['v1'])] },
-      { q: S('How do I spot Van Gogh elsewhere?', ['gk']), a: [S('The museum classes it as Post-Impressionism.', ['cat.style']), S('Look for thick strokes.', ['gk'])] },
-      { q: S('Are the stars real?', ['c1']), a: [S('They match the sky over Arles.', ['c1']), S('Look at the rings.', ['v2', 'c2'])] }] };
+    guide: [{ q: S('How was the pavement made?', ['v1']), a: [S('Each cobble is one curved stroke.', ['v1'])] },
+      { q: S('How do I spot Van Gogh elsewhere?', ['gk']), a: [S('The museum classes it as Post-Impressionism.', ['cat.style']), S('Look for thick strokes.', ['gk'])] }] };
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
-  assert.ok(w.sentences.find(x => x.id === 'g1.a0').issues.includes('pipeline language'));
+  assert.deepEqual(w.sentences.find(x => x.id === 'g1.a0').issues, [], 'S3 control unchanged, so accepted results re-derive identically');
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
-  assert.deepEqual(a.guide.map(g => g.q), ['Are the stars real?'], 'pavement repeats the hotspot; Van Gogh answer is cut to a stub');
-  assert.ok(a.trimmed.some(t => t.why === 'repeats a hotspot') && a.trimmed.some(t => t.why === 'answer cut to a stub'));
-  assert.ok(CF.PIPELINE_LANGUAGE.test('It is classed as abstract art.'));
+  assert.deepEqual(a.guide, [{ q: 'How do I spot Van Gogh elsewhere?', a: 'Look for thick strokes.' }]);
+  assert.ok(a.trimmed.some(t => t.why === 'repeats a hotspot') && a.trimmed.some(t => t.why === 'source-speak'));
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
