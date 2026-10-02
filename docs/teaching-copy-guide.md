@@ -67,9 +67,13 @@ question).
 - **Hotspots say why:** a hotspot never just names or describes an object ("the wooden block sits
   in the foreground" is not a hotspot); it says what to notice and what that tells you.
 
-- **Interpretation (2026-09-30):** a light reading of how a visible detail works on the eye is
-  allowed ("draws the eye", "sets the figure apart"). Meaning, theme, emotion, narrative and
-  symbolism need a source. Players must never think the software decided what the art means.
+- **Interpretation (2026-09-30, extended 2026-10-02, VSD-061):** a light reading of how a visible
+  detail works on the eye is allowed ("draws the eye", "sets the figure apart"). Meaning, theme,
+  emotion and symbolism may be offered **only as a clearly framed, possible reading tied to a
+  visible detail**: "One way to read this…", "This can be read as…", "One reading is that…". A framed
+  reading is never stated as fact, never attributed to the artist's intent, and never to "scholars"
+  or "many viewers" unless a source says so. Unframed meaning, theme, emotion or symbolism still
+  needs a source. Players must never think the software decided what the art means.
 - **Plain style (2026-10-01):** concrete words, no literary flourishes ("painfully human",
   "uneasy stillness"), never tell the viewer what to feel.
 - **Identities:** name saints, figures, characters and places only when a source names them.
