@@ -1,6 +1,6 @@
 # Gesso teaching copy: worked examples (writer /11)
 
-**Status:** draft for owner review, 2026-10-02. Adapted from 8 of the owner-approved north-star records
+**Status:** in use by writer /11 (owner go-ahead for a test run, 2026-10-02; VSD-062). Adapted from 8 of the owner-approved north-star records
 (`docs/vision-study-guide-style.md`), trimmed to today's shape: a guided why, 3–4 tagged hotspots, 5–6
 follow-up questions. Every fact comes from the approved record. The adaptations remove literal repeats,
 cut to the strongest questions, and follow `docs/teaching-copy-guide.md` (plain style; framed readings

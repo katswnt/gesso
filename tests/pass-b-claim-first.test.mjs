@@ -41,7 +41,7 @@ const written = { v: CF.WRITE_VERSION,
   hotspots: [{ anchor: 'd1', head: S('The bare foot', ['d1']), body: [S('Notice the bare foot.', ['d1'])] }, { anchor: 'dX', head: S('Other', ['d1']), body: [S('Look.', ['d1'])] }] };
 check('write controller flags unknown ids, missing ids and unconfirmed hotspot anchors', () => {
   const w = CF.controlWrite(written, writeInput);
-  assert.deepEqual(w.sentences.filter(x => x.issues.length).map(x => `${x.id}:${x.issues.join('|')}`), ['n0.b1:unknown id zz', 'n1.h:no ids']);
+  assert.deepEqual(w.sentences.filter(x => x.issues.length).map(x => `${x.id}:${x.issues.join('|')}`), ['n0.b1:unknown id zz', 'n1.h:no ids', 'h1.h:text does not cite its own pin'], 'v11: a hotspot whose text does not cite its own pin is flagged');
   assert.deepEqual(w.anchorIssues, ['h1: anchor dX is not a confirmed visual']);
   const ci = CF.buildCheckInput({ workId: 'w', writeInput, writeAudit: w });
   assert.ok(!ci.sentences.some(x => x.id === 'n0.b1' || x.id === 'n1.h'));
@@ -156,7 +156,7 @@ check('write /7: label-answerable guide questions are trimmed; usable counts gui
   assert.deepEqual(w.sentences.find(x => x.id === 'g0.q').issues, ['label question']);
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
   assert.equal(a.guide.length, 3); assert.deepEqual(a.usable, { minimal: true, strict: true });
-  assert.match(CF.WRITE_PROMPT, /Hotspots teach what to notice/); assert.match(CF.WRITE_PROMPT, /Did Mino da Fiesole carve the entire relief himself/);
+  assert.match(CF.WRITE_PROMPT, /Never ask what the label\s+answers/); assert.match(CF.WRITE_PROMPT, /Why would a water jar carry a scene from the\s+Iliad/, 'worked examples are in the prompt');
 });
 check('write /8: self-narrated limits are pipeline language and are trimmed', () => {
   for (const x of ['How to read that is left to the viewer, since calling her serene is interpretation.', 'Its sources are not stated here, so it is best read as a visual form.'])
@@ -176,14 +176,14 @@ check('write /9: hotspots carry an axis; an axis without a kept claim-citing sen
   const b = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'h0.b1' ? 'adds' : 'ok' })) }, visuals: input.visuals });
   assert.equal(b.hotspots[0].axis, 'delight', 'the sourced link was trimmed, so the tag cannot claim it');
   assert.ok(CF.WRITE_WIRE_SCHEMA.properties.hotspots.items.required.includes('axis'));
-  assert.match(CF.WRITE_PROMPT, /teaching-copy-guide/); assert.match(CF.WRITE_PROMPT, /No overlap/);
+  assert.match(CF.WRITE_PROMPT, /WORKED EXAMPLES/); assert.match(CF.WRITE_PROMPT, /Don't repeat an answer; deepen the detail/);
 });
 check('v9 review: any mention of the catalog in player copy is trimmed', () => {
   for (const x of ["That absence fits the catalog's label of abstract art.", 'The catalog classes the painting as Baroque.', 'It is catalogued as Romanticism.', 'The catalog gives Munich, Germany, and 1913.'])
     assert.ok(CF.PIPELINE_LANGUAGE.test(x), x);
   assert.ok(!CF.PIPELINE_LANGUAGE.test('Look for the detailed Tudor dress.')); assert.ok(!CF.PIPELINE_LANGUAGE.test('A catalog of saints fills the border.'));
 });
-check('write /10: gk is citable and checked as general knowledge; a why that lost its opening is dropped; a guide answer repeating the why is trimmed', () => {
+check('write /10 + assembly /3: gk is citable; a why that lost its opening is dropped; shared evidence ids are NOT treated as repeats', () => {
   const input = { claims: [{ id: 'c1', text: 'Thought destroyed after the 1928 flood; rediscovered in 1973.' }, { id: 'c2', text: 'A sensation at the 1834 Salon.' }], visuals: [{ id: 'v1', text: 'thick curved strokes', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'awning', bbox: [0.3, 0.3, 0.2, 0.2] }] };
   const S = (s, ids) => ({ s, ids });
   const out = { v: CF.WRITE_VERSION, notes: [],
@@ -197,13 +197,13 @@ check('write /10: gk is citable and checked as general knowledge; a why that los
   assert.match(ci.sentences.find(x => x.id === 'h0.b0').items.find(i => i.id === 'gk').text, /^general knowledge/);
   const ok = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
   assert.equal(ok.hotspots[0].axis, 'artist', 'gk counts as a source for the axis');
-  assert.deepEqual(ok.guide.map(g => g.q), ['Why was it a sensation?'], 'the survival question repeats the why and is dropped');
-  assert.equal(ok.guide[0].a, 'Look at the staging. Notice the light.');
+  assert.deepEqual(ok.guide.map(g => g.q), ['Did it survive?', 'Why was it a sensation?'], 'assembly /3: reusing an evidence id is not repetition (Codex audit)');
+  assert.equal(ok.guide[1].a, 'Look at the staging. Repeat of the why. Notice the light.');
   const frag = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
   assert.equal(frag.why, null, 'a why starting "It was later…" without its opening is not published');
-  assert.match(CF.CHECK_PROMPT, /general knowledge/); assert.match(CF.WRITE_PROMPT, /never just names or describes an object/);
+  assert.match(CF.CHECK_PROMPT, /"gk"/); assert.match(CF.CHECK_PROMPT, /framed possible reading/); assert.match(CF.WRITE_PROMPT, /never just names or describes an\s+object/);
 });
-check('assemble /2: answers that only re-describe a hotspot are trimmed; "museum classes" is trimmed at assembly, not in the S3 control', () => {
+check('assembly /3: hotspot-detail reuse is kept (no ID de-dup); "museum classes" is trimmed at assembly, not in the S3 control', () => {
   const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }, { id: 'cat.style', text: 'style' }], visuals: [{ id: 'v1', text: 'cobbles', bbox: [0.1, 0.8, 0.2, 0.1] }, { id: 'v2', text: 'stars', bbox: [0.5, 0.1, 0.2, 0.1] }] };
   const S = (s, ids) => ({ s, ids });
   const out = { v: CF.WRITE_VERSION, notes: [], why: [S('Why.', ['c0'])],
@@ -213,7 +213,28 @@ check('assemble /2: answers that only re-describe a hotspot are trimmed; "museum
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   assert.deepEqual(w.sentences.find(x => x.id === 'g1.a0').issues, [], 'S3 control unchanged, so accepted results re-derive identically');
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
-  assert.deepEqual(a.guide, [{ q: 'How do I spot Van Gogh elsewhere?', a: 'Look for thick strokes.' }]);
-  assert.ok(a.trimmed.some(t => t.why === 'repeats a hotspot') && a.trimmed.some(t => t.why === 'source-speak'));
+  assert.deepEqual(a.guide, [{ q: 'How was the pavement made?', a: 'Each cobble is one curved stroke.' }, { q: 'How do I spot Van Gogh elsewhere?', a: 'Look for thick strokes.' }]);
+  assert.ok(a.trimmed.some(t => t.why === 'source-speak') && !a.trimmed.some(t => /repeats/.test(t.why)));
+});
+check('v11 regression pack (Codex audit fixtures): dangling "that approach", Composition-style guide survives, multi-sentence rows split, caveats stripped', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'c1', text: 'Neoclassical marble.' }, { id: 'c2', text: 'Made in 1794.' }], visuals: [{ id: 'v1', text: 'polished skin', bbox: [0.4, 0.4, 0.2, 0.2] }, { id: 'v2', text: 'black lines over color', bbox: [0.2, 0.3, 0.2, 0.2] }] };
+  const out = { v: CF.WRITE_VERSION, notes: [], why: [S('A marble group made in 1794.', ['c2'])],
+    hotspots: [{ anchor: 'v1', axis: 'medium', head: S('Polished skin', ['v1']), body: [S('The skin is polished smooth, as marble allows.', ['v1', 'gk'])] }],
+    guide: [
+      { q: S('What makes this Neoclassical?', ['c1']), a: [S('Neoclassical sculptors looked back to ancient models. That approach shows in the smooth skin.', ['c1', 'gk', 'v1'])] },
+      { q: S('How do the black lines change the color?', ['v2']), a: [S('Thin black lines sit over broad color fields.', ['v2']), S('They work as a drawn layer on top of the painted areas.', ['v2', 'gk'])] }] };
+  const w = CF.controlWrite(out, input);
+  assert.deepEqual(w.sentences.filter(x => x.section === 'g0').map(x => x.id), ['g0.q', 'g0.a0', 'g0.a0~1'], 'a two-sentence row is split; parts keep the citations');
+  const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  assert.match(ci.sentences.find(x => x.id === 'g0.a0~1').unit, /^answer to: What makes this Neoclassical/);
+  assert.match(ci.sentences.find(x => x.id === 'h0.b0').unit, /pinned on: polished skin/);
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'g0.a0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
+  assert.ok(!a.guide.some(g => /That approach/.test(g.a)), 'Psyche case: "That approach…" after a trimmed sentence is not published');
+  assert.ok(a.trimmed.some(t => t.id === 'g0.a0~1' && /antecedent/.test(t.why)));
+  assert.deepEqual(a.guide.map(g => g.q), ['How do the black lines change the color?'], 'Composition case: a question building on a pinned detail survives');
+  assert.equal(CF.cleanVisualText('A blindfolded figure in white. Whether she looks serene is a matter of interpretation. Straw lies around the block.'), 'A blindfolded figure in white. Straw lies around the block.');
+  assert.ok(CF.buildWriteInput({ workId: 'w', catalog: {}, claims: [], visuals: [{ id: 'v', text: 'It is unclear whether this is a lamp.' }] }).visuals.length === 0, 'a visual left empty after cleaning is dropped');
+  assert.ok(CF.WORKED_EXAMPLES.startsWith('## 1.') && CF.WORKED_EXAMPLES.length > 10000);
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
