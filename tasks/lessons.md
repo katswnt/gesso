@@ -45,3 +45,9 @@ explicit file paths, never a directory or `-A`, and read `git status --short` BE
 - What happened: claim-first (VSD-053) replaced B4's writer, and its WRITE_PROMPT was written from the newest owner rules only. B4's prompt carried the owner-approved study-guide standard (`docs/vision-study-guide-style.md`, VSD-020); it was not carried over, so claim-first guide questions came out flat ("Where is this café?").
 - Rule: when a new stage replaces an old one, inventory EVERY owner-approved standard the old stage's prompt/validator enforced (grep its prompt for referenced docs/VSDs) and carry each forward or record an explicit owner decision to drop it.
 - Rule: before writing player-facing copy prompts, read `docs/vision-study-guide-style.md` (the canonical editorial guide with worked examples).
+
+## 2026-10-01 — A stage-control change silently re-derived accepted results
+- What happened: changing PIPELINE_LANGUAGE (used by S3's controlWrite) after v10's run made Café Terrace's accepted S3 result re-derive differently ("re-derivation mismatch"); tonight's nightly would have failed closed.
+- Rule: anything a stage's control/derivation uses (controlWrite, controlCheck, regexes they call) is part of that stage's contract. Changing it requires a new WRITE/CHECK version (new run). Post-check wording trims belong in assemble (versioned by ASSEMBLE_VERSION).
+- Rule: after any claim-first change, re-run workStatus over every work with existing copy before pinning.
+- Also: compare writer versions on more than one sample per work; single runs are noisy, and a deterministic rule that removes content needs a before/after count on real copy before shipping (the stub rule removed far more good questions than stubs).
