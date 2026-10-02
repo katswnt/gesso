@@ -1,5 +1,7 @@
 # Codex brief: teaching copy audit (2026-10-01)
 
+> **Superseded** by `tasks/codex-brief-teaching-copy-2026-10-02.md` (this version wrongly said no approved gold examples exist).
+
 **From:** the owner (Kathryn), prepared by Claude. **Repos:** `katswnt/gesso` branch
 `g-03-image-agent-boundary` (code, docs), `katswnt/gesso-pass-b-evidence` branch
 `claude/pass-b-state` (generated copy and stage evidence). This is an investigation and audit. Make no model
