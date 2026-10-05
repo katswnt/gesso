@@ -249,4 +249,16 @@ check('v12 / assembly /4: "Later it…" after a trimmed sentence is dangling; ho
   assert.match(CF.WRITE_PROMPT, /optional/); assert.match(CF.WRITE_PROMPT, /Restraint/); assert.match(CF.CHECK_PROMPT, /Romanticism/);
   assert.ok(!/only way to make tone/.test(CF.WORKED_EXAMPLES));
 });
+check('assembly /5: "He painted it…" after a trimmed sentence survives; "That makes…" and "Later it…" do not', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }, { id: 'c3', text: 'z' }], visuals: [] };
+  const out = { v: CF.WRITE_VERSION, notes: [], guide: [], hotspots: [], why: [S('A night scene without black.', ['c1']), S('He painted it outdoors at night.', ['c2']), S('That makes it a record of a moment.', ['c3'])] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  const verd = id => id === 'why.0' ? 'adds' : 'ok';
+  let a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: verd(x.id) })) }, visuals: [] });
+  assert.equal(a.why, 'He painted it outdoors at night. That makes it a record of a moment.');
+  assert.ok(!/later/.test(CF.assemble({ writeAudit: CF.controlWrite({ ...out, why: [S('A scene.', ['c1']), S('It was later thought lost.', ['c2'])] }, input), checkAudit: { rows: [{ id: 'why.0', verdict: 'adds' }, { id: 'why.1', verdict: 'ok' }] }, visuals: [] }).why || ''), '"It was later…" still depends on the cut sentence');
+  a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.1' ? 'adds' : 'ok' })) }, visuals: [] });
+  assert.equal(a.why, 'A night scene without black.', '"That makes…" after a trimmed sentence is dropped');
+});
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

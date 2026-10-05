@@ -139,7 +139,8 @@ ${WORKED_EXAMPLES}
 Return v "${WRITE_VERSION}".`;
 export const GK_ID = 'gk';
 // Deterministic assembly rules change without a new model call; finished copy records (and is filed by) this version.
-export const ASSEMBLE_VERSION = 4; // 4 (VSD-063): connective + reference word counts as dangling; heading punctuation cleaned.
+export const ASSEMBLE_VERSION = 5; // 5: dangling guard narrowed (bare he/she/it/they no longer count).
+// 4: // 4 (VSD-063): connective + reference word counts as dangling; heading punctuation cleaned.
 // prior: // 3 (2026-10-02): no ID-based de-dup; dangling-continuation guard; source-speak trim. (2: ID de-dup, reverted.)
 // Assembly-only wording trims: changing S3's control (PIPELINE_LANGUAGE) would alter the re-derivation of accepted
 // write results and fail closed; post-check trims belong here.
@@ -285,7 +286,9 @@ export function controlCheck(output, input) {
 // and shared evidence ids are not repeated prose. Kept: source-speak trim, and a dangling-continuation guard: a kept
 // sentence that opens with a reference word ("That approach…", "It…") right after a trimmed sentence in the same unit
 // has lost its antecedent and is trimmed too.
-const DANGLING = /^\s*(?:(?:later|then|so|still|yet|also|even|here|thus|meanwhile|afterward|afterwards)\s*,?\s+)?(this|that|these|those|it|its|they|their|them|such|both|he|she|his|her|there)\b/i;
+// /5: only words that point back to the previous sentence's content count ("That makes…", "This contrast…",
+// "Later it…"). "He"/"It" usually mean the artist or the work and read fine alone (Café v12: "He painted it outdoors…").
+const DANGLING = /^\s*(?:(?:later|then|so|still|yet|also|even|here|thus|meanwhile|afterward|afterwards)\s*,?\s+(?:this|that|these|those|it|its|they|their|them|such|he|she|his|her)\b|(?:this|that|these|those|such|both)\b|(?:it|its|they|he|she)\s+(?:\w+\s+){0,2}(?:later|also|again|too|then)\b)/i;
 export function assemble({ writeAudit, checkAudit, visuals }) {
   const verdict = new Map((checkAudit?.rows || []).map(r => [r.id, r.verdict]));
   const base = x => !x.issues.length && verdict.get(x.id) === 'ok';
