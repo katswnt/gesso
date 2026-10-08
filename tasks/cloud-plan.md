@@ -42,8 +42,9 @@ with the complete evidence tree (13,733 files, 2.71 GB at seeding). It becomes t
 The Routine's lifetime and nested CLI behavior need pilot confirmation. Correctness does not depend on
 surviving an entire work: a lost VM leaves a remotely durable reservation that cannot silently be retried.
 The scheduled UTC hours shift relative to Pacific time at DST; the runner's Pacific gate remains authoritative.
-The configured wrapper default is `PASS_B_CALL_BUDGET_ID=pilot-30`, `PASS_B_MAX_CALLS=30`. Reusing the ID
-resumes its remaining allowance. Do not reset it or choose a new ID/cap without owner authorization.
+**Owner 2026-10-08:** the wrapper default is now `PASS_B_MAX_CALLS=150` per Pacific night, with the allowance id
+`nightly-<Pacific date>` shared by that night's firings. The 30-call pilot (`pilot-30`) is preserved and spent (all 30 calls
+used 2026-10-02). Weekly usage pacing still applies. Do not change the cap or id scheme without owner authorization.
 
 ## Pacing rule (built with option B; works on laptop or cloud)
 

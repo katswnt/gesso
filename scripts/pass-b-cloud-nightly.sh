@@ -27,11 +27,12 @@ cd "$WT"
 # was produced with (sharp's version shapes the image derivatives whose hashes are recorded).
 npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
 node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/package.json','utf8')).version; if (v!=='0.35.3') { console.error('sharp '+v+' != 0.35.3'); process.exit(1); }"
-export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-30}"
+export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-150}"
 # Cloud host, subscription rules: never inherit the historical cloud-credit lane's pacing/hours exemption.
 export PASS_B_CORPUS_LANE=local
-# One pilot allowance, not 30 new calls on every cron firing. A new id/cap requires new owner authorization.
-export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-pilot-30}" PASS_B_LEASE_HOLDER="$HOLDER"
+# Owner 2026-10-08: 150 calls per Pacific night, one allowance shared by that night's firings (00/03/06 PT).
+# The 30-call pilot (pilot-30) is preserved and spent. Weekly usage pacing still applies on top of this cap.
+export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-nightly-$(TZ=America/Los_Angeles date +%Y-%m-%d)}" PASS_B_LEASE_HOLDER="$HOLDER"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
