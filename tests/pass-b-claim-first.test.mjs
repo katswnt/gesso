@@ -176,7 +176,7 @@ check('write /9: hotspots carry an axis; an axis without a kept claim-citing sen
   const b = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'h0.b1' ? 'adds' : 'ok' })) }, visuals: input.visuals });
   assert.equal(b.hotspots[0].axis, 'delight', 'the sourced link was trimmed, so the tag cannot claim it');
   assert.ok(CF.WRITE_WIRE_SCHEMA.properties.hotspots.items.required.includes('axis'));
-  assert.match(CF.WRITE_PROMPT, /WORKED EXAMPLES/); assert.match(CF.WRITE_PROMPT, /Don't repeat an answer; deepen the detail/);
+  assert.match(CF.WRITE_PROMPT, /WORKED EXAMPLES/); assert.match(CF.WRITE_PROMPT, /Don't repeat an answer/);
 });
 check('v9 review: any mention of the catalog in player copy is trimmed', () => {
   for (const x of ["That absence fits the catalog's label of abstract art.", 'The catalog classes the painting as Baroque.', 'It is catalogued as Romanticism.', 'The catalog gives Munich, Germany, and 1913.'])
@@ -260,5 +260,16 @@ check('assembly /5: "He painted it…" after a trimmed sentence survives; "That 
   assert.ok(!/later/.test(CF.assemble({ writeAudit: CF.controlWrite({ ...out, why: [S('A scene.', ['c1']), S('It was later thought lost.', ['c2'])] }, input), checkAudit: { rows: [{ id: 'why.0', verdict: 'adds' }, { id: 'why.1', verdict: 'ok' }] }, visuals: [] }).why || ''), '"It was later…" still depends on the cut sentence');
   a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.1' ? 'adds' : 'ok' })) }, visuals: [] });
   assert.equal(a.why, 'A night scene without black.', '"That makes…" after a trimmed sentence is dropped');
+});
+check('v13 / assembly /6: editorial flags surface lost why openings, one-sentence stubs and thin guides without deleting anything', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }], visuals: [] };
+  const out = { v: CF.WRITE_VERSION, notes: [], hotspots: [], why: [S('Bold claim.', ['c1']), S('He worked outdoors.', ['c2'])],
+    guide: [{ q: S('What is happening?', ['c1']), a: [S('A rescue.', ['c1']), S('Cupid bends to kiss her.', ['c2'])] }] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: ['why.0', 'g0.a1'].includes(x.id) ? 'adds' : 'ok' })) }, visuals: [] });
+  assert.equal(a.why, 'He worked outdoors.'); assert.equal(a.guide[0].a, 'A rescue.');
+  assert.deepEqual(a.flags, ['why lost its opening sentence', 'g0: answer cut to one sentence', 'only 1 follow-up questions']);
+  assert.match(CF.WRITE_PROMPT, /CITATION PATTERNS/); assert.match(CF.CHECK_PROMPT, /seem to move at different speeds/);
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);
