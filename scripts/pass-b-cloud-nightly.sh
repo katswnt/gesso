@@ -32,8 +32,11 @@ export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 P
 export PASS_B_CORPUS_LANE=local
 # Owner 2026-10-08: 150 calls per Pacific night, one allowance shared by that night's firings (00/03/06 PT).
 # The 30-call pilot (pilot-30) is preserved and spent. Weekly usage pacing still applies on top of this cap.
-export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-nightly-$(TZ=America/Los_Angeles date +%Y-%m-%d)}" PASS_B_LEASE_HOLDER="$HOLDER"
-echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | holder $HOLDER"
+# Schedule time zone (owner 2026-10-16): a setting in the evidence repo, so it can be changed from a phone.
+# state/schedule.json {"timeZone": "Europe/Paris"}; default Pacific. The runner's 00:00–08:30 / 09:00 rule is local.
+export PASS_B_TIMEZONE="${PASS_B_TIMEZONE:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).timeZone||'America/Los_Angeles')}catch{console.log('America/Los_Angeles')}")}"
+export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)}" PASS_B_LEASE_HOLDER="$HOLDER"
+echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
 if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then

@@ -180,8 +180,11 @@ export function effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1bo
 // Read-only inspection is shared by planning, repair, and resume. Never call the mutating stale loader here.
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const files = path => existsSync(path) ? readdirSync(path) : [];
+// Owner 2026-10-16: the schedule time zone is a setting (PASS_B_TIMEZONE; the cloud launcher reads it from the
+// evidence repo's state/schedule.json). Default Pacific. The start window / finish rule is unchanged in local time.
+export const SCHEDULE_TZ = process.env.PASS_B_TIMEZONE || 'America/Los_Angeles';
 export function pacificClock(now = new Date()) {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles',
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: SCHEDULE_TZ,
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
   }).formatToParts(now).map(p => [p.type, p.value]));
   const seconds = Number(parts.hour) * 3600 + Number(parts.minute) * 60 + Number(parts.second);
@@ -217,7 +220,7 @@ export function setSpentUsd(v) { SPENT_USD = v; }
 export function callWindow(now = new Date(), exception = process.env.PASS_B_CORPUS_HOURS_EXCEPTION) {
   const clock = pacificClock(now);
   if (!clock.mayStart && exception && exception === clock.date) return { timeout: 30 * 60 * 1000, killSignal: 'SIGKILL', hoursException: clock.date };
-  if (!clock.mayStart) throw new SchedulePauseError('protected-hours: starts allowed only 00:00–08:30 America/Los_Angeles');
+  if (!clock.mayStart) throw new SchedulePauseError(`protected-hours: starts allowed only 00:00–08:30 ${SCHEDULE_TZ}`);
   return { timeout: Math.min(30 * 60 * 1000, clock.remainingMs), killSignal: 'SIGKILL' };
 }
 export function readLedger(runDir = RUN_DIR) {
@@ -703,7 +706,7 @@ export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
     promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
-      : { scope: 'rolling-30-days-through-b3', timeZone: 'America/Los_Angeles', startWindow: '00:00–08:30', finishBy: '09:00' }),
+      : { scope: 'rolling-30-days-through-b3', timeZone: SCHEDULE_TZ, startWindow: '00:00–08:30', finishBy: '09:00' }),
     maxCallMs: 30 * 60 * 1000,
     childEnv: { DISABLE_AUTOUPDATER: '1' } };
 }
@@ -763,6 +766,8 @@ export function bindExecutionPolicy(runDir, runtimeVersion) {
   }
   if (stableJson(withoutWire(current.policy)) === stableJson(withoutWire(policy)))
     throw new RuntimePauseError('wire-schema contract changed; paused pending reviewed --rebind-contract');
+  if (current.policy.timeZone !== policy.timeZone && stableJson({ ...current.policy, timeZone: policy.timeZone, runtimeVersion }) === stableJson(policy))
+    throw new RuntimePauseError(`schedule time zone changed to ${policy.timeZone}; paused pending reviewed --rebind-schedule`);
   throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
 // VSD-054: an owner-reviewed model change appends ONE epoch that differs from the previous only in its model.
@@ -855,14 +860,31 @@ export function grantFormatRetries(runDir, review, rows) {
   }
   return granted;
 }
+// Owner 2026-10-16 (travel to Paris): an owner-reviewed schedule epoch that differs from the previous ONLY in its
+// time zone. The 00:00–08:30 start window and 09:00 finish stay the same in the new local time.
+export const SCHEDULE_REVIEW_VERSION = 'passBCorpusScheduleReview/1';
+export function rebindSchedule(runDir, review) {
+  if (preservedFatal(runDir)) throw new Error('schedule rebind cannot clear a preserved fatal');
+  const previous = executionEpochs(runDir).at(-1);
+  if (!previous || review?.version !== SCHEDULE_REVIEW_VERSION || review.runId !== RUN_ID || review.fromEpochSha256 !== previous.sha256 ||
+      review.toTimeZone !== SCHEDULE_TZ || !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
+    throw new Error('explicit schedule review binding required (toTimeZone must equal PASS_B_TIMEZONE)');
+  const policy = executionPolicy(previous.policy.runtimeVersion, epochModel(previous));
+  const { timeZone: _a, ...prevRest } = previous.policy, { timeZone: _b, ...nextRest } = policy;
+  if (stableJson(prevRest) !== stableJson(nextRest)) throw new Error('schedule rebind cannot change anything but the time zone');
+  if (previous.policy.timeZone === policy.timeZone) throw new Error('schedule rebind has no change');
+  if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('schedule review target policy binding mismatch');
+  return appendEpoch(runDir, policy, previous, review);
+}
 async function main() {
   const args = process.argv.slice(2);
   const rebind = args[0] === '--rebind-runtime' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const rebindModelFile = args[0] === '--rebind-model' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const clearFatal = args[0] === '--clear-fatal' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const rebindContractFile = args[0] === '--rebind-contract' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const rebindScheduleFile = args[0] === '--rebind-schedule' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const grantRetriesFile = args[0] === '--grant-format-retries' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
-  const offlineReview = rebindContractFile || grantRetriesFile;
+  const offlineReview = rebindContractFile || grantRetriesFile || rebindScheduleFile;
   if (clearFatal) { // offline, under the run lease; no CLI/model/network call
     mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 });
     acquireStageLease(RUN_LEASE);
@@ -872,7 +894,7 @@ async function main() {
     } finally { unlinkSync(RUN_LEASE); }
     return;
   }
-  if (!rebind && !rebindModelFile && !offlineReview && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --rebind-contract <review.json> (offline), --grant-format-retries <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
+  if (!rebind && !rebindModelFile && !offlineReview && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --rebind-contract <review.json> (offline), --rebind-schedule <review.json> (offline), --grant-format-retries <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
   if (live) assertExecutionLease({ required: true });
@@ -921,6 +943,13 @@ async function main() {
   try {
     // Reinspect under the lease, then copy only verified missing bytes. Existing evidence is never overwritten.
     const fresh = inspectCorpus({ pool, legacyOf });
+    if (rebindScheduleFile) {
+      if (fresh.fatal) throw new Error('schedule rebind cannot clear preserved fatal history');
+      if (fresh.pause) throw new Error(`schedule rebind requires no pending pause: ${fresh.pause}`);
+      const epoch = rebindSchedule(RUN_DIR, readJson(rebindScheduleFile));
+      console.log(`OFFLINE SCHEDULE REBIND: epoch ${epoch.number}, time zone ${epoch.policy.timeZone}, ${epoch.sha256}. No calls.`);
+      return;
+    }
     if (rebindContractFile) {
       if (fresh.fatal) throw new Error('contract rebind cannot clear preserved fatal history');
       if (fresh.pause) throw new Error(`contract rebind requires no pending pause: ${fresh.pause}`);
