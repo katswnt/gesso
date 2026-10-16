@@ -30,7 +30,9 @@ try { const lines = readFileSync(join(EV, 'incoming', 'vision-ops', 'usage-obser
 // Plain-words verdict.
 const summary = String(status?.summary || '');
 let verdict;
-if (lease) verdict = `⚠️ STUCK: a run still holds the lock (since ${local(lease.acquiredAt)}). If no run is active, it stopped and needs review.`;
+const lastActivity = log[0]?.at ? new Date(log[0].at) : null, quietMin = lastActivity ? (Date.now() - lastActivity) / 60000 : Infinity;
+if (lease && quietMin <= 60) verdict = `⏳ RUNNING NOW: a run holds the lock (since ${local(lease.acquiredAt)}); last activity ${Math.round(quietMin)} min ago.`;
+else if (lease) verdict = `⚠️ STUCK: a run has held the lock since ${local(lease.acquiredAt)} with no activity for ${Number.isFinite(quietMin) ? Math.round(quietMin) + ' min' : 'this whole period'}. It stopped and needs review.`;
 else if (status?.exit && status.exit !== 0) verdict = `⚠️ STOPPED ON PURPOSE (${status.updatedAt ? local(status.updatedAt) : "?"}): ${summary.match(/FAIL-CLOSED: [^\n]*/)?.[0] || summary.slice(-160)}`;
 else if (/call cap \d+ reached/.test(summary) && reserves === 0) verdict = '⚠️ IDLE: the call allowance is used up, so nothing ran.';
 else if (/pacing/.test(summary) && reserves === 0) verdict = 'Paused by usage pacing (the week is ahead of schedule). Nothing is wrong.';
@@ -44,7 +46,7 @@ const out = [
   `Calls made: ${reserves}${lastBudget ? ` · allowance ${budgets.at(-1).replace(/\.json$/, '')}: ${lastBudget.allowances.length}/${lastBudget.limit}` : ''}`,
   `Works finished (copy written): ${copies.length}${copies.length ? ` (latest ${local(copies[0].at)})` : ''}`,
   fatals.length ? `Fatal outcomes: ${fatals.length}: ${fatals.map(f => f.s.replace(/^outcome /, '')).join('; ')}` : null,
-  `Firings recorded: ${statuses.length}${statuses[0] ? ` · last ${local(statuses[0].at)}` : ''}`,
+  `Runs completed: ${statuses.length}${statuses[0] ? ` · last ${local(statuses[0].at)}` : ''}`,
   usage ? `Weekly usage: ${Math.round(usage.sevenDay?.utilization * 100)}% · 5-hour: ${Math.round(usage.fiveHour?.utilization * 100)}% (read ${local(usage.observedAt)})` : null,
   `Code pinned: ${pin?.commit?.slice(0, 7) || '?'} · lock: ${lease ? `held by ${lease.holder}` : 'free'}`,
 ].filter(Boolean);
