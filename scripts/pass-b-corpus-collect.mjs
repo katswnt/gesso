@@ -21,7 +21,7 @@ import { WIRE_SCHEMAS, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs
 import {
   RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION,
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
-  verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope,
+  verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope, answeringModel,
   legacyContentInput, b2InputFor, b2Plan, b3Plan, producerEvidence, verifyStageEvidence, findTranscriptBySha,
 } from './lib/pass-b-calibration.mjs';
 
@@ -425,7 +425,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (tr.init?.claudeCodeVersion) cliVersions.add(tr.init.claudeCodeVersion);
     const usage = isUsageTranscript(text, final);
     if (stage === 'B2') b2LastInterrupted = usage;
-    const model = usage ? tr.init?.model : primaryModelFromEnvelope(final);
+    const model = usage ? tr.init?.model : answeringModel(text, final);
     const inits = initEvents(text);
     // A failed process with no initialization is an operational interruption, not evidence of API use.
     const operational = meta?.kind === 'operational-pause' && meta.exitCode !== 0;
@@ -592,7 +592,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
     const webEvents = stage === 'B2' ? verifyB2WebEvents(tr) : null;
     let cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
-      model: primaryModelFromEnvelope(final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
+      model: answeringModel(stdout, final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
       subtype: final?.subtype, structuredOutputPresent: final?.structured_output != null, imageReceipt, webEvents });
     if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };

@@ -133,6 +133,20 @@ export function primaryModelFromEnvelope(env2) {
   const outOf = u => u?.outputTokens ?? u?.output_tokens ?? 0;
   return Object.entries(mu).sort((a, b) => outOf(b[1]) - outOf(a[1]))[0]?.[0] ?? env2?.model ?? null;
 }
+// 2026-10-16 (Oct 8 cloud false fatal): the model that ANSWERED is the one that wrote the assistant messages. CLI
+// 2.1.294 also made a background Haiku request inside one call (no assistant message; 484 vs 483 output tokens),
+// and the old "most output tokens" rule named Haiku. Helper models that write no assistant message are not the
+// answering model. Several answering models, or none, fall back to the envelope rule (fail closed on mismatch).
+export function answeringModel(transcriptText, final) {
+  const models = new Set();
+  for (const line of String(transcriptText || '').split('\n')) {
+    if (!line.includes('"assistant"')) continue;
+    try { const e = JSON.parse(line); if (e.type === 'assistant' && e.message?.model) models.add(e.message.model); } catch { /* partial line */ }
+  }
+  if (models.size === 1) return [...models][0];
+  if (models.size > 1) return `mixed:${[...models].sort().join('+')}`;
+  return primaryModelFromEnvelope(final);
+}
 export function stripJsonFence(text) {
   const s = String(text);
   const m = s.match(/^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/i);
@@ -258,7 +272,7 @@ export function verifyStageEvidence({ stage, workRunDir, completion, imageBasena
   if (!found) return { ok: false, errors: [`transcript-sha-not-found:${String(completion?.transcriptSha256 || '').slice(0, 12)}`] };
   const transcript = parseStreamTranscript(found.bytes);
   const final = transcriptFinal(transcript);
-  const model = primaryModelFromEnvelope(final);
+  const model = answeringModel(found.bytes, final);
   if (!model || model !== expectedModel) errors.push(`model:${model || 'none'}`);
   const apiKeySource = transcript.init?.apiKeySource ?? null;
   if (apiKeySource !== 'none') errors.push(`apiKeySource:${apiKeySource || 'missing'}`);

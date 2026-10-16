@@ -382,7 +382,44 @@ export function deriveStageAttempt(plan, transcript, exitCode = 0) {
 // ---------- durable execution (mirrors pass-b-b4-window) ----------
 function durableWrite(path, text) { writeFileSync(path, text, { flag: 'wx', mode: 0o600, flush: true }); }
 function syncDirs(paths) { for (const p of paths) { const fd = openSync(p, 'r'); try { fsyncSync(fd); } finally { closeSync(fd); } } }
-export function preservedFatal(outDir) { const p = join(outDir, 'fatal.json'); return existsSync(p) ? readJson(p).reason : null; }
+// Reviewed derivation amendments (2026-10-16). A stored outcome that a corrected, reviewed derivation rule
+// re-classifies (first case: the Oct 8 SI "model:claude-haiku-5-5" false fatal) is never edited. An append-only,
+// hash-chained record binds the exact transcript, stored result and fatal marker and says what the attempt now
+// derives to; auditHistory re-derives and must reach exactly that kind, otherwise it still fails closed.
+export const AMENDMENT_VERSION = 'passBAuditDerivationAmendment/1';
+export function loadAmendments(outDir) {
+  const dir = join(outDir, 'derivation-amendments'), out = [];
+  const names = existsSync(dir) ? readdirSync(dir).filter(n => n.endsWith('.json')).sort() : [];
+  names.forEach((n, i) => {
+    const a = readJson(join(dir, n));
+    if (n !== `${String(i + 1).padStart(6, '0')}.json` || a.version !== AMENDMENT_VERSION || a.previousSha256 !== (out.at(-1)?.sha256 || null)
+        || !a.workId || !/^[0-9a-f]{64}$/.test(a.transcriptSha256 || '') || !/^[0-9a-f]{64}$/.test(a.resultSha256 || '')
+        || !a.fromKind || !a.toKind || !a.reviewedBy?.trim() || !a.reason?.trim()) throw new Error(`derivation amendment ${n} is malformed or out of chain`);
+    out.push({ ...a, sha256: sha256(stableJson(a)) });
+  });
+  return out;
+}
+const amendmentFor = (outDir, workId, meta) => loadAmendments(outDir).find(a => a.workId === workId && a.transcriptSha256 === meta.transcriptSha256 && a.resultSha256 === meta.resultSha256 && a.fromKind === meta.status) || null;
+export function preservedFatal(outDir) {
+  const p = join(outDir, 'fatal.json'); if (!existsSync(p)) return null;
+  const sha = rawSha(p); if (loadAmendments(outDir).some(a => a.fatalJsonSha256 === sha)) return null; // reviewed and amended
+  return readJson(p).reason;
+}
+export function amendDerivation({ outDir, runId, plan, reviewedBy, reason, now = new Date() }) {
+  const dir = join(outDir, 'works', safeWork(plan.workId)), m = join(dir, 'attempt-1.meta.json'), t = join(dir, 'attempt-1.transcript.jsonl');
+  const meta = readJson(m), transcript = readFileSync(t, 'utf8');
+  if (meta.transcriptSha256 !== sha256(transcript)) throw new Error('attempt evidence changed');
+  const derived = deriveAuditAttempt(plan, transcript, meta.exitCode);
+  if (derived.kind === meta.status) throw new Error(`no amendment needed: still derives ${meta.status}`);
+  const prev = loadAmendments(outDir).at(-1) || null, fatalPath = join(outDir, 'fatal.json');
+  const record = { version: AMENDMENT_VERSION, runId, previousSha256: prev?.sha256 || null, workId: plan.workId,
+    transcriptSha256: meta.transcriptSha256, resultSha256: meta.resultSha256, fromKind: meta.status, toKind: derived.kind,
+    fatalJsonSha256: existsSync(fatalPath) ? rawSha(fatalPath) : null, reviewedBy, reason, reviewedAt: now.toISOString() };
+  const adir = join(outDir, 'derivation-amendments'); mkdirSync(adir, { recursive: true });
+  const n = loadAmendments(outDir).length + 1;
+  durableWrite(join(adir, `${String(n).padStart(6, '0')}.json`), `${JSON.stringify(record, null, 1)}\n`);
+  return record;
+}
 // Global nightly preflight must see terminal evidence even if the convenience fatal marker was lost.
 export function auditRunFatal(outDir) {
   const marker = preservedFatal(outDir);
@@ -396,7 +433,7 @@ export function auditRunFatal(outDir) {
     const result = readJson(res);
     if (meta.transcriptSha256 !== rawSha(tr) || meta.resultSha256 !== rawSha(res) || meta.status !== result.kind)
       throw new Error(`${w}: attempt evidence changed`);
-    if (result.kind === 'fatal') return `${w}: ${result.errors.join('; ')}`;
+    if (result.kind === 'fatal' && !amendmentFor(outDir, meta.workId, meta)) return `${w}: ${result.errors.join('; ')}`;
   }
   return null;
 }
@@ -424,7 +461,10 @@ export function auditHistory(outDir, plan, runId) {
   const transcript = readFileSync(t, 'utf8');
   if (meta.transcriptSha256 !== sha256(transcript) || meta.resultSha256 !== rawSha(res)) throw new Error(`${plan.workId}: attempt evidence changed`);
   const derived = deriveAuditAttempt(plan, transcript, meta.exitCode);
-  if (meta.status !== derived.kind || stableJson(derived) !== stableJson(readJson(res))) throw new Error(`${plan.workId}: re-derivation mismatch`);
+  if (meta.status !== derived.kind || stableJson(derived) !== stableJson(readJson(res))) {
+    const a = amendmentFor(outDir, plan.workId, meta);
+    if (!a || a.toKind !== derived.kind) throw new Error(`${plan.workId}: re-derivation mismatch`);
+  }
   return { kind: derived.kind, derived, meta, reservation: r };
 }
 

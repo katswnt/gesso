@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { RUN_ROOT, parseStreamTranscript } from '../scripts/lib/pass-b-calibration.mjs';
+import { RUN_ROOT, parseStreamTranscript, answeringModel, primaryModelFromEnvelope, transcriptFinal } from '../scripts/lib/pass-b-calibration.mjs';
+import { noToolCallProvenance } from '../scripts/pass-b-b4-structured-canary.mjs';
 import * as CF from '../scripts/lib/pass-b-claim-first.mjs';
 import { deriveStageAttempt } from '../scripts/pass-b-shadow-audit.mjs';
 
@@ -271,5 +272,22 @@ check('v13 / assembly /6: editorial flags surface lost why openings, one-sentenc
   assert.equal(a.why, 'He worked outdoors.'); assert.equal(a.guide[0].a, 'A rescue.');
   assert.deepEqual(a.flags, ['why lost its opening sentence', 'g0: answer cut to one sentence', 'only 1 follow-up questions']);
   assert.match(CF.WRITE_PROMPT, /CITATION PATTERNS/); assert.match(CF.CHECK_PROMPT, /seem to move at different speeds/);
+});
+check('Oct 8 false fatal: a background helper model is not the answering model; a wrong answering model is still fatal', () => {
+  const real = join(RUN_ROOT, 'cf-34018d423b36', 'works', '4641e6f95ee21ce6aff7c6ee', 'attempt-1.transcript.jsonl');
+  if (existsSync(real)) {
+    const t = readFileSync(real, 'utf8'), fin = transcriptFinal(parseStreamTranscript(t));
+    assert.equal(primaryModelFromEnvelope(fin), 'claude-haiku-5-5', 'old rule named the helper (484 vs 483 output tokens)');
+    assert.equal(answeringModel(t, fin), 'claude-sonnet-5-5');
+    assert.equal(noToolCallProvenance(t, 0, { expectedModel: 'claude-sonnet-5-5' }).kind === 'fatal', false);
+  }
+  const ev = (model, usage) => [JSON.stringify({ type: 'system', subtype: 'init', model: 'claude-sonnet-5-5', apiKeySource: 'none', tools: ['StructuredOutput'] }),
+    JSON.stringify({ type: 'assistant', message: { model, content: [{ type: 'tool_use', name: 'StructuredOutput', id: 'x', input: { a: 1 } }] } }),
+    JSON.stringify({ type: 'result', subtype: 'success', is_error: false, structured_output: { a: 1 }, modelUsage: usage })].join('\n');
+  const helper = ev('claude-sonnet-5-5', { 'claude-haiku-5-5': { outputTokens: 900 }, 'claude-sonnet-5-5': { outputTokens: 10 } });
+  assert.equal(answeringModel(helper, transcriptFinal(parseStreamTranscript(helper))), 'claude-sonnet-5-5');
+  const wrong = ev('claude-haiku-5-5', { 'claude-haiku-5-5': { outputTokens: 10 } });
+  const prov = noToolCallProvenance(wrong, 0, { expectedModel: 'claude-sonnet-5-5' });
+  assert.equal(prov.kind, 'fatal'); assert.match(prov.errors.join(), /model:claude-haiku-5-5/);
 });
 console.log(`pass-b-claim-first.test: ${n} checks passed`);

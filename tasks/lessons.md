@@ -56,3 +56,8 @@ explicit file paths, never a directory or `-A`, and read `git status --short` BE
 - What happened: the owner repeatedly pointed to "north star" guides. Claude found the north-star list (docs/vision-study-guide-style.md) but used only their questions, iterated writer v6–v10 by adding rules, then told the owner no gold examples existed. The whole records (diagnostic hotspots, cues, whys) were in data/teach-works.js all along; copy quality declined with each rule.
 - Rule: when the owner says approved examples exist, find the actual records and read several whole ones before writing any prompt. Never state something does not exist until it has been searched for by every name the owner used.
 - Rule: build copy prompts from worked examples (gold records), not accumulating rules; score changes against the gold offline before spending calls.
+
+## 2026-10-16 — A fail-closed stop with a retained lease silently halted the nightly for 8 days
+- What happened: a false "model drift" fatal (CLI background Haiku call outvoting the real answer by 1 output token) stopped the Oct 8 run; the lease was correctly retained for review, but nobody reviewed it, so every firing did nothing and only a generic failure notification reached the owner.
+- Rule: never decide provenance by "most output tokens"; the answering model is the one that wrote the assistant messages.
+- Rule: after enabling or changing a cloud schedule, check the next morning's status.json / run log explicitly; a retained lease needs same-day review. (Follow-up: a morning status check that reports the stop reason in plain words.)

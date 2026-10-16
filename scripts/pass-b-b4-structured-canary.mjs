@@ -19,7 +19,7 @@ import { completionKey } from './lib/vision-content-capture.mjs';
 import {
   B4_VALIDATION_CONTRACT_VERSION, CALIBRATION_MODEL, RUN_ROOT, VALIDATION_CONTRACT_VERSION,
   buildStageCommand, compactB4DeltaInput, legacyContentInput, parseStreamTranscript,
-  primaryModelFromEnvelope, transcriptFinal, verifyStageEvidence,
+  primaryModelFromEnvelope, answeringModel, transcriptFinal, verifyStageEvidence,
 } from './lib/pass-b-calibration.mjs';
 import { buildB4Prompt, promptHashes } from './lib/pass-b-prompts.mjs';
 import { assembleAndValidateB4, B4_DELTA_VERSION } from './lib/pass-b-b4-delta.mjs';
@@ -197,7 +197,7 @@ export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = 
   const parsed = parseStreamTranscript(transcript);
   const execution = b4ExecutionEvents(transcript);
   const final = transcriptFinal(parsed);
-  const resolvedModel = primaryModelFromEnvelope(final) || parsed.init?.model || null;
+  const resolvedModel = answeringModel(transcript, final) || parsed.init?.model || null; // helper models with no assistant message are not the answering model
   const apiKeySources = execution.inits.map(init => init.apiKeySource ?? null);
   const invalidInit = apiKeySources.findIndex(source => source !== 'none');
   const apiKeySource = invalidInit >= 0 ? apiKeySources[invalidInit] : (apiKeySources.length ? 'none' : null);
