@@ -3,7 +3,8 @@
 # pacing, hours and the lease decide whether it does anything. Never merges, never steals a lease, never publishes.
 #  1. Clone the private evidence repo's state branch; read the OWNER-PINNED code commit (state/pin.json).
 #  2. Run from a clean worktree at exactly that commit; its data/incoming is the evidence checkout's incoming/.
-#  3. Take the lease (first push wins; a held lease means another run is active or died: exit and report).
+#  3. Take the lease (first push wins; a held lease means another run is active: exit and report. A crashed
+#     automation run's lease is recovered after 90 quiet minutes, VSD-066).
 #  4. Nightly job (claim-first for nearest dailies, then collection). Every reservation is pushed before its call.
 #  5. Write state/status.json and release the lease.
 set -euo pipefail
@@ -35,8 +36,13 @@ export PASS_B_CORPUS_LANE=local
 # Schedule time zone (owner 2026-10-16): a setting in the evidence repo, so it can be changed from a phone.
 # state/schedule.json {"timeZone": "Europe/Paris"}; default Pacific. The runner's 00:00–08:30 / 09:00 rule is local.
 export PASS_B_TIMEZONE="${PASS_B_TIMEZONE:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).timeZone||'America/Los_Angeles')}catch{console.log('America/Los_Angeles')}")}"
-export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)}" PASS_B_LEASE_HOLDER="$HOLDER"
-echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
+# Hours (owner 2026-10-17, VSD-066): state/schedule.json "hours": "all-day" lets every firing start (cron every 2 h);
+# each 2-hour slot then has its own allowance (slot-<date>-<HH>), so every firing may make up to PASS_B_MAX_CALLS.
+export PASS_B_HOURS="${PASS_B_HOURS:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).hours||'night')}catch{console.log('night')}")}"
+if [ "$PASS_B_HOURS" = "all-day" ]; then SLOT_H=$(( 10#$(TZ=$PASS_B_TIMEZONE date +%H) / 2 * 2 )); DEFAULT_BUDGET="slot-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)-$(printf %02d $SLOT_H)"
+else DEFAULT_BUDGET="nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)"; fi
+export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-$DEFAULT_BUDGET}" PASS_B_LEASE_HOLDER="$HOLDER"
+echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
 if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then

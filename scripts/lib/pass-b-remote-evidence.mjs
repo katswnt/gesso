@@ -4,7 +4,11 @@
 //   - each outcome (transcript/result/meta) is pushed right after the call;
 //   - if a push fails, the caller stops before spending (PersistError).
 // A lease on the evidence repo's state branch guarantees one writer (cloud run or laptop): the first successful push
-// wins, losers exit; a lease is never stolen because it looks old and never auto-merged.
+// wins, losers exit; never auto-merged. A lease is never stolen because it looks old, with ONE exception (owner
+// 2026-10-17, VSD-066 "make it self-healing"): an automation lease (routine-/schedule-) whose run CRASHED (no failure
+// status from that holder, and no evidence push for STALE_LEASE_MIN) is recovered by the next automation run. A
+// crashed call is already a terminal unknown-outcome (its reservation was pushed first), so recovery never re-calls.
+// A deliberate fail-closed stop (status.exit != 0 from the holder) and any laptop/owner lease still wait for review.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync, unlinkSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -74,12 +78,20 @@ export function readLease(root) { const p = leasePath(root); return existsSync(p
 export function acquireLease(root, holder, { now = new Date() } = {}) {
   git(root, ['pull', '-q', '--ff-only', 'origin', branch(root)]); // never merge
   const cur = readLease(root);
-  if (cur) throw new LeaseBusyError(`lease held by ${cur.holder} since ${cur.acquiredAt}; never stolen automatically (release it deliberately after checking that run)`);
-  mkdirSync(dirname(leasePath(root)), { recursive: true });
   if (!holder?.trim()) throw new LeaseBusyError('lease holder is required');
+  const stale = cur ? staleLease(root, cur, holder, now) : null;
+  if (cur && !stale) throw new LeaseBusyError(`lease held by ${cur.holder} since ${cur.acquiredAt}; not recoverable automatically (release it deliberately after checking that run)`);
+  mkdirSync(dirname(leasePath(root)), { recursive: true });
+  const paths = [leasePath(root)];
+  if (stale) {
+    unlinkSync(leasePath(root));
+    const log = join(root, 'state', 'lease-recoveries.jsonl');
+    writeFileSync(log, `${JSON.stringify({ recoveredAt: now.toISOString(), from: cur, by: holder, quietMin: stale.quietMin, lastPushAt: stale.lastPushAt })}\n`, { flag: 'a' });
+    paths.push(log);
+  }
   try { writeFileSync(leasePath(root), `${JSON.stringify({ version: LEASE_VERSION, holder, acquiredAt: now.toISOString() }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true }); }
   catch (e) { throw new LeaseBusyError(`local lease was claimed concurrently: ${e.message}`); }
-  try { persist(root, [leasePath(root)], `lease: acquire by ${holder}`, { retries: 0 }); }
+  try { persist(root, paths, stale ? `lease: recover crashed ${cur.holder} (no push for ${stale.quietMin} min) by ${holder}` : `lease: acquire by ${holder}`, { retries: 0 }); }
   catch (e) {
     // Lost the race (non-fast-forward) or network: undo locally and exit; never merge a competing claim.
     try { git(root, ['fetch', '-q', 'origin', branch(root)]); git(root, ['reset', '-q', '--hard', 'FETCH_HEAD']); } catch { /* best effort */ }
@@ -88,6 +100,18 @@ export function acquireLease(root, holder, { now = new Date() } = {}) {
   const owned = readLease(root);
   if (owned?.holder !== holder) throw new LeaseBusyError('lease changed during acquisition');
   return owned;
+}
+// > the longest single call (15 min) with a wide margin: every call pushes its reservation before and outcome after.
+export const STALE_LEASE_MIN = 90;
+const AUTOMATION = /^(routine|schedule)-/;
+export function staleLease(root, cur, claimant, now = new Date()) {
+  if (!AUTOMATION.test(cur?.holder || '') || !AUTOMATION.test(claimant || '')) return null;
+  const sp = join(root, 'state', 'status.json');
+  const st = existsSync(sp) ? JSON.parse(readFileSync(sp, 'utf8')) : null;
+  if (st?.holder === cur.holder && Number(st.exit) !== 0) return null; // deliberate fail-closed stop: owner review
+  const lastPush = Number(git(root, ['log', '-1', '--format=%ct']).trim()) * 1000;
+  const quietMin = Math.floor((now.getTime() - lastPush) / 60000);
+  return quietMin >= STALE_LEASE_MIN ? { quietMin, lastPushAt: new Date(lastPush).toISOString() } : null;
 }
 export function releaseLease(root, holder, { force = false } = {}) {
   const cur = readLease(root);

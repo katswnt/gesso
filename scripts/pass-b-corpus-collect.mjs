@@ -183,11 +183,16 @@ const files = path => existsSync(path) ? readdirSync(path) : [];
 // Owner 2026-10-16: the schedule time zone is a setting (PASS_B_TIMEZONE; the cloud launcher reads it from the
 // evidence repo's state/schedule.json). Default Pacific. The start window / finish rule is unchanged in local time.
 export const SCHEDULE_TZ = process.env.PASS_B_TIMEZONE || 'America/Los_Angeles';
+// Owner 2026-10-17 (VSD-066, on vacation with spare capacity): hours are a setting too (state/schedule.json "hours").
+// 'night' (default) = start 00:00–08:30, finish 09:00 local; 'all-day' = start any time. Weekly usage pacing,
+// the per-firing call cap and every fail-closed gate still apply.
+export const SCHEDULE_HOURS = process.env.PASS_B_HOURS === 'all-day' ? 'all-day' : 'night';
 export function pacificClock(now = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: SCHEDULE_TZ,
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
   }).formatToParts(now).map(p => [p.type, p.value]));
   const seconds = Number(parts.hour) * 3600 + Number(parts.minute) * 60 + Number(parts.second);
+  if (SCHEDULE_HOURS === 'all-day') return { date: `${parts.year}-${parts.month}-${parts.day}`, seconds, mayStart: true, remainingMs: 24 * 3600 * 1000 };
   return { date: `${parts.year}-${parts.month}-${parts.day}`, seconds, mayStart: seconds < 8.5 * 3600,
     remainingMs: Math.max(0, (9 * 3600 - seconds) * 1000 - now.getMilliseconds()) };
 }
@@ -699,6 +704,9 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
 // execution policy. Earlier epochs have no wire fields; adding them needs a reviewed --rebind-contract epoch.
 export const WIRE_POLICY = Object.freeze({ wireSchema: WIRE_SCHEMA_CONTRACT,
   wireSchemaSha256: sha256(stableJson({ B1: WIRE_SCHEMAS.B1, B2: WIRE_SCHEMAS.B2, B3: WIRE_SCHEMAS.B3 })) });
+const SCHEDULE_WINDOWS = { night: { startWindow: '00:00–08:30', finishBy: '09:00' }, 'all-day': { startWindow: 'all day (owner 2026-10-17)', finishBy: 'none' } };
+const SCHEDULE_FIELDS = ['timeZone', 'startWindow', 'finishBy'];
+const withoutSchedule = p => Object.fromEntries(Object.entries(p).filter(([k]) => !SCHEDULE_FIELDS.includes(k)));
 export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
   if (!ALLOWED_COLLECTION_MODELS.includes(model)) throw new Error(`model ${model} is not an allowed collection model`);
@@ -706,7 +714,7 @@ export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
     promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
-      : { scope: 'rolling-30-days-through-b3', timeZone: SCHEDULE_TZ, startWindow: '00:00–08:30', finishBy: '09:00' }),
+      : { scope: 'rolling-30-days-through-b3', timeZone: SCHEDULE_TZ, ...SCHEDULE_WINDOWS[SCHEDULE_HOURS] }),
     maxCallMs: 30 * 60 * 1000,
     childEnv: { DISABLE_AUTOUPDATER: '1' } };
 }
@@ -766,8 +774,8 @@ export function bindExecutionPolicy(runDir, runtimeVersion) {
   }
   if (stableJson(withoutWire(current.policy)) === stableJson(withoutWire(policy)))
     throw new RuntimePauseError('wire-schema contract changed; paused pending reviewed --rebind-contract');
-  if (current.policy.timeZone !== policy.timeZone && stableJson({ ...current.policy, timeZone: policy.timeZone, runtimeVersion }) === stableJson(policy))
-    throw new RuntimePauseError(`schedule time zone changed to ${policy.timeZone}; paused pending reviewed --rebind-schedule`);
+  if (SCHEDULE_FIELDS.some(k => current.policy[k] !== policy[k]) && stableJson(withoutSchedule({ ...current.policy, runtimeVersion })) === stableJson(withoutSchedule(policy)))
+    throw new RuntimePauseError(`schedule changed to ${policy.timeZone}, ${policy.startWindow}; paused pending reviewed --rebind-schedule`);
   throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
 // VSD-054: an owner-reviewed model change appends ONE epoch that differs from the previous only in its model.
@@ -861,18 +869,19 @@ export function grantFormatRetries(runDir, review, rows) {
   return granted;
 }
 // Owner 2026-10-16 (travel to Paris): an owner-reviewed schedule epoch that differs from the previous ONLY in its
-// time zone. The 00:00–08:30 start window and 09:00 finish stay the same in the new local time.
-export const SCHEDULE_REVIEW_VERSION = 'passBCorpusScheduleReview/1';
+// schedule (time zone; since 2026-10-17 also the hours, review /2 binds toHours). Review /1 may change only the zone.
+export const SCHEDULE_REVIEW_VERSION = 'passBCorpusScheduleReview/2';
 export function rebindSchedule(runDir, review) {
   if (preservedFatal(runDir)) throw new Error('schedule rebind cannot clear a preserved fatal');
   const previous = executionEpochs(runDir).at(-1);
-  if (!previous || review?.version !== SCHEDULE_REVIEW_VERSION || review.runId !== RUN_ID || review.fromEpochSha256 !== previous.sha256 ||
-      review.toTimeZone !== SCHEDULE_TZ || !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
-    throw new Error('explicit schedule review binding required (toTimeZone must equal PASS_B_TIMEZONE)');
+  const v1 = review?.version === 'passBCorpusScheduleReview/1';
+  if (!previous || !(v1 || review?.version === SCHEDULE_REVIEW_VERSION) || review.runId !== RUN_ID || review.fromEpochSha256 !== previous.sha256 ||
+      review.toTimeZone !== SCHEDULE_TZ || (!v1 && review.toHours !== SCHEDULE_HOURS) || !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
+    throw new Error('explicit schedule review binding required (toTimeZone/toHours must equal PASS_B_TIMEZONE/PASS_B_HOURS)');
   const policy = executionPolicy(previous.policy.runtimeVersion, epochModel(previous));
-  const { timeZone: _a, ...prevRest } = previous.policy, { timeZone: _b, ...nextRest } = policy;
-  if (stableJson(prevRest) !== stableJson(nextRest)) throw new Error('schedule rebind cannot change anything but the time zone');
-  if (previous.policy.timeZone === policy.timeZone) throw new Error('schedule rebind has no change');
+  if (stableJson(withoutSchedule(previous.policy)) !== stableJson(withoutSchedule(policy))) throw new Error('schedule rebind cannot change anything but the schedule');
+  if (v1 && previous.policy.startWindow !== policy.startWindow) throw new Error('schedule review /1 cannot change the hours');
+  if (SCHEDULE_FIELDS.every(k => previous.policy[k] === policy[k])) throw new Error('schedule rebind has no change');
   if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('schedule review target policy binding mismatch');
   return appendEpoch(runDir, policy, previous, review);
 }

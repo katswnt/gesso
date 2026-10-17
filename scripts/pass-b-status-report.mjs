@@ -16,11 +16,11 @@ const log = execFileSync('git', ['-C', EV, 'log', `--since=${HOURS} hours ago`, 
   .map(l => { const [at, ...s] = l.split('\t'); return { at, s: s.join('\t') }; });
 const count = re => log.filter(c => re.test(c.s)).length;
 const reserves = count(/^reserve /), copies = log.filter(c => /^copy /.test(c.s)), fatals = log.filter(c => /: fatal$/.test(c.s));
-const statuses = log.filter(c => /^status:/.test(c.s));
+const statuses = log.filter(c => /^status:/.test(c.s)), recoveries = log.filter(c => /^lease: recover crashed /.test(c.s));
 const status = read('state/status.json'), lease = read('state/lease.json'), pin = read('state/pin.json');
 
 // Allowance for the current schedule night (state/call-budgets/nightly-<date>.json, date in the schedule time zone).
-const budgets = existsSync(join(EV, 'state', 'call-budgets')) ? readdirSync(join(EV, 'state', 'call-budgets')).filter(f => f.startsWith('nightly-')).sort() : [];
+const budgets = existsSync(join(EV, 'state', 'call-budgets')) ? readdirSync(join(EV, 'state', 'call-budgets')).filter(f => /^(nightly|slot)-/.test(f)).sort() : [];
 const lastBudget = budgets.at(-1) ? read(`state/call-budgets/${budgets.at(-1)}`) : null;
 
 // Latest usage reading.
@@ -32,6 +32,8 @@ const summary = String(status?.summary || '');
 let verdict;
 const lastActivity = log[0]?.at ? new Date(log[0].at) : null, quietMin = lastActivity ? (Date.now() - lastActivity) / 60000 : Infinity;
 if (lease && quietMin <= 60) verdict = `⏳ RUNNING NOW: a run holds the lock (since ${local(lease.acquiredAt)}); last activity ${Math.round(quietMin)} min ago.`;
+else if (lease && /^(routine|schedule)-/.test(lease.holder) && !(status?.holder === lease.holder && Number(status.exit) !== 0))
+  verdict = `🔧 A run crashed (lock held since ${local(lease.acquiredAt)}, quiet ${Number.isFinite(quietMin) ? Math.round(quietMin) + ' min' : 'all period'}). The next firing recovers it automatically after 90 quiet minutes.`;
 else if (lease) verdict = `⚠️ STUCK: a run has held the lock since ${local(lease.acquiredAt)} with no activity for ${Number.isFinite(quietMin) ? Math.round(quietMin) + ' min' : 'this whole period'}. It stopped and needs review.`;
 else if (status?.exit && status.exit !== 0) verdict = `⚠️ STOPPED ON PURPOSE (${status.updatedAt ? local(status.updatedAt) : "?"}): ${summary.match(/FAIL-CLOSED: [^\n]*/)?.[0] || summary.slice(-160)}`;
 else if (/call cap \d+ reached/.test(summary) && reserves === 0) verdict = '⚠️ IDLE: the call allowance is used up, so nothing ran.';
@@ -46,6 +48,7 @@ const out = [
   `Calls made: ${reserves}${lastBudget ? ` · allowance ${budgets.at(-1).replace(/\.json$/, '')}: ${lastBudget.allowances.length}/${lastBudget.limit}` : ''}`,
   `Works finished (copy written): ${copies.length}${copies.length ? ` (latest ${local(copies[0].at)})` : ''}`,
   fatals.length ? `Fatal outcomes: ${fatals.length}: ${fatals.map(f => f.s.replace(/^outcome /, '')).join('; ')}` : null,
+  recoveries.length ? `Self-healed: recovered ${recoveries.length} crashed run lock(s) (${recoveries.map(r => local(r.at)).join(', ')})` : null,
   `Runs completed: ${statuses.length}${statuses[0] ? ` · last ${local(statuses[0].at)}` : ''}`,
   usage ? `Weekly usage: ${Math.round(usage.sevenDay?.utilization * 100)}% · 5-hour: ${Math.round(usage.fiveHour?.utilization * 100)}% (read ${local(usage.observedAt)})` : null,
   `Code pinned: ${pin?.commit?.slice(0, 7) || '?'} · lock: ${lease ? `held by ${lease.holder}` : 'free'}`,

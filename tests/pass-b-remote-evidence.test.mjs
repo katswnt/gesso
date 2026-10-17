@@ -229,6 +229,23 @@ await check('collector refuses a failed reservation push or a cutoff crossed aft
     }
   }
 });
+await check('self-healing (VSD-066): a crashed automation lease is recovered after 90 quiet min; a live run, a fail-closed stop and a laptop lease are not', () => {
+  const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
+  const at = min => new Date(Date.now() + min * 60000);
+  acquireLease(w.a, 'routine-A');
+  assert.throws(() => acquireLease(b, 'routine-B', { now: at(30) }), LeaseBusyError);   // still within a call's reach
+  assert.throws(() => acquireLease(b, 'laptop-B', { now: at(200) }), LeaseBusyError);   // only automation recovers automation
+  assert.equal(acquireLease(b, 'routine-B', { now: at(95) }).holder, 'routine-B');     // crashed: recovered
+  const rec = readFileSync(join(b, 'state', 'lease-recoveries.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  assert.equal(rec.length, 1); assert.equal(rec[0].from.holder, 'routine-A'); assert.ok(rec[0].quietMin >= 90);
+  assert.match(sh(b, 'log', '-1', '--format=%s'), /^lease: recover crashed routine-A/);
+  writeFileSync(join(b, 'state', 'status.json'), JSON.stringify({ holder: 'routine-B', exit: 1, summary: 'FAIL-CLOSED: x' }));
+  persist(b, [join(b, 'state', 'status.json')], 'status: fail');                       // deliberate stop keeps its lease
+  assert.throws(() => acquireLease(w.a, 'routine-C', { now: at(500) }), LeaseBusyError);
+  releaseLease(b, 'routine-B'); acquireLease(b, 'laptop-L');                           // laptop lease: never automatic
+  assert.throws(() => acquireLease(w.a, 'routine-C', { now: at(500) }), LeaseBusyError);
+  rmSync(w.root, { recursive: true });
+});
 await check('status is written from environment variables, surviving braces, quotes and ampersands (2026-10-01 laptop-pilot bug)', () => {
   const w = world(), summary = 'claim-first: finished 3 work(s) {a,b}, "q" & stop=pacing: cap';
   execFileSync('node', ['scripts/pass-b-cloud-lease.mjs', 'write-status-env'], { env: { ...process.env, PASS_B_REMOTE_EVIDENCE: w.a, PASS_B_STATUS_SUMMARY: summary, PASS_B_STATUS_EXIT: '0', PASS_B_STATUS_HOLDER: 'h', PASS_B_STATUS_PIN: 'p' }, stdio: 'pipe' });

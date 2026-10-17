@@ -23,7 +23,7 @@ check('schedule rebind: a Pacific epoch is paused until a reviewed epoch changes
     writeFileSync(join(runDir, 'execution-policies', '000001.json'), JSON.stringify({ version: 'passBCorpusExecutionEpoch/1', runId: C.CORPUS_RUN_ID, number: 1, previousSha256: null, policy: pacific, review: null }));
     assert.throws(() => C.bindExecutionPolicy(runDir, '2.1.300'), /--rebind-schedule/);
     const prev = C.executionEpochs(runDir).at(-1);
-    const review = { version: C.SCHEDULE_REVIEW_VERSION, runId: C.CORPUS_RUN_ID, fromEpochSha256: prev.sha256, toTimeZone: 'Europe/Paris',
+    const review = { version: C.SCHEDULE_REVIEW_VERSION, runId: C.CORPUS_RUN_ID, fromEpochSha256: prev.sha256, toTimeZone: 'Europe/Paris', toHours: 'night',
       toPolicySha256: sha256(stableJson(paris)), reviewedBy: 'fixture', reason: 'fixture', reviewedAt: '2026-10-16T12:00:00Z' };
     for (const [k, v] of [['reviewedBy', ''], ['toTimeZone', 'Asia/Tokyo'], ['toPolicySha256', 'x']]) assert.throws(() => C.rebindSchedule(runDir, { ...review, [k]: v }));
     const e2 = C.rebindSchedule(runDir, review);
