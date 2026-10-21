@@ -391,6 +391,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     bodies[stage] = c.body;
   }
   let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
+  const crashed = {};
   const clearances = loadFatalClearances(runDir);
   const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set();
   const retryGrant = loadFormatRetries(runDir).find(r => r.workId === id) || null;
@@ -412,6 +413,14 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const stem = name.slice(0, -'.reserved.json'.length), metaPath = join(attemptsDir, `${stem}.meta.json`);
     if (!existsSync(metaPath)) {
       const preserved = files(attemptsDir).filter(n => n.startsWith(`${stem}-`) && n.endsWith('.transcript.jsonl'));
+      // Self-healing (owner 2026-10-21, VSD-067): a reservation from ANOTHER (dead) lease holder with no transcript was
+      // killed with its machine before the call returned. It counts as a spent attempt; the stage gets one fresh call,
+      // and a second crash on the same stage holds only this work. Never a corpus-wide pause.
+      if (!preserved.length && r.holder !== process.env.PASS_B_LEASE_HOLDER) {
+        attempts++; crashed[r.stage] = (crashed[r.stage] || 0) + 1;
+        if (crashed[r.stage] >= 2) terminalReasons.push(`${r.stage}:interrupted twice by machine restarts`);
+        continue;
+      }
       if (!preserved.length) attempts++;
       for (const transcript of preserved) incompleteTranscripts.add(transcript);
       pause ||= `${id}/${r.stage}: unknown-outcome (incomplete reserved attempt)`; continue;
@@ -579,6 +588,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     if (PACER) { const d = PACER.check(); if (!d.go) throw new PacingStopError(d.reason); } // VSD-055: before any reservation
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
+      ...(process.env.PASS_B_LEASE_HOLDER ? { holder: process.env.PASS_B_LEASE_HOLDER } : {}),
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
       executionEpoch: epoch.number, executionEpochSha256: epoch.sha256, ...(options.hoursException ? { hoursException: options.hoursException } : {}) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
     // Cloud: push the reservation (and the epoch chain it names) BEFORE spending; a push failure pauses with no call.

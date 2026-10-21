@@ -399,6 +399,19 @@ withFixture('unfinished reservation fails closed across restart',f=>{
   writeFileSync(join(f.workRunDir,'attempts','b2-000020.reserved.json'),JSON.stringify({runId:currentRun,workId:f.id,stage:'B2',seq:20,executionEpoch:epoch.number,executionEpochSha256:epoch.sha256,executionPolicySha256:sha256(stableJson(epoch.policy))}));
   assert.match(f.inspect().pause,/unknown-outcome/);assert.equal(f.inspect().fatal,null);assert.equal(f.inspect().attempts,2);
 },{complete:['B1']});
+withFixture('self-healing (VSD-067): a dead holder\'s unfinished call gets one fresh call; a second crash holds only that work',f=>{
+  const epoch=bindExecutionPolicy(f.runDir,'2.1.280'),prev=process.env.PASS_B_LEASE_HOLDER;
+  const res=(seq,holder)=>writeFileSync(join(f.workRunDir,'attempts',`b2-${String(seq).padStart(6,'0')}.reserved.json`),JSON.stringify({runId:currentRun,workId:f.id,stage:'B2',seq,holder,executionEpoch:epoch.number,executionEpochSha256:epoch.sha256,executionPolicySha256:sha256(stableJson(epoch.policy))}));
+  try{
+    process.env.PASS_B_LEASE_HOLDER='routine-now';
+    res(20,'routine-dead');
+    let r=f.inspect();assert.equal(r.pause,null);assert.equal(r.fatal,null);assert.equal(r.terminalReasons.length,0);assert.equal(r.done,false);assert.equal(r.maxSeq,20);
+    res(21,'routine-now');assert.match(f.inspect().pause,/unknown-outcome/);   // this session's own unfinished call still fails closed
+    rmSync(join(f.workRunDir,'attempts','b2-000021.reserved.json'));
+    res(21,undefined);                                                        // second crash (old holder-less receipt)
+    r=f.inspect();assert.equal(r.pause,null);assert.deepEqual(r.terminalReasons,['B2:interrupted twice by machine restarts']);
+  }finally{if(prev===undefined)delete process.env.PASS_B_LEASE_HOLDER;else process.env.PASS_B_LEASE_HOLDER=prev;}
+},{complete:['B1']});
 
 await ta('transport retry cannot start after 08:30', async()=>{
   const f=fixture({complete:['B1']});let calls=0;
