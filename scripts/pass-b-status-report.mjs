@@ -42,6 +42,23 @@ else if (/protected-hours/.test(summary) && reserves === 0) verdict = 'Outside t
 else if (reserves > 0) verdict = '✅ Worked normally.';
 else verdict = 'No activity in this period.';
 
+// Alarm mode (owner 2026-10-21, after a 2.5-day silent stall): print one loud line when the pipeline is stuck, else "OK".
+// Stuck = a deliberate stop holding the lock, a lock nobody has touched for 4 h (self-healing should have acted by
+// then), or no calls for 6 h while nothing explains it (pacing, usage limit, allowance). Alerts at the first check
+// after the stall starts, then once a day (the 09:00–10:59 local check) until it is fixed.
+if (args.includes('--alarm')) {
+  const now = Date.now(), H = 3600000, lastAt = re => { const c = log.find(x => re.test(x.s)); return c ? Date.parse(c.at) : null; };
+  const lastPush = log[0] ? Date.parse(log[0].at) : 0, lastReserve = lastAt(/^reserve /);
+  let since = null, why = null;
+  if (lease && status?.holder === lease.holder && Number(status.exit) !== 0) { since = Date.parse(status.updatedAt); why = `stopped on purpose: ${summary.match(/FAIL-CLOSED: [^\n]*/)?.[0] || summary.slice(-160)}`; }
+  else if (lease && now - lastPush > 4 * H) { since = lastPush + 4 * H; why = `lock held by ${lease.holder} with no activity since ${local(new Date(lastPush).toISOString())}`; }
+  else if (!lease && !/pacing|usage-limit|call cap/.test(summary) && now - (lastReserve || 0) > 6 * H) { since = (lastReserve || now - 6 * H) + 6 * H; why = `no calls since ${lastReserve ? local(new Date(lastReserve).toISOString()) : 'over ' + HOURS + ' h'}; last status: ${summary.slice(-120) || 'none'}`; }
+  const hour = Number(new Date().toLocaleString('en-GB', { timeZone: TZ, hour: '2-digit', hourCycle: 'h23' }));
+  if (!since) console.log('OK');
+  else if (now - since <= 125 * 60000 || hour === 9 || hour === 10) console.log(`ALERT: Gesso pipeline stuck since ${local(new Date(since).toISOString())}: ${why}`);
+  else console.log(`STILL STUCK (already alerted): since ${local(new Date(since).toISOString())}: ${why}`);
+  process.exit(0);
+}
 const out = [
   `Gesso nightly (${HOURS}h, times in ${TZ})`,
   verdict,
