@@ -15,7 +15,7 @@ import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { RUN_ROOT, trustedCatalog, snapshotLegacy } from './lib/pass-b-calibration.mjs';
-import { CORPUS_RUN_DIR, buildPriorityQueue, inspectWork, inspectCorpus, preservedFatal as corpusFatal, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
+import { CORPUS_RUN_DIR, scopeOrder, SCHEDULE_SCOPE, inspectWork, inspectCorpus, preservedFatal as corpusFatal, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
 import { runAudit, auditHistory, auditRunFatal, callAuditPinned } from './pass-b-shadow-audit.mjs';
 import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
@@ -158,7 +158,8 @@ async function main() {
   // Owner-directed subset (PASS_B_NIGHTLY_ONLY): those works are considered even when their next daily is outside the
   // 30-day window (2026-10-02: a re-run of yesterday's dailies found "0 of 5 pending"). Same gates otherwise.
   const ownerOnly = (process.env.PASS_B_NIGHTLY_ONLY || '').split(',').map(x => x.trim()).filter(Boolean);
-  const windowOrder = buildPriorityQueue(ctx.pool, ctx.daily, { today: clock.date });
+  // VSD-068: scope 'corpus' continues past the window down the same priority bands (window works always first).
+  const windowOrder = scopeOrder(ctx.pool, ctx.daily, clock.date);
   const order = ownerOnly.length ? [...windowOrder, ...ownerOnly.filter(id => !windowOrder.includes(id))] : windowOrder;
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
@@ -175,7 +176,7 @@ async function main() {
     } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
-  console.log(`  window ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
+  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
   console.log(`  safety: ${safetyCheck() || 'clear'}`);
   for (const k of ['S1', 'S2', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   if (!live) { console.log(`READ-ONLY PLAN: no calls or writes. Next up: ${pending.slice(0, 5).map(id => `${dateOf.get(id)} ${id}`).join('; ')}`); return; }
@@ -201,7 +202,7 @@ async function main() {
     if (result.finished) finished++;
     if (mustHalt(result)) stop = result.stop;
   }
-  console.log(`claim-first: finished ${finished} work(s) this session; stop=${stop || 'window covered'}; pacer calls ${pacer.calls}`);
+  console.log(`claim-first: finished ${finished} work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
   if (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');

@@ -187,6 +187,12 @@ export const SCHEDULE_TZ = process.env.PASS_B_TIMEZONE || 'America/Los_Angeles';
 // 'night' (default) = start 00:00–08:30, finish 09:00 local; 'all-day' = start any time. Weekly usage pacing,
 // the per-firing call cap and every fail-closed gate still apply.
 export const SCHEDULE_HOURS = process.env.PASS_B_HOURS === 'all-day' ? 'all-day' : 'night';
+// Owner 2026-10-30 (VSD-068): scope is a setting too (state/schedule.json "scope"). 'window' (default) = the rolling
+// 30-day window only (VSD-042); 'corpus' = the window first, then the remaining priority bands (Easy, top-fame M/H/I,
+// Medium, Hard, Impossible) under the same subscription pacing, per-firing cap and gates.
+export const SCHEDULE_SCOPE = process.env.PASS_B_SCOPE === 'corpus' ? 'corpus' : 'window';
+const SCOPES = { window: 'rolling-30-days-through-b3', corpus: 'rolling-30-days-then-priority-bands-through-b3' };
+export const scopeOrder = (pool, daily, today, scope = SCHEDULE_SCOPE) => buildPriorityQueue(pool, daily, { today, windowOnly: scope !== 'corpus' });
 export function pacificClock(now = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: SCHEDULE_TZ,
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
@@ -715,7 +721,7 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
 export const WIRE_POLICY = Object.freeze({ wireSchema: WIRE_SCHEMA_CONTRACT,
   wireSchemaSha256: sha256(stableJson({ B1: WIRE_SCHEMAS.B1, B2: WIRE_SCHEMAS.B2, B3: WIRE_SCHEMAS.B3 })) });
 const SCHEDULE_WINDOWS = { night: { startWindow: '00:00–08:30', finishBy: '09:00' }, 'all-day': { startWindow: 'all day (owner 2026-10-17)', finishBy: 'none' } };
-const SCHEDULE_FIELDS = ['timeZone', 'startWindow', 'finishBy'];
+const SCHEDULE_FIELDS = ['timeZone', 'startWindow', 'finishBy', 'scope'];
 const withoutSchedule = p => Object.fromEntries(Object.entries(p).filter(([k]) => !SCHEDULE_FIELDS.includes(k)));
 export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
@@ -724,7 +730,7 @@ export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
     promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
-      : { scope: 'rolling-30-days-through-b3', timeZone: SCHEDULE_TZ, ...SCHEDULE_WINDOWS[SCHEDULE_HOURS] }),
+      : { scope: SCOPES[SCHEDULE_SCOPE], timeZone: SCHEDULE_TZ, ...SCHEDULE_WINDOWS[SCHEDULE_HOURS] }),
     maxCallMs: 30 * 60 * 1000,
     childEnv: { DISABLE_AUTOUPDATER: '1' } };
 }
@@ -785,7 +791,7 @@ export function bindExecutionPolicy(runDir, runtimeVersion) {
   if (stableJson(withoutWire(current.policy)) === stableJson(withoutWire(policy)))
     throw new RuntimePauseError('wire-schema contract changed; paused pending reviewed --rebind-contract');
   if (SCHEDULE_FIELDS.some(k => current.policy[k] !== policy[k]) && stableJson(withoutSchedule({ ...current.policy, runtimeVersion })) === stableJson(withoutSchedule(policy)))
-    throw new RuntimePauseError(`schedule changed to ${policy.timeZone}, ${policy.startWindow}; paused pending reviewed --rebind-schedule`);
+    throw new RuntimePauseError(`schedule changed to ${policy.timeZone}, ${policy.startWindow}, ${policy.scope}; paused pending reviewed --rebind-schedule`);
   throw new RuntimePauseError('execution policy / CLI version drift; paused pending reviewed --rebind-runtime');
 }
 // VSD-054: an owner-reviewed model change appends ONE epoch that differs from the previous only in its model.
@@ -879,18 +885,21 @@ export function grantFormatRetries(runDir, review, rows) {
   return granted;
 }
 // Owner 2026-10-16 (travel to Paris): an owner-reviewed schedule epoch that differs from the previous ONLY in its
-// schedule (time zone; since 2026-10-17 also the hours, review /2 binds toHours). Review /1 may change only the zone.
-export const SCHEDULE_REVIEW_VERSION = 'passBCorpusScheduleReview/2';
+// schedule (time zone; since 2026-10-17 also the hours, review /2 binds toHours; since 2026-10-30 also the scope,
+// review /3 binds toScope, VSD-068). Review /1 may change only the zone; /1 and /2 may not change the scope.
+export const SCHEDULE_REVIEW_VERSION = 'passBCorpusScheduleReview/3';
 export function rebindSchedule(runDir, review) {
   if (preservedFatal(runDir)) throw new Error('schedule rebind cannot clear a preserved fatal');
   const previous = executionEpochs(runDir).at(-1);
-  const v1 = review?.version === 'passBCorpusScheduleReview/1';
-  if (!previous || !(v1 || review?.version === SCHEDULE_REVIEW_VERSION) || review.runId !== RUN_ID || review.fromEpochSha256 !== previous.sha256 ||
-      review.toTimeZone !== SCHEDULE_TZ || (!v1 && review.toHours !== SCHEDULE_HOURS) || !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
-    throw new Error('explicit schedule review binding required (toTimeZone/toHours must equal PASS_B_TIMEZONE/PASS_B_HOURS)');
+  const v = { 'passBCorpusScheduleReview/1': 1, 'passBCorpusScheduleReview/2': 2, [SCHEDULE_REVIEW_VERSION]: 3 }[review?.version];
+  if (!previous || !v || review.runId !== RUN_ID || review.fromEpochSha256 !== previous.sha256 ||
+      review.toTimeZone !== SCHEDULE_TZ || (v >= 2 && review.toHours !== SCHEDULE_HOURS) || (v >= 3 && review.toScope !== SCHEDULE_SCOPE) ||
+      !review.reviewedBy?.trim() || !review.reason?.trim() || !Number.isFinite(Date.parse(review.reviewedAt)))
+    throw new Error('explicit schedule review binding required (toTimeZone/toHours/toScope must equal PASS_B_TIMEZONE/PASS_B_HOURS/PASS_B_SCOPE)');
   const policy = executionPolicy(previous.policy.runtimeVersion, epochModel(previous));
   if (stableJson(withoutSchedule(previous.policy)) !== stableJson(withoutSchedule(policy))) throw new Error('schedule rebind cannot change anything but the schedule');
-  if (v1 && previous.policy.startWindow !== policy.startWindow) throw new Error('schedule review /1 cannot change the hours');
+  if (v === 1 && previous.policy.startWindow !== policy.startWindow) throw new Error('schedule review /1 cannot change the hours');
+  if (v < 3 && previous.policy.scope !== policy.scope) throw new Error('schedule review /1 or /2 cannot change the scope');
   if (SCHEDULE_FIELDS.every(k => previous.policy[k] === policy[k])) throw new Error('schedule rebind has no change');
   if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('schedule review target policy binding mismatch');
   return appendEpoch(runDir, policy, previous, review);
@@ -931,7 +940,7 @@ async function main() {
   const inspection = inspectCorpus({ pool, legacyOf, ledger });
   const clock = pacificClock();
   const windowOrder = buildPriorityQueue(pool, daily, { today: clock.date });
-  let order = windowOrder;
+  let order = LANE === 'cloud' ? windowOrder : scopeOrder(pool, daily, clock.date);
   if (LANE === 'cloud') {
     const skipPath = process.env.PASS_B_CLOUD_SKIP;
     if (!skipPath || !existsSync(skipPath)) throw new Error('cloud lane needs PASS_B_CLOUD_SKIP=<skip.json> (local done/held/window ids) so it never duplicates local work');
@@ -949,11 +958,11 @@ async function main() {
   console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION} | lane: ${LANE}${LANE === 'cloud' ? ` (cap $${CLOUD_BUDGET_USD}, spent $${runSpendUsd(RUN_DIR).toFixed(2)})` : ''}`);
   console.log(`Pacific date: ${clock.date} | window: [${clock.date}, ${plusDay(clock.date, 30)}) | ${LANE === 'cloud' ? 'cloud lane: no hours gate (dollar cap instead)' : `may start now: ${clock.mayStart}`}`);
   console.log(`corpus verified B1/B2/B3: ${inspection.totals.b1Complete}/${inspection.totals.b2Complete}/${inspection.totals.b3Complete} | done ${inspection.doneSet.size} | held ${inspection.heldSet.size} | attempts ${inspection.attempts}`);
-  console.log(`${LANE === 'cloud' ? 'cloud-lane candidates (beyond window, minus skip list)' : 'window works'}: ${order.length} | queued: ${queue.length} | pending raw-file repairs: ${inspection.repairs.length} | fatal: ${inspection.fatal || 'none'} | pause: ${inspection.pause || 'none'}`);
+  console.log(`${LANE === 'cloud' ? 'cloud-lane candidates (beyond window, minus skip list)' : SCHEDULE_SCOPE === 'corpus' ? 'window + priority-band works' : 'window works'}: ${order.length} | queued: ${queue.length} | pending raw-file repairs: ${inspection.repairs.length} | fatal: ${inspection.fatal || 'none'} | pause: ${inspection.pause || 'none'}`);
   const active = executionEpochs(RUN_DIR).at(-1);
   console.log(`runtime epoch: ${active ? `${active.number} / CLI ${active.policy.runtimeVersion} / ${active.sha256}` : 'none (first authorized run binds installed CLI)'}`);
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
-  if (!live && !repair && !rebind && !rebindModelFile && !offlineReview) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : 'READ-ONLY PLAN: no writes, migrations, calls, or fetches. Starts only 00:00–08:30 Pacific; no work outside the 30-day window.'); return; }
+  if (!live && !repair && !rebind && !rebindModelFile && !offlineReview) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : `READ-ONLY PLAN: no writes, migrations, calls, or fetches. Hours ${SCHEDULE_HOURS} (${SCHEDULE_TZ}); ${SCHEDULE_SCOPE === 'corpus' ? 'the 30-day window first, then the remaining priority bands' : 'no work outside the 30-day window'}.`); return; }
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
   if (live) laneWindow();
@@ -1076,7 +1085,7 @@ async function main() {
     applyHistoryRepair({ inspection: after, ledger: led, eligibleCount: allEligible.length });
     persistRemote(remoteRoot(), [LEDGER, IMAGE_INDEX, USAGE_LOG, join(RUN_DIR, 'fatal.json')], 'collector stopped');
     if (FATAL) throw new Error(`fatal: ${FATAL}`);
-    console.log(`Stopped: ${STOP_REASON || 'window queue exhausted'}; done ${after.doneSet.size}, held ${after.heldSet.size}.`);
+    console.log(`Stopped: ${STOP_REASON || (LANE === 'local' && SCHEDULE_SCOPE === 'corpus' ? 'corpus queue exhausted' : 'window queue exhausted')}; done ${after.doneSet.size}, held ${after.heldSet.size}.`);
   } finally { unlinkSync(RUN_LEASE); }
 }
 

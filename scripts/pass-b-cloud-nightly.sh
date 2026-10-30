@@ -39,10 +39,13 @@ export PASS_B_TIMEZONE="${PASS_B_TIMEZONE:-$(node -e "try{console.log(JSON.parse
 # Hours (owner 2026-10-17, VSD-066): state/schedule.json "hours": "all-day" lets every firing start (cron every 2 h);
 # each 2-hour slot then has its own allowance (slot-<date>-<HH>), so every firing may make up to PASS_B_MAX_CALLS.
 export PASS_B_HOURS="${PASS_B_HOURS:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).hours||'night')}catch{console.log('night')}")}"
+# Scope (owner 2026-10-30, VSD-068): state/schedule.json "scope": "corpus" continues past the 30-day window down the
+# priority bands (Easy, top-fame M/H/I, Medium, Hard, Impossible) once the window is done; default "window".
+export PASS_B_SCOPE="${PASS_B_SCOPE:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).scope||'window')}catch{console.log('window')}")}"
 if [ "$PASS_B_HOURS" = "all-day" ]; then SLOT_H=$(( 10#$(TZ=$PASS_B_TIMEZONE date +%H) / 2 * 2 )); DEFAULT_BUDGET="slot-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)-$(printf %02d $SLOT_H)"
 else DEFAULT_BUDGET="nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)"; fi
 export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-$DEFAULT_BUDGET}" PASS_B_LEASE_HOLDER="$HOLDER"
-echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
+echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS, scope $PASS_B_SCOPE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
 if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then

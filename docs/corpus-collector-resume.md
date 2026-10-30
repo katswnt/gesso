@@ -22,7 +22,7 @@ failures re-held, 416 verified completions, 129 done / 23 held / 500 preserved a
 
 `PASS_B_CORPUS_LIVE=1 node scripts/pass-b-corpus-collect.mjs --run` is the live entry point; do not run it
 from this handoff alone. The scope is Pacific today plus the following 29 dates, earliest date first,
-with no fall-through to Easy or the rest of the corpus. Every stage/retry must start 00:00–08:30 Pacific;
+then (schedule scope `corpus`, VSD-068) the remaining priority bands. Every stage/retry must start 00:00–08:30 Pacific;
 clients finish or are terminated by 09:00. Foreground invocation does not bypass these limits.
 
 The evidence directory stays `data/incoming/vision-calibration/corpus-b3-6401bc543ead/` under the banked

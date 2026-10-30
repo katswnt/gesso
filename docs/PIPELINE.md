@@ -382,8 +382,9 @@ VSD-035 adds the actual deterministic reconciliation layer:
   binary, so an update mid-run cannot change the child. It never accepts a drifted body retrospectively or authorizes calls. Fresh captured
   producer evidence uses the exact bound CLI version. Each fresh attempt is exclusively reserved
   before invocation and preserves transcript + metadata.
-  Current scope is Pacific today through the following 29 dates, earliest date first, with diversity
-  rotation only within a date; no fall-through to Easy or the rest of the corpus. Every stage and retry
+  Scope is a schedule setting (VSD-068): `window` = today through the following 29 dates, earliest date
+  first, with diversity rotation only within a date; `corpus` (current since 2026-10-30) = that window
+  first, then the remaining priority bands (Easy, top-fame M/H/I, Medium, Hard, Impossible). Every stage and retry
   rechecks the 00:00–08:30 start window; clients have a 30-minute maximum and a 09:00 cutoff.
   Missing/incomplete evidence and hang timeouts never trigger automatic conformance repair. A recorded
   SIGKILL at/after 09:00 is a nonterminal deadline pause; proven provenance failures still take precedence.

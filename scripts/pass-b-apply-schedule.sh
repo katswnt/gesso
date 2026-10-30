@@ -3,10 +3,12 @@
 # routine so the owner's laptop is not needed. Waits for any active run to release the lease, then under its own
 # lease: writes state/schedule.json, appends the reviewed --rebind-schedule epoch, pins the code that contains it,
 # and prints the status report. Idempotent: if the schedule already matches, it only reports.
-#   bash scripts/pass-b-apply-schedule.sh Europe/Paris "<reviewed by>" "<reason>" [night|all-day]
+#   bash scripts/pass-b-apply-schedule.sh Europe/Paris "<reviewed by>" "<reason>" night|all-day window|corpus
+# Hours and scope are required, so a time-zone change can never silently revert them.
 set -euo pipefail
-TZNAME="${1:?time zone}"; REVIEWED_BY="${2:?reviewed by}"; REASON="${3:?reason}"; HOURS="${4:-night}"
+TZNAME="${1:?time zone}"; REVIEWED_BY="${2:?reviewed by}"; REASON="${3:?reason}"; HOURS="${4:?night or all-day}"; SCOPE="${5:?window or corpus}"
 case "$HOURS" in night|all-day) ;; *) echo "hours must be night or all-day"; exit 2;; esac
+case "$SCOPE" in window|corpus) ;; *) echo "scope must be window or corpus"; exit 2;; esac
 REPO_DIR="$(git rev-parse --show-toplevel)"
 EV="${PASS_B_EVIDENCE_DIR:-$HOME/gesso-pass-b-evidence}"; BRANCH="claude/pass-b-state"
 if [ ! -d "$EV/.git" ]; then git clone -q --depth 1 --branch "$BRANCH" https://github.com/katswnt/gesso-pass-b-evidence.git "$EV"; fi
@@ -17,29 +19,29 @@ git -C "$EV" pull -q --ff-only origin "$BRANCH" || true
 git -C "$REPO_DIR" fetch -q origin g-03-image-agent-boundary; CODE="$(git -C "$REPO_DIR" rev-parse FETCH_HEAD)"   # pipeline branch tip (has --rebind-schedule)
 WT="$(mktemp -d)/gesso"; git -C "$REPO_DIR" worktree add -q --detach "$WT" "$CODE"; ln -s "$EV/incoming" "$WT/data/incoming"; cd "$WT"
 npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
-export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_TIMEZONE="$TZNAME" PASS_B_HOURS="$HOURS" PASS_B_CORPUS_LANE=local
+export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_TIMEZONE="$TZNAME" PASS_B_HOURS="$HOURS" PASS_B_SCOPE="$SCOPE" PASS_B_CORPUS_LANE=local
 HOLDER="schedule-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 # Take the lease: free, or a crashed automation run's (recovered after 90 quiet min, VSD-066). A live run: wait (~4h max).
 for i in $(seq 1 48); do node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER" && break; [ "$i" = 48 ] && { echo "STILL LOCKED after waiting: schedule NOT changed (review the lease)"; exit 2; }; sleep 300; done
 trap 'node scripts/pass-b-cloud-lease.mjs release "$HOLDER" || echo "LEASE RELEASE FAILED: release by hand"' EXIT
-CURRENT="$(node -e "try{const j=JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8'));console.log(j.timeZone+'/'+(j.hours||'night'))}catch{console.log('')}")"
-if [ "$CURRENT" != "$TZNAME/$HOURS" ]; then
-  node -e "require('fs').writeFileSync('$EV/state/schedule.json', JSON.stringify({timeZone:'$TZNAME',hours:'$HOURS',setBy:process.argv[1],setAt:new Date().toISOString()},null,1)+'\n')" "$REVIEWED_BY"
+CURRENT="$(node -e "try{const j=JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8'));console.log(j.timeZone+'/'+(j.hours||'night')+'/'+(j.scope||'window'))}catch{console.log('')}")"
+if [ "$CURRENT" != "$TZNAME/$HOURS/$SCOPE" ]; then
+  node -e "require('fs').writeFileSync('$EV/state/schedule.json', JSON.stringify({timeZone:'$TZNAME',hours:'$HOURS',scope:'$SCOPE',setBy:process.argv[1],setAt:new Date().toISOString()},null,1)+'\n')" "$REVIEWED_BY"
 fi
 REVIEW="$(mktemp)"
 PASS_B_REVIEWED_BY="$REVIEWED_BY" PASS_B_REASON="$REASON" PASS_B_REVIEW_OUT="$REVIEW" node --input-type=module -e "
-import { executionEpochs, executionPolicy, epochModel, CORPUS_RUN_DIR, SCHEDULE_REVIEW_VERSION, SCHEDULE_TZ, SCHEDULE_HOURS } from './scripts/pass-b-corpus-collect.mjs';
+import { executionEpochs, executionPolicy, epochModel, CORPUS_RUN_DIR, SCHEDULE_REVIEW_VERSION, SCHEDULE_TZ, SCHEDULE_HOURS, SCHEDULE_SCOPE } from './scripts/pass-b-corpus-collect.mjs';
 import { sha256, stableJson } from './scripts/lib/vision-legacy.mjs';
 import { writeFileSync } from 'node:fs';
 const prev = executionEpochs(CORPUS_RUN_DIR).at(-1), policy = executionPolicy(prev.policy.runtimeVersion, epochModel(prev));
-if (sha256(stableJson(prev.policy)) === sha256(stableJson(policy))) { console.log('epoch already ' + SCHEDULE_TZ + ', ' + SCHEDULE_HOURS); process.exit(0); }
-writeFileSync(process.env.PASS_B_REVIEW_OUT, JSON.stringify({ version: SCHEDULE_REVIEW_VERSION, runId: prev.runId, fromEpochSha256: prev.sha256, toTimeZone: SCHEDULE_TZ, toHours: SCHEDULE_HOURS,
+if (sha256(stableJson(prev.policy)) === sha256(stableJson(policy))) { console.log('epoch already ' + SCHEDULE_TZ + ', ' + SCHEDULE_HOURS + ', ' + SCHEDULE_SCOPE); process.exit(0); }
+writeFileSync(process.env.PASS_B_REVIEW_OUT, JSON.stringify({ version: SCHEDULE_REVIEW_VERSION, runId: prev.runId, fromEpochSha256: prev.sha256, toTimeZone: SCHEDULE_TZ, toHours: SCHEDULE_HOURS, toScope: SCHEDULE_SCOPE,
   toPolicySha256: sha256(stableJson(policy)), reviewedBy: process.env.PASS_B_REVIEWED_BY, reason: process.env.PASS_B_REASON, reviewedAt: new Date().toISOString() }, null, 1));
 console.log('from epoch ' + prev.number + ' (' + prev.policy.timeZone + ')');"
 if [ -s "$REVIEW" ]; then node scripts/pass-b-corpus-collect.mjs --rebind-schedule "$REVIEW" | tail -1; fi
-node -e "require('fs').writeFileSync('$EV/state/pin.json', JSON.stringify({commit:'$CODE',branch:'g-03-image-agent-boundary',pinnedAt:new Date().toISOString(),pinnedBy:'schedule switch to $TZNAME ($HOURS): '+process.argv[1]},null,1)+'\n')" "$REVIEWED_BY"
+node -e "require('fs').writeFileSync('$EV/state/pin.json', JSON.stringify({commit:'$CODE',branch:'g-03-image-agent-boundary',pinnedAt:new Date().toISOString(),pinnedBy:'schedule switch to $TZNAME ($HOURS, $SCOPE): '+process.argv[1]},null,1)+'\n')" "$REVIEWED_BY"
 git -C "$EV" add state/schedule.json state/pin.json incoming/vision-calibration/corpus-b3-6401bc543ead/execution-policies
-git -C "$EV" diff --cached --quiet || { git -C "$EV" commit -q -m "schedule: $TZNAME, $HOURS; pin ${CODE:0:7}"; git -C "$EV" push -q origin "$BRANCH"; }
+git -C "$EV" diff --cached --quiet || { git -C "$EV" commit -q -m "schedule: $TZNAME, $HOURS, $SCOPE; pin ${CODE:0:7}"; git -C "$EV" push -q origin "$BRANCH"; }
 node scripts/pass-b-corpus-collect.mjs | grep -E "date|may start|fatal" | head -3
 echo "=== status report ==="; node scripts/pass-b-status-report.mjs --evidence "$EV"
-echo "SCHEDULE SWITCH COMPLETE: $TZNAME, $HOURS"
+echo "SCHEDULE SWITCH COMPLETE: $TZNAME, $HOURS, $SCOPE"

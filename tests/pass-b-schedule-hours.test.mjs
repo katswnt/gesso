@@ -21,7 +21,7 @@ check('all-day rebind: a night epoch pauses; review /1 cannot change hours; revi
     writeFileSync(join(runDir, 'execution-policies', '000001.json'), JSON.stringify({ version: 'passBCorpusExecutionEpoch/1', runId: C.CORPUS_RUN_ID, number: 1, previousSha256: null, policy: night, review: null }));
     assert.throws(() => C.bindExecutionPolicy(runDir, '2.1.300'), /--rebind-schedule/);
     const prev = C.executionEpochs(runDir).at(-1);
-    const review = { version: C.SCHEDULE_REVIEW_VERSION, runId: C.CORPUS_RUN_ID, fromEpochSha256: prev.sha256, toTimeZone: 'Europe/Paris', toHours: 'all-day',
+    const review = { version: C.SCHEDULE_REVIEW_VERSION, runId: C.CORPUS_RUN_ID, fromEpochSha256: prev.sha256, toTimeZone: 'Europe/Paris', toHours: 'all-day', toScope: 'window',
       toPolicySha256: sha256(stableJson(allDay)), reviewedBy: 'fixture', reason: 'fixture', reviewedAt: '2026-10-17T12:00:00Z' };
     assert.throws(() => C.rebindSchedule(runDir, { ...review, version: 'passBCorpusScheduleReview/1' }), /cannot change the hours/);
     assert.throws(() => C.rebindSchedule(runDir, { ...review, toHours: 'night' }));
