@@ -14,7 +14,8 @@ import { dirname } from 'node:path';
 
 export const PACING_VERSION = 'passBPacing/2';
 export const CALL_BUDGET_VERSION = 'passBCallBudget/1';
-export const DEFAULTS = Object.freeze({ ceiling: 0.85, margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, weekMs: 7 * 24 * 3600 * 1000 });
+// Ceiling 0.95 (owner 2026-10-30, VSD-069: aim for ~95% of the week at reset; was 0.85, VSD-055).
+export const DEFAULTS = Object.freeze({ ceiling: 0.95, margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, weekMs: 7 * 24 * 3600 * 1000 });
 
 // The LAST rate_limit_event in a transcript (the freshest reading of that call), or null.
 export function rateLimitFrom(transcriptText) {

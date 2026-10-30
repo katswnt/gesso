@@ -28,7 +28,7 @@ cd "$WT"
 # was produced with (sharp's version shapes the image derivatives whose hashes are recorded).
 npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
 node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/package.json','utf8')).version; if (v!=='0.35.3') { console.error('sharp '+v+' != 0.35.3'); process.exit(1); }"
-export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-150}"
+export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-300}"
 # Cloud host, subscription rules: never inherit the historical cloud-credit lane's pacing/hours exemption.
 export PASS_B_CORPUS_LANE=local
 # Owner 2026-10-08: 150 calls per Pacific night, one allowance shared by that night's firings (00/03/06 PT).

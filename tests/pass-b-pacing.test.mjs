@@ -23,7 +23,8 @@ await check('on pace goes; ahead of pace stops; ceiling and five-hour windows st
   assert.equal(pacingDecision({ obs: obs(0.40), now }).go, true);
   assert.equal(pacingDecision({ obs: obs(0.60), now }).go, false);              // ahead of ~56% elapsed (+3 margin)
   const late = new Date(reset - 3600e3);                                          // last hour of the week: elapsed ~99%
-  assert.match(pacingDecision({ obs: obs(0.86, { at: late }), now: late }).reason, /ceiling/);
+  assert.equal(pacingDecision({ obs: obs(0.93, { at: late }), now: late }).go, true);       // VSD-069: 95% ceiling
+  assert.match(pacingDecision({ obs: obs(0.95, { at: late }), now: late }).reason, /ceiling/);
   assert.match(pacingDecision({ obs: obs(0.30, { five: 0.95 }), now }).reason, /five-hour/);
 });
 await check('missing, stale, or pre-reset readings never mean zero: two probe calls, then stop', () => {

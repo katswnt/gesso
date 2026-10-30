@@ -559,7 +559,7 @@ function initEvents(text) {
 let CLAUDE_BIN = null; // exact versioned binary resolved at session start (a mid-run update cannot swap it)
 let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null, ACTIVE_MODEL = null, PACER = null;
 export const USAGE_LOG = join(RUN_ROOT, '..', 'vision-ops', 'usage-observations.jsonl');
-export const SESSION_CALL_CAP = Number(process.env.PASS_B_MAX_CALLS || 150); // backstop; pacing decides first
+export const SESSION_CALL_CAP = Number(process.env.PASS_B_MAX_CALLS || 300); // backstop; pacing decides first (300 since VSD-069)
 const markFatal = reason => { FATAL ||= reason; persistFatal(RUN_DIR, FATAL); };
 // Only a classified boundary failure may create fatal.json. Filesystem, lease and runtime problems
 // cannot become permanent provenance findings merely because they surfaced outside runWorkStages.
