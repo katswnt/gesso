@@ -24,6 +24,9 @@ HOLDER="schedule-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 # Take the lease: free, or a crashed automation run's (recovered after 90 quiet min, VSD-066). A live run: wait (~4h max).
 for i in $(seq 1 48); do node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER" && break; [ "$i" = 48 ] && { echo "STILL LOCKED after waiting: schedule NOT changed (review the lease)"; exit 2; }; sleep 300; done
 trap 'node scripts/pass-b-cloud-lease.mjs release "$HOLDER" || echo "LEASE RELEASE FAILED: release by hand"' EXIT
+# The collector must know its own holder: an unfinished call from ANY other holder is a crash orphan (VSD-067), not
+# this job's in-flight call. Without this, an old orphan reads as "unknown outcome" and the rebind fails closed.
+export PASS_B_LEASE_HOLDER="$HOLDER"
 CURRENT="$(node -e "try{const j=JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8'));console.log(j.timeZone+'/'+(j.hours||'night')+'/'+(j.scope||'window'))}catch{console.log('')}")"
 if [ "$CURRENT" != "$TZNAME/$HOURS/$SCOPE" ]; then
   node -e "require('fs').writeFileSync('$EV/state/schedule.json', JSON.stringify({timeZone:'$TZNAME',hours:'$HOURS',scope:'$SCOPE',setBy:process.argv[1],setAt:new Date().toISOString()},null,1)+'\n')" "$REVIEWED_BY"
