@@ -1,12 +1,12 @@
 // Offline job regressions: real stage planning/derivation with injected calls, isolated evidence only.
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots } from '../scripts/pass-b-nightly.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
 import { makePacer } from '../scripts/lib/pass-b-pacing.mjs';
@@ -135,4 +135,36 @@ await check('collector receives only remaining local allowance and errors propag
   assert.equal(CF_RUNNER.equivalentRuns('S3', []).length, 1, 'no other stage gains an alias');
   console.log('ok S2 pre-cap run resolves to cf-1d898d84282f and differs only in the wire-schema hash');
 }
+await check('VSD-070: four works advanced concurrently through the real stages each finish with one attempt per stage, shared pacer', async () => {
+  const pacer = makePacer({ logPath: null, maxCalls: 100, opts: { probeCalls: 100 } }); let calls = 0;
+  const slowCall = (key, p) => runAudit({ ...run(key), plans: [p], pacer,
+    callFn: async () => { calls++; await new Promise(r => setTimeout(r, 3)); return { transcript: transcript(p, output(key)), exitCode: 0 }; } });
+  const ids = ['c1', 'c2', 'c3', 'c4'], results = {};
+  await runPool(ids, 3, async id => { results[id] = await advanceWork({ base: base(id), call: slowCall, saveCopy: () => {} }); }, () => false);
+  assert.ok(ids.every(id => results[id].finished), JSON.stringify(results));
+  assert.equal(calls, 20); assert.equal(pacer.calls, 20); // 5 stages x 4 works, every call through the one pacer
+  for (const id of ids) assert.equal((await advanceWork({ base: base(id), call: () => { throw new Error('must not call'); }, saveCopy: () => {} })).finished, true);
+});
+// VSD-070 (2026-11-01): finished copy is found by name in any date folder, so runs skip it without re-verifying or re-pushing.
+await check('finished copy is recognised by file name in any date folder', async root => {
+  const out = join(root, 'out'), a = copyArtifact('w1', '2026-11-03', { why: 'x' }, out);
+  mkdirSync(dirname(a.path), { recursive: true }); writeFileSync(a.path, '{}');
+  assert.equal(copyName('w1'), basename(a.path)); // the date folder plays no part in the name
+  const names = finishedCopyNames(out);
+  assert.ok(names.has(copyName('w1'))); assert.ok(!names.has(copyName('w2')));
+  assert.equal(finishedCopyNames(join(root, 'none')).size, 0);
+});
+await check('worker pool: at most N works at once, priority order kept, no new work after a stop', async () => {
+  let live = 0, peak = 0; const started = [];
+  await runPool([1, 2, 3, 4, 5, 6, 7], 3, async id => { started.push(id); live++; peak = Math.max(peak, live); await new Promise(r => setTimeout(r, 5)); live--; }, () => false);
+  assert.equal(peak, 3); assert.deepEqual(started, [1, 2, 3, 4, 5, 6, 7]);
+  let stop = false; const seen = [];
+  await runPool([1, 2, 3, 4, 5, 6, 7], 2, async id => { seen.push(id); await new Promise(r => setTimeout(r, 5)); if (id === 2) stop = true; }, () => stop);
+  assert.deepEqual(seen, [1, 2, 3]); // 1 and 2 start together; 3 starts when 1 finishes before 2 stops; nothing after the stop
+});
+await check('concurrent works citing the same source fetch it once', async () => {
+  let fetches = 0; const snap = sharedSnapshots(async url => { fetches++; await new Promise(r => setTimeout(r, 5)); return { url, ok: true }; });
+  const [x, y] = await Promise.all([snap('https://a.example/p', 'd'), snap('https://a.example/p', 'd')]);
+  assert.equal(fetches, 1); assert.equal(x, y);
+});
 console.log(`pass-b-nightly.test: ${n} checks passed`);

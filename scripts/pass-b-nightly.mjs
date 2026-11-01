@@ -9,7 +9,7 @@
 //   node scripts/pass-b-nightly.mjs                 # read-only plan
 //   PASS_B_NIGHTLY_LIVE=1 node scripts/pass-b-nightly.mjs --run [--collect]
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
@@ -139,6 +139,29 @@ export async function advanceWork({ base, call, saveCopy, prepare = async () => 
   throw new Error('nightly work did not reach a terminal state within its bounded stage loop');
 }
 
+// Owner 2026-11-01 (VSD-070): finished copy is found by file name in ANY date folder, so a run never re-verifies or
+// re-pushes hundreds of finished works one by one (at 940 works that took ~1.5 h with no push, and the run lost its
+// lease to self-healing). One catch-up persist of the copy folder covers anything committed but not yet pushed.
+export function finishedCopyNames(out = OUT) {
+  const root = join(out, 'copy'), names = new Set();
+  if (existsSync(root)) for (const d of readdirSync(root)) if (!d.startsWith('.')) for (const f of readdirSync(join(root, d))) names.add(f);
+  return names;
+}
+export const copyName = id => basename(copyArtifact(id, null, {}).path);
+// A small pool of workers over the priority order (VSD-070). Every reservation, pacer allowance and push is
+// synchronous, so concurrent works cannot interleave inside one; each work has its own attempt folder.
+export async function runPool(items, workers, fn, stopped) {
+  let next = 0;
+  const one = async () => { while (!stopped() && next < items.length) await fn(items[next++]); };
+  await Promise.all(Array.from({ length: Math.max(1, workers) }, one));
+}
+// One fetch per URL even when two concurrent works cite the same source.
+export function sharedSnapshots(fetchOne = snapshot) {
+  const inflight = new Map();
+  return (url, dir) => { if (!inflight.has(url)) inflight.set(url, fetchOne(url, dir)); return inflight.get(url); };
+}
+export const NIGHTLY_WORKERS = Math.max(1, Math.min(6, Number(process.env.PASS_B_NIGHTLY_WORKERS || 3)));
+
 export async function collectRemaining({ pacer, execute = execFileP, env = process.env }) {
   if (pacer.remaining === 0) return;
   const r = await execute('node', ['scripts/pass-b-corpus-collect.mjs', '--run'], {
@@ -164,16 +187,13 @@ async function main() {
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
   const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0 }, pending = [];
+  const written = finishedCopyNames();
   for (const id of order) {
+    if (written.has(copyName(id))) { counts.copy++; continue; } // finished in an earlier run (any date folder)
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
     if (!base) { counts.notReady++; continue; }
     const st = workStatus(base);
-    if (st.next === 'copy') {
-      if (copyExists(copyArtifact(id, dateOf.get(id), st.copy))) counts.copy++;
-      else counts.copyPending++;
-      // Idempotently ensure remote persistence too, including a prior committed-but-unpushed copy.
-      pending.push(id);
-    } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
+    if (st.next === 'copy') { counts.copyPending++; pending.push(id); } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
   console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
@@ -190,19 +210,21 @@ async function main() {
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
   const only = ownerOnly;
   if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
-  for (const id of pending) {
-    if (stop) break;
+  persist(remoteRoot(), [join(OUT, 'copy')], 'copy: catch up finished copy not yet pushed');
+  const snap = sharedSnapshots();
+  console.log(`  workers: ${NIGHTLY_WORKERS} | pending: ${pending.length}`);
+  await runPool(pending, NIGHTLY_WORKERS, async id => {
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
-    const result = await advanceWork({ base, call, safetyCheck,
+    const result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop) ? stop : null),
       saveCopy: copy => preserveCopy(copyArtifact(id, dateOf.get(id), copy)),
       prepare: async () => {
-        for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snapshot(u, SNAP);
+        for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snap(u, SNAP);
         persist(remoteRoot(), [SNAP], `snapshots for ${id}`);
       } });
     if (result.finished) finished++;
-    if (mustHalt(result)) stop = result.stop;
-  }
-  console.log(`claim-first: finished ${finished} work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
+    if (mustHalt(result)) stop ||= result.stop;
+  }, () => Boolean(stop));
+  console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
   if (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
