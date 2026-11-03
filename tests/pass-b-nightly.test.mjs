@@ -145,6 +145,19 @@ await check('VSD-070: four works advanced concurrently through the real stages e
   assert.equal(calls, 20); assert.equal(pacer.calls, 20); // 5 stages x 4 works, every call through the one pacer
   for (const id of ids) assert.equal((await advanceWork({ base: base(id), call: () => { throw new Error('must not call'); }, saveCopy: () => {} })).finished, true);
 });
+await check('VSD-071: a page that downloads only after S1 was reserved stays out of that work (no frozen-input stop)', async () => {
+  const b = { ...base('late'), b2: { factChecks: [{ claimId: 'c1', claim: 'The painting shows a red cup resting on a wooden table', sources: [{ sourceId: 's1', url: 'https://example.org/late-page' }] }] } };
+  let calls = 0;
+  const first = await advanceWork({ base: b, saveCopy: () => {}, call: async (key, p) => calls++ < 2 ? call(key, p) : { stop: 'pacing: session call cap reached' } });
+  assert.match(first.stop, /pacing/); // S1 and S2 done, then the run's cap stopped this work mid-way
+  const snap = join(RUN_ROOT, 'claim-first-v1', 'snapshots'), key = sha256('https://example.org/late-page').slice(0, 24);
+  const raw = Buffer.from('<html><body><p>The painting shows a red cup resting on a wooden table, painted in 1650.</p></body></html>');
+  mkdirSync(snap, { recursive: true }); writeFileSync(join(snap, `${key}.raw`), raw);
+  writeFileSync(join(snap, `${key}.meta.json`), JSON.stringify({ url: 'https://example.org/late-page', rawSha256: sha256(raw), contentType: 'text/html', ok: true }));
+  assert.notEqual(workStatus(b).next, 'terminal'); // before VSD-071: throws "frozen input changed since reservation"
+  const rest = await advanceWork({ base: b, call, saveCopy: () => {} });
+  assert.equal(rest.finished, true);
+});
 // VSD-070 (2026-11-01): finished copy is found by name in any date folder, so runs skip it without re-verifying or re-pushing.
 await check('finished copy is recognised by file name in any date folder', async root => {
   const out = join(root, 'out'), a = copyArtifact('w1', '2026-11-03', { why: 'x' }, out);

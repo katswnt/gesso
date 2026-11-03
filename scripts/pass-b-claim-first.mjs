@@ -65,6 +65,21 @@ export function workBase(id) {
 }
 const citedUrls = b2 => [...new Set((b2?.factChecks || []).flatMap(fc => (fc.sources || []).map(s => s.url)).filter(Boolean))];
 const pageFor = url => { const key = sha256(url).slice(0, 24); return existsSync(join(SNAP, `${key}.meta.json`)) ? snapshotTextV2(key, SNAP) : null; };
+// VSD-071 (2026-11-03): a work's source pages are frozen at its first S1 reservation. A page that failed to download
+// then (binding.pages[i] === null) stays absent for that work's later stages and history lookups, even after a later
+// run (or another work) snapshots it; otherwise the next run's plan no longer matches the reservation and the whole
+// pipeline fails closed ("frozen input changed since reservation"). Snapshots are never rewritten, so presence only grows.
+function pagesOf(base) {
+  for (const r of equivalentRuns('S1', [])) {
+    const f = join(r.outDir, 'works', safeWork(base.id), 'attempt-1.reserved.json');
+    if (!existsSync(f)) continue;
+    const pages = readJson(f).binding?.pages;
+    if (!Array.isArray(pages)) break;
+    const urls = citedUrls(base.b2), keep = new Set(urls.filter((u, i) => pages[i]));
+    return url => keep.has(url) ? pageFor(url) : null;
+  }
+  return pageFor;
+}
 
 // ---------- stage bindings and plans ----------
 const STAGES = {
@@ -110,8 +125,9 @@ function mkPlan(key, base, input, binding, extra = {}) {
 export function planS1(base) {
   const b2 = loadB2(base.dir);
   const digest = url => { const f = b2.fetches.find(x => x.url === url && x.status === 'fetched'); return f ? f.digest : null; };
-  const input = CF.buildClaimJudgmentInput({ workId: base.id, catalog: base.catalog, b2: base.b2, page: pageFor, digest });
-  return mkPlan('S1', base, input, { ...base.binding, pages: citedUrls(base.b2).map(u => pageFor(u)?.textSha256 || null) });
+  const page = pagesOf(base);
+  const input = CF.buildClaimJudgmentInput({ workId: base.id, catalog: base.catalog, b2: base.b2, page, digest });
+  return mkPlan('S1', base, input, { ...base.binding, pages: citedUrls(base.b2).map(u => page(u)?.textSha256 || null) });
 }
 export function planS2(base) {
   const candidates = CF.visualCandidates(base.b1);
@@ -144,7 +160,8 @@ export function planSI(base, works, s2Plan) {
   if (h2?.kind !== 'accepted') return null;
   const visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
   const probe = [base.catalog?.title, ...visuals.map(v => v.text), ...(base.b1?.visual?.figures || []).map(f => `${f.who} ${f.role}`), ...(base.b1?.visual?.iconography || [])].join(' ');
-  const pages = citedUrls(base.b2).map(u => ({ sourceId: u, page: pageFor(u) })).filter(x => x.page).map(x => ({ sourceId: x.sourceId, text: x.page.text }));
+  const page = pagesOf(base);
+  const pages = citedUrls(base.b2).map(u => ({ sourceId: u, page: page(u) })).filter(x => x.page).map(x => ({ sourceId: x.sourceId, text: x.page.text }));
   const picked = selectPassages({ componentId: 'ident', text: probe }, pages, { perComponent: 14, perWorkChars: 7000, minScore: 2 }).map(p => p.text);
   const input = CF.buildIdentityInput({ workId: base.id, title: base.catalog?.title, passages: picked, visuals });
   return mkPlan('SI', base, input, { ...base.binding, s2: h2.meta.resultSha256 });
