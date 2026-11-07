@@ -29,7 +29,7 @@ await check('a real answer from another model is still fatal', () => assert.equa
 await check('runAudit: an overloaded API stops the run cleanly with no fatal marker', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'api-error-'));
   try {
-    const r = await runAudit({ plans: [plan], outDir: dir, runId: 'cf-test', binding: { version: 'test' }, callFn: async () => ({ transcript: placeholder(), exitCode: 1 }) });
+    const r = await runAudit({ plans: [plan], outDir: dir, runId: 'cf-test', binding: { version: 'test' }, now: () => new Date('2026-11-05T09:00:00Z'), callFn: async () => ({ transcript: placeholder(), exitCode: 1 }) }); // 01:00 Pacific: inside the start window whatever the real clock says
     assert.equal(r.stop, 'api-error'); assert.equal(r['api-error'], 1); assert.equal(r.fatal, 0);
     assert.equal(existsSync(join(dir, 'fatal.json')), false);
   } finally { rmSync(dir, { recursive: true, force: true }); }

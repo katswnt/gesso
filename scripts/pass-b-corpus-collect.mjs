@@ -17,6 +17,7 @@ import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist as persistRemote, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
 import { stagePrompts } from './lib/pass-b-prompts.mjs';
+import { pipelineWide, setAsideBudget, setAsideRecord, validSetAside } from './lib/pass-b-set-aside.mjs';
 import { WIRE_SCHEMAS, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs';
 import {
   RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION,
@@ -450,6 +451,12 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (stage === 'B2') b2LastInterrupted = usage;
     const model = usage ? tr.init?.model : answeringModel(text, final);
     const inits = initEvents(text);
+    // VSD-073: a work-level fatal set aside under the per-firing budget holds only this work. Subscription-source and
+    // init-model evidence is re-checked here and still stops everything whatever the record says.
+    if (meta?.kind === 'fatal' && !pipelineWide(meta.reason) && inits.length && inits.every(e => e.apiKeySource === 'none' && e.model === epochModel(binding.epoch))
+        && validSetAside(join(attemptsDir, `${name.slice(0, 9)}.set-aside.json`), { workId: id, boundFile: join(attemptsDir, `${name.slice(0, 9)}.meta.json`) })) {
+      terminalReasons.push(`${stage}:set-aside (${meta.reason})`); continue;
+    }
     // A failed process with no initialization is an operational interruption, not evidence of API use.
     const operational = meta?.kind === 'operational-pause' && meta.exitCode !== 0;
     const deadline = meta?.kind === 'deadline-pause' && meta.exitCode === 'deadline';
@@ -561,6 +568,7 @@ let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_R
 export const USAGE_LOG = join(RUN_ROOT, '..', 'vision-ops', 'usage-observations.jsonl');
 export const SESSION_CALL_CAP = Number(process.env.PASS_B_MAX_CALLS || 300); // backstop; pacing decides first (300 since VSD-069)
 const markFatal = reason => { FATAL ||= reason; persistFatal(RUN_DIR, FATAL); };
+const SET_ASIDE = setAsideBudget(); // VSD-073: one budget per collector process (one firing)
 // Only a classified boundary failure may create fatal.json. Filesystem, lease and runtime problems
 // cannot become permanent provenance findings merely because they surfaced outside runWorkStages.
 export function stopForException(error, { fatal, pause }) {
@@ -574,7 +582,7 @@ export function stopForException(error, { fatal, pause }) {
 
 // Injectable executor for offline regression tests. No test needs the real Claude binary.
 export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, ext, stage, command, imageFile,
-  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE }) {
+  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE, setAside = SET_ASIDE }) {
   assertExecutionLease();
   const priorFatal = preservedFatal(runDir);
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);
@@ -627,8 +635,11 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (exitCode === 'timeout' && cls.kind !== 'fatal') cls = { kind: 'held', reason: 'process-timeout; never retry automatically' };
     writeFileSync(join(attemptsDir, `${stem}.meta.json`), `${JSON.stringify({ workId: id, stage, seq, exitCode, ...cls, transcriptFile, transcriptSha256: sha256(stdout) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
-    try { persistRemote(remoteRoot(), [join(attemptsDir, `${stem}.meta.json`), join(attemptsDir, transcriptFile), USAGE_LOG], `outcome ${id}/${stage} ${stem}: ${cls.kind}`); }
+    const aside = cls.kind === 'fatal' && setAside(cls.reason);
+    if (aside) writeFileSync(join(attemptsDir, `${stem}.set-aside.json`), `${JSON.stringify(setAsideRecord({ workId: id, reason: cls.reason, boundFile: join(attemptsDir, `${stem}.meta.json`), now: now() }), null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    try { persistRemote(remoteRoot(), [join(attemptsDir, `${stem}.meta.json`), join(attemptsDir, transcriptFile), ...(aside ? [join(attemptsDir, `${stem}.set-aside.json`)] : []), USAGE_LOG], `outcome ${id}/${stage} ${stem}: ${cls.kind}${aside ? ' (set aside)' : ''}`); }
     catch (e) { if (cls.kind !== 'fatal') throw new OperationalPauseError(`persist-failed after call: ${e.message}`); }
+    if (aside) throw new TerminalAttemptError(`set aside: ${cls.reason}`);
     if (cls.kind === 'fatal') { persistFatal(runDir, `${id}/${stage}: ${cls.reason}`); throw new FatalError(cls.reason); }
     if (cls.kind === 'runtime-pause') throw new RuntimePauseError(cls.reason);
     if (cls.kind === 'operational-pause') throw new OperationalPauseError(cls.reason);

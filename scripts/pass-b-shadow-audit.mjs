@@ -25,6 +25,7 @@ import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-ca
 import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
 import { recordObservation } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease } from './lib/pass-b-remote-evidence.mjs';
+import { pipelineWide, setAsideRecord, validSetAside } from './lib/pass-b-set-aside.mjs';
 import { JUDGMENT_VERSION, JUDGMENT_UNIT, JUDGMENT_PROMPT, JUDGMENT_WIRE_SCHEMA, buildJudgmentInput, authoritativeResolver, controlJudgment, scoreJudgment } from './lib/pass-b-audit-judgment.mjs';
 import { snapshotTextV2 } from './pass-b-audit-evidence.mjs';
 import { AUDIT_V2_VERSION, AUDIT_V2_PROMPT, AUDIT_V2_WIRE_SCHEMA, buildInputV2, controlAuditV2, compactFromV1 } from './lib/pass-b-shadow-audit-v2.mjs';
@@ -435,9 +436,19 @@ export function auditRunFatal(outDir) {
     const result = readJson(res);
     if (meta.transcriptSha256 !== rawSha(tr) || meta.resultSha256 !== rawSha(res) || meta.status !== result.kind)
       throw new Error(`${w}: attempt evidence changed`);
-    if (result.kind === 'fatal' && !amendmentFor(outDir, meta.workId, meta)) return `${w}: ${result.errors.join('; ')}`;
+    if (result.kind === 'fatal' && !amendmentFor(outDir, meta.workId, meta) && !setAsideOf(dir, meta.workId, result)) return `${w}: ${result.errors.join('; ')}`;
   }
   return null;
+}
+// VSD-073: a work-level fatal with a valid set-aside record holds only that work (auditHistory still reports it fatal).
+const setAsideOf = (workDir, workId, result) => !pipelineWide(result.errors.join('; ')) &&
+  validSetAside(join(workDir, 'attempt-1.set-aside.json'), { workId, boundFile: join(workDir, 'attempt-1.result.json') });
+export function setAsideWorks(outDir) {
+  const works = join(outDir, 'works'); if (!existsSync(works)) return [];
+  return readdirSync(works).flatMap(w => { const dir = join(works, w), res = join(dir, 'attempt-1.result.json'), m = join(dir, 'attempt-1.meta.json');
+    if (!existsSync(res) || !existsSync(m)) return [];
+    const meta = readJson(m), result = readJson(res);
+    return result.kind === 'fatal' && !amendmentFor(outDir, meta.workId, meta) && setAsideOf(dir, meta.workId, result) ? [{ workId: meta.workId, reason: result.errors.join('; ') }] : []; });
 }
 function persistFatal(outDir, runId, reason) { const p = join(outDir, 'fatal.json'); if (!existsSync(p)) durableWrite(p, `${JSON.stringify({ runId, reason, recordedAt: new Date().toISOString() })}\n`); }
 
@@ -494,7 +505,8 @@ export async function callAuditPinned(plan, { bin, timeout, execute = execFileP 
 }
 
 // pacer / usageLog (VSD-055): optional usage pacing checked before each reservation; observations recorded after each call.
-export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null, beforeReserve = () => null }) {
+// setAside (VSD-073): optional per-firing budget (lib/pass-b-set-aside.mjs); without it every fatal stops, as before.
+export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null, beforeReserve = () => null, setAside = null }) {
   const incremental = binding?.version?.startsWith('passBClaimFirstNightly/1:');
   if (!existsSync(join(outDir, 'run-manifest.json'))) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
@@ -513,7 +525,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     if (existsSync(receiptFile)) { if (stableJson(readJson(receiptFile)) !== stableJson(receipt)) throw new Error(`${p.workId}: frozen input binding changed`); }
     else durableWrite(receiptFile, `${JSON.stringify(receipt)}\n`);
   }
-  const tally = { calls: 0, accepted: 0, held: 0, fatal: 0, 'usage-limit': 0, 'api-error': 0, 'unknown-outcome': 0, skipped: 0 };
+  const tally = { calls: 0, accepted: 0, held: 0, fatal: 0, 'set-aside': 0, 'usage-limit': 0, 'api-error': 0, 'unknown-outcome': 0, skipped: 0 };
   let stop = auditRunFatal(outDir) ? 'preserved-fatal' : null;
   for (const plan of plans) {
     if (stop) break;
@@ -545,9 +557,13 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     durableWrite(resultPath, `${JSON.stringify(derived, null, 2)}\n`);
     durableWrite(join(dir, 'attempt-1.meta.json'), `${JSON.stringify({ workId: plan.workId, attempt: 1, status: derived.kind, exitCode: raw.exitCode ?? 1, durationMs, promptHash: plan.promptHash, transcriptSha256: sha256(raw.transcript || ''), resultSha256: rawSha(resultPath) }, null, 2)}\n`);
     tally[derived.kind] = (tally[derived.kind] || 0) + 1;
-    if (derived.kind === 'fatal') { persistFatal(outDir, runId, `${plan.workId}: ${derived.errors.join('; ')}`); stop = 'fatal-provenance'; }
+    let aside = false;
+    if (derived.kind === 'fatal' && setAside?.(derived.errors.join('; '))) {
+      aside = true; tally['set-aside']++;
+      durableWrite(join(dir, 'attempt-1.set-aside.json'), `${JSON.stringify(setAsideRecord({ workId: plan.workId, reason: derived.errors.join('; '), boundFile: resultPath, now: now() }), null, 1)}\n`);
+    } else if (derived.kind === 'fatal') { persistFatal(outDir, runId, `${plan.workId}: ${derived.errors.join('; ')}`); stop = 'fatal-provenance'; }
     else if (STOPPED(derived.kind)) stop = derived.kind; // usage limit or API unavailable: a clean stop, slot consumed
-    try { persist(remoteRoot(), [dir, join(outDir, 'fatal.json'), usageLog], `outcome ${runId} ${plan.workId}: ${derived.kind}`); }
+    try { persist(remoteRoot(), [dir, join(outDir, 'fatal.json'), usageLog], `outcome ${runId} ${plan.workId}: ${derived.kind}${aside ? ' (set aside)' : ''}`); }
     catch (e) { stop ||= `persist-failed: ${e.message}`; } // the remote copy then shows a reservation without outcome: terminal, never retried
   }
   return { stop: stop || 'done', ...tally };

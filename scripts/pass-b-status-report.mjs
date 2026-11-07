@@ -16,6 +16,7 @@ const log = execFileSync('git', ['-C', EV, 'log', `--since=${HOURS} hours ago`, 
   .map(l => { const [at, ...s] = l.split('\t'); return { at, s: s.join('\t') }; });
 const count = re => log.filter(c => re.test(c.s)).length;
 const reserves = count(/^reserve /), copies = log.filter(c => /^copy /.test(c.s)), fatals = log.filter(c => /: fatal$/.test(c.s));
+const setAside = log.filter(c => /: fatal \(set aside\)$/.test(c.s)); // VSD-073: one work held, the run kept going
 const statuses = log.filter(c => /^status:/.test(c.s)), recoveries = log.filter(c => /^lease: recover crashed /.test(c.s));
 const status = read('state/status.json'), lease = read('state/lease.json'), pin = read('state/pin.json');
 
@@ -65,6 +66,7 @@ const out = [
   `Calls made: ${reserves}${lastBudget ? ` · allowance ${budgets.at(-1).replace(/\.json$/, '')}: ${lastBudget.allowances.length}/${lastBudget.limit}` : ''}`,
   `Works finished (copy written): ${copies.length}${copies.length ? ` (latest ${local(copies[0].at)})` : ''}`,
   fatals.length ? `Fatal outcomes: ${fatals.length}: ${fatals.map(f => f.s.replace(/^outcome /, '')).join('; ')}` : null,
+  setAside.length ? `Set aside for review (the run kept going): ${setAside.length}: ${setAside.map(f => f.s.replace(/^outcome /, '').replace(/: fatal \(set aside\)$/, '')).join('; ')}` : null,
   recoveries.length ? `Self-healed: recovered ${recoveries.length} crashed run lock(s) (${recoveries.map(r => local(r.at)).join(', ')})` : null,
   `Runs completed: ${statuses.length}${statuses[0] ? ` · last ${local(statuses[0].at)}` : ''}`,
   usage ? `Weekly usage: ${Math.round(usage.sevenDay?.utilization * 100)}% · 5-hour: ${Math.round(usage.fiveHour?.utilization * 100)}% (read ${local(usage.observedAt)})` : null,

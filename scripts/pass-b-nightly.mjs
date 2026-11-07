@@ -17,6 +17,7 @@ import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { RUN_ROOT, trustedCatalog, snapshotLegacy } from './lib/pass-b-calibration.mjs';
 import { CORPUS_RUN_DIR, scopeOrder, SCHEDULE_SCOPE, inspectWork, inspectCorpus, preservedFatal as corpusFatal, pacificClock, USAGE_LOG, SESSION_CALL_CAP } from './pass-b-corpus-collect.mjs';
 import { runAudit, auditHistory, auditRunFatal, callAuditPinned } from './pass-b-shadow-audit.mjs';
+import { setAsideBudget } from './lib/pass-b-set-aside.mjs';
 import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
@@ -204,7 +205,9 @@ async function main() {
 
   const bin = realpathSync(String((await execFileP('/bin/sh', ['-c', 'command -v claude'])).stdout).trim());
   const pacer = makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP, statePath: executionBudgetPath() });
-  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: safetyCheck, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
+  // VSD-073: one set-aside budget for the whole firing, shared by every worker and stage.
+  const setAside = setAsideBudget();
+  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: safetyCheck, setAside, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   let stop = null, finished = 0;
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
@@ -224,6 +227,7 @@ async function main() {
     if (result.finished) finished++;
     if (mustHalt(result)) stop ||= result.stop;
   }, () => Boolean(stop));
+  if (setAside.used()) console.log(`  set aside for review: ${setAside.used()} work(s) (VSD-073)`);
   console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
   if (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { setAsideBudget } from '../scripts/lib/pass-b-set-aside.mjs';
 import { verifyMisreadIncident, applyFatalClearance, loadFatalClearances, FATAL_CLEARANCE_VERSION, CLEARANCE_DISPOSITION, b0FailureClass, B0_TRANSIENT_HOLD_AFTER, B0_CIRCUIT_BREAKER, isPatchUpgrade, runIdFor, computeQueue, classifySpawn, attemptFilename, derivativeMatches, buildPriorityQueue, isUsageInterrupted, isLeaseInterrupted, heldToRequeue, acquireStageLease, pacificClock, callWindow, inspectWork, inspectCorpus, applyHistoryRepair, readLedger, persistFatal, preservedFatal, executeCorpusAttempt, effectivePromptFor, bindExecutionPolicy, executionEpochs, executionPolicy, rebindRuntime, stopForException, enforceValidationBudget, retryTransportOnce, COLLECTOR_VERSION, COLLECTION_MODEL, HISTORICAL_MODEL, rebindModel, epochModel, rebindContract, grantFormatRetries, loadFormatRetries, WIRE_POLICY } from '../scripts/pass-b-corpus-collect.mjs';
 import { syntheticFixture, verifyB1ImageRead, parseStreamTranscript, producerEvidence, trustedCatalog, runWorkStages, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
@@ -704,5 +705,34 @@ await ta('owner hours exception: only today\'s Pacific date opens a daytime star
   assert.throws(()=>callWindow(day,undefined),/protected-hours/);assert.throws(()=>callWindow(day,'2026-09-30'),/protected-hours/);
   const w=callWindow(day,'2026-10-01');assert.equal(w.hoursException,'2026-10-01');assert.equal(w.timeout,30*60*1000);
   assert.equal(callWindow(at('2026-10-01T08:00:00Z'),'2026-10-01').hoursException,undefined,'inside the window no exception is recorded');
+});
+// VSD-073 (owner 2026-11-07): a work-level fatal sets only that work aside; the per-firing budget, subscription source
+// and a forged record still stop everything.
+await ta('set-aside: answering-model drift holds only this work, no fatal marker',async()=>{
+  const f=fixture({complete:['B1']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),setAside:setAsideBudget(),execute:async()=>({stdout:f.transcript('B2',f.bodies.B2,{haikuDominates:true})})}),/set aside: model drift/);
+    assert.equal(preservedFatal(f.runDir),null);
+    const w=f.inspect();assert.equal(w.fatal,null);assert.match(w.terminalReasons.join(),/B2:set-aside \(model drift/);assert.equal(w.done,false);
+    assert.equal(f.corpus().fatal,null);
+    // a forged/stale record (bound to other bytes) no longer counts: the fatal stops everything again
+    const rec=join(f.workRunDir,'attempts','b2-000020.set-aside.json');
+    writeFileSync(rec,JSON.stringify({...JSON.parse(readFileSync(rec,'utf8')),boundSha256:'0'.repeat(64)}));
+    assert.ok(f.inspect().fatal);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+await ta('set-aside: an exhausted budget is the old pipeline-wide fatal',async()=>{
+  const f=fixture({complete:['B1']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),setAside:()=>false,execute:async()=>({stdout:f.transcript('B2',f.bodies.B2,{haikuDominates:true})})}),/model drift/);
+    assert.match(preservedFatal(f.runDir),/model drift/);assert.equal(existsSync(join(f.workRunDir,'attempts','b2-000020.set-aside.json')),false);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+await ta('set-aside: subscription source is never set aside',async()=>{
+  const f=fixture({complete:['B1']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),setAside:setAsideBudget(),execute:async()=>({stdout:f.transcript('B2',f.bodies.B2,{apiKeySource:'api-key'})})}),/apiKeySource/);
+    assert.match(preservedFatal(f.runDir),/apiKeySource/);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 console.log(`\n${n} corpus-collector regressions passed`);

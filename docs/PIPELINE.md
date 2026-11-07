@@ -516,6 +516,13 @@ Offline hardening on 2026-09-30:
   even outside the window or if a stage's convenience fatal marker is absent. Held/unknown
   stages terminate their work before any missing sibling spends. Every non-success stage stop
   is propagated; collection subprocess failures are not swallowed.
+- Set-aside (VSD-073): a work-level fatal (answering-model mismatch, forbidden tool use) writes
+  `attempt-1.set-aside.json` (nightly stages) or `<stem>.set-aside.json` (collector) binding the
+  attempt's result/meta bytes; that work is terminal and the run continues. Subscription source,
+  init tools/model, confinement, and the third set-aside in one process still write `fatal.json`
+  and stop. Preflights ignore only a valid record with a work-level reason; anything else is the
+  old fatal. The morning report lists set-aside works ("Set aside for review"). To review one, read
+  its transcript; if it was a misclassification, a derivation amendment re-classifies it as usual.
 - Stable nightly stage manifests use `inputMode: per-work/1` plus immutable input/binding files.
   New works can join; old prompt/source bindings cannot change. Existing fixed trials remain
   frozen. Resume verifies stage evidence; accepted S4 can reconstruct and push missing copy
