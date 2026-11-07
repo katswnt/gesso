@@ -52,7 +52,7 @@ if (args.includes('--alarm')) {
   let since = null, why = null;
   if (lease && status?.holder === lease.holder && Number(status.exit) !== 0) { since = Date.parse(status.updatedAt); why = `stopped on purpose: ${summary.match(/FAIL-CLOSED: [^\n]*/)?.[0] || summary.slice(-160)}`; }
   else if (lease && now - lastPush > 4 * H) { since = lastPush + 4 * H; why = `lock held by ${lease.holder} with no activity since ${local(new Date(lastPush).toISOString())}`; }
-  else if (!lease && !/pacing|usage-limit|call cap/.test(summary) && now - (lastReserve || 0) > 6 * H) { since = (lastReserve || now - 6 * H) + 6 * H; why = `no calls since ${lastReserve ? local(new Date(lastReserve).toISOString()) : 'over ' + HOURS + ' h'}; last status: ${summary.slice(-120) || 'none'}`; }
+  else if (!lease && !/pacing|usage-limit|api-error|call cap/.test(summary) && now - (lastReserve || 0) > 6 * H) { since = (lastReserve || now - 6 * H) + 6 * H; why = `no calls since ${lastReserve ? local(new Date(lastReserve).toISOString()) : 'over ' + HOURS + ' h'}; last status: ${summary.slice(-120) || 'none'}`; }
   const hour = Number(new Date().toLocaleString('en-GB', { timeZone: TZ, hour: '2-digit', hourCycle: 'h23' }));
   if (!since) console.log('OK');
   else if (now - since <= 125 * 60000 || hour === 9 || hour === 10) console.log(`ALERT: Gesso pipeline stuck since ${local(new Date(since).toISOString())}: ${why}`);

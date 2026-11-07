@@ -327,25 +327,27 @@ export function controlAudit(output, input, { controller = 1 } = {}) {
   return controller >= 2 ? { controller, errors, components } : { errors, components }; // v1 shape is frozen evidence
 }
 
+// The provider refused service (usage limit, or an API error such as 529 Overloaded, VSD-072): no output to judge.
+const STOPPED = kind => kind === 'usage-limit' || kind === 'api-error';
 export function deriveAuditAttempt(plan, transcript, exitCode = 0) {
   if (plan.stageSpec) return deriveStageAttempt(plan, transcript, exitCode);
   const call = noToolCallProvenance(transcript, exitCode);
   const { execution, final, errors } = call;
   let kind = call.kind, audit = null;
   const output = final?.structured_output ?? null;
-  if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 3) {
+  if (kind !== 'fatal' && !STOPPED(kind) && plan.variant === 3) {
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (output?.v !== JUDGMENT_VERSION) errors.push(`judgment-version:${output?.v || 'missing'}`);
     if (output && Array.isArray(output.j)) { audit = controlJudgment(output, plan.input); errors.push(...audit.errors); }
     else errors.push('no-structured-output');
     kind = errors.length ? 'held' : 'accepted';
-  } else if (kind !== 'fatal' && kind !== 'usage-limit' && plan.variant === 2) {
+  } else if (kind !== 'fatal' && !STOPPED(kind) && plan.variant === 2) {
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (output?.v !== AUDIT_V2_VERSION) errors.push(`audit-version:${output?.v || 'missing'}`);
     if (output && Array.isArray(output.segs)) { audit = controlAuditV2(output, plan.input); errors.push(...audit.errors); }
     else errors.push('no-structured-output');
     kind = errors.length ? 'held' : 'accepted';
-  } else if (kind !== 'fatal' && kind !== 'usage-limit') {
+  } else if (kind !== 'fatal' && !STOPPED(kind)) {
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (output?.version !== AUDIT_VERSION) errors.push(`audit-version:${output?.version || 'missing'}`);
     if (output && Array.isArray(output.components)) { audit = controlAudit(output, plan.input); errors.push(...audit.errors); }
@@ -362,12 +364,12 @@ export function deriveStageAttempt(plan, transcript, exitCode = 0) {
   const call = noToolCallProvenance(transcript, exitCode, { allowedTools: spec.allowedTools || ['StructuredOutput'], ...(spec.model ? { expectedModel: spec.model } : {}) });
   const { final, errors } = call;
   let kind = call.kind, audit = null, imageReceipt = null;
-  if (spec.image && kind !== 'usage-limit') {
+  if (spec.image && !STOPPED(kind)) {
     imageReceipt = verifyB1ImageRead(parseStreamTranscript(transcript), { callDir: null, imageBasename: plan.imageFile });
     if (imageReceipt.bad.length) { kind = 'fatal'; errors.push(`confinement violation: ${imageReceipt.bad.join(', ')}`); }
   }
   const output = final?.structured_output ?? null;
-  if (kind !== 'fatal' && kind !== 'usage-limit') {
+  if (kind !== 'fatal' && !STOPPED(kind)) {
     if (call.emissions.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');
     if (spec.image && !imageReceipt.ok) errors.push(`image not read: ${imageReceipt.reason}`);
     if (spec.version && output?.v !== spec.version) errors.push(`version:${output?.v || 'missing'}`);
@@ -511,7 +513,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     if (existsSync(receiptFile)) { if (stableJson(readJson(receiptFile)) !== stableJson(receipt)) throw new Error(`${p.workId}: frozen input binding changed`); }
     else durableWrite(receiptFile, `${JSON.stringify(receipt)}\n`);
   }
-  const tally = { calls: 0, accepted: 0, held: 0, fatal: 0, 'usage-limit': 0, 'unknown-outcome': 0, skipped: 0 };
+  const tally = { calls: 0, accepted: 0, held: 0, fatal: 0, 'usage-limit': 0, 'api-error': 0, 'unknown-outcome': 0, skipped: 0 };
   let stop = auditRunFatal(outDir) ? 'preserved-fatal' : null;
   for (const plan of plans) {
     if (stop) break;
@@ -544,7 +546,7 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     durableWrite(join(dir, 'attempt-1.meta.json'), `${JSON.stringify({ workId: plan.workId, attempt: 1, status: derived.kind, exitCode: raw.exitCode ?? 1, durationMs, promptHash: plan.promptHash, transcriptSha256: sha256(raw.transcript || ''), resultSha256: rawSha(resultPath) }, null, 2)}\n`);
     tally[derived.kind] = (tally[derived.kind] || 0) + 1;
     if (derived.kind === 'fatal') { persistFatal(outDir, runId, `${plan.workId}: ${derived.errors.join('; ')}`); stop = 'fatal-provenance'; }
-    else if (derived.kind === 'usage-limit') stop = 'usage-limit';
+    else if (STOPPED(derived.kind)) stop = derived.kind; // usage limit or API unavailable: a clean stop, slot consumed
     try { persist(remoteRoot(), [dir, join(outDir, 'fatal.json'), usageLog], `outcome ${runId} ${plan.workId}: ${derived.kind}`); }
     catch (e) { stop ||= `persist-failed: ${e.message}`; } // the remote copy then shows a reservation without outcome: terminal, never retried
   }

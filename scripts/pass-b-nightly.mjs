@@ -215,7 +215,7 @@ async function main() {
   console.log(`  workers: ${NIGHTLY_WORKERS} | pending: ${pending.length}`);
   await runPool(pending, NIGHTLY_WORKERS, async id => {
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
-    const result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop) ? stop : null),
+    const result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop) ? stop : null),
       saveCopy: copy => preserveCopy(copyArtifact(id, dateOf.get(id), copy)),
       prepare: async () => {
         for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snap(u, SNAP);
@@ -225,7 +225,7 @@ async function main() {
     if (mustHalt(result)) stop ||= result.stop;
   }, () => Boolean(stop));
   console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
-  if (stop && !/^(pacing|protected-hours|usage-limit)/.test(stop)) throw new Error(stop);
+  if (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
     console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted');

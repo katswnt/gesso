@@ -180,6 +180,21 @@ function usageLimited(events, final) {
     || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
 }
 
+// VSD-072 (2026-11-05 incident): when the API keeps failing (e.g. "529 Overloaded" after the CLI's own retries) the
+// CLI ends the call with a placeholder assistant message whose model is "<synthetic>". That is not a provenance
+// failure: the requested model was right and nothing was generated. Recognised only when ALL hold: an is_error
+// result ending on an API error, the init model is the expected one, every assistant message is the CLI placeholder,
+// no tool use, and zero tokens. Returns the HTTP status (or 'unknown'), else null (normal rules apply, fail closed).
+export function cliApiError(transcript, final, initModel, expectedModel, toolUses) {
+  if (final?.is_error !== true || !(final.terminal_reason === 'api_error' || Number.isInteger(final.api_error_status))) return null;
+  if (initModel !== expectedModel || toolUses.length) return null;
+  const assistants = String(transcript).split('\n').map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(e => e?.type === 'assistant');
+  if (!assistants.length || assistants.some(e => e.message?.model !== '<synthetic>')) return null;
+  const u = final.usage || {};
+  if ((u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0) > 0) return null;
+  return Number.isInteger(final.api_error_status) ? final.api_error_status : 'unknown';
+}
+
 export function cliResubmissionAccepted(execution, final) {
   const uses = execution.toolUses; const res = id => execution.toolResults.find(r => r.toolUseId && r.toolUseId === id);
   if (uses.length < 2 || uses.some(u => u.type !== 'tool_use' || u.name !== 'StructuredOutput' || !u.id)) return false;
@@ -190,7 +205,7 @@ export function cliResubmissionAccepted(execution, final) {
 
 // Call-level safety for any no-tool StructuredOutput call (B4 and the shadow audit): subscription provenance,
 // model, exact init tools, forbidden tools, CLI resubmission, timeout, usage limit, process failure.
-// kind is 'fatal', 'usage-limit', or 'held' (the caller decides acceptance from the body).
+// kind is 'fatal', 'usage-limit', 'api-error' (VSD-072), or 'held' (the caller decides acceptance from the body).
 // allowedTools: default exactly [StructuredOutput] (B4, audits). An image stage passes ['Read', 'StructuredOutput'];
 // its image-read confinement is verified by the caller. Only StructuredOutput emissions count as output emissions.
 export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = ['StructuredOutput'], expectedModel = CALIBRATION_MODEL } = {}) {
@@ -208,7 +223,9 @@ export function noToolCallProvenance(transcript, exitCode = 0, { allowedTools = 
   const emissions = { ...execution, toolUses: execution.toolUses.filter(row => row.name === 'StructuredOutput') };
   const errors = [];
   let kind = 'held';
+  const apiError = cliApiError(transcript, final, parsed.init?.model ?? null, expectedModel, execution.toolUses);
   if (apiKeySource !== 'none') { kind = 'fatal'; errors.push(`apiKeySource:${apiKeySource || 'missing'}`); }
+  else if (apiError != null) { kind = apiError === 429 ? 'usage-limit' : 'api-error'; errors.push(`api-error:${apiError}`); }
   else if (resolvedModel !== expectedModel) { kind = 'fatal'; errors.push(`model:${resolvedModel || 'missing'}`); }
   else if (!exactInitTools) { kind = 'fatal'; errors.push(allowed.length === 1 ? 'B4 init tools must be exactly [StructuredOutput]' : `init tools must be exactly [${allowed.join(', ')}]`); }
   else if (forbiddenTool) { kind = 'fatal'; errors.push(`B4 used tools:${execution.toolUses.map(row => `${row.type}:${row.name || 'unnamed'}`).join(',')}`); }
@@ -236,7 +253,7 @@ export function deriveB4Attempt(plan, transcript, exitCode = 0) {
 
   const delta = final?.structured_output ?? null;
   let body = null, bundle = null, reconciliation = null, leaks = [];
-  if (kind !== 'usage-limit' && kind !== 'fatal') {
+  if (kind !== 'usage-limit' && kind !== 'fatal' && kind !== 'api-error') {
     // StructuredOutput is the CLI's --json-schema return adapter, not a research/image capability.
     // Successful acceptance needs exactly one emission. Interrupted calls may have none and stay held.
     if (execution.toolUses.length === 0) errors.push('missing-StructuredOutput-emission');

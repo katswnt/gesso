@@ -284,7 +284,7 @@ async function main() {
   const pacer = process.env.PASS_B_PACING_OVERRIDE === clock.date ? null : makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP });
   const run = async (key, ps) => { const r = runDirFor(key, works); const res = await runAudit({ plans: ps, outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, callFn: (plan, gate) => callAuditPinned(plan, { bin, timeout: gate.timeout }) }); console.log(`${key}: ${JSON.stringify(res)}`); return res; };
   const [r1, r2] = await Promise.all([run('S1', plans.map(p => p.s1)), run('S2', plans.map(p => p.s2))]);
-  const halted = r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit'].includes(r.stop) || String(r.stop).startsWith('pacing');
+  const halted = r => ['fatal-provenance', 'preserved-fatal', 'protected-hours', 'usage-limit', 'api-error'].includes(r.stop) || String(r.stop).startsWith('pacing');
   if ([r1, r2].some(halted)) { console.log('stopped before writing'); return; }
   if (OPTS.identities) {
     const ri = await run('SI', allPlans(works).map(p => p.si).filter(Boolean));
