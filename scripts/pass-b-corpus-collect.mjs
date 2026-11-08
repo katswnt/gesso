@@ -300,6 +300,24 @@ export function verifyMisreadIncident(text, imageBasename, expectedModel = HISTO
   if (receipt.good !== 1 || stableJson(receipt.bad) !== stableJson([p1])) return fail('strict verifier does not report the misread as the only defect');
   return { ok: true, cwd: C, misreadPath: p1 };
 }
+// VSD-074 (owner 2026-11-08, second occurrence after VSD-049): the exact incident pattern above is handled
+// automatically. The work is held (no capture, no retry) and the pipeline keeps going; anything that deviates from
+// the strict pattern is still a confinement fatal.
+export const MISREAD_REASON = 'misread: one mistyped image name inside the call folder, then the exact image (VSD-074)';
+// A preserved fatal whose only cause is such a misread (attempts from before VSD-074) no longer stops the corpus.
+function misreadOnlyFatal(runDir, reason) {
+  const m = /^(.+)\/(B[13]): (?:preserved )?confinement violation/.exec(String(reason)); if (!m) return false;
+  const [, id, stage] = m, workDir = join(runDir, 'works', sha256(id).slice(0, 24)), attemptsDir = join(workDir, 'attempts');
+  if (!existsSync(join(workDir, 'b0-prep.json'))) return false;
+  const b0 = readJson(join(workDir, 'b0-prep.json')), imageFile = neutralImageFile(b0.image?.imgSha256, b0.image?.ext), epochs = executionEpochs(runDir);
+  const fatal = files(attemptsDir).filter(n => n.startsWith(`${stage.toLowerCase()}-`) && n.endsWith('.meta.json')).map(n => readJson(join(attemptsDir, n))).filter(x => x.kind === 'fatal');
+  return fatal.length > 0 && fatal.every(x => {
+    const tr = join(attemptsDir, String(x.transcriptFile)), res = join(attemptsDir, `${String(x.transcriptFile).slice(0, 9)}.reserved.json`);
+    if (!existsSync(tr) || !existsSync(res) || sha256(readFileSync(tr, 'utf8')) !== x.transcriptSha256) return false;
+    const epoch = epochs.find(e => e.number === (readJson(res).executionEpoch ?? 0));
+    return !!epoch && verifyMisreadIncident(readFileSync(tr, 'utf8'), imageFile, epochModel(epoch)).ok;
+  });
+}
 const clearedFatalReasons = runDir => new Set(loadFatalClearances(runDir).map(c => c.finding.fatalReason));
 export function applyFatalClearance(runDir, request) {
   const f = request?.finding || {};
@@ -332,10 +350,10 @@ export function preservedFatal(runDir, ledger = readLedger(runDir)) {
     if (f.runId !== RUN_ID || typeof f.reason !== 'string') throw new Error('fatal record binding mismatch');
     // fatal.json keeps only the FIRST fatal; a cleared first fatal never hides a later one (ledger + attempt evidence).
     const clearedFile = cleared.has(f.reason) && loadFatalClearances(runDir).some(c => c.finding.fatalJsonSha256 === rawFileSha(path));
-    if (!clearedFile) return f.reason;
+    if (!clearedFile && !misreadOnlyFatal(runDir, f.reason)) return f.reason;
   }
   const led = typeof ledger.stopReason === 'string' && ledger.stopReason.startsWith('fatal:') ? ledger.stopReason.slice(6) : null;
-  return led && !cleared.has(led) ? led : null;
+  return led && !cleared.has(led) && !misreadOnlyFatal(runDir, led) ? led : null;
 }
 export function persistFatal(runDir, reason) {
   const path = join(runDir, 'fatal.json');
@@ -473,6 +491,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
       terminalReasons.push(`${stage}:${CLEARANCE_DISPOSITION}`); continue; // reviewed false-positive: hold, never capture or retry
     }
     const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
+    if (receipt?.bad?.length && binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok) { terminalReasons.push(`${stage}:misread (VSD-074)`); continue; }
     if (receipt?.bad?.length) fatal ||= `${id}/${stage}: preserved confinement violation`;
     if (meta?.kind === 'fatal') fatal ||= `${id}/${stage}: ${meta.reason}`;
     if (operational) { pause ||= `${id}/${stage}: operational-pause (review incomplete outcome)`; continue; }
@@ -582,7 +601,7 @@ export function stopForException(error, { fatal, pause }) {
 
 // Injectable executor for offline regression tests. No test needs the real Claude binary.
 export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, ext, stage, command, imageFile,
-  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE, setAside = SET_ASIDE }) {
+  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE, setAside = SET_ASIDE, misreadAuto = true }) {
   assertExecutionLease();
   const priorFatal = preservedFatal(runDir);
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);
@@ -630,6 +649,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
     else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
+    else if (imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok) cls = { kind: 'held', reason: MISREAD_REASON };
     else if (imageReceipt?.bad?.length) cls = { kind: 'fatal', reason: 'confinement violation' };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };

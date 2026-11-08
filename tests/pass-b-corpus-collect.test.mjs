@@ -332,9 +332,12 @@ const misreadTranscript=(C,image,body,{outside=false}={})=>{
 await ta('clearance: one exact finding clears to a terminal hold; replay, wrong hash and a second fatal all still block',async()=>{
   const f=fixture({complete:['B1','B2']});
   try{
-    const b3=(seq,opts)=>executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3,opts)})});
+    // misreadAuto:false recreates a pre-VSD-074 attempt (the 2026-09-29 incident shape)
+    const b3=(seq,opts)=>executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq,imageFile:f.imageFile,misreadAuto:false,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3,opts)})});
     await assert.rejects(b3(30),/confinement violation/);
-    assert.ok(preservedFatal(f.runDir)); assert.ok(f.inspect().fatal);
+    assert.ok(existsSync(join(f.runDir,'fatal.json')));
+    // VSD-074: that exact preserved pattern no longer stops the corpus; the work alone is held
+    assert.equal(preservedFatal(f.runDir),null); assert.equal(f.inspect().fatal,null); assert.ok(f.inspect().terminalReasons.some(r=>r.includes('misread')));
     const A=join(f.workRunDir,'attempts'), meta=JSON.parse(readFileSync(join(A,'b3-000030.meta.json'),'utf8'));
     const H=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
     const fatalBytes=readFileSync(join(f.runDir,'fatal.json'));
@@ -733,6 +736,32 @@ await ta('set-aside: subscription source is never set aside',async()=>{
   try{
     await assert.rejects(executeCorpusAttempt({...attemptArgs(f),setAside:setAsideBudget(),execute:async()=>({stdout:f.transcript('B2',f.bodies.B2,{apiKeySource:'api-key'})})}),/apiKeySource/);
     assert.match(preservedFatal(f.runDir),/apiKeySource/);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+// VSD-074 (owner 2026-11-08): the exact misread is held automatically, live and preserved; anything else stays fatal.
+await ta('misread: an exact live misread holds only this work, no fatal marker',async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:30,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3)})}),/misread/);
+    assert.equal(existsSync(join(f.runDir,'fatal.json')),false);assert.equal(preservedFatal(f.runDir),null);
+    const w=f.inspect();assert.equal(w.fatal,null);assert.ok(w.terminalReasons.some(r=>r.includes('B3:misread')));assert.equal(w.done,false);assert.equal(w.bodies.B3,undefined,'never captured');
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+await ta('misread: a read outside the call folder is still a pipeline-wide fatal',async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:30,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3,{outside:true})})}),/confinement violation/);
+    assert.match(preservedFatal(f.runDir),/confinement violation/);assert.ok(f.inspect().fatal);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+await ta('misread: a preserved pre-VSD-074 misread fatal clears only while its transcript is intact',async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:30,imageFile:f.imageFile,misreadAuto:false,execute:async(bin,argv,o)=>({stdout:misreadTranscript(o.cwd,f.imageFile,f.bodies.B3)})}),/confinement violation/);
+    assert.equal(preservedFatal(f.runDir),null);
+    const A=join(f.workRunDir,'attempts'),meta=JSON.parse(readFileSync(join(A,'b3-000030.meta.json'),'utf8'));
+    writeFileSync(join(A,meta.transcriptFile),readFileSync(join(A,meta.transcriptFile),'utf8').replace('Structured output provided successfully','edited'));
+    assert.match(preservedFatal(f.runDir),/confinement violation/,'changed transcript: the old fatal stops again');
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 console.log(`\n${n} corpus-collector regressions passed`);

@@ -22,7 +22,7 @@ import { RUN_ROOT, CALIBRATION_MODEL, buildStageCommand, parseStreamTranscript, 
 import { findingsForWork, loadCanonicalFindings } from './lib/pass-b-blocked-findings.mjs';
 import { componentsOf } from './lib/pass-b-audit-components.mjs';
 import { noToolCallProvenance, CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
-import { pacificClock, callWindow } from './pass-b-corpus-collect.mjs';
+import { pacificClock, callWindow, verifyMisreadIncident } from './pass-b-corpus-collect.mjs';
 import { recordObservation } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease } from './lib/pass-b-remote-evidence.mjs';
 import { pipelineWide, setAsideRecord, validSetAside } from './lib/pass-b-set-aside.mjs';
@@ -367,7 +367,9 @@ export function deriveStageAttempt(plan, transcript, exitCode = 0) {
   let kind = call.kind, audit = null, imageReceipt = null;
   if (spec.image && !STOPPED(kind)) {
     imageReceipt = verifyB1ImageRead(parseStreamTranscript(transcript), { callDir: null, imageBasename: plan.imageFile });
-    if (imageReceipt.bad.length) { kind = 'fatal'; errors.push(`confinement violation: ${imageReceipt.bad.join(', ')}`); }
+    // VSD-074: the exact misread (one mistyped name inside the call folder, then the exact image) holds only this work.
+    if (imageReceipt.bad.length && kind === 'held' && verifyMisreadIncident(transcript, plan.imageFile, spec.model || CALIBRATION_MODEL).ok) errors.push(`misread (VSD-074): ${imageReceipt.bad.join(', ')}`);
+    else if (imageReceipt.bad.length) { kind = 'fatal'; errors.push(`confinement violation: ${imageReceipt.bad.join(', ')}`); }
   }
   const output = final?.structured_output ?? null;
   if (kind !== 'fatal' && !STOPPED(kind)) {

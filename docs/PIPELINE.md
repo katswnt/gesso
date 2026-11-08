@@ -523,6 +523,9 @@ Offline hardening on 2026-09-30:
   and stop. Preflights ignore only a valid record with a work-level reason; anything else is the
   old fatal. The morning report lists set-aside works ("Set aside for review"). To review one, read
   its transcript; if it was a misclassification, a derivation amendment re-classifies it as usual.
+- Misread (VSD-074): an image call whose transcript matches the exact VSD-049 shape (one in-folder
+  mistyped image name answered by the CLI's missing-file diagnostic, then the exact image) is a
+  terminal hold (`B1/B3:misread`), never a stop. Any other confinement finding is still fatal.
 - Stable nightly stage manifests use `inputMode: per-work/1` plus immutable input/binding files.
   New works can join; old prompt/source bindings cannot change. Existing fixed trials remain
   frozen. Resume verifies stage evidence; accepted S4 can reconstruct and push missing copy
