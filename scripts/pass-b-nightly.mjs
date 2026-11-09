@@ -22,7 +22,7 @@ import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
-import { OPTS, setBaseProvider, stageBinding, stageRunId, stageHistory, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
+import { OPTS, setBaseProvider, stageBinding, stageRunId, stageHistory, s2RetryRun, s2RetryDue, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
 const execFileP = promisify(execFile);
 const OUT = join(RUN_ROOT, 'claim-first-nightly'), SNAP = join(RUN_ROOT, 'claim-first-v1', 'snapshots');
@@ -75,11 +75,12 @@ export function verifiedBaseFactory({ pool, legacyOf, runDir = CORPUS_RUN_DIR, i
   };
 }
 
-const runOf = key => { const b = stageBinding(key, []), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
+const runOf = key => { if (key === 'S2R') return s2RetryRun([]); const b = stageBinding(key, []), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
 const historyOf = (key, plan) => stageHistory(key, [], plan); // S2 also reads its pre-cap equivalent run (VSD-057)
 // Status of one work across stages; 'copy' when S4 is accepted.
 export function workStatus(base) {
   const s1 = planS1(base), s2 = planS2(base), h1 = historyOf('S1', s1), h2 = historyOf('S2', s2);
+  if (h1?.kind === 'accepted' && h2 && h2.kind !== 'accepted' && s2RetryDue([], s2)) return { next: 'S2R', s2 }; // VSD-075: output lost in transit
   if ([h1, h2].some(h => h && h.kind !== 'accepted')) return { next: 'terminal', why: `S1 ${h1?.kind || 'missing'}, S2 ${h2?.kind || 'missing'}` };
   if (!h1 || !h2) return { next: 'S1S2', s1, s2 };
   const si = planSI(base, [], s2), hi = historyOf('SI', si);
@@ -129,7 +130,7 @@ export async function advanceWork({ base, call, saveCopy, prepare = async () => 
     if (!prepared) { await prepare(); prepared = true; continue; } // refresh plans after snapshots are frozen
     // Sequential dispatch permits a failed S1 to stop before S2 spends anything. Already-reserved stages skip.
     const stages = st.next === 'S1S2' ? [['S1', st.s1], ['S2', st.s2]]
-      : [[st.next, st.next === 'SI' ? st.si : st.next === 'SJ' ? st.sj.plan : st.next === 'S3' ? st.s3.plan : st.s4.plan]];
+      : [[st.next, st.next === 'S2R' ? st.s2 : st.next === 'SI' ? st.si : st.next === 'SJ' ? st.sj.plan : st.next === 'S3' ? st.s3.plan : st.s4.plan]];
     for (const [key, plan] of stages) {
       const result = await call(key, plan);
       if (mustHalt(result)) return result;
@@ -199,7 +200,7 @@ async function main() {
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
   console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
   console.log(`  safety: ${safetyCheck() || 'clear'}`);
-  for (const k of ['S1', 'S2', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
+  for (const k of ['S1', 'S2', 'S2R', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   if (!live) { console.log(`READ-ONLY PLAN: no calls or writes. Next up: ${pending.slice(0, 5).map(id => `${dateOf.get(id)} ${id}`).join('; ')}`); return; }
   if (safetyCheck()) throw new Error(safetyCheck());
 

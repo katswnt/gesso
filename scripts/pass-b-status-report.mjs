@@ -17,6 +17,14 @@ const log = execFileSync('git', ['-C', EV, 'log', `--since=${HOURS} hours ago`, 
 const count = re => log.filter(c => re.test(c.s)).length;
 const reserves = count(/^reserve /), copies = log.filter(c => /^copy /.test(c.s)), fatals = log.filter(c => /: fatal$/.test(c.s));
 const setAside = log.filter(c => /: fatal \(set aside\)$/.test(c.s)); // VSD-073: one work held, the run kept going
+// VSD-075 (2026-11-09): a stage that suddenly holds many works is a pipeline problem, not the works'. S2 held ~58% for
+// 8 days after the 3-worker change and nothing said so. Flag any run holding >= 25% of at least 10 outcomes.
+const byRun = {};
+for (const c of log) { const m = c.s.match(/^outcome (cf-[0-9a-f]+) .*: ([a-z-]+)(?: \(set aside\))?$/); if (m) { const r = (byRun[m[1]] ||= { n: 0, held: 0, accepted: 0 }); r.n++; if (m[2] === 'held') r.held++; if (m[2] === 'accepted') r.accepted++; } }
+const manifest = run => { try { return JSON.parse(execFileSync('git', ['-C', EV, 'show', `HEAD:incoming/vision-calibration/${run}/run-manifest.json`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })); } catch { return null; } };
+const stageOf = run => manifest(run)?.binding?.version?.split(':')[1] || run;
+const highHold = Object.entries(byRun).filter(([, r]) => r.n >= 10 && r.held / r.n >= 0.25);
+const retries = Object.entries(byRun).filter(([run]) => manifest(run)?.binding?.retry).map(([, r]) => r);
 const statuses = log.filter(c => /^status:/.test(c.s)), recoveries = log.filter(c => /^lease: recover crashed /.test(c.s));
 const status = read('state/status.json'), lease = read('state/lease.json'), pin = read('state/pin.json');
 
@@ -67,6 +75,8 @@ const out = [
   `Works finished (copy written): ${copies.length}${copies.length ? ` (latest ${local(copies[0].at)})` : ''}`,
   fatals.length ? `Fatal outcomes: ${fatals.length}: ${fatals.map(f => f.s.replace(/^outcome /, '')).join('; ')}` : null,
   setAside.length ? `Set aside for review (the run kept going): ${setAside.length}: ${setAside.map(f => f.s.replace(/^outcome /, '').replace(/: fatal \(set aside\)$/, '')).join('; ')}` : null,
+  highHold.length ? `⚠️ High hold rate (check the pipeline, not the works): ${highHold.map(([run, r]) => `${stageOf(run)} ${Math.round(100 * r.held / r.n)}% of ${r.n}`).join('; ')}` : null,
+  retries.length ? `S2 retries for output lost in transit (VSD-075): ${retries.reduce((a, r) => a + r.n, 0)} (${retries.reduce((a, r) => a + r.accepted, 0)} accepted)` : null,
   recoveries.length ? `Self-healed: recovered ${recoveries.length} crashed run lock(s) (${recoveries.map(r => local(r.at)).join(', ')})` : null,
   `Runs completed: ${statuses.length}${statuses[0] ? ` · last ${local(statuses[0].at)}` : ''}`,
   usage ? `Weekly usage: ${Math.round(usage.sevenDay?.utilization * 100)}% · 5-hour: ${Math.round(usage.fiveHour?.utilization * 100)}% (read ${local(usage.observedAt)})` : null,

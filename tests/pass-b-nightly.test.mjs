@@ -24,7 +24,7 @@ const base = id => {
   const dir = join('base', id); mkdirSync(join(dir, 'completions'), { recursive: true });
   return { id, dir, catalog: {}, b1: {}, b2: { factChecks: [] }, b0: { image: { imgSha256: '0'.repeat(64), ext: 'png' } }, binding: { source: id } };
 };
-const run = key => { const binding = stageBinding(key, []), runId = stageRunId(binding); return { binding, runId, outDir: join(RUN_ROOT, runId), now }; };
+const run = key => { if (key === 'S2R') return { ...CF_RUNNER.s2RetryRun([]), now }; const binding = stageBinding(key, []), runId = stageRunId(binding); return { binding, runId, outDir: join(RUN_ROOT, runId), now }; };
 const output = key => key === 'S2' ? { verifications: [] } : key === 'SI' ? { v: CF.IDENT_VERSION, ids: [] }
   : key === 'S3' ? { v: CF.WRITE_VERSION, why: [], notes: [], hotspots: [] } : { v: key === 'S4' ? CF.CHECK_VERSION : CF.S1.version, j: [] };
 const transcript = (p, o, source = 'none') => [
@@ -130,8 +130,9 @@ await check('collector receives only remaining local allowance and errors propag
 }
 { // VSD-057: S2's pre-cap run is an equivalent history source (same binding except the B3 wire-schema hash)
   const runs = CF_RUNNER.equivalentRuns('S2', []);
-  assert.equal(runs.length, 2); assert.equal(runs[1].runId, 'cf-1d898d84282f');
+  assert.equal(runs.length, 3); assert.equal(runs[1].runId, 'cf-1d898d84282f');
   const { wireSchemaSha256: _a, ...x } = runs[0].binding, { wireSchemaSha256: _b, ...y } = runs[1].binding; assert.deepEqual(x, y);
+  const { retry, ...z } = runs[2].binding; assert.equal(retry, CF_RUNNER.S2_RETRY); assert.deepEqual(z, runs[0].binding, 'VSD-075 retry run: same binding plus the retry tag');
   assert.equal(CF_RUNNER.equivalentRuns('S3', []).length, 1, 'no other stage gains an alias');
   console.log('ok S2 pre-cap run resolves to cf-1d898d84282f and differs only in the wire-schema hash');
 }
@@ -144,6 +145,29 @@ await check('VSD-070: four works advanced concurrently through the real stages e
   assert.ok(ids.every(id => results[id].finished), JSON.stringify(results));
   assert.equal(calls, 20); assert.equal(pacer.calls, 20); // 5 stages x 4 works, every call through the one pacer
   for (const id of ids) assert.equal((await advanceWork({ base: base(id), call: () => { throw new Error('must not call'); }, saveCopy: () => {} })).finished, true);
+});
+// VSD-075: S2 output lost in transit (exit 0, init, no result event) gets exactly one more S2 call in the retry run.
+const lost = (p, o) => transcript(p, o).split('\n').slice(0, 3).join('\n').slice(0, -20); // cut inside the image line
+const s2Then = (first, retry) => { const keys = []; return { keys, call: (key, p) => { keys.push(key); return runAudit({ ...run(key), plans: [p],
+  callFn: async () => ({ transcript: key === 'S2' ? first(p, output('S2')) : key === 'S2R' ? retry(p, output('S2')) : transcript(p, output(key)), exitCode: 0 }) }); } }; };
+await check('VSD-075: an S2 that lost its output gets one retry; an accepted retry carries the work to copy', async () => {
+  const b = base('lost'), c = s2Then(lost, transcript);
+  const r = await advanceWork({ base: b, call: c.call, saveCopy: () => {} });
+  assert.equal(r.finished, true, JSON.stringify(r)); assert.deepEqual(c.keys, ['S1', 'S2', 'S2R', 'SI', 'S3', 'S4']);
+  assert.equal(auditHistory(run('S2').outDir, planS2(b), run('S2').runId).kind, 'held', 'the original outcome is never edited');
+  assert.equal((await advanceWork({ base: b, call: () => { throw new Error('must not call'); }, saveCopy: () => {} })).finished, true);
+});
+await check('VSD-075: a retry that also fails is final (never a third S2 call)', async () => {
+  const b = base('lost2'), c = s2Then(lost, lost);
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(c.keys, ['S1', 'S2', 'S2R']);
+  assert.equal(workStatus(b).next, 'terminal');
+  assert.equal((await advanceWork({ base: b, call: () => { throw new Error('must not call'); }, saveCopy: () => {} })).terminal, true);
+});
+await check('VSD-075: an S2 held for its content (the call finished) is never retried', async () => {
+  const noAnswer = (p, o) => transcript(p, o).replace(/,"structured_output":\{[^}]*\}/, '').replace(/\n[^\n]*"name":"StructuredOutput"[^\n]*/, '');
+  const b = base('held'), c = s2Then(noAnswer, transcript);
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(c.keys, ['S1', 'S2']);
+  assert.equal(auditHistory(run('S2').outDir, planS2(b), run('S2').runId).kind, 'held');
 });
 await check('VSD-071: a page that downloads only after S1 was reserved stays out of that work (no frozen-input stop)', async () => {
   const b = { ...base('late'), b2: { factChecks: [{ claimId: 'c1', claim: 'The painting shows a red cup resting on a wooden table', sources: [{ sourceId: 's1', url: 'https://example.org/late-page' }] }] } };

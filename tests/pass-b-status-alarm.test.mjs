@@ -41,4 +41,11 @@ check('no calls for 7 h with nothing explaining it: ALERT; a pacing pause: OK', 
   const e = evidence({ commits: [[7, 'reserve cf-1 w'], [6.9, 'status: paced']], status: { holder: 'routine-x', exit: 0, summary: 'stop=pacing: weekly ahead', updatedAt: ago(6.9) } });
   assert.equal(alarm(e), 'OK'); rmSync(e, { recursive: true });
 });
+check('VSD-075: a stage holding >= 25% of at least 10 outcomes is flagged in the report; a normal rate is not', () => {
+  const report = d => execFileSync('node', ['scripts/pass-b-status-report.mjs', '--evidence', d], { encoding: 'utf8' });
+  const outs = (run, held, acc) => [...Array(held)].map((_, i) => [1, `outcome ${run} w${i}: held`]).concat([...Array(acc)].map((_, i) => [1, `outcome ${run} a${i}: accepted`]));
+  const d = evidence({ commits: [...outs('cf-aaaa', 6, 6), ...outs('cf-bbbb', 1, 19)] });
+  const r = report(d); assert.match(r, /High hold rate .*cf-aaaa 50% of 12/); assert.doesNotMatch(r, /cf-bbbb/); rmSync(d, { recursive: true });
+  const e = evidence({ commits: outs('cf-aaaa', 3, 4) }); assert.doesNotMatch(report(e), /High hold rate/, 'too few outcomes to judge'); rmSync(e, { recursive: true });
+});
 console.log(`pass-b-status-alarm.test: ${n} checks passed`);

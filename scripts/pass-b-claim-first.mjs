@@ -144,7 +144,28 @@ export function equivalentRuns(key, works) {
   const r = runDirFor(key, works);
   if (key !== 'S2' || !OPTS.nightly || r.binding.wireSchemaSha256 === S2_PRE_CAP_WIRE_SHA256) return [r];
   const b = { ...r.binding, wireSchemaSha256: S2_PRE_CAP_WIRE_SHA256 }, id = stageRunId(b);
-  return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }];
+  return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }, s2RetryRun(works)];
+}
+// VSD-075 (owner 2026-11-09): from the 3-worker change (Nov 1) until the stdout-to-file fix, 1,158 S2 calls lost the
+// end of their output in transit (exit 0, an init event, no result event: a finished call always ends with one). That
+// is never the work's fault, so such a work gets ONE more S2 call in its own run. Same binding plus a retry tag, so
+// it is an equivalent history source: an accepted retry is used; a held one leaves the original outcome standing.
+export const S2_RETRY = 'passBS2LostOutputRetry/1';
+export function s2RetryRun(works) {
+  const b = { ...runDirFor('S2', works).binding, retry: S2_RETRY }, id = stageRunId(b);
+  return { binding: b, runId: id, outDir: join(RUN_ROOT, id) };
+}
+export const lostOutput = transcript => /"subtype":"init"/.test(transcript)
+  && !transcript.split('\n').some(l => { try { return JSON.parse(l).type === 'result'; } catch { return false; } });
+// Due when every recorded S2 outcome lost its output and the retry run has never reserved this work.
+export function s2RetryDue(works, plan) {
+  if (!OPTS.nightly) return false;
+  const retry = s2RetryRun(works);
+  if (existsSync(retry.outDir) && auditHistory(retry.outDir, plan, retry.runId)) return false; // one retry, whatever its outcome
+  const found = equivalentRuns('S2', works).filter(r => r.runId !== retry.runId && existsSync(r.outDir))
+    .map(r => ({ r, h: auditHistory(r.outDir, plan, r.runId) })).filter(x => x.h);
+  return found.length > 0 && found.every(({ r, h }) => h.kind === 'held' && h.meta?.exitCode === 0
+    && lostOutput(readFileSync(join(r.outDir, 'works', safeWork(plan.workId), 'attempt-1.transcript.jsonl'), 'utf8')));
 }
 export function stageHistory(key, works, plan) {
   const found = equivalentRuns(key, works).map(r => existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null).filter(Boolean);

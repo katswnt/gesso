@@ -14,6 +14,7 @@ import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, mkdtempSync,
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFile } from 'node:child_process';
+import { execToFile } from './lib/pass-b-exec-to-file.mjs';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -490,7 +491,7 @@ export function startGate(now = new Date(), exception = process.env.PASS_B_SHADO
   return callWindow(now); // throws the standard protected-hours pause
 }
 
-export async function callAuditPinned(plan, { bin, timeout, execute = execFileP }) {
+export async function callAuditPinned(plan, { bin, timeout, execute = execToFile }) { // VSD-075: stdout to a file, never a pipe
   const callDir = mkdtempSync(join(tmpdir(), 'pass-b-audit-'));
   try {
     if (plan.imageSource) copyFileSync(plan.imageSource, join(callDir, plan.imageFile)); // the one confined image

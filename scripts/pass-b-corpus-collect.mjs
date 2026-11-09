@@ -8,6 +8,7 @@ import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
+import { execToFile } from './lib/pass-b-exec-to-file.mjs'; // VSD-075: CLI stdout to a file, never a pipe
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import broker, { BROKER_POLICY_VERSION } from './lib/img-broker.mjs';
@@ -601,7 +602,7 @@ export function stopForException(error, { fatal, pause }) {
 
 // Injectable executor for offline regression tests. No test needs the real Claude binary.
 export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, ext, stage, command, imageFile,
-  seq, runtimeVersion, execute = execFileP, now = () => new Date(), lane = LANE, setAside = SET_ASIDE, misreadAuto = true }) {
+  seq, runtimeVersion, execute = execToFile, now = () => new Date(), lane = LANE, setAside = SET_ASIDE, misreadAuto = true }) {
   assertExecutionLease();
   const priorFatal = preservedFatal(runDir);
   if (priorFatal) throw new FatalError(`preserved fatal: ${priorFatal}`);

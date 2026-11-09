@@ -526,6 +526,12 @@ Offline hardening on 2026-09-30:
 - Misread (VSD-074): an image call whose transcript matches the exact VSD-049 shape (one in-folder
   mistyped image name answered by the CLI's missing-file diagnostic, then the exact image) is a
   terminal hold (`B1/B3:misread`), never a stop. Any other confinement finding is still fatal.
+- CLI output (VSD-075): every nightly and collector call writes the CLI's stdout/stderr to files in a
+  private temp folder (`execToFile`), never a pipe; a busy parent can no longer cut a transcript.
+  An S2 that lost its output before the fix (exit 0, init, no result event) gets exactly one more
+  call in the S2 retry run (`cf-98a3617b0e77`, next stage `S2R`); an accepted retry is used, a
+  failed one leaves the original hold final. The morning report flags any run holding >= 25% of
+  >= 10 outcomes ("High hold rate") and counts the retries.
 - Stable nightly stage manifests use `inputMode: per-work/1` plus immutable input/binding files.
   New works can join; old prompt/source bindings cannot change. Existing fixed trials remain
   frozen. Resume verifies stage evidence; accepted S4 can reconstruct and push missing copy
