@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
+import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
 import { makePacer } from '../scripts/lib/pass-b-pacing.mjs';
@@ -168,6 +169,16 @@ await check('VSD-075: an S2 held for its content (the call finished) is never re
   const b = base('held'), c = s2Then(noAnswer, transcript);
   assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(c.keys, ['S1', 'S2']);
   assert.equal(auditHistory(run('S2').outDir, planS2(b), run('S2').runId).kind, 'held');
+});
+await check('2026-11-16: a push GitHub keeps rejecting ends the run cleanly (lease released); a fatal never does', () => {
+  assert.ok(CLEAN_STOP.test(pushStop(new PersistError('push failed: remote: Internal Server Error'))));
+  assert.ok(CLEAN_STOP.test('persist-failed: push failed: x')); assert.ok(!CLEAN_STOP.test('preserved-fatal: cf-1: model drift in init'));
+  assert.throws(() => pushStop(new Error('frozen input changed')), /frozen input/, 'anything else still propagates');
+  const child = stderr => Object.assign(new Error('Command failed'), { stderr });
+  assert.match(collectorPushFailure(child('FAIL-CLOSED: push failed: remote: Internal Server Error')), /^persist-failed \(collector\)/);
+  assert.match(collectorPushFailure(child('FAIL-CLOSED: persist-failed: push failed: x')), /^persist-failed/);
+  assert.equal(collectorPushFailure(child('FAIL-CLOSED: fatal: w/B3: confinement violation (final push also failed: push failed: x)')), null);
+  assert.equal(collectorPushFailure(child('FAIL-CLOSED: preserved-pause: w/B3')), null);
 });
 await check('VSD-071: a page that downloads only after S1 was reserved stays out of that work (no frozen-input stop)', async () => {
   const b = { ...base('late'), b2: { factChecks: [{ claimId: 'c1', claim: 'The painting shows a red cup resting on a wooden table', sources: [{ sourceId: 's1', url: 'https://example.org/late-page' }] }] } };

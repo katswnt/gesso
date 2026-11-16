@@ -532,6 +532,9 @@ Offline hardening on 2026-09-30:
   call in the S2 retry run (`cf-98a3617b0e77`, next stage `S2R`); an accepted retry is used, a
   failed one leaves the original hold final. The morning report flags any run holding >= 25% of
   >= 10 outcomes ("High hold rate") and counts the retries.
+- Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
+  still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
+  firing resumes; a fatal is never downgraded this way.
 - Stable nightly stage manifests use `inputMode: per-work/1` plus immutable input/binding files.
   New works can join; old prompt/source bindings cannot change. Existing fixed trials remain
   frozen. Resume verifies stage evidence; accepted S4 can reconstruct and push missing copy

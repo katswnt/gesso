@@ -51,7 +51,12 @@ export function executionBudgetPath(env = process.env) {
 }
 
 // Commit the given paths (files or directories inside the evidence checkout) and push. Throws PersistError.
-export function persist(root, paths, message, { retries = 1, sleepMs = 3000 } = {}) {
+// 2026-11-16: one retry after 3 s was not enough; GitHub rejected a push with a server error twice in a row on
+// 2026-11-12 and the run stopped for 4 days. Back off 5 s, 30 s, 2 min before giving up (giving up is a clean pause).
+export const PUSH_BACKOFF_MS = [5000, 30000, 120000];
+// Offline tests set PASS_B_PUSH_BACKOFF_MS (e.g. "0,0,0") so a simulated outage retries without waiting.
+const pushBackoff = (env = process.env) => env.PASS_B_PUSH_BACKOFF_MS != null ? env.PASS_B_PUSH_BACKOFF_MS.split(',').filter(Boolean).map(Number) : PUSH_BACKOFF_MS;
+export function persist(root, paths, message, { retries = null, backoffMs = retries === 0 ? [] : pushBackoff() } = {}) { // retries: 0 = no retry (lease races)
   if (!root) return false;
   root = realpathSync(root);
   const rel = paths.filter(p => p && existsSync(p)).map(p => relative(root, realpathSync(p)));
@@ -66,8 +71,8 @@ export function persist(root, paths, message, { retries = 1, sleepMs = 3000 } = 
   for (let i = 0; ; i++) {
     try { git(root, ['push', '-q', 'origin', `HEAD:${branch(root)}`]); return true; }
     catch (e) {
-      if (i >= retries) throw new PersistError(`push failed: ${String(e.stderr || e.message).slice(0, 200)}`);
-      execFileSync('sleep', [String(sleepMs / 1000)]); // transient network: one retry, never a merge
+      if (i >= backoffMs.length) throw new PersistError(`push failed: ${String(e.stderr || e.message).slice(0, 300)}`);
+      if (backoffMs[i]) execFileSync('sleep', [String(backoffMs[i] / 1000)]); // transient network or GitHub error: retry, never a merge
     }
   }
 }

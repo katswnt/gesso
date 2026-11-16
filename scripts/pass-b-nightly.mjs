@@ -20,7 +20,7 @@ import { runAudit, auditHistory, auditRunFatal, callAuditPinned } from './pass-b
 import { setAsideBudget } from './lib/pass-b-set-aside.mjs';
 import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
-import { remoteRoot, persist, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
+import { remoteRoot, persist, assertExecutionLease, executionBudgetPath, PersistError } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
 import { OPTS, setBaseProvider, stageBinding, stageRunId, stageHistory, s2RetryRun, s2RetryDue, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
@@ -28,6 +28,14 @@ const execFileP = promisify(execFile);
 const OUT = join(RUN_ROOT, 'claim-first-nightly'), SNAP = join(RUN_ROOT, 'claim-first-v1', 'snapshots');
 const loadGlobal = (file, name) => { const w = {}; new Function('window', readFileSync(file, 'utf8'))(w); return w[name]; };
 export const mustHalt = r => r.stop !== 'done';
+// Stops that end the run cleanly (lease released, next firing resumes). 2026-11-16: a push GitHub kept rejecting
+// after the backoff joins them; it held the lease for 4 days as a fail-closed stop. Nothing is lost: a reservation
+// that never reached GitHub was never called, and copy that did not reach it is rebuilt from the verified stages.
+export const CLEAN_STOP = /^(pacing|protected-hours|usage-limit|api-error|persist-failed)/;
+export const pushStop = e => { if (e instanceof PersistError) return `persist-failed: ${e.message}`; throw e; };
+// The collector runs as a child: its push failure (never a fatal) is the same clean stop.
+export const collectorPushFailure = e => { const err = String(e?.stderr || e?.message || '');
+  return /FAIL-CLOSED: (persist-failed|push failed)/.test(err) && !/FAIL-CLOSED: fatal/.test(err) ? `persist-failed (collector): ${err.match(/FAIL-CLOSED: (.*)/)[1].slice(0, 200)}` : null; };
 
 export function nightlyFatal({ root = RUN_ROOT, runDir = CORPUS_RUN_DIR, inspection } = {}) {
   const fatal = inspection?.fatal || corpusFatal(runDir);
@@ -214,26 +222,29 @@ async function main() {
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
   const only = ownerOnly;
   if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
-  persist(remoteRoot(), [join(OUT, 'copy')], 'copy: catch up finished copy not yet pushed');
+  try { persist(remoteRoot(), [join(OUT, 'copy')], 'copy: catch up finished copy not yet pushed'); } catch (e) { stop = pushStop(e); }
   const snap = sharedSnapshots();
   console.log(`  workers: ${NIGHTLY_WORKERS} | pending: ${pending.length}`);
   await runPool(pending, NIGHTLY_WORKERS, async id => {
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
-    const result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop) ? stop : null),
+    // A push failure stops the other workers before their next stage too (it is not in this pass-through list).
+    let result;
+    try { result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop) ? stop : null),
       saveCopy: copy => preserveCopy(copyArtifact(id, dateOf.get(id), copy)),
       prepare: async () => {
         for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snap(u, SNAP);
         persist(remoteRoot(), [SNAP], `snapshots for ${id}`);
-      } });
+      } }); } catch (e) { result = { stop: pushStop(e) }; } // copy or snapshot push
     if (result.finished) finished++;
     if (mustHalt(result)) stop ||= result.stop;
   }, () => Boolean(stop));
   if (setAside.used()) console.log(`  set aside for review: ${setAside.used()} work(s) (VSD-073)`);
   console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
-  if (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop)) throw new Error(stop);
+  if (stop && !CLEAN_STOP.test(stop)) throw new Error(stop);
   if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
-    console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted');
+    try { console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted'); }
+    catch (e) { const why = collectorPushFailure(e); if (!why) throw e; console.log(`collection: stop=${why}; the next firing resumes`); }
   }
 }
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) main().catch(e => { console.error(`FAIL-CLOSED: ${e.message}`); process.exit(1); });

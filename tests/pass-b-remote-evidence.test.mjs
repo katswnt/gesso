@@ -10,6 +10,7 @@ import { pathToFileURL } from 'node:url';
 import { persist, acquireLease, releaseLease, readLease, assertExecutionLease, PersistError, LeaseBusyError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { runAudit, countReservations } from '../scripts/pass-b-shadow-audit.mjs';
 
+process.env.PASS_B_PUSH_BACKOFF_MS ??= '0,0,0'; // simulated outages retry without waiting
 let n = 0; const check = async (name, fn) => { try { await fn(); n++; } catch (e) { console.error(`FAIL ${name}`); throw e; } };
 const sh = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 function world() {
@@ -34,6 +35,23 @@ await check('a failed push surfaces as PersistError (never silently continues)',
   const w = world(); rmSync(w.bare, { recursive: true });
   writeFileSync(join(w.a, 'x.json'), '{}');
   assert.throws(() => persist(w.a, [join(w.a, 'x.json')], 'reserve', { retries: 0 }), PersistError);
+  rmSync(w.root, { recursive: true });
+});
+// 2026-11-16: GitHub rejected two pushes in a row with a server error and the run stopped for 4 days.
+const flakyOrigin = (w, failures) => { const hook = join(w.bare, 'hooks', 'pre-receive'), count = join(w.root, 'rejections');
+  writeFileSync(count, '0');
+  writeFileSync(hook, `#!/bin/sh\nn=$(cat "${count}"); if [ "$n" -lt ${failures} ]; then echo $((n+1)) > "${count}"; echo "Internal Server Error" >&2; exit 1; fi\n`, { mode: 0o755 });
+  return () => Number(readFileSync(count, 'utf8')); };
+await check('a push rejected by the server is retried with backoff and lands', () => {
+  const w = world(), rejected = flakyOrigin(w, 3); writeFileSync(join(w.a, 'x.json'), '{}');
+  assert.equal(persist(w.a, [join(w.a, 'x.json')], 'reserve'), true); assert.equal(rejected(), 3);
+  const b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state'); assert.ok(existsSync(join(b, 'x.json')));
+  rmSync(w.root, { recursive: true });
+});
+await check('a server that keeps rejecting gives up after the backoff with PersistError', () => {
+  const w = world(), rejected = flakyOrigin(w, 99); writeFileSync(join(w.a, 'x.json'), '{}');
+  assert.throws(() => persist(w.a, [join(w.a, 'x.json')], 'reserve'), e => e instanceof PersistError && /push failed: .*Internal Server Error/s.test(e.message));
+  assert.equal(rejected(), 4, 'first try + 3 retries');
   rmSync(w.root, { recursive: true });
 });
 await check('lease: first push wins, the second claimant exits, a held lease is never stolen, only its holder (or a forced owner release) frees it', () => {

@@ -1115,7 +1115,9 @@ async function main() {
     persist();
     const after = inspectCorpus({ pool, legacyOf, ledger: led });
     applyHistoryRepair({ inspection: after, ledger: led, eligibleCount: allEligible.length });
-    persistRemote(remoteRoot(), [LEDGER, IMAGE_INDEX, USAGE_LOG, join(RUN_DIR, 'fatal.json')], 'collector stopped');
+    // A failed final push must never hide a fatal: the nightly treats a bare push failure as a clean pause (2026-11-16).
+    try { persistRemote(remoteRoot(), [LEDGER, IMAGE_INDEX, USAGE_LOG, join(RUN_DIR, 'fatal.json')], 'collector stopped'); }
+    catch (e) { if (FATAL) throw new Error(`fatal: ${FATAL} (final push also failed: ${e.message})`); throw e; }
     if (FATAL) throw new Error(`fatal: ${FATAL}`);
     console.log(`Stopped: ${STOP_REASON || (LANE === 'local' && SCHEDULE_SCOPE === 'corpus' ? 'corpus queue exhausted' : 'window queue exhausted')}; done ${after.doneSet.size}, held ${after.heldSet.size}.`);
   } finally { unlinkSync(RUN_LEASE); }
