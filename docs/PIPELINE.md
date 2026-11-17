@@ -532,6 +532,7 @@ Offline hardening on 2026-09-30:
   call in the S2 retry run (`cf-98a3617b0e77`, next stage `S2R`); an accepted retry is used, a
   failed one leaves the original hold final. The morning report flags any run holding >= 25% of
   >= 10 outcomes ("High hold rate") and counts the retries.
+- Per-firing cap (VSD-077): the cloud routine launches with `PASS_B_MAX_CALLS=500` (the wrapper default is still 300). Pacing still stops a run first.
 - Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
   still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
   firing resumes; a fatal is never downgraded this way.
