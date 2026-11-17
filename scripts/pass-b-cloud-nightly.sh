@@ -37,12 +37,14 @@ export PASS_B_CORPUS_LANE=local
 # state/schedule.json {"timeZone": "Europe/Paris"}; default Pacific. The runner's 00:00–08:30 / 09:00 rule is local.
 export PASS_B_TIMEZONE="${PASS_B_TIMEZONE:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).timeZone||'America/Los_Angeles')}catch{console.log('America/Los_Angeles')}")}"
 # Hours (owner 2026-10-17, VSD-066): state/schedule.json "hours": "all-day" lets every firing start (cron every 2 h);
-# each 2-hour slot then has its own allowance (slot-<date>-<HH>), so every firing may make up to PASS_B_MAX_CALLS.
+# each 2-hour slot then has its own allowance (slot-<city>-<date>-<HH>), so every firing may make up to PASS_B_MAX_CALLS.
+# The city (owner 2026-11-17, back on California time) keeps a new time zone's slots from reusing allowances the old
+# time zone already spent on the same local date and hour (Paris slots were slot-<date>-<HH>).
 export PASS_B_HOURS="${PASS_B_HOURS:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).hours||'night')}catch{console.log('night')}")}"
 # Scope (owner 2026-10-30, VSD-068): state/schedule.json "scope": "corpus" continues past the 30-day window down the
 # priority bands (Easy, top-fame M/H/I, Medium, Hard, Impossible) once the window is done; default "window".
 export PASS_B_SCOPE="${PASS_B_SCOPE:-$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$EV/state/schedule.json','utf8')).scope||'window')}catch{console.log('window')}")}"
-if [ "$PASS_B_HOURS" = "all-day" ]; then SLOT_H=$(( 10#$(TZ=$PASS_B_TIMEZONE date +%H) / 2 * 2 )); DEFAULT_BUDGET="slot-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)-$(printf %02d $SLOT_H)"
+if [ "$PASS_B_HOURS" = "all-day" ]; then SLOT_H=$(( 10#$(TZ=$PASS_B_TIMEZONE date +%H) / 2 * 2 )); DEFAULT_BUDGET="slot-${PASS_B_TIMEZONE##*/}-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)-$(printf %02d $SLOT_H)"
 else DEFAULT_BUDGET="nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)"; fi
 export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-$DEFAULT_BUDGET}" PASS_B_LEASE_HOLDER="$HOLDER"
 echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS, scope $PASS_B_SCOPE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"

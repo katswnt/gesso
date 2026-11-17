@@ -533,6 +533,7 @@ Offline hardening on 2026-09-30:
   failed one leaves the original hold final. The morning report flags any run holding >= 25% of
   >= 10 outcomes ("High hold rate") and counts the retries.
 - Per-firing cap (VSD-077): the cloud routine launches with `PASS_B_MAX_CALLS=500` (the wrapper default is still 300). Pacing still stops a run first.
+- Schedule (VSD-078, 2026-11-17): Pacific time, all day, scope corpus. Slot allowances are `state/call-budgets/slot-<city>-<date>-<HH>.json` (earlier Paris slots: `slot-<date>-<HH>`).
 - Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
   still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
   firing resumes; a fatal is never downgraded this way.
