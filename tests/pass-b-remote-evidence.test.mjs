@@ -264,6 +264,23 @@ await check('self-healing (VSD-066): a crashed automation lease is recovered aft
   assert.throws(() => acquireLease(w.a, 'routine-C', { now: at(500) }), LeaseBusyError);
   rmSync(w.root, { recursive: true });
 });
+await check('VSD-079: a restarted container recovers its OWN dead run at once; another holder, a laptop lease and a fail-closed stop are untouched', () => {
+  // 2026-11-18 20:10 UTC: the container was restarted (exit 137) mid-run; the same session came back 30 s later but the
+  // lease waited for 90 quiet minutes and the next firing. The launcher now names its own earlier holder (/tmp survives).
+  const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
+  const at = min => new Date(Date.now() + min * 60000);
+  acquireLease(w.a, 'routine-A');
+  assert.throws(() => acquireLease(b, 'routine-B', { now: at(1), ownDead: 'routine-X' }), LeaseBusyError); // not its run
+  assert.throws(() => acquireLease(b, 'laptop-B', { now: at(1), ownDead: 'routine-A' }), LeaseBusyError);  // automation only
+  assert.equal(acquireLease(b, 'routine-B', { now: at(1), ownDead: 'routine-A' }).holder, 'routine-B');     // own: at once
+  const rec = readFileSync(join(b, 'state', 'lease-recoveries.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  assert.equal(rec.at(-1).own, true); assert.equal(rec.at(-1).from.holder, 'routine-A');
+  assert.match(sh(b, 'log', '-1', '--format=%s'), /^lease: recover crashed routine-A \(own run, container restarted\) by routine-B/);
+  writeFileSync(join(b, 'state', 'status.json'), JSON.stringify({ holder: 'routine-B', exit: 1, summary: 'FAIL-CLOSED: x' }));
+  persist(b, [join(b, 'state', 'status.json')], 'status: fail');                       // deliberate stop keeps its lease
+  assert.throws(() => acquireLease(w.a, 'routine-C', { now: at(2), ownDead: 'routine-B' }), LeaseBusyError);
+  rmSync(w.root, { recursive: true });
+});
 await check('status is written from environment variables, surviving braces, quotes and ampersands (2026-10-01 laptop-pilot bug)', () => {
   const w = world(), summary = 'claim-first: finished 3 work(s) {a,b}, "q" & stop=pacing: cap';
   execFileSync('node', ['scripts/pass-b-cloud-lease.mjs', 'write-status-env'], { env: { ...process.env, PASS_B_REMOTE_EVIDENCE: w.a, PASS_B_STATUS_SUMMARY: summary, PASS_B_STATUS_EXIT: '0', PASS_B_STATUS_HOLDER: 'h', PASS_B_STATUS_PIN: 'p' }, stdio: 'pipe' });

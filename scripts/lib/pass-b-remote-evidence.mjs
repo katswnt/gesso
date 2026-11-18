@@ -80,23 +80,26 @@ export function persist(root, paths, message, { retries = null, backoffMs = retr
 // ---- lease: state/lease.json on the checked-out branch ----
 const leasePath = root => join(root, 'state', 'lease.json');
 export function readLease(root) { const p = leasePath(root); return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null; }
-export function acquireLease(root, holder, { now = new Date() } = {}) {
+// ownDead (VSD-079): the holder this same container started before it was restarted (exit 137). The launcher passes it
+// only when its own /tmp record names it and no pipeline process is alive, so that lease is recovered at once instead
+// of after STALE_LEASE_MIN; a deliberate fail-closed stop still waits for review.
+export function acquireLease(root, holder, { now = new Date(), ownDead = null } = {}) {
   git(root, ['pull', '-q', '--ff-only', 'origin', branch(root)]); // never merge
   const cur = readLease(root);
   if (!holder?.trim()) throw new LeaseBusyError('lease holder is required');
-  const stale = cur ? staleLease(root, cur, holder, now) : null;
+  const stale = cur ? staleLease(root, cur, holder, now, { ownDead }) : null;
   if (cur && !stale) throw new LeaseBusyError(`lease held by ${cur.holder} since ${cur.acquiredAt}; not recoverable automatically (release it deliberately after checking that run)`);
   mkdirSync(dirname(leasePath(root)), { recursive: true });
   const paths = [leasePath(root)];
   if (stale) {
     unlinkSync(leasePath(root));
     const log = join(root, 'state', 'lease-recoveries.jsonl');
-    writeFileSync(log, `${JSON.stringify({ recoveredAt: now.toISOString(), from: cur, by: holder, quietMin: stale.quietMin, lastPushAt: stale.lastPushAt })}\n`, { flag: 'a' });
+    writeFileSync(log, `${JSON.stringify({ recoveredAt: now.toISOString(), from: cur, by: holder, quietMin: stale.quietMin, lastPushAt: stale.lastPushAt, ...(stale.own ? { own: true } : {}) })}\n`, { flag: 'a' });
     paths.push(log);
   }
   try { writeFileSync(leasePath(root), `${JSON.stringify({ version: LEASE_VERSION, holder, acquiredAt: now.toISOString() }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true }); }
   catch (e) { throw new LeaseBusyError(`local lease was claimed concurrently: ${e.message}`); }
-  try { persist(root, paths, stale ? `lease: recover crashed ${cur.holder} (no push for ${stale.quietMin} min) by ${holder}` : `lease: acquire by ${holder}`, { retries: 0 }); }
+  try { persist(root, paths, stale ? `lease: recover crashed ${cur.holder} (${stale.own ? 'own run, container restarted' : `no push for ${stale.quietMin} min`}) by ${holder}` : `lease: acquire by ${holder}`, { retries: 0 }); }
   catch (e) {
     // Lost the race (non-fast-forward) or network: undo locally and exit; never merge a competing claim.
     try { git(root, ['fetch', '-q', 'origin', branch(root)]); git(root, ['reset', '-q', '--hard', 'FETCH_HEAD']); } catch { /* best effort */ }
@@ -109,13 +112,14 @@ export function acquireLease(root, holder, { now = new Date() } = {}) {
 // > the longest single call (15 min) with a wide margin: every call pushes its reservation before and outcome after.
 export const STALE_LEASE_MIN = 90;
 const AUTOMATION = /^(routine|schedule)-/;
-export function staleLease(root, cur, claimant, now = new Date()) {
+export function staleLease(root, cur, claimant, now = new Date(), { ownDead = null } = {}) {
   if (!AUTOMATION.test(cur?.holder || '') || !AUTOMATION.test(claimant || '')) return null;
   const sp = join(root, 'state', 'status.json');
   const st = existsSync(sp) ? JSON.parse(readFileSync(sp, 'utf8')) : null;
   if (st?.holder === cur.holder && Number(st.exit) !== 0) return null; // deliberate fail-closed stop: owner review
   const lastPush = Number(git(root, ['log', '-1', '--format=%ct']).trim()) * 1000;
   const quietMin = Math.floor((now.getTime() - lastPush) / 60000);
+  if (ownDead && ownDead === cur.holder && ownDead !== claimant) return { quietMin, lastPushAt: new Date(lastPush).toISOString(), own: true };
   return quietMin >= STALE_LEASE_MIN ? { quietMin, lastPushAt: new Date(lastPush).toISOString() } : null;
 }
 export function releaseLease(root, holder, { force = false } = {}) {

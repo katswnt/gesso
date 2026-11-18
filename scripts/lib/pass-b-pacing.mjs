@@ -15,7 +15,7 @@ import { dirname } from 'node:path';
 export const PACING_VERSION = 'passBPacing/2';
 export const CALL_BUDGET_VERSION = 'passBCallBudget/1';
 // Ceiling 0.95 (owner 2026-10-30, VSD-069: aim for ~95% of the week at reset; was 0.85, VSD-055).
-export const DEFAULTS = Object.freeze({ ceiling: 0.95, margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, weekMs: 7 * 24 * 3600 * 1000 });
+export const DEFAULTS = Object.freeze({ ceiling: 0.95, margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, probeWaitMs: 15 * 60 * 1000, weekMs: 7 * 24 * 3600 * 1000 });
 
 // The LAST rate_limit_event in a transcript (the freshest reading of that call), or null.
 export function rateLimitFrom(transcriptText) {
@@ -65,7 +65,9 @@ export function latestObservation(logPath, now = new Date()) {
 }
 
 // Stale readings can forbid spending until their own reset; they cannot establish available capacity.
-export function pacingDecision({ obs, now = new Date(), probeUsed = 0, opts = {} }) {
+// lastProbeAt (VSD-079): when the last probe of this reading was granted. Until probeWaitMs after it, that probe may
+// still be in flight (3 workers start together right after a five-hour reset), so the answer is 'wait', not 'stop'.
+export function pacingDecision({ obs, now = new Date(), probeUsed = 0, lastProbeAt = null, opts = {} }) {
   const o = { ...DEFAULTS, ...opts }, t = now.getTime();
   const current = w => validWindow(w) && w.resetsAt > t;
   const weekly = current(obs?.sevenDay) ? obs.sevenDay : null, five = current(obs?.fiveHour) ? obs.fiveHour : null;
@@ -80,6 +82,7 @@ export function pacingDecision({ obs, now = new Date(), probeUsed = 0, opts = {}
   if (!fresh(obs?.sevenDay) || !fresh(obs?.fiveHour)) {
     const why = 'missing, stale or pre-reset usage reading';
     return probeUsed < o.probeCalls ? { go: true, mode: 'probe', reason: `${why}; probe call ${probeUsed + 1}/${o.probeCalls}` }
+      : lastProbeAt != null && t - lastProbeAt < o.probeWaitMs ? { go: false, mode: 'wait', reason: `${why}; waiting for the probe call(s) in flight` }
       : { go: false, mode: 'stop', reason: `${why} after ${o.probeCalls} probe calls; stopping (never assume zero use)` };
   }
   return { go: true, mode: 'normal', reason: `weekly ${Math.round(weekly.utilization * 100)}% < allowed ${Math.round(allowed * 100)}%`, ...base };
@@ -105,8 +108,8 @@ export function makePacer({ logPath, maxCalls, now = () => new Date(), opts = {}
       const t = now(), obs = latestObservation(logPath, t);
       // Only a complete reading or an observed window's actual reset opens another probe allowance.
       const probeKey = JSON.stringify([obs?.completeKey || null, ...['sevenDay', 'fiveHour'].map(k => obs?.[k]?.resetsAt <= t.getTime() ? obs[k].resetsAt : null)]);
-      const probeUsed = s.allowances.filter(a => a.probeKey === probeKey).length;
-      const d = pacingDecision({ obs, now: t, probeUsed, opts });
+      const probes = s.allowances.filter(a => a.probeKey === probeKey), lastProbeAt = probes.length ? Date.parse(probes.at(-1).at) : null;
+      const d = pacingDecision({ obs, now: t, probeUsed: probes.length, lastProbeAt, opts });
       if (d.go) {
         s.allowances.push({ slot: s.allowances.length + 1, at: t.toISOString(), probeKey: d.mode === 'probe' ? probeKey : null });
         if (statePath) {

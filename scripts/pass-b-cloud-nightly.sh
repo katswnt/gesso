@@ -56,7 +56,12 @@ if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then
   node scripts/pass-b-cloud-lease.mjs status | head -12 || { echo "DRY RUN FAILED: lease status"; exit 1; }
   echo "DRY RUN COMPLETE (claude on PATH: $(command -v claude || echo MISSING); CLI $(claude --version 2>/dev/null | head -1))"; exit 0
 fi
-node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER"; LEASE=$?
+# VSD-079: a container restart (exit 137) kills the run but keeps /tmp. The restarted launcher names the run it started
+# before (only if no pipeline process survives), so its own dead lease is recovered now instead of after 90 quiet minutes.
+OWN_DEAD=""
+if [ -s /tmp/pass-b-holder ] && ! pgrep -f "scripts/pass-b-(nightly|corpus-collect)\.mjs" >/dev/null; then OWN_DEAD="$(cat /tmp/pass-b-holder)"; fi
+echo "$HOLDER" > /tmp/pass-b-holder
+node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER" ${OWN_DEAD:+--own-dead "$OWN_DEAD"}; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
 node scripts/pass-b-nightly.mjs --run ${PASS_B_COLLECT:+--collect} 2>&1 | tee /tmp/pass-b-nightly.log; RUN=${PIPESTATUS[0]}
 SUMMARY="$(tail -3 /tmp/pass-b-nightly.log | tr '\n' ' ' | cut -c1-400)"

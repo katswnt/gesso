@@ -135,4 +135,25 @@ await check('missing telemetry permits two probes total across restarts, then a 
     assert.throws(() => makePacer({ logPath: log, maxCalls: NaN }));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+await check('VSD-079: three workers right after a five-hour reset wait for the probes in flight instead of stopping', async () => {
+  // 2026-11-18 01:00 and 06:00 UTC: the five-hour window reset, workers 1-2 took the two probes and worker 3 stopped the
+  // whole firing before their (fresh) readings landed. Now worker 3 waits; a probe that never reports still stops.
+  const dir = mkdtempSync(join(tmpdir(), 'pace-workers-')), log = join(dir, 'u.jsonl'), statePath = join(dir, 'budget.json');
+  try {
+    let t = now.getTime();
+    recordObservation(log, ev(.2, .1, t - 1000), { observedAt: new Date(t - 60e3) }); // five-hour reading from before its reset
+    const pacer = makePacer({ logPath: log, maxCalls: 30, statePath, now: () => new Date(t) });
+    const plan = id => ({ workId: id, input: { x: id }, inputSha256: id, promptHash: 'p', binding: {}, controllerHolds: {} });
+    const tick = () => new Promise(r => setTimeout(r, 5));
+    let calls = 0; const callFn = async () => { calls++; await tick(); await tick(); t += 60e3; recordObservation(log, ev(.2, .01, t + 5 * 3600e3), { observedAt: new Date(t) }); return { transcript: '', exitCode: 0 }; };
+    const sleep = async () => { t += 20e3; await tick(); };
+    const runs = await Promise.all(['a', 'b', 'c'].map(id => runAudit({ plans: [plan(id)], outDir: join(dir, id), runId: `sa-${id}`, binding: {}, now: () => new Date(t), pacer, usageLog: log, callFn, sleep })));
+    // (the stand-in call returns no transcript, so each run ends 'fatal-provenance' AFTER its call; only pacing matters here)
+    assert.deepEqual(runs.filter(r => /^pacing/.test(r.stop || '')).map(r => r.stop), [], 'no worker stops on pacing');
+    assert.equal(calls, 3); assert.deepEqual(['a', 'b', 'c'].map(id => countReservations(join(dir, id))), [1, 1, 1]);
+    // a probe that never reports: wait up to probeWaitMs, then the usual stop
+    assert.equal(pacingDecision({ obs: null, now, probeUsed: 2, lastProbeAt: now.getTime() - 60e3 }).mode, 'wait');
+    assert.match(pacingDecision({ obs: null, now, probeUsed: 2, lastProbeAt: now.getTime() - 16 * 60e3 }).reason, /never assume zero/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
 console.log(`pass-b-pacing.test: ${n} checks passed`);

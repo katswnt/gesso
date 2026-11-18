@@ -507,9 +507,11 @@ export async function callAuditPinned(plan, { bin, timeout, execute = execToFile
   } finally { rmSync(callDir, { recursive: true, force: true }); }
 }
 
+// VSD-079: while another worker's probe call is in flight, re-check every 20 s instead of stopping the session.
+export const PACING_SLEEP = () => new Promise(r => setTimeout(r, 20000));
 // pacer / usageLog (VSD-055): optional usage pacing checked before each reservation; observations recorded after each call.
 // setAside (VSD-073): optional per-firing budget (lib/pass-b-set-aside.mjs); without it every fatal stops, as before.
-export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null, beforeReserve = () => null, setAside = null }) {
+export async function runAudit({ plans, outDir, runId, binding, callFn, now = () => new Date(), exception, pacer = null, usageLog = null, beforeReserve = () => null, setAside = null, sleep = PACING_SLEEP }) {
   const incremental = binding?.version?.startsWith('passBClaimFirstNightly/1:');
   if (!existsSync(join(outDir, 'run-manifest.json'))) {
     mkdirSync(join(outDir, 'works'), { recursive: true, mode: 0o700 });
@@ -538,7 +540,12 @@ export async function runAudit({ plans, outDir, runId, binding, callFn, now = ()
     try { gate = startGate(now(), exception); } catch (e) { stop = 'protected-hours'; break; }
     stop = beforeReserve(); if (stop) break;
     assertExecutionLease();
-    if (pacer) { const d = pacer.check(); if (!d.go) { stop = `pacing: ${d.reason}`; break; } }
+    if (pacer) {
+      let d = pacer.check();
+      while (d.mode === 'wait' && !(stop = beforeReserve())) { await sleep(); d = pacer.check(); } // VSD-079: probes in flight
+      if (stop) break;
+      if (!d.go) { stop = `pacing: ${d.reason}`; break; }
+    }
     const dir = join(outDir, 'works', safeWork(plan.workId));
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     durableWrite(join(dir, 'attempt-1.reserved.json'), `${JSON.stringify({ version: RESERVATION_VERSION, runId, workId: plan.workId, attempt: 1, promptHash: plan.promptHash, inputSha256: plan.inputSha256, binding: plan.binding, hoursException: gate.hoursException, reservedAt: now().toISOString() }, null, 1)}\n`);
