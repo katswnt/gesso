@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, topFameIds, TOP_REWRITE, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
 import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
@@ -211,6 +211,20 @@ await check('writer bump: strict /13 copy is kept, held /13 copy is rewritten, o
   const read = p => ({ '/p/good': { usable: { strict: true } }, '/p/held': { usable: { strict: false } } })[p];
   assert.notEqual(CF.WRITE_VERSION, w13, 'the kept writer is an older one');
   assert.deepEqual(['cur', 'good', 'held', 'old', 'new'].map(id => copyState(id, written, read)), ['done', 'done', null, 'stale', null]);
+});
+// VSD-083: the most recognizable works are rewritten under the current writer even with strict kept copy.
+await check('top-200 rewrite: strict or stale kept copy of a top work is rewritten; current-writer copy stays done', async () => {
+  const name = (id, w) => basename(copyArtifact(id, null, {}, '/o', w).path), w13 = KEPT_WRITES[0];
+  const written = new Map([[name('good', w13), '/p/good'], [name('old', w13).replace(/\.a\d+\.json$/, '.a6.json'), '/p/old'],
+    [name('done14', CF.WRITE_VERSION), '/p/d'], [name('other', w13), '/p/other']]);
+  const read = p => ({ usable: { strict: true } }), rewrite = new Set(['good', 'old', 'done14']);
+  assert.deepEqual(['good', 'old', 'done14', 'other'].map(id => copyState(id, written, read, rewrite)), [null, null, 'done', 'done']);
+  assert.deepEqual(['good', 'old', 'other'].map(id => copyState(id, written, read)), ['done', 'stale', 'done'], 'no rewrite set: VSD-082 unchanged');
+});
+await check('top-200 ranking: fame file first, pool fame second; unplayable and human remains excluded', async () => {
+  const pool = [{ id: 'a', fame: 5 }, { id: 'b', fame: 1 }, { id: 'c', fame: 9, play: false }, { id: 'd', fame: 8, sensitive: 'remains' }, { id: 'e' }];
+  assert.deepEqual(topFameIds(pool, { b: 7 }, 3), ['b', 'a', 'e']);
+  assert.equal(TOP_REWRITE, 200);
 });
 await check('worker pool: at most N works at once, priority order kept, no new work after a stop', async () => {
   let live = 0, peak = 0; const started = [];

@@ -31,9 +31,11 @@ node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/packa
 # Boost (owner 2026-11-18, VSD-080): until PASS_B_BOOST_UNTIL (an ISO time, e.g. the weekly reset) every firing runs
 # PASS_B_BOOST_WORKERS workers and a PASS_B_BOOST_MAX_CALLS cap, to use a week's otherwise-lost allowance before it
 # resets; after that time the routine's plain values apply again with no edit. Pacing still decides every call.
+# VSD-084 (owner 2026-11-19, "run as hard as possible"): the boost also raises the weekly pacing ceiling to
+# PASS_B_BOOST_CEILING (default 0.98, the pacer's maximum; 2% stays for the owner).
 # BOOST-BEGIN
 if [ -n "${PASS_B_BOOST_UNTIL:-}" ] && [ "$(node -e 'process.stdout.write(Date.parse(process.argv[1]) > Date.now() ? "1" : "0")' "$PASS_B_BOOST_UNTIL")" = 1 ]; then
-  export PASS_B_NIGHTLY_WORKERS="${PASS_B_BOOST_WORKERS:-6}" PASS_B_MAX_CALLS="${PASS_B_BOOST_MAX_CALLS:-1000}"; fi
+  export PASS_B_NIGHTLY_WORKERS="${PASS_B_BOOST_WORKERS:-6}" PASS_B_MAX_CALLS="${PASS_B_BOOST_MAX_CALLS:-1000}" PASS_B_WEEKLY_CEILING="${PASS_B_BOOST_CEILING:-0.98}"; fi
 # BOOST-END
 export PASS_B_REMOTE_EVIDENCE="$EV" PASS_B_NIGHTLY_LIVE=1 PASS_B_CORPUS_LIVE=1 PASS_B_MAX_CALLS="${PASS_B_MAX_CALLS:-300}"
 # Cloud host, subscription rules: never inherit the historical cloud-credit lane's pacing/hours exemption.
@@ -54,7 +56,7 @@ export PASS_B_SCOPE="${PASS_B_SCOPE:-$(node -e "try{console.log(JSON.parse(requi
 if [ "$PASS_B_HOURS" = "all-day" ]; then SLOT_H=$(( 10#$(TZ=$PASS_B_TIMEZONE date +%H) / 2 * 2 )); DEFAULT_BUDGET="slot-${PASS_B_TIMEZONE##*/}-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)-$(printf %02d $SLOT_H)"
 else DEFAULT_BUDGET="nightly-$(TZ=$PASS_B_TIMEZONE date +%Y-%m-%d)"; fi
 export PASS_B_CALL_BUDGET_ID="${PASS_B_CALL_BUDGET_ID:-$DEFAULT_BUDGET}" PASS_B_LEASE_HOLDER="$HOLDER"
-echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls, workers ${PASS_B_NIGHTLY_WORKERS:-3} | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS, scope $PASS_B_SCOPE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
+echo "pinned code $PIN | evidence $(git -C "$EV" rev-parse --short HEAD) | cap $PASS_B_MAX_CALLS calls, workers ${PASS_B_NIGHTLY_WORKERS:-3}, weekly ceiling ${PASS_B_WEEKLY_CEILING:-0.95} | time zone $PASS_B_TIMEZONE, hours $PASS_B_HOURS, scope $PASS_B_SCOPE | allowance $PASS_B_CALL_BUDGET_ID | holder $HOLDER"
 set +e
 # Rehearsal (PASS_B_CLOUD_DRY=1): everything above for real, then the read-only plans only: no lease, no calls, no pushes.
 if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then

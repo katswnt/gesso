@@ -15,7 +15,16 @@ import { dirname } from 'node:path';
 export const PACING_VERSION = 'passBPacing/2';
 export const CALL_BUDGET_VERSION = 'passBCallBudget/1';
 // Ceiling 0.95 (owner 2026-10-30, VSD-069: aim for ~95% of the week at reset; was 0.85, VSD-055).
-export const DEFAULTS = Object.freeze({ ceiling: 0.95, margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, probeWaitMs: 15 * 60 * 1000, weekMs: 7 * 24 * 3600 * 1000 });
+// VSD-084 (owner 2026-11-19): the launcher's boost may raise it with PASS_B_WEEKLY_CEILING, never above 0.98, so a
+// sliver of the week stays for the owner. A malformed or out-of-range value stops the run instead of guessing.
+export const MAX_WEEKLY_CEILING = 0.98;
+export function weeklyCeiling(raw = process.env.PASS_B_WEEKLY_CEILING) {
+  if (raw == null || raw === '') return 0.95;
+  const v = Number(raw);
+  if (!(v > 0 && v <= MAX_WEEKLY_CEILING)) throw new Error(`PASS_B_WEEKLY_CEILING=${raw}: must be a number above 0 and at most ${MAX_WEEKLY_CEILING}`);
+  return v;
+}
+export const DEFAULTS = Object.freeze({ ceiling: weeklyCeiling(), margin: 0.03, fiveHourCeiling: 0.9, maxAgeMs: 3 * 3600 * 1000, probeCalls: 2, probeWaitMs: 15 * 60 * 1000, weekMs: 7 * 24 * 3600 * 1000 });
 
 // The LAST rate_limit_event in a transcript (the freshest reading of that call), or null.
 export function rateLimitFrom(transcriptText) {

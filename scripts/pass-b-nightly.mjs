@@ -163,8 +163,17 @@ export const copyName = id => basename(copyArtifact(id, null, {}).path);
 // Kept-writer copy that exists only at an older assembly is 'stale': it can be re-assembled only under that writer's
 // stage bindings, so it is skipped (never rewritten at a cost) until the older writer's re-assembly has run.
 export const KEPT_WRITES = ['passBClaimFirstWrite/13'];
-export function copyState(id, written, read = p => JSON.parse(readFileSync(p, 'utf8'))) {
+// VSD-083 (owner 2026-11-19): the most recognizable works are rewritten under the current writer even when their kept
+// copy is strict-usable (the top-200 audit found its defects there). Same ranking as that audit: playable works that
+// are not human remains, by fame (data/fame.js, else the pool's own value), highest first.
+export const TOP_REWRITE = 200;
+export function topFameIds(pool, fame = {}, n = TOP_REWRITE) {
+  const f = p => fame[p.id] ?? p.fame ?? 0;
+  return pool.filter(p => p.play !== false && p.sensitive !== 'remains').sort((a, b) => f(b) - f(a)).slice(0, n).map(p => p.id);
+}
+export function copyState(id, written, read = p => JSON.parse(readFileSync(p, 'utf8')), rewrite = new Set()) {
   if (written.has(copyName(id))) return 'done';
+  if (rewrite.has(id)) return null; // VSD-083: kept copy (any assembly) does not count; write it again
   for (const w of KEPT_WRITES) {
     const name = basename(copyArtifact(id, null, {}, OUT, w).path), path = written.get(name);
     if (path) return read(path).usable?.strict ? 'done' : null;
@@ -213,8 +222,9 @@ async function main() {
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
   const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0, stale: 0 }, pending = [];
   const written = finishedCopyNames();
+  const rewrite = new Set(topFameIds(ctx.pool, loadGlobal('data/fame.js', 'ARTEFACTUM_FAME') || {}));
   for (const id of order) {
-    const state = copyState(id, written);
+    const state = copyState(id, written, undefined, rewrite);
     if (state === 'done') { counts.copy++; continue; } // finished in an earlier run (any date folder)
     if (state === 'stale') { counts.stale++; continue; } // VSD-082: awaiting re-assembly under its own writer
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
@@ -223,7 +233,7 @@ async function main() {
     if (st.next === 'copy') { counts.copyPending++; pending.push(id); } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
-  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}${counts.stale ? ` | STALE kept copy awaiting re-assembly ${counts.stale}` : ''}`);
+  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}${counts.stale ? ` | STALE kept copy awaiting re-assembly ${counts.stale}` : ''} | top-${TOP_REWRITE} rewrite pending ${pending.filter(id => rewrite.has(id)).length}`);
   console.log(`  safety: ${safetyCheck() || 'clear'}`);
   for (const k of ['S1', 'S2', 'S2R', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   if (!live) { console.log(`READ-ONLY PLAN: no calls or writes. Next up: ${pending.slice(0, 5).map(id => `${dateOf.get(id)} ${id}`).join('; ')}`); return; }
