@@ -131,10 +131,13 @@ await check('collector receives only remaining local allowance and errors propag
 }
 { // VSD-057: S2's pre-cap run is an equivalent history source (same binding except the B3 wire-schema hash)
   const runs = CF_RUNNER.equivalentRuns('S2', []);
-  assert.equal(runs.length, 3); assert.equal(runs[1].runId, 'cf-1d898d84282f');
+  assert.equal(runs.length, 4); assert.equal(runs[1].runId, 'cf-1d898d84282f');
   const { wireSchemaSha256: _a, ...x } = runs[0].binding, { wireSchemaSha256: _b, ...y } = runs[1].binding; assert.deepEqual(x, y);
   const { retry, ...z } = runs[2].binding; assert.equal(retry, CF_RUNNER.S2_RETRY); assert.deepEqual(z, runs[0].binding, 'VSD-075 retry run: same binding plus the retry tag');
-  assert.equal(CF_RUNNER.equivalentRuns('S3', []).length, 1, 'no other stage gains an alias');
+  for (const k of ['S1', 'S2', 'SI', 'SJ', 'S3', 'S4']) { // VSD-085: each stage's only alias is its outage-retry run
+    const rs = CF_RUNNER.equivalentRuns(k, []), { retry: tag, ...rest } = rs.at(-1).binding;
+    assert.equal(rs.length, k === 'S2' ? 4 : 2); assert.equal(tag, CF_RUNNER.OUTAGE_RETRY); assert.deepEqual(rest, rs[0].binding);
+  }
   console.log('ok S2 pre-cap run resolves to cf-1d898d84282f and differs only in the wire-schema hash');
 }
 await check('VSD-070: four works advanced concurrently through the real stages each finish with one attempt per stage, shared pacer', async () => {
@@ -169,6 +172,44 @@ await check('VSD-075: an S2 held for its content (the call finished) is never re
   const b = base('held'), c = s2Then(noAnswer, transcript);
   assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(c.keys, ['S1', 'S2']);
   assert.equal(auditHistory(run('S2').outDir, planS2(b), run('S2').runId).kind, 'held');
+});
+// VSD-085: a stage the provider refused (429 usage limit / API error, VSD-072) gets exactly one more call in a later run.
+const refused = status => p => [
+  { type: 'system', subtype: 'init', model: OPTS.model, apiKeySource: 'none', tools: p.stageSpec.allowedTools },
+  { type: 'assistant', message: { model: '<synthetic>', content: [{ type: 'text', text: `API Error: ${status} Overloaded.` }] }, error: 'server_error' },
+  { type: 'result', subtype: 'success', is_error: true, result: `API Error: ${status} Overloaded.`, api_error_status: status, terminal_reason: 'api_error',
+    usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }, modelUsage: {}, num_turns: 1 },
+].map(e => JSON.stringify(e)).join('\n');
+const runFor = key => key.startsWith('retry:') ? { ...CF_RUNNER.outageRetryRun(key.slice(6), []), now } : run(key);
+const scripted = script => { const keys = []; return { keys, call: (key, p) => { keys.push(key); const t = script[key];
+  return runAudit({ ...runFor(key), plans: [p], callFn: async () => t ? { transcript: t(p), exitCode: 1 } : { transcript: transcript(p, output(key.replace('retry:', ''))), exitCode: 0 } }); } }; };
+const s3Plan = b => { const s2 = planS2(b), sj = CF_RUNNER.planSJ(b, [], CF_RUNNER.planSI(b, [], s2)); return CF_RUNNER.planS3(b, [], planS1(b), s2, sj).plan; };
+const never = { call: () => { throw new Error('must not call'); }, saveCopy: () => {} };
+await check('VSD-085: an S3 refused with a 429 is retried once in a later run, and an accepted retry carries the work to copy', async () => {
+  const b = base('limit'), c = scripted({ S3: refused(429) });
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).stop, 'usage-limit'); // clean stop, slot used
+  assert.deepEqual(workStatus(b).stages.map(([k]) => k), ['retry:S3'], 'not terminal: its one retry is due');
+  const r = await advanceWork({ base: b, call: c.call, saveCopy: () => {} });
+  assert.equal(r.finished, true, JSON.stringify(r)); assert.deepEqual(c.keys, ['S1', 'S2', 'SI', 'S3', 'retry:S3', 'S4']);
+  assert.equal(CF_RUNNER.stageHistory('S3', [], s3Plan(b)).kind, 'accepted');
+  assert.equal(auditHistory(run('S3').outDir, s3Plan(b), run('S3').runId).kind, 'usage-limit', 'the original outcome is never edited');
+  assert.equal((await advanceWork({ base: b, ...never })).finished, true);
+});
+await check('VSD-085: a retry the provider refuses again is final (never a third call)', async () => {
+  const b = base('limit2'), c = scripted({ S4: refused(529), 'retry:S4': refused(429) });
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).stop, 'api-error');
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).stop, 'usage-limit');
+  assert.deepEqual(c.keys, ['S1', 'S2', 'SI', 'S3', 'S4', 'retry:S4']);
+  assert.equal(workStatus(b).next, 'terminal'); assert.equal((await advanceWork({ base: b, ...never })).terminal, true);
+});
+await check('VSD-085: a refused S1 is retried before its never-run S2; held and unknown outcomes are never retried', async () => {
+  const b = base('s1'), c = scripted({ S1: refused(529) });
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).stop, 'api-error'); assert.deepEqual(c.keys, ['S1'], 'S2 spends nothing after the stop');
+  assert.equal((await advanceWork({ base: b, call: c.call, saveCopy: () => {} })).finished, true); assert.deepEqual(c.keys, ['S1', 'retry:S1', 'S2', 'SI', 'S3', 'S4']);
+  const h = base('held'), ch = scripted({ S3: p => transcript(p, { v: 'wrong' }) });
+  assert.equal((await advanceWork({ base: h, call: ch.call, saveCopy: () => {} })).terminal, true); assert.equal(workStatus(h).next, 'terminal');
+  const u = base('unknown'), cu = { keys: [], call: (key, p) => { cu.keys.push(key); return runAudit({ ...runFor(key), plans: [p], callFn: async () => { if (key === 'S4') throw new Error('lost'); return { transcript: transcript(p, output(key)), exitCode: 0 }; } }); } };
+  assert.equal((await advanceWork({ base: u, call: cu.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(cu.keys, ['S1', 'S2', 'SI', 'S3', 'S4']);
 });
 await check('2026-11-16: a push GitHub keeps rejecting ends the run cleanly (lease released); a fatal never does', () => {
   assert.ok(CLEAN_STOP.test(pushStop(new PersistError('push failed: remote: Internal Server Error'))));

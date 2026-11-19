@@ -141,10 +141,10 @@ const runDirFor = (key, works) => { const b = stageBinding(key, works), id = sta
 // stays terminal; it is never re-run in a newer run).
 export const S2_PRE_CAP_WIRE_SHA256 = '1eff2375c79cfdb181de6ae7d1c2ee127084ce819f2249b3ef3c60a54288afc5';
 export function equivalentRuns(key, works) {
-  const r = runDirFor(key, works);
-  if (key !== 'S2' || !OPTS.nightly || r.binding.wireSchemaSha256 === S2_PRE_CAP_WIRE_SHA256) return [r];
+  const r = runDirFor(key, works), outage = OPTS.nightly ? [outageRetryRun(key, works)] : [];
+  if (key !== 'S2' || !OPTS.nightly || r.binding.wireSchemaSha256 === S2_PRE_CAP_WIRE_SHA256) return [r, ...outage];
   const b = { ...r.binding, wireSchemaSha256: S2_PRE_CAP_WIRE_SHA256 }, id = stageRunId(b);
-  return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }, s2RetryRun(works)];
+  return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }, s2RetryRun(works), ...outage];
 }
 // VSD-075 (owner 2026-11-09): from the 3-worker change (Nov 1) until the stdout-to-file fix, 1,158 S2 calls lost the
 // end of their output in transit (exit 0, an init event, no result event: a finished call always ends with one). That
@@ -166,6 +166,25 @@ export function s2RetryDue(works, plan) {
     .map(r => ({ r, h: auditHistory(r.outDir, plan, r.runId) })).filter(x => x.h);
   return found.length > 0 && found.every(({ r, h }) => h.kind === 'held' && h.meta?.exitCode === 0
     && lostOutput(readFileSync(join(r.outDir, 'works', safeWork(plan.workId), 'attempt-1.transcript.jsonl'), 'utf8')));
+}
+// VSD-085 (owner 2026-11-19, before the 0.98 boost): a stage call the provider refused (VSD-072: a 429 usage limit or
+// an API error such as 529) never judged the work, so it gets exactly ONE more call of that stage, in its own run.
+// Same binding plus a retry tag, so like S2R it is an equivalent history source: an accepted retry is used; otherwise
+// the original outcome stands and the work is terminal. Due only while every recorded outcome of that stage is such a
+// refusal and the retry run has never reserved the work. Any other outcome (held, unknown, fatal) is never retried.
+export const OUTAGE_RETRY = 'passBOutageRetry/1';
+export const OUTAGE_KINDS = new Set(['usage-limit', 'api-error']);
+export function outageRetryRun(key, works) {
+  const b = { ...runDirFor(key, works).binding, retry: OUTAGE_RETRY }, id = stageRunId(b);
+  return { binding: b, runId: id, outDir: join(RUN_ROOT, id) };
+}
+export function outageRetryDue(key, works, plan) {
+  if (!OPTS.nightly || !plan) return false;
+  const retry = outageRetryRun(key, works);
+  if (existsSync(retry.outDir) && auditHistory(retry.outDir, plan, retry.runId)) return false; // one retry, whatever its outcome
+  const found = equivalentRuns(key, works).filter(r => r.runId !== retry.runId && existsSync(r.outDir))
+    .map(r => auditHistory(r.outDir, plan, r.runId)).filter(Boolean);
+  return found.length > 0 && found.every(h => OUTAGE_KINDS.has(h.kind));
 }
 export function stageHistory(key, works, plan) {
   const found = equivalentRuns(key, works).map(r => existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null).filter(Boolean);
