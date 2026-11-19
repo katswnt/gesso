@@ -155,13 +155,17 @@ ${WORKED_EXAMPLES}
 Return v "${WRITE_VERSION}".`;
 export const GK_ID = 'gk';
 // Deterministic assembly rules change without a new model call; finished copy records (and is filed by) this version.
-export const ASSEMBLE_VERSION = 6; // 6 (VSD-064): editorial flags (lost why opening, answer cut to one sentence, fewer than 5 questions); nothing extra deleted
+export const ASSEMBLE_VERSION = 7; // 7 (VSD-081, top-200 audit 2026-11-18): drop a question whose answer lost its first sentence,
+// a hotspot left with one body sentence, and a hotspot pinned on a display mount; a why that lost its opening is not strict
+// 6: // 6 (VSD-064): editorial flags (lost why opening, answer cut to one sentence, fewer than 5 questions); nothing extra deleted
 // 5: // 5: dangling guard narrowed (bare he/she/it/they no longer count).
 // 4: // 4 (VSD-063): connective + reference word counts as dangling; heading punctuation cleaned.
 // prior: // 3 (2026-10-02): no ID-based de-dup; dangling-continuation guard; source-speak trim. (2: ID de-dup, reverted.)
 // Assembly-only wording trims: changing S3's control (PIPELINE_LANGUAGE) would alter the re-derivation of accepted
 // write results and fail closed; post-check trims belong here.
 export const ASSEMBLY_LANGUAGE = /\b(the\s+)?museum\s+(classes|classifies|lists|labels|records|catalogs|catalogues)\b|\bclassed\s+as\b/i;
+// A pin on the museum's display hardware, not the work (2026-11-18: two of Ea-nasir's four pins were on its acrylic stand).
+export const DISPLAY_MOUNT = /\b(?:acrylic|plexiglas+|perspex|lucite)\b|\b(?:display|museum)\s+(?:case|stand|mount|label|plinth|vitrine)\b|\b(?:clear|transparent)\s+(?:plastic\s+)?(?:stand|mount|support|holder|sheet)\b/i;
 export const HOTSPOT_AXES = ['when', 'where', 'medium', 'style', 'artist', 'format', 'delight'];
 const SENT = { type: 'object', additionalProperties: false, required: ['s', 'ids'], properties: { s: { type: 'string' }, ids: { type: 'array', items: { type: 'string' } } } };
 export const WRITE_WIRE_SCHEMA = {
@@ -316,7 +320,7 @@ const DANGLING = /^\s*(?:(?:later|then|so|still|yet|also|even|here|thus|meanwhil
 export function assemble({ writeAudit, checkAudit, visuals }) {
   const verdict = new Map((checkAudit?.rows || []).map(r => [r.id, r.verdict]));
   const base = x => !x.issues.length && verdict.get(x.id) === 'ok';
-  const trimmed = [], why = [], notes = [], hotspots = [], guide = [];
+  const trimmed = [], why = [], notes = [], hotspots = [], guide = [], dropped = [];
   const bySection = new Map();
   for (const x of writeAudit.sentences) (bySection.get(x.section) || bySection.set(x.section, []).get(x.section)).push(x);
   const keptSet = new Set();
@@ -337,9 +341,19 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
     const head = xs.find(x => x.part === 'head' || x.part === 'question'), body = xs.filter(x => x.part === 'body' && kept(x));
     if (section === 'why') { why.push(...body.map(x => x.s)); continue; }
     if (!head || !kept(head) || !body.length) continue;
-    if (section.startsWith('g')) { guide.push({ q: head.s, a: body.map(x => x.s).join(' ') }); continue; }
+    // /7: the first sentence of an answer is the answer; what follows elaborates. Without it the rest does not answer
+    // ("Who are the two men?" left with "Light and dress set them apart"), so the question goes. A first sentence cut
+    // only for its wording (mentioning the catalog or the pipeline) took no answer with it.
+    if (section.startsWith('g')) { const first = xs.find(x => x.part === 'body');
+      const wordingOnly = first && (ASSEMBLY_LANGUAGE.test(first.s) || first.issues.includes('pipeline language'));
+      if (first && !kept(first) && !wordingOnly) { dropped.push(`${section}: question dropped, its answer lost its first sentence`); continue; }
+      guide.push({ q: head.s, a: body.map(x => x.s).join(' ') }); continue; }
     if (section.startsWith('n')) { notes.push({ head: head.s, body: body.map(x => x.s).join(' ') }); continue; }
     const v = visuals.find(y => y.id === head.anchor); if (!v) continue;
+    // /7: a hotspot says what to notice AND what it tells you; one sentence left is a bare description. And a pin on
+    // the display stand or case is not a detail of the work.
+    if (body.length < 2) { dropped.push(`${section}: hotspot dropped, one sentence left`); continue; }
+    if (DISPLAY_MOUNT.test(v.text || '')) { dropped.push(`${section}: hotspot dropped, pinned on a display mount`); continue; }
     // An axis tag needs a kept sentence citing a claim or general knowledge (not only visuals); otherwise delight.
     const sourced = body.some(x => x.ids.some(id => !visualIds.has(id)));
     hotspots.push({ anchor: v.id, ...(head.axis ? { axis: head.axis !== 'delight' && !sourced ? 'delight' : head.axis } : {}), x: v.bbox[0] + v.bbox[2] / 2, y: v.bbox[1] + v.bbox[3] / 2, head: head.s.trim().replace(/[.;:]+$/, ''), body: body.map(x => x.s).join(' ') });
@@ -348,7 +362,9 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
   // Editorial flags (Codex v12 eval): visible post-trim defects; structural `usable` is not the editorial bar.
   const flags = [];
   const whyRows = bySection.get('why') || [];
-  if (whyRows.length && !keptSet.has(whyRows[0].id)) flags.push('why lost its opening sentence');
+  const whyOpening = !whyRows.length || keptSet.has(whyRows[0].id);
+  if (!whyOpening) flags.push('why lost its opening sentence');
+  flags.push(...dropped);
   for (const [section, xs] of bySection) if (section.startsWith('g')) {
     const written = xs.filter(x => x.part === 'body'), keptN = written.filter(x => keptSet.has(x.id)).length;
     if (written.length >= 2 && keptN === 1) flags.push(`${section}: answer cut to one sentence`);
@@ -357,7 +373,8 @@ export function assemble({ writeAudit, checkAudit, visuals }) {
   return { why: whyText || null, notes, hotspots, guide, trimmed, flags,
     // Structural sufficiency only (Codex): not a judgment of teaching quality or publication approval.
     usable: { minimal: !!whyText && hotspots.length >= 1 && (notes.length >= 1 || guide.length >= 1),
-      strict: !!whyText && hotspots.length >= 2 && (notes.length >= 2 || guide.length >= 3) } };
+      // /7: a why without its opening sentence loses what the work is (Cana kept only its provenance).
+      strict: !!whyText && whyOpening && hotspots.length >= 2 && (notes.length >= 2 || guide.length >= 3) } };
 }
 export const inputSha = x => sha256(JSON.stringify(x));
 

@@ -39,7 +39,7 @@ const S = (s, ids) => ({ s, ids });
 const written = { v: CF.WRITE_VERSION,
   why: [S('Rembrandt painted it in 1668.', ['f1']), S('It changed everything.', ['f1'])],
   notes: [{ head: S('A late work', ['f1']), body: [S('It dates from 1668.', ['f1']), S('Made for a king.', ['zz'])] }, { head: S('Invented heading', []), body: [S('It dates from 1668.', ['f1'])] }],
-  hotspots: [{ anchor: 'd1', head: S('The bare foot', ['d1']), body: [S('Notice the bare foot.', ['d1'])] }, { anchor: 'dX', head: S('Other', ['d1']), body: [S('Look.', ['d1'])] }] };
+  hotspots: [{ anchor: 'd1', head: S('The bare foot', ['d1']), body: [S('Notice the bare foot.', ['d1']), S('Bare feet often mark a humble figure.', ['d1', 'gk'])] }, { anchor: 'dX', head: S('Other', ['d1']), body: [S('Look.', ['d1'])] }] };
 check('write controller flags unknown ids, missing ids and unconfirmed hotspot anchors', () => {
   const w = CF.controlWrite(written, writeInput);
   assert.deepEqual(w.sentences.filter(x => x.issues.length).map(x => `${x.id}:${x.issues.join('|')}`), ['n0.b1:unknown id zz', 'n1.h:no ids', 'h1.h:text does not cite its own pin'], 'v11: a hotspot whose text does not cite its own pin is flagged');
@@ -151,7 +151,7 @@ check('write /7: label-answerable guide questions are trimmed; usable counts gui
     assert.ok(!CF.LABEL_QUESTION.test(q), q);
   const input = { claims: [{ id: 'c0', text: 'w' }, { id: 'c1', text: 'x' }], visuals: [{ id: 'v1', text: 'y', bbox: [0, 0, 0.2, 0.2] }, { id: 'v2', text: 'z', bbox: [0.5, 0.5, 0.2, 0.2] }] };
   const S = (s, ids = ['c1']) => ({ s, ids });
-  const out = { v: CF.WRITE_VERSION, why: [S('Why.', ['c0'])], notes: [], hotspots: [{ anchor: 'v1', head: S('A', ['v1']), body: [S('a.', ['v1'])] }, { anchor: 'v2', head: S('B', ['v2']), body: [S('b.', ['v2'])] }],
+  const out = { v: CF.WRITE_VERSION, why: [S('Why.', ['c0'])], notes: [], hotspots: [{ anchor: 'v1', head: S('A', ['v1']), body: [S('a.', ['v1']), S('a2.', ['v1'])] }, { anchor: 'v2', head: S('B', ['v2']), body: [S('b.', ['v2']), S('b2.', ['v2'])] }],
     guide: [{ q: S('What style is it?'), a: [S('Romanticism.')] }, ...['Q1?', 'Q2?', 'Q3?'].map(q => ({ q: S(q), a: [S('A.')] }))] };
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   assert.deepEqual(w.sentences.find(x => x.id === 'g0.q').issues, ['label question']);
@@ -170,7 +170,7 @@ check('write /9: hotspots carry an axis; an axis without a kept claim-citing sen
   const S = (s, ids) => ({ s, ids });
   const out = { v: CF.WRITE_VERSION, why: [S('Why.', ['c1'])], notes: [], guide: [], hotspots: [
     { anchor: 'v1', axis: 'style', head: S('Shell relief', ['v1']), body: [S('Notice the shell.', ['v1']), S('It is a hallmark of Neo-Classical design.', ['c1', 'v1'])] },
-    { anchor: 'v2', axis: 'when', head: S('Lattice', ['v2']), body: [S('A diamond lattice band.', ['v2'])] }] };
+    { anchor: 'v2', axis: 'when', head: S('Lattice', ['v2']), body: [S('A diamond lattice band.', ['v2']), S('It draws the eye along the rim.', ['v2'])] }] };
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
   assert.deepEqual(a.hotspots.map(h => h.axis), ['style', 'delight']);
@@ -189,8 +189,8 @@ check('write /10 + assembly /3: gk is citable; a why that lost its opening is dr
   const S = (s, ids) => ({ s, ids });
   const out = { v: CF.WRITE_VERSION, notes: [],
     why: [S('Delaroche made a sensation at the 1834 Salon.', ['c2']), S('It was later thought destroyed in 1928, then found in 1973.', ['c1'])],
-    hotspots: [{ anchor: 'v1', axis: 'artist', head: S('Cobblestones', ['v1']), body: [S('Each stone is one thick curved stroke, a habit typical of Van Gogh.', ['v1', 'gk'])] },
-      { anchor: 'v2', axis: 'delight', head: S('Awning', ['v2']), body: [S('The gold awning pulls the eye.', ['v2'])] }],
+    hotspots: [{ anchor: 'v1', axis: 'artist', head: S('Cobblestones', ['v1']), body: [S('Each stone is one thick curved stroke, a habit typical of Van Gogh.', ['v1', 'gk']), S('Notice how each stroke follows the shape of a stone.', ['v1'])] },
+      { anchor: 'v2', axis: 'delight', head: S('Awning', ['v2']), body: [S('The gold awning is the brightest area.', ['v2']), S('It pulls the eye.', ['v2'])] }],
     guide: [{ q: S('Did it survive?', ['c1']), a: [S('It was thought destroyed in 1928.', ['c1'])] }, { q: S('Why was it a sensation?', ['c2']), a: [S('Look at the staging.', ['gk']), S('Repeat of the why.', ['c2']), S('Notice the light.', ['gk'])] }] };
   const w = CF.controlWrite(out, input);
   assert.deepEqual(w.sentences.find(x => x.id === 'h0.b0').issues, [], 'gk is a known id');
@@ -242,7 +242,7 @@ check('v12 / assembly /4: "Later it…" after a trimmed sentence is dangling; ho
   const S = (s, ids) => ({ s, ids });
   const input = { claims: [{ id: 'c1', text: 'x' }, { id: 'c2', text: 'y' }], visuals: [{ id: 'v1', text: 'z', bbox: [0.1, 0.1, 0.2, 0.2] }] };
   const out = { v: CF.WRITE_VERSION, notes: [], guide: [], why: [S('A hushed theatrical scene.', ['c1']), S('Later it was thought destroyed in a flood.', ['c2'])],
-    hotspots: [{ anchor: 'v1', axis: 'delight', head: S('The lit dress.', ['v1']), body: [S('It draws the eye.', ['v1'])] }] };
+    hotspots: [{ anchor: 'v1', axis: 'delight', head: S('The lit dress.', ['v1']), body: [S('The dress is the lightest area.', ['v1']), S('It draws the eye.', ['v1'])] }] };
   const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
   const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: x.id === 'why.0' ? 'adds' : 'ok' })) }, visuals: input.visuals });
   assert.equal(a.why, null); assert.ok(a.trimmed.some(t => t.id === 'why.1' && /antecedent/.test(t.why)));
@@ -272,6 +272,32 @@ check('v13 / assembly /6: editorial flags surface lost why openings, one-sentenc
   assert.equal(a.why, 'He worked outdoors.'); assert.equal(a.guide[0].a, 'A rescue.');
   assert.deepEqual(a.flags, ['why lost its opening sentence', 'g0: answer cut to one sentence', 'only 1 follow-up questions']);
   assert.match(CF.WRITE_PROMPT, /CITATION PATTERNS/); assert.match(CF.CHECK_PROMPT, /seem to move at different speeds/);
+});
+check('assembly /7 (VSD-081, top-200 audit): a question whose answer lost its first sentence, a one-sentence hotspot and a pin on the display mount are dropped; a why without its opening is not strict', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'c1', text: 'Captain Banninck Cocq and Lieutenant van Ruytenburch.' }, { id: 'c2', text: 'Made for a monastery refectory.' }],
+    visuals: [{ id: 'v1', text: 'Two central figures in black and buff.', bbox: [0.4, 0.4, 0.2, 0.2] }, { id: 'v2', text: 'A speckled gold field.', bbox: [0.1, 0.1, 0.2, 0.2] },
+      { id: 'v3', text: 'A transparent acrylic stand holds the tablet upright inside a display case.', bbox: [0.5, 0.9, 0.2, 0.1] }, { id: 'v4', text: 'Bayonets in a line.', bbox: [0.7, 0.5, 0.2, 0.2] }] };
+  const out = { v: CF.WRITE_VERSION, notes: [], why: [S('A banquet crowded with musicians.', ['v1']), S('It was made for a monastery refectory.', ['c2'])],
+    hotspots: [
+      { anchor: 'v1', axis: 'artist', head: S('Light on the two figures', ['v1']), body: [S('Two figures are strongly lit.', ['v1']), S('Strong light against dark is typical of Rembrandt.', ['v1', 'gk'])] },
+      { anchor: 'v2', axis: 'delight', head: S('Speckled gold field', ['v2']), body: [S('The background is a flat gold field.', ['v2'])] },
+      { anchor: 'v3', axis: 'format', head: S('A tablet held upright', ['v3']), body: [S('A clear stand holds the tablet.', ['v3']), S('Tablets were small enough to hold.', ['v3', 'gk'])] },
+      { anchor: 'v4', axis: 'delight', head: S('Bayonets in a line', ['v4']), body: [S('The bayonets converge on the central man.', ['v4']), S('The line draws the eye to the target.', ['v4'])] }],
+    guide: [
+      { q: S('Who are the two men at the center?', ['v1']), a: [S('They are Captain Banninck Cocq and Lieutenant van Ruytenburch.', ['c1']), S('Light and dress set them apart.', ['v1'])] },
+      { q: S('What do the bayonets do?', ['v4']), a: [S('They point at the central man.', ['v4']), S('Together they show a defeat on every front.', ['v4'])] },
+      { q: S('Where did it hang?', ['c2']), a: [S('The catalog lists it as Venetian.', ['c2']), S('It hung in a monastery refectory.', ['c2'])] }] };
+  const w = CF.controlWrite(out, input), ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+  const cut = ['why.0', 'g0.a0', 'g1.a1'];
+  const a = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: cut.includes(x.id) ? 'adds' : 'ok' })) }, visuals: input.visuals });
+  assert.deepEqual(a.guide.map(g => g.q), ['What do the bayonets do?', 'Where did it hang?'], 'Night Watch case: "Who are the two men?" without the names is dropped; a later cut or a wording-only cut keeps the question');
+  assert.deepEqual(a.hotspots.map(h => h.head), ['Light on the two figures', 'Bayonets in a line'], 'one-sentence pin (Kiss gold field) and display-mount pin (Ea-nasir stand) are dropped');
+  assert.ok(a.flags.includes('g0: question dropped, its answer lost its first sentence') && a.flags.includes('h1: hotspot dropped, one sentence left') && a.flags.includes('h2: hotspot dropped, pinned on a display mount'));
+  assert.equal(a.why, 'It was made for a monastery refectory.'); assert.deepEqual(a.usable, { minimal: true, strict: false }, 'Cana case: a why left with only its provenance is not strict');
+  const full = CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals: input.visuals });
+  assert.equal(full.usable.strict, true); assert.equal(full.guide.length, 3);
+  assert.ok(!CF.DISPLAY_MOUNT.test('A white cockatoo sits inside a glass jar mounted on a stand.'), 'a stand inside the picture is not the display mount');
 });
 check('Oct 8 false fatal: a background helper model is not the answering model; a wrong answering model is still fatal', () => {
   const real = join(RUN_ROOT, 'cf-34018d423b36', 'works', '4641e6f95ee21ce6aff7c6ee', 'attempt-1.transcript.jsonl');
