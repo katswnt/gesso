@@ -299,6 +299,13 @@ check('assembly /7 (VSD-081, top-200 audit): a question whose answer lost its fi
   assert.equal(full.usable.strict, true); assert.equal(full.guide.length, 3);
   assert.ok(!CF.DISPLAY_MOUNT.test('A white cockatoo sits inside a glass jar mounted on a stand.'), 'a stand inside the picture is not the display mount');
 });
+check('write /14 + check /8 (VSD-082): one step per sentence, substance first; the checker judges a sentence alone', () => {
+  assert.equal(CF.WRITE_VERSION, 'passBClaimFirstWrite/14'); assert.equal(CF.CHECK_VERSION, 'passBClaimFirstCheck/8');
+  assert.match(CF.WRITE_PROMPT, /ONE STEP PER SENTENCE/); assert.match(CF.WRITE_PROMPT, /never\s+both/);
+  assert.match(CF.WRITE_PROMPT, /first sentence of every answer carry the substance/);
+  assert.match(CF.CHECK_PROMPT, /judge the sentence, not whether it fully answers/); assert.match(CF.CHECK_PROMPT, /hacha is Spanish for axe/);
+  assert.match(CF.CHECK_PROMPT, /verdict must agree with your reason/);
+});
 check('Oct 8 false fatal: a background helper model is not the answering model; a wrong answering model is still fatal', () => {
   const real = join(RUN_ROOT, 'cf-34018d423b36', 'works', '4641e6f95ee21ce6aff7c6ee', 'attempt-1.transcript.jsonl');
   if (existsSync(real)) {

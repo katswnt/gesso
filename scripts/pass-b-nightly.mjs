@@ -153,11 +153,26 @@ export async function advanceWork({ base, call, saveCopy, prepare = async () => 
 // re-pushes hundreds of finished works one by one (at 940 works that took ~1.5 h with no push, and the run lost its
 // lease to self-healing). One catch-up persist of the copy folder covers anything committed but not yet pushed.
 export function finishedCopyNames(out = OUT) {
-  const root = join(out, 'copy'), names = new Set();
-  if (existsSync(root)) for (const d of readdirSync(root)) if (!d.startsWith('.')) for (const f of readdirSync(join(root, d))) names.add(f);
+  const root = join(out, 'copy'), names = new Map(); // file name -> path
+  if (existsSync(root)) for (const d of readdirSync(root)) if (!d.startsWith('.')) for (const f of readdirSync(join(root, d))) names.set(f, join(root, d, f));
   return names;
 }
 export const copyName = id => basename(copyArtifact(id, null, {}).path);
+// VSD-082 (owner 2026-11-18): a writer bump rewrites only works without good copy. Strict-usable copy from a kept
+// earlier writer, at the CURRENT assembly, stays finished; other copy is written again under the current writer.
+// Kept-writer copy that exists only at an older assembly is 'stale': it can be re-assembled only under that writer's
+// stage bindings, so it is skipped (never rewritten at a cost) until the older writer's re-assembly has run.
+export const KEPT_WRITES = ['passBClaimFirstWrite/13'];
+export function copyState(id, written, read = p => JSON.parse(readFileSync(p, 'utf8'))) {
+  if (written.has(copyName(id))) return 'done';
+  for (const w of KEPT_WRITES) {
+    const name = basename(copyArtifact(id, null, {}, OUT, w).path), path = written.get(name);
+    if (path) return read(path).usable?.strict ? 'done' : null;
+    const stem = name.replace(/\.a\d+\.json$/, '.a');
+    for (const n of written.keys()) if (n.startsWith(stem)) return 'stale';
+  }
+  return null;
+}
 // A small pool of workers over the priority order (VSD-070). Every reservation, pacer allowance and push is
 // synchronous, so concurrent works cannot interleave inside one; each work has its own attempt folder.
 export async function runPool(items, workers, fn, stopped) {
@@ -196,17 +211,19 @@ async function main() {
   const order = ownerOnly.length ? [...windowOrder, ...ownerOnly.filter(id => !windowOrder.includes(id))] : windowOrder;
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
-  const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0 }, pending = [];
+  const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0, stale: 0 }, pending = [];
   const written = finishedCopyNames();
   for (const id of order) {
-    if (written.has(copyName(id))) { counts.copy++; continue; } // finished in an earlier run (any date folder)
+    const state = copyState(id, written);
+    if (state === 'done') { counts.copy++; continue; } // finished in an earlier run (any date folder)
+    if (state === 'stale') { counts.stale++; continue; } // VSD-082: awaiting re-assembly under its own writer
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
     if (!base) { counts.notReady++; continue; }
     const st = workStatus(base);
     if (st.next === 'copy') { counts.copyPending++; pending.push(id); } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
-  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}`);
+  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}${counts.stale ? ` | STALE kept copy awaiting re-assembly ${counts.stale}` : ''}`);
   console.log(`  safety: ${safetyCheck() || 'clear'}`);
   for (const k of ['S1', 'S2', 'S2R', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   if (!live) { console.log(`READ-ONLY PLAN: no calls or writes. Next up: ${pending.slice(0, 5).map(id => `${dateOf.get(id)} ${id}`).join('; ')}`); return; }

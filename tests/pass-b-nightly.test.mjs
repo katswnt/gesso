@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
 import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
@@ -201,6 +201,16 @@ await check('finished copy is recognised by file name in any date folder', async
   const names = finishedCopyNames(out);
   assert.ok(names.has(copyName('w1'))); assert.ok(!names.has(copyName('w2')));
   assert.equal(finishedCopyNames(join(root, 'none')).size, 0);
+});
+// VSD-082: a writer bump keeps strict-usable /13 copy at the current assembly; it rewrites non-strict copy and never
+// rewrites copy that only awaits re-assembly.
+await check('writer bump: strict /13 copy is kept, held /13 copy is rewritten, older-assembly copy is stale', async () => {
+  const name = (id, w) => basename(copyArtifact(id, null, {}, '/o', w).path), w13 = KEPT_WRITES[0];
+  const written = new Map([[name('cur', CF.WRITE_VERSION), '/p/cur'], [name('good', w13), '/p/good'], [name('held', w13), '/p/held'],
+    [name('old', w13).replace(/\.a\d+\.json$/, '.a6.json'), '/p/old']]);
+  const read = p => ({ '/p/good': { usable: { strict: true } }, '/p/held': { usable: { strict: false } } })[p];
+  assert.notEqual(CF.WRITE_VERSION, w13, 'the kept writer is an older one');
+  assert.deepEqual(['cur', 'good', 'held', 'old', 'new'].map(id => copyState(id, written, read)), ['done', 'done', null, 'stale', null]);
 });
 await check('worker pool: at most N works at once, priority order kept, no new work after a stop', async () => {
   let live = 0, peak = 0; const started = [];
