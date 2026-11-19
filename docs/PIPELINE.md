@@ -535,6 +535,7 @@ Offline hardening on 2026-09-30:
 - Per-firing cap (VSD-077): the cloud routine launches with `PASS_B_MAX_CALLS=500` (the wrapper default is still 300). Pacing still stops a run first.
 - Schedule (VSD-078, 2026-11-17): Pacific time, all day, scope corpus. Slot allowances are `state/call-budgets/slot-<city>-<date>-<HH>.json` (earlier Paris slots: `slot-<date>-<HH>`).
 - Lost-time fixes (VSD-079): with probes in flight the pacer says `wait` (re-check every 20 s, at most 15 min) instead of stopping the firing. After a container restart the routine relaunches once and the launcher recovers its own dead lease at once (`pass-b-cloud-lease.mjs acquire <holder> --own-dead <holder from /tmp/pass-b-holder>`), only when no pipeline process is alive.
+- Boost (VSD-080): with `PASS_B_BOOST_UNTIL=<ISO time>` in the routine command, firings that start before that time run `PASS_B_BOOST_WORKERS` (default 6) workers and a `PASS_B_BOOST_MAX_CALLS` (default 1000) cap; afterwards the plain values apply. Used to spend a week's leftover allowance before its reset; remove the variable from the prompt once it has passed.
 - Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
   still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
   firing resumes; a fatal is never downgraded this way.
