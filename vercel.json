@@ -1,6 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "git": { "deploymentEnabled": { "g-03-image-agent-boundary": false } },
   "crons": [
     { "path": "/api/purge-tombstones", "schedule": "0 3 * * *" }
   ],
