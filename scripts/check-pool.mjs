@@ -289,8 +289,12 @@ for(const p of pool){
   // LEDGER IMMUTABILITY: a served day (<= today) in daily-order MUST match the append-only ledger verbatim.
   // If it differs, a refreeze silently altered a day a player already saw — fail loudly.
   { let ledger={}; try{ const t=readFileSync("data/daily-history.js","utf8"); ledger=(JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1)).byDate)||{}; }catch{}
-    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ (date<today?hard:warn).push(`[ledger-missing] ${date} served but absent from daily-history.js (run freeze to record)`); continue; }
-      for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); } }
+    // A served day not yet copied to the ledger is still kept in daily-order, and freeze folds it in before truncating
+    // (lib/daily-ledger.mjs), so it is one summary warning, not a ship blocker (was a hard fail per day until 2026-11-18).
+    const unrecorded=[];
+    for(const [date,day] of Object.entries(daily.byDate||{})){ if(date>today) continue; const led=ledger[date]; if(!led){ unrecorded.push(date); continue; }
+      for(const k of ["easy","medium","hard","impossible"]) if((day[k]||[]).join(",")!==(led[k]||[]).join(",")) hard.push(`[ledger-drift] ${date}/${k}: daily-order differs from ledger — a served day was altered`); }
+    if(unrecorded.length) warn.push(`[ledger-unrecorded] ${unrecorded.length} served days (${unrecorded[0]}..${unrecorded.at(-1)}) kept only in daily-order; npm run freeze records them`); }
   // VISION-AUDIT COVERAGE: how many works scheduled in the next VIS_WIN days have NOT had a genuine image-grounded
   // notes/pins pass (data/vision-audit.json). WARN only — this is the rollout gauge that keeps the audit ahead of
   // what players see. When it reaches 0, upcoming dailies are fully vision-verified.

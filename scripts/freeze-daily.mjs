@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { simplifyMedium } from "./lib/domain.mjs";
 import { baselineDim, classifyRes } from "./lib/img-dimensions.mjs";
+import { foldServed } from "./lib/daily-ledger.mjs";
 // never schedule remains, or works the vision audit judged unplayable (featureless), or works whose
 // fingerprinted image is genuinely low-res (LOW = blurry at reveal) — a blurry image is a bad puzzle in
 // any tier, so keep it OUT of the rotation at the source instead of catching it after the fact. Works not
@@ -214,6 +215,9 @@ out.meta = {
   const artistsOf=ids=>{const s=new Set();for(const id of ids){const a=ak2(byId[id]);if(a)s.add(a);}return s;};
   const clustersOf=ids=>{const s=new Set();for(const id of ids){const c=clk(byId[id]);if(c)s.add(c);}return s;};
   // served days come from the LEDGER first (immutable), then any prior daily-order day, then get generated.
+  // Fold every served day of the PRIOR calendar into the ledger first: the loop below keeps only today-3 onward, and
+  // the anti-repeat windows seed from the ledger, so days recorded only in daily-order must reach it before then.
+  const ledgerBefore=Object.keys(ledger).length; ({ ledger } = foldServed(ledger, prior, todayNum));
   const served={...prior,...ledger};        // ledger wins — a served day can never be altered by a refreeze
   const byDate={}; let recAG=[]; let recW=[]; let recCL=[]; // GLOBAL across tiers: artist gap + work gap + cluster gap
   // PRE-SEED the anti-repeat windows from the ledger's tail (days that fall BEFORE the loop's -3 start) so the
@@ -241,8 +245,7 @@ out.meta = {
   }
   out.byDate=byDate;
   // APPEND newly-served days into the ledger (grow-only; an existing entry is NEVER overwritten or dropped).
-  const newLedger={...ledger}; let added=0;
-  for(const [k,rec] of Object.entries(byDate)){ if(dayNumOf(k)<=todayNum && !newLedger[k]){ newLedger[k]=rec; added++; } }
+  const { ledger: newLedger } = foldServed(ledger, byDate, todayNum); const added=Object.keys(newLedger).length-ledgerBefore;
   writeFileSync("data/daily-history.js","window.ARTEFACTUM_DAILY_HISTORY="+JSON.stringify({byDate:newLedger})+";\n");
   console.log(`ledger: ${Object.keys(newLedger).length} served days recorded (+${added} new)`);
 }
