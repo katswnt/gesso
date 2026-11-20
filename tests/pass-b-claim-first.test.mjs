@@ -25,7 +25,7 @@ check('confirmation needs found, confidence >= 0.6 and an overlapping region', (
   assert.deepEqual(r.errors, ['unknown request zz']);
   // the writer gets B3's neutral note, never B1's candidate wording; a confirmed row with no note is dropped
   const out = { verifications: [{ requestId: 'a', found: true, bbox: [0.2, 0.2, 0.2, 0.2], confidence: 0.8, note: 'Two hands rest on a kneeling figure.' }] };
-  assert.deepEqual(CF.confirmedVisuals(r, out), [{ id: 'a', text: 'Two hands rest on a kneeling figure.', bbox: [0.1, 0.1, 0.2, 0.2] }]);
+  assert.deepEqual(CF.confirmedVisuals(r, out), [{ id: 'a', text: 'Two hands rest on a kneeling figure.', bbox: [0.1, 0.1, 0.2, 0.2], b3: [0.2, 0.2, 0.2, 0.2] }]);
   assert.deepEqual(CF.confirmedVisuals(r, { verifications: [{ requestId: 'a', note: '  ' }] }), []);
 });
 check('only supported claims with a real evidence ref and no issues are writable', () => {
@@ -300,11 +300,137 @@ check('assembly /7 (VSD-081, top-200 audit): a question whose answer lost its fi
   assert.ok(!CF.DISPLAY_MOUNT.test('A white cockatoo sits inside a glass jar mounted on a stand.'), 'a stand inside the picture is not the display mount');
 });
 check('write /14 + check /8 (VSD-082): one step per sentence, substance first; the checker judges a sentence alone', () => {
-  assert.equal(CF.WRITE_VERSION, 'passBClaimFirstWrite/14'); assert.equal(CF.CHECK_VERSION, 'passBClaimFirstCheck/8');
+  assert.ok(CF.WRITE_VERSION_NUMBER(CF.WRITE_VERSION) >= 14); assert.ok(Number(CF.CHECK_VERSION.split('/')[1]) >= 8); // rules carried forward
   assert.match(CF.WRITE_PROMPT, /ONE STEP PER SENTENCE/); assert.match(CF.WRITE_PROMPT, /never\s+both/);
   assert.match(CF.WRITE_PROMPT, /first sentence of every answer carry the substance/);
   assert.match(CF.CHECK_PROMPT, /judge the sentence, not whether it fully answers/); assert.match(CF.CHECK_PROMPT, /hacha is Spanish for axe/);
   assert.match(CF.CHECK_PROMPT, /verdict must agree with your reason/);
+});
+// ---------- fix v1 (VSD-086–088) ----------
+// Pins (20-work trial, pin-geo): B3's box, not B1's guess; a spread target needs a writer-picked example; duplicates go.
+const pinFixture = () => {
+  const S = (s, ids) => ({ s, ids });
+  const visuals = [
+    { id: 'small', text: 'A missing nose.', bbox: [0.05, 0.2, 0.1, 0.1], b3: [0.5, 0.3, 0.06, 0.05] }, // B1 point far off; B3 box 0.003
+    { id: 'mid', text: 'Two officers in sashes.', bbox: [0.3, 0.3, 0.2, 0.2], b3: [0.3, 0.3, 0.4, 0.4] }, // 0.16: current pin stands
+    { id: 'floor', text: 'A steep tilted floor.', bbox: [0.1, 0.6, 0.1, 0.1], b3: [0, 0.25, 1, 0.75] }, // 0.75: spread
+    { id: 'lamp', text: 'A ringed lamp.', bbox: [0.6, 0.1, 0.1, 0.1], b3: [0.62, 0.5, 0.08, 0.08] }, // inside the floor region
+    { id: 'lamp2', text: 'The same ringed lamp, again.', bbox: [0.7, 0.1, 0.1, 0.1], b3: [0.63, 0.51, 0.08, 0.08] }, // IoU > 0.6 with lamp
+    { id: 'sky', text: 'Blue against orange.', bbox: [0.4, 0.1, 0.1, 0.1], b3: [0, 0, 0.9, 0.9] }]; // 0.81: spread
+  const hs = (anchor, head, example) => ({ anchor, ...(example !== undefined ? { example } : {}), axis: 'style', head: S(head, [anchor]),
+    body: [S(`Look at ${head.toLowerCase()}.`, [anchor, ...(visuals.some(v => v.id === example) ? [example] : [])]), S('This is typical of the period.', [anchor, 'gk'])] });
+  const out = (examples = {}) => ({ v: CF.WRITE_VERSION, notes: [], why: [S('A café at night.', ['small']), S('Its light is harsh.', ['mid'])],
+    hotspots: [hs('small', 'The missing nose', examples.small), hs('mid', 'Officers in sashes', examples.mid), hs('floor', 'Steep floor', examples.floor),
+      hs('lamp', 'Ringed lamp', examples.lamp), hs('lamp2', 'Lamp again', examples.lamp2), hs('small', 'The nose again', examples.small), hs('sky', 'Blue and orange', examples.sky)],
+    guide: [0, 1, 2].map(i => ({ q: S(`Question ${i}?`, ['mid']), a: [S(`Answer ${i}.`, ['mid']), S('More.', ['mid'])] })) });
+  const assembled = written => {
+    const input = CF.buildWriteInput({ workId: 'w', catalog: {}, claims: [], visuals }), w = CF.controlWrite(written, input);
+    const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w });
+    return { input, w, a: CF.assemble({ writeAudit: w, checkAudit: { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) }, visuals }) };
+  };
+  return { visuals, out, assembled };
+};
+check('assembly /8 (VSD-086): pin at the B3 centre when its box is small; the current pin otherwise; duplicates dropped; spread targets marked', () => {
+  const { out, assembled } = pinFixture(), { a, input } = assembled(out({ floor: 'lamp', sky: 'none' }));
+  assert.equal(CF.ASSEMBLE_VERSION, 8);
+  const by = h => a.hotspots.find(x => x.head === h);
+  assert.deepEqual([by('The missing nose').x, by('The missing nose').y].map(v => +v.toFixed(3)), [0.53, 0.325], 'small B3 box: its centre, not B1 (0.1, 0.25)');
+  assert.deepEqual([by('Officers in sashes').x, by('Officers in sashes').y], [0.4, 0.4], 'mid-size box: the current pin stands');
+  assert.deepEqual(a.hotspots.map(h => h.head), ['The missing nose', 'Officers in sashes', 'Steep floor', 'Blue and orange'], 'lamp repeats the floor example spot; lamp2 overlaps it; "nose again" reuses an anchor');
+  assert.ok(a.flags.includes('hotspot "Ringed lamp" dropped, same spot as "Steep floor"') && a.flags.includes('hotspot "The nose again" dropped, same spot as "The missing nose"'));
+  // writer input: a spread visual offers the small B3-located details inside it; boxes never reach the writer
+  assert.deepEqual(input.visuals.find(v => v.id === 'floor'), { id: 'floor', text: 'A steep tilted floor.', spread: true, examples: ['small', 'lamp', 'lamp2'] });
+  assert.deepEqual(input.visuals.find(v => v.id === 'small'), { id: 'small', text: 'A missing nose.' });
+});
+check('assembly /8 + writer /15: a spread hotspot is pinned on its picked example; no pick or an invalid pick shows no dot, never the big box centre', () => {
+  const { out, assembled } = pinFixture();
+  const pick = assembled(out({ floor: 'lamp', sky: 'none' })).a.hotspots, floor = pick.find(h => h.head === 'Steep floor');
+  assert.deepEqual([floor.x, floor.y].map(v => +v.toFixed(3)), [0.66, 0.54]); assert.equal(floor.example, 'lamp'); assert.equal(floor.spread, true);
+  const none = pick.find(h => h.head === 'Blue and orange');
+  assert.equal(none.pin, null); assert.equal(none.spread, true); assert.ok(!('x' in none) && !('y' in none), 'no pick: note with no dot');
+  for (const bad of ['mid', 'nope', 'floor']) { // not small, unknown, the spread visual itself
+    const r = assembled(out({ floor: bad })), h = r.a.hotspots.find(x => x.head === 'Steep floor');
+    assert.equal(h.pin, null, `invalid pick ${bad}`); assert.ok(!('example' in h));
+    assert.ok(r.w.anchorIssues.some(i => i.includes(`example ${bad} is not an offered example`)));
+  }
+  assert.equal(assembled(out()).a.hotspots.find(h => h.head === 'Steep floor').pin, null, '/14-shaped output (no example field)');
+  assert.ok(CF.WRITE_WIRE_SCHEMA.properties.hotspots.items.required.includes('example'));
+  assert.match(CF.WRITE_PROMPT, /"spread"/); assert.match(CF.WRITE_PROMPT, /Here, for\s+example/);
+});
+check('assembly /8: strict and minimal count pinned hotspots only', () => {
+  const { visuals } = pinFixture();
+  const core = { why: 'A why.', notes: [], guide: [1, 2, 3].map(i => ({ q: `Q${i}?`, a: 'A.' })), trimmed: [], flags: [],
+    hotspots: [{ anchor: 'floor', head: 'Floor', body: 'B.', x: 0.15, y: 0.65 }, { anchor: 'sky', head: 'Sky', body: 'B.', x: 0.45, y: 0.15 }, { anchor: 'small', head: 'Nose', body: 'B.', x: 0.1, y: 0.25 }] };
+  assert.deepEqual(CF.finishCopy(core, visuals, true).usable, { minimal: true, strict: false }, 'two spread notes and one dot');
+  assert.deepEqual(CF.finishCopy({ ...core, hotspots: core.hotspots.slice(0, 2) }, visuals, true).usable, { minimal: false, strict: false });
+});
+check('assembly /8: finished /7 copy re-assembles to exactly what assembling its stages at /8 gives', () => {
+  const { visuals, out } = pinFixture();
+  const noB3 = visuals.map(({ b3, ...v }) => v), written = { ...out(), v: 'passBClaimFirstWrite/14' };
+  written.hotspots = written.hotspots.slice(0, 3); // /7 never de-duplicated; keep distinct anchors and regions
+  const input = CF.buildWriteInput({ workId: 'w', catalog: {}, claims: [], visuals }), w = CF.controlWrite(written, input);
+  const ci = CF.buildCheckInput({ workId: 'w', writeInput: input, writeAudit: w }), checks = { rows: ci.sentences.map(x => ({ id: x.id, verdict: 'ok' })) };
+  const a7 = CF.assemble({ writeAudit: w, checkAudit: checks, visuals: noB3 }); // without B3 boxes /8 places exactly as /7 did
+  assert.deepEqual(a7.hotspots.map(h => [h.x, h.y]), noB3.slice(0, 3).map(v => [v.bbox[0] + v.bbox[2] / 2, v.bbox[1] + v.bbox[3] / 2]));
+  const body7 = { version: 'passBClaimFirstCopy/2', write: 'passBClaimFirstWrite/14', assemble: 7, workId: 'w', date: '2026-11-21', model: 'm', ...a7 };
+  const re = CF.reassembleCopy(body7, visuals), native = CF.assemble({ writeAudit: w, checkAudit: checks, visuals });
+  const { version, write, assemble, reassembledFrom, workId, date, model, ...copy } = re;
+  assert.deepEqual(copy, native); assert.equal(assemble, 8); assert.equal(reassembledFrom, 7); assert.equal(write, 'passBClaimFirstWrite/14');
+  assert.throws(() => CF.reassembleCopy({ ...body7, assemble: 6 }, visuals), /cannot re-assemble/);
+});
+check('S1 (VSD-087): B2 guide-answer sentences become their own pairs; the earlier input is rebuildable', () => {
+  const pages = { 'https://m/a': { text: 'The eye in the triangle was added later by Empoli to mask a banned symbol. The painting hung in the Certosa refectory.' } };
+  const b2 = { factChecks: [{ claimId: 'fc1', claim: 'It hung in the refectory.', verdict: 'supported', sources: [{ sourceId: 's1', url: 'https://m/a' }] }],
+    guideAnswers: [{ questionId: 'ga1', a: 'The eye in the triangle was added later by Empoli. Short one. It masked a banned three-faced Trinity symbol.', sourceRefs: ['s1', 's9'] }] };
+  const args = { workId: 'w', catalog: { title: 'Supper' }, b2, page: u => pages[u] || null, digest: () => null };
+  const now = CF.buildClaimJudgmentInput(args), before = CF.buildClaimJudgmentInput({ ...args, guidePairs: false });
+  assert.deepEqual(now.pairs.map(p => p.id), ['fc1', 'ga1.1', 'ga1.3'], 'one pair per sentence; fragments under 5 words skipped');
+  assert.ok(now.pairs[1].evidence.some(e => /added later by Empoli/.test(e.text)), 'evidence comes from the answer sources');
+  assert.deepEqual(before.pairs.map(p => p.id), ['fc1']);
+});
+check('supported claims (VSD-087/088): the catalog cannot validate itself; a long reason no longer drops a claim; B2-refuted claims never reach the writer', () => {
+  const s1Input = { pairs: ['f1', 'f2', 'f3', 'f4', 'f5'].map(id => ({ id, claim: id.toUpperCase() })) };
+  const audit = { rows: [{ id: 'f1', verdict: 'supported', ref: 'E1', issues: [] }, { id: 'f2', verdict: 'supported', ref: 'C', issues: [] },
+    { id: 'f3', verdict: 'supported', ref: 'E2', issues: ['reason over 25 words'] }, { id: 'f4', verdict: 'supported', ref: 'E1', issues: [] },
+    { id: 'f5', verdict: 'supported', ref: 'E1', issues: ['reason over 25 words', 'unknown ref E1'] }] };
+  const b2 = { factChecks: [{ claimId: 'f4', verdict: 'refuted' }, { claimId: 'f1', verdict: 'qualified' }] };
+  assert.deepEqual(CF.supportedClaims(s1Input, audit, b2).map(c => c.id), ['f1', 'f3']);
+  assert.deepEqual(CF.supportedClaims(s1Input, audit).map(c => c.id), ['f1', 'f3', 'f4']);
+});
+check('writer input (VSD-088): the catalog date is approximate; a contradicted catalog field is withheld', () => {
+  const cat = { title: 'The Kiss', artist: 'Klimt', date: '1908', medium: 'Oil on panel', place: '', style: 'Secession' };
+  const items = CF.buildWriteInput({ workId: 'w', catalog: cat, claims: [], visuals: [], contradicted: new Set(['medium']) }).claims;
+  assert.deepEqual(items.map(c => c.id), ['cat.title', 'cat.artist', 'cat.date', 'cat.style']);
+  assert.equal(items.find(c => c.id === 'cat.date').text, 'Museum catalog date: about 1908');
+  assert.equal(CF.approxDate('-500'), 'about 500 BCE'); assert.equal(CF.approxDate('c. 1500–1510'), 'c. 1500–1510');
+  assert.equal(CF.catalogItems(cat).find(c => c.id === 'cat.date').text, 'Museum catalog date: 1908', 'the plain catalog items are unchanged');
+});
+check('visual hygiene (VSD-088): contracted and "not verifiable" caveats are stripped; B3 requests drop counts and readings', () => {
+  for (const t of ["The firing atmosphere can't be verified visually.", 'Exposed iron-rich clay body is plausible but not directly verifiable.',
+    "Tiny figures laying bricks can't be resolved at this scale, so the claim can't be confirmed.", 'What it represents is not clear from the image.',
+    'They are not strongly saturated, and I see no clear teal.', "The script is tiny, so the number of characters can't be confirmed.", "The face isn't clearly visible."])
+    assert.equal(CF.cleanVisualText(t), '', t);
+  assert.equal(CF.cleanVisualText('A red cap sits on the head. The cap is bright.'), 'A red cap sits on the head. The cap is bright.');
+  const c = [{ id: 'a', text: 'Three musicians perform at the center, creating a lively rhythm.' }, { id: 'b', text: 'The slit eye is a deep hollow, making the face look blank and watchful.' },
+    { id: 'c', text: 'Two cats skulk at the lower right, clearly indifferent.' }, { id: 'd', text: 'One of the figures holds a cup.' }];
+  assert.deepEqual(CF.confirmRequests(c).map(r => r.whatToLocate), ['Musicians perform at the center.', 'The slit eye is a deep hollow.', 'Cats skulk at the lower right, indifferent.', 'One of the figures holds a cup.']);
+  assert.deepEqual(CF.confirmRequests(c, { legacy: true }).map(r => r.whatToLocate), c.map(x => x.text), 'frozen S2 works keep their wording');
+});
+check('writer /15 + checker /9 (VSD-088): absolutes need a research claim; the checker rejects absolutes, embellishment and era-wide gk', () => {
+  const S = (s, ids) => ({ s, ids });
+  const input = { claims: [{ id: 'cat.title', text: 'Museum catalog title: X' }, { id: 'c1', text: 'It was the first painting shown at the Salon by a woman.' }], visuals: [{ id: 'v1', text: 'A red cap.' }] };
+  const w = CF.controlWrite({ v: CF.WRITE_VERSION, notes: [], hotspots: [], guide: [], why: [S('It was the first painting a woman showed at the Salon.', ['c1']),
+    S('It is the only red cap in Dutch art.', ['v1', 'gk']), S('Every Dutch painter loved red.', ['gk']), S('The title X names it.', ['cat.title'])] }, input);
+  assert.deepEqual(w.sentences.map(x => x.issues), [[], ['absolute without a claim'], ['absolute without a claim'], []]);
+  const old = CF.controlWrite({ v: 'passBClaimFirstWrite/14', notes: [], hotspots: [], guide: [], why: [S('It is the only red cap in Dutch art.', ['v1', 'gk'])] }, input);
+  assert.deepEqual(old.sentences[0].issues, [], 'archived /14 results re-derive unchanged');
+  assert.equal(CF.CHECK_VERSION, 'passBClaimFirstCheck/9'); assert.equal(CF.WRITE_VERSION, 'passBClaimFirstWrite/15');
+  assert.match(CF.CHECK_PROMPT, /"the only", "the first", "every"/); assert.match(CF.CHECK_PROMPT, /an embellishment is not/); assert.match(CF.CHECK_PROMPT, /whole era, culture, movement or people/);
+});
+check('SI (VSD-088): the earlier prompt is kept verbatim for history; the current one keeps "added later" facts; the wire version is unchanged', () => {
+  assert.equal(CF.IDENT_VERSION, 'passBClaimFirstIdentify/2');
+  assert.match(CF.IDENT_PROMPT, /added later, by another hand/); assert.doesNotMatch(CF.IDENT_PROMPT_V2, /added later/);
+  assert.equal(CF.IDENT_PROMPT.replace(/- If a passage says a depicted element was added later[\s\S]*?too\.\n/, ''), CF.IDENT_PROMPT_V2);
 });
 check('Oct 8 false fatal: a background helper model is not the answering model; a wrong answering model is still fatal', () => {
   const real = join(RUN_ROOT, 'cf-34018d423b36', 'works', '4641e6f95ee21ce6aff7c6ee', 'attempt-1.transcript.jsonl');

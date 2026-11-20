@@ -64,6 +64,9 @@ question.
   general knowledge (below).
 - **`delight` is the minority,** and still says why the detail is worth noticing.
 - **The text describes its own pin.** It must describe the detail the pin sits on.
+- **One dot, one spot.** A feature spread over the whole image (a floor, a sky, two colors against each other)
+  gets a dot only on one example spot the writer picks ("Here, for example, …"); with no good example it stays a
+  note without a dot (owner, 2026-11-20, VSD-086). Two hotspots never share a spot.
 - **Explain, don't just name.** Technique, format and object-type pins teach well, and so do story and identity pins
   that explain ("This is Saint Peter Martyr; the wound in his head identifies him"). The weak pin is one that only
   names or describes an object.

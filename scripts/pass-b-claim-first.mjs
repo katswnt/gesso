@@ -20,6 +20,7 @@ import { CALL_TIMEOUT_MS } from './pass-b-b4-structured-canary.mjs';
 import { runAudit, auditHistory, countReservations, preservedFatal, callAuditPinned, loadB2 } from './pass-b-shadow-audit.mjs';
 import { snapshot, snapshotTextV2, selectPassages } from './pass-b-audit-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
+import { contradictedFields, knownConflicts } from './lib/catalog-support.mjs';
 
 const execFileP = promisify(execFile);
 const OUT = join(RUN_ROOT, 'claim-first-v1'), SNAP = join(OUT, 'snapshots');
@@ -90,8 +91,9 @@ const STAGES = {
   S3: { tag: 'write', stage: 'B4', prompt: CF.WRITE_PROMPT, schema: CF.WRITE_WIRE_SCHEMA, version: CF.WRITE_VERSION, control: CF.controlWrite },
   S4: { tag: 'check', stage: 'B4', prompt: CF.CHECK_PROMPT, schema: CF.CHECK_WIRE_SCHEMA, version: CF.CHECK_VERSION, control: CF.controlCheck },
 };
-export function stageBinding(key, works) {
-  const st = STAGES[key];
+// `prompt` overrides the stage prompt for a legacy equivalent run (VSD-088: SI's run before its prompt gained a rule).
+export function stageBinding(key, works, { prompt } = {}) {
+  const st = { ...STAGES[key], ...(prompt ? { prompt } : {}) };
   const command = buildStageCommand({ stage: st.stage, model: OPTS.model, effort: st.effort || null, promptText: '<per-work>', ...(st.schema ? { wireSchema: st.schema } : {}), ...(st.image ? { imageFile: `${'0'.repeat(64)}.jpg` } : {}) });
   // Only stages that changed after pilot 1 get new bindings: S2 (effort), S3 (write /2), S4 (checks /2 output).
   // S1 is unchanged, so its accepted pilot-1 results are reused, not re-called.
@@ -106,12 +108,12 @@ export function stageBinding(key, works) {
 export const stageRunId = binding => `cf-${sha256(stableJson(binding)).slice(0, 12)}`;
 const stageSpec = key => ({ model: OPTS.model, version: STAGES[key].version, allowedTools: STAGES[key].image ? ['Read', 'StructuredOutput'] : ['StructuredOutput'], image: !!STAGES[key].image, control: STAGES[key].control });
 
-function mkPlan(key, base, input, binding, extra = {}) {
-  const st = STAGES[key];
+function mkPlan(key, base, input, binding, extra = {}, { prompt, legacyRequests = false } = {}) {
+  const st = { ...STAGES[key], ...(prompt ? { prompt } : {}) };
   let promptText, command;
   if (st.image) {
     const imageFile = `${base.b0.image.imgSha256}.${base.b0.image.ext}`;
-    promptText = `${st.prompt}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(CF.confirmRequests(input.candidates))}`;
+    promptText = `${st.prompt}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(CF.confirmRequests(input.candidates, { legacy: legacyRequests }))}`;
     command = buildStageCommand({ stage: 'B3', model: OPTS.model, effort: st.effort || null, promptText, imageFile });
     Object.assign(extra, { imageFile, imageSource: join(CORPUS_RUN_DIR, 'imgs', imageFile) });
   } else {
@@ -122,16 +124,38 @@ function mkPlan(key, base, input, binding, extra = {}) {
     inputSha256: sha256(stableJson(input)), promptHash: sha256(promptText), command, ...extra };
 }
 
-export function planS1(base) {
+// VSD-087/088 (fix v1): S1 now adds B2's guide-answer sentences and S2 cleans B1's wording, in the SAME runs. A work
+// keeps the plan it was first frozen with: when a run already holds its input receipt (written before any
+// reservation) and that receipt matches the earlier plan, the earlier plan is used, exactly as VSD-071 freezes pages.
+// Anything else (a genuine input change) still fails closed in auditHistory/runAudit.
+const frozenReceipt = (key, workId) => {
+  for (const r of equivalentRuns(key, OPTS.nightly ? [] : trialWorks())) {
+    const f = join(r.outDir, `input-${safeWork(workId)}.binding.json`), m = join(r.outDir, 'run-manifest.json');
+    if (existsSync(f)) return readJson(f);
+    const listed = existsSync(m) && (readJson(m).inputs || []).find(x => x.workId === workId); // fixed trial runs list inputs in the manifest
+    if (listed) return listed;
+  }
+  return null;
+};
+const pickFrozen = (key, current, earlier) => {
+  const r = frozenReceipt(key, current.workId);
+  if (!r || (r.inputSha256 === current.inputSha256 && r.promptHash === current.promptHash)) return current;
+  const old = earlier();
+  return r.inputSha256 === old.inputSha256 && r.promptHash === old.promptHash ? old : current;
+};
+// `variant` forces one plan (tests, offline tools): { guidePairs } for S1, { legacyRequests } for S2.
+export function planS1(base, variant = null) {
   const b2 = loadB2(base.dir);
   const digest = url => { const f = b2.fetches.find(x => x.url === url && x.status === 'fetched'); return f ? f.digest : null; };
-  const page = pagesOf(base);
-  const input = CF.buildClaimJudgmentInput({ workId: base.id, catalog: base.catalog, b2: base.b2, page, digest });
-  return mkPlan('S1', base, input, { ...base.binding, pages: citedUrls(base.b2).map(u => page(u)?.textSha256 || null) });
+  const page = pagesOf(base), binding = { ...base.binding, pages: citedUrls(base.b2).map(u => page(u)?.textSha256 || null) };
+  const build = guidePairs => mkPlan('S1', base, CF.buildClaimJudgmentInput({ workId: base.id, catalog: base.catalog, b2: base.b2, page, digest, guidePairs }), binding);
+  if (variant) return build(variant.guidePairs);
+  return pickFrozen('S1', build(true), () => build(false));
 }
-export function planS2(base) {
-  const candidates = CF.visualCandidates(base.b1);
-  return mkPlan('S2', base, { unit: base.id, candidates }, { ...base.binding });
+export function planS2(base, variant = null) {
+  const input = { unit: base.id, candidates: CF.visualCandidates(base.b1) }, build = legacyRequests => mkPlan('S2', base, input, { ...base.binding }, {}, { legacyRequests });
+  if (variant) return build(variant.legacyRequests);
+  return pickFrozen('S2', build(false), () => build(true));
 }
 const runDirFor = (key, works) => { const b = stageBinding(key, works), id = stageRunId(b); return { binding: b, runId: id, outDir: join(RUN_ROOT, id) }; };
 // VSD-057 follow-up: S2 reuses the corpus B3 wire schema, so adding validator caps to it (2026-10-01) moved S2 to
@@ -140,12 +164,21 @@ const runDirFor = (key, works) => { const b = stageBinding(key, works), id = sta
 // later stages (SI/SJ/S3) consumed. Without any accepted result, the earliest recorded outcome stands (a held S2
 // stays terminal; it is never re-run in a newer run).
 export const S2_PRE_CAP_WIRE_SHA256 = '1eff2375c79cfdb181de6ae7d1c2ee127084ce819f2249b3ef3c60a54288afc5';
+// VSD-088 (fix v1): SI's prompt gained the "added later" rule, which is a new SI run. The run SI used before stays an
+// equivalent history source (with its own retry run), checked with a plan built from the old prompt (`planOf`), so a
+// work already identified keeps its SI result and is never identified twice; only works without one use the new prompt.
+const legacyRun = (key, works, prompt, planOf) => {
+  const b = stageBinding(key, works, { prompt }), id = stageRunId(b), retry = { ...b, retry: OUTAGE_RETRY };
+  return [{ binding: b, runId: id, outDir: join(RUN_ROOT, id), planOf }, { binding: retry, runId: stageRunId(retry), outDir: join(RUN_ROOT, stageRunId(retry)), planOf, retry: true }];
+};
 export function equivalentRuns(key, works) {
-  const r = runDirFor(key, works), outage = OPTS.nightly ? [outageRetryRun(key, works)] : [];
+  const r = runDirFor(key, works), outage = OPTS.nightly ? [{ ...outageRetryRun(key, works), retry: true }] : [];
+  if (key === 'SI') return [r, ...outage, ...legacyRun('SI', works, CF.IDENT_PROMPT_V2, plan => plan.legacy).filter(x => OPTS.nightly || !x.retry)];
   if (key !== 'S2' || !OPTS.nightly || r.binding.wireSchemaSha256 === S2_PRE_CAP_WIRE_SHA256) return [r, ...outage];
   const b = { ...r.binding, wireSchemaSha256: S2_PRE_CAP_WIRE_SHA256 }, id = stageRunId(b);
   return [r, { binding: b, runId: id, outDir: join(RUN_ROOT, id) }, s2RetryRun(works), ...outage];
 }
+const planFor = (r, plan) => (r.planOf ? r.planOf(plan) : plan);
 // VSD-075 (owner 2026-11-09): from the 3-worker change (Nov 1) until the stdout-to-file fix, 1,158 S2 calls lost the
 // end of their output in transit (exit 0, an init event, no result event: a finished call always ends with one). That
 // is never the work's fault, so such a work gets ONE more S2 call in its own run. Same binding plus a retry tag, so
@@ -180,14 +213,13 @@ export function outageRetryRun(key, works) {
 }
 export function outageRetryDue(key, works, plan) {
   if (!OPTS.nightly || !plan) return false;
-  const retry = outageRetryRun(key, works);
-  if (existsSync(retry.outDir) && auditHistory(retry.outDir, plan, retry.runId)) return false; // one retry, whatever its outcome
-  const found = equivalentRuns(key, works).filter(r => r.runId !== retry.runId && existsSync(r.outDir))
-    .map(r => auditHistory(r.outDir, plan, r.runId)).filter(Boolean);
+  const runs = equivalentRuns(key, works).filter(r => existsSync(r.outDir)), history = r => auditHistory(r.outDir, planFor(r, plan), r.runId);
+  if (runs.some(r => r.retry && history(r))) return false; // one retry, whatever its outcome (a legacy run's retry counts too)
+  const found = runs.filter(r => !r.retry).map(history).filter(Boolean);
   return found.length > 0 && found.every(h => OUTAGE_KINDS.has(h.kind));
 }
 export function stageHistory(key, works, plan) {
-  const found = equivalentRuns(key, works).map(r => existsSync(r.outDir) ? auditHistory(r.outDir, plan, r.runId) : null).filter(Boolean);
+  const found = equivalentRuns(key, works).map(r => existsSync(r.outDir) ? auditHistory(r.outDir, planFor(r, plan), r.runId) : null).filter(Boolean);
   const at = h => Date.parse(h.reservation?.reservedAt) || 0, earliest = xs => xs.sort((a, b) => at(a) - at(b))[0] || null;
   return earliest(found.filter(h => h.kind === 'accepted')) || earliest(found);
 }
@@ -203,8 +235,8 @@ export function planSI(base, works, s2Plan) {
   const page = pagesOf(base);
   const pages = citedUrls(base.b2).map(u => ({ sourceId: u, page: page(u) })).filter(x => x.page).map(x => ({ sourceId: x.sourceId, text: x.page.text }));
   const picked = selectPassages({ componentId: 'ident', text: probe }, pages, { perComponent: 14, perWorkChars: 7000, minScore: 2 }).map(p => p.text);
-  const input = CF.buildIdentityInput({ workId: base.id, title: base.catalog?.title, passages: picked, visuals });
-  return mkPlan('SI', base, input, { ...base.binding, s2: h2.meta.resultSha256 });
+  const input = CF.buildIdentityInput({ workId: base.id, title: base.catalog?.title, passages: picked, visuals }), binding = { ...base.binding, s2: h2.meta.resultSha256 };
+  return { ...mkPlan('SI', base, input, binding), legacy: mkPlan('SI', base, input, binding, {}, { prompt: CF.IDENT_PROMPT_V2 }) };
 }
 export function planSJ(base, works, siPlan) {
   if (!siPlan) return null;
@@ -224,9 +256,25 @@ export function planS3(base, works, s1Plan, s2Plan, sj = null) {
     if (sj.plan.input.pairs.length && hj?.kind !== 'accepted') return null;
     identities = hj ? CF.supportedIdentities(sj.plan.input, hj.derived.audit, sj.identAudit) : [];
   }
-  const claims = [...CF.supportedClaims(s1Plan.input, h1.derived.audit), ...identities.map(i => ({ id: i.id, text: i.text }))], visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
-  const input = CF.buildWriteInput({ workId: base.id, catalog: base.catalog, claims, visuals });
-  return { plan: mkPlan('S3', base, input, { ...base.binding, s1: h1.meta.resultSha256, s2: h2.meta.resultSha256 }), claims, visuals, identities };
+  const claims = [...CF.supportedClaims(s1Plan.input, h1.derived.audit, base.b2), ...identities.map(i => ({ id: i.id, text: i.text }))], visuals = CF.confirmedVisuals(h2.derived.audit, h2.derived.output);
+  // VSD-088/089: a catalog field the medium/date audit or B2 contradicts never reaches the writer. The audit's committed
+  // list can change on a later pin; a work whose S3 input is already frozen keeps the fields it was frozen with.
+  const binding = { ...base.binding, s1: h1.meta.resultSha256, s2: h2.meta.resultSha256 };
+  const build = contradicted => mkPlan('S3', base, CF.buildWriteInput({ workId: base.id, catalog: base.catalog, claims, visuals, contradicted }), binding);
+  let plan = build(contradictedFields(base.catalog, base.b2, KNOWN()));
+  const frozen = frozenInput('S3', base.id);
+  if (frozen && sha256(stableJson(frozen)) !== plan.inputSha256) {
+    const kept = new Set(frozen.claims.filter(c => c.id.startsWith('cat.')).map(c => c.id.slice(4)));
+    plan = build(new Set(CF.CATALOG_FIELDS.filter(f => !kept.has(f))));
+  }
+  return { plan, claims, visuals, identities };
+}
+let knownCache = null;
+const KNOWN = () => (knownCache ||= knownConflicts()); // read once per process
+// The input a nightly run froze for this work (written before its reservation), or null.
+function frozenInput(key, workId) {
+  for (const r of equivalentRuns(key, [])) { const f = join(r.outDir, `input-${safeWork(workId)}.json`); if (OPTS.nightly && existsSync(f)) return readJson(f); }
+  return null;
 }
 export function planS4(base, works, s3) {
   if (!s3) return null;
