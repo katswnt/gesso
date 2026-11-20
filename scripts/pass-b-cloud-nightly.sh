@@ -4,7 +4,7 @@
 #  1. Clone the private evidence repo's state branch; read the OWNER-PINNED code commit (state/pin.json).
 #  2. Run from a clean worktree at exactly that commit; its data/incoming is the evidence checkout's incoming/.
 #  3. Take the lease (first push wins; a held lease means another run is active: exit and report. A crashed
-#     automation run's lease is recovered after 90 quiet minutes, VSD-066).
+#     automation run's lease is recovered after 30 quiet minutes, VSD-066/090; a busy lease is waited for in-session).
 #  4. Nightly job (claim-first for nearest dailies, then collection). Every reservation is pushed before its call.
 #  5. Write state/status.json and release the lease.
 set -euo pipefail
@@ -66,11 +66,13 @@ if [ -n "${PASS_B_CLOUD_DRY:-}" ]; then
   echo "DRY RUN COMPLETE (claude on PATH: $(command -v claude || echo MISSING); CLI $(claude --version 2>/dev/null | head -1))"; exit 0
 fi
 # VSD-079: a container restart (exit 137) kills the run but keeps /tmp. The restarted launcher names the run it started
-# before (only if no pipeline process survives), so its own dead lease is recovered now instead of after 90 quiet minutes.
+# before (only if no pipeline process survives), so its own dead lease is recovered now instead of after 30 quiet minutes.
 OWN_DEAD=""
 if [ -s /tmp/pass-b-holder ] && ! pgrep -f "scripts/pass-b-(nightly|corpus-collect)\.mjs" >/dev/null; then OWN_DEAD="$(cat /tmp/pass-b-holder)"; fi
 echo "$HOLDER" > /tmp/pass-b-holder
-node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER" ${OWN_DEAD:+--own-dead "$OWN_DEAD"}; LEASE=$?
+# VSD-090: a busy lease is re-checked every PASS_B_LEASE_POLL_MIN (5) minutes until it is stale and recovered, for at
+# most PASS_B_LEASE_WAIT_MAX_MIN (120) while its holder is alive; laptop/owner leases and fail-closed stops exit at once.
+node scripts/pass-b-cloud-lease.mjs acquire "$HOLDER" ${OWN_DEAD:+--own-dead "$OWN_DEAD"} --wait; LEASE=$?
 if [ $LEASE -ne 0 ]; then node scripts/pass-b-cloud-lease.mjs status; exit 0; fi
 node scripts/pass-b-nightly.mjs --run ${PASS_B_COLLECT:+--collect} 2>&1 | tee /tmp/pass-b-nightly.log; RUN=${PIPESTATUS[0]}
 SUMMARY="$(tail -3 /tmp/pass-b-nightly.log | tr '\n' ' ' | cut -c1-400)"

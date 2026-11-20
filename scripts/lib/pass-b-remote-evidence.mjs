@@ -6,7 +6,8 @@
 // A lease on the evidence repo's state branch guarantees one writer (cloud run or laptop): the first successful push
 // wins, losers exit; never auto-merged. A lease is never stolen because it looks old, with ONE exception (owner
 // 2026-10-17, VSD-066 "make it self-healing"): an automation lease (routine-/schedule-) whose run CRASHED (no failure
-// status from that holder, and no evidence push for STALE_LEASE_MIN) is recovered by the next automation run. A
+// status from that holder, and no evidence push for STALE_LEASE_MIN, 30 min since VSD-090) is recovered by the next
+// automation run, which now waits in-session until then (VSD-090). A
 // crashed call is already a terminal unknown-outcome (its reservation was pushed first), so recovery never re-calls.
 // A deliberate fail-closed stop (status.exit != 0 from the holder) and any laptop/owner lease still wait for review.
 import { execFileSync } from 'node:child_process';
@@ -109,18 +110,49 @@ export function acquireLease(root, holder, { now = new Date(), ownDead = null } 
   if (owned?.holder !== holder) throw new LeaseBusyError('lease changed during acquisition');
   return owned;
 }
-// > the longest single call (15 min) with a wide margin: every call pushes its reservation before and outcome after.
-export const STALE_LEASE_MIN = 90;
+// > the longest single call (15 min) with a margin: every call pushes its reservation before and outcome after, and with
+// 3–6 workers the evidence branch hears from a live run every few minutes. VSD-090 (2026-11-20): 90 -> 30 min; a run
+// killed at 8 h 43 min on 2026-11-19 blocked the pipeline for 3 h 13 min (10 such recoveries since 2026-10-30).
+export const STALE_LEASE_MIN = 30;
 const AUTOMATION = /^(routine|schedule)-/;
-export function staleLease(root, cur, claimant, now = new Date(), { ownDead = null } = {}) {
-  if (!AUTOMATION.test(cur?.holder || '') || !AUTOMATION.test(claimant || '')) return null;
+// Why a held lease must wait for the owner instead of being recovered automatically (null: an automation lease that may
+// be recovered once stale). Shared by the recovery rule and the waiting launcher (VSD-090).
+export function reviewOnlyLease(root, cur, claimant) {
+  if (!AUTOMATION.test(cur?.holder || '') || !AUTOMATION.test(claimant || '')) return 'not an automation lease; laptop/owner leases wait for review';
   const sp = join(root, 'state', 'status.json');
   const st = existsSync(sp) ? JSON.parse(readFileSync(sp, 'utf8')) : null;
-  if (st?.holder === cur.holder && Number(st.exit) !== 0) return null; // deliberate fail-closed stop: owner review
+  if (st?.holder === cur.holder && Number(st.exit) !== 0) return 'its run stopped fail-closed; owner review'; // deliberate stop
+  return null;
+}
+export function staleLease(root, cur, claimant, now = new Date(), { ownDead = null } = {}) {
+  if (reviewOnlyLease(root, cur, claimant)) return null;
   const lastPush = Number(git(root, ['log', '-1', '--format=%ct']).trim()) * 1000;
   const quietMin = Math.floor((now.getTime() - lastPush) / 60000);
   if (ownDead && ownDead === cur.holder && ownDead !== claimant) return { quietMin, lastPushAt: new Date(lastPush).toISOString(), own: true };
   return quietMin >= STALE_LEASE_MIN ? { quietMin, lastPushAt: new Date(lastPush).toISOString() } : null;
+}
+// VSD-090: a firing that finds the lease busy no longer exits at once (the next chance was the next 2-hourly firing, so
+// a crashed run blocked up to ~3 h). It re-checks every PASS_B_LEASE_POLL_MIN (default 5) and recovers the lease as soon
+// as it is stale, through acquireLease's usual recovery and log. It gives up (LeaseBusyError, the old busy exit) when the
+// holder is still alive after PASS_B_LEASE_WAIT_MAX_MIN (default 120), and at once for a laptop/owner lease or a
+// fail-closed stop, which never recover automatically.
+export const LEASE_POLL_MIN = Number(process.env.PASS_B_LEASE_POLL_MIN || 5);
+export const LEASE_WAIT_MAX_MIN = Number(process.env.PASS_B_LEASE_WAIT_MAX_MIN || 120);
+export async function acquireLeaseWaiting(root, holder, { ownDead = null, now = () => new Date(), sleep = ms => new Promise(r => setTimeout(r, ms)),
+  pollMin = LEASE_POLL_MIN, maxWaitMin = LEASE_WAIT_MAX_MIN, log = m => console.log(m) } = {}) {
+  const start = now().getTime();
+  for (;;) {
+    try { return acquireLease(root, holder, { now: now(), ownDead }); }
+    catch (e) {
+      if (!(e instanceof LeaseBusyError)) throw e;
+      const cur = readLease(root), review = cur ? reviewOnlyLease(root, cur, holder) : null;
+      if (review) throw new LeaseBusyError(`${e.message} (${review})`);
+      const waited = (now().getTime() - start) / 60000;
+      if (waited + pollMin > maxWaitMin) throw new LeaseBusyError(`${e.message} (holder ${cur?.holder ?? 'unknown'} still alive after ${Math.round(waited)} min of waiting)`);
+      log(`LEASE BUSY: ${cur?.holder ?? 'concurrent claim'}; waited ${Math.round(waited)} min, re-checking in ${pollMin} min`);
+      await sleep(pollMin * 60000);
+    }
+  }
 }
 export function releaseLease(root, holder, { force = false } = {}) {
   const cur = readLease(root);

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, topFameIds, TOP_REWRITE, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, topFameIds, TOP_REWRITE, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure, runDeadline, RUN_DEADLINE_MIN } from '../scripts/pass-b-nightly.mjs';
 import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
@@ -279,5 +279,23 @@ await check('concurrent works citing the same source fetch it once', async () =>
   let fetches = 0; const snap = sharedSnapshots(async url => { fetches++; await new Promise(r => setTimeout(r, 5)); return { url, ok: true }; });
   const [x, y] = await Promise.all([snap('https://a.example/p', 'd'), snap('https://a.example/p', 'd')]);
   assert.equal(fetches, 1); assert.equal(x, y);
+});
+await check('VSD-090: past the run deadline no new call starts, the in-flight call finishes and is recorded, and the stop is clean', async () => {
+  assert.equal(RUN_DEADLINE_MIN, 270); assert.throws(() => runDeadline(0), /positive/);
+  let t = 0; const pastDeadline = runDeadline(60, 0, () => t);
+  assert.equal(pastDeadline(), null);
+  // Same composition as main(): the deadline joins the reserve-time safety check and the per-stage check.
+  let calls = 0, stop = null; const results = {};
+  const deadlineCall = (key, p) => runAudit({ ...run(key), plans: [p], beforeReserve: () => pastDeadline(),
+    callFn: async () => { calls++; t = 61 * 60000; await new Promise(r => setTimeout(r, 10)); return { transcript: transcript(p, output(key)), exitCode: 0 }; } });
+  await runPool(['a', 'b'], 2, async id => {
+    const r = await advanceWork({ base: base(id), call: deadlineCall, safetyCheck: () => pastDeadline() || (stop && !CLEAN_STOP.test(stop) ? stop : null), saveCopy: () => {} });
+    results[id] = r; if (r.stop !== 'done') stop ||= r.stop;
+  }, () => Boolean(stop));
+  assert.equal(calls, 1, 'only the call already under way when the clock passed the deadline');
+  const s1 = planS1(base('a')), h = auditHistory(run('S1').outDir, s1, run('S1').runId);
+  assert.equal(h?.kind, 'accepted', 'the in-flight call was recorded');
+  assert.match(stop, /^deadline: 60 min/); assert.ok(CLEAN_STOP.test(stop), 'a clean stop: status written, lease released');
+  assert.equal(auditHistory(run('S1').outDir, planS1(base('b')), run('S1').runId), null, 'work b reserved nothing');
 });
 console.log(`pass-b-nightly.test: ${n} checks passed`);
