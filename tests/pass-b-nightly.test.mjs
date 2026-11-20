@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure, researchOnly } from '../scripts/pass-b-nightly.mjs';
 import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
@@ -214,5 +214,13 @@ await check('concurrent works citing the same source fetch it once', async () =>
   let fetches = 0; const snap = sharedSnapshots(async url => { fetches++; await new Promise(r => setTimeout(r, 5)); return { url, ok: true }; });
   const [x, y] = await Promise.all([snap('https://a.example/p', 'd'), snap('https://a.example/p', 'd')]);
   assert.equal(fetches, 1); assert.equal(x, y);
+});
+await check('research only (VSD-091): the switch empties the copy queue and always hands over to the collector', async () => {
+  assert.equal(researchOnly({ PASS_B_RESEARCH_ONLY: '1' }), true);
+  for (const v of [undefined, '', '0', 'true']) assert.equal(researchOnly({ PASS_B_RESEARCH_ONLY: v }), false);
+  const src = readFileSync(new URL('../scripts/pass-b-nightly.mjs', import.meta.url), 'utf8');
+  assert.match(src, /if \(researchOnly\(\)\) \{ pending\.length = 0;/); // before the worker pool runs
+  assert.ok(src.indexOf('pending.length = 0') < src.indexOf('await runPool(pending'));
+  assert.match(src, /args\.includes\('--collect'\) \|\| researchOnly\(\)/);
 });
 console.log(`pass-b-nightly.test: ${n} checks passed`);

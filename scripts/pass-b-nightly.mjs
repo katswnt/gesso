@@ -170,6 +170,9 @@ export function sharedSnapshots(fetchOne = snapshot) {
   const inflight = new Map();
   return (url, dir) => { if (!inflight.has(url)) inflight.set(url, fetchOne(url, dir)); return inflight.get(url); };
 }
+// VSD-091 (owner 2026-11-20): PASS_B_RESEARCH_ONLY=1 skips the claim-first copy stages (S1–S4) and spends the firing on
+// the collector's B1–B3 research only, which the planned replacement writer reuses. Copy already written is kept.
+export const researchOnly = (env = process.env) => env.PASS_B_RESEARCH_ONLY === '1';
 export const NIGHTLY_WORKERS = Math.max(1, Math.min(6, Number(process.env.PASS_B_NIGHTLY_WORKERS || 3)));
 
 export async function collectRemaining({ pacer, execute = execFileP, env = process.env }) {
@@ -222,6 +225,7 @@ async function main() {
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
   const only = ownerOnly;
   if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
+  if (researchOnly()) { pending.length = 0; console.log('  research only (VSD-091): copy stages skipped; B1–B3 collection only'); }
   try { persist(remoteRoot(), [join(OUT, 'copy')], 'copy: catch up finished copy not yet pushed'); } catch (e) { stop = pushStop(e); }
   const snap = sharedSnapshots();
   console.log(`  workers: ${NIGHTLY_WORKERS} | pending: ${pending.length}`);
@@ -241,7 +245,7 @@ async function main() {
   if (setAside.used()) console.log(`  set aside for review: ${setAside.used()} work(s) (VSD-073)`);
   console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
   if (stop && !CLEAN_STOP.test(stop)) throw new Error(stop);
-  if (!stop && args.includes('--collect')) {
+  if (!stop && (args.includes('--collect') || researchOnly())) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
     try { console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted'); }
     catch (e) { const why = collectorPushFailure(e); if (!why) throw e; console.log(`collection: stop=${why}; the next firing resumes`); }
