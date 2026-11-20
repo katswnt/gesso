@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { OPTS, stageBinding, stageRunId, planS1, planS2 } from '../scripts/pass-b-claim-first.mjs';
 import * as CF_RUNNER from '../scripts/pass-b-claim-first.mjs';
 import { runAudit, auditHistory } from '../scripts/pass-b-shadow-audit.mjs';
-import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, KEPT_WRITES, topFameIds, TOP_REWRITE, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure, runDeadline, RUN_DEADLINE_MIN } from '../scripts/pass-b-nightly.mjs';
+import { advanceWork, workStatus, nightlyFatal, copyArtifact, copyExists, preserveCopy, collectRemaining, finishedCopyNames, copyName, copyState, reassembledCopy, KEPT_WRITES, topFameIds, TOP_REWRITE, runPool, sharedSnapshots, CLEAN_STOP, pushStop, collectorPushFailure, runDeadline, RUN_DEADLINE_MIN } from '../scripts/pass-b-nightly.mjs';
 import { PersistError } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { RUN_ROOT } from '../scripts/lib/pass-b-calibration.mjs';
 import { sha256 } from '../scripts/lib/vision-legacy.mjs';
@@ -135,9 +135,13 @@ await check('collector receives only remaining local allowance and errors propag
   const { wireSchemaSha256: _a, ...x } = runs[0].binding, { wireSchemaSha256: _b, ...y } = runs[1].binding; assert.deepEqual(x, y);
   const { retry, ...z } = runs[2].binding; assert.equal(retry, CF_RUNNER.S2_RETRY); assert.deepEqual(z, runs[0].binding, 'VSD-075 retry run: same binding plus the retry tag');
   for (const k of ['S1', 'S2', 'SI', 'SJ', 'S3', 'S4']) { // VSD-085: each stage's only alias is its outage-retry run
-    const rs = CF_RUNNER.equivalentRuns(k, []), { retry: tag, ...rest } = rs.at(-1).binding;
-    assert.equal(rs.length, k === 'S2' ? 4 : 2); assert.equal(tag, CF_RUNNER.OUTAGE_RETRY); assert.deepEqual(rest, rs[0].binding);
+    const rs = CF_RUNNER.equivalentRuns(k, []), r = k === 'SI' ? rs[1] : rs.at(-1), { retry: tag, ...rest } = r.binding;
+    assert.equal(rs.length, k === 'S2' || k === 'SI' ? 4 : 2); assert.equal(tag, CF_RUNNER.OUTAGE_RETRY); assert.deepEqual(rest, rs[0].binding);
   }
+  // VSD-088: SI's earlier run (the prompt before the "added later" rule) and its retry run stay history sources
+  const si = CF_RUNNER.equivalentRuns('SI', []), { promptSha256: p0, ...cur } = si[0].binding, { promptSha256: p2, ...old } = si[2].binding;
+  assert.deepEqual(old, cur); assert.equal(p2, sha256(CF.IDENT_PROMPT_V2)); assert.notEqual(p0, p2);
+  assert.equal(si[3].binding.retry, CF_RUNNER.OUTAGE_RETRY); assert.ok(si[2].planOf && si[3].retry);
   console.log('ok S2 pre-cap run resolves to cf-1d898d84282f and differs only in the wire-schema hash');
 }
 await check('VSD-070: four works advanced concurrently through the real stages each finish with one attempt per stage, shared pacer', async () => {
@@ -210,6 +214,58 @@ await check('VSD-085: a refused S1 is retried before its never-run S2; held and 
   assert.equal((await advanceWork({ base: h, call: ch.call, saveCopy: () => {} })).terminal, true); assert.equal(workStatus(h).next, 'terminal');
   const u = base('unknown'), cu = { keys: [], call: (key, p) => { cu.keys.push(key); return runAudit({ ...runFor(key), plans: [p], callFn: async () => { if (key === 'S4') throw new Error('lost'); return { transcript: transcript(p, output(key)), exitCode: 0 }; } }); } };
   assert.equal((await advanceWork({ base: u, call: cu.call, saveCopy: () => {} })).terminal, true); assert.deepEqual(cu.keys, ['S1', 'S2', 'SI', 'S3', 'S4']);
+});
+// ---------- fix v1 (VSD-086–088): new inputs only for works not yet frozen; SI's earlier run stays history ----------
+const fixBase = id => Object.assign(base(id), {
+  b2: { factChecks: [], guideAnswers: [{ questionId: 'ga1', a: 'The eye at the top was added later by another painter.', sourceRefs: [] }] },
+  b1: { noteCandidates: [{ noteId: 'n1', body: 'Three figures kneel at the left.', pin: { x: 20, y: 50 }, confidence: 0.9 }] } });
+await check('fix v1 (VSD-087/088): a work frozen before the S1/S2 change keeps its plans; a new work gets guide pairs and cleaned requests', async () => {
+  const old = fixBase('old'), p1 = planS1(old, { guidePairs: false }), p2 = planS2(old, { legacyRequests: true });
+  assert.notEqual(p1.inputSha256, planS1(old, { guidePairs: true }).inputSha256); assert.notEqual(p2.promptHash, planS2(old, { legacyRequests: false }).promptHash);
+  await call('S1', p1); await call('S2', p2); // frozen and answered under the earlier inputs
+  assert.equal(planS1(old).inputSha256, p1.inputSha256); assert.equal(planS2(old).promptHash, p2.promptHash);
+  assert.equal(workStatus(old).next, 'SI', 'their history is found: no second S1 or S2');
+  const fresh = fixBase('fresh');
+  assert.deepEqual(planS1(fresh).input.pairs.map(x => x.id), ['ga1.1']);
+  assert.equal(planS2(fresh).promptHash, planS2(fresh, { legacyRequests: false }).promptHash);
+  assert.throws(() => auditHistory(run('S1').outDir, planS1(old, { guidePairs: true }), run('S1').runId), /frozen input changed/, 'a genuine change still fails closed');
+});
+await check('fix v1 (VSD-088): a work identified under the earlier SI prompt keeps that result; its retry run counts, so never a third call', async () => {
+  const legacy = CF_RUNNER.equivalentRuns('SI', []).slice(2).map(r => ({ ...r, now }));
+  const answer = (r, plan, t) => runAudit({ ...r, plans: [plan], callFn: async () => t ? { transcript: t(plan), exitCode: 1 } : { transcript: transcript(plan, output('SI')), exitCode: 0 } });
+  const b = base('si-old'); await call('S1', planS1(b)); await call('S2', planS2(b));
+  const si = CF_RUNNER.planSI(b, [], planS2(b));
+  assert.equal(workStatus(b).next, 'SI'); assert.notEqual(si.promptHash, si.legacy.promptHash);
+  await answer(legacy[0], si.legacy);
+  assert.equal(workStatus(b).next, 'S3', 'identified in the earlier run: no new SI call');
+  const r = base('si-refused'); await call('S1', planS1(r)); await call('S2', planS2(r));
+  const sr = CF_RUNNER.planSI(r, [], planS2(r));
+  await answer(legacy[0], sr.legacy, refused(529));
+  assert.deepEqual(workStatus(r).stages.map(([k]) => k), ['retry:SI'], 'refused in the earlier run: its one retry is due');
+  await answer(legacy[1], sr.legacy, refused(429)); // that retry already happened in the earlier run's retry run
+  assert.equal(workStatus(r).next, 'terminal', 'never a third call');
+});
+await check('fix v1: re-assembly of a kept /7 copy uses the work\'s verified S2 boxes; strict /7 copy of /13 or /14 is re-assembled, not stale', async root => {
+  const b = Object.assign(base('re'), { b1: { noteCandidates: [{ noteId: 'n1', body: 'A missing nose.', pin: { x: 10, y: 25 }, confidence: 0.9 }] } });
+  const s2 = planS2(b);
+  await runAudit({ ...run('S2'), plans: [s2], callFn: async () => ({ transcript: transcript(s2, { verifications: [{ requestId: 'pin-n1', found: true, confidence: 0.9, bbox: [0.06, 0.21, 0.04, 0.04], note: 'The nose is missing.' }] }), exitCode: 0 }) });
+  const old = join(root, 'copy', '2026-11-01', basename(copyArtifact('re', null, {}, root, KEPT_WRITES[1]).path).replace(/\.a\d+\.json$/, '.a7.json'));
+  const body7 = { version: 'passBClaimFirstCopy/2', write: KEPT_WRITES[1], assemble: 7, workId: 're', date: '2026-11-01', model: OPTS.model, why: 'A why.', notes: [],
+    guide: [1, 2, 3].map(i => ({ q: `Q${i}?`, a: 'A.' })), trimmed: [], flags: [], usable: { minimal: true, strict: true },
+    hotspots: [{ anchor: 'pin-n1', axis: 'delight', x: 0.1, y: 0.25, head: 'Nose', body: 'B. C.' }, { anchor: 'pin-n1', axis: 'delight', x: 0.1, y: 0.25, head: 'Nose again', body: 'B. C.' }] };
+  mkdirSync(dirname(old), { recursive: true }); writeFileSync(old, JSON.stringify(body7));
+  const written = finishedCopyNames(root), state = copyState('re', written);
+  assert.deepEqual(state, { reassemble: old });
+  const r = reassembledCopy(state, b);
+  assert.equal(r.path, old.replace('.a7.json', `.a${CF.ASSEMBLE_VERSION}.json`)); assert.equal(r.body.reassembledFrom, 7);
+  assert.deepEqual(r.body.hotspots.map(h => [h.head, +h.x.toFixed(2), +h.y.toFixed(2)]), [['Nose', 0.08, 0.23]], 'B3 centre; the second pin on the same spot is dropped');
+  assert.equal(r.body.usable.strict, false, 'one pin left: rewritten under the current writer');
+  assert.equal(reassembledCopy(state, null), null, 'unverified work: stays stale');
+  writeFileSync(r.path, JSON.stringify(r.body));
+  assert.equal(copyState('re', finishedCopyNames(root)), null, 'the /8 copy now decides');
+  const name = (id, w) => basename(copyArtifact(id, null, {}, '/o', w).path);
+  const w2 = new Map([[name('t', KEPT_WRITES[0]), '/p/13'], [name('t14', KEPT_WRITES[1]), '/p/14']]), read = () => ({ usable: { strict: true } });
+  assert.deepEqual(['t', 't14'].map(id => copyState(id, w2, read, new Set(['t', 't14']))), [null, 'done'], 'top-200: /13 copy never counts, /14 copy does');
 });
 await check('2026-11-16: a push GitHub keeps rejecting ends the run cleanly (lease released); a fatal never does', () => {
   assert.ok(CLEAN_STOP.test(pushStop(new PersistError('push failed: remote: Internal Server Error'))));

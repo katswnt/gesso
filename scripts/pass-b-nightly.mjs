@@ -177,7 +177,9 @@ export const copyName = id => basename(copyArtifact(id, null, {}).path);
 // earlier writer, at the CURRENT assembly, stays finished; other copy is written again under the current writer.
 // Kept-writer copy that exists only at an older assembly is 'stale': it can be re-assembled only under that writer's
 // stage bindings, so it is skipped (never rewritten at a cost) until the older writer's re-assembly has run.
-export const KEPT_WRITES = ['passBClaimFirstWrite/13'];
+// Fix v1 (VSD-086–088): writer /15 keeps /14 copy the same way. Assembly /8 only re-places hotspots, so strict kept
+// copy at assembly /7 is re-assembled without a call (`reassembledCopy`), not left stale.
+export const KEPT_WRITES = ['passBClaimFirstWrite/13', 'passBClaimFirstWrite/14'];
 // VSD-083 (owner 2026-11-19): the most recognizable works are rewritten under the current writer even when their kept
 // copy is strict-usable (the top-200 audit found its defects there). Same ranking as that audit: playable works that
 // are not human remains, by fame (data/fame.js, else the pool's own value), highest first.
@@ -186,16 +188,31 @@ export function topFameIds(pool, fame = {}, n = TOP_REWRITE) {
   const f = p => fame[p.id] ?? p.fame ?? 0;
   return pool.filter(p => p.play !== false && p.sensitive !== 'remains').sort((a, b) => f(b) - f(a)).slice(0, n).map(p => p.id);
 }
+// VSD-083 still holds for the top 200: their /13 copy never counts; copy from writer /14 on (written for VSD-083) does.
+export const TOP_KEEP_FROM = 14;
+// 'done' | 'stale' | null (write under the current writer) | { reassemble: path } (strict /7 copy of a kept writer).
+// The newest kept writer's copy decides.
 export function copyState(id, written, read = p => JSON.parse(readFileSync(p, 'utf8')), rewrite = new Set()) {
   if (written.has(copyName(id))) return 'done';
-  if (rewrite.has(id)) return null; // VSD-083: kept copy (any assembly) does not count; write it again
-  for (const w of KEPT_WRITES) {
+  const kept = KEPT_WRITES.filter(w => !rewrite.has(id) || CF.WRITE_VERSION_NUMBER(w) >= TOP_KEEP_FROM).reverse();
+  for (const w of kept) {
     const name = basename(copyArtifact(id, null, {}, OUT, w).path), path = written.get(name);
     if (path) return read(path).usable?.strict ? 'done' : null;
     const stem = name.replace(/\.a\d+\.json$/, '.a');
+    for (const a of CF.REASSEMBLE_FROM) { const p = written.get(`${stem}${a}.json`); if (p) return read(p).usable?.strict ? { reassemble: p } : null; }
     for (const n of written.keys()) if (n.startsWith(stem)) return 'stale';
   }
   return null;
+}
+// Kept /7 copy re-assembled at the current assembly from the work's verified S2 (its B3 boxes), filed beside the old
+// copy. null when the work's S2 is not verified here (then it stays stale). No call, no stage re-derivation.
+export function reassembledCopy(state, base, read = p => JSON.parse(readFileSync(p, 'utf8'))) {
+  if (!base) return null;
+  const s2 = planS2(base), h2 = historyOf('S2', s2);
+  if (h2?.kind !== 'accepted') return null;
+  const body = CF.reassembleCopy(read(state.reassemble), CF.confirmedVisuals(h2.derived.audit, h2.derived.output));
+  if (body.workId !== base.id) throw new Error(`re-assembly: copy ${state.reassemble} is not ${base.id}`);
+  return { path: state.reassemble.replace(/\.a\d+\.json$/, `.a${CF.ASSEMBLE_VERSION}.json`), body };
 }
 // A small pool of workers over the priority order (VSD-070). Every reservation, pacer allowance and push is
 // synchronous, so concurrent works cannot interleave inside one; each work has its own attempt folder.
@@ -236,20 +253,27 @@ async function main() {
   const order = ownerOnly.length ? [...windowOrder, ...ownerOnly.filter(id => !windowOrder.includes(id))] : windowOrder;
   // each work's NEXT daily on or after today (works recur; the first-ever date is irrelevant)
   const dateOf = new Map(); for (const [d, v] of Object.entries(ctx.daily.byDate).filter(([d]) => d >= clock.date).sort(([a], [b]) => a.localeCompare(b))) for (const id of Object.values(v).flat()) if (!dateOf.has(id)) dateOf.set(id, d);
-  const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0, stale: 0 }, pending = [];
-  const written = finishedCopyNames();
+  const counts = { window: order.length, notReady: 0, copy: 0, copyPending: 0, terminal: 0, pending: 0, stale: 0, reassembled: 0, reassembledLost: 0 }, pending = [];
+  const written = finishedCopyNames(), reassembly = [];
   const rewrite = new Set(topFameIds(ctx.pool, loadGlobal('data/fame.js', 'ARTEFACTUM_FAME') || {}));
   for (const id of order) {
     const state = copyState(id, written, undefined, rewrite);
     if (state === 'done') { counts.copy++; continue; } // finished in an earlier run (any date folder)
     if (state === 'stale') { counts.stale++; continue; } // VSD-082: awaiting re-assembly under its own writer
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
+    if (state?.reassemble) { // fix v1: no call; written before the workers start
+      const r = reassembledCopy(state, base);
+      if (!r) { counts.stale++; continue; }
+      reassembly.push(r);
+      if (r.body.usable.strict) { counts.copy++; counts.reassembled++; continue; }
+      counts.reassembledLost++; // no longer strict at /8 (pins merged or unpinned): written again under the current writer
+    }
     if (!base) { counts.notReady++; continue; }
     const st = workStatus(base);
     if (st.next === 'copy') { counts.copyPending++; pending.push(id); } else if (st.next === 'terminal') counts.terminal++; else { counts.pending++; pending.push(id); }
   }
   console.log(`nightly (claim-first ${OPTS.model} + identities) | Pacific ${clock.date} | in start window ${clock.mayStart}`);
-  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}${counts.stale ? ` | STALE kept copy awaiting re-assembly ${counts.stale}` : ''} | top-${TOP_REWRITE} rewrite pending ${pending.filter(id => rewrite.has(id)).length}`);
+  console.log(`  ${SCHEDULE_SCOPE === 'corpus' ? 'window + priority bands' : 'window'} ${counts.window}: copy done ${counts.copy} | copy write pending ${counts.copyPending} | stages pending ${counts.pending} | terminal ${counts.terminal} | B1–B3 not verified yet ${counts.notReady}${counts.stale ? ` | STALE kept copy awaiting re-assembly ${counts.stale}` : ''}${reassembly.length ? ` | re-assembly at /${CF.ASSEMBLE_VERSION} ${reassembly.length} (still strict ${counts.reassembled}, to rewrite ${counts.reassembledLost})` : ''} | top-${TOP_REWRITE} rewrite pending ${pending.filter(id => rewrite.has(id)).length}`);
   console.log(`  safety: ${safetyCheck() || 'clear'}`);
   for (const k of ['S1', 'S2', 'S2R', 'SI', 'SJ', 'S3', 'S4']) console.log(`  ${k}: run ${runOf(k).runId}`);
   console.log(`  outage retries (VSD-085): ${['S1', 'S2', 'SI', 'SJ', 'S3', 'S4'].map(k => `${k} ${runOf(RETRY + k).runId}`).join(', ')}`);
@@ -266,7 +290,8 @@ async function main() {
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
   const only = ownerOnly;
   if (only.length) { const keep = new Set(only); pending.splice(0, pending.length, ...pending.filter(id => keep.has(id))); console.log(`  owner subset: ${pending.length} of ${only.length} requested works pending`); }
-  try { persist(remoteRoot(), [join(OUT, 'copy')], 'copy: catch up finished copy not yet pushed'); } catch (e) { stop = pushStop(e); }
+  for (const r of reassembly) if (!existsSync(r.path)) writeFileSync(r.path, `${JSON.stringify(r.body, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  try { persist(remoteRoot(), [join(OUT, 'copy')], `copy: catch up finished copy not yet pushed${reassembly.length ? ` (+${reassembly.length} re-assembled at /${CF.ASSEMBLE_VERSION})` : ''}`); } catch (e) { stop = pushStop(e); }
   const snap = sharedSnapshots();
   console.log(`  workers: ${NIGHTLY_WORKERS} | pending: ${pending.length}`);
   await runPool(pending, NIGHTLY_WORKERS, async id => {
