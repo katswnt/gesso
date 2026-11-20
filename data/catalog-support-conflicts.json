@@ -1,0 +1,755 @@
+{
+ "version": "catalogSupportConflicts/1",
+ "note": "Known conflicts (VSD-089). The writer withholds these catalog fields; fixes to data/pool.js go to main by PR.",
+ "conflicts": [
+  {
+   "id": "aic105316",
+   "field": "date",
+   "source": "b2",
+   "pool": "1916",
+   "other": "\"Renoir painted this in 1916, working with brushes sometimes strapped to his arthritic fingers\""
+  },
+  {
+   "id": "harvard200061",
+   "field": "date",
+   "source": "b2",
+   "pool": "1600",
+   "other": "\"The album dates to circa 1600\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q111362936",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1000",
+   "other": "1854"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1133875",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1640",
+   "other": "1670"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q121461514",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1878",
+   "other": "1909"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1245388",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on yew panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1395699",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel and canvas",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q15008032",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1514",
+   "other": "1529"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q15957668",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1375",
+   "other": "2000"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q17322404",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1787143",
+   "field": "date",
+   "source": "b2",
+   "pool": "1818",
+   "other": "\"The key preparatory cliff drawings were made during Friedrich's 1818 honeymoon visit to Rügen\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q18397036",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1625",
+   "other": "1641"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q18688290",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on canvas",
+   "other": "Oil on wood (panel)"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q18688290",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19273424",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19274827",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1819",
+   "other": "1500"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19327893",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19544603",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19606318",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1692",
+   "other": "1670"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1978815",
+   "field": "date",
+   "source": "b2",
+   "pool": "1810",
+   "other": "\"The catalog metadata date of 1810 is correct\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q19960944",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q20177902",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1738",
+   "other": "1799"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2105277",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q21121980",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2126369",
+   "field": "date",
+   "source": "b2",
+   "pool": "1511",
+   "other": "\"The Mona Lisa dates to 1511\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2268524",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on oak panel",
+   "other": "Oil on canvas on oak panel (canvas layer mounted on rigid panel; catalog shorthand 'oil on oak panel' omits the canvas layer noted by CODART)"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2293905",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on poplar panel",
+   "other": "Oil on canvas mounted on a convex poplar-wood shield (rotella), 60 x 55 cm"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q24090",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2413789",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1502",
+   "other": "1487"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2467141",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2627056",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on wood",
+   "other": "Oil on canvas, 125 x 101 cm (the catalog record 'oil on wood' is incorrect; the Vienna Kunsthistorisches Museum version of this subject is on poplar panel, but this Borghese work is definitively oil on canvas)"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2627056",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on wood",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2631335",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q26707854",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on canvas",
+   "other": "Oil on wood panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q26707854",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2900098",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1550",
+   "other": "1580"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q2909909",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1886",
+   "other": "1867"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3119110",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3277782",
+   "field": "date",
+   "source": "b2",
+   "pool": "1842",
+   "other": "\"Thomas Cole painted The Voyage of Life in 1842 in the United States.\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3399458",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3605562",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3664358",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on panel",
+   "other": "Oil on canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3664358",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3685127",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3698237",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3761425",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Tempera on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3842386",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3842660",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3842700",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3851968",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3937676",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3948774",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on wood",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q4373336",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q465762",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-42",
+   "other": "-1"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q48881620",
+   "field": "date",
+   "source": "b2",
+   "pool": "1175",
+   "other": "\"The piece dates to approximately 1175\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q50752920",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q517408",
+   "field": "date",
+   "source": "b2",
+   "pool": "1794",
+   "other": "\"The sculpture dates from 1794.\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q5812626",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q5818528",
+   "field": "date",
+   "source": "b2",
+   "pool": "1800",
+   "other": "\"The catalog dates this painting to 1800.\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q6118806",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1601",
+   "other": "1675"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q63341199",
+   "field": "date",
+   "source": "b2",
+   "pool": "-300",
+   "other": "\"The work dates to around 300 BCE\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q64026649",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-3100",
+   "other": "-4000"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q646337",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on canvas",
+   "other": "Oil on panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q646337",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q7536969",
+   "field": "date",
+   "source": "b2",
+   "pool": "1884",
+   "other": "\"The painting was made in 1884\""
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q7934008",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Drawing on paper",
+   "other": "panel"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q931933",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q9396043",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Tempera and oil on gold on panel",
+   "other": "Oil and tempera on gold-ground panel, later transferred to canvas support; the Web Gallery of Art records it as 'oil on panel transferred to canvas.' The painted surface retains its original gold-leaf ground and oil glazes; the wooden panel substrate was replaced by canvas in a conservation transfer. The catalog entry 'tempera and oil on gold on panel' describes the painted technique accurately but not the current physical support."
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q971646",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-2570",
+   "other": "-2515"
+  },
+  {
+   "id": "met321343",
+   "field": "date",
+   "source": "b2",
+   "pool": "1423",
+   "other": "\"The labret dates to 1423.\""
+  },
+  {
+   "id": "met451258",
+   "field": "date",
+   "source": "b2",
+   "pool": "1585",
+   "other": "\"The folio dates to 1585\""
+  },
+  {
+   "id": "met451280",
+   "field": "date",
+   "source": "b2",
+   "pool": "1578",
+   "other": "\"The portrait was made in 1578\""
+  },
+  {
+   "id": "wikidata:Q109363512",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Gouache and oil on linen",
+   "other": "board"
+  },
+  {
+   "id": "wikidata:Q111147904",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Watercolor on paper",
+   "other": "Watercolor and pen on varnish-primed cardboard mounted on stretcher"
+  },
+  {
+   "id": "wikidata:Q111147904",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Watercolor on paper",
+   "other": "board"
+  },
+  {
+   "id": "wikidata:Q111479074",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Tempera on paper",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q116940681",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1510",
+   "other": "1400"
+  },
+  {
+   "id": "wikidata:Q116942437",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1510",
+   "other": "1400"
+  },
+  {
+   "id": "wikidata:Q12173713",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil on canvas",
+   "other": "Pencil and watercolor on paper"
+  },
+  {
+   "id": "wikidata:Q125131824",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1591",
+   "other": "1571"
+  },
+  {
+   "id": "wikidata:Q1398760",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-300",
+   "other": "-328"
+  },
+  {
+   "id": "wikidata:Q15284134",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-224",
+   "other": "-199"
+  },
+  {
+   "id": "wikidata:Q16738523",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Oil paint and gold leaf on canvas, leather, and wood",
+   "other": "Oil paint and gold leaf on leather and wood (room surfaces); the Princess painting above the fireplace, La Princesse du pays de la porcelaine, is oil on canvas and is a separate work displayed within the room"
+  },
+  {
+   "id": "wikidata:Q18003128",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1904",
+   "other": "1882"
+  },
+  {
+   "id": "wikidata:Q18749362",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1507",
+   "other": "1650"
+  },
+  {
+   "id": "wikidata:Q19698024",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Tempera on canvas",
+   "other": "board"
+  },
+  {
+   "id": "wikidata:Q20880134",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "wikidata:Q22915417",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Brush and wash on paper",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q24050835",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on cardboard",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q29385812",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-1370",
+   "other": "-1389"
+  },
+  {
+   "id": "wikidata:Q30339474",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1425",
+   "other": "1520"
+  },
+  {
+   "id": "wikidata:Q3632482",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1470",
+   "other": "1458"
+  },
+  {
+   "id": "wikidata:Q3689725",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on panel",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q3773123",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on board",
+   "other": "panel"
+  },
+  {
+   "id": "wikidata:Q408623",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1100",
+   "other": "-500"
+  },
+  {
+   "id": "wikidata:Q4126317",
+   "field": "medium",
+   "source": "b2",
+   "pool": "Pastel on canvas",
+   "other": "Pastel on paper mounted on canvas"
+  },
+  {
+   "id": "wikidata:Q4375071",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Tempera on cardboard",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q45057895",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "board"
+  },
+  {
+   "id": "wikidata:Q47672",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-210",
+   "other": "-247"
+  },
+  {
+   "id": "wikidata:Q50215295",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "panel"
+  },
+  {
+   "id": "wikidata:Q60497141",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on chalk-primed gauze on cardboard",
+   "other": "canvas"
+  },
+  {
+   "id": "wikidata:Q61286508",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "paper"
+  },
+  {
+   "id": "wikidata:Q71005591",
+   "field": "medium",
+   "source": "wikidata",
+   "pool": "Oil on canvas",
+   "other": "paper"
+  },
+  {
+   "id": "wikidata:Q71694296",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "1710",
+   "other": "1695"
+  },
+  {
+   "id": "wikidata:Q810944",
+   "field": "date",
+   "source": "wikidata",
+   "pool": "-200",
+   "other": "-349"
+  },
+  {
+   "id": "wikidata:Q867403",
+   "field": "date",
+   "source": "b2",
+   "pool": "1535",
+   "other": "\"The catalog date of 1535 is the correct date for this work\""
+  },
+  {
+   "id": "wikidata:Q921429",
+   "field": "date",
+   "source": "b2",
+   "pool": "1907",
+   "other": "\"The painting dates to 1907 (per catalog metadata)\""
+  }
+ ]
+}
