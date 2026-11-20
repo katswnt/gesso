@@ -31,7 +31,16 @@ export const mustHalt = r => r.stop !== 'done';
 // Stops that end the run cleanly (lease released, next firing resumes). 2026-11-16: a push GitHub kept rejecting
 // after the backoff joins them; it held the lease for 4 days as a fail-closed stop. Nothing is lost: a reservation
 // that never reached GitHub was never called, and copy that did not reach it is rebuilt from the verified stages.
-export const CLEAN_STOP = /^(pacing|protected-hours|usage-limit|api-error|persist-failed)/;
+export const CLEAN_STOP = /^(pacing|protected-hours|usage-limit|api-error|persist-failed|deadline)/;
+// VSD-090 (2026-11-20): a run has a wall-clock deadline (PASS_B_RUN_DEADLINE_MIN, default 270 = 4.5 h). Past it no new
+// call is reserved; calls already in flight finish and are recorded, then the run ends cleanly (status written, lease
+// released) so the next firing finds a free lease. A run that lived 8 h 43 min and then died blocked 3 h 13 min.
+export const RUN_DEADLINE_MIN = Number(process.env.PASS_B_RUN_DEADLINE_MIN || 270);
+export function runDeadline(minutes = RUN_DEADLINE_MIN, start = Date.now(), now = () => Date.now()) {
+  if (!(minutes > 0)) throw new Error(`run deadline must be a positive number of minutes, got ${minutes}`);
+  const end = start + minutes * 60000;
+  return () => (now() >= end ? `deadline: ${minutes} min wall clock reached; in-flight calls finished, no new ones started` : null);
+}
 export const pushStop = e => { if (e instanceof PersistError) return `persist-failed: ${e.message}`; throw e; };
 // The collector runs as a child: its push failure (never a fatal) is the same clean stop.
 export const collectorPushFailure = e => { const err = String(e?.stderr || e?.message || '');
@@ -211,6 +220,7 @@ export async function collectRemaining({ pacer, execute = execFileP, env = proce
 
 async function main() {
   const args = process.argv.slice(2), live = args.includes('--run');
+  const pastDeadline = runDeadline(); // VSD-090: counted from the start of this run
   if (live && process.env.PASS_B_NIGHTLY_LIVE !== '1') throw new Error('refusing --run: set PASS_B_NIGHTLY_LIVE=1');
   if (live) assertExecutionLease({ required: true });
   OPTS.nightly = true; OPTS.identities = true; // model: CF default (Sonnet 5.5)
@@ -250,7 +260,7 @@ async function main() {
   const pacer = makePacer({ logPath: USAGE_LOG, maxCalls: SESSION_CALL_CAP, statePath: executionBudgetPath() });
   // VSD-073: one set-aside budget for the whole firing, shared by every worker and stage.
   const setAside = setAsideBudget();
-  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: safetyCheck, setAside, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
+  const call = async (key, plan) => { const r = runOf(key); return runAudit({ plans: [plan], outDir: r.outDir, runId: r.runId, binding: r.binding, pacer, usageLog: USAGE_LOG, beforeReserve: () => safetyCheck() || pastDeadline(), setAside, callFn: (p, gate) => callAuditPinned(p, { bin, timeout: gate.timeout }) }); };
   mkdirSync(SNAP, { recursive: true, mode: 0o700 });
   let stop = null, finished = 0;
   // Owner-directed subset (e.g. today's easy dailies): PASS_B_NIGHTLY_ONLY="id1,id2". Same gates; only narrows the queue.
@@ -263,7 +273,7 @@ async function main() {
     const base = (await import('./pass-b-claim-first.mjs')).workBase(id);
     // A push failure stops the other workers before their next stage too (it is not in this pass-through list).
     let result;
-    try { result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop) ? stop : null),
+    try { result = await advanceWork({ base, call, safetyCheck: () => safetyCheck() || pastDeadline() || (stop && !/^(pacing|protected-hours|usage-limit|api-error)/.test(stop) ? stop : null),
       saveCopy: copy => preserveCopy(copyArtifact(id, dateOf.get(id), copy)),
       prepare: async () => {
         for (const u of [...new Set((base.b2?.factChecks || []).flatMap(f => (f.sources || []).map(s => s.url)).filter(Boolean))]) await snap(u, SNAP);
@@ -275,7 +285,8 @@ async function main() {
   if (setAside.used()) console.log(`  set aside for review: ${setAside.used()} work(s) (VSD-073)`);
   console.log(`claim-first: finished ${finished} new work(s) this session; stop=${stop || (SCHEDULE_SCOPE === 'corpus' ? 'window and priority bands covered' : 'window covered')}; pacer calls ${pacer.calls}`);
   if (stop && !CLEAN_STOP.test(stop)) throw new Error(stop);
-  if (!stop && args.includes('--collect')) {
+  if (!stop && args.includes('--collect') && pastDeadline()) console.log(`collection: skipped, ${pastDeadline()}`);
+  else if (!stop && args.includes('--collect')) {
     console.log('collection: handing over to the corpus collector (own gates and pacing)');
     try { console.log(await collectRemaining({ pacer }) || 'shared call budget exhausted'); }
     catch (e) { const why = collectorPushFailure(e); if (!why) throw e; console.log(`collection: stop=${why}; the next firing resumes`); }

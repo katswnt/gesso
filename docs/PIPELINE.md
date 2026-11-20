@@ -535,6 +535,7 @@ Offline hardening on 2026-09-30:
 - Per-firing cap (VSD-077): the cloud routine launches with `PASS_B_MAX_CALLS=500` (the wrapper default is still 300). Pacing still stops a run first.
 - Schedule (VSD-078, 2026-11-17): Pacific time, all day, scope corpus. Slot allowances are `state/call-budgets/slot-<city>-<date>-<HH>.json` (earlier Paris slots: `slot-<date>-<HH>`).
 - Lost-time fixes (VSD-079): with probes in flight the pacer says `wait` (re-check every 20 s, at most 15 min) instead of stopping the firing. After a container restart the routine relaunches once and the launcher recovers its own dead lease at once (`pass-b-cloud-lease.mjs acquire <holder> --own-dead <holder from /tmp/pass-b-holder>`), only when no pipeline process is alive.
+- Lease stalls (VSD-090): a crashed automation lease is recoverable after 30 quiet minutes (was 90). The launcher acquires with `--wait`: on LEASE BUSY it re-checks every `PASS_B_LEASE_POLL_MIN` (5) minutes and recovers the lease as soon as it is stale (logged in `state/lease-recoveries.jsonl` as before); it exits as before when the holder is still pushing after `PASS_B_LEASE_WAIT_MAX_MIN` (120) minutes, and at once for a laptop/owner lease or a fail-closed stop. Each nightly run has a wall-clock deadline `PASS_B_RUN_DEADLINE_MIN` (270 = 4.5 h): past it no new call is reserved, in-flight calls finish and are recorded, and the run ends `stop=deadline` (clean: status written, lease released; `--collect` is skipped). The own-dead fast path (VSD-079) and the exit≠0 guard are unchanged.
 - Boost (VSD-080): with `PASS_B_BOOST_UNTIL=<ISO time>` in the routine command, firings that start before that time run `PASS_B_BOOST_WORKERS` (default 6) workers and a `PASS_B_BOOST_MAX_CALLS` (default 1000) cap; afterwards the plain values apply. Used to spend a week's leftover allowance before its reset; remove the variable from the prompt once it has passed.
 - Assembly /7 (VSD-081): a question whose first answer sentence S4 cut for content is dropped; a hotspot needs two kept body sentences and a pin that is not display hardware (`DISPLAY_MOUNT`); strict-usable needs the why's opening sentence. Re-materializing finished works to `.a7` costs no calls.
 - Writer /14, checker /8 (VSD-082): one step per sentence and substance first; the checker judges each sentence alone. A writer bump keeps strict-usable /13 copy at assembly /7 (`KEPT_WRITES`, `copyState`) and rewrites only held works; /13 copy at an older assembly is reported as STALE and skipped.
@@ -552,7 +553,7 @@ Offline hardening on 2026-09-30:
   separate-clone races. Abnormal exit or status-push failure retains the lease. After a VM loss,
   establish that the prior process is dead, inspect the preserved reservations/status/fatal
   evidence, then have the owner deliberately release the lease. Never steal it on a timer or
-  clear fatal evidence to resume. A successful clean pacing pause can release normally.
+  clear fatal evidence to resume (the only automatic recovery is VSD-066/090's crashed automation lease). A successful clean pacing pause can release normally.
 - Call-start hours are rechecked **after** remote persistence; a slow push cannot cross 08:30
   and still launch a model. The existing 09:00 client deadline remains in force.
 

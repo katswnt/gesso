@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
-import { persist, acquireLease, releaseLease, readLease, assertExecutionLease, PersistError, LeaseBusyError } from '../scripts/lib/pass-b-remote-evidence.mjs';
+import { persist, acquireLease, acquireLeaseWaiting, releaseLease, readLease, assertExecutionLease, PersistError, LeaseBusyError, STALE_LEASE_MIN } from '../scripts/lib/pass-b-remote-evidence.mjs';
 import { runAudit, countReservations } from '../scripts/pass-b-shadow-audit.mjs';
 
 process.env.PASS_B_PUSH_BACKOFF_MS ??= '0,0,0'; // simulated outages retry without waiting
@@ -247,15 +247,16 @@ await check('collector refuses a failed reservation push or a cutoff crossed aft
     }
   }
 });
-await check('self-healing (VSD-066): a crashed automation lease is recovered after 90 quiet min; a live run, a fail-closed stop and a laptop lease are not', () => {
+await check('self-healing (VSD-066, VSD-090): a crashed automation lease is recovered after 30 quiet min (was 90); a live run, a fail-closed stop and a laptop lease are not', () => {
   const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
   const at = min => new Date(Date.now() + min * 60000);
+  assert.equal(STALE_LEASE_MIN, 30);
   acquireLease(w.a, 'routine-A');
-  assert.throws(() => acquireLease(b, 'routine-B', { now: at(30) }), LeaseBusyError);   // still within a call's reach
+  assert.throws(() => acquireLease(b, 'routine-B', { now: at(29) }), LeaseBusyError);   // still within a call's reach
   assert.throws(() => acquireLease(b, 'laptop-B', { now: at(200) }), LeaseBusyError);   // only automation recovers automation
-  assert.equal(acquireLease(b, 'routine-B', { now: at(95) }).holder, 'routine-B');     // crashed: recovered
+  assert.equal(acquireLease(b, 'routine-B', { now: at(31) }).holder, 'routine-B');     // crashed: recovered
   const rec = readFileSync(join(b, 'state', 'lease-recoveries.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
-  assert.equal(rec.length, 1); assert.equal(rec[0].from.holder, 'routine-A'); assert.ok(rec[0].quietMin >= 90);
+  assert.equal(rec.length, 1); assert.equal(rec[0].from.holder, 'routine-A'); assert.ok(rec[0].quietMin >= 30 && rec[0].quietMin < 90);
   assert.match(sh(b, 'log', '-1', '--format=%s'), /^lease: recover crashed routine-A/);
   writeFileSync(join(b, 'state', 'status.json'), JSON.stringify({ holder: 'routine-B', exit: 1, summary: 'FAIL-CLOSED: x' }));
   persist(b, [join(b, 'state', 'status.json')], 'status: fail');                       // deliberate stop keeps its lease
@@ -279,6 +280,53 @@ await check('VSD-079: a restarted container recovers its OWN dead run at once; a
   writeFileSync(join(b, 'state', 'status.json'), JSON.stringify({ holder: 'routine-B', exit: 1, summary: 'FAIL-CLOSED: x' }));
   persist(b, [join(b, 'state', 'status.json')], 'status: fail');                       // deliberate stop keeps its lease
   assert.throws(() => acquireLease(w.a, 'routine-C', { now: at(2), ownDead: 'routine-B' }), LeaseBusyError);
+  rmSync(w.root, { recursive: true });
+});
+// VSD-090: a firing that finds the lease busy waits in-session (simulated clock; sleep advances it) instead of exiting.
+const waitClock = () => { let t = Date.now(), sleeps = 0; return { now: () => new Date(t), sleep: async ms => { sleeps++; t += ms; }, sleeps: () => sleeps, at: () => t }; };
+await check('VSD-090: a busy lease is re-checked every 5 min and recovered once its run has been quiet 30 min', async () => {
+  // 2026-11-19: a run killed 8 h 43 min after it started held the lease until the next firing could recover it 3 h 13 min later.
+  const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
+  acquireLease(w.a, 'routine-A');
+  const c = waitClock(), logs = [];
+  const got = await acquireLeaseWaiting(b, 'routine-B', { now: c.now, sleep: c.sleep, pollMin: 5, maxWaitMin: 120, log: m => logs.push(m) });
+  assert.equal(got.holder, 'routine-B'); assert.equal(c.sleeps(), 6); assert.equal(logs.length, 6); // busy at 0, 5, ... 25; free at 30
+  const rec = readFileSync(join(b, 'state', 'lease-recoveries.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  assert.equal(rec.length, 1); assert.equal(rec[0].from.holder, 'routine-A'); assert.ok(rec[0].quietMin >= 30);
+  rmSync(w.root, { recursive: true });
+});
+await check('VSD-090: a holder that keeps pushing is never recovered; the waiting firing gives up after the 2 h bound', async () => {
+  const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
+  acquireLease(w.a, 'routine-A');
+  const c = waitClock(); let pushes = 0;
+  const sleep = async ms => { await c.sleep(ms); // the live run pushes an outcome during each wait, stamped with the simulated time
+    const prev = process.env.GIT_COMMITTER_DATE; process.env.GIT_COMMITTER_DATE = new Date(c.at()).toISOString();
+    try { writeFileSync(join(w.a, `outcome-${++pushes}`), 'x'); persist(w.a, [join(w.a, `outcome-${pushes}`)], 'outcome'); }
+    finally { if (prev === undefined) delete process.env.GIT_COMMITTER_DATE; else process.env.GIT_COMMITTER_DATE = prev; } };
+  await assert.rejects(acquireLeaseWaiting(b, 'routine-B', { now: c.now, sleep, pollMin: 5, maxWaitMin: 120, log: () => {} }), e => e instanceof LeaseBusyError && /still alive after 120 min/.test(e.message));
+  assert.equal(c.sleeps(), 24); // re-checked at 0, 5, ... 120 min
+  sh(b, 'pull', '-q', '--ff-only', 'origin', 'claude/pass-b-state');
+  assert.equal(readLease(b).holder, 'routine-A'); assert.equal(existsSync(join(b, 'state', 'lease-recoveries.jsonl')), false);
+  rmSync(w.root, { recursive: true });
+});
+await check('VSD-090: the launcher acquires with --wait and keeps the own-dead fast path and the exit≠0 guard', () => {
+  const src = readFileSync(new URL('../scripts/pass-b-cloud-nightly.sh', import.meta.url), 'utf8');
+  assert.match(src, /cloud-lease\.mjs acquire "\$HOLDER" \$\{OWN_DEAD:\+--own-dead "\$OWN_DEAD"\} --wait; LEASE=\$\?/);
+  assert.match(src, /if \[ "\$RUN" -ne 0 \]; then echo "RUN FAILED; lease retained for review"/);
+});
+await check('VSD-090: a laptop lease or a fail-closed stop is not waited for: the firing exits at once, nothing recovered', async () => {
+  const w = world(), b = w.clone('b'); sh(b, 'checkout', '-q', 'claude/pass-b-state');
+  acquireLease(w.a, 'laptop-L');
+  let c = waitClock();
+  await assert.rejects(acquireLeaseWaiting(b, 'routine-B', { now: c.now, sleep: c.sleep, log: () => {} }), /laptop\/owner leases wait for review/);
+  assert.equal(c.sleeps(), 0);
+  releaseLease(w.a, 'laptop-L'); acquireLease(w.a, 'routine-A');
+  writeFileSync(join(w.a, 'state', 'status.json'), JSON.stringify({ holder: 'routine-A', exit: 1, summary: 'FAIL-CLOSED: x' }));
+  persist(w.a, [join(w.a, 'state', 'status.json')], 'status: fail');
+  c = waitClock();
+  const later = () => new Date(c.at() + 600 * 60000); // long quiet: still never recovered
+  await assert.rejects(acquireLeaseWaiting(b, 'routine-B', { now: later, sleep: c.sleep, log: () => {} }), /stopped fail-closed/);
+  assert.equal(c.sleeps(), 0); assert.equal(readLease(b).holder, 'routine-A');
   rmSync(w.root, { recursive: true });
 });
 await check('status is written from environment variables, surviving braces, quotes and ampersands (2026-10-01 laptop-pilot bug)', () => {
