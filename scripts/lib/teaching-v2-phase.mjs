@@ -23,6 +23,20 @@ export const PHASE_RUNNER_VERSION = 'teachingV2Phase/2';
 export const COMPLETION_VERSION = 'teachingV2AttemptComplete/1';
 export const writeJson = (p, v) => { mkdirSync(join(p, '..'), { recursive: true, mode: 0o700 }); const t = `${p}.tmp-${process.pid}`; writeFileSync(t, `${JSON.stringify(v, null, 1)}\n`, { mode: 0o600, flush: true }); renameSync(t, p); };
 export const readJson = p => (existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null);
+// Review R4-A2: attempt evidence files are read WITHOUT throwing. A file that exists but does not parse (a crash inside
+// its write: a torn prefix) is reported as { value: null, unreadable: <why> } and handled as incomplete evidence.
+export const readEvidenceJson = p => {
+  if (!existsSync(p)) return { value: null, unreadable: null };
+  try { return { value: JSON.parse(readFileSync(p, 'utf8')), unreadable: null }; } catch (e) { return { value: null, unreadable: e.message }; }
+};
+// Review R4-A2: an attempt file is written once and appears whole or not at all: the bytes go to a temp file (flushed),
+// then are hard-linked into place (link fails if the file exists, like the old 'wx' flag). A crash leaves at most a
+// stray temp file, which no reader ever reads as evidence.
+export const writeOnceAtomic = (p, data) => {
+  const t = `${p}.tmp-${process.pid}`;
+  writeFileSync(t, data, { flag: 'w', mode: 0o600, flush: true });
+  try { linkSync(t, p); } finally { unlinkSync(t); }
+};
 export const WIRE_FOR = Object.freeze({ W: WRITER_RESULT_WIRE, V: VERIFICATION_WIRE, V2: VERIFICATION_NO_REPLACEMENT_WIRE });
 export const stemOf = e => `${String(e.seq).padStart(2, '0')}-${e.kind}`;
 export const runDirOf = (phaseDir, runId) => join(phaseDir, 'runs', runId);
@@ -49,14 +63,16 @@ export const clearedFor = (clearances, runId, workKey, adir) => (e, stopKind = s
 // ---- R3-A1: the completion receipt, written LAST, binding the outcome files to their reservation ----
 // <stem>.done.json = { version, seq, kind, reservationSha256, transcriptSha256, metaSha256 } (sha256 of file bytes).
 // state 'complete': every file present and bound; 'incomplete': an outcome file (transcript, metadata, receipt) is
-// missing, so the outcome is UNKNOWN; 'mismatch': all present, but the receipt does not bind them or the metadata
-// has no valid exit status.
+// missing, or (review R4-A2) the metadata or receipt is unreadable JSON (a crash inside its write), so the outcome is
+// UNKNOWN; 'mismatch': all present and readable, but the receipt does not bind them or the metadata has no valid
+// exit status.
 export function completionOf(adir, stem, { seq = null, kind = null } = {}) {
   const f = ext => join(adir, `${stem}.${ext}`);
   const missing = ['reserved.json', 'transcript.jsonl', 'meta.json', 'done.json'].filter(x => !existsSync(f(x)));
   if (missing.length) return { state: 'incomplete', reason: `outcome files incomplete (missing ${missing.join(', ')}); no completion receipt binds this attempt` };
-  let done, meta;
-  try { done = JSON.parse(readFileSync(f('done.json'), 'utf8')); meta = JSON.parse(readFileSync(f('meta.json'), 'utf8')); } catch (e) { return { state: 'mismatch', reason: `unreadable outcome file: ${e.message}` }; }
+  const torn = ['meta.json', 'done.json'].map(x => [x, readEvidenceJson(f(x))]).filter(([, r]) => r.unreadable);
+  if (torn.length) return { state: 'incomplete', reason: `outcome files incomplete (unreadable ${torn.map(([x, r]) => `${x}: ${r.unreadable}`).join('; ')}); preserved as written, no completion receipt binds this attempt` };
+  const done = readEvidenceJson(f('done.json')).value, meta = readEvidenceJson(f('meta.json')).value;
   const bad = [];
   if (done?.version !== COMPLETION_VERSION) bad.push('receipt version');
   if (seq != null && done?.seq !== seq) bad.push('seq');
@@ -90,12 +106,17 @@ export function phaseStop({ phaseDir, clearances = [], allowPendingIn = null }) 
       }
       if (!existsSync(adir)) continue;
       for (const f of readdirSync(adir).filter(n => n.endsWith('.reserved.json')).sort()) {
-        const res = readJson(join(adir, f)), seq = res?.seq, stem = f.replace(/\.reserved\.json$/, '');
+        const stem = f.replace(/\.reserved\.json$/, ''), resRead = readEvidenceJson(join(adir, f)), res = resRead.value;
+        const seq = res?.seq ?? (resRead.unreadable ? Number(stem.split('-')[0]) : undefined);
         const inLedger = ledger.find(e => e.seq === seq), notDispatched = (state?.notDispatched || []).some(e => e.seq === seq);
         const pseudo = inLedger || { seq, kind: res?.kind ?? stem.split('-')[1] };
+        // R4-A2: an unreadable reservation receipt is preserved incomplete evidence: an unknown outcome until cleared.
+        if (resRead.unreadable) { if (!cleared(pseudo, 'unknown-outcome')) add('unknown-outcome', seq ?? null, `reservation receipt ${f} is unreadable (${resRead.unreadable}); preserved for review`); continue; }
         if (!inLedger && !notDispatched) { if (!cleared(pseudo, 'unknown-outcome')) add('unknown-outcome', seq ?? null, `reservation receipt ${f} has no ledger entry`); continue; }
         if (!inLedger) continue; // a refused reservation: never dispatched
-        const tp = join(adir, `${stem}.transcript.jsonl`), meta = readJson(join(adir, `${stem}.meta.json`));
+        // R4-A2: torn metadata is never parsed into a throw; it reads as absent here, and completionOf reports the
+        // unit incomplete (an unknown outcome that stops until an owner clearance names these exact bytes).
+        const tp = join(adir, `${stem}.transcript.jsonl`), meta = readEvidenceJson(join(adir, `${stem}.meta.json`)).value;
         const done = completionOf(adir, stem, { seq, kind: inLedger.kind });
         if (meta?.kind === 'fatal' && !cleared(pseudo, 'fatal')) { add('fatal', seq, `transcript outcome ${stem} recorded fatal: ${meta.reason ?? ''}`.trim()); continue; }
         if (existsSync(tp) && res?.imageFile && res?.runtimeVersion) {
@@ -144,15 +165,16 @@ export function makeAttempts({ adir, runId, workId, imageFile, runtime, persist 
     reserve(entry, promptText, wireSchema) {
       mkdirSync(adir, { recursive: true, mode: 0o700 });
       const s = stemOf(entry), receipt = receiptOf({ runId, workId, entry, promptText, wireSchema, imageFile, runtime, holder, budgetId });
-      writeFileSync(join(adir, `${s}.prompt.txt`), promptText, { flag: 'wx', mode: 0o600, flush: true });
-      writeFileSync(join(adir, `${s}.reserved.json`), `${JSON.stringify(receipt)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+      writeOnceAtomic(join(adir, `${s}.prompt.txt`), promptText);
+      writeOnceAtomic(join(adir, `${s}.reserved.json`), `${JSON.stringify(receipt)}\n`);
       persist?.([statePath, join(adir, `${s}.reserved.json`), join(adir, `${s}.prompt.txt`)], `teaching-v2 reserve ${workId}/${s}`); // BEFORE the call
     },
     // Rebuild the classified result of ANY dispatched attempt (reserved or recorded) from its own files, with no
     // call. The receipt must match the ledger entry, the prompt bytes, the recomputed argv and the frozen runtime.
     recover(entry) {
-      const s = stemOf(entry), res = readJson(join(adir, `${s}.reserved.json`)), pp = join(adir, `${s}.prompt.txt`), tp = join(adir, `${s}.transcript.jsonl`);
-      if (!res || !existsSync(pp)) return null;
+      // R4-A2: an unreadable (torn) reservation is incomplete evidence: an unknown outcome (null), never a parse throw.
+      const s = stemOf(entry), res = readEvidenceJson(join(adir, `${s}.reserved.json`)).value, pp = join(adir, `${s}.prompt.txt`), tp = join(adir, `${s}.transcript.jsonl`);
+      if (!res || typeof res !== 'object' || !existsSync(pp)) return null;
       const prompt = readFileSync(pp, 'utf8'), wire = WIRE_FOR[entry.kind];
       const bad = RECEIPT_FIELDS.filter(k => k in entry && stableJson(res[k] ?? null) !== stableJson(entry[k] ?? null));
       if (sha256(prompt) !== res.promptSha256) bad.push('prompt bytes');
@@ -162,7 +184,8 @@ export function makeAttempts({ adir, runId, workId, imageFile, runtime, persist 
       if (bad.length) throw new EvidenceMismatch(`${workId}/${s}: request receipt differs from the ledger or its own bytes (${bad.join(', ')}); preserved for review`);
       // R3-A1: only a complete outcome unit (transcript, metadata with its exit status, and the completion receipt
       // written last, all bound to this reservation) is evidence. Anything less is an UNKNOWN outcome (null), even
-      // when the transcript holds a success event. A receipt that does not bind its files is refused.
+      // when the transcript holds a success event; that includes (R4-A2) unreadable metadata or completion JSON, kept
+      // byte for byte for review. A readable receipt that does not bind its files is refused.
       const done = completionOf(adir, s, { seq: entry.seq, kind: entry.kind });
       if (done.state === 'incomplete') return null;
       if (done.state === 'mismatch') throw new EvidenceMismatch(`${workId}/${s}: ${done.reason}; preserved for review`);
@@ -180,11 +203,13 @@ export function makeInvoke({ adir, work, imageFile, runtime, execute, persist = 
     const r = await runConfined(command, { imagePath: work.image.path, execute, runtimeVersion: runtime.version, bin: runtime.bin });
     const s = stemOf({ seq, kind: stage }), f = ext => join(adir, `${s}.${ext}`);
     // R3-A1: three outcome files, the completion receipt LAST. A crash between any two leaves an incomplete unit,
-    // which recovery treats as an unknown outcome (never as success, never as retryable).
-    writeFileSync(f('transcript.jsonl'), r.stdout, { flag: 'wx', mode: 0o600, flush: true });
-    writeFileSync(f('meta.json'), `${JSON.stringify({ stage, seq, kind: r.kind, reason: r.reason, exitCode: r.exitCode, callDir: r.callDir, wallMs: r.wallMs, transcriptSha256: r.transcriptSha256, promptSha256: command.promptSha256, promptBytes: command.promptBytes, wireSchemaSha256: command.wireSchemaSha256, usage: r.usage, toolUses: r.toolUses, classifier: r.classifier })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    // which recovery treats as an unknown outcome (never as success, never as retryable). R4-A2: each file is written
+    // atomically (writeOnceAtomic), so a crash inside one write leaves it absent rather than torn; a torn file from
+    // any other cause is still read as incomplete evidence (completionOf).
+    writeOnceAtomic(f('transcript.jsonl'), r.stdout);
+    writeOnceAtomic(f('meta.json'), `${JSON.stringify({ stage, seq, kind: r.kind, reason: r.reason, exitCode: r.exitCode, callDir: r.callDir, wallMs: r.wallMs, transcriptSha256: r.transcriptSha256, promptSha256: command.promptSha256, promptBytes: command.promptBytes, wireSchemaSha256: command.wireSchemaSha256, usage: r.usage, toolUses: r.toolUses, classifier: r.classifier })}\n`);
     if (!existsSync(f('reserved.json'))) throw new EvidenceMismatch(`${work.id}/${s}: outcome without its reservation receipt`);
-    writeFileSync(f('done.json'), `${JSON.stringify({ version: COMPLETION_VERSION, seq, kind: stage, reservationSha256: fileSha(f('reserved.json')), transcriptSha256: fileSha(f('transcript.jsonl')), metaSha256: fileSha(f('meta.json')) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
+    writeOnceAtomic(f('done.json'), `${JSON.stringify({ version: COMPLETION_VERSION, seq, kind: stage, reservationSha256: fileSha(f('reserved.json')), transcriptSha256: fileSha(f('transcript.jsonl')), metaSha256: fileSha(f('meta.json')) })}\n`);
     record(r.stdout, `teaching-v2:${work.id}/${stage}`);
     try { persist?.([f('transcript.jsonl'), f('meta.json'), f('done.json')], `teaching-v2 outcome ${work.id}/${s}: ${r.kind}`); }
     catch (e) { if (r.kind !== 'fatal') throw new PauseRun(`outcome not pushed (reconciled from the local transcript on resume): ${e.message}`); }

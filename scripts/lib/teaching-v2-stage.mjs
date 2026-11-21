@@ -14,7 +14,7 @@ import { MODEL } from './teaching-v2-contract.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/4';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/5';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -65,11 +65,19 @@ function toolEvents(evs) {
 //   - complete blocks anywhere under message / content (assistant messages, nested messages);
 //   - streamed blocks (stream_event content_block_start). Their input is the start block's input or, when
 //     input_json_delta fragments follow for that block index, the parse of the concatenated fragments.
-// A streamed input that cannot be resolved is kept with input:null, unresolved:true: it can never establish
-// confinement. The same id and input seen both streamed and complete is kept once.
+// Review R4-A1: a streamed block ends in one of three states.
+//   - resolved   : the fragments parse to an object, or the block was closed (content_block_stop) with its start input;
+//   - unresolved : the block was CLOSED but its fragments do not parse to an object (a completed invocation whose
+//                  input cannot be verified: never a pass);
+//   - unfinished : the stream ended before the block closed and before its input was established (the `{}` start
+//                  placeholder with no delta, or a partial prefix such as `{`). Kept with its raw `partial` text. It
+//                  is NOT a completed invocation; confinedReads decides what, if anything, it proves.
+// A complete block with the same id and name RECONCILES a streamed block: an identical resolved input, or an unfinished
+// placeholder/prefix consistent with the complete input, is the same invocation and is kept once. Anything else is
+// conflicting evidence: both are kept and the streamed copy is marked `conflict` (fatal for a Read).
 export function normalizedToolUses(evs) {
   const uses = [];
-  const add = (b, streamed) => { const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false }; uses.push(u); return u; };
+  const add = (b, streamed) => { const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false, unfinished: false, partial: null, conflict: false }; uses.push(u); return u; };
   const visit = v => {
     if (Array.isArray(v)) { v.forEach(visit); return; }
     if (!v || typeof v !== 'object') return;
@@ -77,35 +85,100 @@ export function normalizedToolUses(evs) {
     for (const k of ['message', 'content', 'content_block']) visit(v[k]);
   };
   let open = new Map();
-  const close = idx => {
+  const close = (idx, stopped) => {
     const b = open.get(idx); if (!b) return; open.delete(idx);
-    if (b.partial.length) { try { b.use.input = JSON.parse(b.partial.join('')); } catch { b.use.input = null; } }
-    if (!b.use.input || typeof b.use.input !== 'object' || Array.isArray(b.use.input)) { b.use.input = null; b.use.unresolved = true; }
+    const u = b.use, raw = b.partial.join('');
+    if (b.partial.length) { let v; try { v = JSON.parse(raw); } catch { v = undefined; } u.input = v; }
+    const isObj = u.input && typeof u.input === 'object' && !Array.isArray(u.input);
+    if (isObj && (b.partial.length || stopped || !isEmptyInput(u.input))) return; // resolved
+    u.input = null; u.partial = raw;
+    if (stopped) u.unresolved = true; else u.unfinished = true;
   };
-  const closeAll = () => { [...open.keys()].forEach(close); open = new Map(); };
+  const closeAll = () => { [...open.keys()].forEach(i => close(i, false)); open = new Map(); };
   for (const e of evs) {
     if (e.type !== 'stream_event') { visit(e); continue; }
     const se = e.event && typeof e.event === 'object' ? e.event : {};
     if (se.type === 'message_start' || se.type === 'message_stop') closeAll();
     visit(se.message);
     const cb = se.content_block, idx = se.index ?? null;
-    if (cb && typeof cb.type === 'string' && /tool_use$/.test(cb.type)) { close(idx); open.set(idx, { use: add(cb, true), partial: [] }); visit(cb.content); }
+    if (cb && typeof cb.type === 'string' && /tool_use$/.test(cb.type)) { close(idx, false); open.set(idx, { use: add(cb, true), partial: [] }); visit(cb.content); }
     else visit(cb);
     if (se.type === 'content_block_delta' && se.delta?.type === 'input_json_delta') open.get(idx)?.partial.push(String(se.delta.partial_json ?? ''));
-    if (se.type === 'content_block_stop') close(idx);
+    if (se.type === 'content_block_stop') close(idx, true);
   }
   closeAll();
-  const seen = new Set();
-  return uses.filter(u => { if (u.id == null) return true; const k = `${u.id}\u0000${stableJson(u.input)}`; if (seen.has(k)) return false; seen.add(k); return true; });
+  const complete = uses.filter(u => !u.streamed), seen = new Set();
+  return uses.filter(u => {
+    if (u.streamed && u.id != null) {
+      const twins = complete.filter(c => c.id === u.id && c.name === u.name);
+      if (twins.length) {
+        if (twins.some(c => sameInvocation(u, c))) return false; // the complete block IS this invocation
+        u.conflict = true; return true; // conflicting evidence: keep both
+      }
+    }
+    if (u.id == null) return true;
+    const k = `${u.id}\u0000${u.input == null ? `partial:${u.partial}` : stableJson(u.input)}`;
+    if (seen.has(k)) return false; seen.add(k); return true;
+  });
+}
+const isEmptyInput = v => v == null || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+// A streamed block and a complete block are the same invocation when the streamed input equals the complete one, or
+// when the streamed block is UNFINISHED and everything it had established agrees with the complete input.
+function sameInvocation(s, c) {
+  if (s.unresolved) return false; // a closed block whose input does not parse matches nothing
+  if (!s.unfinished) return stableJson(s.input) === stableJson(c.input);
+  if (/^\s*\{?\s*$/.test(s.partial)) return true; // the `{}` placeholder (no delta) or the bare `{` prefix
+  const p = partialFilePath(s.partial), fp = typeof c.input?.file_path === 'string' ? c.input.file_path : null;
+  if (!p || fp == null) return false; // a prefix naming something other than a file path: do not guess
+  return p.complete ? fp === p.path : fp.startsWith(p.path);
+}
+// The file_path an unfinished streamed Read had begun to name: { path, complete } or null when none was started
+// (the same reading as the stopgap's pass-b-calibration.mjs fix, b629ced).
+function partialFilePath(raw) {
+  const m = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/.exec(String(raw || ''));
+  if (!m) return null;
+  let path = m[1]; try { path = JSON.parse(`"${m[1]}"`); } catch { /* keep the raw prefix */ }
+  return { path, complete: m[3] === '"' };
+}
+const resolveIn = (dir, p) => (p.startsWith('/') || !dir ? p : `${String(dir).replace(/\/+$/, '')}/${p.replace(/^\.\//, '')}`);
+// Every tool_result id anywhere in the stream: the invocations that EXECUTED.
+function executedIds(evs) {
+  const ids = new Set();
+  const visit = v => {
+    if (Array.isArray(v)) { v.forEach(visit); return; }
+    if (!v || typeof v !== 'object') return;
+    if (typeof v.type === 'string' && /tool_result$/.test(v.type) && v.tool_use_id != null) ids.add(v.tool_use_id);
+    for (const k of ['event', 'message', 'content', 'content_block']) visit(v[k]);
+  };
+  evs.forEach(visit);
+  return ids;
 }
 // The image-receipt / confinement validator over that ONE normalized list: every Read from any envelope must name
-// exactly the confined image; an unresolved Read input is never a pass.
+// exactly the confined image; an unresolved Read input is never a pass. Review R4-A1, for an UNFINISHED streamed Read:
+//   - it executed (a tool_result names its id): its input is unverifiable -> bad (fatal);
+//   - the path it had begun to name already leaves the confined image path, or traverses -> bad (fatal);
+//   - its complete path was streamed -> judged exactly like a complete Read;
+//   - otherwise nothing outside was established: it is listed in `unfinished` and NEVER counts as a successful
+//     inspection, so the call keeps its quota / interruption / exit classification.
+// A streamed Read that conflicts with the complete block of the same id is bad (fatal); both stay on record.
 function confinedReads(stdout, evs, { callDir, imageFile }) {
-  const uses = normalizedToolUses(evs).filter(u => u.type === 'tool_use');
-  const read = verifyB1ImageRead({ ...parseStreamTranscript(stdout), toolUses: uses }, { callDir, imageBasename: imageFile });
-  const unresolved = uses.filter(u => u.name === 'Read' && u.unresolved);
-  if (!unresolved.length) return read;
-  return { ...read, ok: false, bad: [...read.bad, ...unresolved.map(u => `<unresolved streamed Read input ${u.id ?? 'without id'}>`)], reason: `read target unresolved: ${unresolved.length} streamed Read input(s) could not be reconstructed` };
+  const uses = normalizedToolUses(evs).filter(u => u.type === 'tool_use'), ran = executedIds(evs);
+  const wantAbs = callDir ? norm(resolveIn(callDir, imageFile)) : null;
+  const judged = [], unverified = [], unfinished = [];
+  for (const u of uses) {
+    if (u.name !== 'Read' || (!u.unresolved && !u.unfinished && !u.conflict)) { judged.push(u); continue; }
+    if (u.conflict) { unverified.push(`<streamed Read ${u.id} conflicts with its completed block>`); if (u.input != null) judged.push(u); continue; }
+    if (u.unresolved) { unverified.push(`<unresolved streamed Read input ${u.id ?? 'without id'}>`); continue; }
+    if (u.id != null && ran.has(u.id)) { unverified.push(`<executed streamed Read ${u.id} with unverifiable input>`); continue; }
+    const p = partialFilePath(u.partial);
+    if (p?.complete) { judged.push({ ...u, input: { file_path: p.path } }); continue; }
+    if (p && (p.path.includes('..') || !wantAbs || !wantAbs.startsWith(norm(resolveIn(callDir, p.path))))) { unverified.push(`${p.path}…`); continue; }
+    unfinished.push(u.id ?? 'without id');
+  }
+  const read = verifyB1ImageRead({ ...parseStreamTranscript(stdout), toolUses: judged }, { callDir, imageBasename: imageFile });
+  if (!unverified.length) return { ...read, unfinished };
+  const bad = [...read.bad, ...unverified];
+  return { ...read, unfinished, ok: false, bad, reason: read.bad.length ? `read target escaped confinement: ${bad.join(', ')}` : `read target unresolved: ${unverified.length} streamed Read input(s) could not be verified: ${unverified.join(', ')}` };
 }
 const usageLimitedEv = (evs, final) => evs.some(e => e.type === 'rate_limit_event' && e.rate_limit_info?.status === 'rejected')
   || final?.api_error_status === 429 || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
@@ -207,6 +280,9 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   if (prov.errors.includes('multiple-StructuredOutput-emissions')) return out('content-failure', 'multiple StructuredOutput emissions');
   const read = confinedReads(stdout, evs, { callDir: callDir || norm(inits[0].cwd), imageFile });
   if (!read.ok) return out('fatal', `image not inspected: ${read.reason}`); // an image stage must prove it saw the pixels
+  // Review R4-A1: a session reporting success while a Read invocation never finished streaming is not a clean success.
+  // It proves no outside read (so not a confinement fatal), but it is held, never accepted and never retried.
+  if (read.unfinished.length) return out('content-failure', `unfinished streamed Read invocation(s) ${read.unfinished.join(', ')} in a completed session`);
   if (final.structured_output == null) return out('content-failure', 'no structured_output');
   if (exitCode && exitCode !== 0) return out('content-failure', `process exit ${exitCode} after a result`);
   return out('ok', null);
