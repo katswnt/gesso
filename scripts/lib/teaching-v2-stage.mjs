@@ -14,7 +14,7 @@ import { MODEL } from './teaching-v2-contract.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/5';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/6';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -128,17 +128,21 @@ function sameInvocation(s, c) {
   if (s.unresolved) return false; // a closed block whose input does not parse matches nothing
   if (!s.unfinished) return stableJson(s.input) === stableJson(c.input);
   if (/^\s*\{?\s*$/.test(s.partial)) return true; // the `{}` placeholder (no delta) or the bare `{` prefix
-  const p = partialFilePath(s.partial), fp = typeof c.input?.file_path === 'string' ? c.input.file_path : null;
-  if (!p || fp == null) return false; // a prefix naming something other than a file path: do not guess
-  return p.complete ? fp === p.path : fp.startsWith(p.path);
+  const ps = partialFilePaths(s.partial), fp = typeof c.input?.file_path === 'string' ? c.input.file_path : null;
+  if (!ps.length || fp == null) return false; // a prefix naming something other than a file path: do not guess
+  // Review R5-A1: EVERY file_path the fragment names must agree with the complete input, not just the first.
+  return ps.every(p => (p.complete ? fp === p.path : fp.startsWith(p.path)));
 }
-// The file_path an unfinished streamed Read had begun to name: { path, complete } or null when none was started
-// (the same reading as the stopgap's pass-b-calibration.mjs fix, b629ced).
-function partialFilePath(raw) {
-  const m = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/.exec(String(raw || ''));
-  if (!m) return null;
-  let path = m[1]; try { path = JSON.parse(`"${m[1]}"`); } catch { /* keep the raw prefix */ }
-  return { path, complete: m[3] === '"' };
+// EVERY file_path an unfinished streamed Read had begun to name, in order: [{ path, complete }], empty when none was
+// started (the per-token reading of the stopgap's pass-b-calibration.mjs fix, b629ced). Review R5-A1: a fragment may
+// name more than one (a duplicate key), and any one of them may be the outside path, so none is trusted alone.
+function partialFilePaths(raw) {
+  const out = [], re = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/g, text = String(raw || '');
+  for (let m; (m = re.exec(text));) {
+    let path = m[1]; try { path = JSON.parse(`"${m[1]}"`); } catch { /* keep the raw prefix */ }
+    out.push({ path, complete: m[3] === '"' });
+  }
+  return out;
 }
 const resolveIn = (dir, p) => (p.startsWith('/') || !dir ? p : `${String(dir).replace(/\/+$/, '')}/${p.replace(/^\.\//, '')}`);
 // Every tool_result id anywhere in the stream: the invocations that EXECUTED.
@@ -156,29 +160,33 @@ function executedIds(evs) {
 // The image-receipt / confinement validator over that ONE normalized list: every Read from any envelope must name
 // exactly the confined image; an unresolved Read input is never a pass. Review R4-A1, for an UNFINISHED streamed Read:
 //   - it executed (a tool_result names its id): its input is unverifiable -> bad (fatal);
-//   - the path it had begun to name already leaves the confined image path, or traverses -> bad (fatal);
-//   - its complete path was streamed -> judged exactly like a complete Read;
+//   - ANY file_path it names (a complete token or a prefix) leaves the confined image path, or traverses -> bad (fatal);
 //   - otherwise nothing outside was established: it is listed in `unfinished` and NEVER counts as a successful
-//     inspection, so the call keeps its quota / interruption / exit classification.
+//     inspection, so the call keeps its quota / interruption / exit classification and a reported success is held.
+//     Review R5-A1: this holds even when a complete safe path token was streamed. That token is checked for
+//     confinement only; the invocation is still unfinished and never becomes a judged (receipt-bearing) Read.
 // A streamed Read that conflicts with the complete block of the same id is bad (fatal); both stay on record.
 function confinedReads(stdout, evs, { callDir, imageFile }) {
   const uses = normalizedToolUses(evs).filter(u => u.type === 'tool_use'), ran = executedIds(evs);
   const wantAbs = callDir ? norm(resolveIn(callDir, imageFile)) : null;
-  const judged = [], unverified = [], unfinished = [];
+  const judged = [], unverified = [], unfinished = [], escaped = [];
+  // A streamed path token is inside only when it is (complete) or can still become (prefix) exactly the image path.
+  const outside = p => p.path.includes('..') || !wantAbs || (p.complete
+    ? norm(resolveIn(callDir, p.path)) !== wantAbs || p.path.split('/').pop() !== imageFile
+    : !wantAbs.startsWith(norm(resolveIn(callDir, p.path))));
   for (const u of uses) {
     if (u.name !== 'Read' || (!u.unresolved && !u.unfinished && !u.conflict)) { judged.push(u); continue; }
     if (u.conflict) { unverified.push(`<streamed Read ${u.id} conflicts with its completed block>`); if (u.input != null) judged.push(u); continue; }
     if (u.unresolved) { unverified.push(`<unresolved streamed Read input ${u.id ?? 'without id'}>`); continue; }
     if (u.id != null && ran.has(u.id)) { unverified.push(`<executed streamed Read ${u.id} with unverifiable input>`); continue; }
-    const p = partialFilePath(u.partial);
-    if (p?.complete) { judged.push({ ...u, input: { file_path: p.path } }); continue; }
-    if (p && (p.path.includes('..') || !wantAbs || !wantAbs.startsWith(norm(resolveIn(callDir, p.path))))) { unverified.push(`${p.path}…`); continue; }
-    unfinished.push(u.id ?? 'without id');
+    const out = partialFilePaths(u.partial).filter(outside);
+    if (out.length) { for (const p of out) { if (p.complete) escaped.push(p.path); else unverified.push(`${p.path}…`); } continue; }
+    unfinished.push(u.id ?? 'without id'); // still unfinished, whatever safe path token it streamed (review R5-A1)
   }
   const read = verifyB1ImageRead({ ...parseStreamTranscript(stdout), toolUses: judged }, { callDir, imageBasename: imageFile });
-  if (!unverified.length) return { ...read, unfinished };
-  const bad = [...read.bad, ...unverified];
-  return { ...read, unfinished, ok: false, bad, reason: read.bad.length ? `read target escaped confinement: ${bad.join(', ')}` : `read target unresolved: ${unverified.length} streamed Read input(s) could not be verified: ${unverified.join(', ')}` };
+  if (!unverified.length && !escaped.length) return { ...read, unfinished };
+  const bad = [...read.bad, ...escaped, ...unverified];
+  return { ...read, unfinished, ok: false, bad, reason: read.bad.length || escaped.length ? `read target escaped confinement: ${bad.join(', ')}` : `read target unresolved: ${unverified.length} streamed Read input(s) could not be verified: ${unverified.join(', ')}` };
 }
 const usageLimitedEv = (evs, final) => evs.some(e => e.type === 'rate_limit_event' && e.rate_limit_info?.status === 'rejected')
   || final?.api_error_status === 429 || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
