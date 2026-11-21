@@ -745,7 +745,7 @@ node scripts/teaching-v2-packets.mjs            # freeze plan.json + vetted-urls
 node scripts/teaching-v2-packets.mjs --fetch    # the only networked step: capture vetted URLs (C), §3.2 limits
 node scripts/teaching-v2-packets.mjs --build    # offline packets, exact-substring checks, coverage triage
 node scripts/teaching-v2-run.mjs                # DRY RUN, first ten: every W prompt + V template, sha256 + bytes
-node scripts/teaching-v2-run.mjs --phase rest   # DRY RUN, remaining 40 (live needs the ten terminal + --after-first-ten)
+node scripts/teaching-v2-run.mjs --phase rest   # DRY RUN, remaining 40 (bound to the first-ten run; live needs it verified + --after-first-ten)
 node scripts/teaching-v2-pin-diagnostic.mjs --run <tv2a-id>   # 20-work W-vs-B3 prompts only; --live is REFUSED
 node scripts/teaching-v2-run.mjs --previews     # current renderer (index.html itself) + proposed faithful previews
 ```
@@ -784,7 +784,32 @@ The runner refuses unless this holder owns the lease on the state branch. The al
 evidence checkout. While Phase A holds the lease the routine cannot start, and a non-automation lease is never
 recovered as stale. Pacing comes from the shared `vision-ops/usage-observations.jsonl` and call-budget file.
 Each reservation is pushed before its call and each outcome after it. A fatal or unknown outcome writes
-`phase-a/fatal.json`. Nothing then runs, on any work, until the owner reviews the evidence and deletes it.
+`phase-a/fatal.json`. Nothing then runs, on any work, until the owner has reviewed the evidence.
+
+`fatal.json` is only a cache. At every start and before every reservation, the runner re-derives the stop from
+every preserved attempt in every run under `phase-a/runs/`: ledger outcomes, reservation receipts, outcome
+metadata, and each transcript re-classified with the current classifier. An uncleared fatal or unknown attempt,
+or a reservation with no recorded outcome outside the work being resumed, latches again even after `fatal.json`
+has been deleted. To clear a reviewed attempt, add `{ runId, workKey, seq, transcriptSha256, reviewedBy, at, note }`
+to `phase-a/latch-clearances.json`, then delete `fatal.json`. The cleared work stays held.
+
+A resume never trusts cached state (`scripts/lib/teaching-v2-phase.mjs`). Every dispatched attempt is re-checked
+against its reservation receipt: the ledger fields, the prompt bytes, the recomputed command argv, the schema and
+the frozen runtime. Its transcript is then re-classified. The controller replays W → V → V2 from that evidence:
+writer validation, verifier decisions, projections and the final draft are recomputed. A successful attempt
+whose artifact was never saved is rebuilt with no new call. A terminal state is replayed read-only and must
+reproduce exactly, including a byte comparison with the re-opened `final-payload.json`; otherwise the run
+pauses with the state preserved for review. `final-payload.json` is written atomically (temp file, then a hard
+link). If it already exists, its bytes must equal the reconstructed payload; persistence is then retried and the
+acceptance finishes, and different bytes are refused. `--previews` replays each work the same way and shows the
+projection from the verified final payload, never `state.final`.
+
+The first live start freezes the CLI runtime (`runtime.json`: version and resolved binary). Every later start must
+resolve the same runtime, which is also bound into each candidate's binding. A changed CLI needs a reviewed new
+run version. `--phase rest` binds its first-ten parent run: the parent's deterministic id is part of the rest run
+identity, the parent's `run-identity.json` must match, and every first-ten work there must be terminal and
+reproduce from its evidence. The rest run then uses its own allowance (for example
+`PASS_B_CALL_BUDGET_ID=teaching-v2-phase-a-rest`, `PASS_B_MAX_CALLS` up to 117) and needs `--after-first-ten`.
 
 ### Remaining publication and operational follow-ups
 
