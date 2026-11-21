@@ -233,9 +233,51 @@ function resolvePath(base, p) {
 // server_tool_use / mcp_tool_use / other *_tool_use block is a violation. Callers treat a violation as fatal, ahead of
 // usage-limit or transport outcomes. ----
 export const STAGE_TOOLS = Object.freeze({ B1: ['Read', 'StructuredOutput'], B2: ['StructuredOutput', 'WebFetch', 'WebSearch'], B3: ['Read', 'StructuredOutput'], B4: ['StructuredOutput'], B5: ['Read', 'StructuredOutput'] });
-export function verifyStageCapabilities(stdout, stage) {
-  const allowed = STAGE_TOOLS[stage]; if (!allowed) return { ok: false, bad: [`unknown stage ${stage}`] };
+// Review-2 R2-1: activity is found wherever it appears, not only in message.content. Every parsed event of every type
+// (assistant/user messages, stream_event content_block starts, result, rate-limit and other non-message events) is
+// walked, and these are explicit evidence of activity outside the stage's capability:
+//   - any block whose type ends in tool_use (tool_use of a tool outside the stage, server_tool_use, mcp_tool_use, …),
+//     and any non-client *_tool_result block (a server tool's result);
+//   - any nonzero server-tool usage counter (usage.server_tool_use.* or modelUsage.*.webSearchRequests /
+//     webFetchRequests) that the stage's tools cannot explain (web search/fetch counters need WebSearch/WebFetch);
+//   - any tool_name (permission denials, hook or progress events) outside the stage's tools.
+// Tool inputs are not walked (model-chosen data, not activity). These `activity` findings need no init to be proven:
+// callers treat them as fatal ahead of missing-init, exit-code and usage-limit outcomes. The init checks (`bad`) apply
+// to each init present.
+const SERVER_COUNTER_TOOL = Object.freeze({ web_search_requests: 'WebSearch', webSearchRequests: 'WebSearch', web_fetch_requests: 'WebFetch', webFetchRequests: 'WebFetch' });
+export function stageActivityViolations(stdout, stage) {
+  const allowed = STAGE_TOOLS[stage]; if (!allowed) return [`unknown stage ${stage}`];
   const bad = [];
+  const counter = (key, v, where) => {
+    if (typeof v !== 'number' || !(v > 0)) { if (v != null && typeof v !== 'number') bad.push(`${where}.${key} not a count`); return; }
+    const tool = SERVER_COUNTER_TOOL[key];
+    if (!tool || !allowed.includes(tool)) bad.push(`${where}.${key}=${v}`);
+  };
+  const walk = (node, depth) => {
+    if (!node || typeof node !== 'object' || depth > 40) return;
+    if (Array.isArray(node)) { for (const x of node) walk(x, depth + 1); return; }
+    const type = typeof node.type === 'string' ? node.type : '';
+    if (/tool_use$/.test(type)) {
+      if (type !== 'tool_use' || !allowed.includes(node.name)) bad.push(`${type} ${node.name ?? ''}`.trim());
+    } else if (/_tool_result$/.test(type)) bad.push(type);
+    if (typeof node.tool_name === 'string' && !allowed.includes(node.tool_name)) bad.push(`tool_name ${node.tool_name}`);
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'input' && /tool_use$/.test(type)) continue;
+      if (k === 'server_tool_use' && v && typeof v === 'object' && !Array.isArray(v)) { for (const [ck, cv] of Object.entries(v)) counter(ck, cv, 'server_tool_use'); continue; }
+      if (k === 'webSearchRequests' || k === 'webFetchRequests') { counter(k, v, 'modelUsage'); continue; }
+      if (v && typeof v === 'object') walk(v, depth + 1);
+    }
+  };
+  for (const ln of String(stdout).split('\n')) {
+    if (!ln.trim()) continue;
+    let ev; try { ev = JSON.parse(ln); } catch { continue; }
+    walk(ev, 0);
+  }
+  return [...new Set(bad)];
+}
+export function verifyStageCapabilities(stdout, stage) {
+  const allowed = STAGE_TOOLS[stage]; if (!allowed) return { ok: false, bad: [`unknown stage ${stage}`], activity: [`unknown stage ${stage}`] };
+  const activity = stageActivityViolations(stdout, stage), bad = [...activity];
   for (const ln of String(stdout).split('\n')) {
     if (!ln.trim()) continue;
     let ev; try { ev = JSON.parse(ln); } catch { continue; }
@@ -244,14 +286,8 @@ export function verifyStageCapabilities(stdout, stage) {
       if (!tools || JSON.stringify(tools) !== JSON.stringify([...allowed].sort())) bad.push(`init tools ${JSON.stringify(ev.tools ?? null)}`);
       if (ev.mcp_servers != null && !(Array.isArray(ev.mcp_servers) && ev.mcp_servers.length === 0)) bad.push('init mcp_servers not empty'); // absent = none
     }
-    const content = ev?.message?.content;
-    if (Array.isArray(content)) for (const b of content) {
-      const type = String(b?.type || '');
-      if (type === 'tool_use') { if (!allowed.includes(b.name)) bad.push(`tool_use ${b.name}`); }
-      else if (/tool_use$/.test(type)) bad.push(`${type} ${b?.name ?? ''}`.trim());
-    }
   }
-  return { ok: bad.length === 0, bad: [...new Set(bad)].slice(0, 10) };
+  return { ok: bad.length === 0, bad: [...new Set(bad)].slice(0, 10), activity: activity.slice(0, 10) };
 }
 
 // ---- B2 research verification (from the raw transcript, NOT usage.server_tool_use aggregate counters).

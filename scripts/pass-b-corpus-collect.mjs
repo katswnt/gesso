@@ -520,6 +520,10 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (stage === 'B2') b2LastInterrupted = usage;
     const model = usage ? tr.init?.model : answeringModel(text, final);
     const inits = initEvents(text);
+    // VSD-092 review fix 1: the stopgap run re-proves each preserved attempt's executed capability boundary on resume,
+    // ahead of the set-aside shortcut below.
+    // Review-2 R2-1: explicit forbidden activity is a violation even in a transcript with no init.
+    if (STOPGAP) { const pc = verifyStageCapabilities(text, stage); if (pc.activity.length || (inits.length && !pc.ok)) fatal ||= `${id}/${stage}: preserved capability violation`; }
     // VSD-073: a work-level fatal set aside under the per-firing budget holds only this work. Subscription-source and
     // init-model evidence is re-checked here and still stops everything whatever the record says.
     if (meta?.kind === 'fatal' && !pipelineWide(meta.reason) && inits.length && inits.every(e => e.apiKeySource === 'none' && e.model === epochModel(binding.epoch))
@@ -531,8 +535,6 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const deadline = meta?.kind === 'deadline-pause' && meta.exitCode === 'deadline';
     if ((!inits.length && !operational && !deadline && !incompleteTranscripts.has(name)) || inits.some(e => e.apiKeySource !== 'none') ||
         (binding ? inits.some(e => e.model !== epochModel(binding.epoch)) : (model && model !== HISTORICAL_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
-    // VSD-092 review fix 1: the stopgap run re-proves each preserved attempt's executed capability boundary on resume.
-    if (STOPGAP && inits.length && !verifyStageCapabilities(text, stage).ok) fatal ||= `${id}/${stage}: preserved capability violation`;
     const expected = binding ? epochModel(binding.epoch) : HISTORICAL_MODEL; // each attempt against ITS OWN epoch
     if (!usage && final && model && model !== expected) fatal ||= `${id}/${stage}: preserved model drift`;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
@@ -721,14 +723,18 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const inits = initEvents(stdout);
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
     const webEvents = stage === 'B2' ? verifyB2WebEvents(tr) : null;
-    let caps = null, cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
+    // Review-2 R2-1: every activity shape is inspected BEFORE any outcome branch. Explicit forbidden activity is fatal
+    // whatever the init, exit code or quota status (a missing init does not prove nothing executed).
+    const caps = verifyStageCapabilities(stdout, stage);
+    let cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
       model: answeringModel(stdout, final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
       subtype: final?.subtype, structuredOutputPresent: final?.structured_output != null, imageReceipt, webEvents });
-    if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
+    if (caps.activity.length) cls = { kind: 'fatal', reason: `capability violation: ${caps.activity.join(', ')}` };
+    else if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
     else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
-    else if (!(caps = verifyStageCapabilities(stdout, stage)).ok) cls = { kind: 'fatal', reason: `capability violation: ${caps.bad.join(', ')}` }; // review fix 1: before usage/transport
+    else if (!caps.ok) cls = { kind: 'fatal', reason: `capability violation: ${caps.bad.join(', ')}` }; // review fix 1: init capabilities, before usage/transport
     else if (imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok) cls = { kind: 'held', reason: MISREAD_REASON };
     else if (imageReceipt?.bad?.length) cls = { kind: 'fatal', reason: 'confinement violation' };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };

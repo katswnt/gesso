@@ -2,7 +2,7 @@
 // (Finding 1 lives in pass-b-corpus-collect.test.mjs; 13 and the persisted capture attempts in
 // pass-b-research-stopgap.test.mjs.) Offline: no model calls, no network, no evidence writes.
 import assert from 'node:assert';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -161,6 +161,65 @@ t('9: an endless redirect body is destroyed before the next hop; an endless erro
 process.env.PASS_B_RESEARCH_VERSION = 'stopgap-1';
 const C = await import('../scripts/pass-b-corpus-collect.mjs');
 const clean = { PASS_B_RESEARCH_CANARY: '', PASS_B_RESEARCH_ROUTING: '' };
+
+// ---- review-2 R2-1: every activity shape is inspected before any outcome branch ----
+// Reproduction = Codex's probe (round2/probes/stopgap/review2-capabilities.mjs): an injected B1 execution with valid
+// init/image/result evidence plus one extra activity shape. Before the fix the stream_event and server-usage cases
+// returned accepted raw output. No command is executed (the executor is injected).
+const { syntheticFixture, verifyStageCapabilities } = await import('../scripts/lib/pass-b-calibration.mjs');
+const { sha256: legacySha } = await import('../scripts/lib/vision-legacy.mjs');
+const B1_BODY = syntheticFixture().bodies.B1;
+const INIT = { type: 'system', subtype: 'init', apiKeySource: 'none', model: C.COLLECTION_MODEL, claude_code_version: '2.1.280', tools: ['Read', 'StructuredOutput'], mcp_servers: [] };
+const STREAMED_BASH = { type: 'stream_event', event: { type: 'content_block_start', index: 1, content_block: { type: 'tool_use', id: 'x', name: 'Bash', input: { command: 'id' } } } };
+const USAGE_LIMIT = { type: 'result', subtype: 'error', is_error: true, api_error_status: 429, result: 'usage limit reached', structured_output: null };
+async function b1Attempt({ init = true, extra = [], result = {}, exitCode = 0 }) {
+  const root = mkdtempSync(join(tmpdir(), 'r2-cap-')), wd = join(root, 'works', 'work');
+  makeDirs(root, wd);
+  const img = legacySha('img'), file = `${img}.png`; writeFileSync(join(root, 'imgs', file), 'img');
+  try {
+    const r = await C.executeCorpusAttempt({ runDir: root, workRunDir: wd, id: 'work', imgSha256: img, ext: 'png', stage: 'B1', seq: 1, runtimeVersion: '2.1.280', imageFile: file,
+      command: { bin: 'NEVER-EXECUTED', argv: ['-p', 'fixture', '--model', C.COLLECTION_MODEL, '--effort', 'medium'], env: { removeKeys: [] } }, now: () => new Date('2026-11-20T10:00:00Z'),
+      execute: async (_bin, _argv, o) => {
+        const evs = [...(init ? [INIT] : []), { type: 'assistant', message: { model: C.COLLECTION_MODEL, content: [{ type: 'tool_use', name: 'Read', id: 'r', input: { file_path: `${o.cwd}/${file}` } }] } },
+          { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }] } }, ...extra,
+          { type: 'result', subtype: 'success', is_error: false, structured_output: B1_BODY, modelUsage: { [C.COLLECTION_MODEL]: { output_tokens: 10, webSearchRequests: 0 } }, usage: { server_tool_use: { web_search_requests: 0, web_fetch_requests: 0 } }, ...result }];
+        const stdout = `${evs.map(e => JSON.stringify(e)).join('\n')}\n`;
+        if (exitCode) throw Object.assign(new Error('exit'), { code: exitCode, stdout });
+        return { stdout };
+      } });
+    return { accepted: !!r.raw, fatal: C.preservedFatal(root) };
+  } catch (e) { return { error: e.message, fatal: C.preservedFatal(root) }; }
+  finally { rmSync(root, { recursive: true, force: true }); }
+}
+function makeDirs(root, wd) { mkdirSync(wd, { recursive: true }); mkdirSync(join(root, 'imgs')); }
+const FORBIDDEN = [
+  ['a streamed Bash tool_use (stream_event content_block_start)', { extra: [STREAMED_BASH] }],
+  ['a streamed server_tool_use block', { extra: [{ type: 'stream_event', event: { type: 'content_block_start', index: 1, content_block: { type: 'server_tool_use', id: 's', name: 'web_search', input: {} } } }] }],
+  ['usage.server_tool_use.web_search_requests=1 on a stage without WebSearch', { result: { usage: { server_tool_use: { web_search_requests: 1, web_fetch_requests: 0 } } } }],
+  ['modelUsage webSearchRequests=1 on a stage without WebSearch', { result: { modelUsage: { [C.COLLECTION_MODEL]: { output_tokens: 10, webSearchRequests: 1 } } } }],
+  ['a server-tool counter in a streamed message_delta', { extra: [{ type: 'stream_event', event: { type: 'message_delta', usage: { server_tool_use: { web_fetch_requests: 2 } } } }] }],
+  ['a permission denial naming Bash (non-message activity)', { result: { permission_denials: [{ tool_name: 'Bash', tool_use_id: 'b', tool_input: { command: 'id' } }] } }],
+  ['a streamed Bash tool_use with NO init and exit 1', { init: false, extra: [STREAMED_BASH], exitCode: 1 }],
+  ['a streamed Bash tool_use with NO init behind a usage-limit result', { init: false, extra: [STREAMED_BASH], result: USAGE_LIMIT }],
+  ['a client Bash tool_use with NO init behind a usage-limit result and exit 1', { init: false, extra: [{ type: 'assistant', message: { content: [{ type: 'tool_use', id: 'b', name: 'Bash', input: { command: 'id' } }] } }], result: USAGE_LIMIT, exitCode: 1 }],
+];
+for (const [name, opts] of FORBIDDEN)
+  t(`R2-1: ${name} is a pipeline-wide capability fatal, never accepted/usage-limit/operational`, async () => {
+    const r = await b1Attempt(opts);
+    assert.ok(!r.accepted, 'raw output was accepted');
+    assert.match(r.error || '', /capability violation/); assert.match(r.fatal || '', /capability violation/, 'fatal persisted');
+  });
+t('R2-1: control: the same B1 call with zero server-tool counters is accepted; B2 may report web counters', async () => {
+  const r = await b1Attempt({});
+  assert.ok(r.accepted, r.error); assert.strictEqual(r.fatal, null);
+  const b2 = [{ ...INIT, tools: ['StructuredOutput', 'WebFetch', 'WebSearch'] }, { type: 'result', subtype: 'success', modelUsage: { m: { webSearchRequests: 1 } }, usage: { server_tool_use: { web_search_requests: 1, web_fetch_requests: 1 } } }];
+  assert.deepStrictEqual(verifyStageCapabilities(b2.map(e => JSON.stringify(e)).join('\n'), 'B2'), { ok: true, bad: [], activity: [] });
+});
+t('R2-1: init-independent activity is reported for a preserved transcript with no init (resume re-check)', () => {
+  const text = [{ type: 'assistant', message: { content: [] } }, STREAMED_BASH].map(e => JSON.stringify(e)).join('\n');
+  const v = verifyStageCapabilities(text, 'B1');
+  assert.strictEqual(v.ok, false); assert.deepStrictEqual(v.activity, ['tool_use Bash']);
+});
 t('12: a live stopgap run with no canary and no routing manifest is refused (the gate runs before any lease or call)', () => {
   assert.throws(() => C.stopgapSpendGate({ live: true, env: clean }), /needs PASS_B_RESEARCH_ROUTING/);
   assert.deepStrictEqual(C.stopgapSpendGate({ live: false, env: clean }), { canary: null, routing: null }, 'the read-only plan still works');

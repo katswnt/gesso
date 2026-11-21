@@ -634,9 +634,14 @@ byte-identical and still readable by every offline command.
   a command whose effort differs from the active epoch pauses before any reservation.
 - **Capability boundary:** every attempt's transcript must show inits advertising exactly the stage's tools
   (B1/B3 `Read, StructuredOutput`; B2 `StructuredOutput, WebFetch, WebSearch`) and no MCP servers, and only client
-  `tool_use` blocks of those tools. Anything else (an extra tool, `server_tool_use`, `mcp_tool_use`) is a
-  pipeline-wide fatal, checked before usage-limit or transport outcomes; the stopgap run re-checks preserved attempts
-  and imported B1 transcripts on every inspection.
+  `tool_use` blocks of those tools. Activity is found in every event, not only message content: streamed
+  `stream_event` content blocks, any `*_tool_use` / server `*_tool_result` block, nonzero server-tool counters
+  (`usage.server_tool_use.*`, `modelUsage.*.webSearchRequests/webFetchRequests`; web search/fetch counters are
+  allowed only on B2) and any `tool_name` outside the stage (e.g. permission denials). Anything else (an extra tool,
+  `server_tool_use`, `mcp_tool_use`) is a pipeline-wide fatal. Explicit forbidden activity is checked first, before
+  the missing-init, exit-code, usage-limit and transport outcomes (a missing init does not prove nothing ran); the
+  stopgap run re-checks preserved attempts (with or without init, ahead of any set-aside) and imported B1
+  transcripts on every inspection.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
   which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through
