@@ -790,8 +790,42 @@ Each reservation is pushed before its call and each outcome after it. A fatal or
 every preserved attempt in every run under `phase-a/runs/`: ledger outcomes, reservation receipts, outcome
 metadata, and each transcript re-classified with the current classifier. An uncleared fatal or unknown attempt,
 or a reservation with no recorded outcome outside the work being resumed, latches again even after `fatal.json`
-has been deleted. To clear a reviewed attempt, add `{ runId, workKey, seq, transcriptSha256, reviewedBy, at, note }`
-to `phase-a/latch-clearances.json`, then delete `fatal.json`. The cleared work stays held.
+has been deleted.
+
+**Owner clearances (review R3-A3/A4).** A clearance counts only as a record in the tracked file
+`tasks/teaching-v2-phase-a/latch-clearances.json` of the **code** repo, committed at the HEAD the runner has
+checked out. The runner reads it with `git show HEAD:<file>`. It refuses to start (`--live`, `--previews`,
+`--stops`) while that path has any uncommitted, staged, untracked or ignored change. The runner never writes the
+file, and nothing under the evidence tree counts as a clearance, including the old `phase-a/latch-clearances.json`.
+Each record is strict. The fields are `version` (`teachingV2LatchClearance/1`), `runId`, `workKey`, `seq`,
+`attemptKind`, `stopKind` (`fatal` | `unknown-outcome`), `reviewer`, `reviewedAt` (ISO timestamp with zone),
+`reason` (20+ characters) and `evidence`. `evidence` holds the sha256 of the attempt's `reserved.json`,
+`meta.json`, `done.json` and `transcript.jsonl` bytes. A missing file is the literal `"absent"`, never a
+wildcard, and the reservation cannot be absent. The digests are recomputed fresh from disk at every check, so
+any changed byte makes the clearance stale and the stop stands again, in every run.
+`node scripts/teaching-v2-run.mjs --stops` prints each derived stop with its current digests as a template.
+After reviewing the evidence, add the record, commit it for review, and only then delete `fatal.json`. A cleared
+fatal stays held. A cleared unknown outcome, whose evidence is unavailable, becomes an explicit terminal `hold`.
+Its reservation stays consumed and it is never retried. Later works, and the rest run's parent verification,
+may then proceed.
+What this does and does not guarantee: the runner and the owner share one local UID, so this is a **policy
+boundary enforced by git review** (a clearance is a reviewed commit visible in history and in the PR diff), not
+an OS boundary. A same-UID process could still make a commit. It cannot make an uncommitted or evidence-tree file
+count, or reuse a clearance after the evidence changed.
+
+**Attempt completion (R3-A1).** Each dispatched attempt writes `NN-K.transcript.jsonl`, then `NN-K.meta.json`
+(with the exit status), then `NN-K.done.json` last. `done.json` binds the sha256 of the reservation receipt, the
+transcript and the metadata. Only a complete, bound unit is evidence. If any file is missing, the outcome is
+**unknown**, even when the transcript holds a success event: it latches and stops for review. A missing exit
+status is never read as 0, and a receipt that does not bind its files is refused.
+**Transcript records (R3-A2).** A nonempty line that is not a parseable event object (a truncated line or
+non-event JSON) is tracked and makes the attempt fatal. It is never read as "no session ran". Every tool envelope
+is normalized into one list with its inputs, including streamed `content_block` blocks and `input_json_delta`
+fragments. That list feeds one confinement validator, so every Read from any envelope must name the confined
+image. An unresolved streamed input never establishes confinement.
+**Re-persistence (R3-A5).** At every start, before any reservation or acceptance, the runner re-offers every
+preserved evidence file of the run to shared persistence: identity, runtime, allowance, each work's state and
+final payload, and every attempt file. If that fails, it stops.
 
 A resume never trusts cached state (`scripts/lib/teaching-v2-phase.mjs`). Every dispatched attempt is re-checked
 against its reservation receipt: the ledger fields, the prompt bytes, the recomputed command argv, the schema and
