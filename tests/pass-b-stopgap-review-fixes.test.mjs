@@ -357,6 +357,113 @@ t('R3-2: the receipt check normalizes streamed Reads without double-counting or 
   // traversal in an interrupted streamed path is proven bad
   assert.ok(!v([{ type: 'assistant', message: { content: [ok] } }, res, streamStart({ ...ok, id: 'q', input: {} }), streamDelta(`{"file_path":"${dir}/../`)]).ok);
 });
+// ---- review-4 finding 1: resume re-verifies Read confinement against the call directory, never a basename ----
+// Reproduction = Codex's probe (round4/probes/review4-confinement.mjs). An attempt the old controller accepted
+// (reservation with no call directory, meta kind "ok": no pre-existing fatal metadata, no set-aside) whose transcript
+// holds the valid image Read plus a Read of the right basename in another directory, or an interrupted Read whose
+// prefix already left the call directory. Before the fix resume compared basenames only and reported no fatal.
+const { stableJson: legacyStableJson } = await import('../scripts/lib/vision-legacy.mjs');
+const OLD_DIR = '/tmp/corpus-Ab12Cd';
+// Writes one preserved attempt exactly as the pre-review-4 controller did, then runs the resume inspection.
+function oldAttempt(stage, { cwd, extra = [], callDir, readDir = cwd ?? callDir ?? OLD_DIR, result = {} }) {
+  const root = mkdtempSync(join(tmpdir(), 'r4-old-')), id = 'work', wd = join(root, 'works', legacySha(id).slice(0, 24)), at = join(wd, 'attempts');
+  makeDirs(root, wd); mkdirSync(at);
+  const img = legacySha('img'), file = `${img}.png`; writeFileSync(join(root, 'imgs', file), 'img');
+  writeFileSync(join(wd, 'b0-prep.json'), JSON.stringify({ work: { id }, trustedCatalog: {}, legacy: {}, image: { ok: true, imgSha256: img, ext: 'png' } }));
+  try {
+    const epoch = C.bindExecutionPolicy(root, '2.1.280'), stem = `${stage.toLowerCase()}-000001`;
+    writeFileSync(join(at, `${stem}.reserved.json`), `${JSON.stringify({ runId: C.CORPUS_RUN_ID, workId: id, stage, seq: 1, ...(callDir ? { callDir } : {}), promptHash: legacySha('p'),
+      executionPolicySha256: legacySha(legacyStableJson(epoch.policy)), executionEpoch: epoch.number, executionEpochSha256: epoch.sha256 })}\n`);
+    const evs = [{ ...INIT, ...(cwd ? { cwd } : {}) }, { type: 'assistant', message: { model: C.COLLECTION_MODEL, content: [{ type: 'tool_use', name: 'Read', id: 'r', input: { file_path: `${readDir}/${file}` } }] } },
+      { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }] } }, ...extra.map(e => (typeof e === 'function' ? e(file) : e)),
+      { type: 'result', subtype: 'success', is_error: false, structured_output: syntheticFixture().bodies[stage], modelUsage: { [C.COLLECTION_MODEL]: { output_tokens: 10 } }, ...result }];
+    const text = `${evs.map(e => JSON.stringify(e)).join('\n')}\n`, transcriptFile = C.attemptFilename(stage, 1, text);
+    writeFileSync(join(at, transcriptFile), text);
+    writeFileSync(join(at, `${stem}.meta.json`), `${JSON.stringify({ workId: id, stage, seq: 1, exitCode: 0, kind: 'ok', transcriptFile, transcriptSha256: legacySha(text) })}\n`);
+    const row = C.inspectWork({ runDir: root, id, catalog: {}, legacy: {} });
+    return { fatal: row.fatal, pause: row.pause };
+  } finally { rmSync(root, { recursive: true, force: true }); }
+}
+const ELSEWHERE = file => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id: 'bad', name: 'Read', input: { file_path: `/elsewhere/${file}` } }] } });
+const PREFIX = [streamStart({ ...OUT_READ, input: {} }), streamDelta('{"file_path":"/etc/pa')];
+for (const stage of ['B1', 'B3']) {
+  t(`R4-1: ${stage}: an old accepted attempt with the right basename in another directory is a fatal on resume`, () => {
+    // no CLI-reported call directory: confinement cannot be established, so the basename is not accepted
+    assert.match(oldAttempt(stage, { extra: [ELSEWHERE] }).fatal || '', /preserved confinement unverifiable/);
+    // the CLI-reported corpus call directory establishes it, and the other directory is a violation
+    assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: [ELSEWHERE] }).fatal || '', /preserved confinement violation/);
+  });
+  t(`R4-1: ${stage}: an old accepted attempt with an interrupted outside prefix is a fatal on resume`, () => {
+    assert.match(oldAttempt(stage, { extra: PREFIX }).fatal || '', /preserved confinement unverifiable/);
+    assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: PREFIX }).fatal || '', /preserved confinement violation/);
+  });
+  t(`R4-1: ${stage}: legacy rule: only a CLI-reported corpus-XXXXXX cwd establishes an old call directory`, () => {
+    assert.strictEqual(oldAttempt(stage, { cwd: OLD_DIR }).fatal, null, 'control: the old controller pattern, Read exactly <cwd>/<image>');
+    assert.strictEqual(oldAttempt(stage, { cwd: `/private${OLD_DIR}`, readDir: OLD_DIR }).fatal, null, 'control: macOS /private realpath');
+    for (const cwd of ['/tmp/elsewhere', '/tmp/corpus-Ab12', '/tmp/x/../corpus-Ab12Cd', 'corpus-Ab12Cd'])
+      assert.match(oldAttempt(stage, { cwd }).fatal || '', /preserved confinement unverifiable/, cwd);
+    // inits that disagree on the directory do not establish one
+    assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: [{ ...INIT, cwd: '/tmp/corpus-Zz9Yy8' }] }).fatal || '', /preserved confinement unverifiable/);
+  });
+  t(`R4-1: ${stage}: a recorded reservation call directory is authoritative on resume`, () => {
+    // the reservation's directory, not the transcript's, is the confinement: a Read in a different corpus dir is caught
+    assert.match(oldAttempt(stage, { cwd: OLD_DIR, callDir: '/tmp/corpus-Rr0Rr0', readDir: OLD_DIR }).fatal || '', /preserved confinement violation/);
+    assert.strictEqual(oldAttempt(stage, { callDir: '/tmp/corpus-Rr0Rr0' }).fatal, null, 'control: recorded dir, no init cwd');
+  });
+}
+t('R4-1: the controller records its call directory in the reservation, before the call, and resume uses it', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'r4-res-')), id = 'work', wd = join(root, 'works', legacySha(id).slice(0, 24));
+  makeDirs(root, wd);
+  const img = legacySha('img'), file = `${img}.png`; writeFileSync(join(root, 'imgs', file), 'img');
+  writeFileSync(join(wd, 'b0-prep.json'), JSON.stringify({ work: { id }, trustedCatalog: {}, legacy: {}, image: { ok: true, imgSha256: img, ext: 'png' } }));
+  try {
+    let seen, reservedBefore;
+    const r = await C.executeCorpusAttempt({ runDir: root, workRunDir: wd, id, imgSha256: img, ext: 'png', stage: 'B1', seq: 1, runtimeVersion: '2.1.280', imageFile: file,
+      command: { bin: 'NEVER-EXECUTED', argv: ['-p', 'fixture', '--model', C.COLLECTION_MODEL, '--effort', 'medium'], env: { removeKeys: [] } }, now: () => new Date('2026-11-20T10:00:00Z'),
+      execute: async (_b, _a, o) => {
+        seen = o.cwd; reservedBefore = JSON.parse(readFileSync(join(wd, 'attempts', 'b1-000001.reserved.json'), 'utf8'));
+        return { stdout: `${[INIT, { type: 'assistant', message: { model: C.COLLECTION_MODEL, content: [{ type: 'tool_use', name: 'Read', id: 'r', input: { file_path: `${o.cwd}/${file}` } }] } },
+          { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }] } },
+          { type: 'result', subtype: 'success', is_error: false, structured_output: B1_BODY, modelUsage: { [C.COLLECTION_MODEL]: { output_tokens: 10 } } }].map(e => JSON.stringify(e)).join('\n')}\n` };
+      } });
+    assert.ok(r.raw); assert.strictEqual(reservedBefore.callDir, seen, 'reservation names the call directory before the call');
+    assert.strictEqual(C.inspectWork({ runDir: root, id, catalog: {}, legacy: {} }).fatal, null, 'resume accepts the exact recorded directory (INIT has no cwd)');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+// ---- review-4 finding 2: an unfinished empty stream start is not a completed invalid Read ----
+// Reproduction = Codex's probe: the valid image Read, then a streamed Read start whose input is the normal empty `{}`
+// placeholder, no delta, no result, and a quota or transport interruption. Before the fix the start counted as a
+// completed Read of "" and the attempt became a pipeline-wide confinement fatal.
+const EMPTY_START = streamStart({ ...OUT_READ, input: {} });
+const BAD_RESULT = { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'bad', content: 'root:x:0:0' }] } };
+const BLOCK_STOP = { type: 'stream_event', event: { type: 'content_block_stop', index: 1 } };
+for (const stage of ['B1', 'B3']) {
+  t(`R4-2: ${stage}: an empty Read start interrupted by quota is a usage limit (fresh and on resume); with a result it is fatal`, async () => {
+    const quota = await readAttempt(stage, { extra: [EMPTY_START], result: USAGE_LIMIT });
+    assert.strictEqual(quota.error, 'subscription usage limit', JSON.stringify(quota)); assert.strictEqual(quota.fatal, null);
+    assert.strictEqual(quota.resumedFatal, null, `resume: ${JSON.stringify(quota)}`);
+    // executed (a result exists) with input that was never established: still fails closed
+    const executed = await readAttempt(stage, { extra: [EMPTY_START, BAD_RESULT], result: USAGE_LIMIT });
+    assert.match(executed.error || '', /confinement violation/); assert.match(executed.resumedFatal || '', /confinement violation/);
+    // a finished block (content_block_stop) with no arguments is a completed Read of nothing: still fails closed
+    const stopped = await readAttempt(stage, { extra: [EMPTY_START, BLOCK_STOP], result: USAGE_LIMIT });
+    assert.match(stopped.error || '', /confinement violation/); assert.match(stopped.resumedFatal || '', /confinement violation/);
+  });
+  t(`R4-2: ${stage}: an empty Read start interrupted by a transport failure keeps its transport classification`, async () => {
+    const r = await readAttempt(stage, { extra: [EMPTY_START], result: { type: 'noop' }, exitCode: 1 });
+    // the process died mid-stream (exit 1, init present, the Read never finished): a retryable transport failure
+    assert.match(r.error || '', /process failed \(exit 1\)/, JSON.stringify(r)); assert.strictEqual(r.fatal, null);
+    const executed = await readAttempt(stage, { extra: [EMPTY_START, BAD_RESULT], result: { type: 'noop' }, exitCode: 1 });
+    assert.match(executed.error || '', /confinement violation/);
+  });
+}
+t('R4-2: parser: an empty start is unfinished until a delta, a stop or the completed message establishes it', () => {
+  const p = evs => parseStreamTranscript(evs.map(e => JSON.stringify(e)).join('\n')).toolUses;
+  assert.deepStrictEqual(p([EMPTY_START]).map(u => [u.inputComplete, u.partialInput]), [[false, '']]);
+  assert.deepStrictEqual(p([EMPTY_START, BLOCK_STOP]).map(u => u.inputComplete), [true]);
+  const full = { ...OUT_READ, input: { file_path: '/tmp/corpus-x/a.png' } };
+  assert.deepStrictEqual(p([EMPTY_START, { type: 'assistant', message: { content: [full] } }]).map(u => u.input), [full.input], 'one call, the message input');
+});
 t('12: a live stopgap run with no canary and no routing manifest is refused (the gate runs before any lease or call)', () => {
   assert.throws(() => C.stopgapSpendGate({ live: true, env: clean }), /needs PASS_B_RESEARCH_ROUTING/);
   assert.deepStrictEqual(C.stopgapSpendGate({ live: false, env: clean }), { canary: null, routing: null }, 'the read-only plan still works');

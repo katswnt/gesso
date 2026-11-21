@@ -647,7 +647,14 @@ byte-identical and still readable by every offline command.
   violation once its partial path leaves the image path, or if it has a result (its input cannot be verified). An
   out-of-directory or wrong-file Read is a confinement fatal ahead of the missing-init, exit-code and usage-limit
   outcomes, fresh and on resume (ahead of any set-aside); only the exact VSD-074 misread and a reviewed clearance
-  are exempt.
+  are exempt. A streamed start's empty `{}` input with no delta and no `content_block_stop` is an unfinished
+  stream, not a Read of nothing: with no result it takes its normal quota/transport outcome; with a result it is a
+  fatal. Resume checks confinement against the call directory, never a basename: each reservation records the
+  controller's `callDir` before the call, and that is authoritative. An older attempt (no recorded `callDir`) is
+  accepted only when every init the CLI wrote reports the same absolute `cwd` named like the old controller's
+  `mkdtemp` folder (`corpus-` plus six letters/digits), and each Read then targets exactly `<cwd>/<image>`;
+  otherwise any Read in it is a `preserved confinement unverifiable` fatal (a reviewed clearance still applies).
+  All 52 saved banked transcripts meet the old-attempt rule.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
   which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through

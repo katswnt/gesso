@@ -303,6 +303,25 @@ export function loadFatalClearances(runDir) {
   }
   return out;
 }
+// Review-4 finding 1: the call directory a preserved B1/B3 attempt ran in, so resume re-verifies Read confinement exactly
+// as the fresh path did (a matching basename is never proof of confinement).
+//   - Attempts reserved by this controller carry `callDir` in their reservation, written and persisted before the call.
+//     That recorded directory is authoritative.
+//   - Older attempts (no recorded directory) are accepted only when every init event the CLI wrote reports one and the
+//     same absolute `cwd` whose last segment is the old controller's `mkdtemp(<tmpdir>/corpus-)` name (`corpus-` plus
+//     six alphanumerics). The CLI, not the model, writes init, so that is the old controller's directory; every Read
+//     must then target exactly `<cwd>/<image>`. (All 52 saved banked transcripts have this shape.)
+//   - Otherwise the directory cannot be established: an attempt with any Read is a confinement-unverifiable fatal (a
+//     reviewed fatal clearance for that exact transcript still applies). An attempt with no Read has nothing to confine.
+export const LEGACY_CORPUS_CALL_DIR = /^corpus-[A-Za-z0-9]{6}$/;
+const safeCallDir = d => typeof d === 'string' && d.startsWith('/') && !d.split('/').includes('..') && !/[\\\0]/.test(d);
+export function legacyCorpusCallDir(text) {
+  const cwds = new Set(initEvents(text).map(e => e.cwd));
+  if (cwds.size !== 1) return null;
+  const [cwd] = cwds;
+  return safeCallDir(cwd) && LEGACY_CORPUS_CALL_DIR.test(cwd.replace(/\/+$/, '').split('/').pop()) ? cwd : null;
+}
+export const attemptCallDir = (recorded, text) => recorded || legacyCorpusCallDir(text);
 // Exact-incident pattern check: one init (pinned model, subscription, tools exactly [Read, StructuredOutput]); exactly
 // two Reads with unique ids, each with exactly one later result; the first is a wrong basename in the init cwd whose
 // result is EXACTLY the CLI's missing-file diagnostic; the second is the exact image and returns only image blocks;
@@ -469,7 +488,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
   const crashed = {};
   const clearances = loadFatalClearances(runDir);
-  const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set();
+  const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set(), recordedCallDirs = new Map();
   const retryGrant = loadFormatRetries(runDir).find(r => r.workId === id) || null;
   const formatFailures = []; // uncaptured invalid bodies from pre-wire-schema epochs (grant candidates)
   // Released transcripts must stay present and byte-identical whatever happens later (incl. a successful retry).
@@ -481,8 +500,10 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   for (const name of files(attemptsDir).filter(n => n.endsWith('.reserved.json'))) {
     const r = readJson(join(attemptsDir, name));
     if (r.runId !== RUN_ID || r.workId !== id || !['B1','B2','B3'].includes(r.stage) ||
-        !Number.isSafeInteger(r.seq) || r.seq < 1 || name !== `${r.stage.toLowerCase()}-${String(r.seq).padStart(6, '0')}.reserved.json`) throw new Error(`${id}: reservation binding mismatch`);
+        !Number.isSafeInteger(r.seq) || r.seq < 1 || name !== `${r.stage.toLowerCase()}-${String(r.seq).padStart(6, '0')}.reserved.json` ||
+        ('callDir' in r && !safeCallDir(r.callDir))) throw new Error(`${id}: reservation binding mismatch`);
     maxSeq = Math.max(maxSeq, r.seq);
+    if (r.callDir) recordedCallDirs.set(name.slice(0, 9), r.callDir);
     const epoch = epochs.find(e => e.number === (r.executionEpoch ?? 0));
     if (!epoch || sha256(stableJson(epoch.policy)) !== r.executionPolicySha256 ||
         (r.executionEpoch != null && epoch.sha256 !== r.executionEpochSha256)) throw new Error(`${id}: execution policy binding mismatch`);
@@ -527,10 +548,14 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     // Review-3 finding 2: a preserved out-of-directory/wrong-file Read (message or streamed) is a confinement fatal
     // ahead of the set-aside shortcut and every init/outcome branch; only the exact VSD-074 misread and a reviewed
     // fatal clearance for this exact transcript (re-verified below) are exempt.
-    const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
+    // Review-4 finding 1: the receipt is re-verified against the call directory, never a basename alone (see attemptCallDir).
+    const callDir = ['B1', 'B3'].includes(stage) ? attemptCallDir(recordedCallDirs.get(name.slice(0, 9)), text) : null;
+    const unverifiable = ['B1', 'B3'].includes(stage) && !callDir && tr.toolUses.some(u => u.name === 'Read');
+    const receipt = callDir ? verifyB1ImageRead(tr, { callDir, imageBasename: imageFile }) : null;
     const misread = !!receipt?.bad?.length && !!binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (receipt?.bad?.length && !misread && !clearance) fatal ||= `${id}/${stage}: preserved confinement violation`;
+    if (unverifiable && !clearance) fatal ||= `${id}/${stage}: preserved confinement unverifiable (Read with no recorded or CLI-reported corpus call directory)`;
     // VSD-073: a work-level fatal set aside under the per-firing budget holds only this work. Subscription-source and
     // init-model evidence is re-checked here and still stops everything whatever the record says.
     if (meta?.kind === 'fatal' && !pipelineWide(meta.reason) && inits.length && inits.every(e => e.apiKeySource === 'none' && e.model === epochModel(binding.epoch))
@@ -707,6 +732,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const stem = `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}`;
     writeFileSync(join(attemptsDir, `${stem}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, stage, seq,
       ...(process.env.PASS_B_LEASE_HOLDER ? { holder: process.env.PASS_B_LEASE_HOLDER } : {}),
+      callDir: call, // review-4 finding 1: the controller's confined call directory, re-verified on resume
       promptHash: sha256(command.argv[1]), executionPolicySha256: sha256(stableJson(epoch.policy)),
       executionEpoch: epoch.number, executionEpochSha256: epoch.sha256, ...(options.hoursException ? { hoursException: options.hoursException } : {}) })}\n`, { flag: 'wx', mode: 0o600, flush: true });
     // Cloud: push the reservation (and the epoch chain it names) BEFORE spending; a push failure pauses with no call.

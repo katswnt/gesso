@@ -178,11 +178,11 @@ export function parseStreamTranscript(stdout) {
       const se = ev.event;
       if (se.type === 'message_start') open = new Map();
       else if (se.type === 'content_block_start' && se.content_block?.type === 'tool_use') {
-        const b = se.content_block, s = { id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, streamed: true, inputComplete: true, deltas: [] };
+        const b = se.content_block, s = { id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, streamed: true, inputComplete: true, deltas: [], stopped: false };
         streamed.push(s); open.set(se.index, s);
       } else if (se.type === 'content_block_delta' && se.delta?.type === 'input_json_delta' && open.has(se.index)) {
         open.get(se.index).deltas.push(String(se.delta.partial_json ?? ''));
-      }
+      } else if (se.type === 'content_block_stop' && open.has(se.index)) open.get(se.index).stopped = true;
     }
     const content = ev?.message?.content;
     if (Array.isArray(content)) for (const b of content) {
@@ -201,7 +201,12 @@ export function parseStreamTranscript(stdout) {
     if (ev?.type === 'result') final = ev;
   }
   const messageUses = [...toolUses];
-  for (const { deltas, ...s } of streamed) {
+  for (const { deltas, stopped, ...s } of streamed) {
+    // Review-4 finding 2: a start's own `input` is normally the empty placeholder `{}`; the arguments arrive in deltas.
+    // An empty start with no delta and no content_block_stop is an unfinished stream whose input is not yet known
+    // (`inputComplete:false`, empty `partialInput`), not a completed call with no arguments. A matching message block
+    // or a stop establishes it; a result for it still fails closed in the receipt checks.
+    if (!deltas.length && !stopped && isEmptyInput(s.input)) { s.inputComplete = false; s.partialInput = ''; }
     if (deltas.length) {
       const raw = deltas.join('');
       try { const v = JSON.parse(raw); s.input = v && typeof v === 'object' && !Array.isArray(v) ? v : {}; if (s.input !== v) { s.inputComplete = false; s.partialInput = raw; } }
@@ -212,6 +217,7 @@ export function parseStreamTranscript(stdout) {
   }
   return { lines, parsed, toolUses, toolResults, final, init };
 }
+const isEmptyInput = v => v == null || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
 // The file_path an interrupted streamed Read had begun to name: { path, complete } or null when none was started.
 function partialFilePath(raw) {
   const m = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/.exec(String(raw || ''));
