@@ -834,6 +834,16 @@ reports success while holding one is held as a content-failure. A completed bloc
 reconciles it when the two agree. Disagreeing copies are both kept, and the call is fatal. Still fatal: an outside
 or traversing path prefix, a closed block whose input does not parse, an executed start whose input cannot be
 verified, and any forbidden tool.
+**Read argument allowlist (R5-A1, R6-A1).** A Read counts as a verified image read only when its raw argument
+text is exactly `{"file_path":"<confined image path>"}`. Only JSON whitespace may vary: no other key, no escape
+and no duplicate key. The check runs on the raw text itself, before any parse, reconciliation or dedup: the
+streamed `input_json_delta` text and the completed block's input as written in the transcript line. Every raw copy
+of an invocation id must pass. An unfinished stream that is still a prefix of that object (including the `{}`
+start placeholder) stays unfinished, as above. Any other form is decoded and every string value searched. A path
+other than the image is fatal, ahead of a quota, timeout or interruption. If none is found, the form is not an
+image inspection: a session that otherwise succeeded is a content-failure hold, and quota, timeout and
+interruption keep their classification. The saved real transcripts show only `{"file_path":"<absolute path>"}`
+Reads, never `offset`, `limit` or `pages`, so no other key is allowed. Classifier /7.
 **Torn outcome files (R4-A2).** Attempt files are written atomically: a flushed temp file is hard-linked into
 place. A `meta.json`, `done.json` or `reserved.json` that exists but does not parse is still read as preserved
 *incomplete* evidence, with no parse error: an unknown-outcome stop. A clearance whose digests name those exact
