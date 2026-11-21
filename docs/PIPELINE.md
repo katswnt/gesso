@@ -733,6 +733,29 @@ node scripts/pass-b-shadow-audit.mjs --variant 3     # judgment-only pairs (VSD-
 - Owner labels: `scripts/pass-b-audit-label-import.mjs` binds the label page's export to the frozen sample
   (`audit-eval-v1/sample-freeze.json`) by per-component text hashes.
 
+### Teaching-v2 Phase A (VSD-093; offline + dry-run only, no model call made)
+
+This is development evidence for the approved teaching-copy replacement (design draft 2). It is not a
+publication path: the best outcome is `accepted-for-review`, and nothing writes `data/teach-works.js`,
+`data/hotspots.js` or `index.html`. Evidence lives in gitignored `data/incoming/teaching-v2/`. The reviewable
+plan, vetted URLs and packet coverage are tracked in `tasks/teaching-v2-phase-a/`.
+
+```bash
+node scripts/teaching-v2-packets.mjs            # freeze plan.json + vetted-urls.json (no network)
+node scripts/teaching-v2-packets.mjs --fetch    # the only networked step: capture vetted URLs (C), §3.2 limits
+node scripts/teaching-v2-packets.mjs --build    # offline packets, exact-substring checks, coverage triage
+node scripts/teaching-v2-run.mjs                # DRY RUN, first ten: every W prompt + V template, sha256 + bytes
+node scripts/teaching-v2-run.mjs --phase rest   # DRY RUN, remaining 40 (live needs the ten terminal + --after-first-ten)
+node scripts/teaching-v2-pin-diagnostic.mjs --run <tv2a-id>   # 20-work W-vs-fresh-B3 point harness (dry run)
+node scripts/teaching-v2-run.mjs --previews     # current-renderer + faithful static previews from run states
+```
+
+The inputs are the preserved `cal50-0a47b6f7f332` B1/B2/B3 and the sanitized images. Every reused body is
+re-verified against its raw bytes. Old B2 is treated as untrusted leads and old B3 boxes as candidates, with
+documentary requests rejected and the reason recorded. Each work's planned path is W+V, plus at most one V2
+or one transport retry. Live execution (`TEACHING_V2_LIVE=1 ... --live`) is not authorized until Codex has
+reviewed the code and the owner has approved it. It uses the shared pacing ledger and serial order.
+
 ### Remaining publication and operational follow-ups
 
 - **F2 blocks A8 publication:** B0 legacy comparison still reads live teaching/hotspot files. One

@@ -1,0 +1,3381 @@
+{
+ "version": "teachingV2VettedUrls/1",
+ "rules": "teachingV2Vetting/1-host-rules",
+ "note": "Deterministic host rules over the catalog-id holding record and the URLs an earlier B2 actually fetched. Commercial, aggregator and Wikidata entity pages are leads, never captured. Labels never grant authority. Owner/Codex may strike any URL here before --fetch.",
+ "works": [
+  {
+   "id": "wd:Q7166365",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Pepper No. 30",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Pepper_No._30",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Pepper No. 30 – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://art.nelson-atkins.org/objects/48486/pepper-no-30",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Pepper No. 30 – Nelson-Atkins Museum of Art collection record",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Pepper_No._30",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://art.nelson-atkins.org/objects/48486/pepper-no-30",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met247010",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Wall painting from Room H of the Villa of P. Fannius Synistor at Boscoreale",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/247010",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "247010"
+     ]
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Villa_Boscoreale",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s1",
+     "title": "Villa Boscoreale - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://pompeiiinpictures.com/pompeiiinpictures/VF/Villa_016_p1.htm",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s3",
+     "title": "Villa of Publius Fannius Synistor - Pompeii in Pictures",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://ancientimes.blogspot.com/2020/04/frescoes-of-boscoreale-second-style.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s2",
+     "title": "Roman Times: Frescoes of Boscoreale Second Style - Ancientimes blog",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/247010",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Villa_Boscoreale",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://pompeiiinpictures.com/pompeiiinpictures/VF/Villa_016_p1.htm",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q586035",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Little Street",
+   "vetted": [
+    {
+     "url": "https://www.rijksmuseum.nl/en/collection/object/View-of-Houses-in-Delft-Known-as-The-Little-Street--a7dbf937cbd6f7c30f66f8aca4a0207c",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "View of Houses in Delft, Known as The Little Street – Rijksmuseum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.essentialvermeer.com/catalogue/little_street.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "The Little Street – Essential Vermeer Catalogue",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.rijksmuseum.nl/en/collection/object/View-of-Houses-in-Delft-Known-as-The-Little-Street--a7dbf937cbd6f7c30f66f8aca4a0207c",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.essentialvermeer.com/catalogue/little_street.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q97455775",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Relief bust of a girl",
+   "vetted": [
+    {
+     "url": "https://collections.vam.ac.uk/item/O230974/relief-verrocchio-andrea-del",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src3",
+     "title": "Relief — Victoria and Albert Museum collections",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://de.wikipedia.org/wiki/Brustbild_eines_M%C3%A4dchens_(Andrea_del_Verrochio)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Brustbild eines Madchens (Andrea del Verrochio) — German Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://smb.museum-digital.de/index.php?t=objekt&oges=140073",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Brustbild eines Madchens — Skulpturensammlung und Museum fur Byzantinische Kunst, museum-digital",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q97455775",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src4",
+     "title": "Relief bust of a girl (Q97455775) — Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://collections.vam.ac.uk/item/O230974/relief-verrocchio-andrea-del",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://de.wikipedia.org/wiki/Brustbild_eines_M%C3%A4dchens_(Andrea_del_Verrochio)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://smb.museum-digital.de/index.php?t=objekt&oges=140073",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q7678417",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Takiyasha the Witch and the Skeleton Specter",
+   "vetted": [
+    {
+     "url": "https://collections.vam.ac.uk/item/O73119/takiyasha-the-witch-and-the-triptych-kuniyoshi-utagawa/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Takiyasha the Witch and the Skeleton Spectre – V&A Collection",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.sainsbury-institute.org/e-bulletin/june-2025/wicked-history-in-print-thoughts-on-utagawa-kuniyoshis-triptych-takiyasha-the-witch-and-the-skeleton-demon/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Wicked History in Print: Kuniyoshi's Takiyasha – Sainsbury Institute",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collections.vam.ac.uk/item/O73119/takiyasha-the-witch-and-the-triptych-kuniyoshi-utagawa/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://www.sainsbury-institute.org/e-bulletin/june-2025/wicked-history-in-print-thoughts-on-utagawa-kuniyoshis-triptych-takiyasha-the-witch-and-the-skeleton-demon/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q405814",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Ship of Fools",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Ship_of_Fools_(painting)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Ship of Fools (painting) – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://colourlex.com/project/hieronymus-bosch-ship-fools/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Hieronymus Bosch, The Ship of Fools – ColourLex Pigment Analysis",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.zocineart.com/post/bosch-s-ship-of-fools-reading-the-little-panel-of-human-folly",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src3",
+     "title": "Bosch's Ship of Fools: Reading the Little Panel of Human Folly – Zoci ne Art",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Ship_of_Fools_(painting)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://colourlex.com/project/hieronymus-bosch-ship-fools/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.zocineart.com/post/bosch-s-ship-of-fools-reading-the-little-panel-of-human-folly",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "cleveland120847",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Door Plaque with the Head of a Saint",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/120847",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "120847"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1941.57",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Door Plaque with the Head of a Saint – Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/120847",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1941.57",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q1616056",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Hestia Tapestry",
+   "vetted": [
+    {
+     "url": "https://www.doaks.org/resources/textiles/catalogue/BZ.1929.1",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "Hanging with Hestia Polyolbus — Dumbarton Oaks",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.doaks.org/resources/textiles/essays/schrenk",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "The Background of the Enthroned: Spatial Analysis of the Hanging with Hestia Polyolbos — Dumbarton Oaks",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.doaks.org/resources/textiles/catalogue/BZ.1929.1",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://www.doaks.org/resources/textiles/essays/schrenk",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q537640",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Angelus Novus",
+   "vetted": [
+    {
+     "url": "https://press.uchicago.edu/ucp/books/book/chicago/B/bo146792297.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-uchicago",
+     "title": "Behind the Angel of History: The Angelus Novus and Its Interleaf (University of Chicago Press)",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.versobooks.com/blogs/news/2791-the-storm-blowing-from-paradise-walter-benjamin-and-klee-s-angelus-novus",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-verso",
+     "title": "The Storm Blowing from Paradise: Walter Benjamin and Klee's Angelus Novus (Verso)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://hyperallergic.com/whats-behind-the-angel-of-history-annie-bourneuf-paul-klee-angelus-novus/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-hyperallergic",
+     "title": "What's Behind the Angel of History? (Hyperallergic)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://press.uchicago.edu/ucp/books/book/chicago/B/bo146792297.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://www.versobooks.com/blogs/news/2791-the-storm-blowing-from-paradise-walter-benjamin-and-klee-s-angelus-novus",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://hyperallergic.com/whats-behind-the-angel-of-history-annie-bourneuf-paul-klee-angelus-novus/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met57329",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Painting",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/57329",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "57329"
+     ]
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Shibata_Zeshin",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki-zeshin",
+     "title": "Shibata Zeshin - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.artelino.com/articles/shibata_zeshin.asp",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-artelino",
+     "title": "Shibata Zeshin: Master of Japanese Lacquer and Ukiyo-e Prints – Artelino",
+     "vetted": false,
+     "reason": "commercial (lead only, not captured)"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/57329",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-met-api",
+     "title": "MET Collection API – Object 57329",
+     "vetted": false,
+     "reason": "duplicate"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/57329",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Shibata_Zeshin",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1755464",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Knight, Death, and the Devil",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Meisterstiche",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki-meister",
+     "title": "Meisterstiche – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Knight,_Death_and_the_Devil",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki-kdd",
+     "title": "Knight, Death and the Devil – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://lutheranreformation.org/history/albrecht-durers-knight-death-devil/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-lutheran",
+     "title": "Albrecht Dürer's Knight, Death, and the Devil – Lutheran Reformation",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Meisterstiche",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Knight,_Death_and_the_Devil",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://lutheranreformation.org/history/albrecht-durers-knight-death-devil/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q56825917",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Mourning Parents",
+   "vetted": [
+    {
+     "url": "https://c20society.org.uk/war-memorials/belgium-vladslo-deutsche-soldatenfriedhof-german-military-cemetery",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-c20",
+     "title": "Belgium: Vladslo Deutsche Soldatenfriedhof, German Military Cemetery – The Twentieth Century Society",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.canonvanvlaanderen.be/en/events/grieving-parents-by-kathe-kollwitz/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-cvv",
+     "title": "Grieving Parents by Käthe Kollwitz – Canon van Vlaanderen",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.helenavanessen.nl/en/installations/tower-of-babel/world-war-i/the-story-of-peter-kollwitz",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-hve",
+     "title": "The story of Peter Kollwitz – Helena van Essen",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://photographyuntethered.co.uk/kathe-kollwitz-grieving-parents/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-pu",
+     "title": "Kollwitz's Echoes of Grief: The Grieving Parents – Photography Untethered",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artinflanders.be/en/artwork/grieving-parents-2",
+     "origin": "b2-fetched-source",
+     "vetted": false,
+     "reason": "beyond the four-source cap"
+    },
+    {
+     "url": "https://c20society.org.uk/war-memorials/belgium-vladslo-deutsche-soldatenfriedhof-german-military-cemetery",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.canonvanvlaanderen.be/en/events/grieving-parents-by-kathe-kollwitz/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.helenavanessen.nl/en/installations/tower-of-babel/world-war-i/the-story-of-peter-kollwitz",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://photographyuntethered.co.uk/kathe-kollwitz-grieving-parents/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wd:Q616159",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "View from the Window at Le Gras",
+   "vetted": [
+    {
+     "url": "https://www.hrc.utexas.edu/niepce-heliograph/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s-hrc",
+     "title": "The Niépce Heliograph – Harry Ransom Center, UT Austin",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://cool.culturalheritage.org/byorg/abbey/an/an26/an26-3/an26-307.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s-ch",
+     "title": "The First Photograph – Abbey Newsletter / Cultural Heritage",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.hrc.utexas.edu/niepce-heliograph/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://cool.culturalheritage.org/byorg/abbey/an/an26/an26-3/an26-307.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1190706",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Castor and Pollux",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Castor_and_Pollux_(Prado)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Castor and Pollux (Prado) – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q1190706",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Castor and Pollux – Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Castor_and_Pollux_(Prado)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q114769532",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Mars, Venus and Cupid with Vulcan at his forge (the Mantuan Roundel)",
+   "vetted": [
+    {
+     "url": "https://pure.courtauld.ac.uk/en/publications/a-bronze-roundel-for-the-mantuan-court-towards-an-oeuvre-of-gian-",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "A bronze roundel for the Mantuan Court: Towards an oeuvre of Gian Marco Cavalli – Courtauld Institute Research Portal",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://apollo-magazine.com/art-news-met-roundel-acquisition/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "Met acquires much-coveted Renaissance roundel for $23m – Apollo Magazine",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://pure.courtauld.ac.uk/en/publications/a-bronze-roundel-for-the-mantuan-court-towards-an-oeuvre-of-gian-",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://apollo-magazine.com/art-news-met-roundel-acquisition/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q4950181",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Bourke Street",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Bourke_Street_(painting)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-3",
+     "title": "Bourke Street (painting) - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/9_by_5_Impression_Exhibition",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "9 by 5 Impression Exhibition - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.emelbourne.net.au/biogs/EM00220b.htm",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "Bourke Street (Tom Roberts) - eMelbourne: The Encyclopedia of Melbourne Online",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Bourke_Street_(painting)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/9_by_5_Impression_Exhibition",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.emelbourne.net.au/biogs/EM00220b.htm",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "cleveland125571",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Youth Seated by a Willow; Single Page Illustration",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/125571",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "125571"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1947.499",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Youth Seated by a Willow; Single Page Illustration | Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artsandculture.google.com/asset/youth-seated-by-a-willow-single-page-illustration-muhammad-yusuf-iranian/IQH5_fdgYldw6g?hl=en",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Youth Seated by a Willow; Single Page Illustration - Muhammad Yusuf (Iranian) — Google Arts & Culture",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/125571",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1947.499",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q59296885",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Drowned Land",
+   "vetted": [
+    {
+     "url": "https://artbooks.artcanada.com/tom-thomson/key-works/drowned-land",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-aci",
+     "title": "Drowned Land — Tom Thomson | Art Canada Institute",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://artbooks.artcanada.com/tom-thomson/style-and-technique",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-aci-tech",
+     "title": "Style and Technique — Tom Thomson | Art Canada Institute",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artbooks.artcanada.com/tom-thomson/key-works/drowned-land",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://artbooks.artcanada.com/tom-thomson/style-and-technique",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q21585351",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Complaint tablet to Ea-nāṣir",
+   "vetted": [
+    {
+     "url": "https://www.liverpool.ac.uk/archaeology-classics-and-egyptology/blog/2025/oldest-complaint-in-the-world-british-museum/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-liverpool",
+     "title": "The oldest complaint in the world: a trip to the British Museum",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.nationalgeographic.com/history/article/ea-nasir-copper-merchant-ur",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-natgeo",
+     "title": "Meet Ea-Nasir, a shady ancient merchant and modern meme",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/537889-oldest-written-customer-complaint",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-guinness",
+     "title": "Oldest written customer complaint",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.liverpool.ac.uk/archaeology-classics-and-egyptology/blog/2025/oldest-complaint-in-the-world-british-museum/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://www.nationalgeographic.com/history/article/ea-nasir-copper-merchant-ur",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/537889-oldest-written-customer-complaint",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met450509",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Emperor's Carpet",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/450509",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "450509"
+     ]
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.rugrabbit.com/content/classical-safavid-carpets-metropolitan-museum-art-new-york",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s1",
+     "title": "Classical Safavid Persian Carpets in the Metropolitan Museum of Art, New York",
+     "vetted": false,
+     "reason": "commercial (lead only, not captured)"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/450509",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "aic124043",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Versailles, Vase",
+   "vetted": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/124043",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "124043"
+     ]
+    },
+    {
+     "url": "https://www.artgallery.nsw.gov.au/education/exhibition-kits/eugene-atget/technique/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Atget's technique – Art Gallery of New South Wales",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/124043",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.artgallery.nsw.gov.au/education/exhibition-kits/eugene-atget/technique/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q11180645",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Tibetan Dragon Sutra",
+   "vetted": [
+    {
+     "url": "https://theme.npm.edu.tw/exh108/NPMRareBooks/en/page-2.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "NPM Rare Books and Documents New Media Art Exhibition - National Palace Museum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artsandculture.google.com/story/the-decorative-beauty-of-the-tibetan-dragon-buddhist-canon-national-palace-museum-taiwan/AgWhkYFNRwlZKg?hl=en",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "The Decorative Beauty of the Tibetan Dragon Buddhist Canon - Google Arts & Culture / National Palace Museum Taiwan",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://theme.npm.edu.tw/exh108/NPMRareBooks/en/page-2.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q15284134",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Lion of Knidos",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Lion_of_Knidos",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki",
+     "title": "Lion of Knidos – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Lion_of_Knidos",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q28092249",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Night-Shining White",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Night-Shining_White",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S01",
+     "title": "Night-Shining White – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.comuseum.com/painting/masters/han-gan/night-shining-white/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S02",
+     "title": "Han Gan: Night Shining White – China Online Museum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://chinaheritageguide.com/treasures-abroad/night-shining-white",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S03",
+     "title": "Night-Shining White – China Heritage Guide",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Night-Shining_White",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.comuseum.com/painting/masters/han-gan/night-shining-white/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://chinaheritageguide.com/treasures-abroad/night-shining-white",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q15788627",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Painting of Lady Tjepu",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Painting_of_Lady_Tjepu",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikipedia",
+     "title": "Painting of Lady Tjepu - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://egypt-museum.com/lady-tjepu/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-egypt-museum",
+     "title": "Lady Tjepu - Egypt Museum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q15788627",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Painting of Lady Tjepu - Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Painting_of_Lady_Tjepu",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://egypt-museum.com/lady-tjepu/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q110776566",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Bat Woman",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Albert_Joseph_P%C3%A9not",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "Albert Joseph Pénot – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.arthistoryproject.com/artists/albert-joseph-penot/the-bat-woman/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "The Bat Woman by Albert Joseph Pénot | Obelisk Art History",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://commons.wikimedia.org/wiki/File:Albert_Joseph_P%C3%A9not_-_La_Femme_Chauve-Souris.jpg",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-4",
+     "title": "File: Albert Joseph Pénot – La Femme Chauve-Souris – Wikimedia Commons",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://www.artrenewal.org/artists/albert-joseph-penot/8232",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-3",
+     "title": "Albert Joseph Pénot – Art Renewal Center",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Albert_Joseph_P%C3%A9not",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "harvard303416",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Hydria (water jar): The Ransom of Hector",
+   "vetted": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/303416",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "303416"
+     ]
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Pioneer_Group",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wp-pioneer",
+     "title": "Pioneer Group – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/303416",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-harvard",
+     "title": "Hydria (water jar): The Ransom of Hector | Harvard Art Museums",
+     "vetted": false,
+     "reason": "duplicate"
+    },
+    {
+     "url": "https://harvardartmuseums.org/collections/object/303416",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Pioneer_Group",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "cleveland167459",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Julius Caesar",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/167459",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "167459"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2009.271",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s1",
+     "title": "Julius Caesar | Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.clevelandart.org/articles/acquisition-highlights-2009",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s2",
+     "title": "Acquisition Highlights 2009 | Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/167459",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2009.271",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/articles/acquisition-highlights-2009",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q48881623",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Zong-shaped vase with cobalt blue glaze",
+   "vetted": [
+    {
+     "url": "https://harvardartmuseums.org/art/201807",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-harvard",
+     "title": "Vase in the Shape of an Archaic Jade 'Cong' Ritual Implement | Harvard Art Museums",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.royalkecloud.com/blogs/news/cong",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-royalkecloud",
+     "title": "Chinese Porcelain 'Cong' Vase - ROYAL KECLOUD",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://harvardartmuseums.org/art/201807",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.royalkecloud.com/blogs/news/cong",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met256169",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Terracotta kantharos (drinking cup with two high handles)",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/256169",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "256169"
+     ]
+    },
+    {
+     "url": "https://www.colorado.edu/classics/2018/05/11/200621t-attic-kantharos",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S-2",
+     "title": "2006.21.T, Attic Kantharos | Department of Classics, University of Colorado Boulder",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/256169",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S-1",
+     "title": "Metropolitan Museum of Art Open Access API: Terracotta kantharos (object 256169)",
+     "vetted": false,
+     "reason": "duplicate"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/256169",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.colorado.edu/classics/2018/05/11/200621t-attic-kantharos",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q18173418",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Kazusa sea route",
+   "vetted": [
+    {
+     "url": "https://exhibitions.bristolmuseums.org.uk/japanese-prints/hokusai-hiroshige-landscapes/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s3",
+     "title": "Hokusai and Hiroshige landscapes - Masters of Japanese Prints | Bristol Museums",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q18173418",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s1",
+     "title": "The Kazusa sea route - Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://www.artelino.com/articles/hokusai-36-views-fuji.asp",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s2",
+     "title": "Hokusai 36 Views of Mount Fuji – Complete Illustrated List | Artelino",
+     "vetted": false,
+     "reason": "commercial (lead only, not captured)"
+    },
+    {
+     "url": "https://exhibitions.bristolmuseums.org.uk/japanese-prints/hokusai-hiroshige-landscapes/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q2454480",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Triumphal Chariot of Maximilian I",
+   "vetted": [
+    {
+     "url": "https://cool.culturalheritage.org/coolaic/sg/bpg/annual/v14/bp14-07.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s1",
+     "title": "The Triumphal Arch and the Large Triumphal Carriage of Maximilian I",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://cool.culturalheritage.org/coolaic/sg/bpg/annual/v14/bp14-07.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q116259603",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Stickerei-Fragment mit Greifen und Flügelpferden",
+   "vetted": [],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q116259603",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Wikidata: Stickerei-Fragment mit Greifen und Flügelpferden (Q116259603)",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    }
+   ]
+  },
+  {
+   "id": "poussin-seasons-spring",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Spring (The Earthly Paradise)",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Four_Seasons_(Poussin)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "The Four Seasons (Poussin) - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.nicolas-poussin.com/en/works/spring/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Spring or The Earthly Paradise - nicolas-poussin.com",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://collections.louvre.fr/en/ark:/53355/cl010062521",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src3",
+     "title": "Le Printemps - Louvre collections",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Four_Seasons_(Poussin)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.nicolas-poussin.com/en/works/spring/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://collections.louvre.fr/en/ark:/53355/cl010062521",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q105870850",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Manelys",
+   "vetted": [
+    {
+     "url": "https://www.19thc-artworldwide.org/spring11/danish-internationalism-peder-severin-kroyer-in-copenhagen-and-paris",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src3",
+     "title": "Danish Internationalism: Peder Severin Kroyer in Copenhagen and Paris – 19th Century Art Worldwide",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q105870850",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "A moonlit Skagen beach – Wikidata Q105870850",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://artsandculture.google.com/story/evening-atmosphere-skagens-museum/JwVxQl7YrjNPKQ?hl=en",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Evening Atmosphere – Google Arts & Culture / Skagens Museum",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://www.19thc-artworldwide.org/spring11/danish-internationalism-peder-severin-kroyer-in-copenhagen-and-paris",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q16467705",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "La Gloire tirant Auguste de Villiers de l'Isle-Adam de son sommeil éternel",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Glory_Pulling_Auguste_de_Villiers_de_l%27Isle_Adam_From_His_Eternal_Sleep",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-02",
+     "title": "Glory Pulling Auguste de Villiers de l'Isle Adam From His Eternal Sleep – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.parismuseescollections.paris.fr/fr/musee-carnavalet/oeuvres/la-gloire-tirant-auguste-de-villiers-de-l-isle-adam-1838-1889-de-son",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-01",
+     "title": "La gloire tirant Auguste de Villiers de l'Isle Adam de son sommeil éternel – Paris Musées / Carnavalet",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Glory_Pulling_Auguste_de_Villiers_de_l%27Isle_Adam_From_His_Eternal_Sleep",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.parismuseescollections.paris.fr/fr/musee-carnavalet/oeuvres/la-gloire-tirant-auguste-de-villiers-de-l-isle-adam-1838-1889-de-son",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q2287821",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Wendingen",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Wendingen",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikipedia-wendingen",
+     "title": "Wendingen — Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://collection.powerhouse.com.au/object/157543",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-powerhouse",
+     "title": "Wendingen Journal Issue No. 11 from 1921 — Powerhouse Collection",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q2287821",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Wendingen — Wikidata Q2287821",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Wendingen",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://collection.powerhouse.com.au/object/157543",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "harvard216218",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Portrait of Francis I, King of France (after J. Clouet)",
+   "vetted": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/216218",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "216218"
+     ]
+    },
+    {
+     "url": "https://harvardartmuseums.org/art/216218",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Portrait of Francis I, King of France (after J. Clouet) | Harvard Art Museums",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Haydar_Reis",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Haydar Reis - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/216218",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://harvardartmuseums.org/art/216218",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Haydar_Reis",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "harvard230527",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Virgin and Child in Majesty (Seat of Divine Wisdom)",
+   "vetted": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/230527",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "230527"
+     ]
+    },
+    {
+     "url": "https://press.princeton.edu/books/hardcover/9780691657165/throne-of-wisdom",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-pup",
+     "title": "Throne of Wisdom | Princeton University Press (Forsyth, 1972/2019)",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://harvardartmuseums.org/collections/object/230527",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-ham",
+     "title": "Virgin and Child in Majesty (Seat of Divine Wisdom) | Harvard Art Museums",
+     "vetted": false,
+     "reason": "duplicate"
+    },
+    {
+     "url": "https://harvardartmuseums.org/collections/object/230527",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://press.princeton.edu/books/hardcover/9780691657165/throne-of-wisdom",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q1211814",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The Penance of St. John Chrysostom",
+   "vetted": [
+    {
+     "url": "https://artgallery.yale.edu/collections/objects/2667",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S2",
+     "title": "The Penance of Saint John Chrysostom – Yale University Art Gallery",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1934.339",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "S1",
+     "title": "The Penance of St. John Chrysostom – Cleveland Museum of Art",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artgallery.yale.edu/collections/objects/2667",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1934.339",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1128599",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Piri Reis map",
+   "vetted": [
+    {
+     "url": "https://zenodo.org/records/17072383",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "The Piri Reis Map of 1513: A Comprehensive Cartographic and Historical Analysis (Zenodo)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://nwcartographic.com/blogs/essays-articles/the-piri-reis-map",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src3",
+     "title": "The Piri Reis Map of 1513 - New World Cartographic",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://media.unesco.org/sites/default/files/webform/mow001/turkey_world_map_piri_reis_en.pdf",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Turkey - The Piri Reis World Map (1513) in the Topkapi Palace (UNESCO Memory of the World)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://zenodo.org/records/17072383",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://nwcartographic.com/blogs/essays-articles/the-piri-reis-map",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://media.unesco.org/sites/default/files/webform/mow001/turkey_world_map_piri_reis_en.pdf",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q17021261",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Statue of Ashurnasirpal II",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Statue_of_Ashurnasirpal_II",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Statue of Ashurnasirpal II - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.worldhistory.org/image/528/statue-of-ashurnasirpal-ii/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Statue of Ashurnasirpal II - World History Encyclopedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Statue_of_Ashurnasirpal_II",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.worldhistory.org/image/528/statue-of-ashurnasirpal-ii/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "met451717",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Bowl with Eagle",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/451717",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "451717"
+     ]
+    },
+    {
+     "url": "https://islamicceramics.ashmolean.org/Fatimids/lustre.htm",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Fatimid Lustre: C.1.–C.2. — Ashmolean Museum Islamic Ceramics",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artsandculture.google.com/asset/bowl-with-eagle-muslim-ibn-al-dahhan/wwEKvarXQfRBQg",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Bowl with Eagle — Google Arts & Culture / Metropolitan Museum of Art",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/451717",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://islamicceramics.ashmolean.org/Fatimids/lustre.htm",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q63247474",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Head of a statue of a god-MAHG Eg 4",
+   "vetted": [
+    {
+     "url": "https://egypt-museum.com/head-of-a-statue-of-the-god-sobek/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-egypt-museum-sobek",
+     "title": "Head of a Statue of the God Sobek – Egypt Museum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q63247474",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Head of a statue of a god – MAHG Eg 4 (Q63247474) – Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://egypt-museum.com/head-of-a-statue-of-the-god-sobek/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met308527",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Portrait Head Bottle",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/308527",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "308527"
+     ]
+    },
+    {
+     "url": "https://www.monah.org/artifact-blog/2021/1/27/moche-ceramic-vessels",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "Artifact: Moche Ceramic Vessels – MONAH",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://galeriacontici.net/understanding-moche-stirrup-vessels-evolution-of-form-and-iconography-from-moche-i-to-moche-v/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "Understanding Moche Stirrup Vessels: From Moche I to Moche V – Galeria Contici",
+     "vetted": false,
+     "reason": "commercial (lead only, not captured)"
+    },
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/308527",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.monah.org/artifact-blog/2021/1/27/moche-ceramic-vessels",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q2412563",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "The London Group",
+   "vetted": [
+    {
+     "url": "https://thelondongroup.com/the-eleventh-exhibition-1919/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-LG-11th",
+     "title": "The Eleventh Exhibition of The London Group, 1919 – The London Group",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://thelondongroup.com/history/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-LG-hist",
+     "title": "History – The London Group",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.moma.org/collection/works/173223",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-MoMA-search",
+     "title": "E. McKnight Kauffer. The London Group, Exhibition of Modern Art, Nov. 1 to Nov. 29, Mansard Gallery. ca. 1915 | MoMA",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.cooperhewitt.org/channel/kauffer/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-CH-channel",
+     "title": "Underground Modernist: E. McKnight Kauffer | Cooper Hewitt, Smithsonian Design Museum",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://thelondongroup.com/the-eleventh-exhibition-1919/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://thelondongroup.com/history/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.moma.org/collection/works/173223",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.cooperhewitt.org/channel/kauffer/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "cleveland170810",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Calligraphy from a Ghazal of Badr al-Din Hilali Jaghata’i (Persian, active c. 1500)",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/170810",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "170810"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2013.309.b",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s-cma",
+     "title": "Calligraphy from a Ghazal of Badr al-Din Hilali Jaghata'i | Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Badr_al-Din_Hilali",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "s-wiki-hilali",
+     "title": "Badr al-Din Hilali - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/170810",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2013.309.b",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Badr_al-Din_Hilali",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q15880874",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Portrait of Marguerite Khnopff",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Fernand_Khnopff",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikipedia-khnopff",
+     "title": "Fernand Khnopff – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.heritage-kbf.be/collection/portrait-de-marguerite",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-heritage-kbf",
+     "title": "Portrait de Marguerite – Heritage KBF (King Baudouin Foundation)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.thecollector.com/fernand-khnopff-artworks-belgian-artist/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-thecollector",
+     "title": "Master of Symbolism: The Belgian Artist Fernand Khnopff in 8 Works – TheCollector",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://www.wikidata.org/wiki/Q15880874",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Portrait of Marguerite Khnopff – Wikidata Q15880874",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Fernand_Khnopff",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.heritage-kbf.be/collection/portrait-de-marguerite",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q279559",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Babylonian Map of the World",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Babylonian_Map_of_the_World",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki",
+     "title": "Babylonian Map of the World – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.worldhistory.org/image/526/babylonian-map-of-the-world/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-whe",
+     "title": "Babylonian Map of the World – World History Encyclopedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Babylonian_Map_of_the_World",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.worldhistory.org/image/526/babylonian-map-of-the-world/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3829346",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "title": "Leda and the Swan",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Leda_and_the_Swan_(Wilton_House)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wilton",
+     "title": "Leda and the Swan (Wilton House) – Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.collezionegalleriaborghese.it/en/opere/leda-3",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-borghese",
+     "title": "Leda – Galleria Borghese Collection",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.italian-renaissance-art.com/Leda-and-the-Swan.html",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-ira",
+     "title": "Leda and the Swan – Italian Renaissance Art",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.wikidata.org/wiki/Q3829346",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wikidata",
+     "title": "Leda and the Swan (Q3829346) – Wikidata",
+     "vetted": false,
+     "reason": "wikidata entity page (no teaching text)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Leda_and_the_Swan_(Wilton_House)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.collezionegalleriaborghese.it/en/opere/leda-3",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.italian-renaissance-art.com/Leda-and-the-Swan.html",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1091086",
+   "origin": "regression:editorial-audit-03",
+   "title": "The Third of May 1808",
+   "vetted": [
+    {
+     "url": "https://fundaciongoyaenaragon.es/eng/obra/el-tres-de-mayo-de-1808/181",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "goya-fnd",
+     "title": "Fundación Goya en Aragón: El tres de mayo de 1808",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://courses.lumenlearning.com/suny-arthistory2/chapter/third-of-may-1808",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "lumen-3may",
+     "title": "Third of May, 1808 (Lumen / SUNY Art History)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://fundaciongoyaenaragon.es/eng/obra/el-tres-de-mayo-de-1808/181",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://courses.lumenlearning.com/suny-arthistory2/chapter/third-of-may-1808",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q15461864",
+   "origin": "regression:editorial-audit-05",
+   "title": "The Large Blue Horses",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Der_Blaue_Reiter",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "wpbr",
+     "title": "Der Blaue Reiter (Wikipedia)",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.walkerart.org/reader/a-history-of-the-large-blue-horses-at-the-walker/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "walker1",
+     "title": "A History of The Large Blue Horses at the Walker",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.encyclopedia.com/people/literature-and-arts/european-art-1600-present-biographies/franz-marc",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "encsrc",
+     "title": "Franz Marc (Encyclopedia.com)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Der_Blaue_Reiter",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://www.walkerart.org/reader/a-history-of-the-large-blue-horses-at-the-walker/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.encyclopedia.com/people/literature-and-arts/european-art-1600-present-biographies/franz-marc",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q185255",
+   "origin": "regression:editorial-audit-08",
+   "title": "The Wedding at Cana",
+   "vetted": [
+    {
+     "url": "https://www.louvre.fr/en/explore/the-palace/from-the-mona-lisa-to-the-wedding-feast-at-cana",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "louvre_mona",
+     "title": "From the Mona Lisa to The Wedding Feast at Cana - The Salle des États (Louvre)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.louvre.fr/en/explore/visitor-trails/the-louvre-s-masterpieces/a-superstar-and-a-wedding-crowd",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "louvre_trail",
+     "title": "A superstar… and a wedding crowd! (Louvre)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.louvre.fr/en/explore/the-palace/from-the-mona-lisa-to-the-wedding-feast-at-cana",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.louvre.fr/en/explore/visitor-trails/the-louvre-s-masterpieces/a-superstar-and-a-wedding-crowd",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wd:Q3595955",
+   "origin": "regression:editorial-audit-09",
+   "title": "Lion Capital of Ashoka",
+   "vetted": [
+    {
+     "url": "https://orias.berkeley.edu/lion-capital-ashoka",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-3",
+     "title": "Lion Capital of Ashoka - ORIAS, UC Berkeley",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Lion_Capital_of_Ashoka",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-1",
+     "title": "Lion Capital of Ashoka - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/State_Emblem_of_India",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-2",
+     "title": "State Emblem of India - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://orias.berkeley.edu/lion-capital-ashoka",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Lion_Capital_of_Ashoka",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/State_Emblem_of_India",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "wd:Q674846",
+   "origin": "regression:editorial-audit-12",
+   "title": "The Night Café",
+   "vetted": [
+    {
+     "url": "https://artgallery.yale.edu/collections/objects/12507",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src01",
+     "title": "Le cafe de nuit (The Night Cafe) — Yale University Art Gallery collection record",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://news.yale.edu/2025/07/14/vincent-van-goghs-luminous-late-night-haunt",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src02",
+     "title": "Vincent van Gogh's luminous late-night haunt — Yale News, July 2025",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artgallery.yale.edu/collections/objects/12507",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://news.yale.edu/2025/07/14/vincent-van-goghs-luminous-late-night-haunt",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "cleveland155537",
+   "origin": "regression:editorial-audit-17",
+   "title": "Ballgame Thin Stone Head (Hacha)",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/155537",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "155537"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1990.248",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "cma1990248",
+     "title": "Ballgame Thin Stone Head (Hacha), Cleveland Museum of Art 1990.248",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/313235",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met313235",
+     "title": "Bound-hands hacha, Metropolitan Museum of Art",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/155537",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1990.248",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/313235",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "aic32623",
+   "origin": "regression:research-audit-01",
+   "title": "Roundel Fragment",
+   "vetted": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/32623",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "32623"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/445854",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met-445854",
+     "title": "Roundel, The Metropolitan Museum of Art, 09.50.1823",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/32623",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/445854",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met308540",
+   "origin": "regression:research-audit-02",
+   "title": "Stirrup Spout Bottle with Seated Figure",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/308540",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "308540"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/308540",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met308540",
+     "title": "Stirrup Spout Bottle with Seated Figure, The Met",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.metmuseum.org/toah/works-of-art/82.1.30",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met82130",
+     "title": "Stirrup-spout bottle with seated figure, The Met",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/308540",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/308540",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/toah/works-of-art/82.1.30",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q19883613",
+   "origin": "regression:research-audit-03",
+   "title": "Cubist Nude",
+   "vetted": [
+    {
+     "url": "https://www.getdailyart.com/en/24367/alexandra-exter/cubist-nude",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "getdailyart",
+     "title": "Cubist Nude by Alexandra Exter (Daily Art)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.dailyartmagazine.com/alexandra-exter/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "dailyart",
+     "title": "Alexandra Exter (Daily Art Magazine)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.getdailyart.com/en/24367/alexandra-exter/cubist-nude",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://www.dailyartmagazine.com/alexandra-exter/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "met54961",
+   "origin": "regression:research-audit-04",
+   "title": "Sea Bream (Tai) on Nabeshima Porcelain Dish, Sake Cup on Stand, and Painting of a Peony",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/54961",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "54961"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/54961",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met54961",
+     "title": "Met Museum record: Sea Bream (Tai) on Nabeshima Porcelain Dish...",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/52283",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met52283",
+     "title": "Met Museum record: Dish with Camellia Design (Nabeshima type)",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/54961",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/54961",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/52283",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "cleveland136178",
+   "origin": "regression:research-audit-05",
+   "title": "The Flight into Egypt",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/136178",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "136178"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/136178",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "cma136178",
+     "title": "The Flight into Egypt, Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/136178",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/136178",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "met331619",
+   "origin": "regression:research-audit-06",
+   "title": "Striding figure with ibex horns, a raptor skin draped around the shoulders, and upturned boots",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/331619",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "331619"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/331619",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met-331619",
+     "title": "The Met: Striding figure with ibex horns... (2007.280)",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.metmuseum.org/toah/works-of-art/2007.280",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met-toa",
+     "title": "The Met Heilbrunn Timeline: 2007.280",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/331619",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/331619",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/toah/works-of-art/2007.280",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "met53573",
+   "origin": "regression:research-audit-07",
+   "title": "Landscape Painting of Figure in Woodland Setting",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/53573",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "53573"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/53573",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met46632",
+     "title": "Landscape Painting of Figure in Woodland Setting, The Met (46.63.2)",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/53573",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/53573",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "aic30661",
+   "origin": "regression:research-audit-08",
+   "title": "Khamsa Standard",
+   "vetted": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/30661",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "30661"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/453247",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met1984",
+     "title": "Standard ('Alam), Met 1984.504.2 (silver with black inlay, early 18th c., Iran)",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/30661",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/453247",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q60152111",
+   "origin": "regression:research-audit-09",
+   "title": "View of Nihonbashi itchōme Street",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/One_Hundred_Famous_Views_of_Edo",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "wp-ohfve",
+     "title": "One Hundred Famous Views of Edo (Wikipedia)",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/One_Hundred_Famous_Views_of_Edo",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q18709475",
+   "origin": "regression:research-audit-10",
+   "title": "White Cross",
+   "vetted": [
+    {
+     "url": "https://www.guggenheim-venice.it/en/art/works/white-cross/",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "gv1",
+     "title": "White Cross, Peggy Guggenheim Collection, Venice",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://www.guggenheim-venice.it/en/art/works/white-cross/",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "cleveland310353",
+   "origin": "regression:research-audit-11",
+   "title": "The Fourth King of Hell",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/310353",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "310353"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2019.224",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "cma-record",
+     "title": "The Fourth King of Hell, Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.clevelandart.org/articles/10-kings-hell",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "cma-10kings",
+     "title": "The 10 Kings of Hell, Cleveland Museum of Art",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/310353",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/2019.224",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/articles/10-kings-hell",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "cleveland137276",
+   "origin": "regression:research-audit-12",
+   "title": "Adoring Monk",
+   "vetted": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/137276",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "137276"
+     ]
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1962.213",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "cma1962",
+     "title": "Adoring Monk, Cleveland Museum of Art, 1962.213",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://openaccess-api.clevelandart.org/api/artworks/137276",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.clevelandart.org/art/1962.213",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "sinmafa_86-12-1",
+   "origin": "regression:research-audit-13",
+   "title": "Archer figure",
+   "vetted": [],
+   "decisions": [
+    {
+     "url": "https://artsandculture.google.com/asset/equestrian-warrior-and-archer/TAHzP1xID1WVQw",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "gac-archer",
+     "title": "Equestrian figure and Archer (Smithsonian NMAfA via Google Arts & Culture)",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    }
+   ]
+  },
+  {
+   "id": "met327401",
+   "origin": "regression:research-audit-14",
+   "title": "Seated goddess with a child",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/327401",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "327401"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/327401",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met1",
+     "title": "Seated goddess with a child, The Met (1989.281.12)",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/327401",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/327401",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "met469960",
+   "origin": "regression:research-audit-15",
+   "title": "Fragment of a Floor Mosaic with a Personification of Ktisis",
+   "vetted": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/469960",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "469960"
+     ]
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/469960",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met-record",
+     "title": "Fragment of a Floor Mosaic with a Personification of Ktisis, The Met",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://www.metmuseum.org/en/perspectives/ktisis-rethinking-representation",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "met-essay",
+     "title": "Ktisis: Rethinking Representation, The Met",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/469960",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/art/collection/search/469960",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://www.metmuseum.org/en/perspectives/ktisis-rethinking-representation",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    }
+   ]
+  },
+  {
+   "id": "sifsg_F1904.61",
+   "origin": "regression:research-audit-16",
+   "title": "Harmony in Blue and Gold: The Peacock Room",
+   "vetted": [
+    {
+     "url": "https://archive.asia.si.edu/exhibitions/online/peacock/default.htm",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "si-peacock-exh",
+     "title": "A Closer Look: The Peacock Room (Smithsonian Freer|Sackler exhibition)",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://archive.asia.si.edu/exhibitions/online/peacock/images/PeacockRoom.pdf",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "si-peacock-pdf",
+     "title": "Peacock Room exhibition text (Smithsonian, PDF)",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://peacockroom.wayne.edu/timeline",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "wayne-timeline",
+     "title": "The Peacock Room timeline (Wayne State University)",
+     "kind": "scholarly",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://archive.asia.si.edu/exhibitions/online/peacock/default.htm",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://archive.asia.si.edu/exhibitions/online/peacock/images/PeacockRoom.pdf",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    },
+    {
+     "url": "https://peacockroom.wayne.edu/timeline",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "scholarly"
+    }
+   ]
+  },
+  {
+   "id": "aic67362",
+   "origin": "regression:research-audit-17",
+   "title": "Saint Martin and the Beggar",
+   "vetted": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/67362",
+     "kind": "holdingInstitution",
+     "relationshipToWork": "thisObject (catalog id)",
+     "origin": "catalog-id",
+     "objectIds": [
+      "67362"
+     ]
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Saint_Martin_and_the_Beggar_(El_Greco)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "wiki-sm",
+     "title": "Saint Martin and the Beggar (El Greco) - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://api.artic.edu/api/v1/artworks/67362",
+     "origin": "catalog-id",
+     "vetted": true,
+     "kind": "holdingInstitution"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Saint_Martin_and_the_Beggar_(El_Greco)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "wikidata:Q17647883",
+   "origin": "regression:research-audit-18",
+   "title": "Laughing boy",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Laughing_Boy_(painting)",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "wp-laughing-boy",
+     "title": "Laughing Boy (painting) - Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Laughing_Boy_(painting)",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q12418",
+   "origin": "regression:research-audit-19",
+   "title": "Mona Lisa",
+   "vetted": [
+    {
+     "url": "https://collections.louvre.fr/en/ark:/53355/cl010062370",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-louvre-1",
+     "title": "Mona Lisa – Louvre Collections",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    },
+    {
+     "url": "https://nicofranz.art/en/leonardo-da-vinci/mona-lisa",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-nicofranz-1",
+     "title": "Mona Lisa Image Analysis – nicofranz.art",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://collections.louvre.fr/en/ark:/53355/cl010062370",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    },
+    {
+     "url": "https://nicofranz.art/en/leonardo-da-vinci/mona-lisa",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q45585",
+   "origin": "regression:research-audit-20",
+   "title": "The Starry Night",
+   "vetted": [
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Starry_Night",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src-wiki",
+     "title": "The Starry Night — Wikipedia",
+     "kind": "reference",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Starry_Night",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "reference"
+    }
+   ]
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q151047",
+   "origin": "regression:research-audit-21",
+   "title": "The Birth of Venus",
+   "vetted": [
+    {
+     "url": "https://www.uffizi.it/en/artworks/birth-of-venus",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src1",
+     "title": "The birth of Venus by Botticelli | Uffizi Galleries",
+     "kind": "other",
+     "relationshipToWork": "undeclared (B2 lead)",
+     "objectIds": []
+    }
+   ],
+   "decisions": [
+    {
+     "url": "https://artsandculture.google.com/asset/the-birth-of-venus-sandro-botticelli/MQEeq50LABEBVg",
+     "origin": "b2-fetched-source",
+     "b2SourceId": "src2",
+     "title": "The birth of Venus - Sandro Botticelli — Google Arts & Culture",
+     "vetted": false,
+     "reason": "aggregator (lead only, not captured)"
+    },
+    {
+     "url": "https://www.uffizi.it/en/artworks/birth-of-venus",
+     "origin": "b2-fetched-source",
+     "vetted": true,
+     "kind": "other"
+    }
+   ]
+  }
+ ]
+}

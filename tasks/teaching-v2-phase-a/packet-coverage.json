@@ -1,0 +1,1646 @@
+{
+ "version": "teachingV2PacketCoverage/1",
+ "caveat": "Lexical slot candidates count works with at least one captured section matching a slot lexicon (identity = a title word). This is triage, NOT semantic coverage: W must establish each essential from the text and V checks it. transfer is image-grounded and has no source proxy.",
+ "calibration": {
+  "works": 50,
+  "withAnyCapturedText": 48,
+  "withHoldingRecord": 13,
+  "totalChars": 577132,
+  "worksWithSlotCandidates": {
+   "identity": 42,
+   "subjectAction": 38,
+   "functionContext": 41,
+   "makingMechanism": 40,
+   "transfer": null,
+   "significance": 37
+  },
+  "allFourSourceSlots": 29
+ },
+ "regressions": {
+  "works": 27,
+  "withAnyCapturedText": 24,
+  "worksWithSlotCandidates": {
+   "identity": 23,
+   "subjectAction": 17,
+   "functionContext": 13,
+   "makingMechanism": 20,
+   "transfer": null,
+   "significance": 12
+  }
+ },
+ "rows": [
+  {
+   "id": "wd:Q7166365",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 7990,
+   "sections": 16,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 3,
+    "functionContext": 0,
+    "makingMechanism": 3,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "6950d6c2d29859e4c53569d8a7e4c6abd28f03170cf945e8103a877b33bbd28a"
+  },
+  {
+   "id": "met247010",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 15278,
+   "sections": 22,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 16,
+    "subjectAction": 7,
+    "functionContext": 5,
+    "makingMechanism": 6,
+    "significance": 5,
+    "transfer": null
+   },
+   "packetSha256": "dc00a92eb40859e8bbac5d662747d7d2a941a92663ef09c158a4f26896450008"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q586035",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": true,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 38687,
+   "sections": 82,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 21,
+    "subjectAction": 21,
+    "functionContext": 13,
+    "makingMechanism": 32,
+    "significance": 13,
+    "transfer": null
+   },
+   "packetSha256": "74f454584895a4c1c0b8475d855ff171a4752625db34eea4f481a44dae441634"
+  },
+  {
+   "id": "wikidata:Q97455775",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 9409,
+   "sections": 25,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 6,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "8c85f308803566bac305888b37e1a2ef189da3e7294352d3e7c8fc28bf6ec493"
+  },
+  {
+   "id": "wikidata:Q7678417",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 15118,
+   "sections": 30,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 17,
+    "subjectAction": 10,
+    "functionContext": 6,
+    "makingMechanism": 6,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "7fdae1ac3765a300946f04a4d507cc733fbb547155a0a15b8068869a55306c63"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q405814",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 13330,
+   "sections": 17,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 9,
+    "subjectAction": 7,
+    "functionContext": 2,
+    "makingMechanism": 14,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "9932aecf7c2be51a7fb5d6d5ebe71cc0e32c190aa89123e6f182b5f9b609dacc"
+  },
+  {
+   "id": "cleveland120847",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 1983,
+   "sections": 8,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 0,
+    "functionContext": 2,
+    "makingMechanism": 2,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "ac6e23c4fd69e95cb6407fbae87f38dd27acb6623e917035b911e0330c86eb29"
+  },
+  {
+   "id": "wikidata:Q1616056",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 0,
+   "chars": 0,
+   "sections": 0,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "478430f00a40987df22aa4f9d313e067661d5bc3ae23b33c28748233730d168b"
+  },
+  {
+   "id": "wikidata:Q537640",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 23268,
+   "sections": 29,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 12,
+    "subjectAction": 7,
+    "functionContext": 4,
+    "makingMechanism": 11,
+    "significance": 7,
+    "transfer": null
+   },
+   "packetSha256": "a8d9a060c01142fbb209e5f97861ee3d823f0d940587037731937ad195de4a40"
+  },
+  {
+   "id": "met57329",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 12986,
+   "sections": 14,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 3,
+    "functionContext": 4,
+    "makingMechanism": 11,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "66fba7ab6903758f4c8429b8dfe2077785394de54e70b566228b3fbd3e39839b"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1755464",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 16557,
+   "sections": 18,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 14,
+    "subjectAction": 10,
+    "functionContext": 3,
+    "makingMechanism": 10,
+    "significance": 5,
+    "transfer": null
+   },
+   "packetSha256": "425046ae6767bab8e17ebe5edc11184848bab8b0c61534db0e5669fbe26ff90f"
+  },
+  {
+   "id": "wikidata:Q56825917",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 4,
+   "captured": 4,
+   "chars": 39106,
+   "sections": 52,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 14,
+    "subjectAction": 7,
+    "functionContext": 9,
+    "makingMechanism": 9,
+    "significance": 14,
+    "transfer": null
+   },
+   "packetSha256": "64a05458bfdc6db24dcb908dabe228c1caf5ba0b9e1b12ab36f80709042e2ed4"
+  },
+  {
+   "id": "wd:Q616159",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 4246,
+   "sections": 7,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 1,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "11f04784c05131b9b303cc4aa1f690296a82629089ab7f94cc22eee0c1438522"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1190706",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 5420,
+   "sections": 7,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 3,
+    "functionContext": 2,
+    "makingMechanism": 6,
+    "significance": 3,
+    "transfer": null
+   },
+   "packetSha256": "2443d35710746e6620f3b1338efbe6df4910d433cbc98c2c32591d7826db7fb6"
+  },
+  {
+   "id": "wikidata:Q114769532",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 6238,
+   "sections": 15,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 10,
+    "subjectAction": 0,
+    "functionContext": 9,
+    "makingMechanism": 0,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "e7f45a9ccefe363fc798b23f68a8564156e44b6c32dce05e045a457467c34ade"
+  },
+  {
+   "id": "wikidata:Q4950181",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 2,
+   "chars": 4625,
+   "sections": 15,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 2,
+    "functionContext": 2,
+    "makingMechanism": 2,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "2a1f26554422dee6a745af807f8860bc3714ad293c298590172758f079fd85c6"
+  },
+  {
+   "id": "cleveland125571",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 3509,
+   "sections": 7,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 0,
+    "functionContext": 3,
+    "makingMechanism": 3,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "1d3a2e836a6f27015dc8c17e9074aa8085b2a67a399fd833ebad01cd5c85bbf9"
+  },
+  {
+   "id": "wikidata:Q59296885",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 15577,
+   "sections": 20,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 8,
+    "functionContext": 2,
+    "makingMechanism": 9,
+    "significance": 5,
+    "transfer": null
+   },
+   "packetSha256": "f5ff40c1610773059534d6328a7d201c3d5933db9047ad2f72838fdf2e1aef7b"
+  },
+  {
+   "id": "wikidata:Q21585351",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 23428,
+   "sections": 30,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 15,
+    "subjectAction": 7,
+    "functionContext": 7,
+    "makingMechanism": 3,
+    "significance": 5,
+    "transfer": null
+   },
+   "packetSha256": "b9088075495a040b5988f40069a468c85d2657b1c6944ce06201652efabf6f91"
+  },
+  {
+   "id": "met450509",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 11655,
+   "sections": 8,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 1,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "a18249b77ee641d9de291a255ab0e51f1e780932469a30bd6dd4e936e3062fad"
+  },
+  {
+   "id": "aic124043",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 209,
+   "sections": 1,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "1a98fb783ad73d42b29eb8ed0e70dda3b45fa12ae2ffd8ec934b62dc87ff5b86"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q11180645",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 5163,
+   "sections": 6,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 4,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 2,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "9ca4a7927aacf636ca469ec09d69279dc0d21764420c6b161d19012f1622ef43"
+  },
+  {
+   "id": "wikidata:Q15284134",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 3694,
+   "sections": 5,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 0,
+    "functionContext": 3,
+    "makingMechanism": 0,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "6721ba14e6d9ed57b747083582d53d94106e6feb7e0c6e548db1c1ca6606f5f3"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q28092249",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 8815,
+   "sections": 21,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 7,
+    "subjectAction": 4,
+    "functionContext": 5,
+    "makingMechanism": 10,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "d6c3f9c57412a7a5df6a98762bdd69922c4ad7211e76a4f070861971c57b30ba"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q15788627",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 4348,
+   "sections": 12,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 3,
+    "functionContext": 3,
+    "makingMechanism": 8,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "28e291bb43353c9f11b2b13e7628856360ef5a7b5d9872dde8276970a57fdb30"
+  },
+  {
+   "id": "wikidata:Q110776566",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": true,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 1094,
+   "sections": 3,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 1,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "5005fd0f5943320a4c2b9e5e34c4abb5b2941b65b30e0b5adac1f74fc7a0c5a0"
+  },
+  {
+   "id": "harvard303416",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": true,
+    "goldBundleOverlap": true
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 8489,
+   "sections": 18,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 6,
+    "functionContext": 3,
+    "makingMechanism": 4,
+    "significance": 5,
+    "transfer": null
+   },
+   "packetSha256": "624d20b028455a3bddacb59d3044a36d6960a2cbe4cb46eeea709c421d5d963c"
+  },
+  {
+   "id": "cleveland167459",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 9615,
+   "sections": 13,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 3,
+    "functionContext": 1,
+    "makingMechanism": 10,
+    "significance": 6,
+    "transfer": null
+   },
+   "packetSha256": "c2f67c39b16ca362af2b9992617504324bd6620e7091bb09be44c52ac92b12f6"
+  },
+  {
+   "id": "wikidata:Q48881623",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 9050,
+   "sections": 17,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 1,
+    "functionContext": 6,
+    "makingMechanism": 5,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "c1d1eb04d8b85c55967d0625fea9351349915adc4041bb20c6f4138e93269ec2"
+  },
+  {
+   "id": "met256169",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 4190,
+   "sections": 7,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 3,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "db8df73430759ffc348034de252b45c248e760503b77d40d1760c1a7fe49bc4e"
+  },
+  {
+   "id": "wikidata:Q18173418",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 26472,
+   "sections": 79,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 23,
+    "functionContext": 8,
+    "makingMechanism": 13,
+    "significance": 16,
+    "transfer": null
+   },
+   "packetSha256": "6c2d5da4f5809332783fa3ee32fa6130a2b650ec9d6a31f6c6e092812c173949"
+  },
+  {
+   "id": "wikidata:Q2454480",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": true,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 8546,
+   "sections": 11,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "bab38c80e37776b616398c651e8b25cc2f2607646d61fcbc133a829b472e6fcb"
+  },
+  {
+   "id": "wikidata:Q116259603",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 0,
+   "captured": 0,
+   "chars": 0,
+   "sections": 0,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "163385b438f63a29d28854dbb0e4421089e5c0a191a946b677c8f2eb567a29dd"
+  },
+  {
+   "id": "poussin-seasons-spring",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 23642,
+   "sections": 30,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 6,
+    "functionContext": 7,
+    "makingMechanism": 12,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "94c60c231b964a5ba7283e4701af1517fb7c87b4b153634ed10475efae1bff4f"
+  },
+  {
+   "id": "wikidata:Q105870850",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 38954,
+   "sections": 25,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 18,
+    "functionContext": 0,
+    "makingMechanism": 21,
+    "significance": 13,
+    "transfer": null
+   },
+   "packetSha256": "dad97a9f26bb83631d1e066325bfa6d290ceb666d4b88e72f5948d802d7633bc"
+  },
+  {
+   "id": "wikidata:Q16467705",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 3979,
+   "sections": 6,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 4,
+    "subjectAction": 1,
+    "functionContext": 3,
+    "makingMechanism": 1,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "09e290ec2bc786ffcb836f21e645fe6457238381da8c71593d1e85f4f7c7689d"
+  },
+  {
+   "id": "wikidata:Q2287821",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 5340,
+   "sections": 16,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 7,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 4,
+    "significance": 3,
+    "transfer": null
+   },
+   "packetSha256": "faf0b1e234147a1691891d9f449fa5848593c1548d4aed3fa1bd0416ddf2c0f8"
+  },
+  {
+   "id": "harvard216218",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 9022,
+   "sections": 33,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 11,
+    "subjectAction": 9,
+    "functionContext": 4,
+    "makingMechanism": 7,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "841e70ac50bcbc1b03122f5335eb38930bf7c17aa957300fc9e9fe91713a2672"
+  },
+  {
+   "id": "harvard230527",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 2541,
+   "sections": 13,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 0,
+    "functionContext": 2,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "609631f96fa68d8569f7f268fca43c5ace8f85fad183dfa1ac96b913d565172b"
+  },
+  {
+   "id": "wikidata:Q1211814",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 1071,
+   "sections": 4,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 1,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "e332c190ce9da8a5dd2dfff136ef1e5e089248f1662a9b4c59c464dd7b2321f3"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1128599",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 37926,
+   "sections": 39,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 15,
+    "functionContext": 9,
+    "makingMechanism": 6,
+    "significance": 13,
+    "transfer": null
+   },
+   "packetSha256": "c89d330351ad4adb703ab4f2dd6643fae2675aed218d037ac7afd0955b9b0b93"
+  },
+  {
+   "id": "wikidata:Q17021261",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 1757,
+   "sections": 4,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 0,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "f404525974c142ebadd8094a7fba18386602a1cfa115ded87252cf1071cb0be7"
+  },
+  {
+   "id": "met451717",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 8753,
+   "sections": 28,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 6,
+    "makingMechanism": 5,
+    "significance": 3,
+    "transfer": null
+   },
+   "packetSha256": "a112782b23d85fb442103624e706fd1081876752a5d2c0a9c6e9aafc569ca743"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q63247474",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 1,
+   "captured": 1,
+   "chars": 2477,
+   "sections": 5,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 2,
+    "functionContext": 1,
+    "makingMechanism": 0,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "8a3c1c13d2a7ab7033967d444aa02ec0d26c39d111e61610242edb5fda9bc45c"
+  },
+  {
+   "id": "met308527",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 6234,
+   "sections": 8,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 4,
+    "subjectAction": 3,
+    "functionContext": 1,
+    "makingMechanism": 2,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "2de7811c01e93570e40de4017e9d3a9ce65cb704bf924501610351adfd341896"
+  },
+  {
+   "id": "wikidata:Q2412563",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 4,
+   "captured": 3,
+   "chars": 29495,
+   "sections": 37,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 23,
+    "subjectAction": 4,
+    "functionContext": 9,
+    "makingMechanism": 10,
+    "significance": 12,
+    "transfer": null
+   },
+   "packetSha256": "10faaddb04d54ce57b613ec1b50340359832f05ead105011aed372d7194781ed"
+  },
+  {
+   "id": "cleveland170810",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 4548,
+   "sections": 13,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 0,
+    "functionContext": 1,
+    "makingMechanism": 1,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "3272e65b9d9334c2b7181402dad6e5ed7f12217c429e2adeb7fd184c1fbcd22b"
+  },
+  {
+   "id": "wikidata:Q15880874",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 2,
+   "chars": 14504,
+   "sections": 23,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 17,
+    "subjectAction": 10,
+    "functionContext": 4,
+    "makingMechanism": 10,
+    "significance": 8,
+    "transfer": null
+   },
+   "packetSha256": "fd4e1dad65c7ce56002123bdfb3b2643645fe411ade90dc83c021d0287fdefc1"
+  },
+  {
+   "id": "wikidata:Q279559",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 2,
+   "captured": 1,
+   "chars": 12736,
+   "sections": 14,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 11,
+    "subjectAction": 6,
+    "functionContext": 4,
+    "makingMechanism": 1,
+    "significance": 6,
+    "transfer": null
+   },
+   "packetSha256": "d16d88f03216512a9d4ea76c3f8ae1295165f032b11e1aa2f8fe3de9dafbe2a2"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q3829346",
+   "origin": "calibration:cal50-0a47b6f7f332",
+   "flags": {
+    "goldOverlap": false,
+    "goldBundleOverlap": false
+   },
+   "sources": 3,
+   "captured": 3,
+   "chars": 16058,
+   "sections": 29,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 11,
+    "functionContext": 2,
+    "makingMechanism": 15,
+    "significance": 6,
+    "transfer": null
+   },
+   "packetSha256": "bbcbb9b86c8a4f2a5cdc33b1bd7b65722400e703b92b8aeab618664b30b89ee4"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q1091086",
+   "origin": "regression:editorial-audit-03",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 9119,
+   "sections": 27,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 12,
+    "subjectAction": 4,
+    "functionContext": 0,
+    "makingMechanism": 6,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "5ea7b5b47781ce4bbf76e1d2aa2a989ef2419dd410261a1b00f3200a5bcbff64"
+  },
+  {
+   "id": "wikidata:Q15461864",
+   "origin": "regression:editorial-audit-05",
+   "flags": null,
+   "sources": 3,
+   "captured": 3,
+   "chars": 23467,
+   "sections": 41,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 14,
+    "subjectAction": 3,
+    "functionContext": 5,
+    "makingMechanism": 17,
+    "significance": 10,
+    "transfer": null
+   },
+   "packetSha256": "08bb4938315a5c76a3a3c7433ec10da8f6e5c83dc933a48cf74153480d7dcc98"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q185255",
+   "origin": "regression:editorial-audit-08",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 7850,
+   "sections": 17,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 8,
+    "subjectAction": 8,
+    "functionContext": 3,
+    "makingMechanism": 9,
+    "significance": 9,
+    "transfer": null
+   },
+   "packetSha256": "904f2f04f0565ac460186a1ec6aea596318e750d617274d6d29d272f2b2ad126"
+  },
+  {
+   "id": "wd:Q3595955",
+   "origin": "regression:editorial-audit-09",
+   "flags": null,
+   "sources": 3,
+   "captured": 3,
+   "chars": 29261,
+   "sections": 39,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 19,
+    "subjectAction": 9,
+    "functionContext": 12,
+    "makingMechanism": 9,
+    "significance": 13,
+    "transfer": null
+   },
+   "packetSha256": "e3f61aa5cfe76d3e3b8b492668f22d4cd2f1fc02ec16eb62fb8976c3287223c9"
+  },
+  {
+   "id": "wd:Q674846",
+   "origin": "regression:editorial-audit-12",
+   "flags": null,
+   "sources": 2,
+   "captured": 1,
+   "chars": 1400,
+   "sections": 4,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 1,
+    "functionContext": 0,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "67116848f1cdc6db3c3f9a78f452da743ce9912cf4e7d5d0a935b59bdc1f566a"
+  },
+  {
+   "id": "cleveland155537",
+   "origin": "regression:editorial-audit-17",
+   "flags": null,
+   "sources": 3,
+   "captured": 2,
+   "chars": 3249,
+   "sections": 7,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 2,
+    "functionContext": 3,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "29f6c4c54b09be911e64c34d269f239aed7b51c0e799c1962d0d5ae75edc4c53"
+  },
+  {
+   "id": "aic32623",
+   "origin": "regression:research-audit-01",
+   "flags": null,
+   "sources": 2,
+   "captured": 0,
+   "chars": 0,
+   "sections": 0,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "6a68ff88b42a020f543b0a3149633d5bf2a033b45702ac1d6cb70165cdbcf17d"
+  },
+  {
+   "id": "met308540",
+   "origin": "regression:research-audit-02",
+   "flags": null,
+   "sources": 3,
+   "captured": 1,
+   "chars": 1005,
+   "sections": 1,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "cc4eaea6d1210309fc6f16fc0862463be4271dc281f6b2ecbbab59374dc1887b"
+  },
+  {
+   "id": "wikidata:Q19883613",
+   "origin": "regression:research-audit-03",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 9544,
+   "sections": 20,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 5,
+    "functionContext": 0,
+    "makingMechanism": 7,
+    "significance": 4,
+    "transfer": null
+   },
+   "packetSha256": "1057c6cf8ac6943afe4ab7072b71ef28b31dd10127661e7a4d455660d4d5a106"
+  },
+  {
+   "id": "met54961",
+   "origin": "regression:research-audit-04",
+   "flags": null,
+   "sources": 3,
+   "captured": 1,
+   "chars": 1049,
+   "sections": 1,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "cb326df49d626c76b6bbd53470f73cef802188dc735377d43b7057513ed43854"
+  },
+  {
+   "id": "cleveland136178",
+   "origin": "regression:research-audit-05",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 4539,
+   "sections": 8,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 6,
+    "subjectAction": 2,
+    "functionContext": 2,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "02eee79b8a99d4c80d625bc9ff059df21786a69604259402b101fe8a5ab3db77"
+  },
+  {
+   "id": "met331619",
+   "origin": "regression:research-audit-06",
+   "flags": null,
+   "sources": 3,
+   "captured": 1,
+   "chars": 782,
+   "sections": 1,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "ddfb45753522a0359a1acb4e559ec6cb6490becfbe9321d2657cc94c3af16336"
+  },
+  {
+   "id": "met53573",
+   "origin": "regression:research-audit-07",
+   "flags": null,
+   "sources": 2,
+   "captured": 1,
+   "chars": 842,
+   "sections": 2,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "33b52baaec8a1c27aac163420b72508b585b6dc2647fdaeffdc4851d128bed89"
+  },
+  {
+   "id": "aic30661",
+   "origin": "regression:research-audit-08",
+   "flags": null,
+   "sources": 2,
+   "captured": 0,
+   "chars": 0,
+   "sections": 0,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "147c56dd6979d1758e074292322c220be7af135fe739fd2765a708b56aa4c48d"
+  },
+  {
+   "id": "wikidata:Q60152111",
+   "origin": "regression:research-audit-09",
+   "flags": null,
+   "sources": 1,
+   "captured": 1,
+   "chars": 35984,
+   "sections": 218,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 11,
+    "subjectAction": 29,
+    "functionContext": 28,
+    "makingMechanism": 6,
+    "significance": 23,
+    "transfer": null
+   },
+   "packetSha256": "3d1f5a1f0f90d798c81bfa5d37dff8177f9344bd7c8299f81cbea4fe577eb530"
+  },
+  {
+   "id": "wikidata:Q18709475",
+   "origin": "regression:research-audit-10",
+   "flags": null,
+   "sources": 1,
+   "captured": 1,
+   "chars": 1477,
+   "sections": 4,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "7fa8e8384eb0a4d48707726f9bc38057fa04636b0cfa345a1333fdc2c4195f5e"
+  },
+  {
+   "id": "cleveland310353",
+   "origin": "regression:research-audit-11",
+   "flags": null,
+   "sources": 3,
+   "captured": 3,
+   "chars": 15050,
+   "sections": 19,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 9,
+    "subjectAction": 7,
+    "functionContext": 5,
+    "makingMechanism": 7,
+    "significance": 9,
+    "transfer": null
+   },
+   "packetSha256": "80302caf014701fbc32aea11ed50b6f1202f4e5da61e2aff02af13059d58038f"
+  },
+  {
+   "id": "cleveland137276",
+   "origin": "regression:research-audit-12",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 5035,
+   "sections": 7,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 1,
+    "functionContext": 3,
+    "makingMechanism": 1,
+    "significance": 2,
+    "transfer": null
+   },
+   "packetSha256": "d225dc104f15ee4db2b51390e2b8510f84ad098a6290ab64b1eb022c4c49eec5"
+  },
+  {
+   "id": "sinmafa_86-12-1",
+   "origin": "regression:research-audit-13",
+   "flags": null,
+   "sources": 0,
+   "captured": 0,
+   "chars": 0,
+   "sections": 0,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "def77b47616833ce21dde55eff780bc9d0112a1ee5603b57d8c7b79504d7fb3c"
+  },
+  {
+   "id": "met327401",
+   "origin": "regression:research-audit-14",
+   "flags": null,
+   "sources": 2,
+   "captured": 1,
+   "chars": 887,
+   "sections": 1,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "70b20d15bc2995c2a36d1ea09f570724d637b8e3992716654fb408e84a6c42e8"
+  },
+  {
+   "id": "met469960",
+   "origin": "regression:research-audit-15",
+   "flags": null,
+   "sources": 3,
+   "captured": 1,
+   "chars": 921,
+   "sections": 2,
+   "holdingRecordCaptured": true,
+   "lexicalSlotCandidates": {
+    "identity": 1,
+    "subjectAction": 0,
+    "functionContext": 0,
+    "makingMechanism": 0,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "593077f82a21982d49ef6da24f09158fd55f31650068e42286ce7afcebcba960"
+  },
+  {
+   "id": "sifsg_F1904.61",
+   "origin": "regression:research-audit-16",
+   "flags": null,
+   "sources": 3,
+   "captured": 3,
+   "chars": 39885,
+   "sections": 85,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 18,
+    "subjectAction": 11,
+    "functionContext": 11,
+    "makingMechanism": 36,
+    "significance": 21,
+    "transfer": null
+   },
+   "packetSha256": "b5ef3413661ef9b41bfed99c22846465362794c5c6c982fe4cd58b64bb0275ee"
+  },
+  {
+   "id": "aic67362",
+   "origin": "regression:research-audit-17",
+   "flags": null,
+   "sources": 2,
+   "captured": 1,
+   "chars": 1058,
+   "sections": 3,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 2,
+    "subjectAction": 1,
+    "functionContext": 1,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "2a6de0da81497ca851441da92f4fd4d2353345bfe99932c9dbf0c22ad71f095a"
+  },
+  {
+   "id": "wikidata:Q17647883",
+   "origin": "regression:research-audit-18",
+   "flags": null,
+   "sources": 1,
+   "captured": 1,
+   "chars": 2346,
+   "sections": 3,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 3,
+    "subjectAction": 2,
+    "functionContext": 0,
+    "makingMechanism": 1,
+    "significance": 1,
+    "transfer": null
+   },
+   "packetSha256": "3ce55d41099241db61855a55df2183aa8bcf58eb1a48c97e646abee10cf60767"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q12418",
+   "origin": "regression:research-audit-19",
+   "flags": null,
+   "sources": 2,
+   "captured": 2,
+   "chars": 39977,
+   "sections": 43,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 0,
+    "subjectAction": 11,
+    "functionContext": 8,
+    "makingMechanism": 16,
+    "significance": 9,
+    "transfer": null
+   },
+   "packetSha256": "7d273299040d4657cef87980fcba7379b0bca8aa261b7bee95bd22dc582b47f2"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q45585",
+   "origin": "regression:research-audit-20",
+   "flags": null,
+   "sources": 1,
+   "captured": 1,
+   "chars": 26018,
+   "sections": 20,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 19,
+    "subjectAction": 11,
+    "functionContext": 2,
+    "makingMechanism": 19,
+    "significance": 7,
+    "transfer": null
+   },
+   "packetSha256": "a6e8405ffe12d3a3106ee5212e4fa8cbe909f7d14612b39924901678ef9b3013"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q151047",
+   "origin": "regression:research-audit-21",
+   "flags": null,
+   "sources": 1,
+   "captured": 1,
+   "chars": 2559,
+   "sections": 7,
+   "holdingRecordCaptured": false,
+   "lexicalSlotCandidates": {
+    "identity": 5,
+    "subjectAction": 3,
+    "functionContext": 1,
+    "makingMechanism": 1,
+    "significance": 0,
+    "transfer": null
+   },
+   "packetSha256": "dd09c063dc5cc43cd6ab9b2a5879a6dd9171fd8d2a2d42b83ca7f72d589d1f67"
+  }
+ ]
+}

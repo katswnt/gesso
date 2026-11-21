@@ -1,0 +1,510 @@
+{
+ "version": "teachingV2PhaseAPlan/1",
+ "namespace": "teaching-v2/2",
+ "salt": "teaching-v2-phase-a/1",
+ "selectionFile": "tasks/pass-b-calibration-50-selection.json",
+ "selectionSha256": "235e7ebf51cfdc67c887a7d48eae895349171dd7d7cc8e65e51a404011adb37b",
+ "rule": "order = ascending sha256(\"teaching-v2-phase-a/1:\" + id); firstTen = order[0..9]; pinDiagnostic = order[0..19]",
+ "order": [
+  "wd:Q7166365",
+  "met247010",
+  "http://www.wikidata.org/entity/Q586035",
+  "wikidata:Q97455775",
+  "wikidata:Q7678417",
+  "http://www.wikidata.org/entity/Q405814",
+  "cleveland120847",
+  "wikidata:Q1616056",
+  "wikidata:Q537640",
+  "met57329",
+  "http://www.wikidata.org/entity/Q1755464",
+  "wikidata:Q56825917",
+  "wd:Q616159",
+  "http://www.wikidata.org/entity/Q1190706",
+  "wikidata:Q114769532",
+  "wikidata:Q4950181",
+  "cleveland125571",
+  "wikidata:Q59296885",
+  "wikidata:Q21585351",
+  "met450509",
+  "aic124043",
+  "http://www.wikidata.org/entity/Q11180645",
+  "wikidata:Q15284134",
+  "http://www.wikidata.org/entity/Q28092249",
+  "http://www.wikidata.org/entity/Q15788627",
+  "wikidata:Q110776566",
+  "harvard303416",
+  "cleveland167459",
+  "wikidata:Q48881623",
+  "met256169",
+  "wikidata:Q18173418",
+  "wikidata:Q2454480",
+  "wikidata:Q116259603",
+  "poussin-seasons-spring",
+  "wikidata:Q105870850",
+  "wikidata:Q16467705",
+  "wikidata:Q2287821",
+  "harvard216218",
+  "harvard230527",
+  "wikidata:Q1211814",
+  "http://www.wikidata.org/entity/Q1128599",
+  "wikidata:Q17021261",
+  "met451717",
+  "http://www.wikidata.org/entity/Q63247474",
+  "met308527",
+  "wikidata:Q2412563",
+  "cleveland170810",
+  "wikidata:Q15880874",
+  "wikidata:Q279559",
+  "http://www.wikidata.org/entity/Q3829346"
+ ],
+ "firstTen": [
+  "wd:Q7166365",
+  "met247010",
+  "http://www.wikidata.org/entity/Q586035",
+  "wikidata:Q97455775",
+  "wikidata:Q7678417",
+  "http://www.wikidata.org/entity/Q405814",
+  "cleveland120847",
+  "wikidata:Q1616056",
+  "wikidata:Q537640",
+  "met57329"
+ ],
+ "rest": [
+  "http://www.wikidata.org/entity/Q1755464",
+  "wikidata:Q56825917",
+  "wd:Q616159",
+  "http://www.wikidata.org/entity/Q1190706",
+  "wikidata:Q114769532",
+  "wikidata:Q4950181",
+  "cleveland125571",
+  "wikidata:Q59296885",
+  "wikidata:Q21585351",
+  "met450509",
+  "aic124043",
+  "http://www.wikidata.org/entity/Q11180645",
+  "wikidata:Q15284134",
+  "http://www.wikidata.org/entity/Q28092249",
+  "http://www.wikidata.org/entity/Q15788627",
+  "wikidata:Q110776566",
+  "harvard303416",
+  "cleveland167459",
+  "wikidata:Q48881623",
+  "met256169",
+  "wikidata:Q18173418",
+  "wikidata:Q2454480",
+  "wikidata:Q116259603",
+  "poussin-seasons-spring",
+  "wikidata:Q105870850",
+  "wikidata:Q16467705",
+  "wikidata:Q2287821",
+  "harvard216218",
+  "harvard230527",
+  "wikidata:Q1211814",
+  "http://www.wikidata.org/entity/Q1128599",
+  "wikidata:Q17021261",
+  "met451717",
+  "http://www.wikidata.org/entity/Q63247474",
+  "met308527",
+  "wikidata:Q2412563",
+  "cleveland170810",
+  "wikidata:Q15880874",
+  "wikidata:Q279559",
+  "http://www.wikidata.org/entity/Q3829346"
+ ],
+ "pinDiagnostic": [
+  "wd:Q7166365",
+  "met247010",
+  "http://www.wikidata.org/entity/Q586035",
+  "wikidata:Q97455775",
+  "wikidata:Q7678417",
+  "http://www.wikidata.org/entity/Q405814",
+  "cleveland120847",
+  "wikidata:Q1616056",
+  "wikidata:Q537640",
+  "met57329",
+  "http://www.wikidata.org/entity/Q1755464",
+  "wikidata:Q56825917",
+  "wd:Q616159",
+  "http://www.wikidata.org/entity/Q1190706",
+  "wikidata:Q114769532",
+  "wikidata:Q4950181",
+  "cleveland125571",
+  "wikidata:Q59296885",
+  "wikidata:Q21585351",
+  "met450509"
+ ],
+ "flags": {
+  "cleveland167459": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met247010": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q105870850": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q114769532": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "aic124043": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met57329": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "cleveland125571": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "cleveland120847": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "cleveland170810": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q1616056": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "harvard303416": {
+   "goldOverlap": true,
+   "goldBundleOverlap": true
+  },
+  "wikidata:Q116259603": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "poussin-seasons-spring": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met256169": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "harvard230527": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met451717": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met450509": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q63247474": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "met308527": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "harvard216218": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q16467705": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q110776566": {
+   "goldOverlap": true,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q97455775": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q15880874": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q1211814": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q48881623": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q15788627": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q59296885": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q4950181": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q18173418": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q1190706": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q2454480": {
+   "goldOverlap": true,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q2287821": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q56825917": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q3829346": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q15284134": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q17021261": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wd:Q7166365": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q2412563": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q28092249": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q586035": {
+   "goldOverlap": true,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q1755464": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q405814": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q537640": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wd:Q616159": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q279559": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q7678417": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "wikidata:Q21585351": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q1128599": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  },
+  "http://www.wikidata.org/entity/Q11180645": {
+   "goldOverlap": false,
+   "goldBundleOverlap": false
+  }
+ },
+ "goldNote": "Gold-overlap works still run but are excluded from the Phase A gate denominators and reported separately; a bundle-overlap work (W/V see its own gold lesson) is contaminated by construction.",
+ "regressions": [
+  {
+   "id": "http://www.wikidata.org/entity/Q1091086",
+   "label": "editorial-audit-03",
+   "set": "editorial-audit",
+   "caseNo": "03"
+  },
+  {
+   "id": "wikidata:Q15461864",
+   "label": "editorial-audit-05",
+   "set": "editorial-audit",
+   "caseNo": "05"
+  },
+  {
+   "id": "wikidata:Q21585351",
+   "label": "editorial-audit-07",
+   "set": "editorial-audit",
+   "caseNo": "07"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q185255",
+   "label": "editorial-audit-08",
+   "set": "editorial-audit",
+   "caseNo": "08"
+  },
+  {
+   "id": "wd:Q3595955",
+   "label": "editorial-audit-09",
+   "set": "editorial-audit",
+   "caseNo": "09"
+  },
+  {
+   "id": "wd:Q674846",
+   "label": "editorial-audit-12",
+   "set": "editorial-audit",
+   "caseNo": "12"
+  },
+  {
+   "id": "cleveland155537",
+   "label": "editorial-audit-17",
+   "set": "editorial-audit",
+   "caseNo": "17"
+  },
+  {
+   "id": "aic32623",
+   "label": "research-audit-01",
+   "set": "research-audit",
+   "caseNo": "01"
+  },
+  {
+   "id": "met308540",
+   "label": "research-audit-02",
+   "set": "research-audit",
+   "caseNo": "02"
+  },
+  {
+   "id": "wikidata:Q19883613",
+   "label": "research-audit-03",
+   "set": "research-audit",
+   "caseNo": "03"
+  },
+  {
+   "id": "met54961",
+   "label": "research-audit-04",
+   "set": "research-audit",
+   "caseNo": "04"
+  },
+  {
+   "id": "cleveland136178",
+   "label": "research-audit-05",
+   "set": "research-audit",
+   "caseNo": "05"
+  },
+  {
+   "id": "met331619",
+   "label": "research-audit-06",
+   "set": "research-audit",
+   "caseNo": "06"
+  },
+  {
+   "id": "met53573",
+   "label": "research-audit-07",
+   "set": "research-audit",
+   "caseNo": "07"
+  },
+  {
+   "id": "aic30661",
+   "label": "research-audit-08",
+   "set": "research-audit",
+   "caseNo": "08"
+  },
+  {
+   "id": "wikidata:Q60152111",
+   "label": "research-audit-09",
+   "set": "research-audit",
+   "caseNo": "09"
+  },
+  {
+   "id": "wikidata:Q18709475",
+   "label": "research-audit-10",
+   "set": "research-audit",
+   "caseNo": "10"
+  },
+  {
+   "id": "cleveland310353",
+   "label": "research-audit-11",
+   "set": "research-audit",
+   "caseNo": "11"
+  },
+  {
+   "id": "cleveland137276",
+   "label": "research-audit-12",
+   "set": "research-audit",
+   "caseNo": "12"
+  },
+  {
+   "id": "sinmafa_86-12-1",
+   "label": "research-audit-13",
+   "set": "research-audit",
+   "caseNo": "13"
+  },
+  {
+   "id": "met327401",
+   "label": "research-audit-14",
+   "set": "research-audit",
+   "caseNo": "14"
+  },
+  {
+   "id": "met469960",
+   "label": "research-audit-15",
+   "set": "research-audit",
+   "caseNo": "15"
+  },
+  {
+   "id": "sifsg_F1904.61",
+   "label": "research-audit-16",
+   "set": "research-audit",
+   "caseNo": "16"
+  },
+  {
+   "id": "aic67362",
+   "label": "research-audit-17",
+   "set": "research-audit",
+   "caseNo": "17"
+  },
+  {
+   "id": "wikidata:Q17647883",
+   "label": "research-audit-18",
+   "set": "research-audit",
+   "caseNo": "18"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q12418",
+   "label": "research-audit-19",
+   "set": "research-audit",
+   "caseNo": "19"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q45585",
+   "label": "research-audit-20",
+   "set": "research-audit",
+   "caseNo": "20"
+  },
+  {
+   "id": "http://www.wikidata.org/entity/Q151047",
+   "label": "research-audit-21",
+   "set": "research-audit",
+   "caseNo": "21"
+  }
+ ],
+ "frozenAt": "2026-11-20"
+}
