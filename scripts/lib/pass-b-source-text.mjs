@@ -90,15 +90,34 @@ export function flateBudgetCheck(buf, maxDecodedBytes = PDF_LIMITS.maxDecodedByt
   }
   return { ok: true, total, streams };
 }
-const rssMb = pid => {
-  try {
-    if (process.platform === 'linux') return Number(/VmRSS:\s+(\d+)/.exec(readFileSync(`/proc/${pid}/status`, 'utf8'))?.[1] || 0) / 1024;
-    const r = spawnSync('ps', ['-o', 'rss=', '-p', String(pid)], { encoding: 'utf8', timeout: 2000 });
-    return Number(String(r.stdout).trim() || 0) / 1024;
-  } catch { return 0; }
-};
+// Resident-memory observation of the worker (review-2: never fail open). Returns { mb } for a live process, { gone }
+// once it has exited (or is a zombie), and { unobservable } when the platform refuses the reading (e.g. `ps` denied
+// by a sandbox, /proc unreadable). The heap flag alone does not bound pdf.js typed arrays, and RLIMIT_AS is not
+// enforced on macOS (and breaks V8's address-space reservations on Linux), so an unobservable RSS fails the PDF.
+export function makeRssObserver({ platform = process.platform, procRoot = '/proc', psBin = 'ps' } = {}) {
+  const alive = pid => { try { process.kill(pid, 0); return true; } catch (e) { return e?.code === 'EPERM'; } };
+  return pid => {
+    let why;
+    try {
+      if (platform === 'linux') {
+        const st = readFileSync(`${procRoot}/${pid}/status`, 'utf8');
+        if (/^State:\s+Z/m.test(st)) return { gone: true };
+        const kb = /VmRSS:\s+(\d+)/.exec(st)?.[1];
+        if (kb != null) return { mb: Number(kb) / 1024 };
+        why = 'no VmRSS in /proc status';
+      } else {
+        const r = spawnSync(psBin, ['-o', 'rss=', '-p', String(pid)], { encoding: 'utf8', timeout: 2000 });
+        const kb = String(r.stdout ?? '').trim();
+        if (!r.error && r.status === 0 && /^\d+$/.test(kb)) return { mb: Number(kb) / 1024 };
+        why = r.error ? `ps: ${r.error.code || r.error.message}` : `ps exit ${r.status}`;
+      }
+    } catch (e) { why = String(e?.code || e?.message || e); }
+    return alive(pid) ? { unobservable: why } : { gone: true };
+  };
+}
+const observeRss = makeRssObserver();
 // Runs the worker under the limits; resolves { ok, result } or { ok:false, status, reason }.
-export function runPdfWorker(buf, limits = PDF_LIMITS) {
+export function runPdfWorker(buf, limits = PDF_LIMITS, { rss = observeRss } = {}) {
   return new Promise(resolve => {
     const child = spawn(process.execPath, [`--max-old-space-size=${limits.heapMb}`, WORKER], {
       stdio: ['pipe', 'pipe', 'pipe'], env: { PATH: process.env.PATH || '', PDF_WORKER_MAX_PAGES: String(limits.maxPages), PDF_WORKER_MAX_CHARS: String(limits.maxChars) } });
@@ -106,7 +125,15 @@ export function runPdfWorker(buf, limits = PDF_LIMITS) {
     const finish = v => { if (settled) return; settled = true; clearTimeout(timer); clearInterval(watch); resolve(v); };
     const kill = why => { breach ||= why; try { child.kill('SIGKILL'); } catch { /* gone */ } };
     const timer = setTimeout(() => kill({ status: 'pdf-timeout', reason: `pdf extraction exceeded ${limits.timeoutMs} ms` }), limits.timeoutMs);
-    const watch = setInterval(() => { const mb = rssMb(child.pid); if (mb > limits.maxRssMb) kill({ status: 'pdf-memory-limit', reason: `pdf extraction exceeded ${limits.maxRssMb} MB (rss ${Math.round(mb)} MB)` }); }, 100);
+    let exited = false; child.on('exit', () => { exited = true; });
+    const sample = () => {
+      if (exited || settled) return;
+      const o = rss(child.pid);
+      if (o.unobservable) kill({ status: 'pdf-memory-unobservable', reason: `worker memory cannot be observed (${String(o.unobservable).slice(0, 80)}); the ${limits.maxRssMb} MB bound would not be enforced` });
+      else if (o.mb > limits.maxRssMb) kill({ status: 'pdf-memory-limit', reason: `pdf extraction exceeded ${limits.maxRssMb} MB (rss ${Math.round(o.mb)} MB)` });
+    };
+    const watch = setInterval(sample, 100);
+    sample(); // prove the bound is observable before the worker is handed any input
     child.stdout.on('data', d => { n += d.length; if (n > limits.maxStdoutBytes) kill({ status: 'pdf-output-limit', reason: 'pdf extraction output over the cap' }); else out.push(d); });
     child.stderr.on('data', d => { if (err.length < 2000) err += d; });
     child.on('error', e => finish({ ok: false, status: 'pdf-extraction-failed', reason: `worker: ${String(e.message).slice(0, 100)}` }));

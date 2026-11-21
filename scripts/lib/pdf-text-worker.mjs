@@ -8,7 +8,6 @@
 // streams; the parent fails the extraction when any of them is present.
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { inflateSync, constants as zc } from 'node:zlib';
 
 const MAX_PAGES = Number(process.env.PDF_WORKER_MAX_PAGES || 400);
 const MAX_CHARS = Number(process.env.PDF_WORKER_MAX_CHARS || 4_000_000);
@@ -27,40 +26,45 @@ const input = Buffer.concat(chunks), data = new Uint8Array(input);
 const UNDECODED = /[�-\u0000-\u0008\u000B\u000C\u000E-\u001F]/gu;
 const out = { ok: false, version: pdfjs.version, pages: [], warnings, error: null, truncated: false, unmappedFonts: [] };
 
-// ---- font decodability audit (pdf.js silently GUESSES text for fonts with no Unicode mapping) ----
-// A Type0 font with an Identity encoding and no ToUnicode, or a simple font whose /Differences use subset glyph names
-// (g17, glyph12, cid40, …) with no ToUnicode, has no honest code→text mapping: pdf.js emits code points as letters.
-// Objects are found in the file body and in Flate object streams (each inflate capped).
-const SUBSET_GLYPH = /^(g|glyph|cid|index|c|G)\d+$|^\.notdef$/;
-function fontAudit(buf) {
-  const src = buf.toString('latin1'), dicts = [];
-  for (const m of src.matchAll(/\d+\s+\d+\s+obj\b([\s\S]*?)endobj/g)) {
-    const body = m[1], si = body.search(/\bstream\r?\n/);
-    if (si < 0) { dicts.push(body); continue; }
-    const dict = body.slice(0, si); dicts.push(dict);
-    if (!/\/Type\s*\/ObjStm\b/.test(dict) || !/\/FlateDecode\b/.test(dict)) continue;
-    const start = m.index + m[0].indexOf(body) + si + body.slice(si).match(/^stream\r?\n/)[0].length;
-    const end = src.indexOf('endstream', start);
-    try { dicts.push(inflateSync(buf.subarray(start, end), { maxOutputLength: 32 * 1024 * 1024, finishFlush: zc.Z_SYNC_FLUSH }).toString('latin1')); } catch { /* pdf.js reports real stream errors */ }
-  }
-  const fonts = [];
-  for (const d of dicts) for (const m of d.matchAll(/<<\s*\/Type\s*\/Font\b/g)) {
-    let depth = 0, j = m.index;
-    for (; j < d.length - 1 && j < m.index + 20000; j++) {
-      if (d[j] === '<' && d[j + 1] === '<') { depth++; j++; } else if (d[j] === '>' && d[j + 1] === '>') { depth--; j++; if (!depth) break; }
+// ---- font decodability audit (pdf.js silently GUESSES text for codes with no Unicode mapping) ----
+// Audited from pdf.js's OWN resolved data, never from the raw bytes: for every glyph each page actually shows
+// (the operator list's showText glyphs, which include forms and every content stream), look up the font pdf.js
+// resolved for it (commonObjs, exported with fontExtraProperties) and require a real code->Unicode entry. pdf.js
+// falls back to the raw character code when its toUnicode map has no entry, and uses an identity map for a Type0
+// font with no ToUnicode; both are guesses. Dictionary key order, indirect objects and object streams are all
+// resolved by pdf.js before this sees them (review-2 R2-2).
+function auditPageFonts(page, ops, unmapped) {
+  const bad = new Map();
+  let font = null, fontKey = null;
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    const fn = ops.fnArray[i], args = ops.argsArray[i];
+    if (fn === pdfjs.OPS.setFont) {
+      fontKey = args?.[0] ?? null;
+      try { font = fontKey && page.commonObjs.has(fontKey) ? page.commonObjs.get(fontKey) : null; } catch { font = null; }
+      continue;
     }
-    const f = d.slice(m.index, j + 1), name = /\/BaseFont\s*\/([^\s/<>\[\]()]+)/.exec(f)?.[1] || '?';
-    if (/\/ToUnicode\b/.test(f)) continue;
-    if (/\/Subtype\s*\/Type0\b/.test(f) && /\/Encoding\s*\/Identity-[HV]\b/.test(f)) { fonts.push({ name, why: 'Type0 Identity encoding without ToUnicode' }); continue; }
-    const diffs = /\/Differences\s*\[([^\]]*)\]/.exec(f)?.[1];
-    if (diffs && (diffs.match(/\/[^\s/\[\]]+/g) || []).some(g => SUBSET_GLYPH.test(g.slice(1)))) fonts.push({ name, why: 'subset glyph names without ToUnicode' });
+    if (fn !== pdfjs.OPS.showText || !Array.isArray(args?.[0])) continue;
+    const glyphs = args[0].filter(g => g && typeof g === 'object');
+    if (!glyphs.length) continue;
+    const name = font?.name || fontKey || '?';
+    let why = null, count = 0;
+    const tu = font?.toUnicode;
+    if (!font || !tu) { why = 'pdf.js font data unavailable'; count = glyphs.length; }
+    else if (!Array.isArray(tu._map) && Number.isInteger(tu.firstChar) && Number.isInteger(tu.lastChar)) {
+      why = font.composite ? 'Type0 Identity encoding without ToUnicode' : 'identity code-to-text mapping'; count = glyphs.length;
+    } else if (Array.isArray(tu._map)) {
+      count = glyphs.filter(g => tu._map[g.originalCharCode] == null).length;
+      if (count) why = 'shown code(s) without a Unicode mapping';
+    } else { why = 'unrecognized pdf.js toUnicode data'; count = glyphs.length; }
+    if (!why) continue;
+    const k = `${name}\u0000${why}`, prev = bad.get(k);
+    bad.set(k, { name, why, glyphs: (prev?.glyphs || 0) + count, page: prev?.page ?? page.pageNumber });
   }
-  return fonts.slice(0, 50);
+  for (const f of bad.values()) if (unmapped.length < 50) unmapped.push(f);
 }
 try {
-  out.unmappedFonts = fontAudit(input);
   const doc = await pdfjs.getDocument({
-    data, isEvalSupported: false, disableFontFace: true, useSystemFonts: false, enableXfa: false, stopAtErrors: false,
+    data, isEvalSupported: false, disableFontFace: true, fontExtraProperties: true, useSystemFonts: false, enableXfa: false, stopAtErrors: false,
     standardFontDataUrl: `${join(pkgDir, 'standard_fonts')}/`, cMapUrl: `${join(pkgDir, 'cmaps')}/`, cMapPacked: true, verbosity: 1,
   }).promise;
   out.numPages = doc.numPages;
@@ -69,6 +73,7 @@ try {
     const page = { n: i, text: '', undecoded: 0, error: null };
     try {
       const p = await doc.getPage(i);
+      auditPageFonts(p, await p.getOperatorList({ annotationMode: pdfjs.AnnotationMode.DISABLE }), out.unmappedFonts); // same scope as getTextContent
       const tc = await p.getTextContent({ includeMarkedContent: false, disableNormalization: false });
       // Lines from item positions; a vertical move of more than ~1.8 line heights starts a new paragraph.
       let text = '', lastY = null, lastH = 12;

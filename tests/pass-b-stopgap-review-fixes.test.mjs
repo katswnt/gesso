@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { EventEmitter } from 'node:events';
 import { spawnSync } from 'node:child_process';
-import { pagePdf, bombPdf, textOps, HELVETICA, UNMAPPED_TYPE0, UNMAPPED_DIFFERENCES } from './helpers/pdf-fixtures.mjs';
+import { pagePdf, bombPdf, textOps, HELVETICA, UNMAPPED_TYPE0, UNMAPPED_DIFFERENCES, UNMAPPED_TYPE0_INDIRECT, UNMAPPED_DIFFERENCES_INDIRECT, reorderFont } from './helpers/pdf-fixtures.mjs';
 import * as ST from '../scripts/lib/pass-b-source-text.mjs';
 import * as RS from '../scripts/lib/pass-b-research-stopgap.mjs';
 import { createBroker } from '../scripts/lib/img-broker.mjs';
@@ -42,12 +42,44 @@ t('6: compressed-size amplification is refused before pdf.js runs', async () => 
   const r = await ST.extractPdfText(bomb);
   assert.strictEqual(r.ok, false); assert.strictEqual(r.status, 'pdf-decompression-limit');
 });
+// review-2 R2-2 (Codex probe round2/probes/stopgap/review2-pdf.mjs): the same unmapped fonts, serialized so a raw-byte
+// audit cannot see them. Every variant must still fail; the text before the unmapped stream must not pass as complete.
+const UNMAPPED_CASES = [
+  ['Type0 Identity', UNMAPPED_TYPE0, UNMAPPED_TYPE0_INDIRECT, 'BT /F2 12 Tf 72 600 Td <00410042> Tj ET'],
+  ['subset-name Differences', UNMAPPED_DIFFERENCES, UNMAPPED_DIFFERENCES_INDIRECT, 'BT /F2 12 Tf 72 600 Td (ABC) Tj ET'],
+];
+for (const [label, font, indirect, ops] of UNMAPPED_CASES) {
+  const variants = [
+    ['reordered keys (/Subtype before /Type /Font)', { fonts: { F1: HELVETICA, F2: reorderFont(font) } }],
+    ['encoding reached through indirect objects', { fonts: { F1: HELVETICA, F2: indirect.font }, extra: indirect.extra }],
+    ['font inside a compressed object stream', { fonts: { F1: HELVETICA, F2: font }, objStm: true }],
+    ['reordered, indirect and in an object stream', { fonts: { F1: HELVETICA, F2: reorderFont(indirect.font) }, extra: indirect.extra, objStm: true }],
+  ];
+  for (const [vname, opts] of variants)
+    t(`R2-2: ${label} font, ${vname}, still fails as incomplete`, async () => {
+      const r = await ST.extractPdfText(pagePdf([{ text: textOps([ATTRIBUTION]) }, { text: ops }], opts));
+      assert.strictEqual(r.ok, false, `extracted as complete: ${JSON.stringify(r.text)}`);
+      assert.strictEqual(r.status, 'pdf-incomplete'); assert.match(r.reason, /Unicode mapping/);
+    });
+}
+t('R2-2: control: mapped fonts in an object stream, reordered and indirect, still extract completely', async () => {
+  const r = await ST.extractPdfText(pagePdf([{ text: textOps([ATTRIBUTION]) }, { text: textOps([REJECTION], 600, 'F2') }],
+    { fonts: { F1: reorderFont(HELVETICA), F2: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding @X0 >>' }, extra: ['/WinAnsiEncoding'], objStm: true }));
+  assert.ok(r.ok, r.reason); assert.ok(r.text.includes(ATTRIBUTION) && r.text.includes(REJECTION), r.text);
+});
+// review-2 RSS fail-open: Codex's memory probe completed with ok:true because `ps` was denied and rss read as 0.
+for (const [name, rss] of [['ps denied', ST.makeRssObserver({ platform: 'darwin', psBin: '/nonexistent/ps' })], ['/proc unreadable', ST.makeRssObserver({ platform: 'linux', procRoot: '/nonexistent-proc' })]])
+  t(`RSS: an unobservable worker RSS (${name}) fails closed, never reads as 0`, async () => {
+    const r = await ST.runPdfWorker(bombPdf(90 * 1024 * 1024), { ...ST.PDF_LIMITS, maxRssMb: 60 }, { rss });
+    assert.strictEqual(r.ok, false, 'worker ran with no enforced memory bound'); assert.strictEqual(r.status, 'pdf-memory-unobservable');
+  });
 t('6: the pdf.js child process is bounded by time and memory', async () => {
   const pdf = pagePdf([{ text: textOps([ATTRIBUTION]) }]);
   const slow = await ST.runPdfWorker(pdf, { ...ST.PDF_LIMITS, timeoutMs: 30 });
   assert.strictEqual(slow.ok, false); assert.strictEqual(slow.status, 'pdf-timeout');
   const big = await ST.runPdfWorker(bombPdf(90 * 1024 * 1024), { ...ST.PDF_LIMITS, maxRssMb: 60 });
-  assert.strictEqual(big.ok, false); assert.strictEqual(big.status, 'pdf-memory-limit');
+  // Where RSS can be observed the bound trips; where it cannot (a sandbox denying `ps`) the run fails closed instead.
+  assert.strictEqual(big.ok, false); assert.ok(['pdf-memory-limit', 'pdf-memory-unobservable'].includes(big.status), big.status);
   const ok = await ST.extractPdfText(pdf);
   assert.ok(ok.ok); assert.strictEqual(ok.facts.extractor, `pdfjs-dist@${ST.PDFJS_VERSION}`);
 });

@@ -650,9 +650,13 @@ byte-identical and still readable by every offline command.
   at most 24 MB of raw bytes per work (beyond it: `raw-retention-cap`), and capture pauses the run below 4 GB free
   disk. The read-only plan prints retained MB in total and per work. PDF text comes from pdf.js (`pdfjs-dist@5.6.205`,
   pinned in `package.json` and the cloud launcher) in a child process limited to 30 s, 768 MB RSS and 24 MB of output,
-  after a 96 MB cap on decoded Flate streams; any undecodable stream, unmapped font, undecodable character or page
-  error fails the source (`pdf-incomplete`, `pdf-decompression-limit`, `pdf-timeout`, `pdf-memory-limit`, ...) rather
-  than returning partial text. Other failures are explicit statuses (`http-status`, `unsupported-type`, ...). A
+  after a 96 MB cap on decoded Flate streams. RSS is sampled from `/proc` (Linux) or `ps` (macOS) from spawn onward;
+  if it cannot be observed the source fails (`pdf-memory-unobservable`) rather than running unbounded. Font
+  decodability is audited from pdf.js's own resolved fonts and operator list (every shown glyph must have a real
+  code-to-Unicode entry; an identity map for a Type0 font without ToUnicode counts as unmapped), independent of
+  dictionary key order, indirect objects and object streams. Any undecodable stream, unmapped shown glyph,
+  undecodable character or page error fails the source (`pdf-incomplete`, `pdf-decompression-limit`, `pdf-timeout`,
+  `pdf-memory-limit`, ...) rather than returning partial text. Other failures are explicit statuses (`http-status`, `unsupported-type`, ...). A
   session where every fetch fails transiently is recorded in `research/capture-attempts/NNNNNN.json`; one later
   session retries only those URLs, then the failures become the sidecar (so the four-fetch envelope cannot repeat).
   Five deferred works in a row stop the run.
