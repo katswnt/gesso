@@ -746,15 +746,45 @@ node scripts/teaching-v2-packets.mjs --fetch    # the only networked step: captu
 node scripts/teaching-v2-packets.mjs --build    # offline packets, exact-substring checks, coverage triage
 node scripts/teaching-v2-run.mjs                # DRY RUN, first ten: every W prompt + V template, sha256 + bytes
 node scripts/teaching-v2-run.mjs --phase rest   # DRY RUN, remaining 40 (live needs the ten terminal + --after-first-ten)
-node scripts/teaching-v2-pin-diagnostic.mjs --run <tv2a-id>   # 20-work W-vs-fresh-B3 point harness (dry run)
-node scripts/teaching-v2-run.mjs --previews     # current-renderer + faithful static previews from run states
+node scripts/teaching-v2-pin-diagnostic.mjs --run <tv2a-id>   # 20-work W-vs-B3 prompts only; --live is REFUSED
+node scripts/teaching-v2-run.mjs --previews     # current renderer (index.html itself) + proposed faithful previews
 ```
 
-The inputs are the preserved `cal50-0a47b6f7f332` B1/B2/B3 and the sanitized images. Every reused body is
-re-verified against its raw bytes. Old B2 is treated as untrusted leads and old B3 boxes as candidates, with
-documentary requests rejected and the reason recorded. Each work's planned path is W+V, plus at most one V2
-or one transport retry. Live execution (`TEACHING_V2_LIVE=1 ... --live`) is not authorized until Codex has
-reviewed the code and the owner has approved it. It uses the shared pacing ledger and serial order.
+The inputs are the preserved `cal50-0a47b6f7f332` B1/B2/B3 and the sanitized images. Each imported stage is
+re-verified with the shared verifiers (`verifyCapturedStage`, `verifyStageEvidence`) against cal50's own
+contract: one canonical completion, original effective prompt, image, transcript, Sonnet 4.6. The provenance is
+kept as recorded. Body-only regression imports hold before W until they are re-imported with stage evidence.
+Old B2 is treated as untrusted leads and old B3 boxes as candidates, with documentary requests rejected and the
+reason recorded. Each work's planned path is W+V, plus at most one V2 or one transient retry (a provider
+5xx/529 with nothing generated, a process that never started a session, or a usage rejection). Every
+dispatched attempt counts. Content failures and timeouts hold. Each work binds its inputs, prompt and
+renderer once. A changed input refuses reuse and needs a new run version. Packet text keeps every line except
+structural navigation, exact interface labels and a reference tail; each removal is recorded.
+
+The current-renderer preview, and V's render manifest, run index.html's own reveal code in the stubbed-DOM
+sandbox (`scripts/lib/index-app-sandbox.mjs`, shared with `tests/dom-harness.mjs`). It reports the teaser,
+listed notes and questions, the dot source, and displayed dot positions after `declutterMarks` at 343 px and
+560 px plates. It does not model CSS layout, object-fit or zoom. Holds preview the frozen legacy copy. Reports
+give all-50, gold-contaminated (4) and non-gold (46) results separately. The §6.5 gate keeps its 35/50 wording.
+
+Live execution (`TEACHING_V2_LIVE=1 ... --live`) is not authorized until Codex has re-reviewed the code and the
+owner has approved it. When it is, it runs serially under the SAME controls as the corpus collector:
+
+```bash
+# from the shared layout (data/incoming -> $PASS_B_REMOTE_EVIDENCE/incoming), with the routine idle:
+node scripts/pass-b-cloud-lease.mjs acquire laptop-teaching-v2-<name>   # never a routine-/schedule- name
+PASS_B_REMOTE_EVIDENCE=<evidence checkout> PASS_B_LEASE_HOLDER=laptop-teaching-v2-<name> \
+PASS_B_CALL_BUDGET_ID=teaching-v2-phase-a-first10 PASS_B_MAX_CALLS=27 TEACHING_V2_LIVE=1 \
+  node scripts/teaching-v2-run.mjs --live
+node scripts/pass-b-cloud-lease.mjs release laptop-teaching-v2-<name>
+```
+
+The runner refuses unless this holder owns the lease on the state branch. The allowance id must be
+`teaching-v2-phase-a-*` with a cap no larger than runnable works × 3, and the evidence must sit inside the
+evidence checkout. While Phase A holds the lease the routine cannot start, and a non-automation lease is never
+recovered as stale. Pacing comes from the shared `vision-ops/usage-observations.jsonl` and call-budget file.
+Each reservation is pushed before its call and each outcome after it. A fatal or unknown outcome writes
+`phase-a/fatal.json`. Nothing then runs, on any work, until the owner reviews the evidence and deletes it.
 
 ### Remaining publication and operational follow-ups
 
