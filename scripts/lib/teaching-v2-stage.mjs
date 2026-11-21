@@ -14,7 +14,7 @@ import { MODEL } from './teaching-v2-contract.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/6';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/7';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -37,15 +37,58 @@ export function buildConfinedCommand({ stage, promptText, imageFile, wireSchema,
 
 // Every nonempty line is either a JSON event object (string `type`) or a MALFORMED record (review R3-A2): a
 // truncated or unparseable line, or JSON that is not an event. Discarded bytes are tracked, never ignored.
+// Review R6-A1: every object parsed from a record keeps its exact source text (RAW_TEXT), so a Read's input can be
+// checked as written: JSON.parse silently keeps only the last of duplicate keys and decodes escaped key names.
 export function parseRecords(stdout) {
   const evs = [], malformed = [];
   String(stdout).split('\n').forEach((l, i) => {
     if (!l.trim()) return;
-    let e; try { e = JSON.parse(l); } catch { malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'unparseable' }); return; }
+    let e; try { JSON.parse(l); e = parseKeepingRaw(l); } catch { malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'unparseable' }); return; }
     if (e && typeof e === 'object' && !Array.isArray(e) && typeof e.type === 'string') evs.push(e);
     else malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'not an event object' });
   });
   return { evs, malformed };
+}
+const RAW_TEXT = new WeakMap();
+// A strict JSON parser with JSON.parse's semantics (last duplicate wins, `__proto__` is an own key) that records
+// the source text of every object. parseRecords runs JSON.parse first, so any disagreement here is malformed.
+function parseKeepingRaw(text) {
+  let i = 0;
+  const fail = () => { throw new SyntaxError(`unexpected JSON at ${i}`); };
+  const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+  const str = () => {
+    const s = i++;
+    for (; i < text.length && text[i] !== '"'; i++) if (text[i] === '\\') i++;
+    if (i >= text.length) fail();
+    return JSON.parse(text.slice(s, ++i));
+  };
+  const NUM = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+  const value = () => {
+    ws();
+    const c = text[i], s = i;
+    if (c === '"') return str();
+    if (c === '{') {
+      i++; const o = {}; ws();
+      if (text[i] === '}') i++;
+      else for (;;) {
+        ws(); if (text[i] !== '"') fail();
+        const k = str(); ws(); if (text[i++] !== ':') fail();
+        Object.defineProperty(o, k, { value: value(), writable: true, enumerable: true, configurable: true });
+        ws(); const d = text[i++]; if (d === '}') break; if (d !== ',') fail();
+      }
+      RAW_TEXT.set(o, text.slice(s, i)); return o;
+    }
+    if (c === '[') {
+      i++; const a = []; ws();
+      if (text[i] === ']') i++;
+      else for (;;) { a.push(value()); ws(); const d = text[i++]; if (d === ']') break; if (d !== ',') fail(); }
+      return a;
+    }
+    for (const [w, v] of [['true', true], ['false', false], ['null', null]]) if (text.startsWith(w, i)) { i += w.length; return v; }
+    NUM.lastIndex = i; const m = NUM.exec(text); if (!m) fail(); i = NUM.lastIndex; return Number(m[0]);
+  };
+  const v = value(); ws(); if (i !== text.length) fail();
+  return v;
 }
 const events = stdout => parseRecords(stdout).evs;
 // Every *tool_use block anywhere in an envelope (tool_use, server_tool_use, mcp_tool_use, streamed content_block).
@@ -75,9 +118,17 @@ function toolEvents(evs) {
 // A complete block with the same id and name RECONCILES a streamed block: an identical resolved input, or an unfinished
 // placeholder/prefix consistent with the complete input, is the same invocation and is kept once. Anything else is
 // conflicting evidence: both are kept and the streamed copy is marked `conflict` (fatal for a Read).
-export function normalizedToolUses(evs) {
+export function normalizedToolUses(evs) { return reconcileToolUses(collectToolUses(evs)); }
+// Review R6-A1: the raw argument evidence of each collected block, BEFORE any parse, reconciliation or dedup:
+// the concatenated input_json_delta text of a streamed block, else the source text of the block's input object.
+const RAW_ARGS = new WeakMap();
+function collectToolUses(evs) {
   const uses = [];
-  const add = (b, streamed) => { const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false, unfinished: false, partial: null, conflict: false }; uses.push(u); return u; };
+  const add = (b, streamed) => {
+    const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false, unfinished: false, partial: null, conflict: false };
+    RAW_ARGS.set(u, { text: b.input && typeof b.input === 'object' ? RAW_TEXT.get(b.input) ?? null : null, deltas: false });
+    uses.push(u); return u;
+  };
   const visit = v => {
     if (Array.isArray(v)) { v.forEach(visit); return; }
     if (!v || typeof v !== 'object') return;
@@ -88,7 +139,7 @@ export function normalizedToolUses(evs) {
   const close = (idx, stopped) => {
     const b = open.get(idx); if (!b) return; open.delete(idx);
     const u = b.use, raw = b.partial.join('');
-    if (b.partial.length) { let v; try { v = JSON.parse(raw); } catch { v = undefined; } u.input = v; }
+    if (b.partial.length) { RAW_ARGS.set(u, { text: raw, deltas: true }); let v; try { v = JSON.parse(raw); } catch { v = undefined; } u.input = v; }
     const isObj = u.input && typeof u.input === 'object' && !Array.isArray(u.input);
     if (isObj && (b.partial.length || stopped || !isEmptyInput(u.input))) return; // resolved
     u.input = null; u.partial = raw;
@@ -107,6 +158,9 @@ export function normalizedToolUses(evs) {
     if (se.type === 'content_block_stop') close(idx, true);
   }
   closeAll();
+  return uses;
+}
+function reconcileToolUses(uses) {
   const complete = uses.filter(u => !u.streamed), seen = new Set();
   return uses.filter(u => {
     if (u.streamed && u.id != null) {
@@ -166,27 +220,105 @@ function executedIds(evs) {
 //     Review R5-A1: this holds even when a complete safe path token was streamed. That token is checked for
 //     confinement only; the invocation is still unfinished and never becomes a judged (receipt-bearing) Read.
 // A streamed Read that conflicts with the complete block of the same id is bad (fatal); both stay on record.
+// Review R6-A1: a STRICT ALLOWLIST over the raw argument evidence, which fails closed. A Read form verifies a confined
+// image read only when its raw text is exactly the canonical single-key object {"file_path":"<image path>"}, with
+// insignificant JSON whitespace only: no other key, no escape anywhere, no duplicate key. The real CLI emits exactly
+// this shape (every Read in the saved real transcripts is {"file_path":"<abs path>"}; none carries offset, limit or
+// pages), so no other key is allowed. Each raw form of a Read invocation is judged on its own, before parsing,
+// reconciliation or dedup can discard it:
+//   canonical : the canonical object naming the image;
+//   prefix    : an unfinished stream that is still a prefix of that canonical object (the `{}` start placeholder of a
+//               block with no delta is no evidence and counts as a prefix);
+//   other     : anything else. Its string escapes are decoded and EVERY string value (and every key that is not a
+//               plain identifier) is a path mention; any mention that is not (or, unterminated, cannot still become)
+//               the image path is an established outside path: fatal, ahead of quota/timeout/interruption.
+// A Read invocation with an `other` form and no outside mention is not a valid image inspection: a session that
+// would otherwise succeed is held as a content-failure (quota/timeout/interruption keep their classification).
+const CANONICAL_HEAD = '{"file_path":"';
+function readFormVerdict(u, outside) {
+  const { text, deltas } = RAW_ARGS.get(u) || {};
+  if (typeof text !== 'string') return { kind: 'other', out: u.input == null ? [] : jsonStrings(JSON.stringify(u.input)).filter(t => mentions(t) && outside(t)) };
+  const sq = squeezeJson(text);
+  if (u.streamed && !deltas && sq === '{}' && !u.unresolved) return { kind: 'prefix', out: [] }; // start placeholder
+  const m = sq.startsWith(CANONICAL_HEAD) ? /^([^"\\]*)("\}?)?$/.exec(sq.slice(CANONICAL_HEAD.length)) : null;
+  if (m) {
+    const p = { path: m[1], complete: !!m[2] };
+    if (outside(p)) return { kind: 'other', out: [p] };
+    return { kind: m[2] === '"}' ? 'canonical' : 'prefix', out: [] };
+  }
+  if (CANONICAL_HEAD.startsWith(sq)) return { kind: 'prefix', out: [] }; // '', '{', '{"file_pa', ...
+  return { kind: 'other', out: jsonStrings(text).filter(t => mentions(t) && outside(t)) };
+}
+const mentions = t => !t.key || !/^[A-Za-z0-9_]*$/.test(t.path);
+// The text with JSON whitespace outside strings removed.
+function squeezeJson(text) {
+  let out = '', inStr = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inStr) { out += c; if (c === '\\' && i + 1 < text.length) out += text[++i]; else if (c === '"') inStr = false; }
+    else if (c === '"') { inStr = true; out += c; }
+    else if (!' \t\n\r'.includes(c)) out += c;
+  }
+  return out;
+}
+// Every string token of a (possibly partial, possibly malformed) JSON text, decoded: [{ path, complete, key }].
+// A token is a key when it opens an object member (after `{` or `,` inside an object); the rest are values.
+function jsonStrings(text) {
+  const out = [], stack = []; let expectKey = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      let j = i + 1;
+      for (; j < text.length && text[j] !== '"'; j++) if (text[j] === '\\') j++;
+      const complete = j < text.length, key = stack.at(-1) === '{' && expectKey;
+      out.push({ path: decodeJsonString(text.slice(i + 1, Math.min(j, text.length))), complete, key });
+      if (key) expectKey = false;
+      i = j; continue;
+    }
+    if (c === '{') { stack.push('{'); expectKey = true; }
+    else if (c === '[') { stack.push('['); expectKey = false; }
+    else if (c === '}' || c === ']') { stack.pop(); expectKey = false; }
+    else if (c === ',') expectKey = stack.at(-1) === '{';
+    else if (c === ':') expectKey = false;
+  }
+  return out;
+}
+const ESC = { b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
+const decodeJsonString = s => s.replace(/\\(?:u[0-9a-fA-F]{0,3})?$/, '')
+  .replace(/\\(u[0-9a-fA-F]{4}|[^u])/g, (_, e) => (e[0] === 'u' && e.length === 5 ? String.fromCharCode(parseInt(e.slice(1), 16)) : ESC[e] ?? e));
+function readEvidenceGate(uses, outside) {
+  const byId = new Map(), escaped = [], unverified = [], ambiguous = [];
+  uses.forEach((u, n) => { const k = u.id ?? `\u0000${n}`; if (!byId.has(k)) byId.set(k, []); byId.get(k).push(u); });
+  for (const [k, forms] of byId) {
+    const verdicts = forms.map(u => readFormVerdict(u, outside)), out = verdicts.flatMap(v => v.out);
+    for (const p of out) { if (p.complete) escaped.push(p.path); else unverified.push(`${p.path}…`); }
+    if (!out.length && verdicts.some(v => v.kind === 'other')) ambiguous.push(k.startsWith('\u0000') ? 'without id' : k);
+  }
+  return { escaped, unverified, ambiguous };
+}
 function confinedReads(stdout, evs, { callDir, imageFile }) {
-  const uses = normalizedToolUses(evs).filter(u => u.type === 'tool_use'), ran = executedIds(evs);
+  const collected = collectToolUses(evs).filter(u => u.type === 'tool_use'), ran = executedIds(evs);
   const wantAbs = callDir ? norm(resolveIn(callDir, imageFile)) : null;
-  const judged = [], unverified = [], unfinished = [], escaped = [];
-  // A streamed path token is inside only when it is (complete) or can still become (prefix) exactly the image path.
+  // A path token is inside only when it is (complete) or can still become (prefix) exactly the image path.
   const outside = p => p.path.includes('..') || !wantAbs || (p.complete
     ? norm(resolveIn(callDir, p.path)) !== wantAbs || p.path.split('/').pop() !== imageFile
     : !wantAbs.startsWith(norm(resolveIn(callDir, p.path))));
+  // Review R6-A1: the strict allowlist runs on every raw form FIRST; reconciliation only happens afterwards.
+  const gate = readEvidenceGate(collected.filter(u => u.name === 'Read'), outside);
+  const uses = reconcileToolUses(collected);
+  const judged = [], unverified = [...gate.unverified], unfinished = [], escaped = [...gate.escaped], ambiguous = gate.ambiguous;
   for (const u of uses) {
     if (u.name !== 'Read' || (!u.unresolved && !u.unfinished && !u.conflict)) { judged.push(u); continue; }
     if (u.conflict) { unverified.push(`<streamed Read ${u.id} conflicts with its completed block>`); if (u.input != null) judged.push(u); continue; }
     if (u.unresolved) { unverified.push(`<unresolved streamed Read input ${u.id ?? 'without id'}>`); continue; }
     if (u.id != null && ran.has(u.id)) { unverified.push(`<executed streamed Read ${u.id} with unverifiable input>`); continue; }
-    const out = partialFilePaths(u.partial).filter(outside);
-    if (out.length) { for (const p of out) { if (p.complete) escaped.push(p.path); else unverified.push(`${p.path}…`); } continue; }
+    // Any outside path it names is already in the gate's findings (review R6-A1); either way it never verifies.
     unfinished.push(u.id ?? 'without id'); // still unfinished, whatever safe path token it streamed (review R5-A1)
   }
   const read = verifyB1ImageRead({ ...parseStreamTranscript(stdout), toolUses: judged }, { callDir, imageBasename: imageFile });
-  if (!unverified.length && !escaped.length) return { ...read, unfinished };
+  if (!unverified.length && !escaped.length) return { ...read, unfinished, ambiguous };
   const bad = [...read.bad, ...escaped, ...unverified];
-  return { ...read, unfinished, ok: false, bad, reason: read.bad.length || escaped.length ? `read target escaped confinement: ${bad.join(', ')}` : `read target unresolved: ${unverified.length} streamed Read input(s) could not be verified: ${unverified.join(', ')}` };
+  return { ...read, unfinished, ambiguous, ok: false, bad, reason: read.bad.length || escaped.length ? `read target escaped confinement: ${bad.join(', ')}` : `read target unresolved: ${unverified.length} streamed Read input(s) could not be verified: ${unverified.join(', ')}` };
 }
 const usageLimitedEv = (evs, final) => evs.some(e => e.type === 'rate_limit_event' && e.rate_limit_info?.status === 'rejected')
   || final?.api_error_status === 429 || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
@@ -291,6 +423,9 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   // Review R4-A1: a session reporting success while a Read invocation never finished streaming is not a clean success.
   // It proves no outside read (so not a confinement fatal), but it is held, never accepted and never retried.
   if (read.unfinished.length) return out('content-failure', `unfinished streamed Read invocation(s) ${read.unfinished.join(', ')} in a completed session`);
+  // Review R6-A1: a Read whose raw argument evidence is not exactly {"file_path":"<image>"} proves no outside read,
+  // but it is not a verified image inspection either: held, never accepted and never retried.
+  if (read.ambiguous.length) return out('content-failure', `non-canonical Read argument evidence for invocation(s) ${read.ambiguous.join(', ')}; only {"file_path":"<confined image>"} verifies an image read`);
   if (final.structured_output == null) return out('content-failure', 'no structured_output');
   if (exitCode && exitCode !== 0) return out('content-failure', `process exit ${exitCode} after a result`);
   return out('ok', null);
