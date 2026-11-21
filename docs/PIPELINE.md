@@ -826,6 +826,19 @@ image. An unresolved streamed input never establishes confinement.
 **Re-persistence (R3-A5).** At every start, before any reservation or acceptance, the runner re-offers every
 preserved evidence file of the run to shared persistence: identity, runtime, allowance, each work's state and
 final payload, and every attempt file. If that fails, it stops.
+**Unfinished stream blocks (R4-A1).** A streamed tool block that never closed (no `content_block_stop`) and never
+established its input is *unfinished*: the `{}` start placeholder with no delta, or a prefix such as `{`. It is
+not a completed invocation. If it has no tool result and its partial path does not leave the confined image path,
+the call keeps its quota, timeout or exit classification. It never counts as image inspection, and a session that
+reports success while holding one is held as a content-failure. A completed block with the same invocation id
+reconciles it when the two agree. Disagreeing copies are both kept, and the call is fatal. Still fatal: an outside
+or traversing path prefix, a closed block whose input does not parse, an executed start whose input cannot be
+verified, and any forbidden tool.
+**Torn outcome files (R4-A2).** Attempt files are written atomically: a flushed temp file is hard-linked into
+place. A `meta.json`, `done.json` or `reserved.json` that exists but does not parse is still read as preserved
+*incomplete* evidence, with no parse error: an unknown-outcome stop. A clearance whose digests name those exact
+torn bytes turns the work into the terminal hold described above. The reservation stays consumed, the bytes are
+kept, and the result is never accepted or retried. Do not edit or delete the damaged files to unblock the phase.
 
 A resume never trusts cached state (`scripts/lib/teaching-v2-phase.mjs`). Every dispatched attempt is re-checked
 against its reservation receipt: the ledger fields, the prompt bytes, the recomputed command argv, the schema and
