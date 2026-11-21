@@ -641,7 +641,13 @@ byte-identical and still readable by every offline command.
   `server_tool_use`, `mcp_tool_use`) is a pipeline-wide fatal. Explicit forbidden activity is checked first, before
   the missing-init, exit-code, usage-limit and transport outcomes (a missing init does not prove nothing ran); the
   stopgap run re-checks preserved attempts (with or without init, ahead of any set-aside) and imported B1
-  transcripts on every inspection.
+  transcripts on every inspection. Read arguments are checked in both envelopes too: the image-receipt parser takes
+  client `tool_use` blocks from message content and from streamed `content_block_start` blocks (input from the start
+  block or its `input_json_delta` deltas; a repeat of a message block is one call). An interrupted streamed Read is a
+  violation once its partial path leaves the image path, or if it has a result (its input cannot be verified). An
+  out-of-directory or wrong-file Read is a confinement fatal ahead of the missing-init, exit-code and usage-limit
+  outcomes, fresh and on resume (ahead of any set-aside); only the exact VSD-074 misread and a reviewed clearance
+  are exempt.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
   which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through
@@ -659,7 +665,10 @@ byte-identical and still readable by every offline command.
   if it cannot be observed the source fails (`pdf-memory-unobservable`) rather than running unbounded. Font
   decodability is audited from pdf.js's own resolved fonts and operator list (every shown glyph must have a real
   code-to-Unicode entry; an identity map for a Type0 font without ToUnicode counts as unmapped), independent of
-  dictionary key order, indirect objects and object streams. Any undecodable stream, unmapped shown glyph,
+  dictionary key order, indirect objects and object streams. Each glyph is checked against the font of the actual
+  graphics state, replayed from the operator list (`q`/`Q` save and restore, form XObject boundaries, ExtGState
+  `/Font` via `gs`), never just the last `Tf`; where that association cannot be established (no font, unbalanced
+  restore or form end, unreadable gs font) the glyphs fail as unauditable. Any undecodable stream, unmapped shown glyph,
   undecodable character or page error fails the source (`pdf-incomplete`, `pdf-decompression-limit`, `pdf-timeout`,
   `pdf-memory-limit`, ...) rather than returning partial text. Other failures are explicit statuses (`http-status`, `unsupported-type`, ...). A
   session where every fetch fails transiently is recorded in `research/capture-attempts/NNNNNN.json`; one later

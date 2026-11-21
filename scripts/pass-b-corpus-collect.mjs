@@ -524,6 +524,13 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     // ahead of the set-aside shortcut below.
     // Review-2 R2-1: explicit forbidden activity is a violation even in a transcript with no init.
     if (STOPGAP) { const pc = verifyStageCapabilities(text, stage); if (pc.activity.length || (inits.length && !pc.ok)) fatal ||= `${id}/${stage}: preserved capability violation`; }
+    // Review-3 finding 2: a preserved out-of-directory/wrong-file Read (message or streamed) is a confinement fatal
+    // ahead of the set-aside shortcut and every init/outcome branch; only the exact VSD-074 misread and a reviewed
+    // fatal clearance for this exact transcript (re-verified below) are exempt.
+    const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
+    const misread = !!receipt?.bad?.length && !!binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok;
+    const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
+    if (receipt?.bad?.length && !misread && !clearance) fatal ||= `${id}/${stage}: preserved confinement violation`;
     // VSD-073: a work-level fatal set aside under the per-firing budget holds only this work. Subscription-source and
     // init-model evidence is re-checked here and still stops everything whatever the record says.
     if (meta?.kind === 'fatal' && !pipelineWide(meta.reason) && inits.length && inits.every(e => e.apiKeySource === 'none' && e.model === epochModel(binding.epoch))
@@ -537,7 +544,6 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
         (binding ? inits.some(e => e.model !== epochModel(binding.epoch)) : (model && model !== HISTORICAL_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
     const expected = binding ? epochModel(binding.epoch) : HISTORICAL_MODEL; // each attempt against ITS OWN epoch
     if (!usage && final && model && model !== expected) fatal ||= `${id}/${stage}: preserved model drift`;
-    const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (clearance) {
       const metaFile = join(attemptsDir, `${name.slice(0, 9)}.meta.json`), resFile = join(attemptsDir, `${name.slice(0, 9)}.reserved.json`);
       // Every use of a clearance re-verifies ALL of its bound attempt evidence; missing or changed evidence fails closed.
@@ -545,9 +551,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
           || !existsSync(resFile) || rawFileSha(resFile) !== clearance.finding.reservationSha256) throw new Error(`${id}/${stage}: cleared attempt evidence changed`);
       terminalReasons.push(`${stage}:${CLEARANCE_DISPOSITION}`); continue; // reviewed false-positive: hold, never capture or retry
     }
-    const receipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: null, imageBasename: imageFile }) : null;
-    if (receipt?.bad?.length && binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok) { terminalReasons.push(`${stage}:misread (VSD-074)`); continue; }
-    if (receipt?.bad?.length) fatal ||= `${id}/${stage}: preserved confinement violation`;
+    if (misread) { terminalReasons.push(`${stage}:misread (VSD-074)`); continue; }
     if (meta?.kind === 'fatal') fatal ||= `${id}/${stage}: ${meta.reason}`;
     if (operational) { pause ||= `${id}/${stage}: operational-pause (review incomplete outcome)`; continue; }
     if (binding && inits.some(e => e.claude_code_version !== binding.epoch.policy.runtimeVersion)) {
@@ -729,14 +733,18 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     let cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
       model: answeringModel(stdout, final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
       subtype: final?.subtype, structuredOutputPresent: final?.structured_output != null, imageReceipt, webEvents });
+    // Review-3 finding 2: an explicit out-of-directory/wrong-file Read is likewise proven by the transcript alone, so it
+    // is fatal ahead of the missing-init, exit-code and quota branches. The only exception is the exact VSD-074 misread
+    // (which itself requires a valid init and a successful final).
+    const misread = !!imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok;
     if (caps.activity.length) cls = { kind: 'fatal', reason: `capability violation: ${caps.activity.join(', ')}` };
+    else if (imageReceipt?.bad?.length && !misread) cls = { kind: 'fatal', reason: 'confinement violation' };
     else if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
     else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
     else if (!caps.ok) cls = { kind: 'fatal', reason: `capability violation: ${caps.bad.join(', ')}` }; // review fix 1: init capabilities, before usage/transport
-    else if (imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok) cls = { kind: 'held', reason: MISREAD_REASON };
-    else if (imageReceipt?.bad?.length) cls = { kind: 'fatal', reason: 'confinement violation' };
+    else if (misread) cls = { kind: 'held', reason: MISREAD_REASON };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (exitCode === 'timeout' && cls.kind !== 'fatal') cls = { kind: 'held', reason: 'process-timeout; never retry automatically' };

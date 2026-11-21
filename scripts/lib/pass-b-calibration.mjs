@@ -156,8 +156,16 @@ export function stripJsonFence(text) {
 // ---- stream-json transcript parsing. The CLI emits line-delimited JSON events; tool_use blocks live in
 // `assistant` messages, tool_result blocks in `user` messages, and one terminal `result` event carries
 // structured_output/modelUsage/usage. This is the raw execution evidence the controller verifies. ----
+// Review-3 finding 2: client tool_use blocks are normalized from BOTH envelopes, so argument and receipt checks see
+// every Read: message content blocks, and streamed `stream_event` content_block_start blocks whose input is the
+// start block's input or, when input_json_delta deltas follow at the same index, their concatenation. A streamed
+// block whose deltas do not parse (an interrupted stream) is kept with `inputComplete:false` and its raw
+// `partialInput`. A streamed block that repeats a message block (same id and name, and the same input or an
+// incomplete one) is the same call and is not duplicated. Only these two block positions are read: tool-shaped data
+// inside tool inputs, tool results or text is model payload, never an executed tool.
 export function parseStreamTranscript(stdout) {
   const toolUses = [], toolResults = []; let final = null, init = null; let lines = 0, parsed = 0;
+  const streamed = []; let open = new Map(); // index -> streamed block of the message being streamed
   for (const ln of String(stdout).split('\n')) {
     if (!ln.trim()) continue;
     lines++;
@@ -166,6 +174,16 @@ export function parseStreamTranscript(stdout) {
     // The system/init event carries apiKeySource and claude_code_version — the authoritative provenance
     // fields (the terminal result event does NOT include them).
     if (ev?.type === 'system' && ev?.subtype === 'init') init = { apiKeySource: ev.apiKeySource ?? null, claudeCodeVersion: ev.claude_code_version ?? null, model: ev.model ?? null };
+    if (ev?.type === 'stream_event' && ev.event && typeof ev.event === 'object') {
+      const se = ev.event;
+      if (se.type === 'message_start') open = new Map();
+      else if (se.type === 'content_block_start' && se.content_block?.type === 'tool_use') {
+        const b = se.content_block, s = { id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, streamed: true, inputComplete: true, deltas: [] };
+        streamed.push(s); open.set(se.index, s);
+      } else if (se.type === 'content_block_delta' && se.delta?.type === 'input_json_delta' && open.has(se.index)) {
+        open.get(se.index).deltas.push(String(se.delta.partial_json ?? ''));
+      }
+    }
     const content = ev?.message?.content;
     if (Array.isArray(content)) for (const b of content) {
       if (b?.type === 'tool_use') toolUses.push({ id: b.id ?? null, name: b.name ?? null, input: b.input ?? {} });
@@ -182,7 +200,24 @@ export function parseStreamTranscript(stdout) {
     }
     if (ev?.type === 'result') final = ev;
   }
+  const messageUses = [...toolUses];
+  for (const { deltas, ...s } of streamed) {
+    if (deltas.length) {
+      const raw = deltas.join('');
+      try { const v = JSON.parse(raw); s.input = v && typeof v === 'object' && !Array.isArray(v) ? v : {}; if (s.input !== v) { s.inputComplete = false; s.partialInput = raw; } }
+      catch { s.input = {}; s.inputComplete = false; s.partialInput = raw; }
+    }
+    const same = s.id && messageUses.some(u => u.id === s.id && u.name === s.name && (!s.inputComplete || stableJson(u.input) === stableJson(s.input)));
+    if (!same) toolUses.push(s);
+  }
   return { lines, parsed, toolUses, toolResults, final, init };
+}
+// The file_path an interrupted streamed Read had begun to name: { path, complete } or null when none was started.
+function partialFilePath(raw) {
+  const m = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/.exec(String(raw || ''));
+  if (!m) return null;
+  let path = m[1]; try { path = JSON.parse(`"${m[1]}"`); } catch { /* keep the raw prefix */ }
+  return { path, complete: m[3] === '"' };
 }
 
 // The terminal result event (structured_output, modelUsage, usage, num_turns, is_error).
@@ -203,7 +238,20 @@ export function verifyB1ImageRead(transcript, { callDir, imageBasename }) {
   const norm = p => String(p).replace(/^\/private(?=\/)/, '');
   const wantAbs = callDir ? norm(resolvePath(callDir, imageBasename)) : null;
   let good = 0; const bad = [];
-  for (const r of reads) {
+  for (let r of reads) {
+    // Review-3 finding 2: an interrupted streamed Read. A result for it means it executed with an input that cannot
+    // be verified (fail closed); otherwise it is a violation once the path it began to name has left the image path.
+    if (r.streamed && !r.inputComplete) {
+      const p = partialFilePath(r.partialInput);
+      if (r.id && resultFor(transcript, r.id)) { bad.push(`unverifiable streamed Read input ${JSON.stringify(p?.path ?? '')}`); continue; }
+      if (!p) continue;
+      if (!p.complete) {
+        const absPrefix = norm(p.path.startsWith('/') || !callDir ? p.path : resolvePath(callDir, p.path));
+        if (p.path.includes('..') || (wantAbs && !wantAbs.startsWith(absPrefix))) bad.push(`${p.path}…`);
+        continue;
+      }
+      r = { ...r, input: { file_path: p.path } }; // the full path was streamed; judge it as a complete Read
+    }
     const fp = typeof r.input?.file_path === 'string' ? r.input.file_path : '';
     const base = fp.split('/').pop();
     const abs = norm(fp.startsWith('/') ? fp : (callDir ? resolvePath(callDir, fp) : fp));

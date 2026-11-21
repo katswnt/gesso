@@ -151,11 +151,13 @@ export function runPdfWorker(buf, limits = PDF_LIMITS, { rss = observeRss } = {}
 // ("TT: …") and xref reindexing do not affect text and are kept as facts only.
 const LOSSY_WARNING = /not supported|unsupported|unimplemented|invalid (stream|font|cmap)|bad fcheck|unable to (decode|load|parse)|font loading|translatefont|loadfont|tounicode|cmap|glyph|corrupt|stream.*(error|truncated|missing)|error during|failed to/i;
 const BENIGN_WARNING = /^Warning: (TT: |Indexing all PDF objects)/;
-export async function extractPdfText(buf, limits = PDF_LIMITS) {
+// `worker` passes through to runPdfWorker: tests inject an RSS observer so content assertions do not depend on the
+// host's process observability; production callers keep the fail-closed default observer.
+export async function extractPdfText(buf, limits = PDF_LIMITS, worker = {}) {
   if (!Buffer.isBuffer(buf) || buf.subarray(0, 5).toString('latin1') !== '%PDF-') return { ok: false, status: 'pdf-extraction-failed', reason: 'not a PDF' };
   const budget = flateBudgetCheck(buf, limits.maxDecodedBytes);
   if (!budget.ok) return { ok: false, status: 'pdf-decompression-limit', reason: `compressed streams decode past ${limits.maxDecodedBytes} bytes` };
-  const run = await runPdfWorker(buf, limits);
+  const run = await runPdfWorker(buf, limits, worker);
   if (!run.ok) return run;
   const r = run.result;
   const facts = { extractor: `pdfjs-dist@${r.version}`, pages: r.numPages ?? null, decodedFlateBytes: budget.total, warnings: (r.warnings || []).slice(0, 20), unmappedFonts: r.unmappedFonts || [] };

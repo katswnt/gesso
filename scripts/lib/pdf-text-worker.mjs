@@ -8,6 +8,7 @@
 // streams; the parent fails the extraction when any of them is present.
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { fontStateReplay } from './pdf-font-state.mjs';
 
 const MAX_PAGES = Number(process.env.PDF_WORKER_MAX_PAGES || 400);
 const MAX_CHARS = Number(process.env.PDF_WORKER_MAX_CHARS || 4_000_000);
@@ -33,23 +34,16 @@ const out = { ok: false, version: pdfjs.version, pages: [], warnings, error: nul
 // falls back to the raw character code when its toUnicode map has no entry, and uses an identity map for a Type0
 // font with no ToUnicode; both are guesses. Dictionary key order, indirect objects and object streams are all
 // resolved by pdf.js before this sees them (review-2 R2-2).
+// Review-3 finding 1: the font of each shown glyph comes from replaying the graphics state (pdf-font-state.mjs).
 function auditPageFonts(page, ops, unmapped) {
   const bad = new Map();
-  let font = null, fontKey = null;
-  for (let i = 0; i < ops.fnArray.length; i++) {
-    const fn = ops.fnArray[i], args = ops.argsArray[i];
-    if (fn === pdfjs.OPS.setFont) {
-      fontKey = args?.[0] ?? null;
-      try { font = fontKey && page.commonObjs.has(fontKey) ? page.commonObjs.get(fontKey) : null; } catch { font = null; }
-      continue;
-    }
-    if (fn !== pdfjs.OPS.showText || !Array.isArray(args?.[0])) continue;
-    const glyphs = args[0].filter(g => g && typeof g === 'object');
-    if (!glyphs.length) continue;
-    const name = font?.name || fontKey || '?';
+  const lookup = key => (page.commonObjs.has(key) ? page.commonObjs.get(key) : null);
+  for (const { state, glyphs } of fontStateReplay(pdfjs.OPS, ops.fnArray, ops.argsArray, lookup)) {
+    const font = state.font, name = font?.name || state.key || '?';
     let why = null, count = 0;
     const tu = font?.toUnicode;
-    if (!font || !tu) { why = 'pdf.js font data unavailable'; count = glyphs.length; }
+    if (state.unknown) { why = `font association unavailable (${state.unknown})`; count = glyphs.length; }
+    else if (!font || !tu) { why = 'pdf.js font data unavailable'; count = glyphs.length; }
     else if (!Array.isArray(tu._map) && Number.isInteger(tu.firstChar) && Number.isInteger(tu.lastChar)) {
       why = font.composite ? 'Type0 Identity encoding without ToUnicode' : 'identity code-to-text mapping'; count = glyphs.length;
     } else if (Array.isArray(tu._map)) {

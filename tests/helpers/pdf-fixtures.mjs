@@ -90,3 +90,22 @@ export function bombPdf(inflatedBytes) {
     { dict: '<< /Filter /FlateDecode >>', stream: deflateSync(Buffer.alloc(inflatedBytes, 0x20), { level: 9 }) },
   ]);
 }
+// Review-3 finding 1 (graphics/text font state): one page whose uncompressed content stream may select fonts through
+// `Tf`, through an ExtGState (`/GSn gs`, with `gstates` = { GSn: font resource name }) and inside form XObjects
+// (`/Fmn Do`, with `forms` = { Fmn: form content string }). Forms share the page's font and ExtGState resources.
+export const HELVETICA_BOLD = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+export function fontStatePdf(content, { fonts, gstates = {}, forms = {} }) {
+  const names = Object.keys(fonts), formNames = Object.keys(forms), fontRef = k => `${4 + names.indexOf(k)} 0 R`;
+  const fontRes = `/Font << ${names.map(k => `/${k} ${fontRef(k)}`).join(' ')} >>`;
+  const gsRes = Object.keys(gstates).length ? ` /ExtGState << ${Object.entries(gstates).map(([g, f]) => `/${g} << /Font [${fontRef(f)} 12] >>`).join(' ')} >>` : '';
+  const firstForm = 4 + names.length, contentNum = firstForm + formNames.length;
+  const xRes = formNames.length ? ` /XObject << ${formNames.map((f, i) => `/${f} ${firstForm + i} 0 R`).join(' ')} >>` : '';
+  return buildPdf([
+    { dict: '<< /Type /Catalog /Pages 2 0 R >>' },
+    { dict: '<< /Type /Pages /Kids [3 0 R] /Count 1 >>' },
+    { dict: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << ${fontRes}${gsRes}${xRes} >> /Contents ${contentNum} 0 R >>` },
+    ...names.map(k => ({ dict: fonts[k] })),
+    ...formNames.map(f => ({ dict: `<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << ${fontRes}${gsRes} >> >>`, stream: Buffer.from(forms[f], 'latin1') })),
+    { dict: '<< >>', stream: Buffer.from(content, 'latin1') },
+  ]);
+}
