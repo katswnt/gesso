@@ -650,11 +650,29 @@ byte-identical and still readable by every offline command.
   are exempt. A streamed start's empty `{}` input with no delta and no `content_block_stop` is an unfinished
   stream, not a Read of nothing: with no result it takes its normal quota/transport outcome; with a result it is a
   fatal. Resume checks confinement against the call directory, never a basename: each reservation records the
-  controller's `callDir` before the call, and that is authoritative. An older attempt (no recorded `callDir`) is
-  accepted only when every init the CLI wrote reports the same absolute `cwd` named like the old controller's
-  `mkdtemp` folder (`corpus-` plus six letters/digits), and each Read then targets exactly `<cwd>/<image>`;
-  otherwise any Read in it is a `preserved confinement unverifiable` fatal (a reviewed clearance still applies).
-  All 52 saved banked transcripts meet the old-attempt rule.
+  controller's `callDir` before the call, and that is the only evidence that establishes confinement (review-5
+  R5-1). One shared validator (`verifyAttemptConfinement` in `scripts/lib/pass-b-calibration.mjs`) applies it to
+  ordinary resume attempts, banked B1 inspection and imported-copy revalidation alike (R5-2). An older attempt
+  (no recorded `callDir`) is **unverifiable**: a CLI-reported `cwd` proves only where that process ran, not that it
+  was the controller's sandbox (a `corpus-XXXXXX` name can sit anywhere, e.g. `/attacker-controlled/corpus-Ab12Cd`),
+  so no transcript field can make it confined. What happens then:
+  - **Resume/inspection of the stopgap run:** any Read in such an attempt is a `preserved confinement unverifiable`
+    fatal (a reviewed clearance for that exact transcript still applies). Inspecting the banked run itself (no
+    stopgap) reports each one on the row (`confinementUnverifiable`) and in the plan; a live banked resume refuses
+    while any remain.
+  - **Banked import/reuse:** the legacy B1 is **not reusable**. It is not imported (`b1NotImported` records
+    "not reusable: confinement unverifiable"); an import already made by the pre-fix importer is rechecked from its
+    copies and the copied reservation's `callDir`, and if it has none it is never a body (`research.b1NotReusable`).
+    Either way the work takes a fresh B1. This is historical evidence, not a pipeline-wide fatal. All 18 B1 and 15
+    of the 16 B3 among the 52 saved banked transcripts are unverifiable (the other B3 has no Read; no violations);
+    in practice no banked B1 is reusable, because the banked run predates recorded directories.
+  - **Proven violation** (no trusted directory needed: Reads, or an interrupted Read's prefix, in more than one
+    directory or outside the CLI-reported cwd, traversal, a wrong file, or a forbidden tool): an explicit stop for
+    review wherever it is found. On resume it is a `preserved confinement violation` fatal; in a banked B1 the import
+    throws a fatal before anything is written (even with a fresh B1 requested); in an imported copy the work's
+    inspection is fatal.
+  The canary launch also refuses if any of its six works already holds an imported B1 (`canaryImportPreflight`):
+  `PASS_B_RESEARCH_FRESH_B1=1` only stops new imports.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
   which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through

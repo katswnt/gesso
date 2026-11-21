@@ -53,16 +53,19 @@ try {
     const catalog = trustedCatalog(p), legacy = snapshotLegacy(id, { teach, hotspots, vision, auditIds });
     const before = snapshot(banked);
     const ins = inspectBankedWork({ bankedRunDir: banked, bankedRunId: C.BANKED_RUN_ID, id, catalog, legacy, bankedB1Prompt: stagePrompts().B1 });
-    if (!ins.ok || !ins.b1) { results.push({ id, ok: false, reason: ins.reason || ins.b1Reason }); continue; }
+    // Review-5: a banked B1 whose reservation records no call directory is NOT REUSABLE (expected for the whole banked
+    // run, which predates recorded directories): reported, not a failure. A proven violation is a failure.
+    if (ins.ok && !ins.b1 && !ins.b1Violation && /not reusable/.test(ins.b1Reason || '')) { results.push({ id, ok: true, notReusable: ins.b1Reason }); continue; }
+    if (!ins.ok || !ins.b1) { results.push({ id, ok: false, reason: ins.b1Violation || ins.reason || ins.b1Reason }); continue; }
     const nwd = join(fresh, 'works', h); mkdirSync(nwd, { recursive: true });
     const manifest = writeImport({ workDir: nwd, imgsDir: join(fresh, 'imgs'), runId: C.CORPUS_RUN_ID, bankedRunId: C.BANKED_RUN_ID, id, catalog, legacy, banked: ins, now: new Date('2026-11-20T00:00:00Z') });
     const v = verifyImportedB1({ workDir: nwd, runId: C.CORPUS_RUN_ID, id, catalog, legacy, b0: ins.b0, bankedB1Prompt: stagePrompts().B1, manifest });
     const unchanged = JSON.stringify(before) === JSON.stringify(snapshot(banked));
-    const same = JSON.stringify(v.body) === JSON.stringify(ins.b1.body);
+    const same = v.status === 'reusable' && JSON.stringify(v.body) === JSON.stringify(ins.b1.body);
     results.push({ id, ok: unchanged && same, model: v.model, epoch: manifest.b1.epochNumber, promptHash: manifest.b1.promptHash.slice(0, 12), imgSha256: ins.b0.image.imgSha256.slice(0, 12),
       completionSha256: manifest.b1.completionSha256.slice(0, 12), transcriptSha256: manifest.b1.transcriptSha256.slice(0, 12), bankedUnchanged: unchanged, bodyIdentical: same });
   }
 } finally { rmSync(scratch, { recursive: true, force: true }); }
-for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'} ${r.id}${r.ok ? ` | model ${r.model} epoch ${r.epoch} | prompt ${r.promptHash} | image ${r.imgSha256} | completion ${r.completionSha256} | transcript ${r.transcriptSha256} | banked copy unchanged, imported body identical` : ` | ${r.reason || JSON.stringify(r)}`}`);
-console.log(`real-bank B1 import receipts: ${results.filter(r => r.ok).length}/${results.length} verified (banked run ${C.BANKED_RUN_ID} -> stopgap run ${C.CORPUS_RUN_ID}). No calls, no evidence writes.`);
+for (const r of results) console.log(r.notReusable ? `NOT REUSABLE ${r.id} | ${r.notReusable}` : `${r.ok ? 'PASS' : 'FAIL'} ${r.id}${r.ok ? ` | model ${r.model} epoch ${r.epoch} | prompt ${r.promptHash} | image ${r.imgSha256} | completion ${r.completionSha256} | transcript ${r.transcriptSha256} | banked copy unchanged, imported body identical` : ` | ${r.reason || JSON.stringify(r)}`}`);
+console.log(`real-bank B1 import receipts: ${results.filter(r => r.ok && !r.notReusable).length}/${results.length} verified, ${results.filter(r => r.notReusable).length} not reusable (fresh B1) (banked run ${C.BANKED_RUN_ID} -> stopgap run ${C.CORPUS_RUN_ID}). No calls, no evidence writes.`);
 if (results.some(r => !r.ok)) process.exit(1);

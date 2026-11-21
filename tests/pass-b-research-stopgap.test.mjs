@@ -170,7 +170,10 @@ t('stopgap queue: window first (date order), then a balanced round-robin across 
 });
 
 // ---- migration: banked import into the stopgap run ----
-function bankedFixture() {
+// Review-5: the banked B1 is reusable only with a controller-recorded call directory in its reservation. The default
+// fixture has one (the clean control); `callDir: null` reproduces a legacy attempt (no recorded directory).
+const BANK_CALL_DIR = '/tmp/corpus-Bk0001';
+function bankedFixture({ callDir = BANK_CALL_DIR } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'stopgap-')), banked = join(root, 'banked'), cur = join(root, 'current');
   const id = 'met999', p = { id, title: 'Test', artist: 'Anon', y: 1650, place: 'Somewhere', medium: 'oil', style: 'Baroque', img: 'https://example.test/i.jpg' };
   const catalog = trustedCatalog(p), legacy = { workId: id, teaching: null, counts: {} };
@@ -180,7 +183,7 @@ function bankedFixture() {
   writeFileSync(join(wd, 'b0-prep.json'), JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: { id, ok: true, imgSha256, ext } }));
   const B1 = { ...structuredClone(base.bodies.B1), researchQuestions: [] };
   const transcript = (stage, body) => {
-    const blocks = stage === 'B2' ? [{ type: 'tool_use', id: 's', name: 'WebSearch', input: { query: 'q' } }, { type: 'tool_use', id: 'f', name: 'WebFetch', input: { url: 'https://museum.example/peacock' } }] : [{ type: 'tool_use', id: 'r', name: 'Read', input: { file_path: `./${imageFile}` } }];
+    const blocks = stage === 'B2' ? [{ type: 'tool_use', id: 's', name: 'WebSearch', input: { query: 'q' } }, { type: 'tool_use', id: 'f', name: 'WebFetch', input: { url: 'https://museum.example/peacock' } }] : [{ type: 'tool_use', id: 'r', name: 'Read', input: { file_path: `${callDir || '.'}/${imageFile}` } }];
     const results = stage === 'B2' ? ['s', 'f'].map(x => ({ type: 'tool_result', tool_use_id: x, content: [{ type: 'text', text: 'Museum record text with object details. '.repeat(10) }] })) : [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }];
     return [{ type: 'system', subtype: 'init', apiKeySource: 'none', claude_code_version: '2.1.280', model: CALIBRATION_MODEL, tools: STAGE_TOOLS[stage], mcp_servers: [] }, { type: 'assistant', message: { model: CALIBRATION_MODEL, content: blocks } }, { type: 'user', message: { content: results } }, { type: 'result', subtype: 'success', is_error: false, structured_output: body, modelUsage: { [CALIBRATION_MODEL]: { output_tokens: 10 } } }].map(x => JSON.stringify(x)).join('\n') + '\n';
   };
@@ -188,6 +191,11 @@ function bankedFixture() {
     const text = transcript(stage, body); writeFileSync(join(dir, 'attempts', C.attemptFilename(stage, seq, text)), text);
     captureStageCompletion({ runDir: dir, stage, rawResponse: JSON.stringify(body), trusted: { workId: id, imgSha256, promptHash: sha256(promptText), brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION, transcriptSha256: sha256(text) }, producer: producerEvidence(stage, { runtimeVersion: 'unknown' }), createdAt: '2026-11-20T10:00:00Z', context });
   };
+  if (callDir) { // a reservation as the review-4+ controller writes it: epoch-bound, naming the call directory
+    const policy = { evidenceRunId: C.BANKED_RUN_ID, model: CALIBRATION_MODEL, runtimeVersion: '2.1.280' };
+    writeFileSync(join(banked, 'execution-policy.json'), JSON.stringify(policy));
+    writeFileSync(join(wd, 'attempts', 'b1-000001.reserved.json'), JSON.stringify({ runId: C.BANKED_RUN_ID, workId: id, stage: 'B1', seq: 1, callDir, executionPolicySha256: sha256(stableJson(policy)), executionEpoch: 0 }));
+  }
   bank(wd, 'B1', B1, b1PromptText(stagePrompts().B1, imageFile), 1);
   writeFileSync(join(banked, 'ledger.json'), JSON.stringify({ runId: C.BANKED_RUN_ID, heldIds: [], doneIds: [id] }));
   const nwd = join(cur, 'works', sha256(id).slice(0, 24)); mkdirSync(join(nwd, 'attempts'), { recursive: true });

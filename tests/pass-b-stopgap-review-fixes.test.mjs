@@ -387,28 +387,38 @@ function oldAttempt(stage, { cwd, extra = [], callDir, readDir = cwd ?? callDir 
 const ELSEWHERE = file => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id: 'bad', name: 'Read', input: { file_path: `/elsewhere/${file}` } }] } });
 const PREFIX = [streamStart({ ...OUT_READ, input: {} }), streamDelta('{"file_path":"/etc/pa')];
 for (const stage of ['B1', 'B3']) {
+  // Review-5: with no recorded directory a Read elsewhere is now a PROVEN violation (Reads span two directories), not
+  // merely unverifiable; the same with a CLI-reported cwd.
   t(`R4-1: ${stage}: an old accepted attempt with the right basename in another directory is a fatal on resume`, () => {
-    // no CLI-reported call directory: confinement cannot be established, so the basename is not accepted
-    assert.match(oldAttempt(stage, { extra: [ELSEWHERE] }).fatal || '', /preserved confinement unverifiable/);
-    // the CLI-reported corpus call directory establishes it, and the other directory is a violation
+    assert.match(oldAttempt(stage, { extra: [ELSEWHERE] }).fatal || '', /preserved confinement violation/);
     assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: [ELSEWHERE] }).fatal || '', /preserved confinement violation/);
   });
   t(`R4-1: ${stage}: an old accepted attempt with an interrupted outside prefix is a fatal on resume`, () => {
-    assert.match(oldAttempt(stage, { extra: PREFIX }).fatal || '', /preserved confinement unverifiable/);
+    assert.match(oldAttempt(stage, { extra: PREFIX }).fatal || '', /preserved confinement violation/);
     assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: PREFIX }).fatal || '', /preserved confinement violation/);
   });
-  t(`R4-1: ${stage}: legacy rule: only a CLI-reported corpus-XXXXXX cwd establishes an old call directory`, () => {
-    assert.strictEqual(oldAttempt(stage, { cwd: OLD_DIR }).fatal, null, 'control: the old controller pattern, Read exactly <cwd>/<image>');
-    assert.strictEqual(oldAttempt(stage, { cwd: `/private${OLD_DIR}`, readDir: OLD_DIR }).fatal, null, 'control: macOS /private realpath');
-    for (const cwd of ['/tmp/elsewhere', '/tmp/corpus-Ab12', '/tmp/x/../corpus-Ab12Cd', 'corpus-Ab12Cd'])
-      assert.match(oldAttempt(stage, { cwd }).fatal || '', /preserved confinement unverifiable/, cwd);
-    // inits that disagree on the directory do not establish one
+  // ---- review-5 R5-1: a transcript cwd never establishes confinement, whatever its name ----
+  t(`R5-1: ${stage}: a corpus-XXXXXX cwd outside the sandbox (/attacker-controlled, /etc) is unverifiable, never accepted`, () => {
+    for (const cwd of ['/attacker-controlled/corpus-Ab12Cd', '/etc/corpus-Ab12Cd']) {
+      const r = oldAttempt(stage, { cwd });
+      assert.match(r.fatal || '', /preserved confinement unverifiable/, `${cwd}: ${JSON.stringify(r)}`);
+    }
+    // evidence still counts against: a Read outside the reported cwd is a proven violation with no recorded directory
+    assert.match(oldAttempt(stage, { cwd: '/attacker-controlled/corpus-Ab12Cd', readDir: OLD_DIR }).fatal || '', /preserved confinement violation/);
+  });
+  t(`R5-1: ${stage}: no legacy cwd rule: the old controller's own pattern is unverifiable too; malformed and disagreeing cwds stay unverifiable`, () => {
+    // each Read is exactly <cwd>/<image> (or <OLD_DIR>/<image> where the cwd is malformed or absent)
+    for (const [cwd, readDir] of [[OLD_DIR, OLD_DIR], [`/private${OLD_DIR}`, OLD_DIR], ['/tmp/elsewhere', '/tmp/elsewhere'], ['/tmp/corpus-Ab12', '/tmp/corpus-Ab12'],
+      ['/tmp/x/../corpus-Ab12Cd', OLD_DIR], ['corpus-Ab12Cd', OLD_DIR], [undefined, OLD_DIR]])
+      assert.match(oldAttempt(stage, { cwd, readDir }).fatal || '', /preserved confinement unverifiable/, String(cwd));
     assert.match(oldAttempt(stage, { cwd: OLD_DIR, extra: [{ ...INIT, cwd: '/tmp/corpus-Zz9Yy8' }] }).fatal || '', /preserved confinement unverifiable/);
   });
   t(`R4-1: ${stage}: a recorded reservation call directory is authoritative on resume`, () => {
     // the reservation's directory, not the transcript's, is the confinement: a Read in a different corpus dir is caught
     assert.match(oldAttempt(stage, { cwd: OLD_DIR, callDir: '/tmp/corpus-Rr0Rr0', readDir: OLD_DIR }).fatal || '', /preserved confinement violation/);
+    assert.match(oldAttempt(stage, { cwd: '/attacker-controlled/corpus-Ab12Cd', callDir: OLD_DIR }).fatal || '', /preserved confinement violation/, 'a self-consistent false cwd/Read pair');
     assert.strictEqual(oldAttempt(stage, { callDir: '/tmp/corpus-Rr0Rr0' }).fatal, null, 'control: recorded dir, no init cwd');
+    assert.strictEqual(oldAttempt(stage, { cwd: '/attacker-controlled/corpus-Ab12Cd', callDir: '/attacker-controlled/corpus-Ab12Cd' }).fatal, null, 'control: only the recorded directory decides');
   });
 }
 t('R4-1: the controller records its call directory in the reservation, before the call, and resume uses it', async () => {
@@ -463,6 +473,123 @@ t('R4-2: parser: an empty start is unfinished until a delta, a stop or the compl
   assert.deepStrictEqual(p([EMPTY_START, BLOCK_STOP]).map(u => u.inputComplete), [true]);
   const full = { ...OUT_READ, input: { file_path: '/tmp/corpus-x/a.png' } };
   assert.deepStrictEqual(p([EMPTY_START, { type: 'assistant', message: { content: [full] } }]).map(u => u.input), [full.input], 'one call, the message input');
+});
+// ---- review-5 R5-2: banked import and imported-copy reinspection share the directory-aware validator ----
+// Reproduction = Codex's probe (round5/probes/import-confinement.mjs). A banked B1 is created through a real collector
+// with an injected transcript whose init truthfully reports the controller's cwd: the valid image Read plus either a
+// streamed Read of /elsewhere/<image> or an interrupted "/etc/pa" prefix. The OLD collector (bf3ac35, extracted from
+// git) records no call directory; the current collector in banked mode records it. Nothing is edited after creation.
+// Before the fix both the import and a reinspection of an import made by the pre-fix importer (b629ced) reported
+// b1Imported:true, B1 present, fatal:null.
+const { execFileSync } = await import('node:child_process');
+const { pathToFileURL } = await import('node:url');
+const { stagePrompts } = await import('../scripts/lib/pass-b-prompts.mjs');
+const { captureStageCompletion } = await import('../scripts/lib/vision-content-capture.mjs');
+const { BROKER_POLICY_VERSION } = await import('../scripts/lib/img-broker.mjs');
+const { b1PromptText, producerEvidence, IMAGE_TRANSPORT_VERSION } = await import('../scripts/lib/pass-b-calibration.mjs');
+const archiveRoot = mkdtempSync(join(tmpdir(), 'r5-archive-'));
+process.on('exit', () => rmSync(archiveRoot, { recursive: true, force: true }));
+// One module instance per (revision, research version): the collector reads PASS_B_RESEARCH_VERSION at import.
+async function collectorAt(rev, version) {
+  let dir = process.cwd();
+  if (rev) {
+    dir = join(archiveRoot, rev); mkdirSync(dir, { recursive: true });
+    const tar = execFileSync('git', ['archive', rev, 'scripts'], { maxBuffer: 1 << 28 });
+    execFileSync('tar', ['-x', '-C', dir], { input: tar });
+    execFileSync('ln', ['-s', join(process.cwd(), 'node_modules'), join(dir, 'node_modules')]);
+  }
+  const prev = process.env.PASS_B_RESEARCH_VERSION, fresh = process.env.PASS_B_RESEARCH_FRESH_B1;
+  process.env.PASS_B_RESEARCH_VERSION = version; delete process.env.PASS_B_RESEARCH_FRESH_B1;
+  try { return await import(`${pathToFileURL(join(dir, 'scripts', 'pass-b-corpus-collect.mjs')).href}?r5-${rev || 'current'}-${version || 'banked'}`); }
+  finally { process.env.PASS_B_RESEARCH_VERSION = prev; if (fresh != null) process.env.PASS_B_RESEARCH_FRESH_B1 = fresh; }
+}
+const OLD = await collectorAt('bf3ac35', '');              // the collector the banked run actually ran (no recorded call dir)
+const CUR_BANKED = await collectorAt(null, '');            // the fixed collector writing a banked-run attempt (records callDir)
+const PRE_FIX = await collectorAt('b629ced', 'stopgap-1'); // the pre-fix importer (no confinement recheck)
+const IMPORT_MODES = ['clean', 'other-dir-same-basename', 'interrupted-outside-prefix'];
+async function bankedB1(collector, mode) {
+  const root = mkdtempSync(join(tmpdir(), 'r5-import-')), bank = join(root, 'bank'), cur = join(root, 'current'), id = 'work';
+  const wd = join(bank, 'works', legacySha(id).slice(0, 24)), nwd = join(cur, 'works', legacySha(id).slice(0, 24));
+  const img = legacySha('img'), file = `${img}.png`, catalog = {}, legacy = {};
+  mkdirSync(wd, { recursive: true }); mkdirSync(nwd, { recursive: true }); mkdirSync(join(bank, 'imgs'));
+  writeFileSync(join(bank, 'imgs', file), 'img');
+  writeFileSync(join(wd, 'b0-prep.json'), JSON.stringify({ work: { id }, trustedCatalog: catalog, legacy, image: { ok: true, imgSha256: img, ext: 'png' } }));
+  const prompt = b1PromptText(stagePrompts().B1, file);
+  let text;
+  const out = await collector.executeCorpusAttempt({ runDir: bank, workRunDir: wd, id, imgSha256: img, ext: 'png', stage: 'B1', seq: 1, runtimeVersion: '2.1.280', imageFile: file,
+    command: { bin: 'NEVER-EXECUTED', argv: ['-p', prompt, '--model', collector.COLLECTION_MODEL, '--effort', 'medium'], env: { removeKeys: [] } }, now: () => new Date('2026-11-20T10:00:00Z'),
+    execute: async (_b, _a, o) => {
+      const ev = [{ ...INIT, model: collector.COLLECTION_MODEL, cwd: o.cwd }, { type: 'assistant', message: { model: collector.COLLECTION_MODEL, content: [{ type: 'tool_use', id: 'r', name: 'Read', input: { file_path: `${o.cwd}/${file}` } }] } },
+        { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }] } }];
+      if (mode !== 'clean') ev.push(streamStart({ type: 'tool_use', id: 'bad', name: 'Read', input: mode === 'other-dir-same-basename' ? { file_path: `/elsewhere/${file}` } : {} }));
+      if (mode === 'interrupted-outside-prefix') ev.push(streamDelta('{"file_path":"/etc/pa'));
+      ev.push({ type: 'result', subtype: 'success', is_error: false, structured_output: B1_BODY, modelUsage: { [collector.COLLECTION_MODEL]: { output_tokens: 10 } } });
+      text = ev.map(e => JSON.stringify(e)).join('\n'); return { stdout: text };
+    } });
+  assert.ok(out.raw, `${mode}: the creating collector accepted the attempt`);
+  captureStageCompletion({ runDir: wd, stage: 'B1', rawResponse: out.raw, trusted: { workId: id, imgSha256: img, promptHash: legacySha(prompt), brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION, transcriptSha256: legacySha(text) },
+    producer: producerEvidence('B1', { model: collector.COLLECTION_MODEL, runtimeVersion: '2.1.280' }), createdAt: '2026-11-20T10:00:00Z', context: {} });
+  const meta = JSON.parse(readFileSync(join(wd, 'attempts', 'b1-000001.meta.json'), 'utf8')), reservation = JSON.parse(readFileSync(join(wd, 'attempts', 'b1-000001.reserved.json'), 'utf8'));
+  assert.strictEqual(meta.kind, 'ok', `${mode}: accepted attempt`);
+  return { root, id, nwd, reservation, importArgs: () => ({ id, workRunDir: nwd, catalog, legacy, bankedRunDir: bank, imgsDir: join(cur, 'imgs') }),
+    inspect: () => C.inspectWork({ runDir: cur, id, catalog, legacy, priorDir: join(root, 'none') }),
+    manifest: () => existsSync(join(nwd, 'imports', 'manifest.json')) ? JSON.parse(readFileSync(join(nwd, 'imports', 'manifest.json'), 'utf8')) : null,
+    done: () => rmSync(root, { recursive: true, force: true }) };
+}
+t('R5-2: import: old-collector B1s are never imported; an outside Read or prefix is an explicit stop; a recorded-directory B1 imports (control)', async () => {
+  for (const mode of IMPORT_MODES) {
+    const f = await bankedB1(OLD, mode);
+    try {
+      assert.ok(!('callDir' in f.reservation), 'the old collector records no call directory');
+      if (mode === 'clean') {
+        const m = C.importBanked(f.importArgs());
+        assert.strictEqual(m.b1, null, 'legacy B1 not imported');
+        assert.match(m.b1NotImported || '', /not reusable: confinement unverifiable/, 'the receipt records why');
+        const row = f.inspect();
+        assert.deepStrictEqual([row.research.b1Imported, !!row.bodies.B1, row.fatal], [false, false, null], `${mode}: needs a fresh B1, no fatal`);
+      } else {
+        assert.throws(() => C.importBanked(f.importArgs()), /work\/B1: banked B1 confinement violation/, `${mode}: explicit stop`);
+        assert.strictEqual(f.manifest(), null, `${mode}: nothing imported or written`);
+      }
+    } finally { f.done(); }
+  }
+  // control: the fixed collector (which refuses the outside modes on the fresh path) records its directory; clean imports
+  const f = await bankedB1(CUR_BANKED, 'clean');
+  try {
+    assert.ok(f.reservation.callDir, 'the fixed collector records its call directory');
+    assert.ok(C.importBanked(f.importArgs()).b1, 'control: a recorded-directory B1 imports');
+    const row = f.inspect();
+    assert.deepStrictEqual([row.research.b1Imported, !!row.bodies.B1, row.fatal, row.attempts], [true, true, null, 0], 'control: reused, no new call');
+  } finally { f.done(); }
+});
+t('R5-2: reinspection: an import made by the pre-fix importer is rechecked from its copies (not reusable / explicit stop / reusable control)', async () => {
+  for (const [collector, mode, want] of [[OLD, 'clean', 'not-reusable'], [OLD, 'other-dir-same-basename', 'violation'], [OLD, 'interrupted-outside-prefix', 'violation'],
+    [CUR_BANKED, 'clean', 'reusable']]) {
+    const f = await bankedB1(collector, mode);
+    try {
+      assert.ok(PRE_FIX.importBanked(f.importArgs())?.b1, `${mode}: the pre-fix importer copied the B1`);
+      const row = f.inspect();
+      if (want === 'not-reusable') {
+        assert.deepStrictEqual([row.research.b1Imported, !!row.bodies.B1, row.fatal], [false, false, null], JSON.stringify(row.research));
+        assert.match(row.research.b1NotReusable || '', /imported B1 not reusable: confinement unverifiable/);
+      } else if (want === 'violation') {
+        assert.match(row.fatal || '', /work\/B1: imported B1 confinement violation/, `${mode}: ${JSON.stringify({ fatal: row.fatal, imported: row.research.b1Imported })}`);
+        assert.strictEqual(row.bodies.B1, undefined, 'never a body');
+      } else assert.deepStrictEqual([row.research.b1Imported, !!row.bodies.B1, row.fatal], [true, true, null], 'control: recorded directory, clean copy is reused');
+    } finally { f.done(); }
+  }
+});
+// ---- review-5 canary preflight: a launch refuses when any canary work already holds an imported B1 ----
+t('R5 canary preflight: an existing imported B1 on any of the six canary works refuses the launch', async () => {
+  const { CANARY } = await import('../scripts/lib/pass-b-research-gates.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'r5-canary-')), ids = CANARY.map(w => w.id);
+  const manifest = (id, b1) => { const d = join(root, 'works', legacySha(id).slice(0, 24), 'imports'); mkdirSync(d, { recursive: true }); writeFileSync(join(d, 'manifest.json'), JSON.stringify({ workId: id, b1 })); };
+  try {
+    assert.deepStrictEqual(C.canaryImportPreflight({ runDir: root, ids }), { checked: 6 }, 'control: no imports');
+    manifest(ids[0], null); assert.deepStrictEqual(C.canaryImportPreflight({ runDir: root, ids }), { checked: 6 }, 'control: B0-only import (fresh B1)');
+    manifest(ids[4], { completionFile: 'b1-x.json' });
+    assert.throws(() => C.canaryImportPreflight({ runDir: root, ids }), new RegExp(`already hold an imported B1 \\(${ids[4]}\\)`));
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 t('12: a live stopgap run with no canary and no routing manifest is refused (the gate runs before any lease or call)', () => {
   assert.throws(() => C.stopgapSpendGate({ live: true, env: clean }), /needs PASS_B_RESEARCH_ROUTING/);

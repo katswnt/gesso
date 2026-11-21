@@ -61,7 +61,7 @@ async function report() {
     const reqs = row.bodies.B2?.targetedVerificationRequests || [];
     if (reqs.length) template.works.push({ workId: w.id, decisions: reqs.map(r => ({ requestId: r.requestId, whatToLocate: r.whatToLocate, whatToLocateSha256: sha(r.whatToLocate), decision: null, note: '' })) });
     works.push({ ...w, status: row.research?.status, done: row.done, terminalReasons: row.terminalReasons,
-      migration: manifest && { sourceRunId: manifest.sourceRunId, b0: manifest.b0.image?.imgSha256, b1Imported: !!manifest.b1, b1NotImported: manifest.b1NotImported },
+      migration: manifest && { sourceRunId: manifest.sourceRunId, b0: manifest.b0.image?.imgSha256, b1Imported: !!manifest.b1, b1NotImported: manifest.b1NotImported, b1NotReusable: row.research?.b1NotReusable ?? null },
       b1: row.bodies.B1 ? { seen: row.bodies.B1.seen, uncertainty: row.bodies.B1.uncertainty } : null,
       b2: row.bodies.B2 ? { guideAnswers: row.bodies.B2.guideAnswers, uncertainty: row.bodies.B2.uncertainty, factChecks: row.bodies.B2.factChecks.map(f => ({ claim: f.claim, verdict: f.verdict, urls: f.sources.map(s => s.url) })) } : null,
       coverage: coverage && { gaps: coverage.gaps, coverageStatus: coverage.coverageStatus },

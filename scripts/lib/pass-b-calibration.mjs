@@ -274,6 +274,41 @@ export function verifyB1ImageRead(transcript, { callDir, imageBasename }) {
   return { ok, reads: reads.length, good, bad, reason: ok ? null : (bad.length ? `read target escaped confinement: ${bad.join(', ')}` : 'no successful Read of the exact image (no image content block)') };
 }
 
+// ---- Review-5 (R5-1/R5-2): the ONE directory-aware Read-confinement validator for a preserved B1/B3 transcript, shared
+// by ordinary resume attempts, banked inspection and imported-copy revalidation.
+//   - `callDir` is the controller-recorded directory from the attempt's own reservation (written before the call). It
+//     is the only evidence that establishes confinement: every Read must be exactly <callDir>/<image>.
+//   - With no recorded directory, confinement is UNVERIFIABLE. Nothing in the transcript can establish it: a CLI init
+//     `cwd` (whatever its name, e.g. /attacker-controlled/corpus-Ab12Cd) proves only where that process ran, not
+//     that it was the controller's sandbox. The transcript is still searched for a PROVEN violation, which needs no
+//     trusted directory: Reads (or an interrupted Read's prefix) in more than one directory, a Read outside the
+//     CLI-reported cwd, traversal, or a wrong file. Evidence may only ever count against an attempt here.
+// Returns { status, reason, receipt }: 'not-applicable' (not B1/B3), 'no-read', 'confined', 'violation', 'unverifiable'.
+export function verifyAttemptConfinement(text, { stage, callDir = null, imageBasename }) {
+  if (stage !== 'B1' && stage !== 'B3') return { status: 'not-applicable', reason: null, receipt: null };
+  const transcript = parseStreamTranscript(text), reads = transcript.toolUses.filter(u => u.name === 'Read');
+  if (!reads.length) return { status: 'no-read', reason: null, receipt: null };
+  const violation = receipt => ({ status: 'violation', reason: receipt.reason, receipt });
+  if (callDir) {
+    const receipt = verifyB1ImageRead(transcript, { callDir, imageBasename });
+    return receipt.bad.length ? violation(receipt) : { status: 'confined', reason: receipt.ok ? null : receipt.reason, receipt };
+  }
+  const norm = p => String(p).replace(/^\/private(?=\/)/, '').replace(/\/+$/, '');
+  const dirOf = p => norm(p.slice(0, p.lastIndexOf('/')) || '/');
+  const anchors = new Set();
+  const cwds = new Set(String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e?.type === 'system' && e.subtype === 'init' && typeof e.cwd === 'string' ? [e.cwd] : []; } catch { return []; } }));
+  if (cwds.size === 1) { const [cwd] = cwds; if (cwd.startsWith('/') && !cwd.split('/').includes('..')) anchors.add(norm(cwd)); }
+  for (const r of reads) {
+    const p = r.streamed && !r.inputComplete ? partialFilePath(r.partialInput) : null;
+    const fp = p ? (p.complete ? p.path : null) : (typeof r.input?.file_path === 'string' ? r.input.file_path : null);
+    if (fp && fp.startsWith('/') && !fp.includes('..')) anchors.add(dirOf(fp));
+  }
+  if (anchors.size > 1) return violation({ ok: false, reads: reads.length, good: 0, bad: [...anchors].sort(), reason: `Reads span more than one directory: ${[...anchors].sort().join(', ')}` });
+  const receipt = verifyB1ImageRead(transcript, { callDir: anchors.size ? [...anchors][0] : null, imageBasename });
+  if (receipt.bad.length) return violation(receipt);
+  return { status: 'unverifiable', reason: 'no controller-recorded call directory (a transcript cwd cannot establish confinement)', receipt };
+}
+
 // Resolve a possibly-relative path against a base without importing node:path into pure helpers used by tests.
 function resolvePath(base, p) {
   if (typeof p === 'string' && p.startsWith('/')) return p;
@@ -383,7 +418,10 @@ export function findTranscriptBySha(workRunDir, stage, transcriptSha256) {
   }
   return null;
 }
-export function verifyStageEvidence({ stage, workRunDir, completion, imageBasename, expectedModel = CALIBRATION_MODEL, b1 = null, b2 = null, b3 = null, legacy = null }) {
+// `confinement` (review-5 R5-2): when given ({ callDir } from the attempt's reservation, possibly null), the B1/B3 Read
+// check is the shared directory-aware verifyAttemptConfinement and its result is returned as `confinement`; omitted, the
+// legacy basename check below stays for runners that verify their own call directory on the fresh path.
+export function verifyStageEvidence({ stage, workRunDir, completion, imageBasename, expectedModel = CALIBRATION_MODEL, b1 = null, b2 = null, b3 = null, legacy = null, confinement = undefined }) {
   const errors = [];
   const found = findTranscriptBySha(workRunDir, stage, completion?.transcriptSha256);
   if (!found) return { ok: false, errors: [`transcript-sha-not-found:${String(completion?.transcriptSha256 || '').slice(0, 12)}`] };
@@ -393,7 +431,13 @@ export function verifyStageEvidence({ stage, workRunDir, completion, imageBasena
   if (!model || model !== expectedModel) errors.push(`model:${model || 'none'}`);
   const apiKeySource = transcript.init?.apiKeySource ?? null;
   if (apiKeySource !== 'none') errors.push(`apiKeySource:${apiKeySource || 'missing'}`);
-  if (stage === 'B1' || stage === 'B3') { const r = verifyB1ImageRead(transcript, { callDir: null, imageBasename }); if (!r.ok) errors.push(`read:${r.reason}`); }
+  let conf = null;
+  if ((stage === 'B1' || stage === 'B3') && confinement !== undefined) {
+    conf = verifyAttemptConfinement(found.bytes, { stage, callDir: confinement?.callDir ?? null, imageBasename });
+    if (conf.status === 'violation') errors.push(`confinement-violation:${conf.reason}`);
+    else if (conf.status === 'unverifiable') errors.push('confinement-unverifiable');
+    else if (!conf.receipt?.ok) errors.push(`read:${conf.receipt?.reason || 'no Read'}`);
+  } else if (stage === 'B1' || stage === 'B3') { const r = verifyB1ImageRead(transcript, { callDir: null, imageBasename }); if (!r.ok) errors.push(`read:${r.reason}`); }
   if (stage === 'B2') { const r = verifyB2WebEvents(transcript); if (!r.ok) errors.push(`web:${r.reason}`); }
   if (stage === 'B4') {
     const delta = final?.structured_output;
@@ -404,7 +448,7 @@ export function verifyStageEvidence({ stage, workRunDir, completion, imageBasena
       else if (stableJson(r.body) !== stableJson(completion.body)) errors.push('b4-hydration-mismatch');
     }
   }
-  return errors.length ? { ok: false, errors, transcriptFile: found.file } : { ok: true, transcriptFile: found.file };
+  return errors.length ? { ok: false, errors, transcriptFile: found.file, confinement: conf } : { ok: true, transcriptFile: found.file, confinement: conf };
 }
 
 // ---- Resume loader with STALE-vs-CORRUPT discipline (VSD-023). Returns the verified stored body, or null

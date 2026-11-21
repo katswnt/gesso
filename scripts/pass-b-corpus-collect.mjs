@@ -33,7 +33,7 @@ import {
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
   verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope, answeringModel,
   legacyContentInput, b2InputFor, b2Plan, b3Plan, producerEvidence, verifyStageEvidence, findTranscriptBySha,
-  b1PromptText, b2PromptText, b3PromptText, verifyStageCapabilities,
+  b1PromptText, b2PromptText, b3PromptText, verifyStageCapabilities, verifyAttemptConfinement,
 } from './lib/pass-b-calibration.mjs';
 
 export const COLLECTOR_VERSION = 'passBCorpusCollector/4';
@@ -303,25 +303,17 @@ export function loadFatalClearances(runDir) {
   }
   return out;
 }
-// Review-4 finding 1: the call directory a preserved B1/B3 attempt ran in, so resume re-verifies Read confinement exactly
-// as the fresh path did (a matching basename is never proof of confinement).
+// Review-4 finding 1 / review-5 R5-1: resume re-verifies a preserved B1/B3 attempt's Read confinement with the shared
+// directory-aware validator (verifyAttemptConfinement, also used for banked inspection and imported copies).
 //   - Attempts reserved by this controller carry `callDir` in their reservation, written and persisted before the call.
-//     That recorded directory is authoritative.
-//   - Older attempts (no recorded directory) are accepted only when every init event the CLI wrote reports one and the
-//     same absolute `cwd` whose last segment is the old controller's `mkdtemp(<tmpdir>/corpus-)` name (`corpus-` plus
-//     six alphanumerics). The CLI, not the model, writes init, so that is the old controller's directory; every Read
-//     must then target exactly `<cwd>/<image>`. (All 52 saved banked transcripts have this shape.)
-//   - Otherwise the directory cannot be established: an attempt with any Read is a confinement-unverifiable fatal (a
-//     reviewed fatal clearance for that exact transcript still applies). An attempt with no Read has nothing to confine.
-export const LEGACY_CORPUS_CALL_DIR = /^corpus-[A-Za-z0-9]{6}$/;
+//     That recorded directory is the ONLY evidence that establishes confinement.
+//   - An older attempt (no recorded directory) is UNVERIFIABLE: a CLI-reported cwd, whatever its name, proves only where
+//     the process ran, not that it was the controller's sandbox (a `corpus-XXXXXX` name can sit anywhere, e.g.
+//     /attacker-controlled/corpus-Ab12Cd). On resume of this run that is a `preserved confinement unverifiable` fatal
+//     (a reviewed fatal clearance for that exact transcript still applies). An attempt with no Read has nothing to confine.
+//   - A proven violation (Reads in more than one directory or outside the reported cwd, an outside prefix, traversal, a
+//     wrong file) needs no trusted directory and is a `preserved confinement violation` fatal wherever it is found.
 const safeCallDir = d => typeof d === 'string' && d.startsWith('/') && !d.split('/').includes('..') && !/[\\\0]/.test(d);
-export function legacyCorpusCallDir(text) {
-  const cwds = new Set(initEvents(text).map(e => e.cwd));
-  if (cwds.size !== 1) return null;
-  const [cwd] = cwds;
-  return safeCallDir(cwd) && LEGACY_CORPUS_CALL_DIR.test(cwd.replace(/\/+$/, '').split('/').pop()) ? cwd : null;
-}
-export const attemptCallDir = (recorded, text) => recorded || legacyCorpusCallDir(text);
 // Exact-incident pattern check: one init (pinned model, subscription, tools exactly [Read, StructuredOutput]); exactly
 // two Reads with unique ids, each with exactly one later result; the first is a wrong basename in the init cwd whose
 // result is EXACTLY the CLI's missing-file diagnostic; the second is the exact image and returns only image blocks;
@@ -437,7 +429,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   const contexts = stage => stage === 'B2' ? { evidenceIds: b2InputFor(id, catalog, bodies.B1).visibleSignals.map(s => s.evidenceId), ...(STOPGAP ? { b2Contract: B2_CONTRACT_STOPGAP } : {}) }
     : stage === 'B3' ? { requestIds: planB3(bodies.B2).requestIds } : {};
   const completionMeta = {};
-  let b1Imported = false;
+  let b1Imported = false, b1NotReusable = null, importFatal = null;
   const importManifest = STOPGAP ? readImport(workDir) : null;
   // VSD-054: the model a completion must show is the model of the epoch its transcript was reserved under; a
   // transcript with no reservation (pre-epoch history) uses the explicit historical 4.6 rule.
@@ -454,9 +446,16 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const name = `${stage.toLowerCase()}-${completionKey(stage, id)}.json`;
     const found = files(join(workDir, 'completions')).filter(f => f.startsWith(`${stage.toLowerCase()}-`));
     if (stage === 'B1' && importManifest?.b1) { // VSD-092: banked B1 reused from verified copies with its own provenance
-      if (found.length) throw new Error(`${id}: ambiguous B1 (local completion and imported banked B1)`);
-      bodies.B1 = verifyImportedB1({ workDir, runId: RUN_ID, id, catalog, legacy, b0, bankedB1Prompt: BANKED_PROMPTS.B1, manifest: importManifest }).body;
-      b1Imported = true; continue;
+      // Review-5 R5-2: the copies are re-checked with the shared directory-aware validator. A legacy copy (no recorded
+      // call directory) is not reusable: it is never a body, and the work takes a fresh local B1. A proven violation
+      // is an explicit stop for review.
+      const v = verifyImportedB1({ workDir, runId: RUN_ID, id, catalog, legacy, b0, bankedB1Prompt: BANKED_PROMPTS.B1, manifest: importManifest });
+      if (v.status === 'violation') importFatal = `${id}/B1: ${v.reason}`;
+      else if (v.status === 'not-reusable') b1NotReusable = v.reason;
+      else {
+        if (found.length) throw new Error(`${id}: ambiguous B1 (local completion and imported banked B1)`);
+        bodies.B1 = v.body; b1Imported = true; continue;
+      }
     }
     if (!found.length) continue;
     if (found.length !== 1 || found[0] !== name) throw new Error(`${id}: ambiguous ${stage} completion`);
@@ -485,12 +484,13 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     completionMeta[stage] = { bodySha256: c.bodySha256, transcriptSha256: c.transcriptSha256 };
     bodies[stage] = c.body;
   }
-  let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
+  let attempts = 0, maxSeq = 0, fatal = importFatal, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
   const crashed = {};
   const clearances = loadFatalClearances(runDir);
   const epochs = executionEpochs(runDir), activeEpoch = epochs.at(-1), reserved = new Map(), incompleteTranscripts = new Set(), recordedCallDirs = new Map();
   const retryGrant = loadFormatRetries(runDir).find(r => r.workId === id) || null;
   const formatFailures = []; // uncaptured invalid bodies from pre-wire-schema epochs (grant candidates)
+  const confinementUnverifiable = []; // review-5: legacy B1/B3 transcripts with Reads and no recorded call directory
   // Released transcripts must stay present and byte-identical whatever happens later (incl. a successful retry).
   for (const x of retryGrant?.released || []) {
     const path = join(attemptsDir, x.file);
@@ -548,14 +548,19 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     // Review-3 finding 2: a preserved out-of-directory/wrong-file Read (message or streamed) is a confinement fatal
     // ahead of the set-aside shortcut and every init/outcome branch; only the exact VSD-074 misread and a reviewed
     // fatal clearance for this exact transcript (re-verified below) are exempt.
-    // Review-4 finding 1: the receipt is re-verified against the call directory, never a basename alone (see attemptCallDir).
-    const callDir = ['B1', 'B3'].includes(stage) ? attemptCallDir(recordedCallDirs.get(name.slice(0, 9)), text) : null;
-    const unverifiable = ['B1', 'B3'].includes(stage) && !callDir && tr.toolUses.some(u => u.name === 'Read');
-    const receipt = callDir ? verifyB1ImageRead(tr, { callDir, imageBasename: imageFile }) : null;
+    // Review-4 finding 1 / review-5 R5-1: re-verified against the recorded call directory only (see verifyAttemptConfinement).
+    const conf = verifyAttemptConfinement(text, { stage, callDir: recordedCallDirs.get(name.slice(0, 9)) || null, imageBasename: imageFile });
+    const unverifiable = conf.status === 'unverifiable', receipt = conf.status === 'violation' ? conf.receipt : null;
     const misread = !!receipt?.bad?.length && !!binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (receipt?.bad?.length && !misread && !clearance) fatal ||= `${id}/${stage}: preserved confinement violation`;
-    if (unverifiable && !clearance) fatal ||= `${id}/${stage}: preserved confinement unverifiable (Read with no recorded or CLI-reported corpus call directory)`;
+    // Review-5 R5-1: in the stopgap run (this controller's run: every reservation records its directory) an unverifiable
+    // attempt is a fatal stop. Inspecting the banked run itself (no stopgap) meets only historical evidence: each
+    // unverifiable attempt is reported on the row, and a live banked resume refuses while any remain (never accepted).
+    if (unverifiable && !clearance) {
+      if (STOPGAP) fatal ||= `${id}/${stage}: preserved confinement unverifiable (Read with no controller-recorded call directory)`;
+      else confinementUnverifiable.push(name);
+    }
     // VSD-073: a work-level fatal set aside under the per-firing budget holds only this work. Subscription-source and
     // init-model evidence is re-checked here and still stops everything whatever the record says.
     if (meta?.kind === 'fatal' && !pipelineWide(meta.reason) && inits.length && inits.every(e => e.apiKeySource === 'none' && e.model === epochModel(binding.epoch))
@@ -626,7 +631,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
       if (!v.ok) throw new Error(`${id}: source capture sidecar invalid: ${v.errors.join(',')}`);
     }
     done = !!bodies.B1 && (!b2p.run || (!!bodies.B2 && !!coverage && !!capture && (!b3p.run || !!bodies.B3)));
-    research = { b1Imported, importManifest: !!importManifest, b2Planned: b2p.run, files: { coverage: !!coverage, capture: !!capture }, rawBytesRetained: capture?.rawBytesRetained || 0,
+    research = { b1Imported, b1NotReusable, importManifest: !!importManifest, b2Planned: b2p.run, files: { coverage: !!coverage, capture: !!capture }, rawBytesRetained: capture?.rawBytesRetained || 0,
       b2Completion: completionMeta.B2 || null, b3Pending: b3p?.pending || [],
       status: researchStatus({ done, held: !done && terminalReasons.length > 0, b2Planned: b2p.run, bodies, coverage, capture, b3: b3p }) };
   } else done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
@@ -634,14 +639,14 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   // Grant candidate: not done, no fatal/pause, no grant yet, and EVERY terminal reason is a pre-wire invalid body.
   const formatEligible = !done && !fatal && !pause && !retryGrant && formatFailures.length > 0 && uniqueReasons.length > 0 &&
     uniqueReasons.every(r => /^B[123]:invalid body: /.test(r)) ? formatFailures : null;
-  return { id, bodies, repairs, done, attempts, maxSeq, fatal, pause, pendingB2Retry, b2ValidationFailures, formatEligible,
+  return { id, bodies, repairs, done, attempts, maxSeq, fatal, pause, pendingB2Retry, b2ValidationFailures, formatEligible, confinementUnverifiable,
     formatRetryGranted: !!retryGrant, ...(STOPGAP ? { research } : {}),
     terminalReasons: done ? [] : [...new Set(terminalReasons)], cliVersions: [...cliVersions] };
 }
 export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readLedger(runDir), priorDir }) {
   const rows = [], repairs = [], heldReasons = { ...ledger.heldReasons };
   const heldSet = new Set(ledger.heldIds), doneSet = new Set();
-  let fatal = preservedFatal(runDir, ledger), pause = null, attempts = 0, maxSeq = ledger.attemptSeq || 0;
+  let fatal = preservedFatal(runDir, ledger), pause = null, attempts = 0, maxSeq = ledger.attemptSeq || 0, unverifiable = 0;
   const totals = { b1Complete: 0, b2Complete: 0, b3Complete: 0 };
   const knownDirs = new Set(pool.map(p => sha256(p.id).slice(0, 24)));
   if (files(join(runDir, 'works')).some(d => !knownDirs.has(d))) throw new Error('unrecognized work history; fail closed before scheduling');
@@ -650,7 +655,7 @@ export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readL
     if (!existsSync(workDir)) continue;
     const row = inspectWork({ runDir, id: p.id, catalog: trustedCatalog(p), legacy: legacyOf(p.id), priorDir });
     rows.push(row); repairs.push(...row.repairs); fatal ||= row.fatal; pause ||= row.pause;
-    attempts += row.attempts; maxSeq = Math.max(maxSeq, row.maxSeq);
+    attempts += row.attempts; maxSeq = Math.max(maxSeq, row.maxSeq); unverifiable += row.confinementUnverifiable?.length || 0;
     for (const stage of ['B1', 'B2', 'B3']) if (row.bodies[stage]) totals[`${stage.toLowerCase()}Complete`]++;
     if (row.done) doneSet.add(p.id);
     else if (row.terminalReasons.length) { heldSet.add(p.id); heldReasons[p.id] = `evidence:${row.terminalReasons.join('; ')}`; }
@@ -658,7 +663,7 @@ export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readL
     else if (row.formatRetryGranted && /^evidence:B[123]:invalid body:/.test(heldReasons[p.id] || '')) { heldSet.delete(p.id); delete heldReasons[p.id]; }
     else if (heldToRequeue([p.id], heldReasons).length) { heldSet.delete(p.id); delete heldReasons[p.id]; }
   }
-  return { rows, repairs, heldSet, heldReasons, doneSet, fatal, pause, attempts, maxSeq: Math.max(maxSeq, attempts), totals };
+  return { rows, repairs, heldSet, heldReasons, doneSet, fatal, pause, attempts, maxSeq: Math.max(maxSeq, attempts), totals, unverifiable };
 }
 export function applyHistoryRepair({ runDir = RUN_DIR, inspection, ledger = readLedger(runDir), eligibleCount, now = () => new Date() }) {
   for (const r of inspection.repairs) {
@@ -1071,9 +1076,19 @@ export function importBanked({ id, workRunDir, catalog, legacy, bankedRunDir = B
   if (existsSync(b0Path) || readImport(workRunDir)) return null;
   const banked = inspectBankedWork({ bankedRunDir, bankedRunId: BANKED_RUN_ID, id, catalog, legacy, bankedB1Prompt: BANKED_PROMPTS.B1 });
   if (!banked.ok) return null;
+  // Review-5: a proven boundary violation in the banked B1 stops for review before anything is written (even when a
+  // fresh B1 was requested). A legacy B1 that is merely unverifiable is not imported; the receipt records why.
+  if (banked.b1Violation) throw new FatalError(`${id}/B1: ${banked.b1Violation}`);
   const manifest = writeImport({ workDir: workRunDir, imgsDir, runId: RUN_ID, bankedRunId: BANKED_RUN_ID, id, catalog, legacy, banked, freshB1: FRESH_B1, now });
   writeFileSync(b0Path, `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: banked.b0.image }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   return manifest;
+}
+// Review-5 (canary preflight): the frozen canary runs a FRESH B1 for each of its works. PASS_B_RESEARCH_FRESH_B1 only
+// stops new imports, so a launch refuses when any canary work already holds an imported B1 in this run.
+export function canaryImportPreflight({ runDir = RUN_DIR, ids }) {
+  const imported = ids.filter(id => readImport(join(runDir, 'works', sha256(id).slice(0, 24)))?.b1);
+  if (imported.length) throw new Error(`refusing --run: canary work(s) already hold an imported B1 (${imported.join(', ')}); the canary requires fresh B1 for all six. Review before any launch.`);
+  return { checked: ids.length };
 }
 // VSD-092 review fixes 12/14 (pure, tested): which spend path a stopgap invocation is on. Throws when a live run has
 // neither the frozen canary (re-verified from the environment the collector actually received) nor a valid manifest.
@@ -1143,6 +1158,7 @@ async function main() {
   // after every wrapper override) OR a reviewed gap-routing manifest's named works. Nothing else may spend calls.
   let routing = null;
   if (STOPGAP) ({ canary: CANARY_RUN, routing } = stopgapSpendGate({ live }));
+  if (live && CANARY_RUN) canaryImportPreflight({ ids: CANARY_RUN.ids });
   if (FRESH_B1 && !(process.env.PASS_B_CORPUS_ONLY || '').trim()) throw new Error('PASS_B_RESEARCH_FRESH_B1=1 is for an owner-directed subset (the canary) only; set PASS_B_CORPUS_ONLY');
   if (live) assertExecutionLease({ required: true });
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
@@ -1184,7 +1200,7 @@ async function main() {
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
   if (STOPGAP) {
     const st = {}; for (const r of inspection.rows) for (const [k, v] of Object.entries(r.research?.status || {})) if (k !== 'copyEligibility') (st[k] ||= {})[v] = (st[k][v] || 0) + 1;
-    console.log(`research ${RESEARCH_VERSION} (${RESEARCH_STOPGAP_VERSION}) | banked run ${BANKED_RUN_ID} (read-only import source) | imported B1 ${inspection.rows.filter(r => r.research?.b1Imported).length}${FRESH_B1 ? ' | fresh B1 for this subset' : ''}`);
+    console.log(`research ${RESEARCH_VERSION} (${RESEARCH_STOPGAP_VERSION}) | banked run ${BANKED_RUN_ID} (read-only import source) | imported B1 ${inspection.rows.filter(r => r.research?.b1Imported).length} (not reusable ${inspection.rows.filter(r => r.research?.b1NotReusable).length})${FRESH_B1 ? ' | fresh B1 for this subset' : ''}`);
     console.log(`spend gate: ${CANARY_RUN ? `frozen canary phase ${CANARY_RUN.phase} (stages ${CANARY_RUN.stages.join('+')}, cap ${CANARY_RUN.maxCalls} on ${CANARY_RUN.budgetId})` : process.env.PASS_B_RESEARCH_ROUTING ? `gap-routing manifest ${process.env.PASS_B_RESEARCH_ROUTING}` : 'NONE: a live run refuses without the frozen canary or a gap-routing manifest (review finding 12)'}`);
     const raw = inspection.rows.map(r => r.research?.rawBytesRetained || 0), kept = raw.filter(Boolean);
     console.log(`retained raw source bytes: ${(raw.reduce((a, b) => a + b, 0) / 1e6).toFixed(1)} MB over ${kept.length} works${kept.length ? ` (mean ${(kept.reduce((a, b) => a + b, 0) / kept.length / 1e6).toFixed(2)} MB, max ${(Math.max(...kept) / 1e6).toFixed(2)} MB per work)` : ''}`);
@@ -1198,7 +1214,9 @@ async function main() {
     }
   }
   if (!live && !repair && !rebind && !rebindModelFile && !offlineReview) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : `READ-ONLY PLAN: no writes, migrations, calls, or fetches. Hours ${SCHEDULE_HOURS} (${SCHEDULE_TZ}); ${SCHEDULE_SCOPE === 'corpus' ? 'the 30-day window first, then the remaining priority bands' : 'no work outside the 30-day window'}.`); return; }
+  if (!STOPGAP && inspection.unverifiable) console.log(`legacy B1/B3 attempts with unverifiable confinement (no controller-recorded call directory): ${inspection.unverifiable}`);
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
+  if (live && !STOPGAP && inspection.unverifiable) throw new Error(`refusing --run: ${inspection.unverifiable} preserved B1/B3 attempts have unverifiable confinement (review-5 R5-1); review before any banked resume`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
   if (live) laneWindow();
   mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 }); mkdirSync(IMGS_DIR, { recursive: true, mode: 0o700 });

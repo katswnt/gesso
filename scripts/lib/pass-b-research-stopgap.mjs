@@ -22,7 +22,7 @@ import { completionKey } from './vision-content-capture.mjs';
 import { BROKER_POLICY_VERSION } from './img-broker.mjs';
 import {
   CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, MAX_B3_REQUESTS, b1PromptText, findTranscriptBySha, neutralImageFile,
-  parseStreamTranscript, producerEvidence, transcriptFinal, verifyStageEvidence, verifyStageCapabilities,
+  parseStreamTranscript, producerEvidence, transcriptFinal, verifyStageEvidence, verifyStageCapabilities, verifyAttemptConfinement,
 } from './pass-b-calibration.mjs';
 
 export { RESEARCH_STOPGAP_VERSION, B2_CONTRACT_STOPGAP };
@@ -290,7 +290,7 @@ export const passageText = (source, passageId) => { const p = source.passages.fi
 // Verify a banked work's B0 and (if present) B1 exactly as the banked collector would, reading only the banked run.
 function bankedModelFor(bankedRunDir, bankedRunId, workDir, transcriptFile) {
   const stem = String(transcriptFile).slice(0, 9), resPath = join(workDir, 'attempts', `${stem}.reserved.json`);
-  if (!/^b1-\d{6}$/.test(stem) || !existsSync(resPath)) return { model: HISTORICAL_MODEL, reservationPath: null, epochPath: null };
+  if (!/^b1-\d{6}$/.test(stem) || !existsSync(resPath)) return { model: HISTORICAL_MODEL, reservationPath: null, epochPath: null, callDir: null };
   const r = readJson(resPath), number = r.executionEpoch ?? 0;
   if (r.runId !== bankedRunId || r.stage !== 'B1') throw new Error('banked reservation binding mismatch');
   const epochPath = number === 0 ? join(bankedRunDir, 'execution-policy.json') : join(bankedRunDir, 'execution-policies', `${String(number).padStart(6, '0')}.json`);
@@ -299,7 +299,16 @@ function bankedModelFor(bankedRunDir, bankedRunId, workDir, transcriptFile) {
   if (sha256(stableJson(policy)) !== r.executionPolicySha256 || policy?.evidenceRunId !== bankedRunId) throw new Error('banked epoch policy binding mismatch');
   const metaPath = join(workDir, 'attempts', `${stem}.meta.json`);
   if (existsSync(metaPath) && readJson(metaPath).kind !== 'ok') throw new Error('banked B1 attempt was not accepted');
-  return { model: policy.model ?? HISTORICAL_MODEL, reservationPath: resPath, epochPath, epochNumber: number };
+  return { model: policy.model ?? HISTORICAL_MODEL, reservationPath: resPath, epochPath, epochNumber: number, callDir: r.callDir ?? null };
+}
+// Review-5: classify a banked/imported B1 transcript with the shared validator (verifyAttemptConfinement).
+export const NOT_REUSABLE_UNVERIFIABLE = 'not reusable: confinement unverifiable (legacy attempt with no controller-recorded call directory); needs a fresh B1';
+function bankedConfinement(text, callDir, imageFile) {
+  const conf = verifyAttemptConfinement(text, { stage: 'B1', callDir, imageBasename: imageFile });
+  if (conf.status === 'violation') return { conf, violation: `confinement violation: ${String(conf.reason).slice(0, 240)}` };
+  if (conf.status === 'unverifiable') return { conf, notReusable: NOT_REUSABLE_UNVERIFIABLE };
+  if (conf.status !== 'confined' || !conf.receipt?.ok) return { conf, notReusable: `not reusable: ${conf.receipt?.reason || 'no Read of the image'}` };
+  return { conf };
 }
 export function inspectBankedWork({ bankedRunDir, bankedRunId, id, catalog, legacy, bankedB1Prompt }) {
   const workDir = join(bankedRunDir, 'works', sha256(id).slice(0, 24)), b0Path = join(workDir, 'b0-prep.json');
@@ -309,24 +318,31 @@ export function inspectBankedWork({ bankedRunDir, bankedRunId, id, catalog, lega
   if (!b0.image?.ok) return { ok: false, reason: 'banked B0 has no usable image' };
   const imageFile = neutralImageFile(b0.image.imgSha256, b0.image.ext), imagePath = join(bankedRunDir, 'imgs', imageFile);
   if (!existsSync(imagePath) || rawFileSha(imagePath) !== b0.image.imgSha256) return { ok: false, reason: 'banked image missing or changed' };
-  const out = { ok: true, workDir, b0, b0Path, imageFile, imagePath, b1: null, b1Reason: null };
+  // Review-5: b1Violation = a PROVEN boundary violation in the banked B1 (outside path/prefix or forbidden tool): an
+  // explicit stop for review, never ordinary missing research. b1Reason alone = not reusable; the work runs a fresh B1.
+  const out = { ok: true, workDir, b0, b0Path, imageFile, imagePath, b1: null, b1Reason: null, b1Violation: null };
   const name = `b1-${completionKey('B1', id)}.json`, cPath = join(workDir, 'completions', name);
   if (!existsSync(cPath)) { out.b1Reason = 'no banked B1 completion'; return out; }
   try {
     const c = readJson(cPath);
     const found = findTranscriptBySha(workDir, 'B1', c.transcriptSha256);
     if (!found) throw new Error('banked B1 transcript missing');
-    const { model, reservationPath, epochPath, epochNumber } = bankedModelFor(bankedRunDir, bankedRunId, workDir, found.file);
+    const { model, reservationPath, epochPath, epochNumber, callDir } = bankedModelFor(bankedRunDir, bankedRunId, workDir, found.file);
+    // Review-5 R5-1/R5-2: the shared directory-aware check, ahead of every other gate, against the banked reservation's
+    // controller-recorded directory. A legacy attempt (none recorded) is not reusable; a proven violation stops.
+    const caps = verifyStageCapabilities(found.bytes, 'B1');
+    if (!caps.ok) { out.b1Violation = `banked B1 capability violation: ${caps.bad.join(', ')}`.slice(0, 300); out.b1Reason = out.b1Violation; return out; }
+    const conf = bankedConfinement(found.bytes, callDir, imageFile);
+    if (conf.violation) { out.b1Violation = `banked B1 ${conf.violation}`; out.b1Reason = out.b1Violation; return out; }
+    if (conf.notReusable) { out.b1Reason = `banked B1 ${conf.notReusable}`; return out; }
     const promptHash = sha256(b1PromptText(bankedB1Prompt, imageFile));
     const v = validateStageCompletion(c, { trusted: { workId: id, imgSha256: b0.image.imgSha256, promptHash, brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION }, producer: producerEvidence('B1', { model, runtimeVersion: c.producer?.runtimeVersion }) });
     if (!v.ok) throw new Error(`banked B1 completion invalid: ${v.errors.join(',')}`);
     const rawPath = join(workDir, 'raw', `${c.rawResponseSha256}.json`);
     if (!existsSync(rawPath) || rawFileSha(rawPath) !== c.rawResponseSha256 || stableJson(readJson(rawPath)) !== stableJson(c.body)) throw new Error('banked B1 raw missing or mismatched');
-    const ev = verifyStageEvidence({ stage: 'B1', workRunDir: workDir, completion: c, imageBasename: imageFile, expectedModel: model });
+    const ev = verifyStageEvidence({ stage: 'B1', workRunDir: workDir, completion: c, imageBasename: imageFile, expectedModel: model, confinement: { callDir } });
     if (!ev.ok) throw new Error(`banked B1 evidence: ${ev.errors.join(',')}`);
     if (stableJson(transcriptFinal(parseStreamTranscript(found.bytes))?.structured_output) !== stableJson(c.body)) throw new Error('banked B1 transcript/body mismatch');
-    const caps = verifyStageCapabilities(found.bytes, 'B1');
-    if (!caps.ok) throw new Error(`banked B1 capability violation: ${caps.bad.join(', ')}`);
     out.b1 = { completionPath: cPath, completionName: name, rawPath, transcriptFile: found.file, transcriptPath: join(workDir, 'attempts', found.file), reservationPath, epochPath, epochNumber: epochNumber ?? null, model, promptHash, body: c.body };
   } catch (e) { out.b1Reason = String(e.message).slice(0, 200); }
   return out;
@@ -361,20 +377,30 @@ export function writeImport({ workDir, imgsDir, runId, bankedRunId, id, catalog,
 }
 export const readImport = workDir => existsSync(join(workDir, 'imports', 'manifest.json')) ? readJson(join(workDir, 'imports', 'manifest.json')) : null;
 // Re-verify an imported B1 from its copies alone (offline): hashes, completion bindings, original model and transcript.
+// Review-5 R5-2: the copied transcript is re-checked with the shared directory-aware validator against the COPIED
+// reservation's controller-recorded callDir. Returns { status: 'reusable', body, ... }, or { status: 'not-reusable',
+// reason } for a legacy copy with no recorded directory (the work then needs a fresh B1), or { status: 'violation',
+// reason } for a proven boundary violation (an explicit stop for review). Integrity failures still throw.
 export function verifyImportedB1({ workDir, runId, id, catalog, legacy, b0, bankedB1Prompt, manifest }) {
   const m = manifest, d = join(workDir, 'imports', 'b1');
   if (m.version !== IMPORT_VERSION || m.runId !== runId || m.workId !== id || !m.b1) throw new Error(`${id}: import manifest binding mismatch`);
   if (stableJson(m.b0.image) !== stableJson(b0.image) || m.b0.trustedCatalogSha256 !== sha256(stableJson(catalog)) || m.b0.legacySha256 !== sha256(stableJson(legacy))) throw new Error(`${id}: imported B1 is bound to different B0 inputs`);
   const b1 = m.b1, cPath = join(d, 'completions', b1.completionFile), rawPath = join(d, 'raw', b1.rawFile), trPath = join(d, 'attempts', b1.transcriptFile);
   for (const [p, want] of [[cPath, b1.completionSha256], [rawPath, b1.rawSha256], [trPath, b1.transcriptSha256]]) if (!existsSync(p) || rawFileSha(p) !== want) throw new Error(`${id}: imported B1 copy missing or changed`);
-  let model = HISTORICAL_MODEL;
+  let model = HISTORICAL_MODEL, callDir = null;
   if (b1.reservationSha256) {
     const rp = join(d, 'reservation.json'), ep = join(d, 'epoch.json');
     if (!existsSync(rp) || rawFileSha(rp) !== b1.reservationSha256 || !existsSync(ep) || rawFileSha(ep) !== b1.epochFileSha256) throw new Error(`${id}: imported B1 reservation/epoch copy changed`);
     const r = readJson(rp), e = readJson(ep), policy = b1.epochNumber === 0 ? e : e.policy;
     if (r.runId !== m.sourceRunId || sha256(stableJson(policy)) !== r.executionPolicySha256) throw new Error(`${id}: imported B1 epoch binding mismatch`);
-    model = policy.model ?? HISTORICAL_MODEL;
+    model = policy.model ?? HISTORICAL_MODEL; callDir = r.callDir ?? null;
   }
+  const imported = readFileSync(trPath, 'utf8'), importedImage = neutralImageFile(b0.image.imgSha256, b0.image.ext);
+  const caps = verifyStageCapabilities(imported, 'B1');
+  if (!caps.ok) return { status: 'violation', reason: `imported B1 capability violation: ${caps.bad.join(', ')}`.slice(0, 300) };
+  const conf = bankedConfinement(imported, callDir, importedImage);
+  if (conf.violation) return { status: 'violation', reason: `imported B1 ${conf.violation}` };
+  if (conf.notReusable) return { status: 'not-reusable', reason: `imported B1 ${conf.notReusable}` };
   if (model !== b1.model) throw new Error(`${id}: imported B1 model mismatch`);
   const imageFile = neutralImageFile(b0.image.imgSha256, b0.image.ext), promptHash = sha256(b1PromptText(bankedB1Prompt, imageFile));
   if (promptHash !== b1.promptHash) throw new Error(`${id}: imported B1 prompt binding mismatch`);
@@ -382,12 +408,10 @@ export function verifyImportedB1({ workDir, runId, id, catalog, legacy, b0, bank
   const v = validateStageCompletion(c, { trusted: { workId: id, imgSha256: b0.image.imgSha256, promptHash, brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION }, producer: producerEvidence('B1', { model, runtimeVersion: c.producer?.runtimeVersion }) });
   if (!v.ok) throw new Error(`${id}: imported B1 completion invalid: ${v.errors.join(',')}`);
   if (stableJson(readJson(rawPath)) !== stableJson(c.body)) throw new Error(`${id}: imported B1 raw/body mismatch`);
-  const ev = verifyStageEvidence({ stage: 'B1', workRunDir: d, completion: c, imageBasename: imageFile, expectedModel: model });
+  const ev = verifyStageEvidence({ stage: 'B1', workRunDir: d, completion: c, imageBasename: imageFile, expectedModel: model, confinement: { callDir } });
   if (!ev.ok) throw new Error(`${id}: imported B1 evidence: ${ev.errors.join(',')}`);
-  if (stableJson(transcriptFinal(parseStreamTranscript(readFileSync(trPath, 'utf8')))?.structured_output) !== stableJson(c.body)) throw new Error(`${id}: imported B1 transcript/body mismatch`);
-  const caps = verifyStageCapabilities(readFileSync(trPath, 'utf8'), 'B1');
-  if (!caps.ok) throw new Error(`${id}: imported B1 capability violation: ${caps.bad.join(', ')}`);
-  return { body: c.body, model, sourceRunId: m.sourceRunId };
+  if (stableJson(transcriptFinal(parseStreamTranscript(imported))?.structured_output) !== stableJson(c.body)) throw new Error(`${id}: imported B1 transcript/body mismatch`);
+  return { status: 'reusable', body: c.body, model, sourceRunId: m.sourceRunId };
 }
 
 // ---- status axes (design-2 §2.1 item 6): four separate answers, never one "done" ----
