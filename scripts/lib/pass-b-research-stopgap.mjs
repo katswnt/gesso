@@ -13,6 +13,7 @@
 import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { gzipSync, gunzipSync } from 'node:zlib';
 import { sha256, stableJson } from './vision-legacy.mjs';
 import { RESEARCH_STOPGAP_VERSION } from './pass-b-prompts.mjs';
 import { B2_CONTRACT_STOPGAP, B2_CORE_QUESTION_IDS, validateStageCompletion } from './vision-content-schema.mjs';
@@ -21,19 +22,20 @@ import { completionKey } from './vision-content-capture.mjs';
 import { BROKER_POLICY_VERSION } from './img-broker.mjs';
 import {
   CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, MAX_B3_REQUESTS, b1PromptText, findTranscriptBySha, neutralImageFile,
-  parseStreamTranscript, producerEvidence, transcriptFinal, verifyStageEvidence,
+  parseStreamTranscript, producerEvidence, transcriptFinal, verifyStageEvidence, verifyStageCapabilities,
 } from './pass-b-calibration.mjs';
 
 export { RESEARCH_STOPGAP_VERSION, B2_CONTRACT_STOPGAP };
 export const RESEARCH_VERSIONS = Object.freeze(['banked', 'stopgap-1']);
 export const researchVersionFromEnv = (env = process.env) => env.PASS_B_RESEARCH_VERSION === 'stopgap-1' ? 'stopgap-1' : 'banked';
 export const COVERAGE_VERSION = 'passBResearchCoverage/1';
-export const SOURCE_CAPTURE_VERSION = 'passBSourceCapture/1';
+export const SOURCE_CAPTURE_VERSION = 'passBSourceCapture/2'; // /2: raw bytes + full text retained, real byte SHA-256, explicit gaps
 export const IMPORT_VERSION = 'passBResearchImport/1';
 export const B3_DISPATCH_REVIEW_VERSION = 'passBB3DispatchReview/1';
 export const B3_DISPATCH_REQUEST_VERSION = 'passBB3DispatchReviewRequest/1';
 // design-2 §3.2 envelope: at most four capture attempts per work and 40,000 normalized characters kept in total.
-export const CAPTURE_LIMITS = Object.freeze({ maxSources: 4, perSourceChars: 12000, totalChars: 40000, minPassageChars: 1, maxBytes: 8 * 1024 * 1024, timeoutMs: 20000 });
+// maxRawBytesPerWork: retained raw bytes per work (disk budget; review fix 8). Typical pages are 0.1–1 MB.
+export const CAPTURE_LIMITS = Object.freeze({ maxSources: 4, perSourceChars: 12000, totalChars: 40000, minPassageChars: 1, maxBytes: 8 * 1024 * 1024, timeoutMs: 20000, maxRawBytesPerWork: 24 * 1024 * 1024 });
 export const COPY_ELIGIBILITY = 'not-eligible: stopgap research is a reusable lead inventory, not a validated dossier (VSD-092)';
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const files = path => existsSync(path) ? readdirSync(path) : [];
@@ -162,24 +164,51 @@ export function keepPassages(fullText, cap) {
 }
 const TRANSIENT = new Set(['timeout', 'network-error', 'dns-failed', 'no-ipv4', 'remote-addr-mismatch']);
 export const captureIsTransient = s => TRANSIENT.has(s.status) || (s.status === 'http-status' && (s.httpStatus == null || s.httpStatus === 408 || s.httpStatus === 429 || s.httpStatus >= 500));
-export async function captureSources({ targets, fetchDoc, catalog, now = () => new Date() }) {
-  const sources = []; let remaining = CAPTURE_LIMITS.totalChars;
+// SHA-256 of the exact received bytes (review fix 8: never the project helper's stable-JSON serialization of a Buffer).
+export const bytesSha256 = buf => createHash('sha256').update(buf).digest('hex');
+// ---- raw-source store (review fix 8): immutable files OUTSIDE the model packet, under the work's research/sources ----
+// Raw bytes are kept gzip-compressed (deterministic level 9) at sources/<bytesSha256>.raw.gz; the full normalized text
+// at sources/<textSha256>.txt. Content-addressed and exclusive, so a later extraction fix can be audited against them.
+export const sourceStore = researchDir => {
+  const dir = join(researchDir, 'sources');
+  const put = (name, data) => {
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const path = join(dir, name);
+    if (!existsSync(path)) writeFileSync(path, data, { flag: 'wx', mode: 0o600, flush: true });
+    return `sources/${name}`;
+  };
+  return {
+    putRaw: (buf, sha) => { const gz = gzipSync(buf, { level: 9 }); return { file: put(`${sha}.raw.gz`, gz), storedBytes: gz.length }; },
+    putText: (text, sha) => ({ file: put(`${sha}.txt`, text) }),
+  };
+};
+export async function captureSources({ targets, fetchDoc, catalog, store, now = () => new Date(), extract = extractSourceText }) {
+  if (!store) throw new Error('captureSources needs a raw-source store (raw bytes are always retained)');
+  const sources = []; let remaining = CAPTURE_LIMITS.totalChars, rawTotal = 0;
   for (const [i, t] of targets.entries()) {
     const base = { id: `src${i + 1}`, url: t.url, requestedBecause: t.why, sourceIds: t.sourceIds, retrievedAt: now().toISOString() };
     let r;
     try { r = await fetchDoc(t.url, { maxBytes: CAPTURE_LIMITS.maxBytes, timeoutMs: CAPTURE_LIMITS.timeoutMs }); }
     catch (e) { r = { ok: false, reason: 'network-error', detail: String(e?.message || e).slice(0, 100) }; }
     if (!r.ok) { sources.push({ ...base, status: r.reason || 'fetch-failed', httpStatus: r.status ?? null, chain: r.chain || [t.url], finalUrl: null }); continue; }
-    const head = { ...base, chain: r.chain || [t.url], finalUrl: r.finalUrl || t.url, contentType: String(r.declaredMime || '').slice(0, 120), bytes: r.buffer.length, bytesSha256: sha256(r.buffer), extraction: SOURCE_TEXT_EXTRACTION };
-    const x = extractSourceText(r.buffer, r.declaredMime);
-    if (!x.ok) { sources.push({ ...head, kind: x.kind, status: x.status, detail: x.detail ?? null }); continue; }
+    const sha = bytesSha256(r.buffer);
+    const head = { ...base, chain: r.chain || [t.url], finalUrl: r.finalUrl || t.url, contentType: String(r.declaredMime || '').slice(0, 120), bytes: r.buffer.length, bytesSha256: sha, extraction: SOURCE_TEXT_EXTRACTION };
+    // Per-work raw cap (disk budget): a source over it is an explicit failure, never text without its bytes.
+    if (rawTotal + r.buffer.length > CAPTURE_LIMITS.maxRawBytesPerWork) { sources.push({ ...head, status: 'raw-retention-cap', detail: `per-work raw cap ${CAPTURE_LIMITS.maxRawBytesPerWork} bytes` }); continue; }
+    rawTotal += r.buffer.length;
+    head.raw = store.putRaw(r.buffer, sha);
+    const x = await extract(r.buffer, r.declaredMime);
+    if (!x.ok) { sources.push({ ...head, kind: x.kind, status: x.status, detail: x.detail ?? null, ...(x.pdf ? { pdf: x.pdf } : {}) }); continue; }
+    const fullSha = sha256(x.text);
+    const facts = { kind: x.kind, ...(x.pdf ? { pdf: x.pdf } : {}), fullTextChars: x.text.length, fullTextSha256: fullSha, fullText: store.putText(x.text, fullSha), identity: identityClues(catalog, r.finalUrl || t.url, x.text) };
     const kept = keepPassages(x.text, Math.max(0, Math.min(CAPTURE_LIMITS.perSourceChars, remaining)));
-    const facts = { kind: x.kind, fullTextChars: x.text.length, fullTextSha256: sha256(x.text), identity: identityClues(catalog, r.finalUrl || t.url, x.text) };
-    if (!kept.text) { sources.push({ ...head, ...facts, status: 'over-total-budget' }); continue; }
+    if (!kept.text) { sources.push({ ...head, ...facts, status: 'over-total-budget', omitted: [{ fromOffset: 0, chars: x.text.length, reason: 'packet total budget spent' }] }); continue; }
     // Every kept passage is an exact slice of the full extracted text (the kept text is its prefix, cut at a line end).
     if (!x.text.startsWith(kept.text) || kept.passages.some(p => x.text.slice(p.start, p.end) !== kept.text.slice(p.start, p.end))) throw new Error('captured passage is not a substring of the extracted text');
     remaining -= kept.text.length;
-    sources.push({ ...head, ...facts, status: 'captured', storedChars: kept.text.length, truncated: kept.truncated, storedTextSha256: sha256(kept.text), text: kept.text, passages: kept.passages });
+    // The packet keeps whole paragraphs; anything beyond it is an explicit gap pointing at the full text on disk.
+    const omitted = kept.truncated ? [{ fromOffset: kept.text.length + 1, chars: x.text.length - kept.text.length - 1, reason: remaining <= 0 ? 'packet total budget' : 'per-source packet cap' }] : [];
+    sources.push({ ...head, ...facts, status: 'captured', storedChars: kept.text.length, truncated: kept.truncated, omitted, storedTextSha256: sha256(kept.text), text: kept.text, passages: kept.passages });
   }
   return sources;
 }
@@ -188,7 +217,8 @@ export function captureStatus(sources) {
   const ok = sources.filter(s => s.status === 'captured').length;
   return ok === sources.length ? 'captured' : ok ? 'partial' : 'failed';
 }
-export function buildCaptureSidecar({ runId, workId, b2Completion, b2Body, sources, attemptedAt }) {
+export const rawBytesRetained = sources => sources.reduce((n, s) => n + (s.raw ? s.bytes : 0), 0);
+export function buildCaptureSidecar({ runId, workId, b2Completion, b2Body, sources, attemptedAt, priorAttempts = [] }) {
   const urlCaptured = new Map(sources.map(s => [s.url, s.status === 'captured' ? s.id : null]));
   const urlOf = new Map();
   for (const f of b2Body?.factChecks || []) for (const s of f.sources || []) if (!urlOf.has(s.sourceId)) urlOf.set(s.sourceId, String(s.url).replace(/#.*$/, ''));
@@ -198,26 +228,61 @@ export function buildCaptureSidecar({ runId, workId, b2Completion, b2Body, sourc
     return { questionId, answered: !!a, urls, capturedSourceIds: urls.map(u => urlCaptured.get(u)).filter(Boolean) };
   });
   return { version: SOURCE_CAPTURE_VERSION, runId, workId, b2: { bodySha256: b2Completion.bodySha256, transcriptSha256: b2Completion.transcriptSha256 },
-    attemptedAt, limits: CAPTURE_LIMITS, extraction: SOURCE_TEXT_EXTRACTION, status: captureStatus(sources), sources, coreLinks,
-    note: 'Literal captured text is the evidence; B2 summaries remain leads. A core link means B2 cited that page, not that a passage entails the answer.' };
+    attemptedAt, priorAttempts, limits: CAPTURE_LIMITS, extraction: SOURCE_TEXT_EXTRACTION, status: captureStatus(sources), rawBytesRetained: rawBytesRetained(sources), sources, coreLinks,
+    note: 'Literal captured text is the evidence; B2 summaries remain leads. A core link means B2 cited that page, not that a passage entails the answer. Raw bytes and full text are on disk under sources/.' };
 }
-// Re-verify a stored sidecar against the work's B2 completion: binding, text hashes, passage offsets.
-export function verifyCaptureSidecar(sidecar, { runId, workId, b2Completion }) {
+// Re-verify a stored sidecar against the work's B2 completion: binding, text hashes, passage offsets and, given the
+// research dir, the retained raw bytes (SHA-256 of the decompressed bytes), the full text and the prior attempts.
+export function verifyCaptureSidecar(sidecar, { runId, workId, b2Completion, researchDir = null }) {
   const e = [];
   if (sidecar?.version !== SOURCE_CAPTURE_VERSION || sidecar.runId !== runId || sidecar.workId !== workId) e.push('binding');
   if (sidecar?.b2?.bodySha256 !== b2Completion.bodySha256 || sidecar?.b2?.transcriptSha256 !== b2Completion.transcriptSha256) e.push('b2-binding');
   if (!Array.isArray(sidecar?.sources) || sidecar.sources.length > CAPTURE_LIMITS.maxSources) e.push('sources');
+  const file = rel => (researchDir && typeof rel === 'string' && /^sources\/[0-9a-f]{64}\.(raw\.gz|txt)$/.test(rel) ? join(researchDir, rel) : null);
   let total = 0;
   for (const s of sidecar?.sources || []) {
+    if (s.raw && researchDir) {
+      const p = file(s.raw.file);
+      let ok = false; try { const b = gunzipSync(readFileSync(p)); ok = b.length === s.bytes && bytesSha256(b) === s.bytesSha256; } catch { ok = false; }
+      if (!ok) e.push(`${s.id}: raw bytes missing or changed`);
+    }
     if (s.status !== 'captured') { if (s.text != null || s.passages != null) e.push(`${s.id}: failed source carries text`); continue; }
+    if (!s.raw) e.push(`${s.id}: captured text without retained raw bytes`);
     total += s.text.length;
     if (sha256(s.text) !== s.storedTextSha256 || s.text.length !== s.storedChars || s.text.length > CAPTURE_LIMITS.perSourceChars) e.push(`${s.id}: text hash/length`);
+    if (researchDir) {
+      let full = null; try { full = readFileSync(file(s.fullText?.file), 'utf8'); } catch { full = null; }
+      if (full == null || sha256(full) !== s.fullTextSha256 || full.length !== s.fullTextChars || !full.startsWith(s.text)) e.push(`${s.id}: full text missing, changed or not the packet's source`);
+    }
+    if (s.truncated && !(Array.isArray(s.omitted) && s.omitted.length)) e.push(`${s.id}: truncation without an explicit gap`);
     let at = 0;
     for (const p of s.passages) { if (p.start < at || p.end > s.text.length || p.end - p.start !== p.chars) e.push(`${s.id}/${p.id}: offsets`); at = p.end; }
   }
   if (total > CAPTURE_LIMITS.totalChars) e.push('total text over budget');
   if (sidecar && captureStatus(sidecar.sources || []) !== sidecar.status) e.push('status');
+  if (researchDir) for (const a of sidecar?.priorAttempts || []) {
+    const p = join(researchDir, 'capture-attempts', String(a.file || ''));
+    if (!/^\d{6}\.json$/.test(a.file || '') || !existsSync(p) || bytesSha256(readFileSync(p)) !== a.sha256) e.push(`prior capture attempt ${a.file} missing or changed`);
+  }
   return e.length ? { ok: false, errors: e } : { ok: true };
+}
+// ---- persisted capture attempts (review: an all-transient outcome is recorded, never discarded) ----
+// Each session whose capture failed only transiently writes research/capture-attempts/NNNNNN.json. One later session
+// may retry (the bounded transport retry); after MAX_CAPTURE_SESSIONS the sidecar is written with the failures, so
+// the four-fetch envelope can never repeat indefinitely.
+export const MAX_CAPTURE_SESSIONS = 2;
+export function captureAttempts(researchDir) {
+  const dir = join(researchDir, 'capture-attempts'), names = files(dir).filter(n => /^\d{6}\.json$/.test(n)).sort();
+  names.forEach((n, i) => { if (n !== `${String(i + 1).padStart(6, '0')}.json`) throw new Error('capture attempt sequence mismatch'); });
+  return names.map(n => ({ file: n, sha256: bytesSha256(readFileSync(join(dir, n))), record: readJson(join(dir, n)) }));
+}
+export function writeCaptureAttempt(researchDir, { runId, workId, b2Completion, sources, attemptedAt }) {
+  const prior = captureAttempts(researchDir), dir = join(researchDir, 'capture-attempts'); mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const file = `${String(prior.length + 1).padStart(6, '0')}.json`;
+  const record = { version: 'passBSourceCaptureAttempt/1', runId, workId, b2: { bodySha256: b2Completion.bodySha256, transcriptSha256: b2Completion.transcriptSha256 }, attemptedAt, outcome: 'all-transient',
+    sources: sources.map(s => ({ id: s.id, url: s.url, status: s.status, httpStatus: s.httpStatus ?? null, chain: s.chain })) };
+  writeFileSync(join(dir, file), `${JSON.stringify(record, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  return [...prior, { file, sha256: bytesSha256(readFileSync(join(dir, file))), record }];
 }
 export const passageText = (source, passageId) => { const p = source.passages.find(x => x.id === passageId); return p ? source.text.slice(p.start, p.end) : null; };
 
@@ -260,6 +325,8 @@ export function inspectBankedWork({ bankedRunDir, bankedRunId, id, catalog, lega
     const ev = verifyStageEvidence({ stage: 'B1', workRunDir: workDir, completion: c, imageBasename: imageFile, expectedModel: model });
     if (!ev.ok) throw new Error(`banked B1 evidence: ${ev.errors.join(',')}`);
     if (stableJson(transcriptFinal(parseStreamTranscript(found.bytes))?.structured_output) !== stableJson(c.body)) throw new Error('banked B1 transcript/body mismatch');
+    const caps = verifyStageCapabilities(found.bytes, 'B1');
+    if (!caps.ok) throw new Error(`banked B1 capability violation: ${caps.bad.join(', ')}`);
     out.b1 = { completionPath: cPath, completionName: name, rawPath, transcriptFile: found.file, transcriptPath: join(workDir, 'attempts', found.file), reservationPath, epochPath, epochNumber: epochNumber ?? null, model, promptHash, body: c.body };
   } catch (e) { out.b1Reason = String(e.message).slice(0, 200); }
   return out;
@@ -318,6 +385,8 @@ export function verifyImportedB1({ workDir, runId, id, catalog, legacy, b0, bank
   const ev = verifyStageEvidence({ stage: 'B1', workRunDir: d, completion: c, imageBasename: imageFile, expectedModel: model });
   if (!ev.ok) throw new Error(`${id}: imported B1 evidence: ${ev.errors.join(',')}`);
   if (stableJson(transcriptFinal(parseStreamTranscript(readFileSync(trPath, 'utf8')))?.structured_output) !== stableJson(c.body)) throw new Error(`${id}: imported B1 transcript/body mismatch`);
+  const caps = verifyStageCapabilities(readFileSync(trPath, 'utf8'), 'B1');
+  if (!caps.ok) throw new Error(`${id}: imported B1 capability violation: ${caps.bad.join(', ')}`);
   return { body: c.body, model, sourceRunId: m.sourceRunId };
 }
 

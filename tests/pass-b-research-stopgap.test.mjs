@@ -5,6 +5,7 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync, mkdirSync, readdirSyn
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { sha256, stableJson } from '../scripts/lib/vision-legacy.mjs';
 import { stagePrompts, stopgapStagePrompts, STOPGAP_TEXT } from '../scripts/lib/pass-b-prompts.mjs';
@@ -13,9 +14,9 @@ import { wireSchemaFor, validateAgainstWire } from '../scripts/lib/pass-b-wire-s
 import { extractPdfText, extractSourceText } from '../scripts/lib/pass-b-source-text.mjs';
 import {
   b2PlanStopgap, b3DispatchPlan, appendB3DispatchReviews, loadB3DispatchReviews, deriveCoverage, captureTargets, captureSources,
-  buildCaptureSidecar, verifyCaptureSidecar, captureIsTransient, passageText, classifyHold, CAPTURE_LIMITS, B3_DISPATCH_REQUEST_VERSION,
+  buildCaptureSidecar, verifyCaptureSidecar, captureIsTransient, passageText, classifyHold, CAPTURE_LIMITS, B3_DISPATCH_REQUEST_VERSION, sourceStore,
 } from '../scripts/lib/pass-b-research-stopgap.mjs';
-import { syntheticFixture, trustedCatalog, b2Plan, b1PromptText, b2PromptText, b2InputFor, legacyContentInput, producerEvidence, IMAGE_TRANSPORT_VERSION, CALIBRATION_MODEL } from '../scripts/lib/pass-b-calibration.mjs';
+import { runWorkStages, syntheticFixture, trustedCatalog, b2Plan, b1PromptText, b2PromptText, b2InputFor, legacyContentInput, producerEvidence, IMAGE_TRANSPORT_VERSION, CALIBRATION_MODEL, STAGE_TOOLS } from '../scripts/lib/pass-b-calibration.mjs';
 import { captureStageCompletion } from '../scripts/lib/vision-content-capture.mjs';
 import { BROKER_POLICY_VERSION } from '../scripts/lib/img-broker.mjs';
 
@@ -111,12 +112,12 @@ function minimalPdf(lines) {
   return Buffer.concat(parts);
 }
 const PEACOCK = ['Eventually Leyland agreed to half that amount, but he further insulted Whistler', 'by writing his check in pounds, the currency of trade.', 'Leyland kept his dining room as Whistler had left it.'];
-t('PDF text is extracted explicitly (FlateDecode page stream; wraps joined, paragraphs split)', () => {
-  const r = extractPdfText(minimalPdf(PEACOCK));
+t('PDF text is extracted explicitly (FlateDecode page stream; wraps joined, paragraphs split)', async () => {
+  const r = await extractPdfText(minimalPdf(PEACOCK));
   assert.ok(r.ok, r.reason);
   assert.strictEqual(r.text, `${PEACOCK[0]} ${PEACOCK[1]}\n${PEACOCK[2]}`);
-  assert.strictEqual(extractSourceText(minimalPdf(PEACOCK), 'application/pdf').kind, 'pdf');
-  const bad = extractSourceText(Buffer.from('%PDF-1.4\n%%EOF'), 'application/pdf');
+  assert.strictEqual((await extractSourceText(minimalPdf(PEACOCK), 'application/pdf')).kind, 'pdf');
+  const bad = await extractSourceText(Buffer.from('%PDF-1.4\n%%EOF'), 'application/pdf');
   assert.strictEqual(bad.ok, false); assert.strictEqual(bad.status, 'pdf-extraction-failed', 'a failed PDF is an explicit status, not empty success');
 });
 const catalog = { title: 'The Peacock Room', artist: 'Whistler', date: '1876', place: 'London', medium: 'oil', style: '', catalogId: 'sifsg_F1904.61' };
@@ -135,9 +136,10 @@ t('capture targets: core-answer sources first, then cited, then fetched-uncited;
   assert.strictEqual(captureTargets(many, '').length, CAPTURE_LIMITS.maxSources);
 });
 t('literal capture keeps URL, redirect chain, time, byte hash, extraction version, text hash, identity and exact passages', async () => {
-  const sources = await captureSources({ targets: captureTargets(capB2, b2Transcript), fetchDoc: fakeFetch, catalog, now: () => new Date('2026-11-21T01:00:00Z') });
+  const researchDir = mkdtempSync(join(tmpdir(), 'stopgap-cap-'));
+  const sources = await captureSources({ targets: captureTargets(capB2, b2Transcript), fetchDoc: fakeFetch, catalog, store: sourceStore(researchDir), now: () => new Date('2026-11-21T01:00:00Z') });
   const [pdf, html, missing] = sources;
-  assert.strictEqual(pdf.status, 'captured'); assert.strictEqual(pdf.kind, 'pdf'); assert.strictEqual(pdf.bytesSha256, sha256(minimalPdf(PEACOCK)));
+  assert.strictEqual(pdf.status, 'captured'); assert.strictEqual(pdf.kind, 'pdf'); assert.strictEqual(pdf.bytesSha256, createHash('sha256').update(minimalPdf(PEACOCK)).digest('hex'));
   assert.ok(passageText(pdf, 'p1').includes('he further insulted Whistler by writing his check in pounds'), 'the payer passage survives literally');
   assert.deepStrictEqual(html.chain, ['https://museum.example/peacock', 'https://museum.example/peacock/']);
   assert.ok(html.identity.titleInText && html.identity.idTokens.some(x => x.token === 'F1904.61' && x.inText));
@@ -148,11 +150,12 @@ t('literal capture keeps URL, redirect chain, time, byte hash, extraction versio
   const side = buildCaptureSidecar({ runId: 'run', workId: 'w', b2Completion, b2Body: capB2, sources, attemptedAt: '2026-11-21T01:00:00Z' });
   assert.strictEqual(side.status, 'partial');
   assert.deepStrictEqual(side.coreLinks.find(x => x.questionId === 'core-function').capturedSourceIds, ['src1']);
-  assert.ok(verifyCaptureSidecar(side, { runId: 'run', workId: 'w', b2Completion }).ok);
+  assert.ok(verifyCaptureSidecar(side, { runId: 'run', workId: 'w', b2Completion, researchDir }).ok);
   const tampered = structuredClone(side); tampered.sources[0].text = tampered.sources[0].text.replace('pounds', 'guineas');
   assert.ok(!verifyCaptureSidecar(tampered, { runId: 'run', workId: 'w', b2Completion }).ok, 'edited text is detected');
   assert.ok(!verifyCaptureSidecar(side, { runId: 'run', workId: 'w', b2Completion: { ...b2Completion, bodySha256: sha256('other') } }).ok, 'bound to its B2');
   assert.ok(captureIsTransient({ status: 'timeout' }) && !captureIsTransient({ status: 'http-status', httpStatus: 404 }));
+  rmSync(researchDir, { recursive: true, force: true });
 });
 t('daily-hold diagnosis separates image, retrieval, catalog and evidence problems', () => {
   assert.deepStrictEqual(['B0:http-status @x', 'evidence:B2:invalid body: guideAnswers', 'B2 research-not-performed: WebSearch=0', 'w: B0 input drift; preserve and review'].map(classifyHold), ['image', 'evidence', 'retrieval', 'catalog']);
@@ -179,7 +182,7 @@ function bankedFixture() {
   const transcript = (stage, body) => {
     const blocks = stage === 'B2' ? [{ type: 'tool_use', id: 's', name: 'WebSearch', input: { query: 'q' } }, { type: 'tool_use', id: 'f', name: 'WebFetch', input: { url: 'https://museum.example/peacock' } }] : [{ type: 'tool_use', id: 'r', name: 'Read', input: { file_path: `./${imageFile}` } }];
     const results = stage === 'B2' ? ['s', 'f'].map(x => ({ type: 'tool_result', tool_use_id: x, content: [{ type: 'text', text: 'Museum record text with object details. '.repeat(10) }] })) : [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }];
-    return [{ type: 'system', subtype: 'init', apiKeySource: 'none', claude_code_version: '2.1.280', model: CALIBRATION_MODEL }, { type: 'assistant', message: { model: CALIBRATION_MODEL, content: blocks } }, { type: 'user', message: { content: results } }, { type: 'result', subtype: 'success', is_error: false, structured_output: body, modelUsage: { [CALIBRATION_MODEL]: { output_tokens: 10 } } }].map(x => JSON.stringify(x)).join('\n') + '\n';
+    return [{ type: 'system', subtype: 'init', apiKeySource: 'none', claude_code_version: '2.1.280', model: CALIBRATION_MODEL, tools: STAGE_TOOLS[stage], mcp_servers: [] }, { type: 'assistant', message: { model: CALIBRATION_MODEL, content: blocks } }, { type: 'user', message: { content: results } }, { type: 'result', subtype: 'success', is_error: false, structured_output: body, modelUsage: { [CALIBRATION_MODEL]: { output_tokens: 10 } } }].map(x => JSON.stringify(x)).join('\n') + '\n';
   };
   const bank = (dir, stage, body, promptText, seq, context = {}) => {
     const text = transcript(stage, body); writeFileSync(join(dir, 'attempts', C.attemptFilename(stage, seq, text)), text);
@@ -224,7 +227,7 @@ t('new-version B2 + coverage + literal capture complete the work; old B2 is neve
     assert.ok(r.bodies.B2 && !r.done, 'valid B2 alone is not done');
     assert.strictEqual(r.research.status.sourceCaptureStatus, 'not-attempted');
     const deferred = await C.writeResearchSidecars({ id: f.id, workRunDir: f.nwd, catalog: f.catalog, legacy: f.legacy, runDir: f.cur, fetchDoc: async () => ({ ok: false, reason: 'dns-failed' }) });
-    assert.strictEqual(deferred, true, 'an all-transient outage writes no capture and retries later');
+    assert.strictEqual(deferred, true, 'an all-transient outage is recorded as an attempt and retried once later');
     assert.strictEqual(f.inspect().done, false);
     assert.strictEqual(await C.writeResearchSidecars({ id: f.id, workRunDir: f.nwd, catalog: f.catalog, legacy: f.legacy, runDir: f.cur, fetchDoc: fakeFetch }), false);
     r = f.inspect();
@@ -262,5 +265,48 @@ t('banked --run refuses (VSD-092); the stopgap plan is read-only and write-free'
   } finally { rmSync(d, { recursive: true, force: true }); }
 });
 
-for (const [name, fn] of tests) { await fn(); n++; console.log('ok', name); }
+// ---- review: failed capture attempts are persisted; the four-fetch envelope cannot repeat indefinitely ----
+t('an all-transient capture session is recorded; one retry session, then the failures become the sidecar', async () => {
+  const f = bankedFixture();
+  try {
+    C.importBanked({ id: f.id, workRunDir: f.nwd, catalog: f.catalog, legacy: f.legacy, bankedRunDir: f.banked, imgsDir: join(f.cur, 'imgs') });
+    const b2in = b2InputFor(f.id, f.catalog, f.B1);
+    f.bank(f.nwd, 'B2', structuredClone(capB2), b2PromptText(stopgapStagePrompts().B2, b2in, legacyContentInput(f.legacy)), 1, { evidenceIds: b2in.visibleSignals.map(s => s.evidenceId), b2Contract: B2_CONTRACT_STOPGAP });
+    let fetches = 0; const down = async () => { fetches++; return { ok: false, reason: 'dns-failed' }; };
+    const run = () => C.writeResearchSidecars({ id: f.id, workRunDir: f.nwd, catalog: f.catalog, legacy: f.legacy, runDir: f.cur, fetchDoc: down });
+    assert.strictEqual(await run(), true, 'first outage: deferred');
+    const attempts = join(f.nwd, 'research', 'capture-attempts');
+    assert.deepStrictEqual(readdirSync(attempts), ['000001.json'], 'the failed session is persisted');
+    assert.strictEqual(JSON.parse(readFileSync(join(attempts, '000001.json'), 'utf8')).sources.length, 2);
+    assert.strictEqual(await run(), false, 'second outage: no more deferral');
+    assert.deepStrictEqual(readdirSync(attempts), ['000001.json', '000002.json']);
+    const r = f.inspect();
+    assert.strictEqual(r.research.status.sourceCaptureStatus, 'failed'); assert.strictEqual(r.done, true);
+    const side = JSON.parse(readFileSync(join(f.nwd, 'research', 'source-capture.json'), 'utf8'));
+    assert.deepStrictEqual(side.priorAttempts.map(a => a.file), ['000001.json', '000002.json']);
+    assert.strictEqual(fetches, 4, 'two sessions of two targets; never a third');
+    assert.strictEqual(await run(), false); assert.strictEqual(fetches, 4, 'a finished sidecar never re-fetches');
+    writeFileSync(join(attempts, '000001.json'), '{}');
+    assert.throws(() => f.inspect(), /prior capture attempt/);
+  } finally { rmSync(f.root, { recursive: true, force: true }); }
+});
+// ---- review finding 13: stopgap B1/B2/B3 effort is explicit (medium) and epoch-bound ----
+t('stopgap B1/B2/B3 commands carry --effort medium, bound into the execution policy', async () => {
+  assert.strictEqual(C.executionPolicy('2.1.280').effort, 'medium');
+  const fx = syntheticFixture(), seen = {}, cat = trustedCatalog({ id: 'w', title: 'T', artist: 'A', y: 1650, place: 'P', medium: 'oil', style: '' });
+  await runWorkStages({ workId: 'w', catalog: cat, legacy: null, imgSha256: 'a'.repeat(64), ext: 'png', prompts: stopgapStagePrompts(), runtimeVersion: '2.1.280', skipB4: true,
+    plans: { effort: C.STOPGAP_EFFORT, b2Plan: b2PlanStopgap, b3Plan: () => ({ run: true, requests: [{ requestId: 'r1', whatToLocate: 'the halo' }], requestIds: ['r1'], dropped: 0 }) },
+    spawnStage: async (stage, { command }) => { seen[stage] = command.argv.includes('--effort') ? command.argv[command.argv.indexOf('--effort') + 1] : null; throw new Error('stop here'); },
+    capture: async () => { throw new Error('unused'); }, loadCompletion: stage => (stage === 'B1' ? fx.bodies.B1 : stage === 'B2' ? fx.bodies.B2 : null) });
+  assert.strictEqual(seen.B3, 'medium');
+  await runWorkStages({ workId: 'w', catalog: cat, legacy: null, imgSha256: 'a'.repeat(64), ext: 'png', prompts: stopgapStagePrompts(), runtimeVersion: '2.1.280', skipB4: true, plans: { effort: C.STOPGAP_EFFORT, b2Plan: b2PlanStopgap },
+    spawnStage: async (stage, { command }) => { seen[stage] = command.argv[command.argv.indexOf('--effort') + 1]; throw new Error('stop'); }, capture: async () => null });
+  assert.strictEqual(seen.B1, 'medium');
+  await runWorkStages({ workId: 'w', catalog: cat, legacy: null, imgSha256: 'a'.repeat(64), ext: 'png', prompts: stopgapStagePrompts(), runtimeVersion: '2.1.280', skipB4: true, plans: { effort: C.STOPGAP_EFFORT, b2Plan: b2PlanStopgap },
+    spawnStage: async (stage, { command }) => { seen[stage] = command.argv[command.argv.indexOf('--effort') + 1]; throw new Error('stop'); }, capture: async () => null, loadCompletion: stage => (stage === 'B1' ? fx.bodies.B1 : null) });
+  assert.strictEqual(seen.B2, 'medium');
+});
+const failed = [];
+for (const [name, fn] of tests) { try { await fn(); n++; console.log('ok', name); } catch (e) { failed.push(name); console.log('FAIL', name, '-', String(e?.message || e).split('\n')[0].slice(0, 200)); } }
+if (failed.length) { console.log(`pass-b-research-stopgap.test: ${failed.length} FAILED, ${n} passed`); process.exit(1); }
 console.log(`pass-b-research-stopgap.test: ${n} checks passed`);

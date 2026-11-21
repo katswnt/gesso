@@ -194,7 +194,7 @@ function fixture({complete=['B1','B2','B3'],id='test-work'}={}) {
   const transcript=(stage,body,{apiKeySource='none',error=false,result='',version='2.1.280',haikuDominates=false,model=COLLECTION_MODEL}={}) => {
     const blocks=stage==='B2' ? [{type:'tool_use',id:'s',name:'WebSearch',input:{query:'test'}},{type:'tool_use',id:'f',name:'WebFetch',input:{url:'https://example.test'}}] : [{type:'tool_use',id:'r',name:'Read',input:{file_path:`./${imageFile}`}}];
     const results=stage==='B2' ? ['s','f'].map(id=>({type:'tool_result',tool_use_id:id,content:[{type:'text',text:'Museum record text with object details. '.repeat(10)}]})) : [{type:'tool_result',tool_use_id:'r',content:[{type:'image'}]}];
-    return [{type:'system',subtype:'init',apiKeySource,claude_code_version:version,model},{type:'assistant',message:{content:blocks}},{type:'user',message:{content:results}},{type:'result',subtype:'success',is_error:error,result,structured_output:body,modelUsage:{[model]:{output_tokens:10},...(haikuDominates?{'claude-haiku-4-5-20251001':{output_tokens:100}}:{})}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
+    return [{type:'system',subtype:'init',apiKeySource,claude_code_version:version,model,tools:stage==='B2'?['StructuredOutput','WebFetch','WebSearch']:['Read','StructuredOutput'],mcp_servers:[]},{type:'assistant',message:{content:blocks}},{type:'user',message:{content:results}},{type:'result',subtype:'success',is_error:error,result,structured_output:body,modelUsage:{[model]:{output_tokens:10},...(haikuDominates?{'claude-haiku-4-5-20251001':{output_tokens:100}}:{})}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
   };
   const context=stage=>stage==='B2'?syntheticFixture().contexts.B2:stage==='B3'?syntheticFixture().contexts.B3:{};
   let seq=0;
@@ -762,6 +762,28 @@ await ta('misread: a preserved pre-VSD-074 misread fatal clears only while its t
     const A=join(f.workRunDir,'attempts'),meta=JSON.parse(readFileSync(join(A,'b3-000030.meta.json'),'utf8'));
     writeFileSync(join(A,meta.transcriptFile),readFileSync(join(A,meta.transcriptFile),'utf8').replace('Structured output provided successfully','edited'));
     assert.match(preservedFatal(f.runDir),/confinement violation/,'changed transcript: the old fatal stops again');
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+// ---- VSD-092 review finding 1: the executed capability boundary is proven from the transcript, fatal first ----
+const mutateTranscript=(text,fn)=>text.trim().split('\n').map(l=>{const e=JSON.parse(l);fn(e);return JSON.stringify(e);}).join('\n')+'\n';
+const usageFinal=e=>{if(e.type==='result'){Object.assign(e,{subtype:'error',is_error:true,api_error_status:429,result:'usage limit reached',structured_output:null});}};
+for(const [name,mutate] of [
+  ['an init advertising extra tools (Bash) on an otherwise successful call',e=>{if(e.type==='system'&&e.subtype==='init')e.tools=['Read','StructuredOutput','Bash','WebFetch'];}],
+  ['an init with an MCP server',e=>{if(e.type==='system'&&e.subtype==='init')e.mcp_servers=[{name:'x',status:'connected'}];}],
+  ['a forbidden client tool_use (Bash) hidden behind a usage-limit result',e=>{usageFinal(e);if(e.type==='assistant')e.message.content.push({type:'tool_use',id:'b',name:'Bash',input:{command:'cat /etc/passwd'}});}],
+  ['a server_tool_use block behind a usage-limit result',e=>{usageFinal(e);if(e.type==='assistant')e.message.content.push({type:'server_tool_use',id:'w',name:'web_fetch',input:{url:'https://x.test'}});}],
+]) await ta(`capability policy: ${name} is a pipeline-wide fatal, never ok/usage-limit/retryable`,async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:31,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`./${f.imageFile}`,`${o.cwd}/${f.imageFile}`),mutate)})}),/capability violation/);
+    assert.match(preservedFatal(f.runDir)||'',/capability violation/);
+  }finally{rmSync(f.root,{recursive:true,force:true});}
+});
+await ta('capability policy: the exact declared tools (any order) and no MCP servers pass',async()=>{
+  const f=fixture({complete:['B1','B2']});
+  try{
+    const r=await executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:32,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`./${f.imageFile}`,`${o.cwd}/${f.imageFile}`),e=>{if(e.type==='system'&&e.subtype==='init')e.tools=['StructuredOutput','Read'];})})});
+    assert.ok(r.raw);assert.equal(preservedFatal(f.runDir),null);
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 console.log(`\n${n} corpus-collector regressions passed`);

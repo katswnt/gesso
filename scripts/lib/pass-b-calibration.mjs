@@ -227,6 +227,33 @@ function resolvePath(base, p) {
   return `${String(base).replace(/\/+$/, '')}/${clean}`;
 }
 
+// ---- Stage capability policy (VSD-092 review fix 1). The command flags declare a tool set; this proves the executed
+// boundary from the raw transcript: every init must advertise EXACTLY the stage's tools (the CLI adds StructuredOutput
+// for --json-schema) and no MCP servers, and every tool block must be a client tool_use of one of those tools. Any
+// server_tool_use / mcp_tool_use / other *_tool_use block is a violation. Callers treat a violation as fatal, ahead of
+// usage-limit or transport outcomes. ----
+export const STAGE_TOOLS = Object.freeze({ B1: ['Read', 'StructuredOutput'], B2: ['StructuredOutput', 'WebFetch', 'WebSearch'], B3: ['Read', 'StructuredOutput'], B4: ['StructuredOutput'], B5: ['Read', 'StructuredOutput'] });
+export function verifyStageCapabilities(stdout, stage) {
+  const allowed = STAGE_TOOLS[stage]; if (!allowed) return { ok: false, bad: [`unknown stage ${stage}`] };
+  const bad = [];
+  for (const ln of String(stdout).split('\n')) {
+    if (!ln.trim()) continue;
+    let ev; try { ev = JSON.parse(ln); } catch { continue; }
+    if (ev?.type === 'system' && ev?.subtype === 'init') {
+      const tools = Array.isArray(ev.tools) ? [...ev.tools].sort() : null;
+      if (!tools || JSON.stringify(tools) !== JSON.stringify([...allowed].sort())) bad.push(`init tools ${JSON.stringify(ev.tools ?? null)}`);
+      if (ev.mcp_servers != null && !(Array.isArray(ev.mcp_servers) && ev.mcp_servers.length === 0)) bad.push('init mcp_servers not empty'); // absent = none
+    }
+    const content = ev?.message?.content;
+    if (Array.isArray(content)) for (const b of content) {
+      const type = String(b?.type || '');
+      if (type === 'tool_use') { if (!allowed.includes(b.name)) bad.push(`tool_use ${b.name}`); }
+      else if (/tool_use$/.test(type)) bad.push(`${type} ${b?.name ?? ''}`.trim());
+    }
+  }
+  return { ok: bad.length === 0, bad: [...new Set(bad)].slice(0, 10) };
+}
+
 // ---- B2 research verification (from the raw transcript, NOT usage.server_tool_use aggregate counters).
 // Require at least one genuine WebSearch AND one genuine WebFetch that actually RETRIEVED a page. A
 // WebFetch that returns an HTTP 4xx/5xx envelope or an unfollowed redirect comes back with is_error=false
@@ -509,6 +536,8 @@ export function syntheticFixture() {
 // B2 trigger, the B3 dispatch rule and the B2 validation contract. Omitted = the banked behavior, unchanged.
 export async function runWorkStages({ workId, catalog, legacy = null, imgSha256, ext, prompts, runtimeVersion, spawnStage, capture, loadCompletion = () => null, skipB4 = false, model = CALIBRATION_MODEL, plans = null }) {
   const planB2 = plans?.b2Plan || b2Plan, planB3 = plans?.b3Plan || b3Plan, b2Context = plans?.b2Context || {};
+  // VSD-092 review fix 13: plans.effort pins B1/B2/B3 effort explicitly (the stopgap: medium); omitted = session default.
+  const stageEffort = stage => (plans?.effort && ['B1', 'B2', 'B3'].includes(stage) ? plans.effort : null);
   // Calibration: B1 (image, Read tool) → CONDITIONAL B2 (no-image research) → CONDITIONAL B3 (image, only on
   // B2 targeted requests) → compact B4 synthesis (no image, only when B2 ran).
   const status = { B1: 'pending', B2: 'not-requested', B3: 'not-requested', B4: 'not-requested' };
@@ -532,7 +561,7 @@ export async function runWorkStages({ workId, catalog, legacy = null, imgSha256,
     // delta→body rehydration (item 2). B1/B2/B3 evidence needs no bodies.
     const existing = await loadCompletion(stage, { promptHash: sha256(promptText), context, bodies, legacy }); // resume verifies bindings + evidence
     if (existing) { status[stage] = 'complete'; return existing; }
-    const command = buildStageCommand({ stage, model, promptText, imageFile: img, wireSchema: wireSchemaFor(stage, context) });
+    const command = buildStageCommand({ stage, model, promptText, imageFile: img, wireSchema: wireSchemaFor(stage, context), effort: stageEffort(stage) });
     const producer = producerEvidence(stage, { model, runtimeVersion });
     let lastErr;
     for (let attempt = 0; attempt <= validationRetries; attempt++) {

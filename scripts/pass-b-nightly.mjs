@@ -22,6 +22,7 @@ import { snapshot } from './pass-b-audit-evidence.mjs';
 import { makePacer } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist, assertExecutionLease, executionBudgetPath, PersistError } from './lib/pass-b-remote-evidence.mjs';
 import * as CF from './lib/pass-b-claim-first.mjs';
+import { verifyCanaryEnv } from './lib/pass-b-research-gates.mjs';
 import { OPTS, setBaseProvider, stageBinding, stageRunId, stageHistory, s2RetryRun, s2RetryDue, planS1, planS2, planSI, planSJ, planS3, planS4 } from './pass-b-claim-first.mjs';
 
 const execFileP = promisify(execFile);
@@ -186,6 +187,9 @@ async function main() {
   const args = process.argv.slice(2), live = args.includes('--run');
   if (live && process.env.PASS_B_NIGHTLY_LIVE !== '1') throw new Error('refusing --run: set PASS_B_NIGHTLY_LIVE=1');
   if (live) assertExecutionLease({ required: true });
+  // VSD-092 review fix 14: a declared canary must arrive with its frozen settings (after the launcher's boost/routine
+  // overrides) and research-only, so no copy stage can spend its allowance.
+  if (live && verifyCanaryEnv(process.env) && !researchOnly()) throw new Error('refusing --run: the research canary requires PASS_B_RESEARCH_ONLY=1');
   OPTS.nightly = true; OPTS.identities = true; // model: CF default (Sonnet 5.5)
   const ctx = loadCorpusContext(), clock = pacificClock();
   const inspection = inspectCorpus({ pool: ctx.pool, legacyOf: ctx.legacyOf });

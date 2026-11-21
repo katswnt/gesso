@@ -4,31 +4,24 @@
 //
 //   node scripts/pass-b-research-canary.mjs              # plan: works, env, commands, expected calls (no writes)
 //   node scripts/pass-b-research-canary.mjs --report     # offline inspection packet + B3 review template (needs data/incoming)
-//   PASS_B_RESEARCH_CANARY_LIVE=1 node scripts/pass-b-research-canary.mjs --run
-//       phase 1: B1 (fresh, new prompt) + B2 (new contract) + literal source capture. No B3 dispatches: every request
-//       waits for inspection. Requires the evidence repo's state/pin.json to name this checkout's HEAD (Codex-reviewed).
+//   PASS_B_RESEARCH_CANARY_LIVE=1 node scripts/pass-b-research-canary.mjs --run --phase 1
+//       phase 1: B1 (fresh, new prompt) + B2 (new contract) + literal source capture, at most 14 calls on its own
+//       allowance; B3 cannot dispatch. Requires the evidence repo's state/pin.json to name this checkout's HEAD.
 //   phase 2: after inspection, PASS_B_RESEARCH_VERSION=stopgap-1 node scripts/pass-b-corpus-collect.mjs --review-b3 <review.json>
-//       (offline, on the evidence checkout), push it, then --run again: only the approved physical requests reach B3.
+//       (offline, on the evidence checkout), push it, then --run --phase 2: only approved physical requests reach B3,
+//       at most 6 calls on a second allowance. Total ≤ 20; phase-1 retries can never consume the B3 allowance.
+//   The collector and nightly re-verify the frozen settings after the launcher's overrides (boost keys are blanked).
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
+import { CANARY, CANARY_ID, CANARY_PHASES, CANARY_TOTAL_MAX_CALLS, canaryEnv, verifyCanaryEnv } from './lib/pass-b-research-gates.mjs';
 
-// Picked from the research audit's 21 known cases (codex-research/report.md), one per required category.
-export const CANARY = Object.freeze([
-  { id: 'aic67362', category: 'narrative painting', name: 'El Greco, Saint Martin and the Beggar', audit: 'E17 patch: the cloak-sharing story and its meaning were never explained; NGA describes a different version' },
-  { id: 'wikidata:Q18709475', category: 'abstract work', name: 'Kandinsky, White Cross', audit: 'E10 sufficient: negative-space cross from Guggenheim; B3 boxed the cream plane, not the cross' },
-  { id: 'cleveland136178', category: 'print', name: 'Dürer, The Flight into Egypt', audit: 'E05 patch: the threat to the child vanished in the WebFetch summary; B3 got documentary requests' },
-  { id: 'aic30661', category: 'ritual object', name: 'Khamsa Standard', audit: 'E08 redo: use and technique transferred from another standard; silver vs brass-and-silver unresolved' },
-  { id: 'sinmafa_86-12-1', category: 'sculpture', name: 'Malian Archer Figure', audit: 'E13 patch: B1 inferred near life size from a studio photo (61.9 cm); B2 chased looting/TL dating' },
-  { id: 'met53573', category: 'poorly documented work', name: 'Landscape Painting of Figure in Woodland Setting', audit: 'E07 redo: the scene is unexplained; catalog medium "Textile" is painting on silk' },
-]);
-export const CANARY_BUDGET = Object.freeze({ id: 'research-stopgap-canary-1', maxCalls: 20 }); // 6 B1 + 6 B2 + ≤2 retries + ≤6 B3
-export const canaryEnv = () => ({
-  PASS_B_RESEARCH_VERSION: 'stopgap-1', PASS_B_RESEARCH_ONLY: '1', PASS_B_RESEARCH_FRESH_B1: '1', PASS_B_SCOPE: 'corpus',
-  PASS_B_CORPUS_ONLY: CANARY.map(w => w.id).join(','), PASS_B_CALL_BUDGET_ID: CANARY_BUDGET.id, PASS_B_MAX_CALLS: String(CANARY_BUDGET.maxCalls),
-});
+// Picked from the research audit's 21 known cases (codex-research/report.md), one per required category. The frozen
+// spec (IDs, per-phase allowances, env) lives in lib/pass-b-research-gates.mjs so the collector re-verifies it.
+export { CANARY, canaryEnv };
+export const CANARY_BUDGET = Object.freeze({ id: CANARY_ID, maxCalls: CANARY_TOTAL_MAX_CALLS, phases: CANARY_PHASES });
 // Planning numbers from design-2 §3.4 (supplied 40-work measurements: ~168k tokens and ~16.2k output per work for
 // B1+B2+B3, B2 ≈ 58% and B3 ≈ 12% of research tokens). Estimates, not quotes; the core-question agenda may fetch more.
 export const EXPECTED = Object.freeze({
@@ -40,9 +33,10 @@ function plan() {
   console.log('VSD-092 research stopgap canary — READ-ONLY PLAN (no calls, no writes)');
   for (const w of CANARY) console.log(`  ${w.category.padEnd(22)} ${w.id.padEnd(20)} ${w.name}\n  ${''.padEnd(22)} audit: ${w.audit}`);
   console.log('\nEnvironment (added to the routine/laptop wrapper):');
-  for (const [k, v] of Object.entries(canaryEnv())) console.log(`  ${k}=${v}`);
-  console.log(`\nExpected: phase 1 ${EXPECTED.phase1.calls} calls (up to ${EXPECTED.phase1.maxCalls} with the one B2 validation retry or transport retries), ${EXPECTED.phase1.tokens} tokens, ${EXPECTED.phase1.output} output;`);
-  console.log(`          phase 2 ${EXPECTED.phase2.calls}, ${EXPECTED.phase2.tokens} tokens. Shared allowance ${CANARY_BUDGET.id}, cap ${CANARY_BUDGET.maxCalls}.`);
+  for (const phase of [1, 2]) { console.log(`  phase ${phase}:`); for (const [k, v] of Object.entries(canaryEnv(phase))) console.log(`    ${k}=${v}`); }
+  console.log(`\nExpected: phase 1 ${EXPECTED.phase1.calls} calls, ${EXPECTED.phase1.tokens} tokens, ${EXPECTED.phase1.output} output. Enforced cap ${CANARY_PHASES[1].maxCalls} on ${CANARY_PHASES[1].budgetId}:`);
+  console.log('          retries (each B2 may take a validation retry, any call a transport retry) beyond two stop the phase with works incomplete.');
+  console.log(`          phase 2 ${EXPECTED.phase2.calls}, ${EXPECTED.phase2.tokens} tokens. Enforced cap ${CANARY_PHASES[2].maxCalls} on ${CANARY_PHASES[2].budgetId}, B3 only. Total ≤ ${CANARY_BUDGET.maxCalls}.`);
   console.log('\nGates before --run: Codex code review of this branch; owner re-pins state/pin.json to the reviewed commit; broad collection stays paused.');
   console.log('Acceptance (design-2 §2.1): supported essentials or explicit actionable gaps per work; no documentary B3 dispatch; nothing summary-only labeled literal; migration receipts intact. Any failure keeps broad collection paused.');
 }
@@ -82,17 +76,21 @@ async function report() {
   console.log(`report + B3 review template written under ${out} (decide every request; documentary/identity requests must be "reject"). No calls.`);
 }
 
-function run() {
+function run(phaseArg) {
   if (process.env.PASS_B_RESEARCH_CANARY_LIVE !== '1') throw new Error('refusing --run: set PASS_B_RESEARCH_CANARY_LIVE=1 (owner-authorized canary only)');
+  const phase = Number(phaseArg);
+  if (!CANARY_PHASES[phase]) throw new Error('refusing --run: name the phase explicitly (--run --phase 1 or --phase 2)');
+  const env = { ...process.env, ...canaryEnv(phase) };
+  verifyCanaryEnv(env); // the same frozen check the collector repeats after the launcher's overrides
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const pin = JSON.parse(Buffer.from(execFileSync('gh', ['api', 'repos/katswnt/gesso-pass-b-evidence/contents/state/pin.json?ref=claude/pass-b-state', '--jq', '.content'], { encoding: 'utf8' }), 'base64').toString('utf8')).commit;
   if (pin !== head) throw new Error(`refusing --run: the cloud wrapper runs the pinned commit ${pin}, not this checkout (${head}). Pin the Codex-reviewed commit first.`);
-  const r = spawnSync('bash', ['scripts/pass-b-cloud-nightly.sh'], { stdio: 'inherit', env: { ...process.env, ...canaryEnv() } });
+  const r = spawnSync('bash', ['scripts/pass-b-cloud-nightly.sh'], { stdio: 'inherit', env });
   process.exit(r.status ?? 1);
 }
 
 const args = process.argv.slice(2);
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
-  (args[0] === '--run' ? Promise.resolve().then(run) : args[0] === '--report' ? report() : Promise.resolve().then(plan))
+  (args[0] === '--run' ? Promise.resolve().then(() => run(args[1] === '--phase' ? args[2] : null)) : args[0] === '--report' ? report() : Promise.resolve().then(plan))
     .catch(e => { console.error(`FAIL-CLOSED: ${e.message}`); process.exit(1); });
 }

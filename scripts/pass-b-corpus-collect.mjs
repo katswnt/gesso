@@ -3,7 +3,7 @@
 // --run requires PASS_B_CORPUS_LIVE=1 and explicit owner spend authorization.
 // Banked /2 stage evidence stays byte-identical; /4 execution epochs separately pin the CLI/runtime,
 // subscription provenance, pre-call receipts, and Pacific start/deadline rules.
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, copyFileSync, mkdtempSync, rmSync, renameSync, unlinkSync, realpathSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, copyFileSync, mkdtempSync, rmSync, renameSync, unlinkSync, realpathSync, statfsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
@@ -22,17 +22,18 @@ import { pipelineWide, setAsideBudget, setAsideRecord, validSetAside } from './l
 import { WIRE_SCHEMAS, WIRE_SCHEMAS_STOPGAP, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs';
 import { B2_CONTRACT_STOPGAP } from './lib/vision-content-schema.mjs';
 import { SOURCE_TEXT_EXTRACTION } from './lib/pass-b-source-text.mjs';
+import { verifyCanaryEnv, loadRoutingManifest } from './lib/pass-b-research-gates.mjs';
 import {
   researchVersionFromEnv, b2PlanStopgap, b3DispatchPlan, loadB3DispatchReviews, appendB3DispatchReviews, deriveCoverage,
   captureTargets, captureSources, captureIsTransient, buildCaptureSidecar, verifyCaptureSidecar, inspectBankedWork, writeImport,
-  readImport, verifyImportedB1, researchStatus, classifyHold, SOURCE_CAPTURE_VERSION,
+  readImport, verifyImportedB1, researchStatus, classifyHold, SOURCE_CAPTURE_VERSION, sourceStore, captureAttempts, writeCaptureAttempt, MAX_CAPTURE_SESSIONS,
 } from './lib/pass-b-research-stopgap.mjs';
 import {
   RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION,
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
   verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope, answeringModel,
   legacyContentInput, b2InputFor, b2Plan, b3Plan, producerEvidence, verifyStageEvidence, findTranscriptBySha,
-  b1PromptText, b2PromptText, b3PromptText,
+  b1PromptText, b2PromptText, b3PromptText, verifyStageCapabilities,
 } from './lib/pass-b-calibration.mjs';
 
 export const COLLECTOR_VERSION = 'passBCorpusCollector/4';
@@ -530,6 +531,8 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const deadline = meta?.kind === 'deadline-pause' && meta.exitCode === 'deadline';
     if ((!inits.length && !operational && !deadline && !incompleteTranscripts.has(name)) || inits.some(e => e.apiKeySource !== 'none') ||
         (binding ? inits.some(e => e.model !== epochModel(binding.epoch)) : (model && model !== HISTORICAL_MODEL))) fatal ||= `${id}/${stage}: preserved provenance failure`;
+    // VSD-092 review fix 1: the stopgap run re-proves each preserved attempt's executed capability boundary on resume.
+    if (STOPGAP && inits.length && !verifyStageCapabilities(text, stage).ok) fatal ||= `${id}/${stage}: preserved capability violation`;
     const expected = binding ? epochModel(binding.epoch) : HISTORICAL_MODEL; // each attempt against ITS OWN epoch
     if (!usage && final && model && model !== expected) fatal ||= `${id}/${stage}: preserved model drift`;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
@@ -588,11 +591,11 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     if (existsSync(capPath)) {
       if (!bodies.B2) throw new Error(`${id}: source capture without a verified B2`);
       capture = readJson(capPath);
-      const v = verifyCaptureSidecar(capture, { runId: RUN_ID, workId: id, b2Completion: completionMeta.B2 });
+      const v = verifyCaptureSidecar(capture, { runId: RUN_ID, workId: id, b2Completion: completionMeta.B2, researchDir: join(workDir, 'research') });
       if (!v.ok) throw new Error(`${id}: source capture sidecar invalid: ${v.errors.join(',')}`);
     }
     done = !!bodies.B1 && (!b2p.run || (!!bodies.B2 && !!coverage && !!capture && (!b3p.run || !!bodies.B3)));
-    research = { b1Imported, importManifest: !!importManifest, b2Planned: b2p.run, files: { coverage: !!coverage, capture: !!capture },
+    research = { b1Imported, importManifest: !!importManifest, b2Planned: b2p.run, files: { coverage: !!coverage, capture: !!capture }, rawBytesRetained: capture?.rawBytesRetained || 0,
       b2Completion: completionMeta.B2 || null, b3Pending: b3p?.pending || [],
       status: researchStatus({ done, held: !done && terminalReasons.length > 0, b2Planned: b2p.run, bodies, coverage, capture, b3: b3p }) };
   } else done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
@@ -655,6 +658,7 @@ function initEvents(text) {
   return String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e.type === 'system' && e.subtype === 'init' ? [e] : []; } catch { return []; } });
 }
 let CLAUDE_BIN = null; // exact versioned binary resolved at session start (a mid-run update cannot swap it)
+let CANARY_RUN = null; // VSD-092 review fix 14: the verified frozen canary phase, or null
 let STOP = false, FATAL = null, STOP_REASON = null, ATTEMPT_SEQ = 0, TRANSPORT_RETRIES = 0, RUNTIME_VERSION = null, ACTIVE_MODEL = null, PACER = null;
 export const USAGE_LOG = join(RUN_ROOT, '..', 'vision-ops', 'usage-observations.jsonl');
 export const SESSION_CALL_CAP = Number(process.env.PASS_B_MAX_CALLS || 300); // backstop; pacing decides first (300 since VSD-069)
@@ -681,6 +685,9 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
   const epoch = bindExecutionPolicy(runDir, runtimeVersion);
   const epochModelNow = epochModel(epoch), argv = command.argv;
   if (argv[argv.indexOf('--model') + 1] !== epochModelNow) throw new RuntimePauseError(`command model ${argv[argv.indexOf('--model') + 1]} != active epoch model ${epochModelNow}; no reservation written`);
+  // VSD-092 review fix 13: an epoch that binds an effort accepts only commands carrying exactly that --effort.
+  const effortNow = argv.includes('--effort') ? argv[argv.indexOf('--effort') + 1] : null;
+  if (epoch.policy.effort && effortNow !== epoch.policy.effort) throw new RuntimePauseError(`command effort ${effortNow} != active epoch effort ${epoch.policy.effort}; no reservation written`);
   const attemptsDir = join(workRunDir, 'attempts'); mkdirSync(attemptsDir, { recursive: true, mode: 0o700 });
   const lease = join(workRunDir, `${stage}.lease`);
   acquireStageLease(lease);
@@ -714,13 +721,14 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const inits = initEvents(stdout);
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
     const webEvents = stage === 'B2' ? verifyB2WebEvents(tr) : null;
-    let cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
+    let caps = null, cls = classifySpawn({ usageLimit: isUsageTranscript(stdout, final), apiKeySource: tr.init?.apiKeySource,
       model: answeringModel(stdout, final), expectedModel: epochModelNow, exitCode, final, isError: final?.is_error,
       subtype: final?.subtype, structuredOutputPresent: final?.structured_output != null, imageReceipt, webEvents });
     if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
     else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
+    else if (!(caps = verifyStageCapabilities(stdout, stage)).ok) cls = { kind: 'fatal', reason: `capability violation: ${caps.bad.join(', ')}` }; // review fix 1: before usage/transport
     else if (imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok) cls = { kind: 'held', reason: MISREAD_REASON };
     else if (imageReceipt?.bad?.length) cls = { kind: 'fatal', reason: 'confinement violation' };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };
@@ -746,6 +754,8 @@ function makeSpawnStage(workRunDir, imgSha256, ext, id) {
   const once = async (stage, { command, imageFile }) => {
     if (FATAL) throw new FatalError(FATAL);
     if (STOP) throw new SchedulePauseError('run paused');
+    // The canary phase allocation is enforced per stage, not only by the shared total (review fix 14).
+    if (CANARY_RUN && !CANARY_RUN.stages.includes(stage)) throw new OperationalPauseError(`canary phase ${CANARY_RUN.phase} may not dispatch ${stage}`);
     try {
       laneWindow();
       if (stage === 'B2') {
@@ -825,8 +835,10 @@ const WIRE = STOPGAP ? WIRE_SCHEMAS_STOPGAP : WIRE_SCHEMAS;
 export const WIRE_POLICY = Object.freeze({ wireSchema: WIRE_SCHEMA_CONTRACT,
   wireSchemaSha256: sha256(stableJson({ B1: WIRE.B1, B2: WIRE.B2, B3: WIRE.B3 })) });
 // VSD-092: the stopgap run's epochs also bind its research contract (absent from banked epochs, which are unchanged).
+// VSD-092 review fix 13: stopgap B1/B2/B3 run at an explicit, epoch-bound effort (design-2 §3.1: medium).
+export const STOPGAP_EFFORT = 'medium';
 const RESEARCH_POLICY = STOPGAP ? Object.freeze({ research: RESEARCH_STOPGAP_VERSION, b2Contract: B2_CONTRACT_STOPGAP, sourceCapture: SOURCE_CAPTURE_VERSION,
-  sourceText: SOURCE_TEXT_EXTRACTION, b3Dispatch: 'inspected-review-only', bankedImportFrom: BANKED_RUN_ID }) : {};
+  sourceText: SOURCE_TEXT_EXTRACTION, b3Dispatch: 'inspected-review-only', bankedImportFrom: BANKED_RUN_ID, effort: STOPGAP_EFFORT }) : {};
 const SCHEDULE_WINDOWS = { night: { startWindow: '00:00–08:30', finishBy: '09:00' }, 'all-day': { startWindow: 'all day (owner 2026-10-17)', finishBy: 'none' } };
 const SCHEDULE_FIELDS = ['timeZone', 'startWindow', 'finishBy', 'scope'];
 const withoutSchedule = p => Object.fromEntries(Object.entries(p).filter(([k]) => !SCHEDULE_FIELDS.includes(k)));
@@ -1023,21 +1035,41 @@ export function importBanked({ id, workRunDir, catalog, legacy, bankedRunDir = B
   writeFileSync(b0Path, `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: banked.b0.image }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   return manifest;
 }
+// VSD-092 review fixes 12/14 (pure, tested): which spend path a stopgap invocation is on. Throws when a live run has
+// neither the frozen canary (re-verified from the environment the collector actually received) nor a valid manifest.
+export function stopgapSpendGate({ live, env = process.env, runId = RUN_ID }) {
+  const canary = verifyCanaryEnv(env);
+  return { canary, routing: live && !canary ? loadRoutingManifest(env.PASS_B_RESEARCH_ROUTING, runId) : null };
+}
+// Raw source bytes are retained on local disk (review fix 8): refuse to capture when free space is below this floor.
+export const MIN_FREE_DISK_BYTES = 4 * 1024 ** 3;
+export const freeDiskBytes = dir => { const s = statfsSync(dir); return Number(s.bavail) * Number(s.bsize); };
 // After a verified B2: write the derived coverage sidecar, then capture literal source text. Returns true when every
-// capture attempt failed transiently (network outage): nothing is written and the work is retried next session.
-export async function writeResearchSidecars({ id, workRunDir, catalog, legacy, runDir = RUN_DIR, fetchDoc = (url, o) => broker.fetchSourceDocument(url, { ...o, userAgent: BROWSER }), now = () => new Date() }) {
+// capture attempt failed transiently and a retry session remains: the failed session is recorded under
+// research/capture-attempts/ and the work is retried once in a later session (review: failed attempts are persisted).
+export async function writeResearchSidecars({ id, workRunDir, catalog, legacy, runDir = RUN_DIR, fetchDoc = (url, o) => broker.fetchSourceDocument(url, { ...o, userAgent: BROWSER }), now = () => new Date(), freeBytes = freeDiskBytes }) {
   const row = inspectWork({ runDir, id, catalog, legacy });
   if (row.fatal) throw new FatalError(row.fatal);
   if (!row.bodies.B2 || !row.research) return false;
   const dir = join(workRunDir, 'research'); mkdirSync(dir, { recursive: true, mode: 0o700 });
   if (!row.research.files.coverage) writeFileSync(join(dir, 'coverage.json'), `${JSON.stringify(deriveCoverage(row.bodies.B2), null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   if (row.research.files.capture) return false;
+  if (freeBytes(dir) < MIN_FREE_DISK_BYTES) throw new OperationalPauseError(`low disk: under ${MIN_FREE_DISK_BYTES} bytes free for retained source bytes`);
   const tr = findTranscriptBySha(workRunDir, 'B2', row.research.b2Completion.transcriptSha256);
-  const targets = captureTargets(row.bodies.B2, tr?.bytes || '');
+  const prior = captureAttempts(dir);
+  // A retry session re-fetches only the targets that failed transiently last time (no replacement-URL loop).
+  let targets = captureTargets(row.bodies.B2, tr?.bytes || '');
+  if (prior.length) { const again = new Set(prior.at(-1).record.sources.map(x => x.url)); targets = targets.filter(x => again.has(x.url)); }
   const attemptedAt = now().toISOString();
-  const sources = await captureSources({ targets, fetchDoc, catalog, now });
-  if (sources.length && sources.every(captureIsTransient)) return true;
-  const sidecar = buildCaptureSidecar({ runId: RUN_ID, workId: id, b2Completion: row.research.b2Completion, b2Body: row.bodies.B2, sources, attemptedAt });
+  const sources = await captureSources({ targets, fetchDoc, catalog, now, store: sourceStore(dir) });
+  let priorAttempts = prior.map(({ file, sha256: h }) => ({ file, sha256: h }));
+  if (sources.length && sources.every(captureIsTransient)) {
+    // Persist every failed session; one later session may retry, then the failures become the sidecar.
+    const all = writeCaptureAttempt(dir, { runId: RUN_ID, workId: id, b2Completion: row.research.b2Completion, sources, attemptedAt });
+    if (all.length < MAX_CAPTURE_SESSIONS) return true;
+    priorAttempts = all.map(({ file, sha256: h }) => ({ file, sha256: h }));
+  }
+  const sidecar = buildCaptureSidecar({ runId: RUN_ID, workId: id, b2Completion: row.research.b2Completion, b2Body: row.bodies.B2, sources, attemptedAt, priorAttempts });
   writeFileSync(join(dir, 'source-capture.json'), `${JSON.stringify(sidecar, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   return false;
 }
@@ -1067,6 +1099,10 @@ async function main() {
   // VSD-092 containment: the banked B2/B3 format (legacy-claim agenda, documentary B3 requests, summary-only sources)
   // may not resume unchanged. New collection runs the stopgap; the banked run stays readable for every offline command.
   if (live && !STOPGAP && process.env.PASS_B_ALLOW_BANKED_RESEARCH !== '1') throw new Error('refusing --run: banked B2/B3 research is paused (VSD-092); collect with PASS_B_RESEARCH_VERSION=stopgap-1');
+  // VSD-092 review fixes 12/14: on the stopgap version a live run is EITHER the frozen canary (settings re-verified here,
+  // after every wrapper override) OR a reviewed gap-routing manifest's named works. Nothing else may spend calls.
+  let routing = null;
+  if (STOPGAP) ({ canary: CANARY_RUN, routing } = stopgapSpendGate({ live }));
   if (FRESH_B1 && !(process.env.PASS_B_CORPUS_ONLY || '').trim()) throw new Error('PASS_B_RESEARCH_FRESH_B1=1 is for an owner-directed subset (the canary) only; set PASS_B_CORPUS_ONLY');
   if (live) assertExecutionLease({ required: true });
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
@@ -1096,6 +1132,7 @@ async function main() {
   // Owner-directed subset (PASS_B_CORPUS_ONLY="id1,id2"): narrows the queue only; every gate still applies.
   const only = new Set((process.env.PASS_B_CORPUS_ONLY || '').split(',').map(x => x.trim()).filter(Boolean));
   if (only.size) { order = order.filter(id => only.has(id)); console.log(`owner subset: ${order.length} of ${only.size} requested works in the queue order`); }
+  if (routing) { order = order.filter(id => routing.callIds.has(id)); console.log(`gap routing ${process.env.PASS_B_RESEARCH_ROUTING}: ${order.length} of ${routing.callIds.size} works routed to a model call for named gaps`); }
   const eligibleSet = new Set(allEligible.map(p => p.id));
   const queue = computeQueue(order, { eligibleSet, doneSet: inspection.doneSet, heldSet: inspection.heldSet });
   console.log(`runId: ${RUN_ID} | collector: ${COLLECTOR_VERSION} | banked evidence contract: ${EVIDENCE_CONTRACT_VERSION} | lane: ${LANE}${LANE === 'cloud' ? ` (cap $${CLOUD_BUDGET_USD}, spent $${runSpendUsd(RUN_DIR).toFixed(2)})` : ''}`);
@@ -1108,6 +1145,9 @@ async function main() {
   if (STOPGAP) {
     const st = {}; for (const r of inspection.rows) for (const [k, v] of Object.entries(r.research?.status || {})) if (k !== 'copyEligibility') (st[k] ||= {})[v] = (st[k][v] || 0) + 1;
     console.log(`research ${RESEARCH_VERSION} (${RESEARCH_STOPGAP_VERSION}) | banked run ${BANKED_RUN_ID} (read-only import source) | imported B1 ${inspection.rows.filter(r => r.research?.b1Imported).length}${FRESH_B1 ? ' | fresh B1 for this subset' : ''}`);
+    console.log(`spend gate: ${CANARY_RUN ? `frozen canary phase ${CANARY_RUN.phase} (stages ${CANARY_RUN.stages.join('+')}, cap ${CANARY_RUN.maxCalls} on ${CANARY_RUN.budgetId})` : process.env.PASS_B_RESEARCH_ROUTING ? `gap-routing manifest ${process.env.PASS_B_RESEARCH_ROUTING}` : 'NONE: a live run refuses without the frozen canary or a gap-routing manifest (review finding 12)'}`);
+    const raw = inspection.rows.map(r => r.research?.rawBytesRetained || 0), kept = raw.filter(Boolean);
+    console.log(`retained raw source bytes: ${(raw.reduce((a, b) => a + b, 0) / 1e6).toFixed(1)} MB over ${kept.length} works${kept.length ? ` (mean ${(kept.reduce((a, b) => a + b, 0) / kept.length / 1e6).toFixed(2)} MB, max ${(Math.max(...kept) / 1e6).toFixed(2)} MB per work)` : ''}`);
     for (const [k, v] of Object.entries(st)) console.log(`  ${k}: ${Object.entries(v).map(([a, b]) => `${a} ${b}`).join(', ')}`);
     // design-2 §2.2: diagnose the banked daily-window holds before spending on low-priority expansion.
     const bankedLedger = join(BANKED_RUN_DIR, 'ledger.json');
@@ -1224,10 +1264,12 @@ async function main() {
           consecutiveB0 = 0;
           if (!existsSync(join(workRunDir, 'b0-prep.json'))) writeFileSync(join(workRunDir, 'b0-prep.json'), `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: prep }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
           const verified = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
+          // Canary phase 2 spends only on reviewed B3: a work without a verified B2 waits (never a B1/B2 rerun here).
+          if (CANARY_RUN?.phase === 2 && !verified.bodies.B2) { console.log(`canary phase 2: ${id} has no verified B2; skipped`); continue; }
           const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts,
             runtimeVersion: RUNTIME_VERSION, spawnStage: makeSpawnStage(workRunDir, prep.imgSha256, prep.ext, id),
             capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true, model: ACTIVE_MODEL,
-            plans: STOPGAP ? { b2Plan: b2PlanStopgap, b3Plan: b2 => b3DispatchPlan(id, b2, loadB3DispatchReviews(RUN_DIR, RUN_ID)), b2Context: { b2Contract: B2_CONTRACT_STOPGAP } } : null });
+            plans: STOPGAP ? { effort: STOPGAP_EFFORT, b2Plan: b2PlanStopgap, b3Plan: b2 => b3DispatchPlan(id, b2, loadB3DispatchReviews(RUN_DIR, RUN_ID)), b2Context: { b2Contract: B2_CONTRACT_STOPGAP } } : null });
           if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
           // runWorkStages captures exceptions as status text; the durable fatal flag remains authoritative.
           if (FATAL) { persist(); persistWork(id); break; }

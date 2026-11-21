@@ -201,7 +201,7 @@ await check('collector pushes new B0/image/epoch before spending and each captur
         assert.ok(existsSync(join(saved, 'imgs', imageFile)));
         assert.ok(!existsSync(join(saved, 'works', sha256(id).slice(0, 24), 'B1.lease')), 'local PID lease never travels');
         return { stdout: [
-          { type: 'system', subtype: 'init', apiKeySource: 'none', model: COLLECTION_MODEL, claude_code_version: '2.1.282' },
+          { type: 'system', subtype: 'init', apiKeySource: 'none', model: COLLECTION_MODEL, claude_code_version: '2.1.282', tools: ['Read', 'StructuredOutput'], mcp_servers: [] },
           { type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Read', id: 'r', input: { file_path: `${opts.cwd}/${imageFile}` } }] } },
           { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'r', content: [{ type: 'image' }] }] } },
           { type: 'result', subtype: 'success', is_error: false, structured_output: body, modelUsage: { [COLLECTION_MODEL]: { output_tokens: 1 } } },

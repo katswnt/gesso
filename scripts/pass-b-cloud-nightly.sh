@@ -26,8 +26,10 @@ ln -s "$EV/incoming" "$WT/data/incoming"
 cd "$WT"
 # node_modules are not in git and package-lock.json is gitignored: install the exact versions the laptop evidence
 # was produced with (sharp's version shapes the image derivatives whose hashes are recorded).
-npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0
+# pdfjs-dist (VSD-092 review fix 6): the pinned PDF text extractor; its version is part of passBSourceText/4.
+npm install --no-save --no-audit --no-fund --loglevel=error sharp@0.35.3 @vercel/blob@2.4.0 pdfjs-dist@5.6.205
 node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/sharp/package.json','utf8')).version; if (v!=='0.35.3') { console.error('sharp '+v+' != 0.35.3'); process.exit(1); }"
+node -e "const v=JSON.parse(require('fs').readFileSync('node_modules/pdfjs-dist/package.json','utf8')).version; if (v!=='5.6.205') { console.error('pdfjs-dist '+v+' != 5.6.205'); process.exit(1); }"
 # Boost (owner 2026-11-18, VSD-080): until PASS_B_BOOST_UNTIL (an ISO time, e.g. the weekly reset) every firing runs
 # PASS_B_BOOST_WORKERS workers and a PASS_B_BOOST_MAX_CALLS cap, to use a week's otherwise-lost allowance before it
 # resets; after that time the routine's plain values apply again with no edit. Pacing still decides every call.

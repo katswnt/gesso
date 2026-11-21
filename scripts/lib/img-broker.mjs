@@ -212,8 +212,11 @@ export function createBroker({ lookup = dnsLookup, request = httpsRequest } = {}
           // FAIL CLOSED: require a non-empty peer that matches the pinned IP (a missing peer must NOT pass)
           if (!peer || peer !== normalizeIp(pinned.address)) { req.destroy(); return done(err('remote-addr-mismatch', { host, resolvedIp: pinned.address, detail: peer || 'none' })); }
           const status = res.statusCode || 0;
-          if (status >= 300 && status < 400) { res.resume(); return done({ ok: true, redirect: true, status, location: res.headers.location, host, resolvedIp: pinned.address, finalUrl: u.href }); }
-          if (status < 200 || status >= 300) { res.resume(); return done(err('http-status', { status, host })); }
+          // Redirect/error bodies are never read: destroy the response and its socket at once (VSD-092 review fix 9), so an
+          // endless or slow body cannot keep streaming outside the byte cap and chain deadline after the next hop starts.
+          const discard = () => { try { res.destroy(); } catch {} try { req.destroy(); } catch {} };
+          if (status >= 300 && status < 400) { discard(); return done({ ok: true, redirect: true, status, location: res.headers.location, host, resolvedIp: pinned.address, finalUrl: u.href }); }
+          if (status < 200 || status >= 300) { discard(); return done(err('http-status', { status, host })); }
           const declaredMime = res.headers['content-type'] || '';
           const chunks = []; let n = 0;
           res.on('data', (d) => { n += d.length; if (n > cap) { req.destroy(); return done(err('too-large', { host })); } chunks.push(d); });

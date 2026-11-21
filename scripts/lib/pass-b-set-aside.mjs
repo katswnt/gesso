@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 export const SET_ASIDE_VERSION = 'passBSetAside/1';
 export const SET_ASIDE_LIMIT = 2; // per firing; the next work-level fatal stops the pipeline
 // Confinement (a read outside the call sandbox) is a security signal, never one work's problem.
-const PIPELINE_WIDE = /apiKeySource|init tools|every init|model drift in init|no resolved model|confinement/i;
+const PIPELINE_WIDE = /apiKeySource|init tools|every init|model drift in init|no resolved model|confinement|capability violation/i;
 export const pipelineWide = reason => PIPELINE_WIDE.test(String(reason ?? ''));
 
 // One budget per firing, shared by every worker and stage. Returns true when this fatal may be set aside.
