@@ -537,7 +537,7 @@ Offline hardening on 2026-09-30:
 - Lost-time fixes (VSD-079): with probes in flight the pacer says `wait` (re-check every 20 s, at most 15 min) instead of stopping the firing. After a container restart the routine relaunches once and the launcher recovers its own dead lease at once (`pass-b-cloud-lease.mjs acquire <holder> --own-dead <holder from /tmp/pass-b-holder>`), only when no pipeline process is alive.
 - Boost (VSD-080): with `PASS_B_BOOST_UNTIL=<ISO time>` in the routine command, firings that start before that time run `PASS_B_BOOST_WORKERS` (default 6) workers and a `PASS_B_BOOST_MAX_CALLS` (default 1000) cap; afterwards the plain values apply. Used to spend a week's leftover allowance before its reset; remove the variable from the prompt once it has passed.
 - Research only (VSD-091): with `PASS_B_RESEARCH_ONLY=1` in the routine command, a firing runs no S1–S4 copy stages and spends its whole allowance on the collector's B1–B3 research. The plan log prints `research only (VSD-091)`. Remove the variable to resume copy work.
-- Research stopgap (VSD-092): broad collection is paused (routine paused 2026-11-21 00:40 UTC). The banked B2/B3 format may not resume: `pass-b-corpus-collect.mjs --run` refuses unless `PASS_B_RESEARCH_VERSION=stopgap-1` (or the explicit override `PASS_B_ALLOW_BANKED_RESEARCH=1`). Resume only after the six-work canary below passes Codex inspection, with `PASS_B_RESEARCH_VERSION=stopgap-1` added to the routine command next to `PASS_B_RESEARCH_ONLY=1`. See "Research stopgap" below.
+- Research stopgap (VSD-092): broad collection is paused (routine paused 2026-11-21 00:40 UTC). The banked B2/B3 format may not resume: `pass-b-corpus-collect.mjs --run` refuses unless `PASS_B_RESEARCH_VERSION=stopgap-1` (or the explicit override `PASS_B_ALLOW_BANKED_RESEARCH=1`). Resume only after the six-work canary below passes Codex inspection. A live stopgap run spends calls only as the frozen canary or for the named works of a reviewed gap-routing manifest (`PASS_B_RESEARCH_ROUTING`); adding `PASS_B_RESEARCH_VERSION=stopgap-1` to the routine alone makes every firing refuse. See "Research stopgap" below.
 - Assembly /7 (VSD-081): a question whose first answer sentence S4 cut for content is dropped; a hotspot needs two kept body sentences and a pin that is not display hardware (`DISPLAY_MOUNT`); strict-usable needs the why's opening sentence. Re-materializing finished works to `.a7` costs no calls.
 - Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
   still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
@@ -615,7 +615,7 @@ the tool refuses to overwrite a different prior set or activation. Auto-policy a
 index remain unauthorized.
 
 
-### Research stopgap (VSD-092, offline; canary unrun)
+### Research stopgap (VSD-092, offline; canary unrun; Codex code-review fixes applied)
 
 `PASS_B_RESEARCH_VERSION=stopgap-1` switches the collector (and the nightly that hands off to it) to the corrected
 format in its own run, `corpus-b3-e55c50249d63`. Unset, everything is the banked run `corpus-b3-6401bc543ead`,
@@ -630,15 +630,32 @@ byte-identical and still readable by every offline command.
 - **B2 contract** `passBB2/2-stopgap-min0` (validator and wire schema): zero guide answers are structurally valid.
   The banked `/1-min5` contract is unchanged for banked completions.
 - **Trigger:** B2 runs for every work whose B1 is not blocked/unplayable, with or without B1 topics or legacy.
+- **Effort:** stopgap B1/B2/B3 commands carry `--effort medium`, bound into the run's execution epochs (`effort`);
+  a command whose effort differs from the active epoch pauses before any reservation.
+- **Capability boundary:** every attempt's transcript must show inits advertising exactly the stage's tools
+  (B1/B3 `Read, StructuredOutput`; B2 `StructuredOutput, WebFetch, WebSearch`) and no MCP servers, and only client
+  `tool_use` blocks of those tools. Anything else (an extra tool, `server_tool_use`, `mcp_tool_use`) is a
+  pipeline-wide fatal, checked before usage-limit or transport outcomes; the stopgap run re-checks preserved attempts
+  and imported B1 transcripts on every inspection.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
-  which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/1`). Capture runs in the
+  which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through
   the hardened broker's `fetchSourceDocument` (HTTPS only, every redirect re-vetted, public IPv4 only, pinned socket,
-  8 MB streamed cap, 20 s chain deadline). Each source records URL, redirect chain, retrieval time, byte count and hash,
-  `passBSourceText/3` extraction (HTML/JSON as `/2`, plus PDF), full-text hash, title/id identity clues and complete
-  paragraphs as exact passages (offsets into the stored text; ≤12,000 chars per source, ≤40,000 per work, never cut
-  mid-passage). Failures are explicit statuses (`http-status`, `pdf-extraction-failed`, `unsupported-type`, ...). If
-  every attempt fails transiently nothing is written and the work is retried next session (five in a row stop the run).
+  8 MB streamed cap, 20 s chain deadline; redirect and error bodies are destroyed unread). Each source records URL,
+  redirect chain, retrieval time, byte count and SHA-256 of the exact received bytes, `passBSourceText/4` extraction,
+  full-text hash, title/id identity clues and complete paragraphs as exact passages (offsets into the stored text;
+  ≤12,000 chars per source, ≤40,000 per work, never cut mid-passage; anything beyond is an explicit `omitted` gap).
+  The raw bytes (`research/sources/<bytesSha256>.raw.gz`, gzip) and the full normalized text
+  (`research/sources/<textSha256>.txt`) are kept on disk outside the model packet and re-verified on every inspection;
+  at most 24 MB of raw bytes per work (beyond it: `raw-retention-cap`), and capture pauses the run below 4 GB free
+  disk. The read-only plan prints retained MB in total and per work. PDF text comes from pdf.js (`pdfjs-dist@5.6.205`,
+  pinned in `package.json` and the cloud launcher) in a child process limited to 30 s, 768 MB RSS and 24 MB of output,
+  after a 96 MB cap on decoded Flate streams; any undecodable stream, unmapped font, undecodable character or page
+  error fails the source (`pdf-incomplete`, `pdf-decompression-limit`, `pdf-timeout`, `pdf-memory-limit`, ...) rather
+  than returning partial text. Other failures are explicit statuses (`http-status`, `unsupported-type`, ...). A
+  session where every fetch fails transiently is recorded in `research/capture-attempts/NNNNNN.json`; one later
+  session retries only those URLs, then the failures become the sidecar (so the four-fetch envelope cannot repeat).
+  Five deferred works in a row stop the run.
 - **B3:** nothing dispatches unattended. Requests wait (`b3DispatchStatus: awaiting-inspection`) until an append-only
   review, `PASS_B_RESEARCH_VERSION=stopgap-1 node scripts/pass-b-corpus-collect.mjs --review-b3 <review.json>`
   (offline, under the run lease), decides every request of a work against its exact text and its exact B2 body.
@@ -649,19 +666,30 @@ byte-identical and still readable by every offline command.
   `b3DispatchStatus`, `copyEligibility` (always not-eligible). The read-only plan prints them, plus the banked window
   holds by cause (image/retrieval/catalog/evidence).
 - **Queue:** the 30-day window first, date-first (daily coverage repairs), then a round-robin across
-  Easy/Medium/Hard/Impossible/other, each tier in its banked order.
+  Easy/Medium/Hard/Impossible/other, each tier in its banked order. **A live stopgap run does not use this order
+  unfiltered** (review finding 12, not yet implemented: screening the completed bank and routing gaps): outside the
+  frozen canary it refuses unless `PASS_B_RESEARCH_ROUTING=<routing.json>` names a reviewed manifest
+  (`passBResearchRouting/1`: `runId`, `reviewedBy`, `reviewedAt`, `reason`, `works[{workId, route, gaps}]`, route
+  `fresh-research | focused-repair | reuse | capture-and-synthesize`). Only `fresh-research` and `focused-repair`
+  works, each naming its unresolved gaps, are queued; the absence of a new-version artifact is never a reason to buy B2.
 
 Canary (six known works from the research audit; unrun, needs Codex code review and the owner's re-pin first):
 
 ```bash
 node scripts/pass-b-research-canary.mjs            # read-only plan: works, env, expected calls
 node scripts/pass-b-research-canary.mjs --report   # offline inspection packet + B3 review template
-PASS_B_RESEARCH_CANARY_LIVE=1 node scripts/pass-b-research-canary.mjs --run   # phase 1 via pass-b-cloud-nightly.sh
+PASS_B_RESEARCH_CANARY_LIVE=1 node scripts/pass-b-research-canary.mjs --run --phase 1   # via pass-b-cloud-nightly.sh
+node scripts/pass-b-research-import-check.mjs [workId ...]   # offline real-bank B1 import receipt check (gh api, read-only)
 ```
 
-Phase 1 is 12 calls (fresh B1 at the new prompt, `PASS_B_RESEARCH_FRESH_B1=1`, plus B2; up to 14 with retries) under
-allowance `research-stopgap-canary-1` (cap 20); phase 2 dispatches only reviewed physical requests (0–6 B3 calls).
-`--run` refuses unless `state/pin.json` names the checkout's HEAD.
+The frozen spec lives in `scripts/lib/pass-b-research-gates.mjs`. Phase 1 (fresh B1 at the new prompt plus B2 and
+capture, 12 calls expected) has its own allowance `research-stopgap-canary-1-p1` capped at 14 and may not dispatch B3:
+retries beyond two stop the phase with works incomplete. Phase 2 (`--phase 2`) has allowance
+`research-stopgap-canary-1-p2` capped at 6 and dispatches only reviewed B3 requests (a work without a verified B2 is
+skipped). Total ≤ 20. The canary sets `PASS_B_RESEARCH_CANARY=research-stopgap-canary-1/phase-<n>` and blanks the boost
+keys; the nightly and the collector re-verify every frozen setting (IDs, research-only, fresh B1, allowance, cap, no
+boost) from the environment they actually receive and refuse on any change. `--run` refuses unless `state/pin.json`
+names the checkout's HEAD.
 
 ### Current launch scope and collector operation (VSD-041–045)
 
