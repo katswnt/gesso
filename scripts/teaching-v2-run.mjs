@@ -8,23 +8,26 @@
 //   node scripts/teaching-v2-run.mjs --fixture-previews      # previews from a labeled synthetic lesson
 // LIVE (not authorized yet: needs Codex code review + owner OK): --live with TEACHING_V2_LIVE=1, not CI, holding the
 // SHARED evidence lease under a non-automation holder with a teaching-v2-phase-a-* allowance (see docs/PIPELINE.md).
-// --phase rest additionally needs every first-ten work terminal and --after-first-ten. Serial only; resumable.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, renameSync, realpathSync } from 'node:fs';
+// --phase rest is bound to its first-ten parent run (the parent's id is part of its run identity): live needs every
+// first-ten work in that run terminal AND reproducing from its evidence, plus --after-first-ten. Serial; resumable.
+// The live loop and every durable transition live in scripts/lib/teaching-v2-phase.mjs (review round 2).
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { execToFile } from './lib/pass-b-exec-to-file.mjs';
+import { runIdentity as phaseRunIdentity, runIdOf, runPhase, verifyRun, readJson, writeJson, RefusedError } from './lib/teaching-v2-phase.mjs';
 import { CONTRACT_VERSION, MODEL, FROZEN_GOLD_SHA256, WIRE_SCHEMA_HASHES, loadGoldBundle, MAX_INVOCATIONS, PLANNED_PATHS } from './lib/teaching-v2-contract.mjs';
 import { WRITER_CORE_SHA256, VERIFIER_CORE_SHA256, PROMPT_VERSION, buildVerifierPrompt, promptDigest } from './lib/teaching-v2-prompts.mjs';
-import { buildConfinedCommand, runConfined, classifyTranscript, STAGE_EFFORT, CLASSIFIER_VERSION } from './lib/teaching-v2-stage.mjs';
-import { CONTROLLER_VERSION, runWork, workContext, writerPromptFor, preflight, telemetry, isTerminal, PauseRun, LatchStop, BindingChanged, candidateBinding, bindingSha } from './lib/teaching-v2-controller.mjs';
+import { STAGE_EFFORT, CLASSIFIER_VERSION } from './lib/teaching-v2-stage.mjs';
+import { CONTROLLER_VERSION, workContext, writerPromptFor, preflight, telemetry, candidateBinding, bindingSha } from './lib/teaching-v2-controller.mjs';
 import { projectLesson, renderPreviewPage } from './lib/teaching-v2-projection.mjs';
 import { loadCurrentRenderer } from './lib/teaching-v2-current-render.mjs';
 import { CAPTURE_POLICY_VERSION, SECTION_VERSION, EXTRACTION_VERSION } from './lib/teaching-v2-capture.mjs';
 import { loadCalibrationWork, loadRegressionWork, workKey, PLAN_FILE } from './lib/teaching-v2-inputs.mjs';
 import { openPhaseAOperations, readLatch, LatchedError } from './lib/teaching-v2-ops.mjs';
-import { LeaseBusyError, PersistError } from './lib/pass-b-remote-evidence.mjs';
+import { LeaseBusyError } from './lib/pass-b-remote-evidence.mjs';
 import { denominators } from './lib/teaching-v2-report.mjs';
 
 const args = process.argv.slice(2);
@@ -37,8 +40,6 @@ const LIVE = has('--live');
 const plan = JSON.parse(readFileSync(PLAN_FILE, 'utf8'));
 const PHASE_DIR = join(OUT, 'phase-a');
 const PACKETS = join(PHASE_DIR, 'packets');
-const writeJson = (p, v) => { mkdirSync(join(p, '..'), { recursive: true, mode: 0o700 }); const t = `${p}.tmp-${process.pid}`; writeFileSync(t, `${JSON.stringify(v, null, 1)}\n`, { mode: 0o600, flush: true }); renameSync(t, p); };
-const readJson = p => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
 
 function idsFor(phase) {
   if (has('--only')) return [val('--only')];
@@ -69,10 +70,15 @@ const renderLegacy = work => RENDERER.render({ workId: work.id, entry: work.lega
 function loadAll(ids, gold) {
   return ids.map(id => { const work = loadWork(id); const { packet, texts } = loadPacket(id); return { id, work, packet, texts, binding: candidateBinding({ work, packet, texts, gold, renderer: rendererFor(id) }) }; });
 }
-function runIdentity(items) {
-  return { contract: CONTRACT_VERSION, controller: CONTROLLER_VERSION, classifier: CLASSIFIER_VERSION, model: MODEL, efforts: STAGE_EFFORT, prompts: { version: PROMPT_VERSION, writer: WRITER_CORE_SHA256, verifier: VERIFIER_CORE_SHA256 }, gold: FROZEN_GOLD_SHA256, wire: WIRE_SCHEMA_HASHES(), capture: [CAPTURE_POLICY_VERSION, EXTRACTION_VERSION, SECTION_VERSION], plan: sha256(stableJson(plan)), renderer: RENDERER.identity, works: Object.fromEntries(items.map(x => [x.id, bindingSha(x.binding)])) };
+// The candidate bindings in the run identity carry runtime:null; live binds the run's frozen runtime receipt.
+const baseIdentity = () => ({ contract: CONTRACT_VERSION, controller: CONTROLLER_VERSION, classifier: CLASSIFIER_VERSION, model: MODEL, efforts: STAGE_EFFORT, prompts: { version: PROMPT_VERSION, writer: WRITER_CORE_SHA256, verifier: VERIFIER_CORE_SHA256 }, gold: FROZEN_GOLD_SHA256, wire: WIRE_SCHEMA_HASHES(), capture: [CAPTURE_POLICY_VERSION, EXTRACTION_VERSION, SECTION_VERSION], plan: sha256(stableJson(plan)), renderer: RENDERER.identity });
+const runIdentity = (items, parent = null) => phaseRunIdentity({ base: baseIdentity(), items, bindingSha, parent });
+// R2-7: the remaining-40 run binds its first-ten parent run, whose id is deterministic from the same inputs.
+function parentFor(phase, gold) {
+  if (has('--only') ? !plan.rest.includes(val('--only')) : phase !== 'rest') return null; // a rest work run alone is bound too
+  const items = loadAll(plan.firstTen, gold), identity = runIdentity(items);
+  return { runId: runIdOf(identity), identity, items };
 }
-const runIdOf = identity => 'tv2a-' + sha256(stableJson(identity)).slice(0, 12);
 
 function dryRun(items, gold, RUN_ID) {
   const RUN_DIR = join(PHASE_DIR, 'runs', RUN_ID);
@@ -109,76 +115,21 @@ function dryRun(items, gold, RUN_ID) {
   console.log(`prompts written to ${join(RUN_DIR, 'dry-run')}. NO model calls were made.`);
 }
 
-async function live(items, gold, RUN_ID, identity) {
+async function live(items, gold, RUN_ID, identity, parent) {
   if (process.env.TEACHING_V2_LIVE !== '1' || process.env.CI) { console.error('REFUSED: --live needs TEACHING_V2_LIVE=1 (after Codex code review and an owner OK) and not CI.'); process.exit(2); }
+  if (parent && !has('--after-first-ten')) { console.error('REFUSED: the owner must pass --after-first-ten after reviewing the first ten.'); process.exit(2); }
   const RUN_DIR = join(PHASE_DIR, 'runs', RUN_ID);
-  if (PHASE === 'rest') {
-    const notDone = plan.firstTen.filter(id => !isTerminal(readJson(join(RUN_DIR, 'works', workKey(id), 'state.json'))));
-    if (notDone.length || !has('--after-first-ten')) { console.error(`REFUSED: the first ten must all be terminal (${notDone.length} not) and the owner must pass --after-first-ten after reviewing them.`); process.exit(2); }
-  }
   const runnable = items.filter(x => preflight(x).ok).length;
   let ops;
   try { ops = openPhaseAOperations({ phaseDir: PHASE_DIR, runDir: RUN_DIR, runId: RUN_ID, maxCallsForPhase: runnable * (PLANNED_PATHS.cachedB1AndPacket.length + 1) }); }
   catch (e) { if (e instanceof LeaseBusyError || e instanceof LatchedError) { console.error(`REFUSED: ${e.message}`); process.exit(3); } throw e; }
-  const idPath = join(RUN_DIR, 'run-identity.json');
-  if (!existsSync(idPath)) { writeJson(idPath, { runId: RUN_ID, ...identity }); ops.persist([idPath], `teaching-v2 run ${RUN_ID}`); }
-  // Exact versioned CLI binary resolved once (local metadata, never a model query), as the collector does.
+  // Exact versioned CLI binary resolved (local metadata, never a model query) and frozen into the run (runtime.json).
   const execFileP = promisify(execFile);
   const bin = realpathSync(String((await execFileP('sh', ['-c', 'command -v claude'])).stdout).trim());
-  const runtimeVersion = String((await execFileP(bin, ['--version'], { timeout: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } })).stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
-  if (!runtimeVersion) { console.error('REFUSED: could not pin the CLI runtime version'); process.exit(3); }
-  for (const { id, work, packet, texts, binding } of items) {
-    const wdir = join(RUN_DIR, 'works', work.key), adir = join(wdir, 'attempts'), statePath = join(wdir, 'state.json');
-    const state = readJson(statePath) || { workId: id, runId: RUN_ID, status: 'pending', startedAt: new Date().toISOString(), priorRuns: priorRunHistory(work.key, RUN_ID) };
-    const stem = e => `${String(e.seq).padStart(2, '0')}-${e.kind}`;
-    const save = s => writeJson(statePath, s);
-    const attempts = {
-      reserve(entry, promptText) {
-        mkdirSync(adir, { recursive: true, mode: 0o700 });
-        writeFileSync(join(adir, `${stem(entry)}.prompt.txt`), promptText, { flag: 'wx', mode: 0o600, flush: true });
-        writeFileSync(join(adir, `${stem(entry)}.reserved.json`), `${JSON.stringify({ runId: RUN_ID, workId: id, ...entry, runtimeVersion, holder: process.env.PASS_B_LEASE_HOLDER, budgetId: ops.allowance.budgetId })}\n`, { flag: 'wx', mode: 0o600, flush: true });
-        ops.persist([statePath, join(adir, `${stem(entry)}.reserved.json`), join(adir, `${stem(entry)}.prompt.txt`)], `teaching-v2 reserve ${id}/${stem(entry)}`); // BEFORE the call
-      },
-      recover(entry) {
-        const tp = join(adir, `${stem(entry)}.transcript.jsonl`); if (!existsSync(tp)) return null;
-        const stdout = readFileSync(tp, 'utf8'), meta = readJson(join(adir, `${stem(entry)}.meta.json`)), res = readJson(join(adir, `${stem(entry)}.reserved.json`));
-        if (entry.transcriptSha256 && sha256(stdout) !== entry.transcriptSha256) return { kind: 'fatal', reason: 'transcript bytes changed since the attempt was recorded' };
-        const cls = classifyTranscript(stdout, { exitCode: meta?.exitCode ?? 0, callDir: meta?.callDir ?? null, imageFile: `${work.image.sha256}.${work.image.ext}`, runtimeVersion: res?.runtimeVersion });
-        return { ...cls, transcriptSha256: sha256(stdout) };
-      },
-    };
-    const invoke = async (stage, { promptText, wireSchema, seq }) => {
-      const command = buildConfinedCommand({ stage, promptText, imageFile: `${work.image.sha256}.${work.image.ext}`, wireSchema });
-      const r = await runConfined(command, { imagePath: work.image.path, execute: execToFile, runtimeVersion, bin });
-      const s = stem({ seq, kind: stage });
-      writeFileSync(join(adir, `${s}.transcript.jsonl`), r.stdout, { flag: 'wx', mode: 0o600, flush: true });
-      writeFileSync(join(adir, `${s}.meta.json`), `${JSON.stringify({ stage, seq, kind: r.kind, reason: r.reason, exitCode: r.exitCode, callDir: r.callDir, wallMs: r.wallMs, transcriptSha256: r.transcriptSha256, promptSha256: command.promptSha256, promptBytes: command.promptBytes, wireSchemaSha256: command.wireSchemaSha256, usage: r.usage, toolUses: r.toolUses, classifier: r.classifier })}\n`, { flag: 'wx', mode: 0o600, flush: true });
-      ops.record(r.stdout, `teaching-v2:${id}/${stage}`);
-      try { ops.persist([join(adir, `${s}.transcript.jsonl`), join(adir, `${s}.meta.json`)], `teaching-v2 outcome ${id}/${s}: ${r.kind}`); }
-      catch (e) { if (r.kind !== 'fatal') throw new PauseRun(`outcome not pushed (reconciled from the local transcript on resume): ${e.message}`); }
-      console.log(`  ${id} ${stage}: ${r.kind}${r.reason ? ` (${r.reason})` : ''} ${r.wallMs}ms in=${r.usage?.inputTokens} out=${r.usage?.outputTokens} cacheRead=${r.usage?.cacheReadInputTokens}`);
-      return r;
-    };
-    const finalize = payload => {
-      const p = join(wdir, 'final-payload.json');
-      writeFileSync(p, `${JSON.stringify(payload, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
-      ops.persist([p], `teaching-v2 final ${id}`);
-      return JSON.parse(readFileSync(p, 'utf8'));
-    };
-    try { await runWork({ work, packet, texts, gold, state, invoke, gate: () => ops.gate(), attempts, save, render: renderFor(work), finalize, binding }); }
-    catch (e) {
-      if (e instanceof LatchStop) { ops.latch({ kind: e.latch, reason: e.message, workId: id }); console.error(`LATCHED at ${id}: ${e.message}. Nothing more runs until the owner reviews it.`); break; }
-      if (e instanceof PauseRun || e instanceof LatchedError || e instanceof LeaseBusyError || e instanceof PersistError) { console.error(`PAUSED at ${id}: ${e.message}`); break; }
-      throw e;
-    } finally { try { ops.persist([statePath], `teaching-v2 state ${id}`); } catch { /* the next reservation push carries it */ } }
-    console.log(`${id}: ${state.status}${state.holdReasons ? ` — ${state.holdReasons[0]}` : ''}`);
-  }
+  const version = String((await execFileP(bin, ['--version'], { timeout: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } })).stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
+  try { await runPhase({ phaseDir: PHASE_DIR, runId: RUN_ID, identity, items, gold, ops, runtime: { version, bin }, execute: execToFile, renderFor, parent }); }
+  catch (e) { if (e instanceof RefusedError) { console.error(`REFUSED: ${e.message}`); process.exit(3); } throw e; }
   summarize(items.map(x => x.id), RUN_ID);
-}
-// Calls this work already cost under earlier run versions (a changed candidate never hides its retries).
-function priorRunHistory(key, runId) {
-  const root = join(PHASE_DIR, 'runs'); if (!existsSync(root)) return [];
-  return readdirSync(root).filter(r => r !== runId).flatMap(r => { const s = readJson(join(root, r, 'works', key, 'state.json')); return s ? [{ runId: r, calls: (s.ledger || []).length, status: s.status }] : []; });
 }
 
 function summarize(ids, RUN_ID) {
@@ -192,14 +143,17 @@ function summarize(ids, RUN_ID) {
   console.log(`summary -> ${join(RUN_DIR, `summary-${PHASE}.json`)}`);
 }
 
-function previews(items, RUN_ID, { fixture = false } = {}) {
+// Review R2-4: a run preview never reads state.final. Each work is replayed read-only from its attempt evidence
+// and the candidate shown is the projection inside the re-opened, byte-verified final-payload.json.
+async function previews(items, gold, RUN_ID, { fixture = false } = {}) {
   const RUN_DIR = join(PHASE_DIR, 'runs', RUN_ID);
   const dir = join(RUN_DIR, fixture ? 'previews-fixture' : 'previews'); mkdirSync(join(dir, 'img'), { recursive: true, mode: 0o700 });
-  const works = items.map(({ id, work }) => {
+  const verified = fixture ? null : await verifyRun({ phaseDir: PHASE_DIR, runId: RUN_ID, items, gold, renderFor });
+  const works = items.map(({ id, work }, i) => {
     const rel = `img/${work.image.sha256}.${work.image.ext}`; if (!existsSync(join(dir, rel))) copyFileSync(work.image.path, join(dir, rel));
-    const s = fixture ? { status: 'FIXTURE (synthetic text, not a model output)', final: { draft: { lesson: fixtureLesson() } } } : readJson(join(RUN_DIR, 'works', work.key, 'state.json'));
-    const lesson = s?.status === 'accepted-for-review' || fixture ? s.final.draft.lesson : null;
-    const projection = lesson ? projectLesson(lesson) : null;
+    const v = verified?.rows[i];
+    const s = fixture ? { status: 'FIXTURE (synthetic text, not a model output)' } : { status: v.ok ? v.status : (v.status === 'not-run' ? null : `${v.status} (UNVERIFIED: ${v.reason}; frozen legacy shown)`) };
+    const projection = fixture ? projectLesson(fixtureLesson()) : (v.ok && v.payload ? v.payload.projection : null);
     // A candidate renders through index.html; a hold (or an unrun work) renders the FROZEN LEGACY that stays live.
     const current = projection ? renderFor(work)(projection) : renderLegacy(work);
     return { id, title: work.catalog?.title, artist: work.catalog?.artist, date: work.catalog?.date, imageRel: rel, status: s?.status || 'not run', projection, current, shown: projection ? 'candidate' : 'frozen legacy', entry: projection ? projection.entry : (work.legacy?.teaching ?? null) };
@@ -218,12 +172,14 @@ async function main() {
   const gold = loadGoldBundle('.');
   const ids = idsFor(PHASE);
   const items = loadAll(has('--fixture-previews') ? ids.slice(0, 2) : ids, gold);
-  const identity = runIdentity(items), RUN_ID = runIdOf(identity);
+  const parent = has('--fixture-previews') ? null : parentFor(PHASE, gold);
+  const identity = runIdentity(items, parent?.runId ?? null), RUN_ID = runIdOf(identity);
+  if (parent) console.log(`continuation of first-ten run ${parent.runId} (bound into this run's identity)`);
   const latch = readLatch(PHASE_DIR);
   if (latch) console.log(`NOTE: phase-wide ${latch.kind} latch present (${latch.at}); live runs are refused until the owner clears it.`);
-  if (has('--fixture-previews')) return previews(items, RUN_ID, { fixture: true });
-  if (has('--previews')) return previews(items, RUN_ID);
-  if (LIVE) return live(items, gold, RUN_ID, identity);
+  if (has('--fixture-previews')) return previews(items, gold, RUN_ID, { fixture: true });
+  if (has('--previews')) return previews(items, gold, RUN_ID);
+  if (LIVE) return live(items, gold, RUN_ID, identity, parent);
   return dryRun(items, gold, RUN_ID);
 }
 main().catch(e => { console.error(`FAIL-CLOSED: ${e.message}`); process.exit(1); });

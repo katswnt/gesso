@@ -12,7 +12,7 @@ import { buildConfinedCommand, classifyTranscript, CONFINED_FLAGS } from '../scr
 import { buildStageCommand } from '../scripts/lib/pass-b-calibration.mjs';
 import { projectLesson, validateProjection, faithfulView, renderPreviewPage } from '../scripts/lib/teaching-v2-projection.mjs';
 import { loadCurrentRenderer } from '../scripts/lib/teaching-v2-current-render.mjs';
-import { runWork, PauseRun, LatchStop, telemetry, candidateBinding, bindingSha } from '../scripts/lib/teaching-v2-controller.mjs';
+import { runWork, PauseRun, LatchStop, telemetry, candidateBinding, bindingSha, workContext, writerPromptFor } from '../scripts/lib/teaching-v2-controller.mjs';
 import { assemblePacket, buildSections, applyBudget, vetUrls, createSourceCapture, lexicalKeywordHits } from '../scripts/lib/teaching-v2-capture.mjs';
 import { diagnosticRequests, validateLocalization, b3Lesson, compareMethods } from '../scripts/lib/teaching-v2-pins.mjs';
 import { importB3Candidates, derivePlan } from '../scripts/lib/teaching-v2-inputs.mjs';
@@ -353,7 +353,7 @@ test('controller: no captured literal text holds before W with zero calls', asyn
   assert.equal(st.status, 'hold'); assert.equal(called, 0); assert.equal(st.stage, 'preflight');
 });
 test('controller: an interrupted reservation is rebuilt from its transcript, or latches as an unknown outcome', async () => {
-  const mk = () => { const binding = candidateBinding({ work, packet, texts, gold }); return { ledger: [{ seq: 1, kind: 'W', reason: 'planned', outcome: 'reserved' }], artifacts: {}, binding, bindingSha256: bindingSha(binding) }; };
+  const mk = () => { const binding = candidateBinding({ work, packet, texts, gold }); return { ledger: [{ seq: 1, kind: 'W', reason: 'planned', outcome: 'reserved', promptSha256: sha256(writerPromptFor(workContext({ work, packet, gold }))), bindingSha256: bindingSha(binding) }], artifacts: {}, binding, bindingSha256: bindingSha(binding) }; };
   // no transcript -> unknown outcome, latched, never re-called
   const s1 = mk();
   await assert.rejects(drive([], s1, { attempts: { recover: () => null } }), LatchStop); assert.equal(s1.ledger[0].outcome, 'unknown');

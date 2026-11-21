@@ -14,7 +14,7 @@ import { MODEL } from './teaching-v2-contract.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/2';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/3';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -53,6 +53,27 @@ const usageLimitedEv = (evs, final) => evs.some(e => e.type === 'rate_limit_even
   || final?.api_error_status === 429 || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
 const norm = p => String(p || '').replace(/^\/private(?=\/)/, '');
 
+// Init-independent activity policy (review R2-1): any tool event outside the stage policy, or any server-tool usage
+// counter, anywhere in the stream. Checked first, with or without an init event.
+function activityViolation(evs) {
+  const bad = toolEvents(evs).filter(t => t.type !== 'tool_use' || !STAGE_TOOLS.includes(t.name));
+  if (bad.length) return `forbidden tool activity: ${[...new Set(bad.map(t => `${t.type}:${t.name || 'unnamed'}`))].join(',')}`;
+  for (const r of evs.filter(e => e.type === 'result')) {
+    const stu = r.usage?.server_tool_use || {};
+    if (Object.values(stu).some(n => Number(n) > 0)) return `server tool use recorded in usage: ${JSON.stringify(stu)}`;
+    if (Object.values(r.modelUsage || {}).some(u => Number(u?.webSearchRequests) > 0 || Number(u?.webFetchRequests) > 0)) return 'server tool requests recorded in modelUsage';
+  }
+  return null;
+}
+// Affirmative evidence that no session ran: the stream holds only rate-limit notices and error results that
+// explicitly report zero turns, no generated output and no structured output (an empty stream qualifies).
+// Any other event (assistant, user, stream_event, tool activity, a result without num_turns === 0) is activity.
+export function noSessionActivity(evs) {
+  if (toolEvents(evs).length) return false;
+  return evs.every(e => e.type === 'rate_limit_event'
+    || (e.type === 'result' && e.is_error === true && e.num_turns === 0 && !(Number(e.usage?.output_tokens) > 0) && e.structured_output == null));
+}
+
 // Capability policy for every init event and every tool event. Returns the first violation or null.
 // Fatal precedence: this runs BEFORE any usage/transport/content classification.
 export function capabilityViolation(stdout, { callDir = null, imageFile, model = MODEL, runtimeVersion }) {
@@ -69,12 +90,8 @@ export function capabilityViolation(stdout, { callDir = null, imageFile, model =
     if (callDir && norm(i.cwd) !== norm(callDir)) return 'init cwd is not the confined call directory';
     if (!callDir && !CALL_DIR_RE.test(norm(i.cwd))) return 'init cwd is not a teaching-v2 call directory';
   }
-  const bad = toolEvents(evs).filter(t => t.type !== 'tool_use' || !STAGE_TOOLS.includes(t.name));
-  if (bad.length) return `forbidden tool activity: ${[...new Set(bad.map(t => `${t.type}:${t.name || 'unnamed'}`))].join(',')}`;
-  const final = evs.filter(e => e.type === 'result').at(-1);
-  const stu = final?.usage?.server_tool_use || {};
-  if (Object.values(stu).some(n => Number(n) > 0)) return `server tool use recorded in usage: ${JSON.stringify(stu)}`;
-  if (Object.values(final?.modelUsage || {}).some(u => Number(u?.webSearchRequests) > 0)) return 'web search requests recorded in modelUsage';
+  const act = activityViolation(evs);
+  if (act) return act;
   const dir = callDir || norm(inits[0]?.cwd) || null;
   const read = verifyB1ImageRead(parseStreamTranscript(stdout), { callDir: dir, imageBasename: imageFile });
   if (read.bad.length) return `confinement: ${read.reason}`;
@@ -95,10 +112,17 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   const inits = evs.filter(e => e.type === 'system' && e.subtype === 'init');
   const usage = usageOf(final, stdout);
   const out = (kind, reason) => ({ kind, reason, usage, classifier: CLASSIFIER_VERSION, toolUses: tr.toolUses.map(u => u.name), structured: kind === 'ok' ? final.structured_output : null, initCwd: inits[0]?.cwd ?? null });
+  // Review R2-1: ALL activity is inspected before ANY outcome branch. Forbidden activity is fatal whether or not
+  // there is an init, whatever the exit code or quota message.
+  const forbidden = activityViolation(evs);
+  if (forbidden) return out('fatal', forbidden);
   if (!inits.length) {
+    // A missing init does not prove that nothing ran. Only AFFIRMATIVE evidence of no session activity (see
+    // noSessionActivity) may become a pre-session usage limit or transport failure; anything else is fatal.
+    if (!noSessionActivity(evs)) return out('fatal', 'session activity without an init event (provenance and confinement unverifiable)');
     if (usageLimitedEv(evs, final)) return out('usage-limit', 'subscription usage limit before any session');
     if (exitCode === 'timeout') return out('interrupted', 'timeout before init');
-    if (exitCode && exitCode !== 0) return out('transport-failure', `process exit ${exitCode} before init (nothing executed)`);
+    if (exitCode && exitCode !== 0) return out('transport-failure', `process exit ${exitCode} before init (no session activity)`);
     return out('fatal', 'no init event (provenance unverifiable)');
   }
   const violation = capabilityViolation(stdout, { callDir, imageFile, model, runtimeVersion });
