@@ -33,7 +33,7 @@ import {
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
   verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope, answeringModel,
   legacyContentInput, b2InputFor, b2Plan, b3Plan, producerEvidence, verifyStageEvidence, findTranscriptBySha,
-  b1PromptText, b2PromptText, b3PromptText, verifyStageCapabilities, verifyAttemptConfinement,
+  b1PromptText, b2PromptText, b3PromptText, verifyStageCapabilities, verifyAttemptConfinement, transcriptMalformed,
 } from './lib/pass-b-calibration.mjs';
 
 export const COLLECTOR_VERSION = 'passBCorpusCollector/4';
@@ -353,6 +353,7 @@ export function verifyMisreadIncident(text, imageBasename, expectedModel = HISTO
 // VSD-074 (owner 2026-11-08, second occurrence after VSD-049): the exact incident pattern above is handled
 // automatically. The work is held (no capture, no retry) and the pipeline keeps going; anything that deviates from
 // the strict pattern is still a confinement fatal.
+export const MALFORMED_HELD = 'malformed transcript evidence (duplicate member): unverifiable, held (R7)';
 export const MISREAD_REASON = 'misread: one mistyped image name inside the call folder, then the exact image (VSD-074)';
 // A preserved fatal whose only cause is such a misread (attempts from before VSD-074) no longer stops the corpus.
 function misreadOnlyFatal(runDir, reason) {
@@ -554,6 +555,10 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const misread = !!receipt?.bad?.length && !!binding && verifyMisreadIncident(text, imageFile, epochModel(binding.epoch)).ok;
     const clearance = clearances.find(c => c.finding.workId === id && c.finding.stage === stage && c.finding.transcriptFile === name && c.finding.transcriptSha256 === sha256(text));
     if (receipt?.bad?.length && !misread && !clearance) fatal ||= `${id}/${stage}: preserved confinement violation`;
+    // R7: a line with a duplicate member anywhere is malformed evidence on every stage: fatal when it holds a tool block
+    // or a non-image path, otherwise this attempt is unverifiable and held (never accepted, never reused).
+    const malformed = transcriptMalformed(tr, { callDir: recordedCallDirs.get(name.slice(0, 9)) || null, imageBasename: stage === 'B2' ? null : imageFile });
+    if (malformed.fatal.length && !clearance) fatal ||= `${id}/${stage}: preserved malformed transcript evidence`;
     // Review-5 R5-1: in the stopgap run (this controller's run: every reservation records its directory) an unverifiable
     // attempt is a fatal stop. Inspecting the banked run itself (no stopgap) meets only historical evidence: each
     // unverifiable attempt is reported on the row, and a live banked resume refuses while any remain (never accepted).
@@ -592,6 +597,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
       continue;
     }
     if (deadline) { if (stage === 'B2') b2LastInterrupted = true; continue; }
+    if (malformed.held.length) { terminalReasons.push(`${stage}:${MALFORMED_HELD}`); continue; } // never accepted or reused
     if (meta?.kind === 'held') terminalReasons.push(`${stage}:${meta.reason}`);
     if (bodies[stage] || usage) continue;
     if (!final || final.is_error || final.structured_output == null) { terminalReasons.push(`${stage}:unknown-or-failed-attempt`); continue; }
@@ -757,6 +763,7 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
     const inits = initEvents(stdout);
     const imageReceipt = ['B1', 'B3'].includes(stage) ? verifyB1ImageRead(tr, { callDir: call, imageBasename: imageFile }) : null;
+    const malformed = transcriptMalformed(tr, { callDir: call, imageBasename: ['B1', 'B3'].includes(stage) ? imageFile : null });
     const webEvents = stage === 'B2' ? verifyB2WebEvents(tr) : null;
     // Review-2 R2-1: every activity shape is inspected BEFORE any outcome branch. Explicit forbidden activity is fatal
     // whatever the init, exit code or quota status (a missing init does not prove nothing executed).
@@ -770,11 +777,13 @@ export async function executeCorpusAttempt({ runDir, workRunDir, id, imgSha256, 
     const misread = !!imageReceipt?.bad?.length && misreadAuto && verifyMisreadIncident(stdout, imageFile, epochModelNow).ok;
     if (caps.activity.length) cls = { kind: 'fatal', reason: `capability violation: ${caps.activity.join(', ')}` };
     else if (imageReceipt?.bad?.length && !misread) cls = { kind: 'fatal', reason: 'confinement violation' };
+    else if (malformed.fatal.length) cls = { kind: 'fatal', reason: 'malformed transcript evidence' }; // R7
     else if (!inits.length && exitCode === 'deadline') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };
     else if (!inits.length && exitCode !== 0) cls = { kind: 'operational-pause', reason: 'process failed before provenance could be verified; review incomplete outcome' };
     else if (!inits.length || inits.some(e => e.apiKeySource !== 'none')) cls = { kind: 'fatal', reason: 'every init must report apiKeySource:none' };
     else if (inits.some(e => e.model !== epochModelNow)) cls = { kind: 'fatal', reason: 'model drift in init' };
     else if (!caps.ok) cls = { kind: 'fatal', reason: `capability violation: ${caps.bad.join(', ')}` }; // review fix 1: init capabilities, before usage/transport
+    else if (malformed.held.length && cls.kind !== 'fatal') cls = { kind: 'held', reason: MALFORMED_HELD }; // R7: unverifiable, never ok/usage-limit
     else if (misread) cls = { kind: 'held', reason: MISREAD_REASON };
     else if (cls.kind !== 'fatal' && inits.some(e => e.claude_code_version !== runtimeVersion)) cls = { kind: 'runtime-pause', reason: 'CLI runtime version drift/missing; reviewed rebind required' };
     else if (exitCode === 'deadline' && cls.kind !== 'fatal') cls = { kind: 'deadline-pause', reason: '09:00 deadline termination' };

@@ -192,7 +192,7 @@ function fixture({complete=['B1','B2','B3'],id='test-work'}={}) {
   writeFileSync(join(workRunDir,'b0-prep.json'),JSON.stringify({work:{id},trustedCatalog:catalog,legacy,image:{ok:true,imgSha256,ext}}));
   const bodies=syntheticFixture().bodies;
   const transcript=(stage,body,{apiKeySource='none',error=false,result='',version='2.1.280',haikuDominates=false,model=COLLECTION_MODEL}={}) => {
-    const blocks=stage==='B2' ? [{type:'tool_use',id:'s',name:'WebSearch',input:{query:'test'}},{type:'tool_use',id:'f',name:'WebFetch',input:{url:'https://example.test'}}] : [{type:'tool_use',id:'r',name:'Read',input:{file_path:`./${imageFile}`}}];
+    const blocks=stage==='B2' ? [{type:'tool_use',id:'s',name:'WebSearch',input:{query:'test'}},{type:'tool_use',id:'f',name:'WebFetch',input:{url:'https://example.test'}}] : [{type:'tool_use',id:'r',name:'Read',input:{file_path:`/tmp/corpus-Fx0001/${imageFile}`}}];
     const results=stage==='B2' ? ['s','f'].map(id=>({type:'tool_result',tool_use_id:id,content:[{type:'text',text:'Museum record text with object details. '.repeat(10)}]})) : [{type:'tool_result',tool_use_id:'r',content:[{type:'image'}]}];
     return [{type:'system',subtype:'init',apiKeySource,claude_code_version:version,model,cwd:'/tmp/corpus-Fx0001',tools:stage==='B2'?['StructuredOutput','WebFetch','WebSearch']:['Read','StructuredOutput'],mcp_servers:[]},{type:'assistant',message:{content:blocks}},{type:'user',message:{content:results}},{type:'result',subtype:'success',is_error:error,result,structured_output:body,modelUsage:{[model]:{output_tokens:10},...(haikuDominates?{'claude-haiku-4-5-20251001':{output_tokens:100}}:{})}}].map(x=>JSON.stringify(x)).join('\n')+'\n';
   };
@@ -536,7 +536,7 @@ await ta('bad subscription provenance wins over simultaneous CLI drift',async()=
 await ta('confinement failure wins over usage rejection and CLI drift',async()=>{
   const f=fixture({complete:[]});
   try{
-    const text=f.transcript('B1',null,{error:true,result:'usage limit',version:'2.1.281'}).replace(`./${f.imageFile}`,'/etc/passwd');
+    const text=f.transcript('B1',null,{error:true,result:'usage limit',version:'2.1.281'}).replace(`/tmp/corpus-Fx0001/${f.imageFile}`,'/etc/passwd');
     await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B1',imageFile:f.imageFile,execute:async()=>({stdout:text})}),/confinement/);
     assert.match(preservedFatal(f.runDir),/confinement/);
   }finally{rmSync(f.root,{recursive:true,force:true});}
@@ -775,14 +775,14 @@ for(const [name,mutate] of [
 ]) await ta(`capability policy: ${name} is a pipeline-wide fatal, never ok/usage-limit/retryable`,async()=>{
   const f=fixture({complete:['B1','B2']});
   try{
-    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:31,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`./${f.imageFile}`,`${o.cwd}/${f.imageFile}`),mutate)})}),/capability violation/);
+    await assert.rejects(executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:31,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`/tmp/corpus-Fx0001/${f.imageFile}`,`${o.cwd}/${f.imageFile}`),mutate)})}),/capability violation/);
     assert.match(preservedFatal(f.runDir)||'',/capability violation/);
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 await ta('capability policy: the exact declared tools (any order) and no MCP servers pass',async()=>{
   const f=fixture({complete:['B1','B2']});
   try{
-    const r=await executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:32,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`./${f.imageFile}`,`${o.cwd}/${f.imageFile}`),e=>{if(e.type==='system'&&e.subtype==='init')e.tools=['StructuredOutput','Read'];})})});
+    const r=await executeCorpusAttempt({...attemptArgs(f),stage:'B3',seq:32,imageFile:f.imageFile,execute:async(bin,argv,o)=>({stdout:mutateTranscript(f.transcript('B3',f.bodies.B3).replace(`/tmp/corpus-Fx0001/${f.imageFile}`,`${o.cwd}/${f.imageFile}`),e=>{if(e.type==='system'&&e.subtype==='init')e.tools=['StructuredOutput','Read'];})})});
     assert.ok(r.raw);assert.equal(preservedFatal(f.runDir),null);
   }finally{rmSync(f.root,{recursive:true,force:true});}
 });

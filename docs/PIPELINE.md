@@ -673,6 +673,20 @@ byte-identical and still readable by every offline command.
     inspection is fatal.
   The canary launch also refuses if any of its six works already holds an imported B1 (`canaryImportPreflight`):
   `PASS_B_RESEARCH_FRESH_B1=1` only stops new imports.
+- **Read inputs are checked raw, by a strict allowlist that fails closed** (review-6 R6-S1, with the round-7 Phase A
+  findings applied here; `verifyB1ImageRead` in `scripts/lib/pass-b-calibration.mjs`, shared by fresh attempts,
+  resume, banked import and imported-copy reinspection). `JSON.parse` keeps only the last duplicate member and
+  decodes escaped names, so its output is never the evidence. Every raw input form seen for one invocation id (the
+  completed message input sliced from the raw line, a populated streamed start input, and the concatenated deltas) must
+  be exactly `{"file_path":"<callDir>/<image>"}` (whitespace aside; literal name, canonical value), or a benign
+  unfinished prefix of it (`''`, `{`, the raw `{}` start placeholder). Any file_path value, after decoding and with
+  duplicates kept, that is or began to name something else is fatal, and a later safe copy, a success or a quota
+  result cannot erase it; any other complete non-canonical form is fatal; an unfinished divergent form never makes a
+  receipt and is fatal once a tool result shows it ran. Every transcript line is also read by a strict parser that
+  rejects a duplicate member name at any depth (compared after decoding): such a line is malformed evidence, fatal
+  when it holds a tool block or a non-image path, otherwise the attempt is held as unverifiable (never ok, never
+  reused). All 33 Reads in the 52 saved transcripts are canonical; those 52 and the 1,947 local corpus B1/B3
+  transcripts classify exactly as before, and none of 4,144 local transcripts has a malformed line.
 - **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
   which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/2`). Capture runs in the
   collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through

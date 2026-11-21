@@ -163,14 +163,23 @@ export function stripJsonFence(text) {
 // `partialInput`. A streamed block that repeats a message block (same id and name, and the same input or an
 // incomplete one) is the same call and is not duplicated. Only these two block positions are read: tool-shaped data
 // inside tool inputs, tool results or text is model payload, never an executed tool.
+// Review-6 R6-S1: `JSON.parse` keeps only the last of duplicate members and decodes escaped names, so its output cannot
+// be confinement evidence. Every tool_use also carries `rawForms`: the RAW text of each input form seen for it (the
+// completed message input sliced from the raw line, the streamed start input, the concatenated deltas), taken before
+// any parse, reconciliation or deduplication; a dropped streamed duplicate hands its forms to the block it repeats.
+// `malformedLines` lists every line with a duplicate member name at any depth (see rawTranscriptLine): a whole-line
+// `JSON.parse` silently keeps one copy, so such a line is malformed evidence (transcriptMalformed decides fatal/held).
+// R7: a populated start input is its own argument copy; only the raw empty `{}` start is a placeholder.
 export function parseStreamTranscript(stdout) {
   const toolUses = [], toolResults = []; let final = null, init = null; let lines = 0, parsed = 0;
   const streamed = []; let open = new Map(); // index -> streamed block of the message being streamed
+  const malformedLines = [];
   for (const ln of String(stdout).split('\n')) {
     if (!ln.trim()) continue;
     lines++;
     let ev; try { ev = JSON.parse(ln); } catch { continue; }
     parsed++;
+    const raw = rawTranscriptLine(ln, lines); if (raw.malformed) malformedLines.push(raw.malformed);
     // The system/init event carries apiKeySource and claude_code_version — the authoritative provenance
     // fields (the terminal result event does NOT include them).
     if (ev?.type === 'system' && ev?.subtype === 'init') init = { apiKeySource: ev.apiKeySource ?? null, claudeCodeVersion: ev.claude_code_version ?? null, model: ev.model ?? null };
@@ -178,15 +187,15 @@ export function parseStreamTranscript(stdout) {
       const se = ev.event;
       if (se.type === 'message_start') open = new Map();
       else if (se.type === 'content_block_start' && se.content_block?.type === 'tool_use') {
-        const b = se.content_block, s = { id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, streamed: true, inputComplete: true, deltas: [], stopped: false };
+        const b = se.content_block, s = { id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, streamed: true, inputComplete: true, deltas: [], stopped: false, startRaw: raw.startInput ?? (b.input === undefined ? null : JSON.stringify(b.input)) };
         streamed.push(s); open.set(se.index, s);
       } else if (se.type === 'content_block_delta' && se.delta?.type === 'input_json_delta' && open.has(se.index)) {
         open.get(se.index).deltas.push(String(se.delta.partial_json ?? ''));
       } else if (se.type === 'content_block_stop' && open.has(se.index)) open.get(se.index).stopped = true;
     }
     const content = ev?.message?.content;
-    if (Array.isArray(content)) for (const b of content) {
-      if (b?.type === 'tool_use') toolUses.push({ id: b.id ?? null, name: b.name ?? null, input: b.input ?? {} });
+    if (Array.isArray(content)) for (const [i, b] of content.entries()) {
+      if (b?.type === 'tool_use') toolUses.push({ id: b.id ?? null, name: b.name ?? null, input: b.input ?? {}, rawForms: [{ source: 'message', raw: raw.contentInputs?.[i] ?? JSON.stringify(b.input ?? {}), complete: true }] });
       if (b?.type === 'tool_result') {
         const hasImage = Array.isArray(b.content) && b.content.some(c => c?.type === 'image');
         // Capture bounded HEAD+TAIL of the result text so a fetch that returned a non-error envelope but NO
@@ -201,30 +210,186 @@ export function parseStreamTranscript(stdout) {
     if (ev?.type === 'result') final = ev;
   }
   const messageUses = [...toolUses];
-  for (const { deltas, stopped, ...s } of streamed) {
+  for (const { deltas, stopped, startRaw, ...s } of streamed) {
     // Review-4 finding 2: a start's own `input` is normally the empty placeholder `{}`; the arguments arrive in deltas.
     // An empty start with no delta and no content_block_stop is an unfinished stream whose input is not yet known
     // (`inputComplete:false`, empty `partialInput`), not a completed call with no arguments. A matching message block
     // or a stop establishes it; a result for it still fails closed in the receipt checks.
-    if (!deltas.length && !stopped && isEmptyInput(s.input)) { s.inputComplete = false; s.partialInput = ''; }
+    const startForm = { source: 'start', raw: startRaw ?? '', complete: true }, placeholder = isPlaceholderRaw(startRaw);
+    s.rawForms = [];
+    if (!deltas.length && !stopped && isEmptyInput(s.input)) { s.inputComplete = false; s.partialInput = ''; s.rawForms.push({ ...startForm, complete: false, placeholder }); }
+    else if (!(deltas.length && placeholder)) s.rawForms.push(startForm); // with deltas, only the raw `{}` start is a mere placeholder
     if (deltas.length) {
       const raw = deltas.join('');
+      s.rawForms.push({ source: 'deltas', raw, complete: stopped });
       try { const v = JSON.parse(raw); s.input = v && typeof v === 'object' && !Array.isArray(v) ? v : {}; if (s.input !== v) { s.inputComplete = false; s.partialInput = raw; } }
       catch { s.input = {}; s.inputComplete = false; s.partialInput = raw; }
     }
-    const same = s.id && messageUses.some(u => u.id === s.id && u.name === s.name && (!s.inputComplete || stableJson(u.input) === stableJson(s.input)));
-    if (!same) toolUses.push(s);
+    const same = s.id && messageUses.find(u => u.id === s.id && u.name === s.name && (!s.inputComplete || stableJson(u.input) === stableJson(s.input)));
+    if (same) same.rawForms.push(...s.rawForms); else toolUses.push(s);
   }
-  return { lines, parsed, toolUses, toolResults, final, init };
+  return { lines, parsed, toolUses, toolResults, final, init, malformedLines };
 }
 const isEmptyInput = v => v == null || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
-// The file_path an interrupted streamed Read had begun to name: { path, complete } or null when none was started.
-function partialFilePath(raw) {
-  const m = /"file_path"\s*:\s*"((?:[^"\\]|\\.)*)(\\?)("?)/.exec(String(raw || ''));
-  if (!m) return null;
-  let path = m[1]; try { path = JSON.parse(`"${m[1]}"`); } catch { /* keep the raw prefix */ }
-  return { path, complete: m[3] === '"' };
+
+// ---- Review-6 R6-S1: a strict raw JSON reader that keeps what `JSON.parse` erases (duplicate members, escaped names,
+// an unfinished tail). An unfinished text throws a RawEof marker (with the decoded prefix of an open string), never
+// a syntax error, so a partial form can be read as far as it goes. ----
+class RawEof { constructor(start, partial) { this.start = start; this.partial = partial; } }
+function rawReader(text) {
+  const n = text.length; let i = 0;
+  const STR = /[^"\\\u0000-\u001f]*/y, NUM = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y, HEX = /^[0-9a-fA-F]*$/;
+  const ESC = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
+  const fail = () => { throw new SyntaxError(`raw JSON: unexpected ${i < n ? JSON.stringify(text[i]) : 'end'} at ${i}`); };
+  const eof = (start = i, partial = null) => { throw new RawEof(start, partial); };
+  const R = {
+    get i() { return i; }, set i(v) { i = v; },
+    end: () => i >= n, peek: () => text[i],
+    ws() { while (i < n && (text[i] === ' ' || text[i] === '\t' || text[i] === '\n' || text[i] === '\r')) i++; },
+    expect(c) { if (i >= n) eof(); if (text[i] !== c) fail(); i++; },
+    str() { // at '"'; returns { v, s, e }
+      const s = i++; let out = '';
+      for (;;) {
+        STR.lastIndex = i; const m = STR.exec(text); out += m[0]; i += m[0].length;
+        if (i >= n) eof(s, out);
+        const c = text[i];
+        if (c === '"') { i++; return { v: out, s, e: i }; }
+        if (c !== '\\') fail(); // a raw control character
+        if (i + 1 >= n) eof(s, out);
+        const d = text[i + 1];
+        if (d === 'u') {
+          const h = text.slice(i + 2, i + 6);
+          if (h.length < 4 && HEX.test(h)) eof(s, out);
+          if (h.length < 4 || !HEX.test(h)) fail();
+          out += String.fromCharCode(parseInt(h, 16)); i += 6;
+        } else if (d in ESC) { out += ESC[d]; i += 2; } else fail();
+      }
+    },
+    value() { // a whole value as a node: { t: 'o', m: [[name, node]…] } | { t: 'a', a } | { t: 's', v } | { t: 'n' | 'l' }, with s/e
+      R.ws(); if (i >= n) eof();
+      const c = text[i], s = i;
+      if (c === '{' || c === '[') {
+        const obj = c === '{', close = obj ? '}' : ']', items = []; i++; R.ws();
+        if (text[i] === close) { i++; return obj ? { t: 'o', m: items, s, e: i } : { t: 'a', a: items, s, e: i }; }
+        for (;;) {
+          if (obj) { R.ws(); if (i >= n) eof(); if (text[i] !== '"') fail(); const k = R.str(); R.ws(); R.expect(':'); items.push([k.v, R.value()]); }
+          else items.push(R.value());
+          R.ws(); if (i >= n) eof();
+          if (text[i] === ',') { i++; continue; }
+          if (text[i] === close) { i++; return obj ? { t: 'o', m: items, s, e: i } : { t: 'a', a: items, s, e: i }; }
+          fail();
+        }
+      }
+      if (c === '"') { const r = R.str(); return { t: 's', v: r.v, s, e: r.e }; }
+      if (c === '-' || (c >= '0' && c <= '9')) {
+        NUM.lastIndex = i; const m = NUM.exec(text);
+        if (!m || m[0] === '-') { if (i + 1 >= n) eof(); fail(); }
+        i += m[0].length; if (i >= n) eof(s); // a number at the very end may still be growing
+        return { t: 'n', s, e: i };
+      }
+      for (const lit of ['true', 'false', 'null']) {
+        if (text.startsWith(lit, i)) { i += lit.length; return { t: 'l', s, e: i }; }
+        if (i + lit.length > n && lit.startsWith(text.slice(i))) eof();
+      }
+      return fail();
+    },
+  };
+  return R;
 }
+// One whole line read strictly and raw. A duplicate member name at ANY depth (names compared after decoding escapes)
+// makes the line malformed evidence: `JSON.parse` would silently keep the last copy (R7: e.g. two `input` members on
+// one completed tool block, or `"input"`). The record notes whether the line holds a tool block and every
+// path-like string it contains, so transcriptMalformed can tell a fatal line from one that is only unverifiable.
+// Also returns the raw text of each message content block's `input` and of a streamed start block's `input`.
+const PATHLIKE = /^(?:\/|~\/|\.{1,2}\/)|(?:^|\/)\.\.(?:\/|$)/;
+export function rawTranscriptLine(line, lineNo = 1) {
+  const out = { malformed: null, contentInputs: null, startInput: null };
+  let root;
+  try { const R = rawReader(line); root = R.value(); R.ws(); if (!R.end()) throw new SyntaxError('trailing text'); }
+  catch (e) { out.malformed = { line: lineNo, reason: `not strict JSON (${String(e?.message || 'unfinished').slice(0, 80)})`, toolBlock: true, paths: [] }; return out; }
+  const duplicates = []; let toolBlock = false;
+  const walk = (node, at, collect) => {
+    const stack = [[node, at]];
+    while (stack.length) {
+      const [x, where] = stack.pop();
+      if (x.t === 'o') {
+        const seen = new Set();
+        for (const [k, v] of x.m) {
+          if (!collect && seen.has(k)) duplicates.push(`${where}.${k}`);
+          seen.add(k);
+          if (k === 'type' && v.t === 's' && /(?:tool_use|tool_result)$/.test(v.v)) toolBlock = true;
+          stack.push([v, `${where}.${k}`]);
+        }
+      } else if (x.t === 'a') x.a.forEach((v, i) => stack.push([v, `${where}[${i}]`]));
+      else if (collect && x.t === 's' && PATHLIKE.test(x.v)) collect.push(x.v);
+    }
+  };
+  walk(root, '$', null);
+  if (duplicates.length) {
+    const paths = []; walk(root, '$', paths);
+    out.malformed = { line: lineNo, reason: `duplicate member ${[...new Set(duplicates)].slice(0, 4).join(', ')}`, toolBlock, paths: [...new Set(paths)] };
+  }
+  const last = (o, k) => (o?.t === 'o' ? o.m.filter(([name]) => name === k).at(-1)?.[1] ?? null : null); // JSON.parse's choice
+  const slice = node => (node ? line.slice(node.s, node.e) : null);
+  const content = last(last(root, 'message'), 'content');
+  if (content?.t === 'a') out.contentInputs = content.a.map(b => slice(last(b, 'input')));
+  out.startInput = slice(last(last(last(root, 'event'), 'content_block'), 'input'));
+  return out;
+}
+// The malformed lines of a parsed transcript, split by consequence. A line that holds a tool block, or names any path
+// other than the stage's exact image (every path, for a stage with no image), is fatal; any other malformed line leaves
+// the session unverifiable: held, never ok.
+export function transcriptMalformed(transcript, { callDir = null, imageBasename = null } = {}) {
+  const norm = p => String(p).replace(/^\/private(?=\/)/, '');
+  const wantAbs = callDir && imageBasename ? norm(resolvePath(callDir, imageBasename)) : null;
+  const isImage = p => !!imageBasename && !p.includes('..') && (wantAbs ? norm(p) === wantAbs : p.split('/').pop() === imageBasename);
+  const fatal = [], held = [];
+  for (const m of transcript?.malformedLines || []) {
+    const other = m.paths.filter(p => !isImage(p)), why = `malformed transcript line ${m.line}: ${m.reason}`;
+    if (m.toolBlock || other.length) fatal.push(`${why}${m.toolBlock ? ' (tool block)' : ''}${other.length ? ` (non-image path ${other.slice(0, 3).join(', ')})` : ''}`);
+    else held.push(why);
+  }
+  return { fatal, held };
+}
+const isPlaceholderRaw = raw => { if (raw == null) return false; const a = rawInputMembers(raw); return a.closed && !a.malformed && !a.trailing && !a.members.length; };
+// The top-level members of one raw Read input form, read before any JSON.parse: names decoded, every duplicate kept,
+// an unfinished tail allowed (`closed:false`). Nested values are syntax-checked and skipped, never searched.
+function rawInputMembers(raw) {
+  const text = String(raw ?? ''), R = rawReader(text), a = { members: [], empty: false, closed: false, malformed: false, trailing: false };
+  try {
+    R.ws(); if (R.end()) { a.empty = true; return a; }
+    if (R.peek() !== '{') { R.value(); a.malformed = true; return a; } // a complete non-object
+    R.i++; R.ws();
+    if (R.end()) return a;
+    if (R.peek() === '}') R.i++;
+    else for (;;) {
+      const m = { keyRaw: '', key: '', keyComplete: false, kind: null, value: undefined, valueRaw: null, valueComplete: false };
+      a.members.push(m); R.ws();
+      if (R.end()) return a;
+      if (R.peek() !== '"') throw new SyntaxError('member name');
+      try { const k = R.str(); m.keyRaw = text.slice(k.s, k.e); m.key = k.v; m.keyComplete = true; }
+      catch (e) { if (e instanceof RawEof) { m.keyRaw = text.slice(e.start); m.key = e.partial; } throw e; }
+      R.ws(); R.expect(':'); R.ws();
+      if (R.end()) return a;
+      if (R.peek() === '"') {
+        m.kind = 'string';
+        try { const v = R.str(); m.value = v.v; m.valueRaw = text.slice(v.s, v.e); m.valueComplete = true; }
+        catch (e) { if (e instanceof RawEof) { m.value = e.partial; m.valueRaw = text.slice(e.start); } throw e; }
+      } else { m.kind = 'other'; const s = R.i; R.value(); m.valueRaw = text.slice(s, R.i); m.valueComplete = true; }
+      R.ws(); if (R.end()) return a;
+      if (R.peek() === ',') { R.i++; continue; }
+      if (R.peek() !== '}') throw new SyntaxError('member separator');
+      R.i++; break;
+    }
+    a.closed = true;
+    R.ws(); if (!R.end()) a.trailing = true;
+  } catch (e) { if (!(e instanceof RawEof)) a.malformed = true; }
+  return a;
+}
+// The raw input forms of one tool_use (a hand-built transcript without them is judged by its parsed input).
+const readForms = r => (Array.isArray(r.rawForms) && r.rawForms.length ? r.rawForms : [{ source: 'message', raw: JSON.stringify(r.input ?? {}), complete: true }]);
+// Every file_path value a raw form names (decoded member names, duplicates kept, an unfinished one included).
+const formPaths = form => rawInputMembers(form.raw).members.filter(m => m.keyComplete && m.key === 'file_path' && m.kind === 'string').map(m => ({ path: m.value, complete: m.valueComplete }));
 
 // The terminal result event (structured_output, modelUsage, usage, num_turns, is_error).
 export function transcriptFinal(transcript) { return transcript?.final ?? null; }
@@ -237,41 +402,80 @@ function resultFor(transcript, toolUseId) {
 // ---- B1 image-receipt verification (from the raw transcript, NOT from prose). Require at least one
 // successful Read of the EXACT SHA-named image inside the confined call dir; reject ANY Read whose target
 // escapes that dir or names a different file. ----
+// Review-6 R6-S1: a strict raw-input ALLOWLIST that fails closed. A Read verifies as a confined image read only when
+// EVERY raw input form seen for its invocation id (completed message input, streamed start input, concatenated deltas)
+// is exactly the canonical single-member object {"file_path":"<SAFE>"} (insignificant JSON whitespace aside; the name
+// spelled literally, the value in canonical JSON encoding), SAFE being <recorded callDir>/<exact image basename>, or a
+// benign unfinished prefix of it ('', '{', the `{}` start placeholder, a prefix of that object). Per invocation, in
+// this order of precedence:
+//   - any file_path value (names decoded, every duplicate member kept, an unfinished value included) that is or began
+//     to name something other than SAFE is an established outside/conflicting path: bad, whatever else is seen;
+//   - any complete form that is not canonical (extra/duplicate/escaped members, `{}`, malformed or trailing text) is bad;
+//   - an unfinished form that is not a prefix of the canonical object, or no canonical form at all, establishes no
+//     receipt, and is bad once a tool_result shows it executed (an input that cannot be verified);
+//   - otherwise a delivered image result is one good read.
+// A later safe block, a successful result or a quota result therefore never erases an established finding. All 33 Read
+// inputs in the saved real-transcript sample use only `file_path`, so no other member is admitted.
 export function verifyB1ImageRead(transcript, { callDir, imageBasename }) {
   const reads = transcript.toolUses.filter(u => u.name === 'Read');
   // Normalize the macOS /tmp -> /private/tmp symlink so the call dir and the Read tool's reported realpath
   // compare equal. (mkdtemp returns /tmp/…; the Read tool reports /private/tmp/….)
   const norm = p => String(p).replace(/^\/private(?=\/)/, '');
   const wantAbs = callDir ? norm(resolvePath(callDir, imageBasename)) : null;
-  let good = 0; const bad = [];
-  for (let r of reads) {
-    // Review-3 finding 2: an interrupted streamed Read. A result for it means it executed with an input that cannot
-    // be verified (fail closed); otherwise it is a violation once the path it began to name has left the image path.
-    if (r.streamed && !r.inputComplete) {
-      const p = partialFilePath(r.partialInput);
-      if (r.id && resultFor(transcript, r.id)) { bad.push(`unverifiable streamed Read input ${JSON.stringify(p?.path ?? '')}`); continue; }
-      if (!p) continue;
-      if (!p.complete) {
-        const absPrefix = norm(p.path.startsWith('/') || !callDir ? p.path : resolvePath(callDir, p.path));
-        if (p.path.includes('..') || (wantAbs && !wantAbs.startsWith(absPrefix))) bad.push(`${p.path}…`);
-        continue;
-      }
-      r = { ...r, input: { file_path: p.path } }; // the full path was streamed; judge it as a complete Read
+  // a complete path is SAFE (traversal, another directory or another file is outside); an unfinished one still could be
+  const safePath = fp => {
+    const base = fp.split('/').pop(), abs = norm(fp.startsWith('/') ? fp : (callDir ? resolvePath(callDir, fp) : fp));
+    return !fp.includes('..') && base === imageBasename && (callDir ? abs === wantAbs : true);
+  };
+  const safePrefix = p => {
+    if (p.includes('..')) return false;
+    if (!wantAbs) return true;
+    const abs = p.startsWith('/') ? p : resolvePath(callDir, p);
+    return wantAbs.startsWith(norm(abs)) || `/private${wantAbs}`.startsWith(abs);
+  };
+  const judge = form => {
+    if (form.placeholder) return { status: 'prefix', outside: [] };
+    const a = rawInputMembers(form.raw), outside = [];
+    for (const m of a.members) if (m.keyComplete && m.key === 'file_path' && m.kind === 'string') {
+      if (m.valueComplete ? !safePath(m.value) : !safePrefix(m.value)) outside.push(m.valueComplete ? m.value : `${m.value}…`);
     }
-    const fp = typeof r.input?.file_path === 'string' ? r.input.file_path : '';
-    const base = fp.split('/').pop();
-    const abs = norm(fp.startsWith('/') ? fp : (callDir ? resolvePath(callDir, fp) : fp));
-    const traversal = fp.includes('..');
-    const insideCallDir = callDir ? (abs === wantAbs) : (base === imageBasename);
-    if (traversal || !insideCallDir || base !== imageBasename) { bad.push(fp); continue; } // out-of-dir, traversal, or wrong file
-    const res = r.id ? resultFor(transcript, r.id) : null;
+    const [m] = a.members, LITERAL = '"file_path"';
+    if (form.complete || a.closed || a.malformed) {
+      const canonical = a.closed && !a.trailing && !a.malformed && a.members.length === 1 && m.keyRaw === LITERAL && m.kind === 'string' && m.valueComplete
+        && m.valueRaw === JSON.stringify(m.value) && (!callDir || m.value.startsWith('/')) && safePath(m.value);
+      return { status: canonical ? 'canonical' : 'nonconforming', outside };
+    }
+    const prefix = a.members.length === 0 || (a.members.length === 1 && (m.keyComplete ? m.keyRaw === LITERAL : LITERAL.startsWith(m.keyRaw))
+      && (m.kind === null || (m.kind === 'string' && (m.valueComplete ? safePath(m.value) : safePrefix(m.value)))));
+    return { status: prefix ? 'prefix' : 'unverified', outside };
+  };
+  // R7: a malformed line (duplicate members anywhere) holding a tool block or a non-image path is fatal; any other one
+  // leaves the session unverifiable (no receipt: held, never ok)
+  const malformed = transcriptMalformed(transcript, { callDir, imageBasename });
+  let good = 0; const bad = [...malformed.fatal], unverifiable = [...malformed.held];
+  // one invocation per tool-use id (a block with no id stands alone), with every raw form seen for it
+  const invocations = new Map();
+  for (const r of reads) {
+    const key = r.id ? `id:${r.id}` : Symbol('no id'), inv = invocations.get(key) || { id: r.id, forms: new Set() };
+    for (const f of readForms(r)) inv.forms.add(f);
+    invocations.set(key, inv);
+  }
+  for (const { id, forms } of invocations.values()) {
+    const judged = [...forms].map(judge), res = id ? resultFor(transcript, id) : null;
+    const outside = [...new Set(judged.flatMap(j => j.outside))];
+    if (outside.length) { bad.push(...outside); continue; }
+    if (judged.some(j => j.status === 'nonconforming')) { bad.push(`non-canonical Read input ${[...forms].map(f => JSON.stringify(String(f.raw).slice(0, 200))).join(' / ')}`); continue; }
+    if (judged.some(j => j.status === 'unverified') || !judged.some(j => j.status === 'canonical')) {
+      if (res) bad.push(`unverifiable Read input ${[...forms].map(f => JSON.stringify(String(f.raw).slice(0, 200))).join(' / ')}`);
+      continue;
+    }
     // A Read is delivered ONLY with a nonempty tool-use id AND a matching non-error tool_result carrying an
     // image content block. A missing result (or missing id) is NOT receipt.
-    const delivered = !!(r.id && res && !res.isError && res.hasImage);
-    if (delivered) good++;
+    if (res && !res.isError && res.hasImage) good++;
   }
-  const ok = good >= 1 && bad.length === 0;
-  return { ok, reads: reads.length, good, bad, reason: ok ? null : (bad.length ? `read target escaped confinement: ${bad.join(', ')}` : 'no successful Read of the exact image (no image content block)') };
+  const ok = good >= 1 && bad.length === 0 && unverifiable.length === 0;
+  return { ok, reads: reads.length, good, bad, unverifiable, reason: ok ? null : (bad.length ? `read target escaped confinement: ${bad.join(', ')}`
+    : unverifiable.length ? `unverifiable transcript evidence: ${unverifiable.join(', ')}` : 'no successful Read of the exact image (no image content block)') };
 }
 
 // ---- Review-5 (R5-1/R5-2): the ONE directory-aware Read-confinement validator for a preserved B1/B3 transcript, shared
@@ -283,26 +487,27 @@ export function verifyB1ImageRead(transcript, { callDir, imageBasename }) {
 //     that it was the controller's sandbox. The transcript is still searched for a PROVEN violation, which needs no
 //     trusted directory: Reads (or an interrupted Read's prefix) in more than one directory, a Read outside the
 //     CLI-reported cwd, traversal, or a wrong file. Evidence may only ever count against an attempt here.
-// Returns { status, reason, receipt }: 'not-applicable' (not B1/B3), 'no-read', 'confined', 'violation', 'unverifiable'.
+// Returns { status, reason, receipt }: 'not-applicable' (not B1/B3), 'no-read', 'confined', 'violation', 'unverifiable',
+// or (R7) 'malformed': a recorded directory, no violation, but a malformed line leaves the session unverifiable (held).
 export function verifyAttemptConfinement(text, { stage, callDir = null, imageBasename }) {
   if (stage !== 'B1' && stage !== 'B3') return { status: 'not-applicable', reason: null, receipt: null };
   const transcript = parseStreamTranscript(text), reads = transcript.toolUses.filter(u => u.name === 'Read');
-  if (!reads.length) return { status: 'no-read', reason: null, receipt: null };
+  if (!reads.length && !transcript.malformedLines.length) return { status: 'no-read', reason: null, receipt: null };
   const violation = receipt => ({ status: 'violation', reason: receipt.reason, receipt });
   if (callDir) {
     const receipt = verifyB1ImageRead(transcript, { callDir, imageBasename });
-    return receipt.bad.length ? violation(receipt) : { status: 'confined', reason: receipt.ok ? null : receipt.reason, receipt };
+    if (receipt.bad.length) return violation(receipt);
+    if (receipt.unverifiable.length) return { status: 'malformed', reason: receipt.reason, receipt };
+    return { status: 'confined', reason: receipt.ok ? null : receipt.reason, receipt };
   }
   const norm = p => String(p).replace(/^\/private(?=\/)/, '').replace(/\/+$/, '');
   const dirOf = p => norm(p.slice(0, p.lastIndexOf('/')) || '/');
   const anchors = new Set();
   const cwds = new Set(String(text).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e?.type === 'system' && e.subtype === 'init' && typeof e.cwd === 'string' ? [e.cwd] : []; } catch { return []; } }));
   if (cwds.size === 1) { const [cwd] = cwds; if (cwd.startsWith('/') && !cwd.split('/').includes('..')) anchors.add(norm(cwd)); }
-  for (const r of reads) {
-    const p = r.streamed && !r.inputComplete ? partialFilePath(r.partialInput) : null;
-    const fp = p ? (p.complete ? p.path : null) : (typeof r.input?.file_path === 'string' ? r.input.file_path : null);
-    if (fp && fp.startsWith('/') && !fp.includes('..')) anchors.add(dirOf(fp));
-  }
+  // Review-6 R6-S1: every complete file_path in every raw form (duplicates kept), not the parser's surviving value
+  for (const r of reads) for (const f of readForms(r)) for (const { path: fp, complete } of formPaths(f))
+    if (complete && fp.startsWith('/') && !fp.includes('..')) anchors.add(dirOf(fp));
   if (anchors.size > 1) return violation({ ok: false, reads: reads.length, good: 0, bad: [...anchors].sort(), reason: `Reads span more than one directory: ${[...anchors].sort().join(', ')}` });
   const receipt = verifyB1ImageRead(transcript, { callDir: anchors.size ? [...anchors][0] : null, imageBasename });
   if (receipt.bad.length) return violation(receipt);
@@ -431,6 +636,9 @@ export function verifyStageEvidence({ stage, workRunDir, completion, imageBasena
   if (!model || model !== expectedModel) errors.push(`model:${model || 'none'}`);
   const apiKeySource = transcript.init?.apiKeySource ?? null;
   if (apiKeySource !== 'none') errors.push(`apiKeySource:${apiKeySource || 'missing'}`);
+  // R7: a transcript line with a duplicate member anywhere is malformed evidence for every stage (never verified)
+  const malformed = transcriptMalformed(transcript, { callDir: confinement?.callDir ?? null, imageBasename: stage === 'B1' || stage === 'B3' ? imageBasename : null });
+  if (malformed.fatal.length || malformed.held.length) errors.push(`malformed-transcript:${[...malformed.fatal, ...malformed.held].join('|').slice(0, 200)}`);
   let conf = null;
   if ((stage === 'B1' || stage === 'B3') && confinement !== undefined) {
     conf = verifyAttemptConfinement(found.bytes, { stage, callDir: confinement?.callDir ?? null, imageBasename });
