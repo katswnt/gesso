@@ -11,6 +11,7 @@ import { pathToFileURL } from 'node:url';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { RUN_ROOT } from './lib/pass-b-calibration.mjs';
 import { AUDIT_WORKS, buildWorkInput } from './pass-b-shadow-audit.mjs';
+import { extractText, extractTextV2, extractJsonText } from './lib/pass-b-source-text.mjs';
 
 export const EXTRACTION_VERSION = 'passBSourceText/1';
 export const SELECTION_VERSION = 'passBAuditPassages/1';
@@ -45,42 +46,10 @@ export async function snapshot(url, SNAP = SNAPSHOT_DIR) {
   return meta;
 }
 
-// ---- deterministic HTML -> text ----
-const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', hellip: '…', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', eacute: 'é', egrave: 'è', agrave: 'à', ccedil: 'ç', ouml: 'ö', uuml: 'ü', auml: 'ä' };
-export function extractText(html) {
-  let t = String(html)
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|noscript|svg|nav|header|footer|form|template|iframe)\b[\s\S]*?<\/\1\s*>/gi, ' ')
-    .replace(/<sup\b[^>]*class="[^"]*reference[^"]*"[\s\S]*?<\/sup>/gi, '') // Wikipedia citation markers
-    .replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr|\/section|\/article|\/blockquote|\/dd|\/dt)\b[^>]*>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&([a-z]+);/gi, (m, n) => ENT[n.toLowerCase()] ?? m);
-  return t.split('\n').map(l => l.replace(/[ \t\r\f\v]+/g, ' ').trim()).filter(l => l.length >= 3).join('\n').normalize('NFC');
-}
-
-// passBSourceText/2: /1 replaced every tag with a space, which left spaces before punctuation and inside quotes
-// ("British Museum , where", "\" Theses on ... History \""), so correct verbatim quotes failed to match. /2 is /1 plus
-// that repair, re-derived from the preserved raw bytes. /1 files and the evidence built from them are unchanged.
+// ---- deterministic HTML/JSON -> text: moved unchanged to lib/pass-b-source-text.mjs (VSD-092), re-exported here ----
+export { extractText, extractTextV2, extractJsonText };
+// passBSourceText/2: /1 plus the spacing repair before punctuation and inside quotes (see the lib).
 export const EXTRACTION_VERSION_2 = 'passBSourceText/2';
-export function extractTextV2(html) {
-  return extractText(html).split('\n').map(l => l
-    .replace(/\s+([,.;:!?)\]}»”’])/g, '$1').replace(/([(\[{«“‘])\s+/g, '$1')
-    .replace(/"\s+([^"]*?)\s+"/g, '"$1"')).join('\n');
-}
-// Museum API records (e.g. Art Institute of Chicago) come back as JSON: keep every string field as "key: value",
-// with any embedded HTML converted by the /2 extractor. Deterministic.
-export function extractJsonText(raw) {
-  const lines = [];
-  const walk = (v, key) => {
-    if (typeof v === 'string') { const t = /<[a-z!/]/i.test(v) ? extractTextV2(v).replace(/\n+/g, ' ') : v.replace(/\s+/g, ' ').trim(); if (t.length >= 3) lines.push(`${key}: ${t}`); }
-    else if (Array.isArray(v)) v.forEach(x => walk(x, key));
-    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, k);
-  };
-  walk(JSON.parse(raw), 'record');
-  return lines.join('\n').normalize('NFC');
-}
 export function snapshotTextV2(key, snapDir = SNAP) {
   const meta = JSON.parse(readFileSync(join(snapDir, `${key}.meta.json`), 'utf8'));
   const raw = readFileSync(join(snapDir, `${key}.raw`));

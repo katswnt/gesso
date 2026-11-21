@@ -364,6 +364,12 @@ export function buildStageCommand({ stage, model = CALIBRATION_MODEL, promptText
   return { bin: 'claude', argv, env, toolsEnforced: toolSet === '' ? 'none' : toolSet, imageAttached: !!imageFile, imageFile, wireSchemaSha256: sha256(stableJson(schema)) };
 }
 
+// ---- Exact effective prompt text per stage (the base prompt + the only per-work dynamic part). Shared by the live
+// orchestration and every resume/import verifier, so a completion's promptHash is always recomputed from one rule. ----
+export const b1PromptText = (base, imageFile) => `${base}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile} to view the artwork, then inventory ONLY what you actually see. If Read fails or returns no image, set imageFitness.ok=false and do not invent content.`;
+export const b2PromptText = (base, b2in, legacyInput) => `${base}\n\nCATALOG+SIGNALS:\n${JSON.stringify(b2in)}\n\nEXISTING CONTENT:\n${JSON.stringify(legacyInput)}`;
+export const b3PromptText = (base, imageFile, requests) => `${base}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(requests)}`;
+
 // ---- B1 → B2 boundary: only allowlisted signals cross (reuses the vetted buildB2Input). ----
 export function b2InputFor(workId, catalog, b1Body) {
   return buildB2Input({ workId, trustedCatalog: catalog, b1: b1Body });
@@ -499,7 +505,10 @@ export function syntheticFixture() {
 // never corrupts other works. `spawnStage(stage,{argv,imageFile})` returns raw stdout; `capture(...)`
 // validates+persists and throws on an invalid body; `hasCompletion(stage)` supports resume. ----
 // model: the model of the collector's ACTIVE execution epoch (VSD-054); the default keeps calibration callers on 4.6.
-export async function runWorkStages({ workId, catalog, legacy = null, imgSha256, ext, prompts, runtimeVersion, spawnStage, capture, loadCompletion = () => null, skipB4 = false, model = CALIBRATION_MODEL }) {
+// plans (VSD-092 research stopgap): optional { b2Plan(b1, legacy), b3Plan(b2), b2Context } overriding the banked
+// B2 trigger, the B3 dispatch rule and the B2 validation contract. Omitted = the banked behavior, unchanged.
+export async function runWorkStages({ workId, catalog, legacy = null, imgSha256, ext, prompts, runtimeVersion, spawnStage, capture, loadCompletion = () => null, skipB4 = false, model = CALIBRATION_MODEL, plans = null }) {
+  const planB2 = plans?.b2Plan || b2Plan, planB3 = plans?.b3Plan || b3Plan, b2Context = plans?.b2Context || {};
   // Calibration: B1 (image, Read tool) → CONDITIONAL B2 (no-image research) → CONDITIONAL B3 (image, only on
   // B2 targeted requests) → compact B4 synthesis (no image, only when B2 ran).
   const status = { B1: 'pending', B2: 'not-requested', B3: 'not-requested', B4: 'not-requested' };
@@ -550,26 +559,24 @@ export async function runWorkStages({ workId, catalog, legacy = null, imgSha256,
   };
   try {
     // B1 prompt explicitly names the confined image file for the Read tool (the only per-work dynamic part).
-    const b1Prompt = `${prompts.B1}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile} to view the artwork, then inventory ONLY what you actually see. If Read fails or returns no image, set imageFitness.ok=false and do not invent content.`;
-    bodies.B1 = await run('B1', { imageFile, promptText: b1Prompt });
+    bodies.B1 = await run('B1', { imageFile, promptText: b1PromptText(prompts.B1, imageFile) });
   } catch (e) { status.B1 = `failed:${e.message.slice(0, 80)}`; return { status, bodies, retries }; }
-  const b2 = b2Plan(bodies.B1, legacy);
+  const b2 = planB2(bodies.B1, legacy);
   if (!b2.run) return { status, bodies, retries }; // no research needed and no legacy to check -> stop after B1
   status.B2 = 'requested';
   try {
     const b2in = b2InputFor(workId, catalog, bodies.B1);
     // B2 gets allowlisted image signals AND the existing site content to audit — but no image and no image prose.
     // One validation-only retry (owner-authorized): a normally-completed B2 that fails strict validation reruns once.
-    bodies.B2 = await run('B2', { promptText: `${prompts.B2}\n\nCATALOG+SIGNALS:\n${JSON.stringify(b2in)}\n\nEXISTING CONTENT:\n${JSON.stringify(legacyInput)}`, context: { evidenceIds: b2in.visibleSignals.map(s => s.evidenceId) }, validationRetries: 1 });
+    bodies.B2 = await run('B2', { promptText: b2PromptText(prompts.B2, b2in, legacyInput), context: { evidenceIds: b2in.visibleSignals.map(s => s.evidenceId), ...b2Context }, validationRetries: 1 });
   } catch (e) { status.B2 = `failed:${e.message.slice(0, 80)}`; return { status, bodies, retries }; } // B2 failed after retry: retain B1, needs attention
   // B3: conditional targeted second look — ONLY the concrete visual questions B2 raised (image, Read tool).
-  const b3 = b3Plan(bodies.B2);
+  const b3 = planB3(bodies.B2);
   if (b3.dropped) status.b3Dropped = b3.dropped; // no silent cap: surface requests dropped by MAX_B3_REQUESTS
   if (b3.run) {
     status.B3 = 'requested';
     try {
-      const b3Prompt = `${prompts.B3}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(b3.requests)}`;
-      bodies.B3 = await run('B3', { imageFile, promptText: b3Prompt, context: { requestIds: b3.requestIds } });
+      bodies.B3 = await run('B3', { imageFile, promptText: b3PromptText(prompts.B3, imageFile, b3.requests), context: { requestIds: b3.requestIds } });
     } catch (e) { status.B3 = `failed:${e.message.slice(0, 80)}`; } // a failed second look does not block synthesis
   }
   // --through-b3 / --skip-b4 execution mode: bank B1–B3 tonight; leave B4 for tomorrow's corrected run.

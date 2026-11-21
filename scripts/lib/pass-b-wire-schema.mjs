@@ -5,7 +5,7 @@
 // third conformed), so an over-cap field no longer burns a whole attempt. Cross-references, uniqueness and
 // semantic rules stay out; the strict JS validators in vision-content-schema.mjs remain the final authority.
 // Enums are imported from the validator module so the two contracts cannot drift.
-import { ROLES, EVIDENCE_AXES, QUESTION_TOPICS, IMAGE_STATES, CONTENT_COMPONENTS, DISPOSITIONS } from './vision-content-schema.mjs';
+import { ROLES, EVIDENCE_AXES, QUESTION_TOPICS, IMAGE_STATES, CONTENT_COMPONENTS, DISPOSITIONS, B2_CONTRACT_STOPGAP } from './vision-content-schema.mjs';
 
 const str = { type: 'string' }, bool = { type: 'boolean' }, num = { type: 'number' }, int = { type: 'integer' };
 const enumOf = (...v) => ({ type: 'string', enum: v });
@@ -117,18 +117,23 @@ export const B4_DELTA = obj({
 // VSD-057: the per-work B2 schema pins guideAnswers[].evidenceRef to the exact visible-signal ids B2 was given
 // (the validator's evidenceSet), so an invented or B1-delight reference is bounced in-call like a length cap.
 // Every other stage, and B2 without ids, uses the static schema.
+// VSD-092: the research-stopgap B2 contract has no guide-answer minimum (the validator's b2GuideAnswersMin).
+// The banked B2 wire schema, its hash and every banked execution epoch are unchanged.
+export const B2_STOPGAP = { ...B2, properties: { ...B2.properties, guideAnswers: list(guideAnswer, 20) } };
 export function wireSchemaFor(stage, context = {}) {
-  if (stage !== 'B2' || !Array.isArray(context.evidenceIds)) return WIRE_SCHEMAS[stage];
+  const base = stage === 'B2' && context.b2Contract === B2_CONTRACT_STOPGAP ? B2_STOPGAP : WIRE_SCHEMAS[stage];
+  if (stage !== 'B2' || !Array.isArray(context.evidenceIds)) return base;
   const ids = [...new Set(context.evidenceIds)].sort();
   const evidenceRef = ids.length ? nullable({ type: 'string', enum: ids }) : { type: 'null' };
   const guide = { ...guideAnswer, properties: { ...guideAnswer.properties, evidenceRef } };
-  return { ...B2, properties: { ...B2.properties, guideAnswers: { ...B2.properties.guideAnswers, items: guide } } };
+  return { ...base, properties: { ...base.properties, guideAnswers: { ...base.properties.guideAnswers, items: guide } } };
 }
 export const WIRE_SCHEMA_CONTRACT = 'passBWireSchema/2-capped';
 
 // B4's provider schema is now the delta (the model's actual output). The full-record shape lives only in the
 // strict JS validator, run by the controller on the assembled result.
 export const WIRE_SCHEMAS = Object.freeze({ B1, B2, B3, B4: B4_DELTA });
+export const WIRE_SCHEMAS_STOPGAP = Object.freeze({ B1, B2: B2_STOPGAP, B3, B4: B4_DELTA });
 export const WIRE_B4_FULL = B4; // retained for reference/tests; not sent to the model anymore
 
 // Minimal JSON-Schema-subset validator (type, enum, required, additionalProperties:false, properties, items,

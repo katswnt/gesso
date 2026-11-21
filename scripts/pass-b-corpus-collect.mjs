@@ -17,14 +17,22 @@ import { captureStageCompletion, verifyCapturedStage, completionKey } from './li
 import { makePacer, recordObservation } from './lib/pass-b-pacing.mjs';
 import { remoteRoot, persist as persistRemote, assertExecutionLease, executionBudgetPath } from './lib/pass-b-remote-evidence.mjs';
 import { validateStageBody, validateStageCompletion } from './lib/vision-content-schema.mjs';
-import { stagePrompts } from './lib/pass-b-prompts.mjs';
+import { stagePrompts, stopgapStagePrompts, RESEARCH_STOPGAP_VERSION } from './lib/pass-b-prompts.mjs';
 import { pipelineWide, setAsideBudget, setAsideRecord, validSetAside } from './lib/pass-b-set-aside.mjs';
-import { WIRE_SCHEMAS, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs';
+import { WIRE_SCHEMAS, WIRE_SCHEMAS_STOPGAP, WIRE_SCHEMA_CONTRACT } from './lib/pass-b-wire-schema.mjs';
+import { B2_CONTRACT_STOPGAP } from './lib/vision-content-schema.mjs';
+import { SOURCE_TEXT_EXTRACTION } from './lib/pass-b-source-text.mjs';
+import {
+  researchVersionFromEnv, b2PlanStopgap, b3DispatchPlan, loadB3DispatchReviews, appendB3DispatchReviews, deriveCoverage,
+  captureTargets, captureSources, captureIsTransient, buildCaptureSidecar, verifyCaptureSidecar, inspectBankedWork, writeImport,
+  readImport, verifyImportedB1, researchStatus, classifyHold, SOURCE_CAPTURE_VERSION,
+} from './lib/pass-b-research-stopgap.mjs';
 import {
   RUN_ROOT, CALIBRATION_MODEL, IMAGE_TRANSPORT_VERSION, VALIDATION_CONTRACT_VERSION,
   trustedCatalog, snapshotLegacy, runWorkStages, neutralImageFile, parseStreamTranscript, transcriptFinal,
   verifyB1ImageRead, verifyB2WebEvents, primaryModelFromEnvelope, answeringModel,
   legacyContentInput, b2InputFor, b2Plan, b3Plan, producerEvidence, verifyStageEvidence, findTranscriptBySha,
+  b1PromptText, b2PromptText, b3PromptText,
 } from './lib/pass-b-calibration.mjs';
 
 export const COLLECTOR_VERSION = 'passBCorpusCollector/4';
@@ -33,7 +41,13 @@ export const EVIDENCE_CONTRACT_VERSION = 'passBCorpusCollector/2';
 const LANES = 4;
 const BROWSER = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36';
 const execFileP = promisify(execFile);
-const prompts = stagePrompts();
+// VSD-092 research stopgap: PASS_B_RESEARCH_VERSION=stopgap-1 selects the corrected B1/B2/B3 format, which has its
+// OWN run identity and directory. Unset = the banked contract, byte-identical to before (its run id, prompts, epochs,
+// ledger and done state never change). The stopgap run imports compatible banked B0/image and B1 artifacts.
+export const RESEARCH_VERSION = researchVersionFromEnv();
+const STOPGAP = RESEARCH_VERSION === 'stopgap-1';
+const BANKED_PROMPTS = stagePrompts();
+const prompts = STOPGAP ? stopgapStagePrompts() : BANKED_PROMPTS;
 const PROMPT_HASHES_B0B3 = { B1: sha256(prompts.B1), B2: sha256(prompts.B2), B3: sha256(prompts.B3) }; // B4 EXCLUDED
 // Hash the FULL contract directly (calibrationContract/contractHash intentionally ignores non-calibration
 // fields like model/broker, so we must not route through it here — item 1 requires binding all of them).
@@ -49,8 +63,9 @@ export const HISTORICAL_MODEL = CALIBRATION_MODEL; // 'claude-sonnet-4-6': attem
 export const COLLECTION_MODEL = 'claude-sonnet-5-5';
 export const ALLOWED_COLLECTION_MODELS = Object.freeze(['claude-sonnet-4-6', 'claude-sonnet-5-5']);
 export const epochModel = epoch => epoch?.policy?.model ?? HISTORICAL_MODEL;
-export function runIdFor({ promptHashes, model = CALIBRATION_MODEL, collector = EVIDENCE_CONTRACT_VERSION }) {
-  return computeRunId({ scope: 'corpus-through-b3', collector, prompts: { B1: promptHashes.B1, B2: promptHashes.B2, B3: promptHashes.B3 }, model, broker: BROKER_POLICY_VERSION, transport: IMAGE_TRANSPORT_VERSION, validation: VALIDATION_CONTRACT_VERSION });
+// `research` (VSD-092) joins the identity only for a non-banked research version, so the banked id is unchanged.
+export function runIdFor({ promptHashes, model = CALIBRATION_MODEL, collector = EVIDENCE_CONTRACT_VERSION, research = null }) {
+  return computeRunId({ scope: 'corpus-through-b3', collector, prompts: { B1: promptHashes.B1, B2: promptHashes.B2, B3: promptHashes.B3 }, model, broker: BROKER_POLICY_VERSION, transport: IMAGE_TRANSPORT_VERSION, validation: VALIDATION_CONTRACT_VERSION, ...(research ? { research } : {}) });
 }
 // Queue is derived from verified terminal states: priority order minus done minus held (no fragile cursor).
 export function computeQueue(order, { eligibleSet, doneSet, heldSet }) { return order.filter(id => eligibleSet.has(id) && !doneSet.has(id) && !heldSet.has(id)); }
@@ -61,8 +76,13 @@ export function isUsageInterrupted(status) { return Object.values(status || {}).
 export function isLeaseInterrupted(status) { return Object.values(status || {}).some(s => typeof s === 'string' && /stage [A-Z0-9]+ leased by another collector/i.test(s)); }
 export function isRecoverableHeldReason(reason) { return !!reason && /stage [A-Z0-9]+ leased by another collector/i.test(String(reason)); }
 export function heldToRequeue(heldIds, heldReasons = {}) { return (heldIds || []).filter(id => isRecoverableHeldReason(heldReasons[id])); }
-const RUN_ID = runIdFor({ promptHashes: { ...PROMPT_HASHES_B0B3, B4: sha256(prompts.B4) } });
+const RUN_ID = runIdFor({ promptHashes: { ...PROMPT_HASHES_B0B3, B4: sha256(prompts.B4) }, ...(STOPGAP ? { research: RESEARCH_STOPGAP_VERSION } : {}) });
 const RUN_DIR = join(RUN_ROOT, RUN_ID);
+// The banked run (read-only source for stopgap imports): always the banked prompts' identity.
+export const BANKED_RUN_ID = runIdFor({ promptHashes: Object.fromEntries(Object.entries(BANKED_PROMPTS).map(([k, v]) => [k, sha256(v)])) });
+export const BANKED_RUN_DIR = join(RUN_ROOT, BANKED_RUN_ID);
+// A fresh B1 at the new prompt version instead of the banked import: owner-subset runs only (the canary), never bulk.
+const FRESH_B1 = STOPGAP && process.env.PASS_B_RESEARCH_FRESH_B1 === '1';
 export const CORPUS_RUN_ID = RUN_ID, CORPUS_RUN_DIR = RUN_DIR; // read-only source for the window B4 runner
 const IMGS_DIR = join(RUN_DIR, 'imgs');
 const IMAGE_INDEX = join(IMGS_DIR, 'image-index.json');
@@ -82,7 +102,7 @@ class StageLeaseBusyError extends Error {}
 class TerminalAttemptError extends Error {}
 export class OperationalPauseError extends Error {}
 export class RuntimePauseError extends OperationalPauseError {}
-export const corpusWorkEvidencePaths = workRunDir => ['b0-prep.json', 'attempts', 'completions', 'raw'].map(p => join(workRunDir, p));
+export const corpusWorkEvidencePaths = workRunDir => ['b0-prep.json', 'attempts', 'completions', 'raw', 'imports', 'research'].map(p => join(workRunDir, p));
 const USAGE_MARKER = /usage limit|spend limit|rate.?limit|quota/i;
 
 const processIsAlive = (pid) => {
@@ -171,11 +191,12 @@ export function classifySpawn({ usageLimit, apiKeySource, model, expectedModel, 
 export function attemptFilename(stage, seq, stdout) { return `${stage.toLowerCase()}-${String(seq).padStart(6, '0')}-${sha256(String(stdout)).slice(0, 8)}.transcript.jsonl`; }
 
 // ---- reconstruct the exact effective prompt (for promptHash verification on reuse/migration) ----
-export function effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1body, b2body, b3body }) {
+// b3Requests: the exact dispatched list (VSD-092 stopgap: the inspected-review plan); default = the banked b3Plan.
+export function effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1body, b2body, b3Requests = null }) {
   const legacyInput = legacyContentInput(legacy);
-  if (stage === 'B1') return `${prompts.B1}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile} to view the artwork, then inventory ONLY what you actually see. If Read fails or returns no image, set imageFitness.ok=false and do not invent content.`;
-  if (stage === 'B2') return `${prompts.B2}\n\nCATALOG+SIGNALS:\n${JSON.stringify(b2InputFor(id, catalog, b1body))}\n\nEXISTING CONTENT:\n${JSON.stringify(legacyInput)}`;
-  if (stage === 'B3') return `${prompts.B3}\n\nThe working directory contains exactly one image file: ./${imageFile}\nCall the Read tool on ./${imageFile}, then answer ONLY these targeted requests.\n\nLOCATE:\n${JSON.stringify(b3Plan(b2body).requests)}`;
+  if (stage === 'B1') return b1PromptText(prompts.B1, imageFile);
+  if (stage === 'B2') return b2PromptText(prompts.B2, b2InputFor(id, catalog, b1body), legacyInput);
+  if (stage === 'B3') return b3PromptText(prompts.B3, imageFile, b3Requests ?? b3Plan(b2body).requests);
   return null;
 }
 
@@ -194,7 +215,23 @@ export const SCHEDULE_HOURS = process.env.PASS_B_HOURS === 'all-day' ? 'all-day'
 // Medium, Hard, Impossible) under the same subscription pacing, per-firing cap and gates.
 export const SCHEDULE_SCOPE = process.env.PASS_B_SCOPE === 'corpus' ? 'corpus' : 'window';
 const SCOPES = { window: 'rolling-30-days-through-b3', corpus: 'rolling-30-days-then-priority-bands-through-b3' };
-export const scopeOrder = (pool, daily, today, scope = SCHEDULE_SCOPE) => buildPriorityQueue(pool, daily, { today, windowOnly: scope !== 'corpus' });
+export const scopeOrder = (pool, daily, today, scope = SCHEDULE_SCOPE) => (STOPGAP ? stopgapPriorityQueue : buildPriorityQueue)(pool, daily, { today, windowOnly: scope !== 'corpus' });
+// VSD-092 (design-2 §2.2) queue for the research stopgap: the 30-day window first, date-first, exactly as before (its
+// works were operationally done under the banked contract, so these are the daily coverage repairs). After the window,
+// a balanced selection instead of exhausting one band: round-robin across Easy/Medium/Hard/Impossible/other, keeping
+// each tier's banked order (top-fame first, region|host|medium rotation). Fame metadata is not research quality.
+export function stopgapPriorityQueue(pool, daily, { today, windowOnly = true }) {
+  const window = buildPriorityQueue(pool, daily, { today, windowOnly: true });
+  if (windowOnly) return window;
+  const poolIds = new Set(pool.map(p => p.id)), byQ = new Map(pool.map(p => [normQ(p.id), p.id]));
+  const tierOf = new Map();
+  for (const t of ['easy', 'medium', 'hard', 'impossible']) for (const raw of daily[t] || []) { const r = poolIds.has(raw) ? raw : byQ.get(normQ(raw)); if (r && !tierOf.has(r)) tierOf.set(r, t); }
+  const inWindow = new Set(window), groups = new Map(['easy', 'medium', 'hard', 'impossible', 'other'].map(t => [t, []]));
+  for (const id of buildPriorityQueue(pool, daily, { today, windowOnly: false })) if (!inWindow.has(id)) groups.get(tierOf.get(id) || 'other').push(id);
+  const out = [...window], lists = [...groups.values()];
+  for (let i = 0, live = true; live; i++) { live = false; for (const l of lists) if (i < l.length) { out.push(l[i]); live = true; } }
+  return out;
+}
 export function pacificClock(now = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: SCHEDULE_TZ,
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
@@ -374,8 +411,14 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   const imageFile = neutralImageFile(b0.image?.imgSha256, b0.image?.ext);
   if (!derivativeMatches(join(runDir, 'imgs', imageFile), b0.image.imgSha256)) throw new Error(`${id}: image hash mismatch`);
   const attemptsDir = join(workDir, 'attempts');
-  const contexts = stage => stage === 'B2' ? { evidenceIds: b2InputFor(id, catalog, bodies.B1).visibleSignals.map(s => s.evidenceId) }
-    : stage === 'B3' ? { requestIds: b3Plan(bodies.B2).requestIds } : {};
+  // VSD-092: the stopgap B2 contract (no answer minimum) and the inspected-review B3 dispatch plan.
+  const reviews = STOPGAP ? loadB3DispatchReviews(runDir, RUN_ID) : null;
+  const planB3 = b2 => STOPGAP ? b3DispatchPlan(id, b2, reviews) : b3Plan(b2);
+  const contexts = stage => stage === 'B2' ? { evidenceIds: b2InputFor(id, catalog, bodies.B1).visibleSignals.map(s => s.evidenceId), ...(STOPGAP ? { b2Contract: B2_CONTRACT_STOPGAP } : {}) }
+    : stage === 'B3' ? { requestIds: planB3(bodies.B2).requestIds } : {};
+  const completionMeta = {};
+  let b1Imported = false;
+  const importManifest = STOPGAP ? readImport(workDir) : null;
   // VSD-054: the model a completion must show is the model of the epoch its transcript was reserved under; a
   // transcript with no reservation (pre-epoch history) uses the explicit historical 4.6 rule.
   const workEpochs = executionEpochs(runDir);
@@ -390,11 +433,16 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   for (const stage of ['B1', 'B2', 'B3']) {
     const name = `${stage.toLowerCase()}-${completionKey(stage, id)}.json`;
     const found = files(join(workDir, 'completions')).filter(f => f.startsWith(`${stage.toLowerCase()}-`));
+    if (stage === 'B1' && importManifest?.b1) { // VSD-092: banked B1 reused from verified copies with its own provenance
+      if (found.length) throw new Error(`${id}: ambiguous B1 (local completion and imported banked B1)`);
+      bodies.B1 = verifyImportedB1({ workDir, runId: RUN_ID, id, catalog, legacy, b0, bankedB1Prompt: BANKED_PROMPTS.B1, manifest: importManifest }).body;
+      b1Imported = true; continue;
+    }
     if (!found.length) continue;
     if (found.length !== 1 || found[0] !== name) throw new Error(`${id}: ambiguous ${stage} completion`);
     const path = join(workDir, 'completions', name), c = readJson(path);
     if (c.stage !== stage) throw new Error(`${id}: completion stage mismatch`);
-    const promptHash = sha256(effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1body: bodies.B1, b2body: bodies.B2 }));
+    const promptHash = sha256(effectivePromptFor(stage, { id, catalog, legacy, imageFile, b1body: bodies.B1, b2body: bodies.B2, b3Requests: stage === 'B3' ? planB3(bodies.B2).requests : null }));
     const expectedModel = expectedModelFor(stage, c.transcriptSha256);
     const v = validateStageCompletion(c, { ...contexts(stage), trusted: { workId: id, imgSha256: b0.image.imgSha256, promptHash, brokerPolicyVersion: BROKER_POLICY_VERSION, imageTransportVersion: IMAGE_TRANSPORT_VERSION }, producer: producerEvidence(stage, { model: expectedModel, runtimeVersion: c.producer?.runtimeVersion }) });
     if (!v.ok) throw new Error(`${id}: invalid ${stage} completion: ${v.errors.join(',')}`);
@@ -414,6 +462,7 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
     const tr = parseStreamTranscript(findTranscriptBySha(workDir, stage, c.transcriptSha256).bytes);
     if (stableJson(transcriptFinal(tr)?.structured_output) !== stableJson(c.body)) throw new Error(`${id}: transcript/body mismatch`);
     completionTranscripts.add(c.transcriptSha256);
+    completionMeta[stage] = { bodySha256: c.bodySha256, transcriptSha256: c.transcriptSha256 };
     bodies[stage] = c.body;
   }
   let attempts = 0, maxSeq = 0, fatal = null, pause = null, b2ValidationFailures = 0, b2LastInterrupted = false;
@@ -524,13 +573,35 @@ export function inspectWork({ runDir, id, catalog, legacy, priorDir = join(RUN_R
   const pendingB2Retry = b2ValidationFailures === 1 && b2LastInterrupted && !bodies.B2 &&
     terminalReasons.every(r => r.startsWith('B2:invalid body:'));
   if (pendingB2Retry) terminalReasons.length = 0;
-  const done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
+  let done, research;
+  if (STOPGAP) {
+    // Stopgap completion: B2 for every usable work, plus its coverage and literal-capture sidecars, plus B3 only for
+    // requests an inspected review dispatched. Valid stage JSON alone is never "done".
+    const b2p = b2PlanStopgap(bodies.B1), b3p = bodies.B2 ? planB3(bodies.B2) : null;
+    const covPath = join(workDir, 'research', 'coverage.json'), capPath = join(workDir, 'research', 'source-capture.json');
+    let coverage = null, capture = null;
+    if (existsSync(covPath)) {
+      if (!bodies.B2) throw new Error(`${id}: coverage sidecar without a verified B2`);
+      coverage = readJson(covPath);
+      if (stableJson(coverage) !== stableJson(deriveCoverage(bodies.B2))) throw new Error(`${id}: coverage sidecar does not match its B2`);
+    }
+    if (existsSync(capPath)) {
+      if (!bodies.B2) throw new Error(`${id}: source capture without a verified B2`);
+      capture = readJson(capPath);
+      const v = verifyCaptureSidecar(capture, { runId: RUN_ID, workId: id, b2Completion: completionMeta.B2 });
+      if (!v.ok) throw new Error(`${id}: source capture sidecar invalid: ${v.errors.join(',')}`);
+    }
+    done = !!bodies.B1 && (!b2p.run || (!!bodies.B2 && !!coverage && !!capture && (!b3p.run || !!bodies.B3)));
+    research = { b1Imported, importManifest: !!importManifest, b2Planned: b2p.run, files: { coverage: !!coverage, capture: !!capture },
+      b2Completion: completionMeta.B2 || null, b3Pending: b3p?.pending || [],
+      status: researchStatus({ done, held: !done && terminalReasons.length > 0, b2Planned: b2p.run, bodies, coverage, capture, b3: b3p }) };
+  } else done = !!bodies.B1 && (!b2Plan(bodies.B1, legacy).run || (!!bodies.B2 && (!b3Plan(bodies.B2).run || !!bodies.B3)));
   const uniqueReasons = [...new Set(terminalReasons)];
   // Grant candidate: not done, no fatal/pause, no grant yet, and EVERY terminal reason is a pre-wire invalid body.
   const formatEligible = !done && !fatal && !pause && !retryGrant && formatFailures.length > 0 && uniqueReasons.length > 0 &&
     uniqueReasons.every(r => /^B[123]:invalid body: /.test(r)) ? formatFailures : null;
   return { id, bodies, repairs, done, attempts, maxSeq, fatal, pause, pendingB2Retry, b2ValidationFailures, formatEligible,
-    formatRetryGranted: !!retryGrant,
+    formatRetryGranted: !!retryGrant, ...(STOPGAP ? { research } : {}),
     terminalReasons: done ? [] : [...new Set(terminalReasons)], cliVersions: [...cliVersions] };
 }
 export function inspectCorpus({ runDir = RUN_DIR, pool, legacyOf, ledger = readLedger(runDir), priorDir }) {
@@ -750,8 +821,12 @@ async function prepImage(id, imgUrl, catalog, legacy, imageIndex) {
 
 // VSD-057: the capped B1–B3 provider schemas (and the per-work B2 evidenceRef enum generator) are part of the
 // execution policy. Earlier epochs have no wire fields; adding them needs a reviewed --rebind-contract epoch.
+const WIRE = STOPGAP ? WIRE_SCHEMAS_STOPGAP : WIRE_SCHEMAS;
 export const WIRE_POLICY = Object.freeze({ wireSchema: WIRE_SCHEMA_CONTRACT,
-  wireSchemaSha256: sha256(stableJson({ B1: WIRE_SCHEMAS.B1, B2: WIRE_SCHEMAS.B2, B3: WIRE_SCHEMAS.B3 })) });
+  wireSchemaSha256: sha256(stableJson({ B1: WIRE.B1, B2: WIRE.B2, B3: WIRE.B3 })) });
+// VSD-092: the stopgap run's epochs also bind its research contract (absent from banked epochs, which are unchanged).
+const RESEARCH_POLICY = STOPGAP ? Object.freeze({ research: RESEARCH_STOPGAP_VERSION, b2Contract: B2_CONTRACT_STOPGAP, sourceCapture: SOURCE_CAPTURE_VERSION,
+  sourceText: SOURCE_TEXT_EXTRACTION, b3Dispatch: 'inspected-review-only', bankedImportFrom: BANKED_RUN_ID }) : {};
 const SCHEDULE_WINDOWS = { night: { startWindow: '00:00–08:30', finishBy: '09:00' }, 'all-day': { startWindow: 'all day (owner 2026-10-17)', finishBy: 'none' } };
 const SCHEDULE_FIELDS = ['timeZone', 'startWindow', 'finishBy', 'scope'];
 const withoutSchedule = p => Object.fromEntries(Object.entries(p).filter(([k]) => !SCHEDULE_FIELDS.includes(k)));
@@ -759,7 +834,7 @@ export function executionPolicy(runtimeVersion, model = COLLECTION_MODEL) {
   if (!/^\d+\.\d+\.\d+$/.test(runtimeVersion || '')) throw new Error('explicit Claude Code version required');
   if (!ALLOWED_COLLECTION_MODELS.includes(model)) throw new Error(`model ${model} is not an allowed collection model`);
   return { version: COLLECTOR_VERSION, evidenceRunId: RUN_ID, runtimeVersion, model,
-    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY,
+    promptHashes: PROMPT_HASHES_B0B3, validation: VALIDATION_CONTRACT_VERSION, ...WIRE_POLICY, ...RESEARCH_POLICY,
     ...(LANE === 'cloud'
       ? { scope: 'cloud-credit-beyond-window-through-b3', startWindow: 'none (cloud credits, VSD-047)', finishBy: 'none', lane: 'cloud' }
       : { scope: SCOPES[SCHEDULE_SCOPE], timeZone: SCHEDULE_TZ, ...SCHEDULE_WINDOWS[SCHEDULE_HOURS] }),
@@ -936,6 +1011,36 @@ export function rebindSchedule(runDir, review) {
   if (review.toPolicySha256 !== sha256(stableJson(policy))) throw new Error('schedule review target policy binding mismatch');
   return appendEpoch(runDir, policy, previous, review);
 }
+// ---- VSD-092 research stopgap: banked import and post-B2 sidecars ----
+// Import a compatible banked B0/image (+ B1 unless a fresh B1 was requested) once, before B0, with a migration receipt.
+// The banked run is only read. A work with no compatible banked evidence simply runs the normal B0/B1 path.
+export function importBanked({ id, workRunDir, catalog, legacy, bankedRunDir = BANKED_RUN_DIR, imgsDir = IMGS_DIR, now = new Date() }) {
+  const b0Path = join(workRunDir, 'b0-prep.json');
+  if (existsSync(b0Path) || readImport(workRunDir)) return null;
+  const banked = inspectBankedWork({ bankedRunDir, bankedRunId: BANKED_RUN_ID, id, catalog, legacy, bankedB1Prompt: BANKED_PROMPTS.B1 });
+  if (!banked.ok) return null;
+  const manifest = writeImport({ workDir: workRunDir, imgsDir, runId: RUN_ID, bankedRunId: BANKED_RUN_ID, id, catalog, legacy, banked, freshB1: FRESH_B1, now });
+  writeFileSync(b0Path, `${JSON.stringify({ version: 'passBCalibrationB0/1', work: { id }, trustedCatalog: catalog, legacy, image: banked.b0.image }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  return manifest;
+}
+// After a verified B2: write the derived coverage sidecar, then capture literal source text. Returns true when every
+// capture attempt failed transiently (network outage): nothing is written and the work is retried next session.
+export async function writeResearchSidecars({ id, workRunDir, catalog, legacy, runDir = RUN_DIR, fetchDoc = (url, o) => broker.fetchSourceDocument(url, { ...o, userAgent: BROWSER }), now = () => new Date() }) {
+  const row = inspectWork({ runDir, id, catalog, legacy });
+  if (row.fatal) throw new FatalError(row.fatal);
+  if (!row.bodies.B2 || !row.research) return false;
+  const dir = join(workRunDir, 'research'); mkdirSync(dir, { recursive: true, mode: 0o700 });
+  if (!row.research.files.coverage) writeFileSync(join(dir, 'coverage.json'), `${JSON.stringify(deriveCoverage(row.bodies.B2), null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  if (row.research.files.capture) return false;
+  const tr = findTranscriptBySha(workRunDir, 'B2', row.research.b2Completion.transcriptSha256);
+  const targets = captureTargets(row.bodies.B2, tr?.bytes || '');
+  const attemptedAt = now().toISOString();
+  const sources = await captureSources({ targets, fetchDoc, catalog, now });
+  if (sources.length && sources.every(captureIsTransient)) return true;
+  const sidecar = buildCaptureSidecar({ runId: RUN_ID, workId: id, b2Completion: row.research.b2Completion, b2Body: row.bodies.B2, sources, attemptedAt });
+  writeFileSync(join(dir, 'source-capture.json'), `${JSON.stringify(sidecar, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  return false;
+}
 async function main() {
   const args = process.argv.slice(2);
   const rebind = args[0] === '--rebind-runtime' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
@@ -944,7 +1049,9 @@ async function main() {
   const rebindContractFile = args[0] === '--rebind-contract' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const rebindScheduleFile = args[0] === '--rebind-schedule' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
   const grantRetriesFile = args[0] === '--grant-format-retries' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
-  const offlineReview = rebindContractFile || grantRetriesFile || rebindScheduleFile;
+  const reviewB3File = args[0] === '--review-b3' && args.length === 2 && !args[1].startsWith('--') ? args[1] : null;
+  const offlineReview = rebindContractFile || grantRetriesFile || rebindScheduleFile || reviewB3File;
+  if (reviewB3File && !STOPGAP) throw new Error('--review-b3 applies to the research stopgap only (PASS_B_RESEARCH_VERSION=stopgap-1)');
   if (clearFatal) { // offline, under the run lease; no CLI/model/network call
     mkdirSync(join(RUN_DIR, 'works'), { recursive: true, mode: 0o700 });
     acquireStageLease(RUN_LEASE);
@@ -954,9 +1061,13 @@ async function main() {
     } finally { unlinkSync(RUN_LEASE); }
     return;
   }
-  if (!rebind && !rebindModelFile && !offlineReview && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --rebind-contract <review.json> (offline), --rebind-schedule <review.json> (offline), --grant-format-retries <review.json> (offline), --clear-fatal <clearance.json> (offline), OR --run (gated)');
+  if (!rebind && !rebindModelFile && !offlineReview && (args.length > 1 || args.some(a => !['--run', '--repair-history'].includes(a)))) throw new Error('use default read-only plan, --repair-history (offline), --rebind-runtime <review.json> (offline), --rebind-model <review.json> (offline), --rebind-contract <review.json> (offline), --rebind-schedule <review.json> (offline), --grant-format-retries <review.json> (offline), --review-b3 <review.json> (offline, stopgap), --clear-fatal <clearance.json> (offline), OR --run (gated)');
   const live = args.includes('--run'), repair = args.includes('--repair-history');
   if (live && process.env.PASS_B_CORPUS_LIVE !== '1') throw new Error('refusing --run: set PASS_B_CORPUS_LIVE=1');
+  // VSD-092 containment: the banked B2/B3 format (legacy-claim agenda, documentary B3 requests, summary-only sources)
+  // may not resume unchanged. New collection runs the stopgap; the banked run stays readable for every offline command.
+  if (live && !STOPGAP && process.env.PASS_B_ALLOW_BANKED_RESEARCH !== '1') throw new Error('refusing --run: banked B2/B3 research is paused (VSD-092); collect with PASS_B_RESEARCH_VERSION=stopgap-1');
+  if (FRESH_B1 && !(process.env.PASS_B_CORPUS_ONLY || '').trim()) throw new Error('PASS_B_RESEARCH_FRESH_B1=1 is for an owner-directed subset (the canary) only; set PASS_B_CORPUS_ONLY');
   if (live) assertExecutionLease({ required: true });
   if (process.env.PASS_B_CORPUS_REQUEUE) throw new Error('blind requeue disabled: preserved terminal failures require reviewed new inputs/contract');
   const pool = loadGlobal('data/pool.js', 'ARTEFACTUM_POOL');
@@ -994,6 +1105,18 @@ async function main() {
   const active = executionEpochs(RUN_DIR).at(-1);
   console.log(`runtime epoch: ${active ? `${active.number} / CLI ${active.policy.runtimeVersion} / ${active.sha256}` : 'none (first authorized run binds installed CLI)'}`);
   console.log(`first queued: ${queue.slice(0, 10).join(', ')}`);
+  if (STOPGAP) {
+    const st = {}; for (const r of inspection.rows) for (const [k, v] of Object.entries(r.research?.status || {})) if (k !== 'copyEligibility') (st[k] ||= {})[v] = (st[k][v] || 0) + 1;
+    console.log(`research ${RESEARCH_VERSION} (${RESEARCH_STOPGAP_VERSION}) | banked run ${BANKED_RUN_ID} (read-only import source) | imported B1 ${inspection.rows.filter(r => r.research?.b1Imported).length}${FRESH_B1 ? ' | fresh B1 for this subset' : ''}`);
+    for (const [k, v] of Object.entries(st)) console.log(`  ${k}: ${Object.entries(v).map(([a, b]) => `${a} ${b}`).join(', ')}`);
+    // design-2 §2.2: diagnose the banked daily-window holds before spending on low-priority expansion.
+    const bankedLedger = join(BANKED_RUN_DIR, 'ledger.json');
+    if (existsSync(bankedLedger)) {
+      const L = readJson(bankedLedger), win = new Set(windowOrder), heldWin = (L.heldIds || []).filter(x => win.has(x)), by = {};
+      for (const x of heldWin) (by[classifyHold(L.heldReasons?.[x])] ||= []).push(x);
+      console.log(`banked window holds: ${heldWin.length}${heldWin.length ? ` — ${Object.entries(by).map(([k, v]) => `${k} ${v.length}`).join(', ')}` : ''}`);
+    }
+  }
   if (!live && !repair && !rebind && !rebindModelFile && !offlineReview) { console.log(LANE === 'cloud' ? 'READ-ONLY PLAN (cloud lane): no writes, calls, or fetches. Works beyond the 30-day window only; stops at the dollar cap.' : `READ-ONLY PLAN: no writes, migrations, calls, or fetches. Hours ${SCHEDULE_HOURS} (${SCHEDULE_TZ}); ${SCHEDULE_SCOPE === 'corpus' ? 'the 30-day window first, then the remaining priority bands' : 'no work outside the 30-day window'}.`); return; }
   if (live && inspection.fatal) throw new Error(`preserved fatal: ${inspection.fatal}`);
   if (live && inspection.pause) throw new OperationalPauseError(inspection.pause);
@@ -1015,6 +1138,13 @@ async function main() {
       if (fresh.pause) throw new Error(`contract rebind requires no pending pause: ${fresh.pause}`);
       const epoch = rebindContract(RUN_DIR, readJson(rebindContractFile));
       console.log(`OFFLINE CONTRACT REBIND: epoch ${epoch.number}, wire ${epoch.policy.wireSchema} ${epoch.policy.wireSchemaSha256.slice(0, 12)}, model ${epoch.policy.model}, CLI ${epoch.policy.runtimeVersion}, ${epoch.sha256}. No calls.`);
+      return;
+    }
+    if (reviewB3File) { // VSD-092: inspected B3 dispatch decisions, append-only, one per work, bound to its exact B2
+      if (fresh.fatal) throw new Error('B3 review cannot clear preserved fatal history');
+      const b2s = new Map(fresh.rows.filter(r => r.bodies.B2).map(r => [r.id, r.bodies.B2]));
+      const written = appendB3DispatchReviews(RUN_DIR, RUN_ID, readJson(reviewB3File), b2s);
+      console.log(`B3 DISPATCH REVIEWS APPENDED: ${written.length} works, ${written.reduce((n, r) => n + r.decisions.filter(d => d.decision === 'dispatch').length, 0)} requests approved for dispatch. No calls.`);
       return;
     }
     if (grantRetriesFile) {
@@ -1071,7 +1201,7 @@ async function main() {
     // Cloud: after each work, push its whole directory (B0, completions, raw) plus images, index and ledger.
     const persistWork = id => persistRemote(remoteRoot(), [...corpusWorkEvidencePaths(wdirOf(id)), IMGS_DIR, IMAGE_INDEX, LEDGER], `work ${id}`);
     const hold = (id, reason) => { heldSet.add(id); led.heldReasons[id] = reason; persist(); };
-    let cursor = 0, consecutiveB0 = 0;
+    let cursor = 0, consecutiveB0 = 0, consecutiveCapture = 0;
     const lane = async () => {
       while (!STOP && !FATAL) {
         try { laneWindow(); } catch (e) { STOP = true; STOP_REASON = e instanceof BudgetStopError ? 'budget-cap' : 'protected-hours'; break; }
@@ -1079,6 +1209,7 @@ async function main() {
         const p = poolById.get(id), workRunDir = wdirOf(id), catalog = trustedCatalog(p), legacy = legacyOf(id);
         try {
           mkdirSync(workRunDir, { recursive: true, mode: 0o700 });
+          if (STOPGAP) importBanked({ id, workRunDir, catalog, legacy });
           const prep = await prepImage(id, p.img, catalog, legacy, imageIndex);
           if (!prep.ok) {
             if (b0FailureClass(prep) === 'transient') {
@@ -1095,11 +1226,20 @@ async function main() {
           const verified = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
           const { status, retries } = await runWorkStages({ workId: id, catalog, legacy, imgSha256: prep.imgSha256, ext: prep.ext, prompts,
             runtimeVersion: RUNTIME_VERSION, spawnStage: makeSpawnStage(workRunDir, prep.imgSha256, prep.ext, id),
-            capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true, model: ACTIVE_MODEL });
+            capture: makeCapture(workRunDir), loadCompletion: stage => verified.bodies[stage] || null, skipB4: true, model: ACTIVE_MODEL,
+            plans: STOPGAP ? { b2Plan: b2PlanStopgap, b3Plan: b2 => b3DispatchPlan(id, b2, loadB3DispatchReviews(RUN_DIR, RUN_ID)), b2Context: { b2Contract: B2_CONTRACT_STOPGAP } } : null });
           if (retries?.B2?.attempts) led.validationRetries = (led.validationRetries || 0) + retries.B2.attempts;
           // runWorkStages captures exceptions as status text; the durable fatal flag remains authoritative.
           if (FATAL) { persist(); persistWork(id); break; }
           if (STOP || isUsageInterrupted(status) || isLeaseInterrupted(status)) { persist(); persistWork(id); continue; }
+          if (STOPGAP) { // coverage + literal source capture after B2, in this research-only path itself (no model call)
+            const deferred = await writeResearchSidecars({ id, workRunDir, catalog, legacy });
+            if (deferred) {
+              if (++consecutiveCapture >= B0_CIRCUIT_BREAKER) { STOP = true; STOP_REASON = 'network-unavailable (source capture)'; }
+              persist(); persistWork(id); continue; // capture retried next session; never a hold for a transient outage
+            }
+            consecutiveCapture = 0;
+          }
           const result = inspectWork({ runDir: RUN_DIR, id, catalog, legacy });
           if (result.fatal) { markFatal(result.fatal); break; }
           if (result.done) doneSet.add(id);

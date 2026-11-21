@@ -207,6 +207,13 @@ export function isCorroboratingSource(url) {
   return !NON_AUTHORITATIVE_HOSTS.some(d => h === d || h.endsWith('.' + d));
 }
 
+// B2 contract fork (VSD-092 research stopgap). The banked contract keeps its five-answer minimum, so every banked
+// completion validates exactly as before. The stopgap contract allows ZERO guide answers: a structurally valid B2 can
+// still be research-incomplete, and its core coverage is reported in a separate sidecar, never inferred from validity.
+export const B2_CONTRACT_BANKED = 'passBB2/1-min5';
+export const B2_CONTRACT_STOPGAP = 'passBB2/2-stopgap-min0';
+export const B2_CORE_QUESTION_IDS = Object.freeze(['core-subject', 'core-function', 'core-context', 'core-mechanism']);
+export const b2GuideAnswersMin = (context = {}) => context.b2Contract === B2_CONTRACT_STOPGAP ? 0 : 5;
 function validateB2(body, context = {}) {
   const e = errors();
   e.need(keys(body, ['catalog', 'factChecks', 'guideAnswers', 'targetedVerificationRequests', 'uncertainty']), 'B2 keys');
@@ -239,7 +246,7 @@ function validateB2(body, context = {}) {
     && id(item.questionId) && text(item.q, 300) && text(item.a, 1200)
     && ['image', 'context'].includes(item.kind)
     && (item.evidenceRef === null || evidenceSet.has(item.evidenceRef))
-    && list(item.sourceRefs, sourceId => id(sourceId) && sourceSet.has(sourceId), 10, 1), 20, 5), 'guideAnswers');
+    && list(item.sourceRefs, sourceId => id(sourceId) && sourceSet.has(sourceId), 10, 1), 20, b2GuideAnswersMin(context)), 'guideAnswers');
   e.need(unique((body.guideAnswers || []).map(item => item.questionId)), 'duplicate guide questionId');
   const claimSet = new Set(claimIds);
   e.need(list(body.targetedVerificationRequests, item => keys(item, ['requestId', 'claimId', 'whatToLocate'])

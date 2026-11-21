@@ -73,6 +73,48 @@ export function buildB4Prompt() {
 export function stagePrompts() {
   return { B1: buildB1Prompt(), B2: buildB2Prompt(), B3: buildB3Prompt(), B4: buildB4Prompt() };
 }
+
+// ---- Research stopgap (VSD-092, owner 2026-11-20): a VERSIONED fork of the banked B1/B2/B3 prompts. ----
+// The banked prompts above stay byte-identical, so the banked corpus run identity (corpus-b3-6401bc543ead), the
+// calibration runs and the claim-first chain that read it are unchanged. The stopgap prompts differ from the banked
+// ones only by the replacements/additions below (design-2 §2.1 items 1–4); a new run identity binds them.
+export const RESEARCH_STOPGAP_VERSION = 'passBResearchStopgap/1';
+const BANKED_B2_SCOPE = 'Run research only where B1 questions or consequential legacy claims genuinely need verification/context — do not open broad research merely because a work exists. Legacy content is UNTRUSTED editorial material: use it to identify claims worth checking; it is not true merely because it appears, and the absence of a correction is not confirmation.';
+const BANKED_B2_GUIDE_RULE = 'Rules: give at least five guideAnswers (internal, sourced). ';
+export const STOPGAP_TEXT = Object.freeze({
+  b1Relational: 'In seen/relationships, prioritize the main action or interaction, object-use clues, and two or three spatial relationships that organize the image. Distinguish visible shape from inferred identity or manufacturing process. Do not infer physical size from a studio photograph or unreadable scale, or explain age, culture, ritual meaning or material behavior from appearance.',
+  b2Scope: 'First establish a minimum teaching dossier independently of legacy copy: subject/story or organizing idea; original function/use or viewing situation; essential historical/artistic context; and the distinctive visible mechanism described by reliable sources. Distinguish this object from its type, tradition and comparisons. Name unsupported core answers in uncertainty. An honestly unknown function is acceptable; an unresearched one is not complete coverage. Then check consequential legacy claims. Legacy is untrusted material to audit, not the agenda or evidence. Ignore trivia unless it changes subject, function, interpretation, attribution, date range, place or technique.',
+  b2Guide: 'Use guideAnswers for supported answers to core-subject, core-function, core-context and core-mechanism (use exactly those questionIds). Add a recognition/comparison answer only when it teaches something additional. Separate sourced fact from interpretation. Do not pad with repeated dating, biography, acquisition history or statements that a topic is irrelevant. Missing evidence belongs in uncertainty. ',
+  b2Targets: 'targetedVerificationRequests is for an image-only locator with no web tools. Return [] unless a consequential unresolved physical target needs another look. Each request names ONE visible feature, optionally with a position. Never ask for a source, museum record, dating test, attribution, provenance, original use, technical analysis, species or named identity, or a historical verdict to confirm. Put documentary gaps in uncertainty.',
+  // A WebFetch instruction can improve what the summarizer returns but cannot prove fidelity (design-2 §2.1 item 5):
+  // the controller's literal source capture after B2 is the evidence; B2's summaries remain leads.
+  b2Fetch: 'When you call WebFetch, ask it to extract the object’s own description and short exact passages answering subject/story, original use, essential context and visual mechanism, preserving names, agents of actions, negations, uncertainty and whether a statement concerns this object or a comparison, and to label missing answers. Exclude navigation, shop links, acquisition lists and unrelated objects.',
+  b3Found: 'found means the requested physical feature is visibly present, not that an associated historical claim is true. Give a tight box around that feature. If the request is documentary, asks for identity, or cannot be decided from this view, return found=false and bbox=null, and explain the limitation. Describe ambiguous appearance without converting it into a named identity.',
+});
+const insertAfter = (paragraphs, startsWith, text) => {
+  const i = paragraphs.findIndex(p => p.startsWith(startsWith));
+  if (i < 0) throw new Error(`stopgap prompt anchor missing: ${startsWith}`); // banked text drifted: fail closed
+  return [...paragraphs.slice(0, i + 1), text, ...paragraphs.slice(i + 1)];
+};
+export function buildB1PromptStopgap() {
+  return insertAfter(buildB1Prompt().split('\n\n'), 'Do not fabricate.', STOPGAP_TEXT.b1Relational).join('\n\n');
+}
+export function buildB2PromptStopgap() {
+  let p = buildB2Prompt().split('\n\n');
+  const scope = p.indexOf(BANKED_B2_SCOPE), rules = p.findIndex(x => x.startsWith(BANKED_B2_GUIDE_RULE));
+  if (scope < 0 || rules < 0) throw new Error('stopgap B2 anchor missing'); // fail closed on banked-text drift
+  p[scope] = STOPGAP_TEXT.b2Scope;
+  p[rules] = STOPGAP_TEXT.b2Guide + p[rules].slice(BANKED_B2_GUIDE_RULE.length);
+  p = insertAfter(p, 'RESEARCH BUDGET', STOPGAP_TEXT.b2Targets);
+  return insertAfter(p, 'Actually retrieve before you assert', STOPGAP_TEXT.b2Fetch).join('\n\n');
+}
+export function buildB3PromptStopgap() {
+  return insertAfter(buildB3Prompt().split('\n\n'), 'Rules:', STOPGAP_TEXT.b3Found).join('\n\n');
+}
+// B4 is not part of the stopgap (the claim-first/B4 copy chain is frozen, VSD-091); it stays the banked text.
+export function stopgapStagePrompts() {
+  return { B1: buildB1PromptStopgap(), B2: buildB2PromptStopgap(), B3: buildB3PromptStopgap(), B4: buildB4Prompt() };
+}
 export function promptHashes() {
   const p = stagePrompts();
   return Object.fromEntries(Object.entries(p).map(([stage, text]) => [stage, sha256(text)]));

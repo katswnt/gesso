@@ -230,21 +230,31 @@ export function createBroker({ lookup = dnsLookup, request = httpsRequest } = {}
   }
 
   // follow the redirect chain under one shared deadline, re-vetting every hop
-  async function stream(rawUrl, { cap, timeoutMs, maxRedirects, userAgent, referer } = {}) {
+  async function stream(rawUrl, { cap, timeoutMs, maxRedirects, userAgent, referer, accept } = {}) {
     const c0 = checkUrl(rawUrl); if (!c0.ok) return c0;
     const deadlineAt = Date.now() + (timeoutMs ?? DEFAULTS.timeoutMs);
     let u = c0.url, hop = 0;
-    let headers = baseHeaders(u, userAgent, referer, false);
+    const chain = [u.href];
+    let headers = baseHeaders(u, userAgent, referer, false, accept);
     while (true) {
-      if (Date.now() > deadlineAt) return err('timeout', { host: u.hostname });
+      if (Date.now() > deadlineAt) return err('timeout', { host: u.hostname, chain });
       const r = await oneHop(u, headers, deadlineAt, cap);
-      if (!r.ok) return r;
-      if (!r.redirect) return { ok: true, buffer: r.buffer, declaredMime: r.declaredMime, finalUrl: r.finalUrl, host: r.host, resolvedIp: r.resolvedIp, hops: hop };
+      if (!r.ok) return { ...r, chain };
+      if (!r.redirect) return { ok: true, buffer: r.buffer, declaredMime: r.declaredMime, finalUrl: r.finalUrl, host: r.host, resolvedIp: r.resolvedIp, hops: hop, chain };
       const d = redirectDecision(u.href, r.location, hop, maxRedirects ?? DEFAULTS.maxRedirects);
-      if (!d.ok) return d;
-      hop += 1; u = d.url;
-      headers = baseHeaders(u, userAgent, referer, d.stripSensitive);
+      if (!d.ok) return { ...d, chain };
+      hop += 1; u = d.url; chain.push(u.href);
+      headers = baseHeaders(u, userAgent, referer, d.stripSensitive, accept);
     }
+  }
+
+  // VSD-092 literal source capture: a public documentation page (HTML/JSON/PDF/plain text) through the SAME
+  // transport rules as images (HTTPS only, every hop re-vetted, IPv4 public-only, pinned socket, peer check, streamed
+  // byte cap and one chain deadline). Returns raw bytes for deterministic extraction; nothing here interprets them.
+  async function fetchSourceDocument(rawUrl, opts = {}) {
+    const o = { maxBytes: 8 * 1024 * 1024, timeoutMs: 20_000, maxRedirects: DEFAULTS.maxRedirects, ...opts };
+    return stream(rawUrl, { cap: o.maxBytes, timeoutMs: o.timeoutMs, maxRedirects: o.maxRedirects, userAgent: o.userAgent, referer: false,
+      accept: 'text/html,application/xhtml+xml,application/json,application/pdf,text/plain;q=0.8,*/*;q=0.1' });
   }
 
   async function fetchImageToModelFile(rawUrl, runImgsDir, opts = {}) {
@@ -262,7 +272,7 @@ export function createBroker({ lookup = dnsLookup, request = httpsRequest } = {}
 
   // `stream` stays PRIVATE (never returned): callers must go through fetchImageToModelFile so raw bytes can't skip
   // MIME/decode/re-encode. (probeImage removed until Phase 2 — it needs a real early-close success mode.)
-  return { fetchImageToModelFile, classifyIp, isBlockedIp, checkUrl, sniffMime, mimeMatches, redirectDecision, validateAndReencode };
+  return { fetchImageToModelFile, fetchSourceDocument, classifyIp, isBlockedIp, checkUrl, sniffMime, mimeMatches, redirectDecision, validateAndReencode };
 }
 
 // host-specific bounded upstream URL so we don't download a full master just to downscale it. CLAMPS an existing
@@ -288,8 +298,8 @@ function boundedDerivativeUrl(raw, capPx) {
 
 // only UA/Accept/scoped-Referer; sensitive headers never set, never forwarded across origins. Accept advertises
 // ONLY the formats the broker actually accepts (jpeg/png/webp/gif — no AVIF, which the allowlist rejects).
-function baseHeaders(u, userAgent, referer, stripSensitive) {
-  const h = { 'User-Agent': userAgent || `GessoImgBroker/1 (${BROKER_POLICY_VERSION})`, 'Accept': 'image/webp,image/png,image/jpeg,image/gif,*/*;q=0.5' };
+function baseHeaders(u, userAgent, referer, stripSensitive, accept = 'image/webp,image/png,image/jpeg,image/gif,*/*;q=0.5') {
+  const h = { 'User-Agent': userAgent || `GessoImgBroker/1 (${BROKER_POLICY_VERSION})`, 'Accept': accept };
   if (!stripSensitive) { const ref = referer && REFERER_HOSTS[u.hostname]; if (ref) h['Referer'] = ref; }
   return h;
 }
@@ -310,3 +320,4 @@ function writeExclusive(dir, name, buf) {
 const broker = createBroker();
 export default broker;
 export const fetchImageToModelFile = broker.fetchImageToModelFile;
+export const fetchSourceDocument = broker.fetchSourceDocument;
