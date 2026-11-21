@@ -6,6 +6,10 @@
 //   node scripts/teaching-v2-run.mjs --phase regressions     # dry run, known regression cases (reported separately)
 //   node scripts/teaching-v2-run.mjs --previews              # current (index.html itself) + proposed faithful previews
 //   node scripts/teaching-v2-run.mjs --fixture-previews      # previews from a labeled synthetic lesson
+//   node scripts/teaching-v2-run.mjs --stops                 # the derived phase-wide stops, each with the FRESH evidence
+//                                                            # digests an owner clearance must name (prints; writes nothing)
+// Owner clearances (review R3-A3) are read ONLY from tasks/teaching-v2-phase-a/latch-clearances.json as committed at
+// this checkout's HEAD; the runner refuses to start while that file has uncommitted changes, and never writes it.
 // LIVE (not authorized yet: needs Codex code review + owner OK): --live with TEACHING_V2_LIVE=1, not CI, holding the
 // SHARED evidence lease under a non-automation holder with a teaching-v2-phase-a-* allowance (see docs/PIPELINE.md).
 // --phase rest is bound to its first-ten parent run (the parent's id is part of its run identity): live needs every
@@ -17,7 +21,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
 import { execToFile } from './lib/pass-b-exec-to-file.mjs';
-import { runIdentity as phaseRunIdentity, runIdOf, runPhase, verifyRun, readJson, writeJson, RefusedError } from './lib/teaching-v2-phase.mjs';
+import { runIdentity as phaseRunIdentity, runIdOf, runPhase, verifyRun, phaseStop, readJson, writeJson, RefusedError, runDirOf, workDirOf, stemOf } from './lib/teaching-v2-phase.mjs';
+import { loadCommittedClearances, attemptDigests, ClearanceError, CLEARANCE_VERSION, CLEARANCES_FILE } from './lib/teaching-v2-clearances.mjs';
 import { CONTRACT_VERSION, MODEL, FROZEN_GOLD_SHA256, WIRE_SCHEMA_HASHES, loadGoldBundle, MAX_INVOCATIONS, PLANNED_PATHS } from './lib/teaching-v2-contract.mjs';
 import { WRITER_CORE_SHA256, VERIFIER_CORE_SHA256, PROMPT_VERSION, buildVerifierPrompt, promptDigest } from './lib/teaching-v2-prompts.mjs';
 import { STAGE_EFFORT, CLASSIFIER_VERSION } from './lib/teaching-v2-stage.mjs';
@@ -117,6 +122,7 @@ function dryRun(items, gold, RUN_ID) {
 
 async function live(items, gold, RUN_ID, identity, parent) {
   if (process.env.TEACHING_V2_LIVE !== '1' || process.env.CI) { console.error('REFUSED: --live needs TEACHING_V2_LIVE=1 (after Codex code review and an owner OK) and not CI.'); process.exit(2); }
+  try { committedClearances(); } catch (e) { if (e instanceof ClearanceError) { console.error(`REFUSED: ${e.message}`); process.exit(3); } throw e; } // before the lease or any write
   if (parent && !has('--after-first-ten')) { console.error('REFUSED: the owner must pass --after-first-ten after reviewing the first ten.'); process.exit(2); }
   const RUN_DIR = join(PHASE_DIR, 'runs', RUN_ID);
   const runnable = items.filter(x => preflight(x).ok).length;
@@ -127,9 +133,29 @@ async function live(items, gold, RUN_ID, identity, parent) {
   const execFileP = promisify(execFile);
   const bin = realpathSync(String((await execFileP('sh', ['-c', 'command -v claude'])).stdout).trim());
   const version = String((await execFileP(bin, ['--version'], { timeout: 10000, env: { ...process.env, DISABLE_AUTOUPDATER: '1' } })).stdout).match(/\b\d+\.\d+\.\d+\b/)?.[0];
-  try { await runPhase({ phaseDir: PHASE_DIR, runId: RUN_ID, identity, items, gold, ops, runtime: { version, bin }, execute: execToFile, renderFor, parent }); }
-  catch (e) { if (e instanceof RefusedError) { console.error(`REFUSED: ${e.message}`); process.exit(3); } throw e; }
+  try { await runPhase({ phaseDir: PHASE_DIR, runId: RUN_ID, identity, items, gold, ops, runtime: { version, bin }, execute: execToFile, renderFor, parent, clearances: committedClearances() }); }
+  catch (e) { if (e instanceof RefusedError || e instanceof ClearanceError) { console.error(`REFUSED: ${e.message}`); process.exit(3); } throw e; }
   summarize(items.map(x => x.id), RUN_ID);
+}
+
+// Owner clearances: only the reviewed file committed at HEAD of THIS code checkout (R3-A3); throws ClearanceError.
+let clearanceCache = null;
+function committedClearances() {
+  if (!clearanceCache) { clearanceCache = loadCommittedClearances({ repoDir: '.' }); console.log(`owner clearances: ${clearanceCache.clearances.length} committed in ${CLEARANCES_FILE} at ${clearanceCache.commit.slice(0, 12)}`); }
+  return clearanceCache.clearances;
+}
+// The derived stops and, for each attempt, the fresh evidence digests a clearance record must name. Read-only.
+function printStops() {
+  const { stops } = phaseStop({ phaseDir: PHASE_DIR, clearances: committedClearances() });
+  if (!stops.length) { console.log('no phase-wide stop: every preserved attempt is clean or validly cleared.'); return; }
+  for (const st of stops) {
+    console.log(`STOP ${st.kind} ${st.runId}/${st.workKey ?? '-'}${st.seq != null ? ` attempt ${st.seq}` : ''}: ${st.reason}`);
+    const state = st.workKey ? readJson(join(workDirOf(runDirOf(PHASE_DIR, st.runId), st.workKey), 'state.json')) : null;
+    const e = (state?.ledger || []).find(x => x.seq === st.seq);
+    if (!e) continue;
+    const evidence = attemptDigests(join(workDirOf(runDirOf(PHASE_DIR, st.runId), st.workKey), 'attempts'), stemOf(e));
+    console.log(`  template (add to ${CLEARANCES_FILE} ONLY after reviewing that evidence; commit it for review):\n  ${JSON.stringify({ version: CLEARANCE_VERSION, runId: st.runId, workKey: st.workKey, seq: st.seq, attemptKind: e.kind, stopKind: st.kind, reviewer: '<owner>', reviewedAt: '<ISO timestamp>', reason: '<what was reviewed and why it is cleared>', evidence })}`);
+  }
 }
 
 function summarize(ids, RUN_ID) {
@@ -148,7 +174,7 @@ function summarize(ids, RUN_ID) {
 async function previews(items, gold, RUN_ID, { fixture = false } = {}) {
   const RUN_DIR = join(PHASE_DIR, 'runs', RUN_ID);
   const dir = join(RUN_DIR, fixture ? 'previews-fixture' : 'previews'); mkdirSync(join(dir, 'img'), { recursive: true, mode: 0o700 });
-  const verified = fixture ? null : await verifyRun({ phaseDir: PHASE_DIR, runId: RUN_ID, items, gold, renderFor });
+  const verified = fixture ? null : await verifyRun({ phaseDir: PHASE_DIR, runId: RUN_ID, items, gold, renderFor, clearances: committedClearances() });
   const works = items.map(({ id, work }, i) => {
     const rel = `img/${work.image.sha256}.${work.image.ext}`; if (!existsSync(join(dir, rel))) copyFileSync(work.image.path, join(dir, rel));
     const v = verified?.rows[i];
@@ -179,6 +205,7 @@ async function main() {
   if (latch) console.log(`NOTE: phase-wide ${latch.kind} latch present (${latch.at}); live runs are refused until the owner clears it.`);
   if (has('--fixture-previews')) return previews(items, gold, RUN_ID, { fixture: true });
   if (has('--previews')) return previews(items, gold, RUN_ID);
+  if (has('--stops')) return printStops();
   if (LIVE) return live(items, gold, RUN_ID, identity, parent);
   return dryRun(items, gold, RUN_ID);
 }

@@ -27,7 +27,7 @@ export class LatchedError extends Error {}
 export function writeLatch(phaseDir, { kind, reason, workId = null, runId = null, at = new Date() }, { root = null } = {}) {
   mkdirSync(phaseDir, { recursive: true, mode: 0o700 });
   const p = latchPath(phaseDir);
-  if (!existsSync(p)) writeFileSync(p, `${JSON.stringify({ version: OPS_VERSION, kind, reason: String(reason).slice(0, 500), workId, runId, at: at.toISOString(), clear: 'owner review only: inspect the attempt evidence, record the reviewed attempt in phase-a/latch-clearances.json, then delete this file deliberately (never automatic). Deleting this file alone clears nothing: the stop is re-derived from the preserved attempts' }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
+  if (!existsSync(p)) writeFileSync(p, `${JSON.stringify({ version: OPS_VERSION, kind, reason: String(reason).slice(0, 500), workId, runId, at: at.toISOString(), clear: 'owner review only: inspect the attempt evidence, commit a clearance of that exact attempt evidence to tasks/teaching-v2-phase-a/latch-clearances.json in the code repo (node scripts/teaching-v2-run.mjs --stops prints the digests), then delete this file deliberately (never automatic). Deleting this file alone clears nothing: the stop is re-derived from the preserved attempts' }, null, 1)}\n`, { flag: 'wx', mode: 0o600, flush: true });
   try { persist(root, [p], `teaching-v2 LATCH: ${kind}`); } catch { /* the local latch still stops every later local start */ }
   return readLatch(phaseDir);
 }

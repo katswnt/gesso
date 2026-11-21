@@ -14,7 +14,7 @@ import { MODEL } from './teaching-v2-contract.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/3';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/4';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -35,7 +35,19 @@ export function buildConfinedCommand({ stage, promptText, imageFile, wireSchema,
     promptSha256: sha256(promptText), promptBytes: Buffer.byteLength(promptText, 'utf8'), wireSchemaSha256: sha256(stableJson(wireSchema)) };
 }
 
-const events = stdout => String(stdout).split('\n').flatMap(l => { try { const e = JSON.parse(l); return e && typeof e === 'object' ? [e] : []; } catch { return []; } });
+// Every nonempty line is either a JSON event object (string `type`) or a MALFORMED record (review R3-A2): a
+// truncated or unparseable line, or JSON that is not an event. Discarded bytes are tracked, never ignored.
+export function parseRecords(stdout) {
+  const evs = [], malformed = [];
+  String(stdout).split('\n').forEach((l, i) => {
+    if (!l.trim()) return;
+    let e; try { e = JSON.parse(l); } catch { malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'unparseable' }); return; }
+    if (e && typeof e === 'object' && !Array.isArray(e) && typeof e.type === 'string') evs.push(e);
+    else malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'not an event object' });
+  });
+  return { evs, malformed };
+}
+const events = stdout => parseRecords(stdout).evs;
 // Every *tool_use block anywhere in an envelope (tool_use, server_tool_use, mcp_tool_use, streamed content_block).
 function toolEvents(evs) {
   const out = [];
@@ -48,6 +60,52 @@ function toolEvents(evs) {
   };
   evs.forEach(visit);
   return out;
+}
+// Review R3-A2: ONE normalized list of tool invocations WITH their inputs, from every supported envelope:
+//   - complete blocks anywhere under message / content (assistant messages, nested messages);
+//   - streamed blocks (stream_event content_block_start). Their input is the start block's input or, when
+//     input_json_delta fragments follow for that block index, the parse of the concatenated fragments.
+// A streamed input that cannot be resolved is kept with input:null, unresolved:true: it can never establish
+// confinement. The same id and input seen both streamed and complete is kept once.
+export function normalizedToolUses(evs) {
+  const uses = [];
+  const add = (b, streamed) => { const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false }; uses.push(u); return u; };
+  const visit = v => {
+    if (Array.isArray(v)) { v.forEach(visit); return; }
+    if (!v || typeof v !== 'object') return;
+    if (typeof v.type === 'string' && /tool_use$/.test(v.type)) add(v, false);
+    for (const k of ['message', 'content', 'content_block']) visit(v[k]);
+  };
+  let open = new Map();
+  const close = idx => {
+    const b = open.get(idx); if (!b) return; open.delete(idx);
+    if (b.partial.length) { try { b.use.input = JSON.parse(b.partial.join('')); } catch { b.use.input = null; } }
+    if (!b.use.input || typeof b.use.input !== 'object' || Array.isArray(b.use.input)) { b.use.input = null; b.use.unresolved = true; }
+  };
+  const closeAll = () => { [...open.keys()].forEach(close); open = new Map(); };
+  for (const e of evs) {
+    if (e.type !== 'stream_event') { visit(e); continue; }
+    const se = e.event && typeof e.event === 'object' ? e.event : {};
+    if (se.type === 'message_start' || se.type === 'message_stop') closeAll();
+    visit(se.message);
+    const cb = se.content_block, idx = se.index ?? null;
+    if (cb && typeof cb.type === 'string' && /tool_use$/.test(cb.type)) { close(idx); open.set(idx, { use: add(cb, true), partial: [] }); visit(cb.content); }
+    else visit(cb);
+    if (se.type === 'content_block_delta' && se.delta?.type === 'input_json_delta') open.get(idx)?.partial.push(String(se.delta.partial_json ?? ''));
+    if (se.type === 'content_block_stop') close(idx);
+  }
+  closeAll();
+  const seen = new Set();
+  return uses.filter(u => { if (u.id == null) return true; const k = `${u.id}\u0000${stableJson(u.input)}`; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+// The image-receipt / confinement validator over that ONE normalized list: every Read from any envelope must name
+// exactly the confined image; an unresolved Read input is never a pass.
+function confinedReads(stdout, evs, { callDir, imageFile }) {
+  const uses = normalizedToolUses(evs).filter(u => u.type === 'tool_use');
+  const read = verifyB1ImageRead({ ...parseStreamTranscript(stdout), toolUses: uses }, { callDir, imageBasename: imageFile });
+  const unresolved = uses.filter(u => u.name === 'Read' && u.unresolved);
+  if (!unresolved.length) return read;
+  return { ...read, ok: false, bad: [...read.bad, ...unresolved.map(u => `<unresolved streamed Read input ${u.id ?? 'without id'}>`)], reason: `read target unresolved: ${unresolved.length} streamed Read input(s) could not be reconstructed` };
 }
 const usageLimitedEv = (evs, final) => evs.some(e => e.type === 'rate_limit_event' && e.rate_limit_info?.status === 'rejected')
   || final?.api_error_status === 429 || (final?.is_error === true && /usage limit|spend limit|rate.?limit|quota/i.test(String(final?.result || '')));
@@ -65,6 +123,8 @@ function activityViolation(evs) {
   }
   return null;
 }
+export const validExitCode = c => c === 'timeout' || Number.isInteger(c);
+const malformedReason = m => `${m.length} malformed or non-event transcript record(s) (first at line ${m[0].line}: ${m[0].why}); activity and confinement unverifiable`;
 // Affirmative evidence that no session ran: the stream holds only rate-limit notices and error results that
 // explicitly report zero turns, no generated output and no structured output (an empty stream qualifies).
 // Any other event (assistant, user, stream_event, tool activity, a result without num_turns === 0) is activity.
@@ -77,7 +137,7 @@ export function noSessionActivity(evs) {
 // Capability policy for every init event and every tool event. Returns the first violation or null.
 // Fatal precedence: this runs BEFORE any usage/transport/content classification.
 export function capabilityViolation(stdout, { callDir = null, imageFile, model = MODEL, runtimeVersion }) {
-  const evs = events(stdout), inits = evs.filter(e => e.type === 'system' && e.subtype === 'init');
+  const { evs, malformed } = parseRecords(stdout), inits = evs.filter(e => e.type === 'system' && e.subtype === 'init');
   const allowed = stableJson([...STAGE_TOOLS].sort());
   for (const i of inits) {
     if (i.apiKeySource !== 'none') return `apiKeySource must be none (subscription only), got ${i.apiKeySource ?? 'missing'}`;
@@ -92,8 +152,9 @@ export function capabilityViolation(stdout, { callDir = null, imageFile, model =
   }
   const act = activityViolation(evs);
   if (act) return act;
+  if (malformed.length) return malformedReason(malformed);
   const dir = callDir || norm(inits[0]?.cwd) || null;
-  const read = verifyB1ImageRead(parseStreamTranscript(stdout), { callDir: dir, imageBasename: imageFile });
+  const read = confinedReads(stdout, evs, { callDir: dir, imageFile });
   if (read.bad.length) return `confinement: ${read.reason}`;
   return null;
 }
@@ -107,15 +168,21 @@ export function capabilityViolation(stdout, { callDir = null, imageFile, model =
 //   content-failure    - the call ran and produced no acceptable output (schema retries exhausted, refusal,
 //                        max turns, missing structured output, a non-transient API error). Holds; never retried.
 //   interrupted        - timeout or mid-call death: outcome not proven transient. Holds; never retried.
+// exitCode is REQUIRED (review R3-A1): an integer or 'timeout' from the attempt's own exit receipt. A missing
+// receipt is never read as 0; a caller without one has an unknown outcome and must not classify.
 export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile, model = MODEL, runtimeVersion }) {
-  const evs = events(stdout), tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
+  if (!validExitCode(exitCode)) throw new TypeError(`classifyTranscript needs the recorded exit status (got ${JSON.stringify(exitCode ?? null)}); a missing exit receipt is an unknown outcome`);
+  const { evs, malformed } = parseRecords(stdout), tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
   const inits = evs.filter(e => e.type === 'system' && e.subtype === 'init');
   const usage = usageOf(final, stdout);
-  const out = (kind, reason) => ({ kind, reason, usage, classifier: CLASSIFIER_VERSION, toolUses: tr.toolUses.map(u => u.name), structured: kind === 'ok' ? final.structured_output : null, initCwd: inits[0]?.cwd ?? null });
+  const out = (kind, reason) => ({ kind, reason, usage, classifier: CLASSIFIER_VERSION, toolUses: normalizedToolUses(evs).map(u => u.name), structured: kind === 'ok' ? final.structured_output : null, initCwd: inits[0]?.cwd ?? null, malformedRecords: malformed.length });
   // Review R2-1: ALL activity is inspected before ANY outcome branch. Forbidden activity is fatal whether or not
   // there is an init, whatever the exit code or quota message.
   const forbidden = activityViolation(evs);
   if (forbidden) return out('fatal', forbidden);
+  // Review R3-A2: bytes that are not a parseable event (a truncated line, non-event JSON) may carry activity nothing
+  // above could inspect. They never support "no session ran", nor confinement: fatal, for review.
+  if (malformed.length) return out('fatal', malformedReason(malformed));
   if (!inits.length) {
     // A missing init does not prove that nothing ran. Only AFFIRMATIVE evidence of no session activity (see
     // noSessionActivity) may become a pre-session usage limit or transport failure; anything else is fatal.
@@ -127,7 +194,7 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   }
   const violation = capabilityViolation(stdout, { callDir, imageFile, model, runtimeVersion });
   if (violation) return out('fatal', violation);
-  const prov = noToolCallProvenance(stdout, exitCode === 'timeout' ? 'timeout' : (exitCode ?? 0), { allowedTools: [...STAGE_TOOLS], expectedModel: model });
+  const prov = noToolCallProvenance(stdout, exitCode, { allowedTools: [...STAGE_TOOLS], expectedModel: model });
   if (prov.kind === 'fatal') return out('fatal', prov.errors.join('; ') || 'provenance');
   if (prov.kind === 'usage-limit' || usageLimitedEv(evs, final)) return out('usage-limit', 'subscription usage limit');
   if (prov.kind === 'api-error') {
@@ -138,7 +205,7 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   if (!final) return out('interrupted', `no result event (exit ${exitCode}); outcome not proven transient`);
   if (final.is_error || (final.subtype && final.subtype !== 'success')) return out('content-failure', `result ${final.subtype || 'error'}${final.stop_reason ? `/${final.stop_reason}` : ''}`);
   if (prov.errors.includes('multiple-StructuredOutput-emissions')) return out('content-failure', 'multiple StructuredOutput emissions');
-  const read = verifyB1ImageRead(tr, { callDir: callDir || norm(inits[0].cwd), imageBasename: imageFile });
+  const read = confinedReads(stdout, evs, { callDir: callDir || norm(inits[0].cwd), imageFile });
   if (!read.ok) return out('fatal', `image not inspected: ${read.reason}`); // an image stage must prove it saw the pixels
   if (final.structured_output == null) return out('content-failure', 'no structured_output');
   if (exitCode && exitCode !== 0) return out('content-failure', `process exit ${exitCode} after a result`);
@@ -162,7 +229,7 @@ export async function runConfined(command, { imagePath, execute, runtimeVersion,
     const env = { ...process.env, ...command.env.set }; for (const k of command.env.removeKeys) delete env[k];
     let stdout = '', exitCode = 0;
     try { ({ stdout } = await execute(bin, command.argv, { cwd: call, env, timeout: timeoutMs, maxBuffer: 64 * 1024 * 1024 })); }
-    catch (e) { exitCode = e.killed ? 'timeout' : (e.code ?? 1); stdout = e.stdout || ''; }
+    catch (e) { exitCode = e.killed ? 'timeout' : (Number.isInteger(e.code) ? e.code : 1); stdout = e.stdout || ''; } // a spawn/signal error code is a nonzero exit
     const cls = classifyTranscript(stdout, { exitCode, callDir: call, imageFile: command.imageFile, runtimeVersion });
     return { ...cls, stdout, exitCode, callDir: call, wallMs: Date.now() - t0, transcriptSha256: sha256(stdout) };
   } finally { rmSync(call, { recursive: true, force: true }); }

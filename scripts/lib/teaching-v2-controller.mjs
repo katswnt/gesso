@@ -17,7 +17,7 @@ import { projectLesson, validateProjection, renderManifest, PROJECTION_VERSION }
 import { b1EvidenceIds, catalogConflicts, importB3Candidates } from './teaching-v2-inputs.mjs';
 import { STAGE_EFFORT, CLASSIFIER_VERSION } from './teaching-v2-stage.mjs';
 
-export const CONTROLLER_VERSION = 'teachingV2Controller/3';
+export const CONTROLLER_VERSION = 'teachingV2Controller/4';
 export const BINDING_VERSION = 'teachingV2CandidateBinding/2';
 export class PauseRun extends Error { constructor(reason) { super(reason); this.name = 'PauseRun'; } }
 // A latching stop: the runner persists a phase-wide latch and refuses every later reservation/restart until review.
@@ -101,6 +101,9 @@ export class EvidenceMismatch extends BindingChanged { constructor(reason) { sup
 // dispatched attempt whose derived artifact is missing is rebuilt without a new call. A terminal state is replayed
 // read-only and must reproduce exactly (including the re-opened final payload), or the resume is refused.
 // isCleared(entry): the owner's recorded review of a fatal/unknown attempt (otherwise it re-latches, review R2-3).
+// A cleared attempt never runs again: a cleared fatal holds as it did, and a cleared UNKNOWN outcome (its evidence
+// unavailable by definition) moves the work to an explicit terminal hold with the reservation still consumed
+// (review R3-A4). Later works may then proceed.
 export async function runWork(args) {
   const { work, packet, texts, gold, state, invoke, gate = async () => {}, attempts = null, render = null, finalize = null, binding = null, isCleared = () => false } = args;
   const { save = () => {}, now = () => new Date() } = args;
@@ -140,9 +143,15 @@ export async function runWork(args) {
   for (const e of state.ledger) {
     const r = attempts?.recover ? await attempts.recover(e) : null;
     if (e.outcome === 'reserved') {
-      if (!r) { e.outcome = 'unknown'; e.detail = 'reservation without a recoverable transcript; retained for review'; save(state); throw new LatchStop(`${work.id}/${e.kind} attempt ${e.seq}: unknown outcome`, 'unknown-outcome'); }
-      Object.assign(e, { outcome: r.kind, dispatch: r.kind, detail: r.reason ?? null, reconstructed: true, usage: r.usage ?? null, transcriptSha256: r.transcriptSha256 ?? null, structuredSha256: shaOrNull(r.structured) });
-      save(state);
+      if (!r) {
+        e.outcome = 'unknown'; e.detail = 'reservation without a complete, bound outcome (transcript, exit receipt, completion receipt); retained for review'; save(state);
+        if (!isCleared(e)) throw new LatchStop(`${work.id}/${e.kind} attempt ${e.seq}: unknown outcome`, 'unknown-outcome');
+      } else {
+        Object.assign(e, { outcome: r.kind, dispatch: r.kind, detail: r.reason ?? null, reconstructed: true, usage: r.usage ?? null, transcriptSha256: r.transcriptSha256 ?? null, structuredSha256: shaOrNull(r.structured) });
+        save(state);
+      }
+    } else if (e.outcome === 'unknown') {
+      // Owner-cleared unknown outcome (an uncleared one latched above): nothing to rebuild; held below by call().
     } else if (attempts?.recover) {
       if (!r) throw new EvidenceMismatch(`${work.id}/${e.kind} attempt ${e.seq}: a dispatched attempt has no recoverable transcript`);
       if (r.kind !== dispatchOf(e) || shaOrNull(r.structured) !== (e.structuredSha256 ?? null) || (e.transcriptSha256 && r.transcriptSha256 && e.transcriptSha256 !== r.transcriptSha256)) {
@@ -182,6 +191,7 @@ export async function runWork(args) {
       const d = dispatchOf(last);
       if (d === 'fatal') { finish('hold', { holdReasons: [`confinement/provenance: ${last.detail ?? ''}`.trim()], stage: kind }); return null; }
       if (d === 'content-failure' || d === 'interrupted') { finish('hold', { holdReasons: [`${kind} ${d}: ${last.detail ?? ''}`.trim(), 'no retry: not a proven transient failure'], stage: kind }); return null; }
+      if (d === 'unknown') { finish('hold', { holdReasons: [`${kind} attempt ${last.seq}: owner-cleared unknown outcome (evidence unavailable)`, 'terminal hold: the reservation stays consumed; never retried'], stage: kind }); return null; }
     }
     let req = last && last.kind === kind && TRANSIENT_OUTCOMES.includes(last.outcome) ? { kind, reason: 'transportRetry' } : { kind, reason };
     for (;;) {
