@@ -537,6 +537,7 @@ Offline hardening on 2026-09-30:
 - Lost-time fixes (VSD-079): with probes in flight the pacer says `wait` (re-check every 20 s, at most 15 min) instead of stopping the firing. After a container restart the routine relaunches once and the launcher recovers its own dead lease at once (`pass-b-cloud-lease.mjs acquire <holder> --own-dead <holder from /tmp/pass-b-holder>`), only when no pipeline process is alive.
 - Boost (VSD-080): with `PASS_B_BOOST_UNTIL=<ISO time>` in the routine command, firings that start before that time run `PASS_B_BOOST_WORKERS` (default 6) workers and a `PASS_B_BOOST_MAX_CALLS` (default 1000) cap; afterwards the plain values apply. Used to spend a week's leftover allowance before its reset; remove the variable from the prompt once it has passed.
 - Research only (VSD-091): with `PASS_B_RESEARCH_ONLY=1` in the routine command, a firing runs no S1–S4 copy stages and spends its whole allowance on the collector's B1–B3 research. The plan log prints `research only (VSD-091)`. Remove the variable to resume copy work.
+- Research stopgap (VSD-092): broad collection is paused (routine paused 2026-11-21 00:40 UTC). The banked B2/B3 format may not resume: `pass-b-corpus-collect.mjs --run` refuses unless `PASS_B_RESEARCH_VERSION=stopgap-1` (or the explicit override `PASS_B_ALLOW_BANKED_RESEARCH=1`). Resume only after the six-work canary below passes Codex inspection, with `PASS_B_RESEARCH_VERSION=stopgap-1` added to the routine command next to `PASS_B_RESEARCH_ONLY=1`. See "Research stopgap" below.
 - Assembly /7 (VSD-081): a question whose first answer sentence S4 cut for content is dropped; a hotspot needs two kept body sentences and a pin that is not display hardware (`DISPLAY_MOUNT`); strict-usable needs the why's opening sentence. Re-materializing finished works to `.a7` costs no calls.
 - Push failures (VSD-076): a rejected evidence push is retried after 5 s, 30 s and 2 min. If GitHub
   still refuses, the run ends cleanly (`stop=persist-failed`, exit 0, lease released) and the next
@@ -613,6 +614,54 @@ set with exclusive-create writes and atomically advances the separately hash-bou
 the tool refuses to overwrite a different prior set or activation. Auto-policy and the curated
 index remain unauthorized.
 
+
+### Research stopgap (VSD-092, offline; canary unrun)
+
+`PASS_B_RESEARCH_VERSION=stopgap-1` switches the collector (and the nightly that hands off to it) to the corrected
+format in its own run, `corpus-b3-e55c50249d63`. Unset, everything is the banked run `corpus-b3-6401bc543ead`,
+byte-identical and still readable by every offline command.
+
+- **Prompts** (`stopgapStagePrompts()` in `scripts/lib/pass-b-prompts.mjs`; banked `stagePrompts()` unchanged): B2's
+  scope rule is the minimum teaching dossier (subject/story or organizing idea, function or viewing situation, context,
+  visible mechanism) independent of legacy; guideAnswers use `core-subject|core-function|core-context|core-mechanism`;
+  `targetedVerificationRequests` are image-only physical targets; WebFetch is asked for exact passages. B1 adds the
+  action/use/spatial-relations rule and no size/meaning inference. B3 says `found` is physical; documentary or identity
+  requests return `found:false,bbox:null`.
+- **B2 contract** `passBB2/2-stopgap-min0` (validator and wire schema): zero guide answers are structurally valid.
+  The banked `/1-min5` contract is unchanged for banked completions.
+- **Trigger:** B2 runs for every work whose B1 is not blocked/unplayable, with or without B1 topics or legacy.
+- **Sidecars** in each work dir: `research/coverage.json` (`passBResearchCoverage/1`: which core answers exist and
+  which are gaps; never "complete") and `research/source-capture.json` (`passBSourceCapture/1`). Capture runs in the
+  collector right after B2, on at most four URLs (core-answer sources, then other cited, then fetched-uncited), through
+  the hardened broker's `fetchSourceDocument` (HTTPS only, every redirect re-vetted, public IPv4 only, pinned socket,
+  8 MB streamed cap, 20 s chain deadline). Each source records URL, redirect chain, retrieval time, byte count and hash,
+  `passBSourceText/3` extraction (HTML/JSON as `/2`, plus PDF), full-text hash, title/id identity clues and complete
+  paragraphs as exact passages (offsets into the stored text; ≤12,000 chars per source, ≤40,000 per work, never cut
+  mid-passage). Failures are explicit statuses (`http-status`, `pdf-extraction-failed`, `unsupported-type`, ...). If
+  every attempt fails transiently nothing is written and the work is retried next session (five in a row stop the run).
+- **B3:** nothing dispatches unattended. Requests wait (`b3DispatchStatus: awaiting-inspection`) until an append-only
+  review, `PASS_B_RESEARCH_VERSION=stopgap-1 node scripts/pass-b-corpus-collect.mjs --review-b3 <review.json>`
+  (offline, under the run lease), decides every request of a work against its exact text and its exact B2 body.
+- **Migration:** before B0, a compatible banked B0/image and B1 (same catalog/legacy, verified image hash, verified
+  completion/raw/transcript/epoch model) are copied into `imports/` with `imports/manifest.json`
+  (`passBResearchImport/1`) naming the source run and hashes, and re-verified from those copies on every inspection.
+  The banked run is only read. Status axes per work: `operationalStatus`, `sourceCaptureStatus`, `coverageStatus`,
+  `b3DispatchStatus`, `copyEligibility` (always not-eligible). The read-only plan prints them, plus the banked window
+  holds by cause (image/retrieval/catalog/evidence).
+- **Queue:** the 30-day window first, date-first (daily coverage repairs), then a round-robin across
+  Easy/Medium/Hard/Impossible/other, each tier in its banked order.
+
+Canary (six known works from the research audit; unrun, needs Codex code review and the owner's re-pin first):
+
+```bash
+node scripts/pass-b-research-canary.mjs            # read-only plan: works, env, expected calls
+node scripts/pass-b-research-canary.mjs --report   # offline inspection packet + B3 review template
+PASS_B_RESEARCH_CANARY_LIVE=1 node scripts/pass-b-research-canary.mjs --run   # phase 1 via pass-b-cloud-nightly.sh
+```
+
+Phase 1 is 12 calls (fresh B1 at the new prompt, `PASS_B_RESEARCH_FRESH_B1=1`, plus B2; up to 14 with retries) under
+allowance `research-stopgap-canary-1` (cap 20); phase 2 dispatches only reviewed physical requests (0–6 B3 calls).
+`--run` refuses unless `state/pin.json` names the checkout's HEAD.
 
 ### Current launch scope and collector operation (VSD-041–045)
 
