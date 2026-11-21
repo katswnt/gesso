@@ -1,10 +1,11 @@
 # Gesso teaching copy guide (canonical)
 
 **Owner approved:** 2026-10-01 (VSD-059). **Updated:** 2026-10-02 (VSD-061 framed readings; VSD-062 gold set,
-worked examples, and the Codex audit corrections).
+worked examples, and the Codex audit corrections); 2026-11-20 (VSD-093: the teaching-v2 path section only).
 **Used by:** the claim-first writer and checker (`scripts/lib/pass-b-claim-first.mjs`, write /11+). The writer
 prompt is built from this guide and from `docs/teaching-copy-examples.md`. Any future pipeline that writes
-player-facing copy must follow both files. Change them only with an owner decision recorded in
+player-facing copy must follow both files. The teaching-v2 writer/verifier also uses them, with the shapes in
+"Teaching-v2 path" below. Change them only with an owner decision recorded in
 `docs/vision-system.md`.
 
 ## The gold set (what "good" means)
@@ -97,6 +98,27 @@ question.
 names red-figure in a pin, explains how it works in one question, why it mattered in another, and how to
 spot it in a third. A question that only re-describes a hotspot, or repeats the why, is out. (Literal
 "each fact appears once" was tried on 2026-10-01 and deleted good teaching.)
+
+## Teaching-v2 path (VSD-093; new path only)
+
+**Scope:** only the teaching-v2 writer and verifier (`scripts/lib/teaching-v2-*.mjs`, design draft 2 §3.3,
+owner-approved 2026-11-20). Everything above stays the rule for the claim-first writer and the old B4
+validation, which are unchanged. On the new path these shapes replace "The three parts" table:
+
+- **Why:** one complete sentence, at most 500 characters. It must equal what the game's teaser shows (the
+  text up to the first ". "), so it is never trimmed to fit.
+- **Notes:** 2–5 notes, each a short head (≤80 characters) and a body (≤600), with one tag (`when`, `where`,
+  `medium`, `style`, `artist`, `format` or `delight`; at most one pure delight). A note may have **no dot**
+  when what it teaches is distributed across the image, global or a relationship between distant parts. Each
+  note has exactly one anchor, and a distributed or global anchor never gets a dot. A note may pin one
+  representative example if it says so. Notes keep their own numbers: dots are never renumbered around a
+  no-dot note. Every dot is checked twice: is it the right target, and is the point on it.
+- **Questions:** 4–7 questions (normally 5–6), q ≤180 and a ≤700 characters, answers normally 2–4
+  sentences. Four rich questions can pass; four restatements cannot.
+- **Across the lesson:** at least two distinct links from something visible to what it explains, and one
+  clue the reader can use on another work.
+
+All of "Rules that always win" below apply on the new path too.
 
 ## Rules that always win
 

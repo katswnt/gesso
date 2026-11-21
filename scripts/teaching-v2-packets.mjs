@@ -8,8 +8,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sha256, stableJson } from './lib/vision-legacy.mjs';
-import { createSourceCapture, persistSnapshot, readSnapshot, vetUrls, assemblePacket, lexicalSlotCandidates, CAPTURE_POLICY_VERSION } from './lib/teaching-v2-capture.mjs';
-import { validatePacketIntegrity, SLOTS, sha256Bytes } from './lib/teaching-v2-contract.mjs';
+import { createSourceCapture, persistSnapshot, readSnapshot, vetUrls, assemblePacket, lexicalKeywordHits, KEYWORD_GROUPS, CAPTURE_POLICY_VERSION } from './lib/teaching-v2-capture.mjs';
+import { validatePacketIntegrity, sha256Bytes } from './lib/teaching-v2-contract.mjs';
 import { loadCalibrationWork, loadRegressionWork, derivePlan, b2Sources, workKey, PLAN_FILE, SELECTION_FILE, REGRESSIONS } from './lib/teaching-v2-inputs.mjs';
 
 const args = process.argv.slice(2);
@@ -102,16 +102,24 @@ function buildAll(plan) {
     if (!integ.ok) throw new Error(`${w.id}: packet integrity failed: ${integ.errors.slice(0, 3).join('; ')}`);
     writeJson(join(PACKETS, `${workKey(w.id)}.json`), packet);
     writeJson(join(PACKETS, `${workKey(w.id)}.texts.json`), { workId: w.id, packetSha256: packet.packetSha256, texts });
-    const lex = lexicalSlotCandidates(packet, w.catalog);
-    rows.push({ id: w.id, origin: w.origin, flags: plan.flags[w.id] || null, sources: packet.sources.length, captured: packet.sources.filter(s => s.status === 'captured').length, chars: integ.chars, sections: packet.sources.reduce((n, s) => n + s.sections.length, 0), holdingRecordCaptured: packet.sources.some(s => s.kind === 'holdingInstitution' && s.status === 'captured'), lexicalSlotCandidates: lex, packetSha256: packet.packetSha256 });
+    const lex = lexicalKeywordHits(packet, w.catalog);
+    const captured = packet.sources.filter(s => s.status === 'captured');
+    rows.push({ id: w.id, origin: w.origin, flags: plan.flags[w.id] || null, sources: packet.sources.length, captured: captured.length, chars: integ.chars, sections: packet.sources.reduce((n, s) => n + s.sections.length, 0), holdingRecordCaptured: captured.some(s => s.kind === 'holdingInstitution'), onlyReferenceCaptured: captured.length > 0 && captured.every(s => s.kind === 'reference'), extractionGaps: packet.gaps.filter(g => /extraction left out/.test(g.reason)).length, lexicalKeywordHits: lex, packetSha256: packet.packetSha256 });
   }
+  // Review finding 17: report the all-50 operational set, the gold-contaminated works and the non-gold evaluation
+  // works separately; keyword hits are renamed and are never coverage.
+  const ALL_FOUR = ['titleWord', 'depictionWords', 'useWords', 'makingWords'];
+  const stats = rs => ({ works: rs.length, withAnyCapturedText: rs.filter(r => r.captured > 0).length, withHoldingRecord: rs.filter(r => r.holdingRecordCaptured).length, onlyReferenceCaptured: rs.filter(r => r.onlyReferenceCaptured).length,
+    withExtractionGaps: rs.filter(r => r.extractionGaps).length, totalChars: rs.reduce((n, r) => n + r.chars, 0),
+    worksWithKeywordHits: Object.fromEntries(['titleWord', ...Object.keys(KEYWORD_GROUPS)].map(g => [g, rs.filter(r => r.lexicalKeywordHits[g] > 0).length])),
+    worksWithAllFourKeywordGroups: rs.filter(r => ALL_FOUR.every(g => r.lexicalKeywordHits[g] > 0)).length });
   const calRows = rows.filter(r => r.origin.startsWith('calibration'));
-  const slotCount = rs => Object.fromEntries(SLOTS.map(s => [s, s === 'transfer' ? null : rs.filter(r => r.lexicalSlotCandidates[s] > 0).length]));
+  const gold = calRows.filter(r => r.flags?.goldOverlap), nonGold = calRows.filter(r => !r.flags?.goldOverlap);
   const summary = {
-    version: 'teachingV2PacketCoverage/1',
-    caveat: 'Lexical slot candidates count works with at least one captured section matching a slot lexicon (identity = a title word). This is triage, NOT semantic coverage: W must establish each essential from the text and V checks it. transfer is image-grounded and has no source proxy.',
-    calibration: { works: calRows.length, withAnyCapturedText: calRows.filter(r => r.captured > 0).length, withHoldingRecord: calRows.filter(r => r.holdingRecordCaptured).length, totalChars: calRows.reduce((n, r) => n + r.chars, 0), worksWithSlotCandidates: slotCount(calRows), allFourSourceSlots: calRows.filter(r => ['identity', 'subjectAction', 'functionContext', 'makingMechanism'].every(s => r.lexicalSlotCandidates[s] > 0)).length },
-    regressions: { works: rows.length - calRows.length, withAnyCapturedText: rows.filter(r => !r.origin.startsWith('calibration') && r.captured > 0).length, worksWithSlotCandidates: slotCount(rows.filter(r => !r.origin.startsWith('calibration'))) },
+    version: 'teachingV2PacketCoverage/2',
+    caveat: 'Capture and keyword counts only. A keyword hit means a captured section contains a word from a group (titleWord = a title word of 5+ letters; allFour = titleWord, depictionWords, useWords, makingWords); it is NOT identity, subject, function, context or mechanism coverage. W must establish each essential from the text and V checks it. onlyReferenceCaptured packets (e.g. Wikipedia alone) cannot be sole evidence for substantive historical teaching (design §3.2).',
+    calibration: { all50: stats(calRows), goldContaminated: { ids: gold.map(r => r.id), ...stats(gold) }, nonGold: stats(nonGold) },
+    regressions: stats(rows.filter(r => !r.origin.startsWith('calibration'))),
     rows,
   };
   writeJson(COVERAGE_FILE, summary);

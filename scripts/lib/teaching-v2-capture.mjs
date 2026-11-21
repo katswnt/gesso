@@ -8,7 +8,7 @@
 //      (same on-disk key/format as the shadow-audit snapshot helper, scripts/pass-b-audit-evidence.mjs).
 //   2. Pure offline packet assembly: deterministic HTML/JSON/PDF -> normalized text, boilerplate stripping,
 //      paragraph-preserving sections with exact offsets, the 40,000-character packet budget with recorded
-//      selection (never a mid-passage cut), URL vetting rules, and a lexical slot-candidate coverage triage.
+//      selection (never a mid-passage cut), URL vetting rules, and lexical keyword hits (never coverage).
 import { request as httpsRequest } from 'node:https';
 import { lookup as dnsLookup } from 'node:dns';
 import { execFileSync } from 'node:child_process';
@@ -19,9 +19,9 @@ import { extractTextV2, extractJsonText } from '../pass-b-audit-evidence.mjs';
 import { sha256, stableJson } from './vision-legacy.mjs';
 import { LIMITS, SOURCE_KINDS, sha256Bytes } from './teaching-v2-contract.mjs';
 
-export const CAPTURE_POLICY_VERSION = 'teachingV2Capture/1';
+export const CAPTURE_POLICY_VERSION = 'teachingV2Capture/2'; // /2: unwanted redirect/error bodies are destroyed, not drained
 export const EXTRACTION_VERSION = 'teachingV2SourceText/1'; // passBSourceText/2 HTML + filtered JSON + pdftotext
-export const SECTION_VERSION = 'teachingV2Sections/1';
+export const SECTION_VERSION = 'teachingV2Sections/2'; // /2: structural navigation only; no word-count line filter; omissions recorded
 export const CAPTURE_LIMITS = Object.freeze({ maxBytes: 5 * 1024 * 1024, timeoutMs: 20000, maxRedirects: 4 });
 const UA = 'Mozilla/5.0 (compatible; GessoSourceSnapshot/2; +https://gesso.katswint.com)';
 const ACCEPT = 'text/html,application/xhtml+xml,application/json,application/pdf;q=0.9';
@@ -52,17 +52,21 @@ export function createSourceCapture({ resolve = dnsLookup, request = httpsReques
           const peer = normalizeIp(res.socket && res.socket.remoteAddress);
           if (!peer || peer !== normalizeIp(pinned.address)) { req.destroy(); return done(fail('remote-addr-mismatch', { host: u.hostname })); }
           const status = res.statusCode || 0;
-          if (status >= 300 && status < 400) { res.resume(); return done({ ok: true, redirect: true, status, location: res.headers.location }); }
-          if (status !== 200) { res.resume(); return done(fail(`http ${status}`, { status })); }
+          // A redirect or error body is never read: destroy the response and request at once, so nothing keeps
+          // streaming outside the byte cap and deadline after the next hop starts (review finding 9).
+          const discard = () => { try { res.destroy(); } catch { /* ignore */ } try { req.destroy(); } catch { /* ignore */ } };
+          if (status >= 300 && status < 400) { const location = res.headers.location; discard(); return done({ ok: true, redirect: true, status, location }); }
+          if (status !== 200) { discard(); return done(fail(`http ${status}`, { status })); }
           const declared = Number(res.headers['content-length']);
-          if (Number.isFinite(declared) && declared > cap) { req.destroy(); return done(fail('too-large', { status })); }
+          if (Number.isFinite(declared) && declared > cap) { discard(); return done(fail('too-large', { status })); }
           const chunks = []; let n = 0;
-          res.on('data', d => { n += d.length; if (n > cap) { req.destroy(); return done(fail('too-large', { status })); } chunks.push(d); });
+          res.on('data', d => { if (settled) return; n += d.length; if (n > cap) { discard(); return done(fail('too-large', { status })); } chunks.push(d); });
           res.on('end', () => { if (!n) return done(fail('empty-body', { status })); done({ ok: true, redirect: false, status, buffer: Buffer.concat(chunks), contentType: String(res.headers['content-type'] || '') }); });
           res.on('error', () => done(fail('network-error')));
         });
       } catch { return done(fail('network-error')); }
       timer = setTimeout(() => { try { req.destroy(); } catch { /* ignore */ } done(fail('timeout', { host: u.hostname })); }, Math.max(1, deadlineAt - Date.now()));
+      // (the request-level deadline above also destroys a response still streaming when it fires)
       req.on('timeout', () => { req.destroy(); done(fail('timeout')); });
       req.on('error', () => done(fail('network-error')));
       req.end();
@@ -134,20 +138,26 @@ export function extractSnapshotText({ meta, raw }, { pdf = extractPdfText } = {}
 
 // ---------------- sections + packet budget ----------------
 const WIKI_TAIL = /^(References|See also|Notes|External links|Further reading|Bibliography|Sources|Citations|Footnotes)$/;
-// Boilerplate = navigation/menus/shop lists: short lines with no sentence punctuation. Substantive sentences and
-// "key: value" record fields are always kept (qualifications live there).
+// Navigation is removed STRUCTURALLY (extractText drops nav/header/footer/form/script/style elements before any
+// line exists). What remains is kept whole, including short sentences and their neighbouring qualifications
+// (review finding 7: "Attribution remains uncertain." was dropped by a word-count rule). The only line-level
+// removals are exact interface labels that are never substantive, plus a reference-apparatus tail after a
+// standard heading; every removed line is recorded with its offsets so nothing is omitted silently.
+export const UI_LABEL = /^(skip to (main )?content|main menu|menu|search|search the collection|log ?in|sign ?in|sign up|register|subscribe|newsletter|share|share this|print|close|back to top|home|shop|visit|donate|join|become a member|buy tickets|tickets|cart|basket|accept|accept all|accept all cookies|reject all|cookie settings|toggle navigation|previous|next)$/i;
 export function keepLine(line, format) {
-  const words = line.split(/\s+/).filter(Boolean).length;
-  if (format === 'json') return /^[a-z_]+: /i.test(line) && line.length >= 12;
-  if (words >= 8) return true;
-  return words >= 4 && /[.!?;:]["”’)]?$/.test(line);
+  const t = line.trim();
+  if (!t) return false;
+  if (format === 'json') return true; // every "key: value" record field is kept
+  return !UI_LABEL.test(t);
 }
-export function buildSections(sourceId, text, format, { maxSectionChars = 2000 } = {}) {
+export function splitSections(sourceId, text, format, { maxSectionChars = 2000 } = {}) {
   const lines = []; let at = 0;
   for (const line of text.split('\n')) { lines.push({ line, start: at, end: at + line.length }); at += line.length + 1; }
-  let cut = lines.length;
+  let cut = lines.length; const omitted = [];
   if (format === 'html') { const i = lines.findIndex(l => WIKI_TAIL.test(l.line.trim())); if (i > 0) cut = i; }
-  const kept = lines.slice(0, cut).map((l, i) => ({ ...l, i })).filter(l => keepLine(l.line, format));
+  if (cut < lines.length) omitted.push({ reason: `reference apparatus after heading "${lines[cut].line.trim()}"`, start: lines[cut].start, end: lines.at(-1).end, chars: lines.slice(cut).reduce((n, l) => n + l.line.length, 0) });
+  const kept = [];
+  lines.slice(0, cut).forEach((l, i) => { if (keepLine(l.line, format)) kept.push({ ...l, i }); else if (l.line.trim()) omitted.push({ reason: 'interface label', start: l.start, end: l.end, chars: l.line.length, text: l.line.trim() }); });
   const sections = []; let cur = null;
   for (const l of kept) {
     const contiguous = cur && l.i === cur.lastI + 1 && (l.end - cur.start) <= maxSectionChars;
@@ -155,8 +165,9 @@ export function buildSections(sourceId, text, format, { maxSectionChars = 2000 }
     else { if (cur) sections.push(cur); cur = { start: l.start, end: l.end, lastI: l.i }; }
   }
   if (cur) sections.push(cur);
-  return sections.map((s, n) => ({ id: `${sourceId}.s${String(n + 1).padStart(3, '0')}`, text: text.slice(s.start, s.end), start: s.start, end: s.end }));
+  return { sections: sections.map((x, n) => ({ id: `${sourceId}.s${String(n + 1).padStart(3, '0')}`, text: text.slice(x.start, x.end), start: x.start, end: x.end })), omitted };
 }
+export function buildSections(sourceId, text, format, opts) { return splitSections(sourceId, text, format, opts).sections; }
 // Fair-share budget in source priority order; whole sections only; every omission recorded.
 export function applyBudget(sources, total = LIMITS.packetChars) {
   let remaining = total; const captured = sources.filter(s => s.status === 'captured');
@@ -231,7 +242,9 @@ export function assemblePacket({ workId, catalogId, vetted, snapshots }) {
     captureReceipts.push({ url: v.url, ok: ex.ok, error: ex.ok ? null : ex.error, status: snap.meta.status, contentType: snap.meta.contentType, bytes: snap.meta.bytes, rawSha256: snap.meta.rawSha256, retrievedAt: snap.meta.retrievedAt, finalUrl: snap.meta.finalUrl, chain: snap.meta.chain });
     if (!ex.ok || !ex.text.trim()) { sources.push({ ...base, finalUrl: snap.meta.finalUrl, title: v.title || '', retrievedAt: snap.meta.retrievedAt, bytesHash: snap.meta.rawSha256, textHash: null, extractionVersion: EXTRACTION_VERSION, status: 'unavailable', sections: [] }); gaps.push({ sourceId: id, url: v.url, reason: ex.error || 'empty text' }); return; }
     texts[id] = ex.text;
-    sources.push({ ...base, finalUrl: snap.meta.finalUrl, title: ex.title || v.title || '', retrievedAt: snap.meta.retrievedAt, bytesHash: snap.meta.rawSha256, textHash: sha256(ex.text), extractionVersion: EXTRACTION_VERSION, format: ex.format, status: 'captured', allSections: buildSections(id, ex.text, ex.format) });
+    const split = splitSections(id, ex.text, ex.format);
+    sources.push({ ...base, finalUrl: snap.meta.finalUrl, title: ex.title || v.title || '', retrievedAt: snap.meta.retrievedAt, bytesHash: snap.meta.rawSha256, textHash: sha256(ex.text), extractionVersion: EXTRACTION_VERSION, format: ex.format, status: 'captured', allSections: split.sections, extractionOmissions: split.omitted });
+    if (split.omitted.some(o => o.reason !== 'interface label')) gaps.push({ sourceId: id, url: v.url, reason: `extraction left out ${split.omitted.filter(o => o.reason !== 'interface label').map(o => o.reason).join('; ')} (offsets recorded)` });
   });
   for (const s of sources) if (!s.allSections) s.allSections = [];
   applyBudget(sources);
@@ -241,20 +254,22 @@ export function assemblePacket({ workId, catalogId, vetted, snapshots }) {
   return { packet, texts };
 }
 
-// ---------------- lexical slot-candidate triage (NOT semantic coverage; W/V decide that) ----------------
-export const SLOT_LEXICON = Object.freeze({
-  subjectAction: /\b(depict|depicts|depicting|shows|showing|scene|story|represent|represents|portrait of|subject|narrat|episode|myth|legend|figure of)\w*/i,
-  functionContext: /\b(used (for|as|in)|made for|commission|ritual|ceremon|funer|burial|tomb|altar|worship|devotion|served|function|purpose|patron|display(ed)? in|offering|temple|church|court|household|daily use)\w*/i,
-  makingMechanism: /\b(technique|carved|carving|paint|slip|cast|woven|weav|glaze|brush|printed|engrav|incis|pigment|layer|fired|modell?ed|inlay|gilded|gilding|woodblock|etch|lacquer|relief|chisel|mold|mould|stroke)\w*/i,
-  significance: /\b(important|influential|famous|first|celebrated|innovat|significant|masterpiece|renowned|landmark|pioneer|notable|best[- ]known|iconic|admired)\w*/i,
+// ---------------- lexical keyword hits (review finding 17: NOT coverage of any slot; W/V decide that) ----------------
+// Counts captured sections containing a keyword from each group. A hit says a word occurs; it never says the
+// packet answers the subject, function, context or mechanism question, and it is never reported as coverage.
+export const KEYWORD_GROUPS = Object.freeze({
+  depictionWords: /\b(depict|depicts|depicting|shows|showing|scene|story|represent|represents|portrait of|subject|narrat|episode|myth|legend|figure of)\w*/i,
+  useWords: /\b(used (for|as|in)|made for|commission|ritual|ceremon|funer|burial|tomb|altar|worship|devotion|served|function|purpose|patron|display(ed)? in|offering|temple|church|court|household|daily use)\w*/i,
+  makingWords: /\b(technique|carved|carving|paint|slip|cast|woven|weav|glaze|brush|printed|engrav|incis|pigment|layer|fired|modell?ed|inlay|gilded|gilding|woodblock|etch|lacquer|relief|chisel|mold|mould|stroke)\w*/i,
+  significanceWords: /\b(important|influential|famous|first|celebrated|innovat|significant|masterpiece|renowned|landmark|pioneer|notable|best[- ]known|iconic|admired)\w*/i,
 });
-export function lexicalSlotCandidates(packet, catalog) {
-  const tokens = String(catalog?.title || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').match(/[a-z]{5,}/g) || [];
-  const out = { identity: 0, subjectAction: 0, functionContext: 0, makingMechanism: 0, significance: 0, transfer: null };
+export function lexicalKeywordHits(packet, catalog) {
+  const tokens = String(catalog?.title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/[a-z]{5,}/g) || [];
+  const out = { titleWord: 0, depictionWords: 0, useWords: 0, makingWords: 0, significanceWords: 0 };
   for (const s of packet.sources) for (const sec of s.sections || []) {
-    const t = sec.text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    if (tokens.length && tokens.some(k => t.includes(k))) out.identity++;
-    for (const slot of Object.keys(SLOT_LEXICON)) if (SLOT_LEXICON[slot].test(sec.text)) out[slot]++;
+    const t = sec.text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (tokens.length && tokens.some(k => t.includes(k))) out.titleWord++;
+    for (const g of Object.keys(KEYWORD_GROUPS)) if (KEYWORD_GROUPS[g].test(sec.text)) out[g]++;
   }
-  return out; // transfer is image-grounded by W; no lexical source proxy
+  return out;
 }

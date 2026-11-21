@@ -10,9 +10,10 @@ import * as C from '../scripts/lib/teaching-v2-contract.mjs';
 import * as P from '../scripts/lib/teaching-v2-prompts.mjs';
 import { buildConfinedCommand, classifyTranscript, CONFINED_FLAGS } from '../scripts/lib/teaching-v2-stage.mjs';
 import { buildStageCommand } from '../scripts/lib/pass-b-calibration.mjs';
-import { projectLesson, validateProjection, currentRendererView, faithfulView, GENERIC_Q, renderPreviewPage } from '../scripts/lib/teaching-v2-projection.mjs';
-import { runWork, PauseRun, telemetry } from '../scripts/lib/teaching-v2-controller.mjs';
-import { assemblePacket, buildSections, applyBudget, vetUrls, createSourceCapture, lexicalSlotCandidates } from '../scripts/lib/teaching-v2-capture.mjs';
+import { projectLesson, validateProjection, faithfulView, renderPreviewPage } from '../scripts/lib/teaching-v2-projection.mjs';
+import { loadCurrentRenderer } from '../scripts/lib/teaching-v2-current-render.mjs';
+import { runWork, PauseRun, LatchStop, telemetry, candidateBinding, bindingSha } from '../scripts/lib/teaching-v2-controller.mjs';
+import { assemblePacket, buildSections, applyBudget, vetUrls, createSourceCapture, lexicalKeywordHits } from '../scripts/lib/teaching-v2-capture.mjs';
 import { diagnosticRequests, validateLocalization, b3Lesson, compareMethods } from '../scripts/lib/teaching-v2-pins.mjs';
 import { importB3Candidates, derivePlan } from '../scripts/lib/teaching-v2-inputs.mjs';
 
@@ -116,7 +117,7 @@ test('W/V use sonnet-5-5 at high effort with the same confinement flags, bypassi
 });
 const IMG = `${'c'.repeat(64)}.jpg`, DIR = '/tmp/tv2-call-x';
 function transcript({ model = 'claude-sonnet-5-5', apiKeySource = 'none', readPath = `${DIR}/${IMG}`, image = true, extraTool = null, result = true, answer = model } = {}) {
-  const ev = [{ type: 'system', subtype: 'init', apiKeySource, model, claude_code_version: '9.9.9' },
+  const ev = [{ type: 'system', subtype: 'init', apiKeySource, model, claude_code_version: '9.9.9', cwd: DIR, tools: ['Read', 'StructuredOutput'], mcp_servers: [], permissionMode: 'dontAsk' },
     { type: 'assistant', message: { model: answer, content: [{ type: 'tool_use', id: 't1', name: 'Read', input: { file_path: readPath } }] } },
     { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', content: image ? [{ type: 'image' }] : 'File does not exist.' }] } }];
   if (extraTool) ev.push({ type: 'assistant', message: { model: answer, content: [{ type: 'tool_use', id: 't2', name: extraTool, input: {} }] } });
@@ -125,16 +126,16 @@ function transcript({ model = 'claude-sonnet-5-5', apiKeySource = 'none', readPa
   return ev.map(e => JSON.stringify(e)).join('\n');
 }
 test('transcript classification: ok, transport, and fatal confinement/provenance cases', () => {
-  const c = s => classifyTranscript(s, { exitCode: 0, callDir: DIR, imageFile: IMG }).kind;
+  const c = s => classifyTranscript(s, { exitCode: 0, callDir: DIR, imageFile: IMG, runtimeVersion: '9.9.9' }).kind;
   assert.equal(c(transcript()), 'ok');
-  assert.equal(classifyTranscript(transcript(), { exitCode: 0, callDir: DIR, imageFile: IMG }).usage.outputTokens, 20);
-  assert.equal(c(transcript({ result: false })), 'transport-failure');
+  assert.equal(classifyTranscript(transcript(), { exitCode: 0, callDir: DIR, imageFile: IMG, runtimeVersion: '9.9.9' }).usage.outputTokens, 20);
+  assert.equal(c(transcript({ result: false })), 'interrupted', 'a missing result is not a proven transient failure');
   assert.equal(c(transcript({ extraTool: 'WebFetch' })), 'fatal');
   assert.equal(c(transcript({ apiKeySource: 'ANTHROPIC_API_KEY' })), 'fatal');
   assert.equal(c(transcript({ model: 'claude-sonnet-4-6', answer: 'claude-sonnet-4-6' })), 'fatal');
   assert.equal(c(transcript({ readPath: '/etc/passwd' })), 'fatal');
   assert.equal(c(transcript({ image: false })), 'fatal');
-  assert.equal(classifyTranscript('', { exitCode: 1, callDir: DIR, imageFile: IMG }).kind, 'transport-failure');
+  assert.equal(classifyTranscript('', { exitCode: 1, callDir: DIR, imageFile: IMG, runtimeVersion: '9.9.9' }).kind, 'transport-failure');
 });
 
 // ---------- schemas + referential validation ----------
@@ -212,9 +213,10 @@ test('URL vetting: holding record first, commercial/aggregator/Wikidata never ca
   assert.ok(!v.vetted.some(x => /artelino|artsandculture|wikidata|insecure/.test(x.url)));
   assert.equal(v.vetted.find(x => x.url.includes('clevelandart.org/art')).kind, 'holdingInstitution');
 });
-test('lexical slot candidates are triage counts, with no transfer proxy', () => {
-  const lex = lexicalSlotCandidates(packet, { title: 'Hydria with Priam' });
-  assert.equal(lex.transfer, null); assert.ok(lex.subjectAction >= 1 && lex.functionContext >= 1 && lex.makingMechanism >= 1);
+test('lexical keyword hits are word counts, never slot coverage', () => {
+  const lex = lexicalKeywordHits(packet, { title: 'Hydria with Priam' });
+  assert.deepEqual(Object.keys(lex), ['titleWord', 'depictionWords', 'useWords', 'makingWords', 'significanceWords']);
+  assert.ok(lex.depictionWords >= 1 && lex.useWords >= 1 && lex.makingWords >= 1);
 });
 
 // ---------- hardened capture (offline, injected DNS/request) ----------
@@ -256,23 +258,20 @@ test('projection converts 0-1 to percent exactly once and never renumbers around
   const reword = clone(proj); reword.entry.notes[0].body += ' More.';
   assert.ok(!validateProjection(reword, lesson).ok, 'wording change accepted');
 });
-test('current-renderer model mirrors index.html: hidden unpinned note, generic filter, teaser, legacy pin fallback', () => {
-  const html = readFileSync('index.html', 'utf8');
-  assert.ok(html.includes(`const GENERIC_Q=${GENERIC_Q.toString()};`), 'GENERIC_Q drifted from index.html');
-  assert.ok(html.includes("const d=w.indexOf('. '); return d>-1?w.slice(0,d+1):w;"), 'teaser rule drifted from index.html');
-  assert.ok(html.includes('const show=anchored.length>=2?anchored:idx;'), 'notes filter drifted from index.html');
+test('current renderer runs index.html itself: hidden unpinned note, generic filter, teaser, legacy pin fallback', () => {
+  const R = loadCurrentRenderer(); const id = 'harvard216218';
   const lesson = writerResult().draft.lesson;
   lesson.questions.unshift({ id: 'q0', q: 'What is the story behind it?', a: 'A generic stem.' });
-  const cur = currentRendererView({ ...projectLesson(lesson), visPins: [] });
-  assert.deepEqual(cur.hiddenNotes.map(x => x.i), [1]);
-  assert.deepEqual(cur.hiddenGuide.map(g => g.i), [0]);
+  const cur = R.render({ workId: id, ...projectLesson(lesson), imageSize: { width: 300, height: 300 } });
+  assert.deepEqual(cur.notesShown, [1, 3], 'the unpinned note is hidden while two notes are pinned');
+  assert.ok(!cur.questionsShown.includes(1), 'the generic stem is filtered');
   assert.deepEqual(cur.dots.map(d => d.label), [1, 3]);
   const noPins = writerResult().draft.lesson; noPins.hotspots.forEach(h => { h.x = null; h.y = null; });
-  const fb = currentRendererView({ ...projectLesson(noPins), visPins: [{ x: 0.5, y: 0.5 }] });
-  assert.equal(fb.dotSource, 'legacy-vision-fallback'); assert.ok(fb.losses.some(l => /fallback/.test(l)));
+  const fb = R.render({ workId: id, ...projectLesson(noPins), visionRecord: { pins: [{ x: 0.5, y: 0.5, label: 'old' }] } });
+  assert.equal(fb.dotSource, 'legacy-fallback'); assert.ok(fb.losses.some(l => /fallback/.test(l)));
   const f = faithfulView(projectLesson(lesson)); assert.equal(f.notes.length, 3); assert.equal(f.guide.length, 5);
-  const page = renderPreviewPage({ kind: 'current', works: [{ id: 'fx', title: 'T', imageRel: 'img/x.jpg', status: 'accepted-for-review', projection: projectLesson(lesson) }] });
-  assert.match(page, /left:25%;top:50%/); assert.match(page, /Lost in the current renderer/);
+  const page = renderPreviewPage({ kind: 'current', works: [{ id, title: 'T', imageRel: 'img/x.jpg', status: 'accepted-for-review', shown: 'candidate', current: cur, entry: projectLesson(lesson).entry }] });
+  assert.match(page, /Lost or moved in the current renderer/); assert.match(page, /Candidate lesson/);
 });
 
 // ---------- attempt budget ----------
@@ -318,10 +317,11 @@ test('pass/hold: the controller recomputes pass and never trusts a self-declared
 const gold = { sha256: C.FROZEN_GOLD_SHA256, text: 'gold' };
 const work = { id: 'fx1', key: 'k', catalog: { title: 'Hydria with Priam' }, b1: { imageFitness: { imageState: 'usable' }, seen: 'a jar' }, b2: null, b3: null, image: { sha256: 'c'.repeat(64), ext: 'jpg' } };
 const ok = s => ({ kind: 'ok', structured: s, usage: { outputTokens: 100, inputTokens: 5 }, wallMs: 10, transcriptSha256: 't' });
-async function drive(responses, state = {}) {
+const stubRender = proj => ({ model: 'stub', whyShown: proj.entry.why, notesShown: [], questionsShown: [], cuesShown: [], dotSource: 'notes', dots: [], displayed: {}, losses: [] });
+async function drive(responses, state = {}, extra = {}) {
   const calls = []; const queue = [...responses];
   const invoke = async (stage, { reason }) => { calls.push(`${stage}:${reason}`); const r = queue.shift(); if (!r) throw new Error(`unexpected call ${stage}`); return typeof r === 'function' ? r() : r; };
-  const st = await runWork({ work, packet, texts, gold, state, invoke });
+  const st = await runWork({ work, packet, texts, gold, state, invoke, render: stubRender, ...extra });
   return { st, calls };
 }
 test('controller: W ok + V pass = accepted-for-review in two calls (never an approval)', async () => {
@@ -349,14 +349,19 @@ test('controller: a confinement failure holds the work and pauses the run', asyn
 });
 test('controller: no captured literal text holds before W with zero calls', async () => {
   const empty = clone(packet); empty.sources.forEach(s => { s.status = 'unavailable'; s.sections = []; });
-  let called = 0; const st = await runWork({ work, packet: empty, texts: {}, gold, state: {}, invoke: async () => { called++; } });
+  let called = 0; const st = await runWork({ work, packet: empty, texts: {}, gold, state: {}, invoke: async () => { called++; }, render: stubRender });
   assert.equal(st.status, 'hold'); assert.equal(called, 0); assert.equal(st.stage, 'preflight');
 });
-test('controller: resume after an interrupted reservation counts it as spent and retries once', async () => {
-  const state = { ledger: [{ kind: 'W', reason: 'planned', outcome: 'reserved' }], artifacts: {} };
-  const { st, calls } = await drive([ok(writerResult()), ok(verification())], state);
-  assert.deepEqual(calls, ['W:transportRetry', 'V:planned']); assert.equal(st.status, 'accepted-for-review'); assert.equal(telemetry(st).calls, 3);
-  const again = await drive([], st); assert.deepEqual(again.calls, []); // terminal works are skipped on resume
+test('controller: an interrupted reservation is rebuilt from its transcript, or latches as an unknown outcome', async () => {
+  const mk = () => { const binding = candidateBinding({ work, packet, texts, gold }); return { ledger: [{ seq: 1, kind: 'W', reason: 'planned', outcome: 'reserved' }], artifacts: {}, binding, bindingSha256: bindingSha(binding) }; };
+  // no transcript -> unknown outcome, latched, never re-called
+  const s1 = mk();
+  await assert.rejects(drive([], s1, { attempts: { recover: () => null } }), LatchStop); assert.equal(s1.ledger[0].outcome, 'unknown');
+  // a flushed transcript -> its result is reused without a new W call
+  const s2 = mk();
+  const { st, calls } = await drive([ok(verification())], s2, { attempts: { recover: () => ({ ...ok(writerResult()), reason: null }) } });
+  assert.deepEqual(calls, ['V:planned']); assert.equal(st.status, 'accepted-for-review'); assert.equal(telemetry(st).calls, 2);
+  const again = await drive([], st, { attempts: { recover: e => e.kind === 'W' ? ok(writerResult()) : ok(verification()) } }); assert.deepEqual(again.calls, []); // terminal works are not re-called
 });
 
 // ---------- coordinate diagnostic + inputs ----------

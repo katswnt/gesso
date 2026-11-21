@@ -1,32 +1,77 @@
 {
- "version": "teachingV2PacketCoverage/1",
- "caveat": "Lexical slot candidates count works with at least one captured section matching a slot lexicon (identity = a title word). This is triage, NOT semantic coverage: W must establish each essential from the text and V checks it. transfer is image-grounded and has no source proxy.",
+ "version": "teachingV2PacketCoverage/2",
+ "caveat": "Capture and keyword counts only. A keyword hit means a captured section contains a word from a group (titleWord = a title word of 5+ letters; allFour = titleWord, depictionWords, useWords, makingWords); it is NOT identity, subject, function, context or mechanism coverage. W must establish each essential from the text and V checks it. onlyReferenceCaptured packets (e.g. Wikipedia alone) cannot be sole evidence for substantive historical teaching (design §3.2).",
  "calibration": {
-  "works": 50,
-  "withAnyCapturedText": 48,
-  "withHoldingRecord": 13,
-  "totalChars": 577132,
-  "worksWithSlotCandidates": {
-   "identity": 42,
-   "subjectAction": 38,
-   "functionContext": 41,
-   "makingMechanism": 40,
-   "transfer": null,
-   "significance": 37
+  "all50": {
+   "works": 50,
+   "withAnyCapturedText": 48,
+   "withHoldingRecord": 13,
+   "onlyReferenceCaptured": 7,
+   "withExtractionGaps": 27,
+   "totalChars": 634304,
+   "worksWithKeywordHits": {
+    "titleWord": 42,
+    "depictionWords": 39,
+    "useWords": 41,
+    "makingWords": 41,
+    "significanceWords": 37
+   },
+   "worksWithAllFourKeywordGroups": 30
   },
-  "allFourSourceSlots": 29
+  "goldContaminated": {
+   "ids": [
+    "http://www.wikidata.org/entity/Q586035",
+    "wikidata:Q110776566",
+    "harvard303416",
+    "wikidata:Q2454480"
+   ],
+   "works": 4,
+   "withAnyCapturedText": 4,
+   "withHoldingRecord": 1,
+   "onlyReferenceCaptured": 1,
+   "withExtractionGaps": 2,
+   "totalChars": 62872,
+   "worksWithKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 3,
+    "useWords": 3,
+    "makingWords": 3,
+    "significanceWords": 3
+   },
+   "worksWithAllFourKeywordGroups": 2
+  },
+  "nonGold": {
+   "works": 46,
+   "withAnyCapturedText": 44,
+   "withHoldingRecord": 12,
+   "onlyReferenceCaptured": 6,
+   "withExtractionGaps": 25,
+   "totalChars": 571432,
+   "worksWithKeywordHits": {
+    "titleWord": 40,
+    "depictionWords": 36,
+    "useWords": 38,
+    "makingWords": 38,
+    "significanceWords": 34
+   },
+   "worksWithAllFourKeywordGroups": 28
+  }
  },
  "regressions": {
   "works": 27,
   "withAnyCapturedText": 24,
-  "worksWithSlotCandidates": {
-   "identity": 23,
-   "subjectAction": 17,
-   "functionContext": 13,
-   "makingMechanism": 20,
-   "transfer": null,
-   "significance": 12
-  }
+  "withHoldingRecord": 10,
+  "onlyReferenceCaptured": 4,
+  "withExtractionGaps": 11,
+  "totalChars": 275687,
+  "worksWithKeywordHits": {
+   "titleWord": 23,
+   "depictionWords": 17,
+   "useWords": 13,
+   "makingWords": 21,
+   "significanceWords": 12
+  },
+  "worksWithAllFourKeywordGroups": 12
  },
  "rows": [
   {
@@ -38,18 +83,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 7990,
-   "sections": 16,
+   "chars": 9439,
+   "sections": 6,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 3,
-    "functionContext": 0,
-    "makingMechanism": 3,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 6,
+    "depictionWords": 3,
+    "useWords": 0,
+    "makingWords": 5,
+    "significanceWords": 3
    },
-   "packetSha256": "6950d6c2d29859e4c53569d8a7e4c6abd28f03170cf945e8103a877b33bbd28a"
+   "packetSha256": "50b5ee87e0f788121e40f7b8bc4023018a901816e6535f98fed1bb9070324e32"
   },
   {
    "id": "met247010",
@@ -60,18 +106,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 15278,
-   "sections": 22,
+   "chars": 16948,
+   "sections": 13,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 16,
-    "subjectAction": 7,
-    "functionContext": 5,
-    "makingMechanism": 6,
-    "significance": 5,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 11,
+    "depictionWords": 7,
+    "useWords": 5,
+    "makingWords": 7,
+    "significanceWords": 7
    },
-   "packetSha256": "dc00a92eb40859e8bbac5d662747d7d2a941a92663ef09c158a4f26896450008"
+   "packetSha256": "c06d62d0b7ce682a41e0d2413a03026e51b8d158e5d78db358f5a2a296aeecb2"
   },
   {
    "id": "http://www.wikidata.org/entity/Q586035",
@@ -82,18 +129,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 38687,
-   "sections": 82,
+   "chars": 39646,
+   "sections": 23,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 21,
-    "subjectAction": 21,
-    "functionContext": 13,
-    "makingMechanism": 32,
-    "significance": 13,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 15,
+    "depictionWords": 18,
+    "useWords": 13,
+    "makingWords": 19,
+    "significanceWords": 10
    },
-   "packetSha256": "74f454584895a4c1c0b8475d855ff171a4752625db34eea4f481a44dae441634"
+   "packetSha256": "c9af50f86f417b3b013f3a4f2c5c4fe0af1b3fb641f3488a7e06ed0e98b705c3"
   },
   {
    "id": "wikidata:Q97455775",
@@ -104,18 +152,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 9409,
-   "sections": 25,
+   "chars": 11864,
+   "sections": 8,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 6,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 7,
+    "significanceWords": 0
    },
-   "packetSha256": "8c85f308803566bac305888b37e1a2ef189da3e7294352d3e7c8fc28bf6ec493"
+   "packetSha256": "cd00983dcd56875bc3a7264b165d2df2f23e4848a9c6bf8881bf718979f93b48"
   },
   {
    "id": "wikidata:Q7678417",
@@ -126,18 +175,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 15118,
-   "sections": 30,
+   "chars": 17104,
+   "sections": 13,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 17,
-    "subjectAction": 10,
-    "functionContext": 6,
-    "makingMechanism": 6,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 13,
+    "depictionWords": 7,
+    "useWords": 5,
+    "makingWords": 5,
+    "significanceWords": 2
    },
-   "packetSha256": "7fdae1ac3765a300946f04a4d507cc733fbb547155a0a15b8068869a55306c63"
+   "packetSha256": "f0904c0f3a6e17f26acff3e06baaf8370657fa7f0d1843296c663f2fdc5f9adc"
   },
   {
    "id": "http://www.wikidata.org/entity/Q405814",
@@ -148,18 +198,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 13330,
-   "sections": 17,
+   "chars": 14033,
+   "sections": 10,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 9,
-    "subjectAction": 7,
-    "functionContext": 2,
-    "makingMechanism": 14,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 6,
+    "useWords": 2,
+    "makingWords": 8,
+    "significanceWords": 4
    },
-   "packetSha256": "9932aecf7c2be51a7fb5d6d5ebe71cc0e32c190aa89123e6f182b5f9b609dacc"
+   "packetSha256": "45c644cc8761ed21aaec9175c6f5e43e277cceb6e973262bfb5a2b4e8acbadde"
   },
   {
    "id": "cleveland120847",
@@ -170,18 +221,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 1983,
-   "sections": 8,
+   "chars": 2601,
+   "sections": 3,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 0,
-    "functionContext": 2,
-    "makingMechanism": 2,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 0,
+    "useWords": 2,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "ac6e23c4fd69e95cb6407fbae87f38dd27acb6623e917035b911e0330c86eb29"
+   "packetSha256": "18a18d40cd81b4238b0b2d9575e5de1af67cc33d05c1f9e152ee939308a3a3fa"
   },
   {
    "id": "wikidata:Q1616056",
@@ -195,15 +247,16 @@
    "chars": 0,
    "sections": 0,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "478430f00a40987df22aa4f9d313e067661d5bc3ae23b33c28748233730d168b"
+   "packetSha256": "73cc11232b29262cc0b3cc9a2a461d3a8bb9c3d8ee28c0d6513501e2578282f2"
   },
   {
    "id": "wikidata:Q537640",
@@ -214,18 +267,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 23268,
-   "sections": 29,
+   "chars": 23363,
+   "sections": 18,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 12,
-    "subjectAction": 7,
-    "functionContext": 4,
-    "makingMechanism": 11,
-    "significance": 7,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 11,
+    "depictionWords": 9,
+    "useWords": 4,
+    "makingWords": 9,
+    "significanceWords": 7
    },
-   "packetSha256": "a8d9a060c01142fbb209e5f97861ee3d823f0d940587037731937ad195de4a40"
+   "packetSha256": "d79a22d5d36220c6a76f4bef51a9ef4cb8ff1570c3913fc6e958521579d2d563"
   },
   {
    "id": "met57329",
@@ -236,18 +290,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 12986,
-   "sections": 14,
+   "chars": 13375,
+   "sections": 9,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 3,
-    "functionContext": 4,
-    "makingMechanism": 11,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 8,
+    "depictionWords": 3,
+    "useWords": 4,
+    "makingWords": 9,
+    "significanceWords": 4
    },
-   "packetSha256": "66fba7ab6903758f4c8429b8dfe2077785394de54e70b566228b3fbd3e39839b"
+   "packetSha256": "ebed4b6dd7cc39f09481f2c7b399af72debad254b5e78ca0630586605e87bc62"
   },
   {
    "id": "http://www.wikidata.org/entity/Q1755464",
@@ -258,18 +313,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 16557,
-   "sections": 18,
+   "chars": 17476,
+   "sections": 15,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 14,
-    "subjectAction": 10,
-    "functionContext": 3,
-    "makingMechanism": 10,
-    "significance": 5,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 12,
+    "depictionWords": 10,
+    "useWords": 4,
+    "makingWords": 11,
+    "significanceWords": 4
    },
-   "packetSha256": "425046ae6767bab8e17ebe5edc11184848bab8b0c61534db0e5669fbe26ff90f"
+   "packetSha256": "c018ed7a7899d0bb560c468aefebd7441b6c05693cd9c16102005ff4f9ff4fd5"
   },
   {
    "id": "wikidata:Q56825917",
@@ -280,18 +336,19 @@
    },
    "sources": 4,
    "captured": 4,
-   "chars": 39106,
-   "sections": 52,
+   "chars": 38540,
+   "sections": 25,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 14,
-    "subjectAction": 7,
-    "functionContext": 9,
-    "makingMechanism": 9,
-    "significance": 14,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 12,
+    "depictionWords": 8,
+    "useWords": 9,
+    "makingWords": 9,
+    "significanceWords": 11
    },
-   "packetSha256": "64a05458bfdc6db24dcb908dabe228c1caf5ba0b9e1b12ab36f80709042e2ed4"
+   "packetSha256": "5533f1826ee86f89a981b71a4ca851fee1d40cfbf6a081b5ad9e0a5353e9f74d"
   },
   {
    "id": "wd:Q616159",
@@ -302,18 +359,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 4246,
+   "chars": 5851,
    "sections": 7,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 1,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 2,
+    "useWords": 1,
+    "makingWords": 1,
+    "significanceWords": 1
    },
-   "packetSha256": "11f04784c05131b9b303cc4aa1f690296a82629089ab7f94cc22eee0c1438522"
+   "packetSha256": "ff7f2715fda1c498220256f62dd13dfc0d463d066d50f43da41d0911dcfdc6a0"
   },
   {
    "id": "http://www.wikidata.org/entity/Q1190706",
@@ -324,18 +382,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 5420,
-   "sections": 7,
+   "chars": 5782,
+   "sections": 4,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 3,
-    "functionContext": 2,
-    "makingMechanism": 6,
-    "significance": 3,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 3,
+    "useWords": 2,
+    "makingWords": 4,
+    "significanceWords": 2
    },
-   "packetSha256": "2443d35710746e6620f3b1338efbe6df4910d433cbc98c2c32591d7826db7fb6"
+   "packetSha256": "92d5892e26385ed8d9cc7b94b8bf995efaa75a2321fe4db6338609d1d3af027b"
   },
   {
    "id": "wikidata:Q114769532",
@@ -346,18 +405,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 6238,
-   "sections": 15,
+   "chars": 7679,
+   "sections": 6,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 10,
-    "subjectAction": 0,
-    "functionContext": 9,
-    "makingMechanism": 0,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 5,
+    "depictionWords": 0,
+    "useWords": 4,
+    "makingWords": 0,
+    "significanceWords": 2
    },
-   "packetSha256": "e7f45a9ccefe363fc798b23f68a8564156e44b6c32dce05e045a457467c34ade"
+   "packetSha256": "408d1cfc46b18433a9bec11daea940a60e44f9d7027551efb8fd8a2c6b9af285"
   },
   {
    "id": "wikidata:Q4950181",
@@ -368,18 +428,19 @@
    },
    "sources": 3,
    "captured": 2,
-   "chars": 4625,
-   "sections": 15,
+   "chars": 6035,
+   "sections": 4,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 2,
-    "functionContext": 2,
-    "makingMechanism": 2,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 2,
+    "useWords": 2,
+    "makingWords": 3,
+    "significanceWords": 2
    },
-   "packetSha256": "2a1f26554422dee6a745af807f8860bc3714ad293c298590172758f079fd85c6"
+   "packetSha256": "5d0d25995e16a64e58f6244fd3b3781234f6e2fc9a30a4de5983f304bde5945e"
   },
   {
    "id": "cleveland125571",
@@ -390,18 +451,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 3509,
-   "sections": 7,
+   "chars": 3788,
+   "sections": 5,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 0,
-    "functionContext": 3,
-    "makingMechanism": 3,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 0,
+    "useWords": 2,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "1d3a2e836a6f27015dc8c17e9074aa8085b2a67a399fd833ebad01cd5c85bbf9"
+   "packetSha256": "60815fcce693b32e8b31c07cb8b0393594cf78a4a791c7934c2911374f488661"
   },
   {
    "id": "wikidata:Q59296885",
@@ -412,18 +474,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 15577,
-   "sections": 20,
+   "chars": 16536,
+   "sections": 10,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 8,
-    "functionContext": 2,
-    "makingMechanism": 9,
-    "significance": 5,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 8,
+    "useWords": 2,
+    "makingWords": 10,
+    "significanceWords": 5
    },
-   "packetSha256": "f5ff40c1610773059534d6328a7d201c3d5933db9047ad2f72838fdf2e1aef7b"
+   "packetSha256": "7cc5c4f509a863521f516fd4036b48a734c3c7b8900a6d3be0e2af56409c0a6d"
   },
   {
    "id": "wikidata:Q21585351",
@@ -434,18 +497,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 23428,
-   "sections": 30,
+   "chars": 24717,
+   "sections": 17,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 15,
-    "subjectAction": 7,
-    "functionContext": 7,
-    "makingMechanism": 3,
-    "significance": 5,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 16,
+    "depictionWords": 6,
+    "useWords": 6,
+    "makingWords": 3,
+    "significanceWords": 5
    },
-   "packetSha256": "b9088075495a040b5988f40069a468c85d2657b1c6944ce06201652efabf6f91"
+   "packetSha256": "3d8ff30ee00b782a4be07f2faebf1e8ddc94a342c384fdbc9e8bb25442394d4a"
   },
   {
    "id": "met450509",
@@ -456,18 +520,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 11655,
-   "sections": 8,
+   "chars": 11681,
+   "sections": 6,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 1,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 1,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "a18249b77ee641d9de291a255ab0e51f1e780932469a30bd6dd4e936e3062fad"
+   "packetSha256": "c170d56ee7c5a2786f935cf66dd6d6daad3fe46055f2fc3fbb9302f6d1a0b36d"
   },
   {
    "id": "aic124043",
@@ -478,18 +543,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 209,
+   "chars": 226,
    "sections": 1,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "1a98fb783ad73d42b29eb8ed0e70dda3b45fa12ae2ffd8ec934b62dc87ff5b86"
+   "packetSha256": "ba11e7e1229f1ca2689f1a6eefbb14129898caebdaf8389cc6db918bb77f6cad"
   },
   {
    "id": "http://www.wikidata.org/entity/Q11180645",
@@ -500,18 +566,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 5163,
-   "sections": 6,
+   "chars": 5681,
+   "sections": 5,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 4,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 2,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 1,
+    "useWords": 1,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "9ca4a7927aacf636ca469ec09d69279dc0d21764420c6b161d19012f1622ef43"
+   "packetSha256": "39e70ededa8bbab14ff7effa7765bca8157848fae65a2aebaae5bb6a683e5573"
   },
   {
    "id": "wikidata:Q15284134",
@@ -522,18 +589,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 3694,
-   "sections": 5,
+   "chars": 3984,
+   "sections": 3,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 0,
-    "functionContext": 3,
-    "makingMechanism": 0,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 0,
+    "useWords": 2,
+    "makingWords": 0,
+    "significanceWords": 3
    },
-   "packetSha256": "6721ba14e6d9ed57b747083582d53d94106e6feb7e0c6e548db1c1ca6606f5f3"
+   "packetSha256": "7963df15def0ba173aa02e458a49dd588dae4e816e31f266fa7a7ddf2819951d"
   },
   {
    "id": "http://www.wikidata.org/entity/Q28092249",
@@ -544,18 +612,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 8815,
-   "sections": 21,
+   "chars": 9860,
+   "sections": 7,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 7,
-    "subjectAction": 4,
-    "functionContext": 5,
-    "makingMechanism": 10,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 6,
+    "depictionWords": 4,
+    "useWords": 5,
+    "makingWords": 6,
+    "significanceWords": 4
    },
-   "packetSha256": "d6c3f9c57412a7a5df6a98762bdd69922c4ad7211e76a4f070861971c57b30ba"
+   "packetSha256": "9b0ce10a788097a30962ab0f632ae96b06b7b474e9087744a23dad755c699220"
   },
   {
    "id": "http://www.wikidata.org/entity/Q15788627",
@@ -566,18 +635,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 4348,
-   "sections": 12,
+   "chars": 5203,
+   "sections": 4,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 3,
-    "functionContext": 3,
-    "makingMechanism": 8,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 4,
+    "useWords": 3,
+    "makingWords": 3,
+    "significanceWords": 0
    },
-   "packetSha256": "28e291bb43353c9f11b2b13e7628856360ef5a7b5d9872dde8276970a57fdb30"
+   "packetSha256": "1037af54d305759ad6d72adac77448f115f718452b18db69561a0a24b46123d3"
   },
   {
    "id": "wikidata:Q110776566",
@@ -588,18 +658,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 1094,
-   "sections": 3,
+   "chars": 1458,
+   "sections": 1,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 1,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 1,
+    "useWords": 1,
+    "makingWords": 1,
+    "significanceWords": 1
    },
-   "packetSha256": "5005fd0f5943320a4c2b9e5e34c4abb5b2941b65b30e0b5adac1f74fc7a0c5a0"
+   "packetSha256": "02cfe597d1dcaa0e0af8ddc346642203fe13d525fe7461845843b5c4fb74fb5b"
   },
   {
    "id": "harvard303416",
@@ -610,18 +681,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 8489,
-   "sections": 18,
+   "chars": 9883,
+   "sections": 7,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 6,
-    "functionContext": 3,
-    "makingMechanism": 4,
-    "significance": 5,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 5,
+    "useWords": 3,
+    "makingWords": 4,
+    "significanceWords": 5
    },
-   "packetSha256": "624d20b028455a3bddacb59d3044a36d6960a2cbe4cb46eeea709c421d5d963c"
+   "packetSha256": "9326814c8e7099a636a278ac8bdfee0106838fc5ff106e51ceeb7d75b2bf1e81"
   },
   {
    "id": "cleveland167459",
@@ -632,18 +704,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 9615,
-   "sections": 13,
+   "chars": 10281,
+   "sections": 9,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 3,
-    "functionContext": 1,
-    "makingMechanism": 10,
-    "significance": 6,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 6,
+    "depictionWords": 3,
+    "useWords": 1,
+    "makingWords": 8,
+    "significanceWords": 5
    },
-   "packetSha256": "c2f67c39b16ca362af2b9992617504324bd6620e7091bb09be44c52ac92b12f6"
+   "packetSha256": "41267da3757f477fa3d79e50468d4e48bf5102f431a995633856a6184485402b"
   },
   {
    "id": "wikidata:Q48881623",
@@ -654,18 +727,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 9050,
-   "sections": 17,
+   "chars": 10170,
+   "sections": 6,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 1,
-    "functionContext": 6,
-    "makingMechanism": 5,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 2,
+    "useWords": 4,
+    "makingWords": 5,
+    "significanceWords": 3
    },
-   "packetSha256": "c1d1eb04d8b85c55967d0625fea9351349915adc4041bb20c6f4138e93269ec2"
+   "packetSha256": "749575dc48b83e8939f309e4cec4759792ec10cd481bd0e9779bbd92a8f9e175"
   },
   {
    "id": "met256169",
@@ -676,18 +750,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 4190,
-   "sections": 7,
+   "chars": 4529,
+   "sections": 5,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 3,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 1,
+    "useWords": 1,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "db8df73430759ffc348034de252b45c248e760503b77d40d1760c1a7fe49bc4e"
+   "packetSha256": "ff1c05f05b9afe31e9601b88dfcec9f65af39380d2c524d7e39256c03259004e"
   },
   {
    "id": "wikidata:Q18173418",
@@ -698,18 +773,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 26472,
-   "sections": 79,
+   "chars": 31538,
+   "sections": 19,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 23,
-    "functionContext": 8,
-    "makingMechanism": 13,
-    "significance": 16,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 5,
+    "depictionWords": 15,
+    "useWords": 7,
+    "makingWords": 8,
+    "significanceWords": 9
    },
-   "packetSha256": "6c2d5da4f5809332783fa3ee32fa6130a2b650ec9d6a31f6c6e092812c173949"
+   "packetSha256": "29725bc932544fa2d1773a26076f60cf72c06d52e70ff91e2d3202946411becd"
   },
   {
    "id": "wikidata:Q2454480",
@@ -720,18 +796,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 8546,
-   "sections": 11,
+   "chars": 11885,
+   "sections": 7,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "bab38c80e37776b616398c651e8b25cc2f2607646d61fcbc133a829b472e6fcb"
+   "packetSha256": "9688e81aa7f07280317b4ff5980f183997b389ae6103d2b43a32a4dcab4caae0"
   },
   {
    "id": "wikidata:Q116259603",
@@ -745,15 +822,16 @@
    "chars": 0,
    "sections": 0,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "163385b438f63a29d28854dbb0e4421089e5c0a191a946b677c8f2eb567a29dd"
+   "packetSha256": "26e06db62d0843bdcb55a8b43cea642144ed61790b2d05b43406a23083b3c5f8"
   },
   {
    "id": "poussin-seasons-spring",
@@ -764,18 +842,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 23642,
-   "sections": 30,
+   "chars": 23710,
+   "sections": 18,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 6,
-    "functionContext": 7,
-    "makingMechanism": 12,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 6,
+    "useWords": 5,
+    "makingWords": 8,
+    "significanceWords": 3
    },
-   "packetSha256": "94c60c231b964a5ba7283e4701af1517fb7c87b4b153634ed10475efae1bff4f"
+   "packetSha256": "3e9fb69a38bafdcd36dea12b858373fb83fb50b41c60a5cfa3cebb5f52a519fe"
   },
   {
    "id": "wikidata:Q105870850",
@@ -786,18 +865,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 38954,
-   "sections": 25,
+   "chars": 38998,
+   "sections": 24,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 18,
-    "functionContext": 0,
-    "makingMechanism": 21,
-    "significance": 13,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 18,
+    "useWords": 0,
+    "makingWords": 21,
+    "significanceWords": 13
    },
-   "packetSha256": "dad97a9f26bb83631d1e066325bfa6d290ceb666d4b88e72f5948d802d7633bc"
+   "packetSha256": "cfc74966cf7c2089829c57aa9a1ebb4e77f9cb3231505baf9c0d72267ede6020"
   },
   {
    "id": "wikidata:Q16467705",
@@ -808,18 +888,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 3979,
-   "sections": 6,
+   "chars": 4118,
+   "sections": 3,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 4,
-    "subjectAction": 1,
-    "functionContext": 3,
-    "makingMechanism": 1,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 1,
+    "useWords": 3,
+    "makingWords": 1,
+    "significanceWords": 1
    },
-   "packetSha256": "09e290ec2bc786ffcb836f21e645fe6457238381da8c71593d1e85f4f7c7689d"
+   "packetSha256": "87122b6e46c52cbbd008e3e418b3b9b0fcd2bf53053d300dcde111a02114a328"
   },
   {
    "id": "wikidata:Q2287821",
@@ -830,18 +911,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 5340,
-   "sections": 16,
+   "chars": 12758,
+   "sections": 8,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 7,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 4,
-    "significance": 3,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 5,
+    "depictionWords": 1,
+    "useWords": 4,
+    "makingWords": 4,
+    "significanceWords": 4
    },
-   "packetSha256": "faf0b1e234147a1691891d9f449fa5848593c1548d4aed3fa1bd0416ddf2c0f8"
+   "packetSha256": "aa7c42f05b9bd3fe6c0f093e430354e2270401adefe59458237b5bc21a359760"
   },
   {
    "id": "harvard216218",
@@ -852,18 +934,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 9022,
-   "sections": 33,
+   "chars": 11290,
+   "sections": 7,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 11,
-    "subjectAction": 9,
-    "functionContext": 4,
-    "makingMechanism": 7,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 7,
+    "useWords": 2,
+    "makingWords": 5,
+    "significanceWords": 1
    },
-   "packetSha256": "841e70ac50bcbc1b03122f5335eb38930bf7c17aa957300fc9e9fe91713a2672"
+   "packetSha256": "7c53dff763e4cbd724f7e32bdb8807bef3403421e7bf9fbc4b95d83dc72f1eb9"
   },
   {
    "id": "harvard230527",
@@ -874,18 +957,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 2541,
-   "sections": 13,
+   "chars": 3724,
+   "sections": 2,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 0,
-    "functionContext": 2,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 0,
+    "useWords": 2,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "609631f96fa68d8569f7f268fca43c5ace8f85fad183dfa1ac96b913d565172b"
+   "packetSha256": "b64cfdd074881aea303092340b599f7ad56f9597ab0cd19b53ac0ca9012baa3e"
   },
   {
    "id": "wikidata:Q1211814",
@@ -896,18 +980,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 1071,
-   "sections": 4,
+   "chars": 1355,
+   "sections": 3,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 1,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 1,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "e332c190ce9da8a5dd2dfff136ef1e5e089248f1662a9b4c59c464dd7b2321f3"
+   "packetSha256": "4bfbeec2a668377b5fb0d3e1eb90a4be35664e56a16970cc0bebb38ddda86e03"
   },
   {
    "id": "http://www.wikidata.org/entity/Q1128599",
@@ -918,18 +1003,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 37926,
-   "sections": 39,
+   "chars": 39499,
+   "sections": 22,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 15,
-    "functionContext": 9,
-    "makingMechanism": 6,
-    "significance": 13,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 14,
+    "useWords": 9,
+    "makingWords": 6,
+    "significanceWords": 12
    },
-   "packetSha256": "c89d330351ad4adb703ab4f2dd6643fae2675aed218d037ac7afd0955b9b0b93"
+   "packetSha256": "d98624582416b3e161f3fe2f67beccfece28923df925ef65b6684be58736d5f8"
   },
   {
    "id": "wikidata:Q17021261",
@@ -940,18 +1026,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 1757,
-   "sections": 4,
+   "chars": 2170,
+   "sections": 2,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 0,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 1,
+    "useWords": 1,
+    "makingWords": 0,
+    "significanceWords": 1
    },
-   "packetSha256": "f404525974c142ebadd8094a7fba18386602a1cfa115ded87252cf1071cb0be7"
+   "packetSha256": "ecf5659596f2891202529d45d69eaa592a67fc14fc36d87d283e7a28b44edec8"
   },
   {
    "id": "met451717",
@@ -962,18 +1049,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 8753,
-   "sections": 28,
+   "chars": 10095,
+   "sections": 6,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 6,
-    "makingMechanism": 5,
-    "significance": 3,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 1,
+    "useWords": 3,
+    "makingWords": 4,
+    "significanceWords": 3
    },
-   "packetSha256": "a112782b23d85fb442103624e706fd1081876752a5d2c0a9c6e9aafc569ca743"
+   "packetSha256": "27c94d456c76c9c0009feb8f6b3b2492a6eec262babd30c9971d1ad0d2ab78e8"
   },
   {
    "id": "http://www.wikidata.org/entity/Q63247474",
@@ -984,18 +1072,19 @@
    },
    "sources": 1,
    "captured": 1,
-   "chars": 2477,
-   "sections": 5,
+   "chars": 2822,
+   "sections": 2,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 2,
-    "functionContext": 1,
-    "makingMechanism": 0,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 2,
+    "useWords": 2,
+    "makingWords": 0,
+    "significanceWords": 1
    },
-   "packetSha256": "8a3c1c13d2a7ab7033967d444aa02ec0d26c39d111e61610242edb5fda9bc45c"
+   "packetSha256": "3f8acdbf7ea2d2ba1f99dc562d2f45be8af4a961dab98c5f66cf4717e598a03c"
   },
   {
    "id": "met308527",
@@ -1006,18 +1095,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 6234,
-   "sections": 8,
+   "chars": 6823,
+   "sections": 5,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 4,
-    "subjectAction": 3,
-    "functionContext": 1,
-    "makingMechanism": 2,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 3,
+    "useWords": 1,
+    "makingWords": 3,
+    "significanceWords": 4
    },
-   "packetSha256": "2de7811c01e93570e40de4017e9d3a9ce65cb704bf924501610351adfd341896"
+   "packetSha256": "32846e1aa004413d92b8b98b66d65a89a61a89f9fc3120bab9d3520ed26873c0"
   },
   {
    "id": "wikidata:Q2412563",
@@ -1028,18 +1118,19 @@
    },
    "sources": 4,
    "captured": 3,
-   "chars": 29495,
-   "sections": 37,
+   "chars": 31326,
+   "sections": 21,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 23,
-    "subjectAction": 4,
-    "functionContext": 9,
-    "makingMechanism": 10,
-    "significance": 12,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 18,
+    "depictionWords": 4,
+    "useWords": 9,
+    "makingWords": 10,
+    "significanceWords": 12
    },
-   "packetSha256": "10faaddb04d54ce57b613ec1b50340359832f05ead105011aed372d7194781ed"
+   "packetSha256": "afa5a142a8084915a0eec20333f04372ee44e47db9bc665556592baac94f96ea"
   },
   {
    "id": "cleveland170810",
@@ -1050,18 +1141,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 4548,
-   "sections": 13,
+   "chars": 5484,
+   "sections": 6,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 0,
-    "functionContext": 1,
-    "makingMechanism": 1,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 5,
+    "depictionWords": 0,
+    "useWords": 1,
+    "makingWords": 1,
+    "significanceWords": 1
    },
-   "packetSha256": "3272e65b9d9334c2b7181402dad6e5ed7f12217c429e2adeb7fd184c1fbcd22b"
+   "packetSha256": "8415bda422d50f32d753ef980198bce2b34939e549df91cf73284e584ac45c2a"
   },
   {
    "id": "wikidata:Q15880874",
@@ -1072,18 +1164,19 @@
    },
    "sources": 2,
    "captured": 2,
-   "chars": 14504,
-   "sections": 23,
+   "chars": 17018,
+   "sections": 12,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 17,
-    "subjectAction": 10,
-    "functionContext": 4,
-    "makingMechanism": 10,
-    "significance": 8,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 12,
+    "depictionWords": 5,
+    "useWords": 4,
+    "makingWords": 7,
+    "significanceWords": 7
    },
-   "packetSha256": "fd4e1dad65c7ce56002123bdfb3b2643645fe411ade90dc83c021d0287fdefc1"
+   "packetSha256": "6b9ad371d2f3a8b16ac5cb01a9336643e67b137768c7b170bef0d3d551d99dcd"
   },
   {
    "id": "wikidata:Q279559",
@@ -1094,18 +1187,19 @@
    },
    "sources": 2,
    "captured": 1,
-   "chars": 12736,
-   "sections": 14,
+   "chars": 14127,
+   "sections": 8,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 11,
-    "subjectAction": 6,
-    "functionContext": 4,
-    "makingMechanism": 1,
-    "significance": 6,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 7,
+    "useWords": 4,
+    "makingWords": 1,
+    "significanceWords": 6
    },
-   "packetSha256": "d16d88f03216512a9d4ea76c3f8ae1295165f032b11e1aa2f8fe3de9dafbe2a2"
+   "packetSha256": "1fd7a5f5ec45139d397e97538ddd7367f6cd50c372a617a09b099255ad761d74"
   },
   {
    "id": "http://www.wikidata.org/entity/Q3829346",
@@ -1116,18 +1210,19 @@
    },
    "sources": 3,
    "captured": 3,
-   "chars": 16058,
-   "sections": 29,
+   "chars": 17831,
+   "sections": 13,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 11,
-    "functionContext": 2,
-    "makingMechanism": 15,
-    "significance": 6,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 10,
+    "useWords": 1,
+    "makingWords": 10,
+    "significanceWords": 6
    },
-   "packetSha256": "bbcbb9b86c8a4f2a5cdc33b1bd7b65722400e703b92b8aeab618664b30b89ee4"
+   "packetSha256": "e80130a6f15e6764cb7d789226958fb6c2f5b26e1d01389e5972bb2e8cb4245a"
   },
   {
    "id": "http://www.wikidata.org/entity/Q1091086",
@@ -1135,18 +1230,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 9119,
-   "sections": 27,
+   "chars": 11122,
+   "sections": 8,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 12,
-    "subjectAction": 4,
-    "functionContext": 0,
-    "makingMechanism": 6,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 7,
+    "depictionWords": 4,
+    "useWords": 0,
+    "makingWords": 5,
+    "significanceWords": 4
    },
-   "packetSha256": "5ea7b5b47781ce4bbf76e1d2aa2a989ef2419dd410261a1b00f3200a5bcbff64"
+   "packetSha256": "dc5cc7a9e61c2dec41ad620fea471a10cda35ecd2ed5ca14d01ce7c1b52a4305"
   },
   {
    "id": "wikidata:Q15461864",
@@ -1154,18 +1250,19 @@
    "flags": null,
    "sources": 3,
    "captured": 3,
-   "chars": 23467,
-   "sections": 41,
+   "chars": 26312,
+   "sections": 17,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 14,
-    "subjectAction": 3,
-    "functionContext": 5,
-    "makingMechanism": 17,
-    "significance": 10,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 9,
+    "depictionWords": 4,
+    "useWords": 5,
+    "makingWords": 13,
+    "significanceWords": 10
    },
-   "packetSha256": "08bb4938315a5c76a3a3c7433ec10da8f6e5c83dc933a48cf74153480d7dcc98"
+   "packetSha256": "6519bcbf1af16916d4f35f4087b0155684bb7b174d54b6bbc29f3569819bbb13"
   },
   {
    "id": "http://www.wikidata.org/entity/Q185255",
@@ -1173,18 +1270,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 7850,
-   "sections": 17,
+   "chars": 8829,
+   "sections": 7,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 8,
-    "subjectAction": 8,
-    "functionContext": 3,
-    "makingMechanism": 9,
-    "significance": 9,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 5,
+    "depictionWords": 6,
+    "useWords": 3,
+    "makingWords": 6,
+    "significanceWords": 5
    },
-   "packetSha256": "904f2f04f0565ac460186a1ec6aea596318e750d617274d6d29d272f2b2ad126"
+   "packetSha256": "404e44269711a32fd7fc24a77599233ffa20cccfe4807d5cd113395ff8d31399"
   },
   {
    "id": "wd:Q3595955",
@@ -1192,18 +1290,19 @@
    "flags": null,
    "sources": 3,
    "captured": 3,
-   "chars": 29261,
-   "sections": 39,
+   "chars": 29787,
+   "sections": 20,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 19,
-    "subjectAction": 9,
-    "functionContext": 12,
-    "makingMechanism": 9,
-    "significance": 13,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 15,
+    "depictionWords": 8,
+    "useWords": 10,
+    "makingWords": 7,
+    "significanceWords": 12
    },
-   "packetSha256": "e3f61aa5cfe76d3e3b8b492668f22d4cd2f1fc02ec16eb62fb8976c3287223c9"
+   "packetSha256": "987d1dd22755c567fb960dacb264d2d711386729620741171f99791e476ab6ca"
   },
   {
    "id": "wd:Q674846",
@@ -1211,18 +1310,19 @@
    "flags": null,
    "sources": 2,
    "captured": 1,
-   "chars": 1400,
-   "sections": 4,
+   "chars": 1962,
+   "sections": 2,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 1,
-    "functionContext": 0,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 1,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "67116848f1cdc6db3c3f9a78f452da743ce9912cf4e7d5d0a935b59bdc1f566a"
+   "packetSha256": "bf4e74c77dd75a21295b8466090526ce7011e972f0dec328027cc209efbbf255"
   },
   {
    "id": "cleveland155537",
@@ -1230,18 +1330,19 @@
    "flags": null,
    "sources": 3,
    "captured": 2,
-   "chars": 3249,
-   "sections": 7,
+   "chars": 3534,
+   "sections": 4,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 2,
-    "functionContext": 3,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 2,
+    "useWords": 2,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "29f6c4c54b09be911e64c34d269f239aed7b51c0e799c1962d0d5ae75edc4c53"
+   "packetSha256": "0cdf072871b41923673f278dcd37f9e0216e25298a4c05084cf0704d261c2565"
   },
   {
    "id": "aic32623",
@@ -1252,15 +1353,16 @@
    "chars": 0,
    "sections": 0,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "6a68ff88b42a020f543b0a3149633d5bf2a033b45702ac1d6cb70165cdbcf17d"
+   "packetSha256": "9abf5d9917470bbd165e5c3c0173117d4a271d1086c04139e04fa61bd59fd249"
   },
   {
    "id": "met308540",
@@ -1268,18 +1370,19 @@
    "flags": null,
    "sources": 3,
    "captured": 1,
-   "chars": 1005,
+   "chars": 1015,
    "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "cc4eaea6d1210309fc6f16fc0862463be4271dc281f6b2ecbbab59374dc1887b"
+   "packetSha256": "d4fa13e1489279db04eba1a28976f1062ff5b91f10f59159096cdb917db4f727"
   },
   {
    "id": "wikidata:Q19883613",
@@ -1287,18 +1390,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 9544,
-   "sections": 20,
+   "chars": 11572,
+   "sections": 8,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 5,
-    "functionContext": 0,
-    "makingMechanism": 7,
-    "significance": 4,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 5,
+    "useWords": 0,
+    "makingWords": 5,
+    "significanceWords": 3
    },
-   "packetSha256": "1057c6cf8ac6943afe4ab7072b71ef28b31dd10127661e7a4d455660d4d5a106"
+   "packetSha256": "051c0370505f994a622ccf3706b948cd6f9f50bb86e1e1e8e59ca3c63efea982"
   },
   {
    "id": "met54961",
@@ -1306,18 +1410,19 @@
    "flags": null,
    "sources": 3,
    "captured": 1,
-   "chars": 1049,
+   "chars": 1060,
    "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "cb326df49d626c76b6bbd53470f73cef802188dc735377d43b7057513ed43854"
+   "packetSha256": "452fc6aa92d2802f1b48e9c32f67d152668f35af40d335edf53d18eeb38135a8"
   },
   {
    "id": "cleveland136178",
@@ -1325,18 +1430,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 4539,
-   "sections": 8,
+   "chars": 4956,
+   "sections": 5,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 6,
-    "subjectAction": 2,
-    "functionContext": 2,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 4,
+    "depictionWords": 2,
+    "useWords": 1,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "02eee79b8a99d4c80d625bc9ff059df21786a69604259402b101fe8a5ab3db77"
+   "packetSha256": "2f165be04f21f45a957267287decbb6bf010428c9b3ea1c39d034d25362ca55e"
   },
   {
    "id": "met331619",
@@ -1344,18 +1450,19 @@
    "flags": null,
    "sources": 3,
    "captured": 1,
-   "chars": 782,
+   "chars": 792,
    "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "ddfb45753522a0359a1acb4e559ec6cb6490becfbe9321d2657cc94c3af16336"
+   "packetSha256": "f0aa6af58eb8db8d56b9ece360fcde34b048ced579b66eb3b9efcc79ecb760c0"
   },
   {
    "id": "met53573",
@@ -1363,18 +1470,19 @@
    "flags": null,
    "sources": 2,
    "captured": 1,
-   "chars": 842,
-   "sections": 2,
+   "chars": 865,
+   "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "33b52baaec8a1c27aac163420b72508b585b6dc2647fdaeffdc4851d128bed89"
+   "packetSha256": "7723967d44b49c857c4935e52af64c8840449b14ac4de64b57f761c610e9a80a"
   },
   {
    "id": "aic30661",
@@ -1385,15 +1493,16 @@
    "chars": 0,
    "sections": 0,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "147c56dd6979d1758e074292322c220be7af135fe739fd2765a708b56aa4c48d"
+   "packetSha256": "d3a84a7061758e767fcdfcbd3f567fa05836d873fd0ff26e663b0a79b935b6c3"
   },
   {
    "id": "wikidata:Q60152111",
@@ -1401,18 +1510,19 @@
    "flags": null,
    "sources": 1,
    "captured": 1,
-   "chars": 35984,
-   "sections": 218,
+   "chars": 38757,
+   "sections": 20,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 11,
-    "subjectAction": 29,
-    "functionContext": 28,
-    "makingMechanism": 6,
-    "significance": 23,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 10,
+    "depictionWords": 16,
+    "useWords": 15,
+    "makingWords": 8,
+    "significanceWords": 13
    },
-   "packetSha256": "3d1f5a1f0f90d798c81bfa5d37dff8177f9344bd7c8299f81cbea4fe577eb530"
+   "packetSha256": "83461d9dce07f825af4478d102a566eb1bade09806a62662fc36a4bff230ef5b"
   },
   {
    "id": "wikidata:Q18709475",
@@ -1420,18 +1530,19 @@
    "flags": null,
    "sources": 1,
    "captured": 1,
-   "chars": 1477,
-   "sections": 4,
+   "chars": 2074,
+   "sections": 3,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "7fa8e8384eb0a4d48707726f9bc38057fa04636b0cfa345a1333fdc2c4195f5e"
+   "packetSha256": "f344ed46ba6be190de1d12aaa4235a45442dcb6b98e9634380dcdf302b90da1a"
   },
   {
    "id": "cleveland310353",
@@ -1439,18 +1550,19 @@
    "flags": null,
    "sources": 3,
    "captured": 3,
-   "chars": 15050,
-   "sections": 19,
+   "chars": 15439,
+   "sections": 11,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 9,
-    "subjectAction": 7,
-    "functionContext": 5,
-    "makingMechanism": 7,
-    "significance": 9,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 8,
+    "depictionWords": 6,
+    "useWords": 4,
+    "makingWords": 7,
+    "significanceWords": 8
    },
-   "packetSha256": "80302caf014701fbc32aea11ed50b6f1202f4e5da61e2aff02af13059d58038f"
+   "packetSha256": "f6b89368d2431b2ae590a396c14cac1946ebb5c62ef1335a2609019f8673eec5"
   },
   {
    "id": "cleveland137276",
@@ -1458,18 +1570,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 5035,
-   "sections": 7,
+   "chars": 5408,
+   "sections": 5,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 1,
-    "functionContext": 3,
-    "makingMechanism": 1,
-    "significance": 2,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 3,
+    "depictionWords": 1,
+    "useWords": 3,
+    "makingWords": 1,
+    "significanceWords": 2
    },
-   "packetSha256": "d225dc104f15ee4db2b51390e2b8510f84ad098a6290ab64b1eb022c4c49eec5"
+   "packetSha256": "3a859ea783f41a15cf53934e8ddc7cc4eca9d635e846a4a59a7925a0305c1085"
   },
   {
    "id": "sinmafa_86-12-1",
@@ -1480,15 +1593,16 @@
    "chars": 0,
    "sections": 0,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "def77b47616833ce21dde55eff780bc9d0112a1ee5603b57d8c7b79504d7fb3c"
+   "packetSha256": "2981e073e7f79f525a284bc3b5d38809ac0a44d8f4addca71c10fc30f8a6e3f7"
   },
   {
    "id": "met327401",
@@ -1499,15 +1613,16 @@
    "chars": 887,
    "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "70b20d15bc2995c2a36d1ea09f570724d637b8e3992716654fb408e84a6c42e8"
+   "packetSha256": "286b442adcda9af54aeef24c6d73403d4a5f13d75c919b59d3fb24afdddf196d"
   },
   {
    "id": "met469960",
@@ -1515,18 +1630,19 @@
    "flags": null,
    "sources": 3,
    "captured": 1,
-   "chars": 921,
-   "sections": 2,
+   "chars": 944,
+   "sections": 1,
    "holdingRecordCaptured": true,
-   "lexicalSlotCandidates": {
-    "identity": 1,
-    "subjectAction": 0,
-    "functionContext": 0,
-    "makingMechanism": 0,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 0,
+    "useWords": 0,
+    "makingWords": 0,
+    "significanceWords": 0
    },
-   "packetSha256": "593077f82a21982d49ef6da24f09158fd55f31650068e42286ce7afcebcba960"
+   "packetSha256": "56bd29757ddfc574d62cd79f7e372a386521fa3afbb084df1f758580c05eb5d8"
   },
   {
    "id": "sifsg_F1904.61",
@@ -1534,18 +1650,19 @@
    "flags": null,
    "sources": 3,
    "captured": 3,
-   "chars": 39885,
-   "sections": 85,
+   "chars": 38089,
+   "sections": 20,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 18,
-    "subjectAction": 11,
-    "functionContext": 11,
-    "makingMechanism": 36,
-    "significance": 21,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 14,
+    "depictionWords": 9,
+    "useWords": 9,
+    "makingWords": 19,
+    "significanceWords": 13
    },
-   "packetSha256": "b5ef3413661ef9b41bfed99c22846465362794c5c6c982fe4cd58b64bb0275ee"
+   "packetSha256": "e5cde8499e46500be103070da973f7fb2ec48f10bdcea76c3ffec1b93327bd90"
   },
   {
    "id": "aic67362",
@@ -1553,18 +1670,19 @@
    "flags": null,
    "sources": 2,
    "captured": 1,
-   "chars": 1058,
-   "sections": 3,
+   "chars": 1306,
+   "sections": 1,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 2,
-    "subjectAction": 1,
-    "functionContext": 1,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 1,
+    "depictionWords": 1,
+    "useWords": 1,
+    "makingWords": 1,
+    "significanceWords": 0
    },
-   "packetSha256": "2a6de0da81497ca851441da92f4fd4d2353345bfe99932c9dbf0c22ad71f095a"
+   "packetSha256": "dbfd77058a4be442f504f23a3df9328fe1cb112bd8df102ffd4abf57725f20cf"
   },
   {
    "id": "wikidata:Q17647883",
@@ -1572,18 +1690,19 @@
    "flags": null,
    "sources": 1,
    "captured": 1,
-   "chars": 2346,
-   "sections": 3,
+   "chars": 2676,
+   "sections": 2,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 3,
-    "subjectAction": 2,
-    "functionContext": 0,
-    "makingMechanism": 1,
-    "significance": 1,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 1,
+    "useWords": 0,
+    "makingWords": 2,
+    "significanceWords": 1
    },
-   "packetSha256": "3ce55d41099241db61855a55df2183aa8bcf58eb1a48c97e646abee10cf60767"
+   "packetSha256": "db7c2d09fc3d0d09e0644a3cd1b16681d4c881f8e2feb636f114277eba777b1b"
   },
   {
    "id": "http://www.wikidata.org/entity/Q12418",
@@ -1591,18 +1710,19 @@
    "flags": null,
    "sources": 2,
    "captured": 2,
-   "chars": 39977,
-   "sections": 43,
+   "chars": 38553,
+   "sections": 25,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 0,
-    "subjectAction": 11,
-    "functionContext": 8,
-    "makingMechanism": 16,
-    "significance": 9,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 2,
+   "lexicalKeywordHits": {
+    "titleWord": 0,
+    "depictionWords": 10,
+    "useWords": 7,
+    "makingWords": 12,
+    "significanceWords": 8
    },
-   "packetSha256": "7d273299040d4657cef87980fcba7379b0bca8aa261b7bee95bd22dc582b47f2"
+   "packetSha256": "974b184357cf2abceb8d4cc107213cb0c821cfba297b75fa3063c53fab5c3e3b"
   },
   {
    "id": "http://www.wikidata.org/entity/Q45585",
@@ -1610,18 +1730,19 @@
    "flags": null,
    "sources": 1,
    "captured": 1,
-   "chars": 26018,
-   "sections": 20,
+   "chars": 26627,
+   "sections": 16,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 19,
-    "subjectAction": 11,
-    "functionContext": 2,
-    "makingMechanism": 19,
-    "significance": 7,
-    "transfer": null
+   "onlyReferenceCaptured": true,
+   "extractionGaps": 1,
+   "lexicalKeywordHits": {
+    "titleWord": 16,
+    "depictionWords": 11,
+    "useWords": 2,
+    "makingWords": 16,
+    "significanceWords": 7
    },
-   "packetSha256": "a6e8405ffe12d3a3106ee5212e4fa8cbe909f7d14612b39924901678ef9b3013"
+   "packetSha256": "238bd2853564ac16aa93f0a663edb2a68d5bf991312ce4e47835ba221e3335e4"
   },
   {
    "id": "http://www.wikidata.org/entity/Q151047",
@@ -1629,18 +1750,19 @@
    "flags": null,
    "sources": 1,
    "captured": 1,
-   "chars": 2559,
-   "sections": 7,
+   "chars": 3121,
+   "sections": 2,
    "holdingRecordCaptured": false,
-   "lexicalSlotCandidates": {
-    "identity": 5,
-    "subjectAction": 3,
-    "functionContext": 1,
-    "makingMechanism": 1,
-    "significance": 0,
-    "transfer": null
+   "onlyReferenceCaptured": false,
+   "extractionGaps": 0,
+   "lexicalKeywordHits": {
+    "titleWord": 2,
+    "depictionWords": 2,
+    "useWords": 1,
+    "makingWords": 2,
+    "significanceWords": 0
    },
-   "packetSha256": "dd09c063dc5cc43cd6ab9b2a5879a6dd9171fd8d2a2d42b83ca7f72d589d1f67"
+   "packetSha256": "aea66f4af4dcf247f6cdf5383c808f279b0fcb8f15d6e818f6a74edc143e75e2"
   }
  ]
 }

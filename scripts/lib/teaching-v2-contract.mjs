@@ -188,8 +188,12 @@ export function validatePacketIntegrity(packet, normalizedTextBySourceId = null)
     void secIds;
   }
   if (chars > LIMITS.packetChars) errors.push(`packet text ${chars} > ${LIMITS.packetChars}`);
+  // The packet hash is recomputed, never trusted (review finding 4).
+  if (packetHash(packet) !== packet?.packetSha256) errors.push('packetSha256 does not match the packet contents');
   return { ok: errors.length === 0, errors, chars };
 }
+// packetSha256 = sha256(stableJson(packet without its own packetSha256 field)), exactly as assemblePacket computes it.
+export function packetHash(packet) { if (!packet || typeof packet !== 'object') return null; const { packetSha256: _omit, ...rest } = packet; return sha256(stableJson(rest)); }
 function packetIndex(packet) {
   const sources = new Map(), sections = new Map();
   for (const s of packet?.sources || []) { sources.set(s.id, s); for (const sec of s.sections || []) sections.set(`${s.id}#${sec.id}`, sec); }
@@ -250,7 +254,11 @@ export function validateDossier(d, { packet, b1EvidenceIds = new Set(), observat
     checkRefs(e.sourceRefs, `dossier.essentials.${e.slot}`);
     // transfer may be an image-grounded explanation; every other supported essential needs literal support.
     if (e.status === 'supported' && e.slot !== 'transfer' && !e.sourceRefs.length) errors.push(`dossier.essentials.${e.slot}: supported without a source ref`);
-    if (e.applicability === 'notApplicable' && e.status !== 'notApplicable') errors.push(`dossier.essentials.${e.slot}: notApplicable applicability with status ${e.status}`);
+    if ((e.applicability === 'notApplicable') !== (e.status === 'notApplicable')) errors.push(`dossier.essentials.${e.slot}: applicability ${e.applicability} with status ${e.status}`);
+    // Meaningful combinations (review finding 10): an answer for supported, a stated limitation for unknown/conflicted.
+    if (e.status === 'supported' && !e.answer.trim()) errors.push(`dossier.essentials.${e.slot}: supported without an answer`);
+    if ((e.status === 'unknown' || e.status === 'conflicted') && !e.limitation.trim()) errors.push(`dossier.essentials.${e.slot}: ${e.status} without a stated limitation`);
+    if (e.slot === 'identity' && e.applicability !== 'required') errors.push('dossier.essentials.identity: identity is always required');
   });
   d.facts.forEach(f => { checkRefs(f.sourceRefs, `dossier.facts.${f.id}`); if (!f.sourceRefs.length) errors.push(`dossier.facts.${f.id}: a fact needs a source ref`); });
   d.visualBindings.forEach(v => {
@@ -356,7 +364,14 @@ export function validateVerification(v, { draft, allowReplacement, packet, dossi
   slotsExactlyOnce(v.coverage, 'verification.coverage', errors);
   const lesson = draft?.lesson;
   const hsIds = new Set((lesson?.hotspots || []).map(h => h.id));
-  v.issues.forEach((i, k) => { if (i.surface !== '' && !resolvePointer(lesson, i.surface).ok) errors.push(`issues[${k}]: surface ${i.surface} not in the lesson`); });
+  const refOk = refResolver(packet, dossier?.passages || []);
+  v.issues.forEach((i, k) => {
+    if (i.surface !== '' && !resolvePointer(lesson, i.surface).ok) errors.push(`issues[${k}]: surface ${i.surface} not in the lesson`);
+    for (const r of i.sourceRefs) if (!refOk(r)) errors.push(`issues[${k}]: unresolved source ref ${r}`); // review finding 10
+  });
+  // A dossier-required slot cannot be judged notApplicable (review finding 10).
+  const required = new Set((dossier?.essentials || []).filter(e => e.applicability === 'required').map(e => e.slot));
+  for (const c of v.coverage) if (c.result === 'notApplicable' && required.has(c.slot)) errors.push(`coverage.${c.slot}: notApplicable for a slot the dossier marks required`);
   const pinSeen = new Set();
   for (const p of v.pins) { if (!hsIds.has(p.hotspotId)) errors.push(`pins: unknown hotspot ${p.hotspotId}`); if (pinSeen.has(p.hotspotId)) errors.push(`pins: duplicate ${p.hotspotId}`); pinSeen.add(p.hotspotId); }
   for (const h of lesson?.hotspots || []) if (h.x !== null && !pinSeen.has(h.id)) errors.push(`pins: dotted hotspot ${h.id} not judged`);
@@ -377,23 +392,36 @@ export function verificationOutcome(v, { draft, allowReplacement, packet, dossie
   const minors = v.issues.filter(i => i.severity === 'minor').length;
   if (v.decision === 'hold') return { decision: 'hold', reasons: ['verifier-hold', ...serious.map(i => `${i.severity}:${i.category}`)], minors };
   if (v.decision === 'revise') return { decision: 'revise', reasons: serious.map(i => `${i.severity}:${i.category}`).concat(badPins.map(id => `pin:${id}`)), replacement: v.replacement, minors };
-  // decision === 'pass': the controller recomputes the rule and never trusts a self-declared pass.
-  if (serious.length || badPins.length) return { decision: 'hold', reasons: ['verifier-pass-inconsistent', ...serious.map(i => `${i.severity}:${i.category}`), ...badPins.map(id => `pin:${id}`)], minors };
+  // decision === 'pass': the controller recomputes the rule and never trusts a self-declared pass. A pass that
+  // reports missing or misleading coverage contradicts itself (review finding 10) and holds.
+  const badCoverage = v.coverage.filter(c => c.result === 'missing' || c.result === 'misleading');
+  if (serious.length || badPins.length || badCoverage.length) return { decision: 'hold', reasons: ['verifier-pass-inconsistent', ...serious.map(i => `${i.severity}:${i.category}`), ...badPins.map(id => `pin:${id}`), ...badCoverage.map(c => `coverage:${c.slot}:${c.result}`)], minors };
   return { decision: 'pass', reasons: [], minors };
 }
 
-// ---- Attempt budget (design §3.4). Planned path + at most ONE extra (V2 or one transport retry), never above five. ----
+// ---- Attempt budget (design §3.4). Planned path + at most ONE extra (V2 or one transient retry), never above five. ----
+// Every ledger entry is a DISPATCHED attempt (review finding 3): a call refused by pacing/lease/latch never gets an
+// entry, and every dispatched attempt counts, whatever its outcome (usage rejections included). Budget eligibility
+// and telemetry read the same history.
 export const MAX_INVOCATIONS = 5;
 export const PLANNED_PATHS = Object.freeze({ cachedB1AndPacket: ['W', 'V'] }); // Phase A: valid cached B1 + literal packet
+// Outcomes that are failures of the attempt itself (no usable result). Only TRANSIENT ones may be retried, once.
+export const FAILED_OUTCOMES = Object.freeze(['transport-failure', 'usage-limit', 'content-failure', 'interrupted', 'fatal', 'unknown', 'reserved']);
+export const TRANSIENT_OUTCOMES = Object.freeze(['transport-failure', 'usage-limit']);
 export function authorizeCall(ledger, request, { planned = PLANNED_PATHS.cachedB1AndPacket } = {}) {
-  const calls = ledger.filter(e => e.spent !== false);
+  const calls = ledger;
+  if (calls.some(e => e.outcome === 'reserved' || e.outcome === 'unknown')) return { ok: false, reason: 'budget: an attempt with an unknown outcome awaits review' };
+  if (calls.some(e => e.outcome === 'fatal')) return { ok: false, reason: 'budget: a fatal attempt stops this work' };
   if (calls.length >= MAX_INVOCATIONS) return { ok: false, reason: `budget: ${MAX_INVOCATIONS} invocations already spent` };
   if (planned.length >= MAX_INVOCATIONS && request.reason !== 'planned') return { ok: false, reason: 'budget: a five-call path has no extra' };
   const extras = calls.filter(e => e.reason === 'v2' || e.reason === 'transportRetry');
+  const succeeded = kind => calls.some(e => e.kind === kind && !FAILED_OUTCOMES.includes(e.outcome) && e.outcome !== 'invalid' && e.outcome !== 'hold');
   if (request.reason === 'planned') {
-    const done = calls.filter(e => e.reason === 'planned').map(e => e.kind);
-    const next = planned[done.length];
+    if (calls.some(e => e.kind === request.kind && e.reason === 'planned')) return { ok: false, reason: `budget: planned ${request.kind} was already dispatched (a repeat is only the one transient retry)` };
+    const next = planned.find(k => !succeeded(k));
     if (next !== request.kind) return { ok: false, reason: `budget: next planned call is ${next ?? 'none'}, not ${request.kind}` };
+    const idx = planned.indexOf(request.kind);
+    if (!planned.slice(0, idx).every(succeeded)) return { ok: false, reason: `budget: ${request.kind} needs every earlier planned stage to have succeeded` };
     return { ok: true };
   }
   if (extras.length >= 1) return { ok: false, reason: 'budget: the one extra invocation is already used' };
@@ -406,18 +434,18 @@ export function authorizeCall(ledger, request, { planned = PLANNED_PATHS.cachedB
   }
   if (request.reason === 'transportRetry') {
     const last = calls.at(-1);
-    if (!last || last.outcome !== 'transport-failure' || last.kind !== request.kind) return { ok: false, reason: 'budget: a transport retry repeats only the call that just failed in transport' };
+    if (!last || !TRANSIENT_OUTCOMES.includes(last.outcome) || last.kind !== request.kind) return { ok: false, reason: 'budget: a transient retry repeats only the call that just failed transiently (transport or usage rejection)' };
     return { ok: true };
   }
   return { ok: false, reason: `budget: unknown reason ${request.reason}` };
 }
-// After an attempt: planned-call transport failures are re-issued as the extra; bad valid content never is.
+// After an attempt: a transient failure of the last call is re-issued as the extra; bad valid content never is.
 export function nextStep(ledger, { planned = PLANNED_PATHS.cachedB1AndPacket } = {}) {
   const last = ledger.at(-1);
   if (!last) return { call: planned[0], reason: 'planned' };
-  if (last.outcome === 'transport-failure') {
+  if (TRANSIENT_OUTCOMES.includes(last.outcome)) {
     const a = authorizeCall(ledger, { kind: last.kind, reason: 'transportRetry' }, { planned });
-    return a.ok ? { call: last.kind, reason: 'transportRetry', retryOf: last.reason } : { terminal: 'hold', why: `transport failure; ${a.reason}` };
+    return a.ok ? { call: last.kind, reason: 'transportRetry', retryOf: last.reason } : { terminal: 'hold', why: `${last.outcome}; ${a.reason}` };
   }
   return null; // content outcomes are routed by the controller (W ok -> V; V revise -> V2; else terminal)
 }
