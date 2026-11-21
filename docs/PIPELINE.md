@@ -844,6 +844,14 @@ other than the image is fatal, ahead of a quota, timeout or interruption. If non
 image inspection: a session that otherwise succeeded is a content-failure hold, and quota, timeout and
 interruption keep their classification. The saved real transcripts show only `{"file_path":"<absolute path>"}`
 Reads, never `offset`, `limit` or `pages`, so no other key is allowed. Classifier /7.
+**No duplicate names, no overwritten copies (R7-A1, R7-A2).** Every transcript line is parsed by a strict
+parser (`scripts/lib/strict-json.mjs`) that rejects duplicate member names at any depth, compared after escape
+decoding (`"input"` and `"input"` are the same name). Such a line never becomes an event: it is malformed
+evidence. It is fatal, ahead of quota, when any copy carries a tool block or any path-like string other than the
+confined image. Otherwise the session is held as a content-failure (only a fatal outranks it; it is never `ok`).
+A streamed `content_block_start` with a non-empty input is its own argument copy, kept beside the joined deltas
+and the completed input, and each copy must pass the allowlist above. Nothing overwrites earlier evidence, and
+only the exact empty `{}` start is a placeholder. Classifier /8.
 **Torn outcome files (R4-A2).** Attempt files are written atomically: a flushed temp file is hard-linked into
 place. A `meta.json`, `done.json` or `reserved.json` that exists but does not parse is still read as preserved
 *incomplete* evidence, with no parse error: an unknown-outcome stop. A clearance whose digests name those exact

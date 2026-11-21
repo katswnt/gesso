@@ -11,10 +11,11 @@ import { parseStreamTranscript, transcriptFinal, verifyB1ImageRead, neutralImage
 import { rateLimitFrom } from './pass-b-pacing.mjs';
 import { noToolCallProvenance } from '../pass-b-b4-structured-canary.mjs';
 import { MODEL } from './teaching-v2-contract.mjs';
+import { parseStrictJson } from './strict-json.mjs';
 
 export const STAGE_EFFORT = Object.freeze({ W: 'high', V: 'high', V2: 'high', B3D: 'medium' });
 export const IMAGE_TRANSPORT = 'readtool-confined-dir/1';
-export const CLASSIFIER_VERSION = 'teachingV2Classifier/7';
+export const CLASSIFIER_VERSION = 'teachingV2Classifier/8';
 // The shared confinement flags, identical to buildStageCommand's (asserted by tests/teaching-v2.test.mjs).
 export const CONFINED_FLAGS = Object.freeze(['--prompt-suggestions', 'false', '--safe-mode', '--restricted', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
   '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--no-session-persistence', '--output-format', 'stream-json', '--verbose']);
@@ -38,57 +39,46 @@ export function buildConfinedCommand({ stage, promptText, imageFile, wireSchema,
 // Every nonempty line is either a JSON event object (string `type`) or a MALFORMED record (review R3-A2): a
 // truncated or unparseable line, or JSON that is not an event. Discarded bytes are tracked, never ignored.
 // Review R6-A1: every object parsed from a record keeps its exact source text (RAW_TEXT), so a Read's input can be
-// checked as written: JSON.parse silently keeps only the last of duplicate keys and decodes escaped key names.
+// checked as written.
+// Review R7-A1: every line must parse under a STRICT parser (strict-json.mjs) that rejects duplicate member names at
+// any depth, compared after escape decoding. JSON.parse keeps only the last copy, so a duplicate `input` (or a
+// duplicate envelope member such as `content`) would discard earlier evidence before any check could see it. A line
+// with a duplicate name is malformed evidence and never becomes an event; malformedSplit decides fatal vs held.
 export function parseRecords(stdout) {
   const evs = [], malformed = [];
   String(stdout).split('\n').forEach((l, i) => {
     if (!l.trim()) return;
-    let e; try { JSON.parse(l); e = parseKeepingRaw(l); } catch { malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'unparseable' }); return; }
+    const rec = { line: i + 1, bytes: Buffer.byteLength(l, 'utf8') };
+    let p; try { JSON.parse(l); p = parseStrictJson(l, { onObject: (o, raw) => RAW_TEXT.set(o, raw) }); } catch { malformed.push({ ...rec, why: 'unparseable' }); return; }
+    if (p.duplicates.length) {
+      malformed.push({ ...rec, why: `duplicate member name(s) ${[...new Set(p.duplicates.map(d => JSON.stringify(d.name)))].join(', ')}`, duplicate: true,
+        toolish: p.strings.some(t => TOOLISH.test(t.text)), paths: p.strings.map(t => t.text).filter(t => /[/\\]|^~/.test(t)) });
+      return;
+    }
+    const e = p.value;
     if (e && typeof e === 'object' && !Array.isArray(e) && typeof e.type === 'string') evs.push(e);
-    else malformed.push({ line: i + 1, bytes: Buffer.byteLength(l, 'utf8'), why: 'not an event object' });
+    else malformed.push({ ...rec, why: 'not an event object' });
   });
   return { evs, malformed };
 }
 const RAW_TEXT = new WeakMap();
-// A strict JSON parser with JSON.parse's semantics (last duplicate wins, `__proto__` is an own key) that records
-// the source text of every object. parseRecords runs JSON.parse first, so any disagreement here is malformed.
-function parseKeepingRaw(text) {
-  let i = 0;
-  const fail = () => { throw new SyntaxError(`unexpected JSON at ${i}`); };
-  const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
-  const str = () => {
-    const s = i++;
-    for (; i < text.length && text[i] !== '"'; i++) if (text[i] === '\\') i++;
-    if (i >= text.length) fail();
-    return JSON.parse(text.slice(s, ++i));
-  };
-  const NUM = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
-  const value = () => {
-    ws();
-    const c = text[i], s = i;
-    if (c === '"') return str();
-    if (c === '{') {
-      i++; const o = {}; ws();
-      if (text[i] === '}') i++;
-      else for (;;) {
-        ws(); if (text[i] !== '"') fail();
-        const k = str(); ws(); if (text[i++] !== ':') fail();
-        Object.defineProperty(o, k, { value: value(), writable: true, enumerable: true, configurable: true });
-        ws(); const d = text[i++]; if (d === '}') break; if (d !== ',') fail();
-      }
-      RAW_TEXT.set(o, text.slice(s, i)); return o;
-    }
-    if (c === '[') {
-      i++; const a = []; ws();
-      if (text[i] === ']') i++;
-      else for (;;) { a.push(value()); ws(); const d = text[i++]; if (d === ']') break; if (d !== ',') fail(); }
-      return a;
-    }
-    for (const [w, v] of [['true', true], ['false', false], ['null', null]]) if (text.startsWith(w, i)) { i += w.length; return v; }
-    NUM.lastIndex = i; const m = NUM.exec(text); if (!m) fail(); i = NUM.lastIndex; return Number(m[0]);
-  };
-  const v = value(); ws(); if (i !== text.length) fail();
-  return v;
+// Any token, key or value, that can belong to a tool block (tool_use / tool_result, Read, its input or stream deltas).
+const TOOLISH = /tool|^Read$|^StructuredOutput$|^input$|partial_json|input_json/i;
+// Review R7-A1: a duplicate-name record is FATAL when any copy carries a tool block (any tool token) or any path-like
+// string (a `/`, a `\` or a leading `~`) that is not exactly the confined image. Otherwise it establishes nothing
+// outside but leaves the session unverifiable: HELD, never ok and never retried. Unparseable and non-event records
+// stay fatal.
+function malformedSplit(malformed, { dir, imageFile }) {
+  const wantAbs = dir && imageFile ? norm(resolveIn(dir, imageFile)) : null;
+  const isImage = p => !p.includes('..') && !!wantAbs && norm(resolveIn(dir, p)) === wantAbs && p.split('/').pop() === imageFile;
+  const fatal = [], held = [];
+  for (const m of malformed) {
+    if (!m.duplicate) { fatal.push(m); continue; }
+    const outside = [...new Set(m.paths.filter(p => !isImage(p)))];
+    if (!m.toolish && !outside.length) { held.push(m); continue; }
+    fatal.push({ ...m, why: `${m.why}${m.toolish ? ' in a record carrying a tool block' : ''}${outside.length ? `; outside path mention(s): ${outside.join(', ')}` : ''}` });
+  }
+  return { fatal, held };
 }
 const events = stdout => parseRecords(stdout).evs;
 // Every *tool_use block anywhere in an envelope (tool_use, server_tool_use, mcp_tool_use, streamed content_block).
@@ -119,14 +109,17 @@ function toolEvents(evs) {
 // placeholder/prefix consistent with the complete input, is the same invocation and is kept once. Anything else is
 // conflicting evidence: both are kept and the streamed copy is marked `conflict` (fatal for a Read).
 export function normalizedToolUses(evs) { return reconcileToolUses(collectToolUses(evs)); }
-// Review R6-A1: the raw argument evidence of each collected block, BEFORE any parse, reconciliation or dedup:
-// the concatenated input_json_delta text of a streamed block, else the source text of the block's input object.
+// Review R6-A1: the raw argument evidence of each collected block, BEFORE any parse, reconciliation or dedup.
+// Review R7-A2: a LIST of every argument copy, append-only, never overwritten: the block's own input (a completed
+// block's input, or a streamed content_block_start's input) and, for a streamed block, the concatenated
+// input_json_delta text. Each copy is judged by the allowlist on its own; a later safe copy cannot erase an earlier one.
+// Each form: { text (source text, or null when the input is not an object), value, deltas, start }.
 const RAW_ARGS = new WeakMap();
 function collectToolUses(evs) {
   const uses = [];
   const add = (b, streamed) => {
     const u = { type: b.type, id: b.id ?? null, name: b.name ?? null, input: b.input ?? null, streamed, unresolved: false, unfinished: false, partial: null, conflict: false };
-    RAW_ARGS.set(u, { text: b.input && typeof b.input === 'object' ? RAW_TEXT.get(b.input) ?? null : null, deltas: false });
+    RAW_ARGS.set(u, [{ text: b.input && typeof b.input === 'object' ? RAW_TEXT.get(b.input) ?? null : null, value: b.input ?? null, deltas: false, start: streamed }]);
     uses.push(u); return u;
   };
   const visit = v => {
@@ -139,7 +132,7 @@ function collectToolUses(evs) {
   const close = (idx, stopped) => {
     const b = open.get(idx); if (!b) return; open.delete(idx);
     const u = b.use, raw = b.partial.join('');
-    if (b.partial.length) { RAW_ARGS.set(u, { text: raw, deltas: true }); let v; try { v = JSON.parse(raw); } catch { v = undefined; } u.input = v; }
+    if (b.partial.length) { RAW_ARGS.get(u).push({ text: raw, value: null, deltas: true, start: false }); let v; try { v = JSON.parse(raw); } catch { v = undefined; } u.input = v; }
     const isObj = u.input && typeof u.input === 'object' && !Array.isArray(u.input);
     if (isObj && (b.partial.length || stopped || !isEmptyInput(u.input))) return; // resolved
     u.input = null; u.partial = raw;
@@ -229,17 +222,19 @@ function executedIds(evs) {
 //   canonical : the canonical object naming the image;
 //   prefix    : an unfinished stream that is still a prefix of that canonical object (the `{}` start placeholder of a
 //               block with no delta is no evidence and counts as a prefix);
+//               Review R7-A2: ONLY the exact empty `{}` start input is a placeholder. A populated start input is its own
+//               argument copy, judged like any other (the real API sends `{}`): an outside path in it is fatal and a
+//               non-canonical form holds, whatever the deltas or completed block say afterwards.
 //   other     : anything else. Its string escapes are decoded and EVERY string value (and every key that is not a
 //               plain identifier) is a path mention; any mention that is not (or, unterminated, cannot still become)
 //               the image path is an established outside path: fatal, ahead of quota/timeout/interruption.
 // A Read invocation with an `other` form and no outside mention is not a valid image inspection: a session that
 // would otherwise succeed is held as a content-failure (quota/timeout/interruption keep their classification).
 const CANONICAL_HEAD = '{"file_path":"';
-function readFormVerdict(u, outside) {
-  const { text, deltas } = RAW_ARGS.get(u) || {};
-  if (typeof text !== 'string') return { kind: 'other', out: u.input == null ? [] : jsonStrings(JSON.stringify(u.input)).filter(t => mentions(t) && outside(t)) };
+function readFormVerdict({ text, value, start }, outside) {
+  if (typeof text !== 'string') return { kind: 'other', out: value == null ? [] : jsonStrings(JSON.stringify(value)).filter(t => mentions(t) && outside(t)) };
   const sq = squeezeJson(text);
-  if (u.streamed && !deltas && sq === '{}' && !u.unresolved) return { kind: 'prefix', out: [] }; // start placeholder
+  if (start && sq === '{}') return { kind: 'prefix', out: [] }; // the ordinary empty start placeholder: no evidence
   const m = sq.startsWith(CANONICAL_HEAD) ? /^([^"\\]*)("\}?)?$/.exec(sq.slice(CANONICAL_HEAD.length)) : null;
   if (m) {
     const p = { path: m[1], complete: !!m[2] };
@@ -290,7 +285,7 @@ function readEvidenceGate(uses, outside) {
   const byId = new Map(), escaped = [], unverified = [], ambiguous = [];
   uses.forEach((u, n) => { const k = u.id ?? `\u0000${n}`; if (!byId.has(k)) byId.set(k, []); byId.get(k).push(u); });
   for (const [k, forms] of byId) {
-    const verdicts = forms.map(u => readFormVerdict(u, outside)), out = verdicts.flatMap(v => v.out);
+    const verdicts = forms.flatMap(u => RAW_ARGS.get(u) || [{ text: null, value: u.input }]).map(f => readFormVerdict(f, outside)), out = verdicts.flatMap(v => v.out);
     for (const p of out) { if (p.complete) escaped.push(p.path); else unverified.push(`${p.path}…`); }
     if (!out.length && verdicts.some(v => v.kind === 'other')) ambiguous.push(k.startsWith('\u0000') ? 'without id' : k);
   }
@@ -365,8 +360,9 @@ export function capabilityViolation(stdout, { callDir = null, imageFile, model =
   }
   const act = activityViolation(evs);
   if (act) return act;
-  if (malformed.length) return malformedReason(malformed);
   const dir = callDir || norm(inits[0]?.cwd) || null;
+  const bad = malformedSplit(malformed, { dir, imageFile }).fatal; // a held duplicate-name record is not a violation
+  if (bad.length) return malformedReason(bad);
   const read = confinedReads(stdout, evs, { callDir: dir, imageFile });
   if (read.bad.length) return `confinement: ${read.reason}`;
   return null;
@@ -388,14 +384,22 @@ export function classifyTranscript(stdout, { exitCode, callDir = null, imageFile
   const { evs, malformed } = parseRecords(stdout), tr = parseStreamTranscript(stdout), final = transcriptFinal(tr);
   const inits = evs.filter(e => e.type === 'system' && e.subtype === 'init');
   const usage = usageOf(final, stdout);
-  const out = (kind, reason) => ({ kind, reason, usage, classifier: CLASSIFIER_VERSION, toolUses: normalizedToolUses(evs).map(u => u.name), structured: kind === 'ok' ? final.structured_output : null, initCwd: inits[0]?.cwd ?? null, malformedRecords: malformed.length });
+  // Review R7-A1: a duplicate-name record that carries no tool block and no outside path is HELD. Only a fatal
+  // outcome outranks it; every other outcome (ok, usage-limit, transport, interruption) becomes a content-failure hold.
+  const split = malformedSplit(malformed, { dir: callDir || norm(inits[0]?.cwd) || null, imageFile });
+  const held = split.held.length ? `${split.held.length} transcript record(s) with duplicate member names (first at line ${split.held[0].line}: ${split.held[0].why}); session evidence unverifiable, held` : null;
+  const out = (k, r) => {
+    const [kind, reason] = held && k !== 'fatal' ? ['content-failure', `${held} (otherwise ${k}${r ? `: ${r}` : ''})`] : [k, r];
+    return { kind, reason, usage, classifier: CLASSIFIER_VERSION, toolUses: normalizedToolUses(evs).map(u => u.name), structured: kind === 'ok' ? final.structured_output : null, initCwd: inits[0]?.cwd ?? null, malformedRecords: malformed.length };
+  };
   // Review R2-1: ALL activity is inspected before ANY outcome branch. Forbidden activity is fatal whether or not
   // there is an init, whatever the exit code or quota message.
   const forbidden = activityViolation(evs);
   if (forbidden) return out('fatal', forbidden);
   // Review R3-A2: bytes that are not a parseable event (a truncated line, non-event JSON) may carry activity nothing
   // above could inspect. They never support "no session ran", nor confinement: fatal, for review.
-  if (malformed.length) return out('fatal', malformedReason(malformed));
+  // Review R7-A1: so is a duplicate-name record carrying a tool block or an outside path (split above).
+  if (split.fatal.length) return out('fatal', malformedReason(split.fatal));
   if (!inits.length) {
     // A missing init does not prove that nothing ran. Only AFFIRMATIVE evidence of no session activity (see
     // noSessionActivity) may become a pre-session usage limit or transport failure; anything else is fatal.

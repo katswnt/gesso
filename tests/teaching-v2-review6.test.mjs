@@ -55,7 +55,13 @@ test('R6-A1: a COMPLETED Read block is judged on its raw input text: duplicate o
   }
 });
 test('R6-A1: a non-canonical Read naming only the image is not a verified inspection: success is held, interruptions keep their kind', async () => {
-  const NONCANON = [`{"file_path":"${SAFE}","offset":1}`, `{"limit":2,"file_path":"${SAFE}"}`, `{"file_\\u0070ath":"${SAFE}"}`, `{"file_path":"${SAFE.replaceAll('/', '\\/')}"}`, `{"file_path":"${SAFE}","file_path":"${SAFE}"}`];
+  const NONCANON = [`{"file_path":"${SAFE}","offset":1}`, `{"limit":2,"file_path":"${SAFE}"}`, `{"file_\\u0070ath":"${SAFE}"}`, `{"file_path":"${SAFE.replaceAll('/', '\\/')}"}`];
+  // Review R7-A1 supersedes one former row here: a duplicate member name (even two identical safe file_path copies)
+  // makes the whole record malformed evidence, and a malformed record carrying a tool block is fatal, not a hold.
+  for (const [mode, tail, exitCode] of [['success', LINES.slice(2), 0], ['quota', [LINES[2], quota], 1]]) {
+    const d = await classify(tr(LINES[0], receiptWith(`{"file_path":"${SAFE}","file_path":"${SAFE}"}`), tail), { exitCode });
+    assert.equal(d.kind, 'fatal', `duplicate safe file_path / ${mode}: ${d.kind} (${d.reason})`); assert.match(d.reason, /duplicate member name/);
+  }
   for (const raw of NONCANON) {
     const r = await classify(tr(LINES[0], receiptWith(raw), LINES.slice(2)));
     assert.equal(r.kind, 'content-failure', `${raw}: ${r.kind} (${r.reason})`); assert.match(r.reason, /non-canonical Read argument evidence/);
